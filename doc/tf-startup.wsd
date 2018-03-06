@@ -1,0 +1,68 @@
+@startuml
+title "TensorFlow XLA Dynamic plugin startup"
+
+hide footbox
+skinparam sequence {
+    ArrowColor DeepSkyBlue
+    ActorBorderColor DeepSkyBlue
+
+    ParticipantBorderColor DeepSkyBlue
+    ParticipantBackgroundColor DodgerBlue
+    'ParticipantFontName Impact
+    ParticipantFontSize 14
+    ParticipantFontColor #FFFFFF
+
+    ActorBackgroundColor aqua
+    ActorFontColor DeepSkyBlue
+    ActorFontSize 12
+    ActorFontName Aapex
+}
+
+[-> InitModule : static initialization
+activate InitModule
+InitModule -> Utils: GetTensorflowRoot()
+note right: Tensorflow root is the\n installation directory of TensorFlow
+InitModule -> tensorflow.Env.Default: LoadLibrary()
+InitModule -> tensorflow.Env.Default: GetSymbolFromLibrary()
+InitModule -> libPlugin.so: GetPluginData()
+InitModule -> KernelRegistration: REGISTER_XLA_LAUNCH_KERNEL(tensorflow::XlaLocalLaunchOp, data types)
+InitModule -> KernelRegistration: REGISTER_XLA_DEVICE_KERNELS('DEVICE-NAME', data types)
+InitModule -> KernelRegistration: REGISTER_XLA_BACKEND('JIT_DEVICE_NAME', data types, OpFilter)
+
+== Platform Initialization ==
+
+create Platform
+InitModule -> Platform: new Platform("Name", kPluginPlatformId)
+InitModule -> MultiPlatformManager : RegisterPlatform
+InitModule -> libPlugin.so: Init(kPluginPlatformId)
+
+== Compiler Registration ==
+InitModule -> xla.Compiler : RegisterCompilerFactory(kPluginPlatformId, []{Create compiler instance} )
+InitModule -> xla.ComputationPlacer: RegisterComputationPlacer(kPluginPlatformId, PluginCompiler::CreateComputationPlacer)
+
+== Transfer Manager Registration ==
+InitModule -> PluginTransferManager: Init(kPluginPlatformId)
+note right PluginTransferManager: This calls the RegisterTransferManager \nWhich creates the transfer manager\n using the factory method
+create PluginTransferManager
+InitModule -> PluginTransferManager: new [via PluginTransferManager::CreateTransferManager]
+InitModule -> libPlugin.so: GetTransferManager()
+note right libPlugin.so: The transfer manager implementation \nfrom plugin is set to the TF side
+InitModule -> PluginTransferManager  :SetImplementation
+
+== Device Registration ==
+InitModule -> DeviceFactory: Register('DEVICE-NAME', PluginDeviceFactory )
+
+create PluginDeviceFactory
+InitModule -> PluginDeviceFactory: new(platform name, 'DEVICE-NAME', 'JIT_DEVICE_NAME')
+DeviceFactory -> PluginDeviceFactory: CreateDevices( Session options, name)
+
+PluginDeviceFactory -> XlaDevice: Create(...)
+
+note left XlaDevice: The `Create` function creates \nand registers plugin device
+note left XlaDevice: Parameters are: \nplatform name, \n'DEVICE-NAME', \nSession options, \n...
+
+deactivate InitModule
+[<-- InitModule: Static initialization complete
+
+@enduml
+InitModule -> DeviceFactory: Register(kPluginPlatformId, 'DEVICE-NAME', 'JIT_DEVICE_NAME' )

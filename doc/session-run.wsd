@@ -1,0 +1,41 @@
+@startuml
+title "TensorFlow Backend Creation (Session.run)"
+
+hide footbox
+skinparam sequence {
+    ArrowColor DeepSkyBlue
+    ActorBorderColor DeepSkyBlue
+
+    ParticipantBorderColor DeepSkyBlue
+    ParticipantBackgroundColor DodgerBlue
+    'ParticipantFontName Impact
+    ParticipantFontSize 14
+    ParticipantFontColor #FFFFFF
+
+    ActorBackgroundColor aqua
+    ActorFontColor DeepSkyBlue
+    ActorFontSize 12
+    ActorFontName Aapex
+}
+
+actor Python
+Python -> ClientLibrary: GetOrCreateLocalClient( SessionOptions)
+activate ClientLibrary
+create LocalInstance
+ClientLibrary -> LocalInstance: new
+activate LocalInstance
+LocalInstance -> LocalService: NewService
+activate LocalService
+LocalService -> Backend: CreateBackend
+activate Backend
+
+note left Backend: A backend is created for the device
+
+Backend -> Compiler: GetForPlatform( kPluginId )
+Backend -> PlatformUtil: GetForPlatform( kPluginId )
+Backend -> TransferManager: GetForPlatform( kPluginId )
+Backend -> ComputationPlacer: GetForPlatform( kPluginId )
+
+ClientLibrary -> Python
+
+@enduml

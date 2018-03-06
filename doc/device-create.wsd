@@ -1,0 +1,50 @@
+@startuml
+title "TensorFlow Device Creation"
+
+hide footbox
+skinparam sequence {
+    ArrowColor DeepSkyBlue
+    ActorBorderColor DeepSkyBlue
+
+    ParticipantBorderColor DeepSkyBlue
+    ParticipantBackgroundColor DodgerBlue
+    'ParticipantFontName Impact
+    ParticipantFontSize 14
+    ParticipantFontColor #FFFFFF
+
+    ActorBackgroundColor aqua
+    ActorFontColor DeepSkyBlue
+    ActorFontSize 12
+    ActorFontName Aapex
+}
+
+actor Python
+Python -> DirectSessionFactory: NewSession( SessionOptions)
+activate DirectSessionFactory
+
+DirectSessionFactory -> DeviceFactory: AddDevices( SessionOptions )
+activate DeviceFactory
+DeviceFactory -> DeviceFactory: GetFactory("CPU")
+DeviceFactory -> ThreadPoolDeviceFactory: CreateDevices(...)
+
+' Create the rest of devices including pluguins.
+DeviceFactory -> DeviceFactory: device_factories()
+note left: Iterate over the list of device \nfactories creating each device
+
+DeviceFactory -> DynamicPluginDeviceFactory: CreateDevices(...)
+DynamicPluginDeviceFactory -> tensorflow: RegisterXlaDeviceKernels()
+note left: XLA kernels are registered here
+
+DynamicPluginDeviceFactory -> XlaDevice:Create(Platform name, device_ordinal, ...)
+XlaDevice -> XlaOpRegistry : RegisterCompilationDevice(...)
+XlaDevice ->tensorflow : BuildDeviceAttributes(name prefix, ... )
+note left: This is where the device name is created i.e.,\n "/job:localhost/replica:0/task:0/device:CPU:0"
+
+DynamicPluginDeviceFactory -> DynamicPluginDeviceFactory : push_back the new device to the global list
+
+deactivate DeviceFactory
+
+DirectSessionFactory -> Python
+deactivate DirectSessionFactory
+note left DirectSessionFactory: The end of Python snippet \n"with tf.device('/device:PLUGIN_DEV:0')"
+@enduml
