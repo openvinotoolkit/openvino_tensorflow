@@ -23,6 +23,9 @@ limitations under the License.
 //-----------------------------------------------------------------------------
 //  Misc. function declarations
 //-----------------------------------------------------------------------------
+// Temp
+void nGraphTest();
+
 static void print_embeded_computation(const xla::HloComputation *computation,
                                       int nest_level = 0);
 static xla::plugin::DeviceInfo s_DeviceInfo = {
@@ -54,9 +57,6 @@ xla::StatusOr<std::unique_ptr<xla::HloModule>> RunHloPasses(
   // Run the HLO optimization passes here
   return std::move(module);
 }
-
-// Temp
-void nGraphTest();
 
 std::unique_ptr<xla::Executable> RunBackend(
     std::unique_ptr<xla::HloModule> hlo_module,
