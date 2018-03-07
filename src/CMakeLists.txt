@@ -50,6 +50,8 @@ include_directories( ${TENSORFLOW_INCLUDE_DIR} )
 include_directories( ${TENSORFLOW_INCLUDE_DIR}/external/nsync/public )
 include_directories( ${NGRAPH_DIR}/include )
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 add_library( tensorflow_xla_plugin_framework SHARED IMPORTED)
 set_target_properties( 
     tensorflow_xla_plugin_framework 
@@ -88,6 +90,17 @@ target_compile_definitions(
     ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} PRIVATE 
     _GLIBCXX_USE_CXX11_ABI=1 
 )
+
+set( NGRAPH_INSTALL_DIR ${TENSORFLOW_DIR}/plugins)
+message( STATUS "NGRAPH_INSTALL_DIR: " ${NGRAPH_INSTALL_DIR})
+
+set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_DIR})
+
+install(
+    TARGETS 
+    ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} 
+    LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} ./
+)  
 
 
 
