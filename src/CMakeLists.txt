@@ -11,14 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.9)
-
-# set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+cmake_minimum_required(VERSION 3.1)
 
 project (ngraph_plugin CXX)
 set(NGRAPH_VERSION 0.0)
 set(NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME ngraph_plugin)
+
+# set(CMAKE_CXX_COMPILER "clang++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # These variables are undocumented but useful.
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -73,6 +73,16 @@ set( SRC
    ngraph_plugin.cc 
    executable.cc
    transfer_manager.cc
+   ngraph_emitter.cc
+   ngraph_compiler.cc
+   ngraph_autobroadcast.cc
+   ngraph_log.cc
+   ngraph_utils.cc
+   ngraph_fusion.cc
+   ngraph_platform.cc
+   ngraph_platform_id.cc
+   ngraph_executor.cc
+   ngraph_executable.cc
 )
 
 add_library( ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} SHARED ${SRC} )
