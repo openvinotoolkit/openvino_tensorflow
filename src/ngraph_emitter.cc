@@ -52,6 +52,10 @@ Status NGraphEmitter::Initialize() {
         ng_op = std::make_shared<ngraph::op::Parameter>(ngraph::element::i32,
                                                         ng_shape);
         break;
+      case S64:
+        ng_op = std::make_shared<ngraph::op::Parameter>(ngraph::element::i64,
+                                                        ng_shape);
+        break;
       case PRED:
         ng_op = std::make_shared<ngraph::op::Parameter>(
             ngraph::element::boolean, ng_shape);
@@ -257,6 +261,10 @@ Status NGraphEmitter::ProcessConvert(HloInstruction* convert) {
     case S32: {
       ng_op = std::make_shared<ngraph::op::Convert>(ng_operand,
                                                     ngraph::element::i32);
+    } break;
+    case S64: {
+      ng_op = std::make_shared<ngraph::op::Convert>(ng_operand,
+                                                    ngraph::element::i64);
     } break;
     case PRED: {
       ng_op = std::make_shared<ngraph::op::Convert>(ng_operand,
@@ -595,6 +603,12 @@ StatusOr<std::shared_ptr<ngraph::Node>> NGraphEmitter::MakeNGraphConstant(
       auto int_vector = std::vector<int32>(literal.data<int32>().begin(),
                                            literal.data<int32>().end());
       ng_node = ngraph::op::Constant::create(ngraph::element::i32, ng_shape,
+                                             int_vector);
+    } break;
+    case S64: {
+      auto int_vector = std::vector<int64>(literal.data<int64>().begin(),
+                                           literal.data<int64>().end());
+      ng_node = ngraph::op::Constant::create(ngraph::element::i64, ng_shape,
                                              int_vector);
     } break;
     case PRED: {

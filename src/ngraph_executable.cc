@@ -19,7 +19,6 @@ limitations under the License.
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph_executor.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
 #include "tensorflow/compiler/xla/literal_util.h"
@@ -59,6 +58,10 @@ NGraphExecutable::CreateNGraphTensor(
       ng_tensor = ng_backend->make_primary_tensor_view(
           ngraph::element::i32, ngraph::Shape(ng_element_shape));
     } break;
+    case S64: {
+      ng_tensor = ng_backend->make_primary_tensor_view(
+          ngraph::element::i64, ngraph::Shape(ng_element_shape));
+    } break;
     case PRED: {
       ng_tensor = ng_backend->make_primary_tensor_view(
           ngraph::element::boolean, ngraph::Shape(ng_element_shape));
@@ -94,7 +97,7 @@ Status NGraphExecutable::CreateInputTensorViews(
                             CreateNGraphTensor(buffer_shape, ng_backend));
         auto data_size = ShapeUtil::ByteSizeOf(buffer_shape);
         static_cast<ngraph::runtime::TensorView*>(ng_tv.get())
-            ->write(argument->buffer(shape_index).opaque(), 0, data_size);
+            ->write(device_mem_base.opaque(), 0, data_size);
         ng_input_tv_list.push_back(ng_tv);
       }
     }
@@ -109,11 +112,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
     const ServiceExecutableRunOptions* run_options,
     tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
     HloExecutionProfile* hlo_execution_profile) {
-  // Get NGraphExecutor, for memory allocation
-  se::Stream* stream = run_options->stream();
-  se::StreamExecutor* executor(stream->parent());
-  NGraphExecutor* ngraph_executor(
-      static_cast<NGraphExecutor*>(executor->implementation()));
+  NGRAPH_VLOG(3) << "ExecuteOnStream start";
 
   // Start profiling
   uint64 start_micros = tensorflow::Env::Default()->NowMicros();
@@ -130,8 +129,10 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
   // Create the arguments as ngraph Parameters
   std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_input_tv_list;
+  NGRAPH_VLOG(3) << "CreateInputTensorViews";
   TF_CHECK_OK(CreateInputTensorViews(computation, ng_backend, arguments,
                                      ng_input_tv_list));
+  NGRAPH_VLOG(3) << "CreateInputTensorViews done";
 
   // Output tensor
   xla::HloInstruction* root_instruction = computation->root_instruction();
@@ -150,10 +151,16 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
   // allocation (i.e. the "leftmost leaf" is first).
   std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_result_tv_list;
 
-  ShapedBuffer* result_buffer = new ShapedBuffer(
+  // Get the StreamExecutor so we can get the platform and device ordinal for
+  // the ShapedBuffer.
+  se::Stream* stream = run_options->stream();
+  se::StreamExecutor* executor(stream->parent());
+
+  std::unique_ptr<ShapedBuffer> result_buffer = MakeUnique<ShapedBuffer>(
       root_shape, root_shape, executor->platform(), executor->device_ordinal());
 
-  // Pass 1: Allocate DevieMemoryBases and nGraph tensors.
+  NGRAPH_VLOG(3) << "output buffers pre-allocate";
+  // Pass 1: Allocate DeviceMemoryBases and nGraph tensors.
   for (auto& idx_buf : result_buffer->buffers()) {
     auto& shape_index = idx_buf.first;
 
@@ -161,10 +168,11 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
     auto sub_buffer_byte_size =
         ShapeUtil::ByteSizeOf(sub_buffer_shape, sizeof(void*));
 
+    NGRAPH_VLOG(3) << "output buffer: allocating " << sub_buffer_byte_size;
+
     TF_ASSIGN_OR_RETURN(se::DeviceMemoryBase sub_buffer_dmb,
                         run_options->allocator()->Allocate(
-                            executor->device_ordinal(), sub_buffer_byte_size,
-                            /*retry_on_failure=*/false));
+                            executor->device_ordinal(), sub_buffer_byte_size));
     result_buffer->set_buffer(sub_buffer_dmb, shape_index);
 
     // If this is a leaf node we will create an nGraph tensor.
@@ -174,8 +182,10 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
       ng_result_tv_list.push_back(ng_tv);
     }
   }
+  NGRAPH_VLOG(3) << "output buffers pre-allocate done";
 
   // Pass 2: Set up the pointers to child buffers for the non-leaf nodes.
+  NGRAPH_VLOG(3) << "output buffers pointers";
   for (auto& idx_buf : result_buffer->buffers()) {
     auto& shape_index = idx_buf.first;
     auto& device_mem_base = idx_buf.second;
@@ -194,6 +204,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
       }
     }
   }
+  NGRAPH_VLOG(3) << "output buffers done";
 
   // Call the nGraph executable.
   auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
@@ -201,6 +212,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
   // Copy data back from the nGraph result tensors to each corresponding leaf
   // buffer.
+  NGRAPH_VLOG(3) << "copy-back";
   size_t i = 0;
 
   for (auto it = result_buffer->buffers().leaf_begin();
@@ -209,6 +221,11 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
     auto device_mem_base = it->second;
 
     auto& sub_buffer_shape = ShapeUtil::GetSubshape(root_shape, shape_index);
+
+    // In the degenerate case (an empty tuple), the leaf node *can* be a tuple.
+    // Skip in this case, because there are no actual buffers associated.
+    if (sub_buffer_shape.element_type() == TUPLE) continue;
+
     auto sub_buffer_byte_size = ShapeUtil::ByteSizeOf(sub_buffer_shape);
 
     auto ng_result_tv =
@@ -217,6 +234,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
     i++;
   }
+  NGRAPH_VLOG(3) << "copy-back done";
 
   // Profiling scripts
   uint64 end_micros = tensorflow::Env::Default()->NowMicros();
@@ -226,7 +244,9 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
     execution_profile_.set_compute_time_ns(std::max(nanoseconds, 1.0));
   }
 
-  return std::unique_ptr<xla::ShapedBuffer>(result_buffer);
+  NGRAPH_VLOG(3) << "ExecuteOnStream end";
+
+  return std::move(result_buffer);
 }
 
 //-----------------------------------------------------------------------------

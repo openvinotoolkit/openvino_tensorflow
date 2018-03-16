@@ -18,7 +18,7 @@ set(NGRAPH_VERSION 0.0)
 set(NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME ngraph_plugin)
 
 # set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare")
 
 # These variables are undocumented but useful.
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
