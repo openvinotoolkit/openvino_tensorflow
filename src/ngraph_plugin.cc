@@ -64,33 +64,10 @@ xla::StatusOr<std::unique_ptr<xla::HloModule>> RunHloPasses(
 std::unique_ptr<xla::Executable> RunBackend(
     std::unique_ptr<xla::HloModule> hlo_module,
     ::perftools::gputools::StreamExecutor* stream_exec) {
-  // TODO (TEMP HACK)
-  //
-  // This is what we really want to do once ExecuteOnStream is implemented, but
-  // for the moment we are just calling it for its side effects, then returning
-  // a PluginExecutable that will run through HloEvaluator:
-  //
-  // return s_Compiler.RunBackend(std::move(hlo_module), stream_exec,
-  // /*device_allocator=*/nullptr).ValueOrDie();
-
-  auto hlo_module_clone = hlo_module->Clone();
-  auto dummy = s_Compiler
-                   .RunBackend(std::move(hlo_module), stream_exec,
-                               /*device_allocator=*/nullptr)
-                   .ValueOrDie();
-
-  std::cout << "\n======================================================\n"
-               "PluginCompiler::Compile()\n"
-               "======================================================"
-            << std::endl;
-  print_embeded_computation(hlo_module_clone->entry_computation());
-
-  // Create the Executable
-  std::unique_ptr<PluginExecutable> executable =
-      xla::MakeUnique<PluginExecutable>(std::move(hlo_module_clone),
-                                        GetTransferManager());
-
-  return executable;
+  return s_Compiler
+      .RunBackend(std::move(hlo_module), stream_exec,
+                  /*device_allocator=*/nullptr)
+      .ValueOrDie();
 }
 
 //-----------------------------------------------------------------------------
