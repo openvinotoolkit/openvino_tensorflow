@@ -112,7 +112,7 @@ Status NGraphEmitter::ProcessElementwiseUnary(HloInstruction* hlo,
 
   // Save ng_op in op_map
   m_op_map[hlo] = ng_op;
-  m_instruction_list.push_back({hlo->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({hlo->ToString(), ng_op->get_name()});
 
   return tensorflow::Status::OK();
 }
@@ -216,7 +216,7 @@ Status NGraphEmitter::ProcessElementwiseBinary(HloInstruction* hlo,
 
   // Store this in the map
   m_op_map[hlo] = ng_op;
-  m_instruction_list.push_back({hlo->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({hlo->ToString(), ng_op->get_name()});
   return Status::OK();
 }
 
@@ -237,7 +237,7 @@ Status NGraphEmitter::ProcessConcatenate(
 
   // Save it
   m_op_map[concatenate] = ng_op;
-  m_instruction_list.push_back({concatenate->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({concatenate->ToString(), ng_op->get_name()});
 
   return Status::OK();
 }
@@ -270,7 +270,7 @@ Status NGraphEmitter::ProcessConvert(HloInstruction* convert) {
   }
 
   m_op_map[convert] = ng_op;
-  m_instruction_list.push_back({convert->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({convert->ToString(), ng_op->get_name()});
   return Status::OK();
 }
 
@@ -288,7 +288,7 @@ Status NGraphEmitter::ProcessReverse(HloInstruction* reverse,
   auto ng_operand = m_op_map.find(operand)->second;
   auto ng_op = std::make_shared<ngraph::op::Reverse>(ng_operand, ng_axis_set);
   m_op_map[reverse] = ng_op;
-  m_instruction_list.push_back({reverse->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({reverse->ToString(), ng_op->get_name()});
 
   return Status::OK();
 }
@@ -467,7 +467,7 @@ Status NGraphEmitter::ProcessConvolution(HloInstruction* convolution,
   m_op_map[convolution] = properly_ordered_convolution_output_node;
   m_instruction_list.push_back(
       {convolution->ToString(),
-       properly_ordered_convolution_output_node->get_node_id()});
+       properly_ordered_convolution_output_node->get_name()});
 
   return Status::OK();
 }
@@ -487,8 +487,7 @@ Status NGraphEmitter::ProcessSelect(HloInstruction* select,
       ng_pred_arg, ng_on_true_arg, ng_on_false_arg);
 
   m_op_map[select] = ng_op_select;
-  m_instruction_list.push_back(
-      {select->ToString(), ng_op_select->get_node_id()});
+  m_instruction_list.push_back({select->ToString(), ng_op_select->get_name()});
 
   return Status::OK();
 }
@@ -527,7 +526,7 @@ Status NGraphEmitter::ProcessDot(HloInstruction* dot, const HloInstruction* lhs,
   // Create ngraph node
   auto ng_op = std::make_shared<ngraph::op::Dot>(ng_lhs, ng_rhs);
   m_op_map[dot] = ng_op;
-  m_instruction_list.push_back({dot->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({dot->ToString(), ng_op->get_name()});
 
   return Status::OK();
 }
@@ -572,7 +571,7 @@ Status NGraphEmitter::ProcessCompare(HloInstruction* compare, HloOpcode opcode,
 
   // Store this in the map
   m_op_map[compare] = ng_op;
-  m_instruction_list.push_back({compare->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({compare->ToString(), ng_op->get_name()});
   return Status::OK();
 }
 
@@ -653,7 +652,7 @@ Status NGraphEmitter::ProcessConstant(HloInstruction* constant,
 
   // Store this in the map
   m_op_map[constant] = ng_op;
-  m_instruction_list.push_back({constant->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({constant->ToString(), ng_op->get_name()});
   return Status::OK();
 }
 
@@ -670,7 +669,7 @@ Status NGraphEmitter::ProcessGetTupleElement(HloInstruction* get_tuple_element,
   auto ng_op = m_tuple_op_map_vector[operand][get_tuple_element->tuple_index()];
   m_op_map[get_tuple_element] = ng_op;
   m_instruction_list.push_back(
-      {get_tuple_element->ToString(), ng_op->get_node_id()});
+      {get_tuple_element->ToString(), ng_op->get_name()});
 
   return Status::OK();
 }
@@ -683,7 +682,7 @@ Status NGraphEmitter::ProcessParameter(HloInstruction* parameter) {
   TF_RET_CHECK(ng_param_entry != m_op_map.end());
 
   m_instruction_list.push_back(
-      {parameter->ToString(), ng_param_entry->second->get_node_id()});
+      {parameter->ToString(), ng_param_entry->second->get_name()});
 
   return Status::OK();
 }
@@ -734,7 +733,7 @@ Status NGraphEmitter::ProcessSlice(HloInstruction* slice,
 
   // Update the map
   m_op_map[slice] = ng_op;
-  m_instruction_list.push_back({slice->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({slice->ToString(), ng_op->get_name()});
 
   return Status::OK();
 }
@@ -831,8 +830,7 @@ Status NGraphEmitter::ProcessReduce(HloInstruction* reduce,
 
   // Save ng_op in op_map
   m_op_map[reduce] = ng_reduce_op;
-  m_instruction_list.push_back(
-      {reduce->ToString(), ng_reduce_op->get_node_id()});
+  m_instruction_list.push_back({reduce->ToString(), ng_reduce_op->get_name()});
 
   return tensorflow::Status::OK();
 }
@@ -905,8 +903,7 @@ Status NGraphEmitter::ProcessReduceWindow(HloInstruction* reduce_window,
 
   // Save ng_op to op_map
   m_op_map[reduce_window] = ng_op;
-  m_instruction_list.push_back(
-      {reduce_window->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({reduce_window->ToString(), ng_op->get_name()});
 
   return tensorflow::Status::OK();
 }
@@ -988,7 +985,7 @@ Status NGraphEmitter::ProcessSelectAndScatter(
   // Save ng_op to op_map
   m_op_map[select_and_scatter] = ng_op;
   m_instruction_list.push_back(
-      {select_and_scatter->ToString(), ng_op->get_node_id()});
+      {select_and_scatter->ToString(), ng_op->get_name()});
 
   return tensorflow::Status::OK();
 }
@@ -1010,7 +1007,7 @@ Status NGraphEmitter::ProcessBroadcast(HloInstruction* broadcast) {
 
   // Save ng_op in op_map
   m_op_map[broadcast] = ng_op;
-  m_instruction_list.push_back({broadcast->ToString(), ng_op->get_node_id()});
+  m_instruction_list.push_back({broadcast->ToString(), ng_op->get_name()});
 
   return tensorflow::Status::OK();
 }
@@ -1144,7 +1141,7 @@ Status NGraphEmitter::ProcessReshape(HloInstruction* reshape) {
   // Save ng_op in op_map
   m_op_map[reshape] = ng_reshape_op;
   m_instruction_list.push_back(
-      {reshape->ToString(), ng_reshape_op->get_node_id()});
+      {reshape->ToString(), ng_reshape_op->get_name()});
 
   return Status::OK();
 }
@@ -1184,7 +1181,7 @@ Status NGraphEmitter::ProcessTranspose(HloInstruction* transpose) {
   // Save ng_op in op_map
   m_op_map[transpose] = ng_transpose_op;
   m_instruction_list.push_back(
-      {transpose->ToString(), ng_transpose_op->get_node_id()});
+      {transpose->ToString(), ng_transpose_op->get_name()});
 
   return Status::OK();
 }
@@ -1226,7 +1223,7 @@ Status NGraphEmitter::ProcessPad(HloInstruction* pad) {
 
   // Save ng_op in op_map
   m_op_map[pad] = ng_pad_op;
-  m_instruction_list.push_back({pad->ToString(), ng_pad_op->get_node_id()});
+  m_instruction_list.push_back({pad->ToString(), ng_pad_op->get_name()});
 
   return Status::OK();
 }
@@ -1254,7 +1251,7 @@ Status NGraphEmitter::ProcessFusion(HloInstruction* fusion) {
   TF_ASSIGN_OR_RETURN(ng_root_op, fusion_emitter->Emit(fusion, m_op_map));
 
   m_op_map[fusion] = ng_root_op;
-  m_instruction_list.push_back({fusion->ToString(), ng_root_op->get_node_id()});
+  m_instruction_list.push_back({fusion->ToString(), ng_root_op->get_name()});
 
   return Status::OK();
 }

@@ -41,129 +41,6 @@ NGraphExecutable::NGraphExecutable(
 NGraphExecutable::~NGraphExecutable() {}
 
 //-----------------------------------------------------------------------------
-// NGraphExecutable::ExecuteOnStream()
-//-----------------------------------------------------------------------------
-/*
-StatusOr<se::DeviceMemoryBase> NGraphExecutable::ExecuteOnStream(
-    const ServiceExecutableRunOptions* run_options,
-    tensorflow::gtl::ArraySlice<se::DeviceMemoryBase> arguments,
-    HloExecutionProfile* hlo_execution_profile) {
-  // Get NGraphExecutor, for memory allocation
-  se::Stream* stream = run_options->stream();
-  se::StreamExecutor* executor(stream->parent());
-  NGraphExecutor* ngraph_executor(
-      static_cast<NGraphExecutor*>(executor->implementation()));
-
-  // Start profiling
-  uint64 start_micros = tensorflow::Env::Default()->NowMicros();
-
-  // Get computation
-  xla::HloComputation* computation = module().entry_computation();
-  if (computation->num_parameters() != static_cast<int64>(arguments.size())) {
-    return tensorflow::errors::Internal(
-        "Mismatch between argument count and graph parameter count.");
-  }
-
-  // ngraph backend
-  auto ng_backend = m_ng_manager->allocate_backend();
-
-  // Create the arguments as ngraph Parameters
-  std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_arg_list;
-  TF_CHECK_OK(CreateInputArgs(computation, ng_backend, arguments, ng_arg_list));
-
-  // Output tensor
-  xla::HloInstruction* root_instruction = computation->root_instruction();
-  xla::Shape root_shape = root_instruction->shape();
-
-  // Handle tuple differently
-  se::DeviceMemoryBase ret;
-  if (ShapeUtil::IsTuple(root_shape)) {
-    // Construct ngraph result tuple op
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_result_buffers;
-    int num_elements = int(ShapeUtil::TupleElementCount(root_shape));
-    for (int i = 0; i < num_elements; ++i) {
-      auto ng_result_buffer = std::shared_ptr<ngraph::runtime::TensorView>();
-      TF_ASSIGN_OR_RETURN(
-          ng_result_buffer,
-          CreateNGraphTensor(ShapeUtil::GetTupleElementShape(root_shape, i),
-                             ng_backend));
-      ng_result_buffers.push_back(ng_result_buffer);
-    }
-
-    // Create the result of the computation
-    auto ng_result_tuple_op = ngraph::xla::make_tuple(ng_result_buffers);
-
-    // Call the executable
-    auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
-    ngraph::xla::call(call_frame, ng_arg_list, {ng_result_tuple_op});
-
-    // Allocate memory on XLA NGraphDevice, top level memory is just void*
-    // pointer to elements
-    int64 tuple_top_size(xla::ShapeUtil::ByteSizeOf(root_shape, sizeof(void*)));
-    void** buf =
-        reinterpret_cast<void**>(ngraph_executor->Allocate(tuple_top_size));
-    void** buf_rc = buf;
-
-    // Allocate individual buffers and copy values
-    num_elements = int(ShapeUtil::TupleElementCount(root_shape));
-    for (int i = 0; i < num_elements; ++i) {
-      // Get pointer to ngraph values
-      // Allocate Host-side memory
-      // TODO - figure out how to reuse memory
-      int byte_size = int(ShapeUtil::ByteSizeOf(
-          ShapeUtil::GetTupleElementShape(root_shape, i)));
-      void* element_buf = ngraph_executor->Allocate(byte_size);
-
-      // Copy the result data to the host side (i.e., TensorFlow side)
-      auto ng_result_buffer =
-          static_cast<ngraph::runtime::TensorView*>(ng_result_buffers[i].get());
-      ng_result_buffer->read(element_buf, 0, byte_size);
-
-      // Convert void* to DeviceMemoryBase
-      auto out = se::DeviceMemoryBase(element_buf, byte_size);
-      *buf++ = out.opaque();
-    }
-
-    // Apply to return value
-    ret = se::DeviceMemoryBase(buf_rc, tuple_top_size);
-
-  } else {
-    // Allocate memory for ngraph-cpp
-    // TODO: Investigate whether we can reuse the return memory
-
-    // Create and execute ngraph call frame
-    auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
-
-    // Allocate memory on XLA NGraphDevice
-    int byte_size = ShapeUtil::ByteSizeOf(root_shape);
-    void* buf = ngraph_executor->Allocate(byte_size);
-
-    // nGraph result tensor
-    auto ng_result_buffer = std::shared_ptr<ngraph::runtime::TensorView>();
-    TF_ASSIGN_OR_RETURN(ng_result_buffer,
-                        CreateNGraphTensor(root_shape, ng_backend));
-    call_frame->call(ng_arg_list, {ng_result_buffer});
-
-    // Copy the return data to host side memory
-    ng_result_buffer->read(buf, 0, byte_size);
-
-    // Apply to return value
-    ret = se::DeviceMemoryBase(buf, byte_size);
-  }
-
-  // Profiling scripts
-  uint64 end_micros = tensorflow::Env::Default()->NowMicros();
-  {
-    tensorflow::mutex_lock lock(mutex_);
-    const double nanoseconds = (end_micros - start_micros) * 1000.0;
-    execution_profile_.set_compute_time_ns(std::max(nanoseconds, 1.0));
-  }
-
-  return ret;
-}
-*/
-
-//-----------------------------------------------------------------------------
 //  NGraphExecutable::CreateNGraphTensor()
 //-----------------------------------------------------------------------------
 StatusOr<std::shared_ptr<ngraph::runtime::TensorView>>
@@ -196,24 +73,31 @@ NGraphExecutable::CreateNGraphTensor(
 }
 
 //-----------------------------------------------------------------------------
-//  NGraphExecutable::CreateInputArgs()
+//  NGraphExecutable::CreateInputTensorViews()
 //-----------------------------------------------------------------------------
-Status NGraphExecutable::CreateInputArgs(
+Status NGraphExecutable::CreateInputTensorViews(
     const xla::HloComputation* computation,
     std::shared_ptr<ngraph::runtime::Backend>& ng_backend,
     tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& ng_arg_list) {
-  // Create the arguments as ngraph Parameters
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&
+        ng_input_tv_list) {
   for (int64 p = 0; p < computation->num_parameters(); p++) {
     HloInstruction* param = computation->parameter_instruction(p);
+    const ShapedBuffer* argument = arguments[p];
 
-    auto ng_input_arg = std::shared_ptr<ngraph::runtime::TensorView>();
-    TF_ASSIGN_OR_RETURN(ng_input_arg,
-                        CreateNGraphTensor(param->shape(), ng_backend));
-    auto data_size = ShapeUtil::ByteSizeOf(param->shape());
-    static_cast<ngraph::runtime::TensorView*>(ng_input_arg.get())
-        ->write(arguments[p]->root_buffer().opaque(), 0, data_size);
-    ng_arg_list.push_back(ng_input_arg);
+    for (auto& idx_bufs : argument->buffers()) {
+      auto& shape_index = idx_bufs.first;
+      auto& device_mem_base = idx_bufs.second;
+      auto& buffer_shape = ShapeUtil::GetSubshape(param->shape(), shape_index);
+      if (buffer_shape.element_type() != TUPLE) {
+        TF_ASSIGN_OR_RETURN(auto ng_tv,
+                            CreateNGraphTensor(buffer_shape, ng_backend));
+        auto data_size = ShapeUtil::ByteSizeOf(buffer_shape);
+        static_cast<ngraph::runtime::TensorView*>(ng_tv.get())
+            ->write(argument->buffer(shape_index).opaque(), 0, data_size);
+        ng_input_tv_list.push_back(ng_tv);
+      }
+    }
   }
   return Status::OK();
 }
@@ -225,8 +109,124 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
     const ServiceExecutableRunOptions* run_options,
     tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
     HloExecutionProfile* hlo_execution_profile) {
-  return tensorflow::errors::Unimplemented(
-      "ExecuteOnStream is not yet supported on nGraph.");
+  // Get NGraphExecutor, for memory allocation
+  se::Stream* stream = run_options->stream();
+  se::StreamExecutor* executor(stream->parent());
+  NGraphExecutor* ngraph_executor(
+      static_cast<NGraphExecutor*>(executor->implementation()));
+
+  // Start profiling
+  uint64 start_micros = tensorflow::Env::Default()->NowMicros();
+
+  // Get computation
+  const xla::HloComputation* computation = module().entry_computation();
+  if (computation->num_parameters() != static_cast<int64>(arguments.size())) {
+    return tensorflow::errors::Internal(
+        "Mismatch between argument count and graph parameter count.");
+  }
+
+  // ngraph backend
+  auto ng_backend = m_ng_manager->allocate_backend();
+
+  // Create the arguments as ngraph Parameters
+  std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_input_tv_list;
+  TF_CHECK_OK(CreateInputTensorViews(computation, ng_backend, arguments,
+                                     ng_input_tv_list));
+
+  // Output tensor
+  xla::HloInstruction* root_instruction = computation->root_instruction();
+  xla::Shape root_shape = root_instruction->shape();
+
+  // Create nGraph TensorViews and a ShapedBuffer for the result.
+  //
+  // This proceeds in two phases (it could be one, but we would need a
+  // post-order traversal of the ShapedBuffer's buffer tree, and the iterator
+  // only allows pre-order as far as I can tell). First, we allocate space
+  // (a DeviceMemoryBase) for each node of the ShapedBuffer, and also nGraph
+  // tensors for the leaf nodes. Second, we set the pointers inside of the non-
+  // leaf nodes' buffers, which must point to each child node's buffer.
+
+  // As we allocate nGraph tensors we will add them to this vector in order of
+  // allocation (i.e. the "leftmost leaf" is first).
+  std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_result_tv_list;
+
+  ShapedBuffer* result_buffer = new ShapedBuffer(
+      root_shape, root_shape, executor->platform(), executor->device_ordinal());
+
+  // Pass 1: Allocate DevieMemoryBases and nGraph tensors.
+  for (auto& idx_buf : result_buffer->buffers()) {
+    auto& shape_index = idx_buf.first;
+
+    auto& sub_buffer_shape = ShapeUtil::GetSubshape(root_shape, shape_index);
+    auto sub_buffer_byte_size =
+        ShapeUtil::ByteSizeOf(sub_buffer_shape, sizeof(void*));
+
+    TF_ASSIGN_OR_RETURN(se::DeviceMemoryBase sub_buffer_dmb,
+                        run_options->allocator()->Allocate(
+                            executor->device_ordinal(), sub_buffer_byte_size,
+                            /*retry_on_failure=*/false));
+    result_buffer->set_buffer(sub_buffer_dmb, shape_index);
+
+    // If this is a leaf node we will create an nGraph tensor.
+    if (sub_buffer_shape.element_type() != TUPLE) {
+      TF_ASSIGN_OR_RETURN(auto ng_tv,
+                          CreateNGraphTensor(sub_buffer_shape, ng_backend));
+      ng_result_tv_list.push_back(ng_tv);
+    }
+  }
+
+  // Pass 2: Set up the pointers to child buffers for the non-leaf nodes.
+  for (auto& idx_buf : result_buffer->buffers()) {
+    auto& shape_index = idx_buf.first;
+    auto& device_mem_base = idx_buf.second;
+
+    auto& sub_buffer_shape = ShapeUtil::GetSubshape(root_shape, shape_index);
+    void* sub_buffer_data = device_mem_base.opaque();
+
+    if (sub_buffer_shape.element_type() == TUPLE) {
+      auto child_shape_index = shape_index;
+      const void** p = (const void**)sub_buffer_data;
+      for (int64 i = 0; i < ShapeUtil::TupleElementCount(sub_buffer_shape);
+           i++) {
+        child_shape_index.push_back(i);
+        *p++ = result_buffer->buffer(child_shape_index).opaque();
+        child_shape_index.pop_back();
+      }
+    }
+  }
+
+  // Call the nGraph executable.
+  auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
+  call_frame->call(ng_input_tv_list, ng_result_tv_list);
+
+  // Copy data back from the nGraph result tensors to each corresponding leaf
+  // buffer.
+  size_t i = 0;
+
+  for (auto it = result_buffer->buffers().leaf_begin();
+       it != result_buffer->buffers().leaf_end(); ++it) {
+    auto shape_index = it->first;
+    auto device_mem_base = it->second;
+
+    auto& sub_buffer_shape = ShapeUtil::GetSubshape(root_shape, shape_index);
+    auto sub_buffer_byte_size = ShapeUtil::ByteSizeOf(sub_buffer_shape);
+
+    auto ng_result_tv =
+        static_cast<ngraph::runtime::TensorView*>(ng_result_tv_list[i].get());
+    ng_result_tv->read(device_mem_base.opaque(), 0, sub_buffer_byte_size);
+
+    i++;
+  }
+
+  // Profiling scripts
+  uint64 end_micros = tensorflow::Env::Default()->NowMicros();
+  {
+    tensorflow::mutex_lock lock(mutex_);
+    const double nanoseconds = (end_micros - start_micros) * 1000.0;
+    execution_profile_.set_compute_time_ns(std::max(nanoseconds, 1.0));
+  }
+
+  return std::unique_ptr<xla::ShapedBuffer>(result_buffer);
 }
 
 //-----------------------------------------------------------------------------

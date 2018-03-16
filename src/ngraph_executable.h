@@ -64,7 +64,7 @@ class NGraphExecutable : public Executable {
   static int64 ShapeSizeBytes(const Shape& shape);
 
  private:
-  Status CreateInputArgs(
+  Status CreateInputTensorViews(
       const xla::HloComputation* entry_computation,
       std::shared_ptr<ngraph::runtime::Backend>& ng_backend,
       tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
