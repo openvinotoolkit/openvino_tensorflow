@@ -25,17 +25,8 @@ limitations under the License.
 #include "ngraph_fusion.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
-//#include "tensorflow/compiler/xla/service/algebraic_simplifier.h"
-//#include "tensorflow/compiler/xla/service/flatten_call_graph.h"
-//#include "tensorflow/compiler/xla/service/hlo_constant_folding.h"
-//#include "tensorflow/compiler/xla/service/hlo_cse.h"
-//#include "tensorflow/compiler/xla/service/hlo_dce.h"
-//#include "tensorflow/compiler/xla/service/hlo_graph_dumper.h"
 #include "tensorflow/compiler/xla/service/hlo_pass_fix.h"
 #include "tensorflow/compiler/xla/service/hlo_pass_pipeline.h"
-//#include "tensorflow/compiler/xla/service/hlo_subcomputation_unification.h"
-// #include "tensorflow/compiler/xla/service/inliner.h"
-// #include "tensorflow/compiler/xla/service/reshape_mover.h"
 #include "tensorflow/compiler/xla/shape_util.h"
 #include "tensorflow/compiler/xla/status_macros.h"
 #include "tensorflow/core/lib/core/errors.h"
@@ -66,39 +57,9 @@ StatusOr<std::unique_ptr<HloModule>> NGraphCompiler::RunHloPasses(
     perftools::gputools::StreamExecutor* executor,
     DeviceMemoryAllocator* device_allocator) {
   HloPassPipeline pipeline("NGraph");
-  // pipeline.AddPass<Inliner>();
-  // pipeline.AddPass<HloSubcomputationUnification>();
-  // pipeline.AddPass<HloCSE>(false);
 
-  // This is required to break constants op containing tuples, to a tuple op
-  // containing multiple constnat ops. E.g.
-  // [from]
-  // %constant = (f32[], f32[3]{0}, f32[2,3]{1,0}) constant({...})]
-  // [to]
-  // TupleConstant.v1 () -> (f32[], f32[3], f32[2,3]) {
-  //   %constant.1 = f32[] constant(7.3)
-  //   %constant.2 = f32[3]{0} constant({1.1, 2, 3.3})
-  //   %constant.3 = f32[2,3]{1,0} constant(f32[2,3] { { 1.1, 2.2, 3.5 },
-  //                                                   { 4.8, 5, 6.7 }, })
-  //   %tuple = (f32[], f32[3]{0}, f32[2,3]{1,0}) tuple(f32[] %constant.1,
-  //            f32[3]{0} %constant.2, f32[2,3]{1,0} %constant.3)
-  // }
   if (getenv("XLA_NGRAPH_SKIP_FUSION") == nullptr)
     pipeline.AddPass<HloPassFix<NGraphFusion>>(&m_fusion_map);
-
-  // TODO: Currently we're setting the 3rd argument
-  //       enable_dot_simplification=false, since we don't have reshape op yet.
-  // We are possibly interested only in the Algebraic Simplification
-  // pipeline.AddPass<HloPassFix<AlgebraicSimplifier>>(
-  //    false, [](const Shape&, const Shape&) { return false; }, false);
-
-  // Possibly remove passes below
-  // pipeline.AddPass<ReshapeMover>();
-  // pipeline.AddPass<HloConstantFolding>();
-  // pipeline.AddPass<HloCSE>(true);
-
-  // pipeline.AddPass<HloDCE>();
-  // pipeline.AddPass<FlattenCallGraph>();
 
   TF_ASSIGN_OR_RETURN(bool changed, pipeline.Run(hlo_module.get()));
 
@@ -184,10 +145,6 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
   // We don't have a layout pass, so we have to set layout to default values
   hlo_module->mutable_entry_computation_layout()->SetToDefaultLayout();
 
-  // TODO: Enable optimization when the ngraph++ has implemented all the
-  // operators that are introcuced as a result of the optimization.
-  // TF_RETURN_IF_ERROR(RunHloOptimization(hlo_module.get()));
-
   // Get computation and root_instruction
   xla::HloComputation* computation = hlo_module->entry_computation();
   xla::HloInstruction* root_instruction = computation->root_instruction();
@@ -270,27 +227,12 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
 }
 
 //---------------------------------------------------------------------------
-// PlatformId
-//---------------------------------------------------------------------------
-se::Platform::Id NGraphCompiler::PlatformId() const {
-  return kNGraphPlatformId;
-}
-
-//---------------------------------------------------------------------------
 // ShapeSizeBytesFunction
 //---------------------------------------------------------------------------
 HloCostAnalysis::ShapeSizeFunction NGraphCompiler::ShapeSizeBytesFunction()
     const {
   return NGraphExecutable::ShapeSizeBytes;
 }
-
-//---------------------------------------------------------------------------
-// Registration
-//---------------------------------------------------------------------------
-// REGISTER_MODULE_INITIALIZER(ngraph_compiler, {
-//  xla::Compiler::RegisterCompilerFactory(
-//      kNGraphPlatformId, []() { return xla::MakeUnique<NGraphCompiler>(); });
-//});
 
 }  // namespace ngraph_plugin
 }  // namespace xla

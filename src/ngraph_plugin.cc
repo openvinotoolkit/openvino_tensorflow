@@ -13,12 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <dlfcn.h>
 #include <iostream>
+
 #include "ngraph/ngraph.hpp"
 #include "tensorflow/compiler/xla/status_macros.h"
 #include "tensorflow/compiler/xla/xla_plugin.h"
 
-#include "executable.h"
 #include "ngraph_compiler.h"
 #include "transfer_manager.h"
 
@@ -31,6 +32,8 @@ static void print_embeded_computation(const xla::HloComputation* computation,
 static xla::plugin::DeviceInfo s_DeviceInfo = {"nGraphDevice", "NGRAPH",
                                                "NGRAPH_JIT", 1};
 
+extern "C" xla::plugin::Info GetPluginData();
+
 //-----------------------------------------------------------------------------
 //  We keep a singleton instance of the NGraphCompiler object.
 //-----------------------------------------------------------------------------
@@ -40,11 +43,49 @@ static xla::ngraph_plugin::NGraphCompiler s_Compiler;
 //  Plugin Interface Implementation functions
 //-----------------------------------------------------------------------------
 std::string Version() { return "0.0.0.0"; }
+
 xla::plugin::DeviceInfo DeviceInfo() { return s_DeviceInfo; }
+
+#include "ngraph/util.hpp"
+
 bool Init(perftools::gputools::Platform::Id platform_id) {
-  // std::cout << "Init Called" << std::endl;
+  // Determine the full path of this DSO
+  Dl_info dlInfo;
+
+  dladdr((const void*)&ngraph::aligned_free, &dlInfo);
+  if (dlInfo.dli_sname == NULL || dlInfo.dli_saddr == NULL) {
+    std::cerr << "Cannot determine location of the DSO. "
+                 "nGraph device won't be available"
+              << std::endl;
+    return false;
+  }
+
+  std::string dso_path(dlInfo.dli_fname);
+  size_t loc = dso_path.find_last_of("/\\");
+  std::string ngraph_directory = dso_path.substr(0, loc);
+  std::cout << "Plugin DSO location: " << ngraph_directory << std::endl;
+
+  auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
+                       RTLD_NOW | RTLD_GLOBAL);
+  if (handle == nullptr) {
+    std::cerr << "Error loading the plugin library. "
+                 "nGraph device won't be available"
+              << std::endl;
+    return false;
+  }
+
+  handle = dlopen((ngraph_directory + "/libngraph.so").c_str(),
+                  RTLD_NOW | RTLD_GLOBAL);
+  if (handle == nullptr) {
+    std::cerr << "Error loading the plugin library. "
+                 "nGraph device won't be available"
+              << std::endl;
+    return false;
+  }
+
   return true;
 }
+
 xla::TransferManagerInterface* GetTransferManager() {
   static std::unique_ptr<xla::TransferManagerInterface> tx_manager =
       std::unique_ptr<xla::TransferManagerInterface>(new TransferManager());
@@ -96,4 +137,4 @@ static xla::plugin::Info s_PluginInfo = {
 //-----------------------------------------------------------------------------
 // DSO Entry point
 //-----------------------------------------------------------------------------
-extern "C" xla::plugin::Info GetPluginData() { return s_PluginInfo; }
+xla::plugin::Info GetPluginData() { return s_PluginInfo; }
