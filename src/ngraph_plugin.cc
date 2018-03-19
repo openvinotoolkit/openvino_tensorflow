@@ -46,7 +46,6 @@ std::string Version() { return "0.0.0.0"; }
 
 xla::plugin::DeviceInfo DeviceInfo() { return s_DeviceInfo; }
 
-//#include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/util.hpp"
 
 bool Init(perftools::gputools::Platform::Id platform_id) {
