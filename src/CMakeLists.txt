@@ -71,7 +71,6 @@ set_target_properties(
 #-----------------------------------------------------------------------------------------------
 set( SRC 
    ngraph_plugin.cc 
-   #executable.cc
    transfer_manager.cc
    ngraph_emitter.cc
    ngraph_compiler.cc
@@ -79,9 +78,6 @@ set( SRC
    ngraph_log.cc
    ngraph_utils.cc
    ngraph_fusion.cc
-   #ngraph_platform.cc
-   #ngraph_platform_id.cc
-   #ngraph_executor.cc
    ngraph_executable.cc
 )
 

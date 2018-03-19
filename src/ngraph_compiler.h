@@ -23,7 +23,7 @@ limitations under the License.
 #include "ngraph_emitter.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
-#include "tensorflow/compiler/xla/service/compiler.h"
+//#include "tensorflow/compiler/xla/service/compiler.h"
 #include "tensorflow/compiler/xla/service/executable.h"
 #include "tensorflow/compiler/xla/service/hlo_module.h"
 #include "tensorflow/compiler/xla/service/hlo_module_config.h"
@@ -33,40 +33,24 @@ namespace se = ::perftools::gputools;
 namespace xla {
 namespace ngraph_plugin {
 
-class NGraphCompiler : public Compiler {
+class NGraphCompiler {
  public:
   NGraphCompiler();
-  ~NGraphCompiler() override {}
+  ~NGraphCompiler() {}
 
   StatusOr<std::unique_ptr<HloModule>> RunHloPasses(
       std::unique_ptr<HloModule> module,
       perftools::gputools::StreamExecutor* executor,
-      DeviceMemoryAllocator* device_allocator) override;
+      DeviceMemoryAllocator* device_allocator);
 
   StatusOr<std::unique_ptr<Executable>> RunBackend(
       std::unique_ptr<HloModule> hlo_module,
       perftools::gputools::StreamExecutor* stream_exec,
-      DeviceMemoryAllocator* device_allocator) override;
+      DeviceMemoryAllocator* device_allocator);
 
-  StatusOr<std::vector<std::unique_ptr<Executable>>> Compile(
-      std::vector<std::unique_ptr<HloModule>> hlo_modules,
-      std::vector<std::vector<perftools::gputools::StreamExecutor*>>
-          stream_exec,
-      DeviceMemoryAllocator* device_allocator) override {
-    return tensorflow::errors::Unimplemented(
-        "Compilation of multiple HLO modules is not supported on Interpreter.");
-  }
+  HloCostAnalysis::ShapeSizeFunction ShapeSizeBytesFunction() const;
 
-  StatusOr<std::vector<std::unique_ptr<AotCompilationResult>>>
-  CompileAheadOfTime(std::vector<std::unique_ptr<HloModule>> hlo_modules,
-                     const AotCompilationOptions& aot_options) override {
-    return tensorflow::errors::InvalidArgument(
-        "AOT compilation not supported on Executor");
-  }
-
-  HloCostAnalysis::ShapeSizeFunction ShapeSizeBytesFunction() const override;
-
-  se::Platform::Id PlatformId() const override;
+  se::Platform::Id PlatformId() const;
 
  private:
   static std::shared_ptr<ngraph::runtime::Manager> m_ngraph_runtime_manager;
