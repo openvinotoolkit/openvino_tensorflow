@@ -1157,26 +1157,48 @@ bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
 //
 // ============================
 
+static bool MatchBroadcastedZero(
+    HloInstruction* root, std::vector<HloInstruction*>& matched_instructions) {
+  if (root->opcode() == HloOpcode::kBroadcast) {
+    matched_instructions.push_back(root);
+    root = root->mutable_operand(0);
+  }
+
+  if (root->opcode() == HloOpcode::kConstant && root->literal().IsAll(0)) {
+    matched_instructions.push_back(root);
+    return true;
+  }
+
+  return false;
+}
+
 // Look for graphs of the form:
 //
-// arg    const(0)
-//    \   /
-//     max
+// const(0)
+//    |
+// broadcast    arg
+//         \   /
+//          max
+//
+// where the "broadcast" is optional.
 bool NGraphFusionVisitor::FuseRelu(HloInstruction* root) {
   if (root->opcode() != HloOpcode::kMaximum) {
     return false;
   }
 
+  std::vector<HloInstruction*> matched_instructions;
+  matched_instructions.push_back(root);
+
   HloInstruction* lhs = root->mutable_operand(0);
 
-  if (lhs->opcode() != HloOpcode::kConstant || !lhs->literal().IsAll(0)) {
+  if (!MatchBroadcastedZero(lhs, matched_instructions)) {
     return false;
   }
 
   // Build the emitter and put it into the map.
   auto emitter = new NGraphEmitter::FusedReluEmitter();
 
-  FuseInstructions(emitter, {root, lhs});
+  FuseInstructions(emitter, matched_instructions);
   return true;
 }
 
