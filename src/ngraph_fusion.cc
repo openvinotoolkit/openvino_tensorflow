@@ -685,11 +685,9 @@ bool NGraphFusionVisitor::FuseAvgPoolBprop(HloInstruction* root) {
 // Given the TF convolution dimensions, attempts to reconstruct the data
 // format (NCHW or NHWC). Returns false if the dimensions are not consistent
 // with NCHW; otherwise, updates "data_format" by reference.
-static bool ReconstructConvolutionDataFormat(
+static bool ReconstructConvolutionDataFormatForBpropData(
     const ConvolutionDimensionNumbers& dnums,
     tensorflow::TensorFormat& data_format) {
-  // TODO(amprocte): we're checking input_* now, whereas previously there was
-  // only one set of parameters corresponding to both input and output.
   if (dnums.input_batch_dimension() == 0 &&
       dnums.input_feature_dimension() == 1) {
     data_format = tensorflow::FORMAT_NCHW;
@@ -866,8 +864,6 @@ bool NGraphFusionVisitor::FuseConvolutionBpropData(HloInstruction* root) {
   // of TF's usual HWio.
   const ConvolutionDimensionNumbers& dims =
       root->convolution_dimension_numbers();
-  // TODO(amprocte): we're checking input_* now, whereas previously there was
-  // only one set of parameters corresponding to both input and output.
   size_t num_spatial_dims = dims.input_spatial_dimensions().size();
 
   if (dims.kernel_output_feature_dimension() != int64(num_spatial_dims) ||
@@ -879,7 +875,7 @@ bool NGraphFusionVisitor::FuseConvolutionBpropData(HloInstruction* root) {
   // we can't.
   tensorflow::TensorFormat data_format;  // returned by reference
 
-  if (!ReconstructConvolutionDataFormat(dims, data_format)) {
+  if (!ReconstructConvolutionDataFormatForBpropData(dims, data_format)) {
     return false;
   }
 
@@ -997,8 +993,6 @@ static bool TransposeDimensionsMatchConvFilterBpropOutput(
 static bool ReconstructConvolutionDataFormatForBpropFilters(
     const ConvolutionDimensionNumbers& dnums,
     tensorflow::TensorFormat& data_format) {
-  // TODO(amprocte): we're checking input_* now, whereas previously there was
-  // only one set of parameters corresponding to both input and output.
   if (dnums.input_feature_dimension() == 0 &&
       dnums.input_batch_dimension() == 1) {
     data_format = tensorflow::FORMAT_NCHW;
@@ -1109,8 +1103,6 @@ bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
 
   size_t input_first_spatial_axis =
       (data_format == tensorflow::FORMAT_NCHW ? 2 : 1);
-  // TODO(amprocte): we're checking input_* now, whereas previously there was
-  // only one set of parameters corresponding to both input and output.
   size_t num_spatial_dims = dims.input_spatial_dimensions().size();
 
   for (size_t i = 0; i < num_spatial_dims; i++) {
