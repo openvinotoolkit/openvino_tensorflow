@@ -1,3 +1,4 @@
+
 /* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +23,6 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-//#include "tensorflow/compiler/xla/client/padding.h"
 #include "tensorflow/compiler/xla/layout_util.h"
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/service/dfs_hlo_visitor_with_default.h"
@@ -964,25 +964,6 @@ bool NGraphFusionVisitor::FuseConvolutionBpropData(HloInstruction* root) {
   return true;
 }
 
-// Checks to make sure that the transpose dims are of the form
-// [1,2,3,...,n-1,0].
-static bool TransposeDimensionsMatchConvFilterBpropOutput(
-    std::vector<int64> transpose_dims) {
-  if (transpose_dims.size() == 0) {
-    return false;
-  }
-
-  size_t i;
-
-  for (i = 0; i < transpose_dims.size() - 1; i++) {
-    if (transpose_dims[i] != int64(i) + 1) {
-      return false;
-    }
-  }
-
-  return (transpose_dims[i] == 0);
-}
-
 // Given the TF convolution dimensions, attempts to reconstruct the data
 // format (NCHW or NHWC). Returns false if the dimensions are not consistent
 // with NCHW; otherwise, updates "data_format" by reference.
@@ -1007,6 +988,18 @@ static bool ReconstructConvolutionDataFormatForBpropFilters(
   }
 }
 
+// Given a set of convolution dimension numbers, check whether the output
+// format matches the expected, i.e. "HWNC". (Here the N really corresponds
+// to the input-channel dimension and C to the output-channel dimension of
+// the filters.
+static bool CheckOutputDimensionsForBpropFilters(
+    const ConvolutionDimensionNumbers& dnums) {
+  return (dnums.output_batch_dimension() ==
+              dnums.output_spatial_dimensions_size() &&
+          dnums.output_feature_dimension() ==
+              dnums.output_spatial_dimensions_size() + 1);
+}
+
 // Check for convolution backprop to filters:
 //
 //  input   out_delta
@@ -1027,19 +1020,8 @@ static bool ReconstructConvolutionDataFormatForBpropFilters(
 // and "Co" dimensions for out_delta.
 //
 // And where the transpose op is reshaping oHWi to HWio.
-bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
-  if (root->opcode() != HloOpcode::kTranspose) {
-    return false;
-  }
-
-  // This transpose op must match the action expected at the output of
-  // convolution data backprop (a switch from oHWi to HWio).
-  if (!TransposeDimensionsMatchConvFilterBpropOutput(root->dimensions())) {
-    return false;
-  }
-
-  HloInstruction* convolution = root->mutable_operand(0);
-
+bool NGraphFusionVisitor::FuseConvolutionBpropFilters(
+    HloInstruction* convolution) {
   if (convolution->opcode() != HloOpcode::kConvolution) {
     return false;
   }
@@ -1047,10 +1029,16 @@ bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
   HloInstruction* input = convolution->mutable_operand(0);
   HloInstruction* out_delta = convolution->mutable_operand(1);
 
-  // Figure out the data format (either NCHW or NHWC), and give up on fusion if
-  // we can't.
   const ConvolutionDimensionNumbers& dims =
       convolution->convolution_dimension_numbers();
+
+  // Make sure the output format matches what's expected.
+  if (!CheckOutputDimensionsForBpropFilters(dims)) {
+    return false;
+  }
+
+  // Figure out the data format (either NCHW or NHWC), and give up on fusion if
+  // we can't.
   tensorflow::TensorFormat data_format;  // returned by reference
 
   if (!ReconstructConvolutionDataFormatForBpropFilters(dims, data_format)) {
@@ -1079,8 +1067,9 @@ bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
   std::vector<int64> forward_output_shape(
       out_delta->shape().dimensions().begin(),
       out_delta->shape().dimensions().end());
-  std::vector<int64> forward_filter_shape(root->shape().dimensions().begin(),
-                                          root->shape().dimensions().end());
+  std::vector<int64> forward_filter_shape(
+      convolution->shape().dimensions().begin(),
+      convolution->shape().dimensions().end());
 
   // Try to reconstruct the padding type (SAME or VALID), give up on fusion if
   // we can't.
@@ -1139,7 +1128,7 @@ bool NGraphFusionVisitor::FuseConvolutionBpropFilters(HloInstruction* root) {
       ng_forward_padding_below, ng_forward_padding_above,
       (data_format == tensorflow::FORMAT_NCHW));
 
-  FuseInstructions(emitter, {root, convolution});
+  FuseInstructions(emitter, {convolution});
   return true;
 }
 
