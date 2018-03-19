@@ -273,7 +273,8 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
 // PlatformId
 //---------------------------------------------------------------------------
 se::Platform::Id NGraphCompiler::PlatformId() const {
-  return kNGraphPlatformId;
+  static se::Platform::Id bogus;
+  return bogus;
 }
 
 //---------------------------------------------------------------------------
