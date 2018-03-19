@@ -23,7 +23,6 @@ limitations under the License.
 #include "ngraph_emitter.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
-//#include "tensorflow/compiler/xla/service/compiler.h"
 #include "tensorflow/compiler/xla/service/executable.h"
 #include "tensorflow/compiler/xla/service/hlo_module.h"
 #include "tensorflow/compiler/xla/service/hlo_module_config.h"
