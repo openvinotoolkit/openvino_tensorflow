@@ -20,7 +20,6 @@ limitations under the License.
 #include "tensorflow/compiler/xla/status_macros.h"
 #include "tensorflow/compiler/xla/xla_plugin.h"
 
-#include "executable.h"
 #include "ngraph_compiler.h"
 #include "transfer_manager.h"
 
