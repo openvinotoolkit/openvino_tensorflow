@@ -1,4 +1,4 @@
-/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2017-2018 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_COMPILER_NGRAPH_DRIVER_NGRAPH_UTILS_H_
-#define TENSORFLOW_COMPILER_NGRAPH_DRIVER_NGRAPH_UTILS_H_
+#ifndef NGRAPH_UTILS_H_
+#define NGRAPH_UTILS_H_
 
 #include <dlfcn.h>
 #include <stdio.h>
@@ -130,4 +130,4 @@ tensorflow::Status MaybeAddAxesShuffle(
 }  // namespace ngraph_plugin
 }  // namespace xla
 
-#endif  // TENSORFLOW_COMPILER_NGRAPH_DRIVER_NGRAPH_UTILS_H_
+#endif  // NGRAPH_UTILS_H_

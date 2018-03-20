@@ -71,11 +71,6 @@ TransferManager::TransferLiteralFromDevice(
 xla::Status TransferManager::TransferLiteralToDevice(
     perftools::gputools::StreamExecutor* executor, const xla::Literal& literal,
     const xla::ShapedBuffer& device_buffer) {
-  const xla::Shape& shape = literal.shape();
-  // std::cout << "transferring literal shape to device: "
-  //           << ShapeUtil::HumanString(shape) << "; device location: "
-  //           << device_buffer.buffer(/*index=*/{}).opaque() << std::endl;
-
   // The on-host and on-device shape should always be the same for the generic
   // transfer manager.
   TF_RET_CHECK(xla::ShapeUtil::Equal(device_buffer.on_device_shape(),
@@ -84,11 +79,7 @@ xla::Status TransferManager::TransferLiteralToDevice(
   TF_RET_CHECK(xla::ShapeUtil::Compatible(literal.shape(),
                                           device_buffer.on_host_shape()));
 
-  // std::cout << "Executor Device: " << executor->device_ordinal()
-  //           << " Buffer Device Ordinal: " << device_buffer.device_ordinal()
-  //           << " device_buffer: " << device_buffer << std::endl;
   TF_RET_CHECK(executor->device_ordinal() == device_buffer.device_ordinal());
-
   TF_RETURN_IF_ERROR(WriteTupleIndexTables(executor, device_buffer));
 
   return xla::ShapeUtil::ForEachSubshapeWithStatus(

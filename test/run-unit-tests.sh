@@ -34,11 +34,6 @@ fi
 # The directory of this script
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# # TensorFlow source directory, hard coded to 5 dirs upwards
-# # ngraph-tensorflow/tensorflow/compiler/plugin/ngraph/tools
-# # [5]               [4]        [3]      [2]    [1]    [0]
-# TF_DIR_RELATIVE=${THIS_SCRIPT_DIR}/../../../../..
-
 # # Convert TF_DIR to an absolute path, using a technique that works on all relevant platforms.
 # TF_DIR="$(cd "${TF_DIR_RELATIVE}"; pwd)"
 TF_DIR="${THIS_SCRIPT_DIR}"
@@ -276,10 +271,6 @@ declare -a enabled_tests=(
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
-# ngraph/tests:simple_test_dynamic_plugin
-test_target="tensorflow/compiler/plugin/ngraph/tests:simple_test_dynamic_plugin"
-build_and_run_tests ${test_target} "SimpleTest.*"
-
 # xla/tests:dot_operation_test
 test_target="tensorflow/compiler/xla/tests:dot_operation_test_dynamic_plugin"
 declare -a enabled_tests=(
@@ -481,33 +472,6 @@ declare -a enabled_tests=(
     "Reverse2x0x4x3FloatArrayDim13"
     # "Reverse4DU8ArrayOnDim23"
     "Reverse4DFloatArrayOnDim01"
-)
-build_and_run_tests ${test_target} ${enabled_tests[@]}
-
-# xla/tests:reduce_window_test_dynamic_plugin
-test_target="tensorflow/compiler/xla/tests:reduce_window_test_dynamic_plugin"
-declare -a enabled_tests=(
-  "Min3In5Stride2"
-  # "ZeroElementSmall" # has padding
-  # "NonSquareSmall"  # has padding
-  "MiddleDimsSmall"
-  # "Along2ndMinorDim"  # has padding
-  # "AmongMajor2Dims"  # has padding
-  # "AmongMajor2DimsMediumSize"  # has padding
-  "DISABLED_AmongMajor2DimsMediumSizeLargePadding"
-  "Add1x1x2In2x1x2"
-  "Add1x1x2In2x1x3Stride1x1x2"
-  # "Add1x1x2In2x1x3SamePad"  # has padding
-  "NonstandardReduceFunction"
-  # "R4UnitWindow"   # has padding
-  "R4SecondMinorStride"
-  # "R4SecondMinorUnitStride"  # has padding
-  # "R4SecondMinorWin"  # has padding
-  # "AmongMajor2DimsMultipleMinor"  # has padding
-  "Add24In1152_NoOverlap"
-  "Add128In128Stride128"
-  # "R2ReduceWindowInceptionFromBroadcast"  # has padding
-  # "R2ReduceWindowNonOverlappingFromBroadcast"  # has padding
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
