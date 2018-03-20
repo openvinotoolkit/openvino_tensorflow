@@ -62,7 +62,6 @@ bool Init(perftools::gputools::Platform::Id platform_id) {
   std::string dso_path(dlInfo.dli_fname);
   size_t loc = dso_path.find_last_of("/\\");
   std::string ngraph_directory = dso_path.substr(0, loc);
-  VLOG(1) << "Plugin DSO location: " << ngraph_directory;
 
   auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
                        RTLD_NOW | RTLD_GLOBAL);
