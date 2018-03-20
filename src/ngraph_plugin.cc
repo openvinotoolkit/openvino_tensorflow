@@ -1,17 +1,18 @@
-/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-==============================================================================*/
+/*******************************************************************************
+ * Copyright 2017-2018 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 
 #include <dlfcn.h>
 #include <iostream>
@@ -27,8 +28,6 @@ limitations under the License.
 //  Misc. function declarations
 //-----------------------------------------------------------------------------
 
-static void print_embeded_computation(const xla::HloComputation* computation,
-                                      int nest_level = 0);
 static xla::plugin::DeviceInfo s_DeviceInfo = {"nGraphDevice", "NGRAPH",
                                                "NGRAPH_JIT", 1};
 
@@ -67,18 +66,16 @@ bool Init(perftools::gputools::Platform::Id platform_id) {
   auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
                        RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
-    std::cerr << "Error loading the plugin library. "
-                 "nGraph device won't be available"
-              << std::endl;
+    LOG(WARNING) << "Error loading the plugin library. "
+                    "nGraph device won't be available";
     return false;
   }
 
   handle = dlopen((ngraph_directory + "/libngraph.so").c_str(),
                   RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
-    std::cerr << "Error loading the plugin library. "
-                 "nGraph device won't be available"
-              << std::endl;
+    LOG(WARNING) << "Error loading the plugin library. "
+                    "nGraph device won't be available";
     return false;
   }
 
@@ -113,17 +110,6 @@ std::unique_ptr<xla::Executable> RunBackend(
 //-----------------------------------------------------------------------------
 // Utility functions
 //-----------------------------------------------------------------------------
-static void print_embeded_computation(const xla::HloComputation* computation,
-                                      int nest_level) {
-  auto embedded_computations = computation->MakeEmbeddedComputationsList();
-  std::cout << "NGRAPH_COMPILER  computation: " << computation->name()
-            << "; nest_level: " << nest_level
-            << "; num_embedded: " << embedded_computations.size() << std::endl;
-  std::cout << computation->ToString() << std::endl;
-  for (auto embedded_computation : embedded_computations) {
-    print_embeded_computation(embedded_computation, nest_level + 1);
-  }
-}
 
 //-----------------------------------------------------------------------------
 //  Global data for this Plugin

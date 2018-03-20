@@ -11,47 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.1)
-
-project (ngraph_plugin CXX)
-set(NGRAPH_VERSION 0.0)
-set(NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME ngraph_plugin)
-
-# set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare")
-
-# These variables are undocumented but useful.
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
-execute_process(
-    COMMAND 
-    python -c "import tensorflow as tf; print(tf.sysconfig.get_include())"
-    OUTPUT_VARIABLE TEMP
-)
-string(REGEX REPLACE "\n$" "" TENSORFLOW_INCLUDE_DIR "${TEMP}")
-
-execute_process(
-    COMMAND 
-    python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())"
-    OUTPUT_VARIABLE TEMP
-)
-string(REGEX REPLACE "\n$" "" TENSORFLOW_DIR "${TEMP}")
-
-
-# Link the ngraph stuff
-set( NGRAPH_DIR $ENV{HOME}/ngraph_dist)
-
-MESSAGE( STATUS "TENSORFLOW_DIR: " ${TENSORFLOW_DIR} )
-MESSAGE( STATUS "TENSORFLOW_INCLUDE_DIR: " ${TENSORFLOW_INCLUDE_DIR} )
-MESSAGE( STATUS "NGRAPH_DIR: " ${NGRAPH_DIR} )
-
-include_directories( ${TENSORFLOW_INCLUDE_DIR} )
-include_directories( ${TENSORFLOW_INCLUDE_DIR}/external/nsync/public )
-include_directories( ${NGRAPH_DIR}/include )
-
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 add_library( tensorflow_xla_plugin_framework SHARED IMPORTED)
 set_target_properties( 
     tensorflow_xla_plugin_framework 
@@ -97,10 +56,19 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=1 
 )
 
-set( NGRAPH_INSTALL_DIR ${TENSORFLOW_DIR}/plugins)
-message( STATUS "NGRAPH_INSTALL_DIR: " ${NGRAPH_INSTALL_DIR})
+# uninstall target
+if(NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.in.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        IMMEDIATE @ONLY)
 
-set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_DIR})
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
+
+
+message( STATUS "NGRAPH_INSTALL_DIR: " ${NGRAPH_INSTALL_DIR})
 
 install(
     TARGETS 
