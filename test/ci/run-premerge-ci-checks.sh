@@ -14,6 +14,13 @@ if [ ! -e $TF_ROOT ]; then
     exit 1
 fi
 
+# Copy the scripts to the TensorFlow directory
+cp run-unit-tests.sh $TF_ROOT
+if [ ! -e $TF_ROOT/run-unit-tests.sh ]; then
+    echo "Cannot copy scripts to TensorFlow installation directory: " $TF_ROOT/run-unit-tests.sh
+    exit 1
+fi
+
 pushd "$TF_ROOT"
 
 #===================================================================================================
