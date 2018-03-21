@@ -21,8 +21,8 @@
 #include <sstream>
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph_autobroadcast.h"
 #include "ngraph_log.h"
