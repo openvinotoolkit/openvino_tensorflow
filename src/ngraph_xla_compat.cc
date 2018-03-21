@@ -171,11 +171,11 @@ ngraph::runtime::TensorViewPtrs flatten(
 }
 
 void call(shared_ptr<ngraph::runtime::CallFrame> call_frame,
-          const ngraph::runtime::TensorViewPtrs& inputs,
-          const ngraph::runtime::TensorViewPtrs& outputs) {
-  ngraph::runtime::TensorViewPtrs flat_inputs(flatten(inputs));
+          const ngraph::runtime::TensorViewPtrs& outputs,
+          const ngraph::runtime::TensorViewPtrs& inputs) {
   ngraph::runtime::TensorViewPtrs flat_outputs(flatten(outputs));
-  call_frame->tensor_call(flat_inputs, flat_outputs);
+  ngraph::runtime::TensorViewPtrs flat_inputs(flatten(inputs));
+  call_frame->tensor_call(flat_outputs, flat_inputs);
 }
 
 }  // namespace compat

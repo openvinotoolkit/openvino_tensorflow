@@ -224,7 +224,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
   // Call the nGraph executable.
   auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
-  call_frame->call(ng_input_tv_list, ng_result_tv_list);
+  call_frame->call(ng_result_tv_list, ng_input_tv_list);
 
   // Copy data back from the nGraph result tensors to each corresponding leaf
   // buffer.
