@@ -35,10 +35,10 @@ limitations under the License.
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph/type/type.hpp"
 #include "ngraph_xla_compat.h"
 
 using namespace std;
@@ -171,11 +171,11 @@ ngraph::runtime::TensorViewPtrs flatten(
 }
 
 void call(shared_ptr<ngraph::runtime::CallFrame> call_frame,
-          const ngraph::runtime::TensorViewPtrs& inputs,
-          const ngraph::runtime::TensorViewPtrs& outputs) {
-  ngraph::runtime::TensorViewPtrs flat_inputs(flatten(inputs));
+          const ngraph::runtime::TensorViewPtrs& outputs,
+          const ngraph::runtime::TensorViewPtrs& inputs) {
   ngraph::runtime::TensorViewPtrs flat_outputs(flatten(outputs));
-  call_frame->tensor_call(flat_inputs, flat_outputs);
+  ngraph::runtime::TensorViewPtrs flat_inputs(flatten(inputs));
+  call_frame->tensor_call(flat_outputs, flat_inputs);
 }
 
 }  // namespace compat

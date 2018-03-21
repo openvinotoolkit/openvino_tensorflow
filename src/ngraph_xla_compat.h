@@ -40,7 +40,7 @@ limitations under the License.
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace xla {
 namespace ngraph_plugin {
