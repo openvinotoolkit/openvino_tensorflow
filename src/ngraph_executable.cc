@@ -30,13 +30,13 @@ limitations under the License.
 ==============================================================================*/
 
 #include "ngraph_executable.h"
-#include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
+#include "ngraph_xla_compat.h"
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/service/hlo_evaluator.h"
 #include "tensorflow/compiler/xla/shape_util.h"

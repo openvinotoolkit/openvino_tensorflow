@@ -20,7 +20,6 @@
 #include <memory>
 #include <sstream>
 
-#include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/get_output_element.hpp"
@@ -28,6 +27,7 @@
 #include "ngraph_autobroadcast.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
+#include "ngraph_xla_compat.h"
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/service/shape_inference.h"
 #include "tensorflow/compiler/xla/shape_util.h"
@@ -767,8 +767,8 @@ Status NGraphEmitter::ProcessTuple(
     auto& ng_op = m_op_map.at(operand);
     ng_ops_vector.push_back(ng_op);
   }
-  auto ng_op = std::make_shared<ngraph::xla::op::Tuple>(
-      ngraph::NodeVector{ng_ops_vector});
+  auto ng_op =
+      std::make_shared<compat::op::Tuple>(ngraph::NodeVector{ng_ops_vector});
 
   m_op_map[tuple] = ng_op;
   m_tuple_op_map_vector[tuple] = ng_ops_vector;
@@ -780,8 +780,8 @@ Status NGraphEmitter::ProcessTuple(
 //-----------------------------------------------------------------------------
 //  NGraphEmitter::NGraphFunction
 //-----------------------------------------------------------------------------
-StatusOr<std::shared_ptr<ngraph::xla::XLAFunction>>
-NGraphEmitter::NGraphFunction(const HloInstruction* root_instruction) {
+StatusOr<std::shared_ptr<compat::XLAFunction>> NGraphEmitter::NGraphFunction(
+    const HloInstruction* root_instruction) {
   // Get the parameters from the graph
   std::vector<std::shared_ptr<ngraph::Node>> ng_parameter_list;
 
@@ -800,9 +800,9 @@ NGraphEmitter::NGraphFunction(const HloInstruction* root_instruction) {
 
   std::vector<std::shared_ptr<ngraph::Node>> ng_roots_list{ng_root_instruction};
 
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_function =
-      std::make_shared<ngraph::xla::XLAFunction>(ng_roots_list,
-                                                 ng_parameter_list, "");
+  std::shared_ptr<compat::XLAFunction> ng_function =
+      std::make_shared<compat::XLAFunction>(ng_roots_list, ng_parameter_list,
+                                            "");
 
   return ng_function;
 }
@@ -826,7 +826,7 @@ Status NGraphEmitter::ProcessReduce(HloInstruction* reduce,
   TF_CHECK_OK(function_instruction->Accept(embedded_emitter.GetVisitor()));
 
   // Get the ngraph::function from the visited sub-graph
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_function;
+  std::shared_ptr<compat::XLAFunction> ng_function;
   TF_ASSIGN_OR_RETURN(ng_function,
                       embedded_emitter.NGraphFunction(function_instruction));
 
@@ -892,7 +892,7 @@ Status NGraphEmitter::ProcessReduceWindow(HloInstruction* reduce_window,
   TF_CHECK_OK(function_instruction->Accept(embedded_emitter.GetVisitor()));
 
   // Get the ngraph::function from the visited sub-graph
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_reduction_function;
+  std::shared_ptr<compat::XLAFunction> ng_reduction_function;
   TF_ASSIGN_OR_RETURN(ng_reduction_function,
                       embedded_emitter.NGraphFunction(function_instruction));
 
@@ -964,8 +964,8 @@ Status NGraphEmitter::ProcessSelectAndScatter(
   TF_CHECK_OK(select_function_instruction->Accept(
       select_embedded_emitter.GetVisitor()));
 
-  // Get the ngraph::function from the visited sub-graph
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_select_function;
+  // Get the XLAFunction from the visited sub-graph
+  std::shared_ptr<compat::XLAFunction> ng_select_function;
   TF_ASSIGN_OR_RETURN(
       ng_select_function,
       select_embedded_emitter.NGraphFunction(select_function_instruction));
@@ -979,7 +979,7 @@ Status NGraphEmitter::ProcessSelectAndScatter(
   TF_CHECK_OK(scatter_embedded_emitter.Initialize());
   TF_CHECK_OK(scatter_function_instruction->Accept(
       scatter_embedded_emitter.GetVisitor()));
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_scatter_function;
+  std::shared_ptr<compat::XLAFunction> ng_scatter_function;
   TF_ASSIGN_OR_RETURN(
       ng_scatter_function,
       scatter_embedded_emitter.NGraphFunction(scatter_function_instruction));
@@ -1318,7 +1318,7 @@ Status NGraphEmitter::ProcessBatchNormTraining(HloInstruction* bnt) {
     ng_output_op = std::make_shared<ngraph::op::Reshape>(
         ng_output_op, axis_order, reshaped_shape);
 
-    ng_result_op = std::make_shared<ngraph::xla::op::Tuple>(
+    ng_result_op = std::make_shared<compat::op::Tuple>(
         ngraph::NodeVector{ng_output_op, ng_mean_op, ng_variance_op});
   }
 
@@ -1427,7 +1427,7 @@ Status NGraphEmitter::ProcessBatchNormGrad(HloInstruction* bng) {
     ng_input_delta_op = std::make_shared<ngraph::op::Reshape>(
         ng_input_delta_op, axis_order, reshaped_shape);
 
-    ng_result_op = std::make_shared<ngraph::xla::op::Tuple>(ngraph::NodeVector{
+    ng_result_op = std::make_shared<compat::op::Tuple>(ngraph::NodeVector{
         ng_input_delta_op, ng_gamma_delta_op, ng_beta_delta_op});
   }
 

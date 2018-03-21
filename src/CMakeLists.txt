@@ -38,6 +38,7 @@ set( SRC
    ngraph_utils.cc
    ngraph_fusion.cc
    ngraph_executable.cc
+   ngraph_xla_compat.cc
 )
 
 add_library( ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} SHARED ${SRC} )

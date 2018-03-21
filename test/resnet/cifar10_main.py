@@ -185,7 +185,7 @@ def cifar10_model_fn(features, labels, mode):
   tf.summary.image('images', features, max_outputs=6)
   with tf.device('/job:localhost/replica:0/task:0/device:'+FLAGS.select_device+':0'):
       network = resnet_model.cifar10_resnet_v2_generator(
-          FLAGS.resnet_size, NUM_CLASSES)#,data_format='channels_last')
+          FLAGS.resnet_size, NUM_CLASSES,data_format='channels_first')
 
       inputs = tf.reshape(features, [-1, HEIGHT, WIDTH, DEPTH])
       logits = network(inputs, mode == tf.estimator.ModeKeys.TRAIN)
