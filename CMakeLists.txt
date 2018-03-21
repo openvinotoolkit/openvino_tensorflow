@@ -18,6 +18,7 @@ set(NGRAPH_VERSION 0.0)
 set(NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME ngraph_plugin)
 
 # set(CMAKE_CXX_COMPILER "clang++")
+include(ExternalProject)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare")
 
 # These variables are undocumented but useful.
@@ -40,7 +41,21 @@ string(REGEX REPLACE "\n$" "" TENSORFLOW_DIR "${TEMP}")
 
 
 # Link the ngraph stuff
-set( NGRAPH_DIR $ENV{HOME}/ngraph_dist)
+ExternalProject_Add(
+    ext_ngraph
+    GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
+    GIT_TAG v0.1.0-rc1
+    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+    TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"                           
+    STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"                       
+    DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"                 
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/src"                        
+    BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/build"                      
+    UPDATE_COMMAND ""
+)
+
+
+set( NGRAPH_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 
 MESSAGE( STATUS "TENSORFLOW_DIR: " ${TENSORFLOW_DIR} )
 MESSAGE( STATUS "TENSORFLOW_INCLUDE_DIR: " ${TENSORFLOW_INCLUDE_DIR} )
