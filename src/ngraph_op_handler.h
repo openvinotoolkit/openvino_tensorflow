@@ -48,8 +48,9 @@ limitations under the License.
 // |---------------------|-------------------------------------------|---------|
 // | kAbs                | NGraphOpHandler::HandleElementwiseUnary   |YES
 // | kAdd                | NGraphOpHandler::HandleElementwiseBinary  |YES
-// | kBatchNormGrad      | NGraphOpHandler::HandleBatchNormGrad      |
-// | kBatchNormTraining  | NGraphOpHandler::HandleBatchNormTraining  |
+// | kBatchNormGrad      | NGraphOpHandler::HandleBatchNormGrad      |YES
+// | kBatchNormInference | NGraphOpHandler::HandleBatchNormInference |YES
+// | kBatchNormTraining  | NGraphOpHandler::HandleBatchNormTraining  |YES
 // | kBitcast            | NGraphOpHandler::HandleBitcast            |
 // | kBroadcast          | NGraphOpHandler::HandleBroadcast          |YES
 // | kCall               | NGraphOpHandler::HandleCall               |
@@ -166,11 +167,15 @@ class NGraphOpHandler : private DfsHloVisitorWithDefault {
   }
 
   Status HandleBatchNormTraining(HloInstructionPtr hlo) final {
-    return DefaultAction(hlo);
+    return ProcessBatchNormTraining(hlo);
+  }
+
+  Status HandleBatchNormInference(HloInstructionPtr hlo) final {
+    return ProcessBatchNormInference(hlo);
   }
 
   Status HandleBatchNormGrad(HloInstructionPtr hlo) final {
-    return DefaultAction(hlo);
+    return ProcessBatchNormGrad(hlo);
   }
 
   Status HandleClamp(HloInstructionPtr clamp) final {
@@ -299,6 +304,24 @@ class NGraphOpHandler : private DfsHloVisitorWithDefault {
   // class as is to determine which opetations are handled by the ngraph
   virtual Status ProcessElementwiseBinary(HloInstruction* hlo,
                                           HloOpcode opcode) {
+    m_ostream << GetSupportedInstructionMsg(hlo);
+    NGRAPH_VLOG(1) << GetSupportedInstructionMsg(hlo);
+    return Status::OK();
+  }
+
+  virtual Status ProcessBatchNormTraining(HloInstruction* hlo) {
+    m_ostream << GetSupportedInstructionMsg(hlo);
+    NGRAPH_VLOG(1) << GetSupportedInstructionMsg(hlo);
+    return Status::OK();
+  }
+
+  virtual Status ProcessBatchNormInference(HloInstruction* hlo) {
+    m_ostream << GetSupportedInstructionMsg(hlo);
+    NGRAPH_VLOG(1) << GetSupportedInstructionMsg(hlo);
+    return Status::OK();
+  }
+
+  virtual Status ProcessBatchNormGrad(HloInstruction* hlo) {
     m_ostream << GetSupportedInstructionMsg(hlo);
     NGRAPH_VLOG(1) << GetSupportedInstructionMsg(hlo);
     return Status::OK();
