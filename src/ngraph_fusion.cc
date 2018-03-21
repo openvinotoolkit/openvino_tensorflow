@@ -247,7 +247,7 @@ static inline bool ReconstructDataFormatFromPoolingWindow(
   // Both the batch and channel dimension will have to have size, stride, and
   // dilations of 1, and padding of 0.
   auto check_dimension = [](const WindowDimension& dim) -> bool {
-    return (dim.size() && 1 && dim.stride() == 1 && dim.padding_low() == 0 &&
+    return (dim.size() == 1 && dim.stride() == 1 && dim.padding_low() == 0 &&
             dim.padding_high() == 0 && dim.window_dilation() == 1 &&
             dim.base_dilation() == 1);
   };
@@ -464,11 +464,25 @@ static bool MatchAvgPoolDivideByCountRHSPostBroadcast(
                                           matched_instructions);
 }
 
+static bool MatchBroadcastedConstant(
+    HloInstruction* root, std::vector<HloInstruction*>& matched_instructions) {
+  if (root->opcode() == HloOpcode::kBroadcast) {
+    matched_instructions.push_back(root);
+    root = root->mutable_operand(0);
+  }
+
+  if (root->opcode() == HloOpcode::kConstant) {
+    matched_instructions.push_back(root);
+    return true;
+  }
+
+  return false;
+}
+
 static bool MatchAvgPoolDivideByCountRHS(
     HloInstruction* root, std::vector<HloInstruction*>& matched_instructions,
     bool& is_valid_padding) {
-  if (root->opcode() == HloOpcode::kConstant) {
-    matched_instructions.push_back(root);
+  if (MatchBroadcastedConstant(root, matched_instructions)) {
     is_valid_padding = true;
     return true;
   }

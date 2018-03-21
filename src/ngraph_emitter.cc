@@ -20,7 +20,10 @@
 #include <memory>
 #include <sstream>
 
+#include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph_autobroadcast.h"
 #include "ngraph_log.h"
@@ -1239,6 +1242,200 @@ Status NGraphEmitter::ProcessPad(HloInstruction* pad) {
   // Save ng_op in op_map
   m_op_map[pad] = ng_pad_op;
   m_instruction_list.push_back({pad->ToString(), ng_pad_op->get_name()});
+
+  return Status::OK();
+}
+
+//-----------------------------------------------------------------------------
+// NGraphEmitter::ProcessBatchNormTraining()
+//-----------------------------------------------------------------------------
+Status NGraphEmitter::ProcessBatchNormTraining(HloInstruction* bnt) {
+  const HloInstruction* operand_input = bnt->operand(0);
+  const HloInstruction* operand_gamma = bnt->operand(1);
+  const HloInstruction* operand_beta = bnt->operand(2);
+
+  double epsilon = bnt->epsilon();
+
+  std::shared_ptr<ngraph::Node> ng_input_op =
+      m_op_map.find(operand_input)->second;
+  std::shared_ptr<ngraph::Node> ng_gamma_op =
+      m_op_map.find(operand_gamma)->second;
+  std::shared_ptr<ngraph::Node> ng_beta_op =
+      m_op_map.find(operand_beta)->second;
+
+  // If the normed axis is not 1, we will need to move the normed axis into
+  // that position.
+  if (bnt->feature_index() != 1) {
+    const ngraph::Shape& input_shape = ng_input_op->get_shape();
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < input_shape.size(); i++) {
+      if (i != bnt->feature_index()) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(input_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + 1, bnt->feature_index());
+    reshaped_shape.insert(reshaped_shape.begin() + 1,
+                          input_shape[bnt->feature_index()]);
+
+    ng_input_op = std::make_shared<ngraph::op::Reshape>(ng_input_op, axis_order,
+                                                        reshaped_shape);
+  }
+
+  std::shared_ptr<ngraph::Node> ng_result_op =
+      std::make_shared<ngraph::op::BatchNorm>(epsilon, ng_gamma_op, ng_beta_op,
+                                              ng_input_op);
+
+  std::shared_ptr<ngraph::Node> ng_output_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 0);
+  std::shared_ptr<ngraph::Node> ng_mean_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 1);
+  std::shared_ptr<ngraph::Node> ng_variance_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 2);
+
+  // If the normed axis is not 1, we will need to undo the reshaping we did
+  // above, on output 0 of the batch-norm op. We then have to glue the results
+  // back together with xla::op::Tuple.
+  if (bnt->feature_index() != 1) {
+    const ngraph::Shape& output_shape = ng_result_op->get_output_shape(0);
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < output_shape.size(); i++) {
+      if (i != 1) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(output_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + bnt->feature_index(), 1);
+    reshaped_shape.insert(reshaped_shape.begin() + bnt->feature_index(),
+                          output_shape[1]);
+
+    ng_output_op = std::make_shared<ngraph::op::Reshape>(
+        ng_output_op, axis_order, reshaped_shape);
+
+    ng_result_op = std::make_shared<ngraph::xla::op::Tuple>(
+        ngraph::NodeVector{ng_output_op, ng_mean_op, ng_variance_op});
+  }
+
+  // Because this is a multi-output (tuple-typed) op, we need to put it in the
+  // tuple op map.
+  m_tuple_op_map_vector[bnt] =
+      ngraph::NodeVector{ng_output_op, ng_mean_op, ng_variance_op};
+  m_instruction_list.push_back({bnt->ToString(), ng_result_op->get_name()});
+  return Status::OK();
+}
+
+//-----------------------------------------------------------------------------
+// NGraphEmitter::ProcessBatchNormGrad()
+//-----------------------------------------------------------------------------
+Status NGraphEmitter::ProcessBatchNormGrad(HloInstruction* bng) {
+  const HloInstruction* operand_input = bng->operand(0);
+  const HloInstruction* operand_gamma = bng->operand(1);
+  const HloInstruction* operand_mean = bng->operand(2);
+  const HloInstruction* operand_variance = bng->operand(3);
+  const HloInstruction* operand_delta = bng->operand(4);
+
+  double epsilon = bng->epsilon();
+
+  std::shared_ptr<ngraph::Node> ng_input_op =
+      m_op_map.find(operand_input)->second;
+  std::shared_ptr<ngraph::Node> ng_gamma_op =
+      m_op_map.find(operand_gamma)->second;
+  std::shared_ptr<ngraph::Node> ng_mean_op =
+      m_op_map.find(operand_mean)->second;
+  std::shared_ptr<ngraph::Node> ng_variance_op =
+      m_op_map.find(operand_variance)->second;
+  std::shared_ptr<ngraph::Node> ng_delta_op =
+      m_op_map.find(operand_delta)->second;
+
+  // If the normed axis is not 1, we will need to move the normed axis into
+  // that position, both for the input and for the output delta.
+  if (bng->feature_index() != 1) {
+    const ngraph::Shape& input_shape = ng_input_op->get_shape();
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < input_shape.size(); i++) {
+      if (i != bng->feature_index()) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(input_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + 1, bng->feature_index());
+    reshaped_shape.insert(reshaped_shape.begin() + 1,
+                          input_shape[bng->feature_index()]);
+
+    ng_input_op = std::make_shared<ngraph::op::Reshape>(ng_input_op, axis_order,
+                                                        reshaped_shape);
+    ng_delta_op = std::make_shared<ngraph::op::Reshape>(ng_delta_op, axis_order,
+                                                        reshaped_shape);
+  }
+
+  // TODO(amprocte): We are temporarily supplying a fake value for beta here
+  // (all NaN, same shape/et as gamma), because XLA does not give beta to us.
+  // This should work because nGraph should not actually use beta. The nGraph
+  // op may change to discard this parameter. Update this when nGraph does.
+  std::shared_ptr<ngraph::Node> ng_nan_scalar_op =
+      std::make_shared<ngraph::op::Constant>(ng_gamma_op->get_element_type(),
+                                             ngraph::Shape{},
+                                             std::vector<std::string>{"NAN"});
+  ngraph::AxisSet ng_broadcast_axes;
+  for (size_t i = 0; i < ng_gamma_op->get_shape().size(); i++) {
+    ng_broadcast_axes.insert(i);
+  }
+  std::shared_ptr<ngraph::Node> ng_nan_tensor_op =
+      std::make_shared<ngraph::op::Broadcast>(
+          ng_nan_scalar_op, ng_gamma_op->get_shape(), ng_broadcast_axes);
+
+  std::shared_ptr<ngraph::Node> ng_result_op =
+      std::make_shared<ngraph::op::BatchNormBackprop>(
+          epsilon, ng_gamma_op, /*beta=*/ng_nan_tensor_op, ng_input_op,
+          ng_mean_op, ng_variance_op, ng_delta_op);
+
+  std::shared_ptr<ngraph::Node> ng_input_delta_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 0);
+  std::shared_ptr<ngraph::Node> ng_gamma_delta_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 1);
+  std::shared_ptr<ngraph::Node> ng_beta_delta_op =
+      std::make_shared<ngraph::op::GetOutputElement>(ng_result_op, 2);
+
+  // If the normed axis is not 1, we will need to undo the reshaping we did
+  // above, on output 0 of the batch-norm op. We then have to glue the results
+  // back together with xla::op::Tuple.
+  if (bng->feature_index() != 1) {
+    const ngraph::Shape& output_shape = ng_result_op->get_output_shape(0);
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < output_shape.size(); i++) {
+      if (i != 1) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(output_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + bng->feature_index(), 1);
+    reshaped_shape.insert(reshaped_shape.begin() + bng->feature_index(),
+                          output_shape[1]);
+
+    ng_input_delta_op = std::make_shared<ngraph::op::Reshape>(
+        ng_input_delta_op, axis_order, reshaped_shape);
+
+    ng_result_op = std::make_shared<ngraph::xla::op::Tuple>(ngraph::NodeVector{
+        ng_input_delta_op, ng_gamma_delta_op, ng_beta_delta_op});
+  }
+
+  // Because this is a multi-output (tuple-typed) op, we need to put it in the
+  // tuple op map.
+  m_tuple_op_map_vector[bng] = ngraph::NodeVector{
+      ng_input_delta_op, ng_gamma_delta_op, ng_beta_delta_op};
+  m_instruction_list.push_back({bng->ToString(), ng_result_op->get_name()});
 
   return Status::OK();
 }
