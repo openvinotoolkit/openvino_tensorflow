@@ -19,11 +19,11 @@
 
 #include <string>
 #include <vector>
-#include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph_log.h"
 #include "ngraph_op_handler.h"
 #include "ngraph_utils.h"
+#include "ngraph_xla_compat.h"
 #include "tensorflow/compiler/xla/service/dfs_hlo_visitor_with_default.h"
 #include "tensorflow/compiler/xla/service/hlo_computation.h"
 #include "tensorflow/compiler/xla/service/hlo_instruction.h"
@@ -72,7 +72,7 @@ class NGraphEmitter : private NGraphOpHandler {
     return m_parameter_number_map;
   }
 
-  StatusOr<std::shared_ptr<ngraph::xla::XLAFunction>> NGraphFunction(
+  StatusOr<std::shared_ptr<compat::XLAFunction>> NGraphFunction(
       const HloInstruction* root_instruction);
 
   // TODO: CLEANUP Remove Debug
@@ -441,7 +441,7 @@ class NGraphBuilder {
   // TODO: CLEANUP Remove Debug
   void DebugPrintInstructionsList() { m_emitter.DebugPrintInstructionsList(); }
 
-  StatusOr<std::shared_ptr<ngraph::xla::XLAFunction>> NGraphFunction(
+  StatusOr<std::shared_ptr<compat::XLAFunction>> NGraphFunction(
       const HloInstruction* root_instruction) {
     if (!m_emitter.Visited()) {
       return FailedPrecondition(

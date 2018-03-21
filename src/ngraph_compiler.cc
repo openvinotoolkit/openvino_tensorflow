@@ -185,7 +185,7 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
   builder.DebugPrintInstructionsList();
 
   // Create the nGraph function operator
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_function;
+  std::shared_ptr<compat::XLAFunction> ng_function;
   TF_ASSIGN_OR_RETURN(ng_function, builder.NGraphFunction(root_instruction));
 
   // Serialize
