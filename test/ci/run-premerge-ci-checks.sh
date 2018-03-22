@@ -8,7 +8,10 @@ echo "**************************************************************************
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-TF_ROOT="$THIS_SCRIPT_DIR"/../../../ngraph-tensorflow
+if [ -z ${TF_ROOT+x} ]; then
+    TF_ROOT="$THIS_SCRIPT_DIR"/../../../ngraph-tensorflow
+fi
+
 if [ ! -e $TF_ROOT ]; then
     echo "TensorFlow installation directory not found: " $TF_ROOT
     exit 1
