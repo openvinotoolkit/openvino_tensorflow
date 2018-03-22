@@ -112,8 +112,8 @@ std::shared_ptr<ngraph::runtime::TensorView> get_tuple_element(
 
 /// Invoke a call frame where some arguments might be XLATuples
 void call(std::shared_ptr<ngraph::runtime::CallFrame> call_frame,
-          const ngraph::runtime::TensorViewPtrs& inputs,
-          const ngraph::runtime::TensorViewPtrs& outputs);
+          const ngraph::runtime::TensorViewPtrs& outputs,
+          const ngraph::runtime::TensorViewPtrs& inputs);
 }
 }
 }
