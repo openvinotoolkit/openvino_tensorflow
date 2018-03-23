@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 add_library( tensorflow_xla_plugin_framework SHARED IMPORTED)
 set_target_properties( 
     tensorflow_xla_plugin_framework 
@@ -24,6 +25,7 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION 
     ${NGRAPH_DIR}/lib/libngraph.so
 )
+add_dependencies(ngraph_lib ext_ngraph)
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
