@@ -77,7 +77,7 @@ StatusOr<std::unique_ptr<HloModule>> NGraphCompiler::RunHloPasses(
   if (getenv("XLA_NGRAPH_SKIP_FUSION") == nullptr)
     pipeline.AddPass<HloPassFix<NGraphFusion>>(&m_fusion_map);
 
-  TF_ASSIGN_OR_RETURN(bool changed, pipeline.Run(hlo_module.get()));
+  TF_CHECK_OK(pipeline.Run(hlo_module.get()).status());
 
   return std::move(hlo_module);
 }
@@ -185,7 +185,7 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
   builder.DebugPrintInstructionsList();
 
   // Create the nGraph function operator
-  std::shared_ptr<ngraph::xla::XLAFunction> ng_function;
+  std::shared_ptr<compat::XLAFunction> ng_function;
   TF_ASSIGN_OR_RETURN(ng_function, builder.NGraphFunction(root_instruction));
 
   // Serialize

@@ -30,13 +30,13 @@ limitations under the License.
 ==============================================================================*/
 
 #include "ngraph_executable.h"
-#include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
+#include "ngraph_xla_compat.h"
 #include "tensorflow/compiler/xla/literal_util.h"
 #include "tensorflow/compiler/xla/service/hlo_evaluator.h"
 #include "tensorflow/compiler/xla/shape_util.h"
@@ -224,7 +224,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
   // Call the nGraph executable.
   auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
-  call_frame->call(ng_input_tv_list, ng_result_tv_list);
+  call_frame->call(ng_result_tv_list, ng_input_tv_list);
 
   // Copy data back from the nGraph result tensors to each corresponding leaf
   // buffer.
