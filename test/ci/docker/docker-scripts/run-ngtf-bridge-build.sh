@@ -110,7 +110,6 @@ export TF_NEED_MPI=0
 cd "${ngtf_dir}"
 ./configure
 
-
 xtime="$(date)"
 echo  ' '
 echo  "===== Starting Tensorflow Binaries Build at ${xtime} ====="
@@ -126,7 +125,6 @@ echo  "===== Starting Tensorflow Wheel Build at ${xtime} ====="
 echo  ' '
 
 bazel-bin/tensorflow/tools/pip_package/build_pip_package "${WHEEL_BUILD_DIR}"
-
 
 xtime="$(date)"
 echo  ' '
@@ -169,16 +167,6 @@ echo  ' '
 ln -s "${bridge_dir}/ngraph_dist" "${HOME}/ngraph_dist"
 
 cd "${bridge_dir}"
-
-echo 'DBG1'
-which python
-
-echo 'DBG2'
-ls /tmp/venv_python2/lib/python2.7/site-packages
-ls /tmp/venv_python2/lib/python2.7/site-packages/tensorflow
-
-echo 'DBG3'
-python -c 'import sys ; print(str(sys.path)) ; import tensorflow ; dir(tensorflow)'
 
 mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
