@@ -70,8 +70,6 @@ set( NGRAPH_INSTALL_DIR ${TENSORFLOW_DIR}/plugins)
 set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_DIR})
 set(CMAKE_INSTALL_RPATH "${NGRAPH_DIR}/lib")
 
-set(CMAKE_INSTALL_RPATH "${NGRAPH_DIR}/lib")
-
 # Add the directories to be built
 add_subdirectory(src)
 
