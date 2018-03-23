@@ -187,8 +187,21 @@ make -j16
 
 xtime="$(date)"
 echo  ' '
+echo  "===== Run Bridge CI Test Scripts at ${xtime} ====="
+echo  ' '
+
+cd "${bridge_dir}/test/ci"
+
+export USER_PLUGIN_PATH="${bbuild_dir}/src/libngraph_plugin.so"
+export TF_ROOT="${ngtf_dir}"
+"${bridge_dir}/test/ci/run-premerge-ci-checks.sh"
+
+xtime="$(date)"
+echo  ' '
 echo  "===== Deactivating the Virtual Environment at ${xtime} ====="
 echo  ' '
+
+deactivate
 
 xtime="$(date)"
 echo ' '
