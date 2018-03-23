@@ -94,10 +94,8 @@ export CC_OPT_FLAGS="-march=native"
 export USE_DEFAULT_PYTHON_LIB_PATH=1
 export TF_ENABLE_XLA=1
 
-# Ensures that Tensorboard's dynamic-linking dependencies are satisfied.
-export TF_NEED_MKL=1
-# Easier to just download it, than to guess if it's already installed.
-export TF_DOWNLOAD_MKL=1
+export TF_NEED_MKL=0
+export TF_DOWNLOAD_MKL=0
 
 export TF_NEED_JEMALLOC=1
 export TF_NEED_GCP=0

@@ -42,7 +42,7 @@ RUN pip install --upgrade pytest
 # REPLACED BY:
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 #
-# This is for TF1.5
+# This bazel version works with current TF
 RUN wget -c https://github.com/bazelbuild/bazel/releases/download/0.11.0/bazel_0.11.0-linux-x86_64.deb
 RUN dpkg -i bazel_0.11.0-linux-x86_64.deb || true
 
