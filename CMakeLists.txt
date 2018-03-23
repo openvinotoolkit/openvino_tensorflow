@@ -51,6 +51,7 @@ ExternalProject_Add(
     DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"                 
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/src"
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/build"                      
+    BUILD_COMMAND make ngraph
     UPDATE_COMMAND ""
 )
 
