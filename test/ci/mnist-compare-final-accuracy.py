@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import print_function
 import argparse
 import os
 import os.path
@@ -30,8 +31,8 @@ import mnist_softmax_util as msu
 def ensure_mnist_data_local_copy(data_download_script_path, data_dir):
 
     cmd = [data_download_script_path, data_dir]
-    print "script: ", data_download_script_path
-    print "data_dir: ", data_dir
+    print("script: %s" % data_download_script_path)
+    print("data_dir: %s" % data_dir)
     p = subprocess.Popen(
         cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()

@@ -29,7 +29,7 @@
 //-----------------------------------------------------------------------------
 
 static xla::plugin::DeviceInfo s_DeviceInfo = {"nGraphDevice", "NGRAPH",
-                                               "NGRAPH_JIT", 1};
+                                               "NGRAPH_JIT", 1, 20};
 
 extern "C" xla::plugin::Info GetPluginData();
 
@@ -37,6 +37,10 @@ extern "C" xla::plugin::Info GetPluginData();
 //  We keep a singleton instance of the NGraphCompiler object.
 //-----------------------------------------------------------------------------
 static xla::ngraph_plugin::NGraphCompiler s_Compiler;
+
+static std::vector<tensorflow::DataType> knGraphPluginSupportedDatatypes = {
+    {tensorflow::DT_INT32, tensorflow::DT_FLOAT, tensorflow::DT_BOOL,
+     tensorflow::DT_DOUBLE, tensorflow::DT_INT64}};
 
 //-----------------------------------------------------------------------------
 //  Plugin Interface Implementation functions
@@ -107,6 +111,9 @@ std::unique_ptr<xla::Executable> RunBackend(
       .ValueOrDie();
 }
 
+std::vector<tensorflow::DataType> SupportedDataTypes() {
+  return knGraphPluginSupportedDatatypes;
+}
 //-----------------------------------------------------------------------------
 // Utility functions
 //-----------------------------------------------------------------------------
@@ -116,8 +123,8 @@ std::unique_ptr<xla::Executable> RunBackend(
 //-----------------------------------------------------------------------------
 
 static xla::plugin::Info s_PluginInfo = {
-    Version,      DeviceInfo, Init,   GetTransferManager,
-    RunHloPasses, RunBackend, nullptr};
+    Version,    DeviceInfo,        Init, GetTransferManager, RunHloPasses,
+    RunBackend, SupportedDataTypes};
 
 //-----------------------------------------------------------------------------
 // DSO Entry point
