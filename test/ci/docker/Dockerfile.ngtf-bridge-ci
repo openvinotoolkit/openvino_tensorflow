@@ -16,6 +16,7 @@ RUN apt-get update &&  apt-get install -y \
     sudo \
     zlib1g zlib1g-dev bash-completion \
     build-essential cmake \
+    libtinfo-dev \
     zip golang-go \
     locate curl
 
