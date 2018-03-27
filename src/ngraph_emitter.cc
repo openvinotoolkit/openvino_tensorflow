@@ -1331,6 +1331,84 @@ Status NGraphEmitter::ProcessBatchNormTraining(HloInstruction* bnt) {
 }
 
 //-----------------------------------------------------------------------------
+// NGraphEmitter::ProcessBatchNormInference()
+//-----------------------------------------------------------------------------
+Status NGraphEmitter::ProcessBatchNormInference(HloInstruction* bni) {
+  const HloInstruction* operand_input = bni->operand(0);
+  const HloInstruction* operand_gamma = bni->operand(1);
+  const HloInstruction* operand_beta = bni->operand(2);
+  const HloInstruction* operand_mean = bni->operand(3);
+  const HloInstruction* operand_variance = bni->operand(4);
+
+  double epsilon = bni->epsilon();
+
+  std::shared_ptr<ngraph::Node> ng_input_op =
+      m_op_map.find(operand_input)->second;
+  std::shared_ptr<ngraph::Node> ng_gamma_op =
+      m_op_map.find(operand_gamma)->second;
+  std::shared_ptr<ngraph::Node> ng_beta_op =
+      m_op_map.find(operand_beta)->second;
+  std::shared_ptr<ngraph::Node> ng_mean_op =
+      m_op_map.find(operand_mean)->second;
+  std::shared_ptr<ngraph::Node> ng_variance_op =
+      m_op_map.find(operand_variance)->second;
+
+  // If the normed axis is not 1, we will need to move the normed axis into
+  // that position.
+  if (bni->feature_index() != 1) {
+    const ngraph::Shape& input_shape = ng_input_op->get_shape();
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < input_shape.size(); i++) {
+      if (i != bni->feature_index()) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(input_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + 1, bni->feature_index());
+    reshaped_shape.insert(reshaped_shape.begin() + 1,
+                          input_shape[bni->feature_index()]);
+
+    ng_input_op = std::make_shared<ngraph::op::Reshape>(ng_input_op, axis_order,
+                                                        reshaped_shape);
+  }
+
+  std::shared_ptr<ngraph::Node> ng_result_op =
+      std::make_shared<ngraph::op::BatchNorm>(epsilon, ng_gamma_op, ng_beta_op,
+                                              ng_input_op, ng_mean_op,
+                                              ng_variance_op);
+
+  // If the normed axis is not 1, we will need to undo the reshaping we did
+  // above.
+  if (bni->feature_index() != 1) {
+    const ngraph::Shape& output_shape = ng_result_op->get_output_shape(0);
+    ngraph::AxisVector axis_order;
+    ngraph::Shape reshaped_shape;
+
+    for (size_t i = 0; i < output_shape.size(); i++) {
+      if (i != 1) {
+        axis_order.push_back(i);
+        reshaped_shape.push_back(output_shape[i]);
+      }
+    }
+
+    axis_order.insert(axis_order.begin() + bni->feature_index(), 1);
+    reshaped_shape.insert(reshaped_shape.begin() + bni->feature_index(),
+                          output_shape[1]);
+
+    ng_result_op = std::make_shared<ngraph::op::Reshape>(
+        ng_result_op, axis_order, reshaped_shape);
+  }
+
+  m_instruction_list.push_back({bni->ToString(), ng_result_op->get_name()});
+  m_op_map[bni] = ng_result_op;
+
+  return Status::OK();
+}
+
+//-----------------------------------------------------------------------------
 // NGraphEmitter::ProcessBatchNormGrad()
 //-----------------------------------------------------------------------------
 Status NGraphEmitter::ProcessBatchNormGrad(HloInstruction* bng) {
