@@ -49,11 +49,11 @@ echo "  WHEEL_BUILD_DIR=${WHEEL_BUILD_DIR}  (Used by maint/build-install-tf.sh)"
 # Do some up-front checks, to make sure necessary directories are in-place and
 # build directories are not-in-place
 
-if [ ! -d "${LD_LIBRARY_PATH}" ] ; then
-    ( >&2 echo '***** Error: *****' )
-    ( >&2 echo "ngraph_dist directory does not appear to be present -- please make sure it exists in the bridge directory before running this script: ${LD_LIBRARY_PATH}" )
-    exit 1
-fi
+#if [ ! -d "${LD_LIBRARY_PATH}" ] ; then
+#    ( >&2 echo '***** Error: *****' )
+#    ( >&2 echo "ngraph_dist directory does not appear to be present -- please make sure it exists in the bridge directory before running this script: ${LD_LIBRARY_PATH}" )
+#    exit 1
+#fi
 
 if [ -d "${WHEEL_BUILD_DIR}" ] ; then
     ( >&2 echo '***** Error: *****' )
@@ -70,11 +70,11 @@ fi
 # Kludge because currently bridge build only supports having ngraph_dist in
 # the home directory.  This is being changed, but probably will not be done
 # soon enough before CI goes live.
-if [ -f "${HOME}/ngraph_dist" ] ; then
-    ( >&2 echo '***** Error: *****' )
-    ( >&2 echo "~/ngraph_dist directory already exists -- please remove it before calling this script: ${bbuild_dir}" )
-    exit 1
-fi
+#if [ -f "${HOME}/ngraph_dist" ] ; then
+#    ( >&2 echo '***** Error: *****' )
+#    ( >&2 echo "~/ngraph_dist directory already exists -- please remove it before calling this script: ${bbuild_dir}" )
+#    exit 1
+#fi
 
 # Make sure the Bazel cache is in /tmp, as docker images have too little space
 # in the root filesystem, where /home (and $HOME/.cache) is.  Even though we
