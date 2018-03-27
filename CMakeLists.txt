@@ -67,7 +67,7 @@ include_directories( ${TENSORFLOW_INCLUDE_DIR}/external/nsync/public )
 include_directories( ${NGRAPH_DIR}/include )
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set( NGRAPH_INSTALL_DIR ${TENSORFLOW_DIR}/plugins)
+set( NGRAPH_INSTALL_DIR ${TENSORFLOW_DIR})
 set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_DIR})
 set(CMAKE_INSTALL_RPATH "${NGRAPH_DIR}/lib")
 

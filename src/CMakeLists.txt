@@ -70,13 +70,10 @@ if(NOT TARGET uninstall)
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
 
-
-message( STATUS "NGRAPH_INSTALL_DIR: " ${NGRAPH_INSTALL_DIR})
-
 install(
     TARGETS 
     ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} 
-    LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} ./
+    LIBRARY DESTINATION plugins
 )  
 
 
