@@ -166,6 +166,8 @@ class NGraphEmitter : private NGraphOpHandler {
 
   Status ProcessBatchNormTraining(HloInstruction* bnt) override;
 
+  Status ProcessBatchNormInference(HloInstruction* bni) override;
+
   Status ProcessBatchNormGrad(HloInstruction* bng) override;
 
   Status ProcessFusion(HloInstruction* fusion) override;
