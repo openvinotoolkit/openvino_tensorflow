@@ -44,7 +44,7 @@ string(REGEX REPLACE "\n$" "" TENSORFLOW_DIR "${TEMP}")
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-    GIT_TAG v0.2.0-rc0
+    GIT_TAG v0.2.0
     CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
     TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"                           
     STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"                       
