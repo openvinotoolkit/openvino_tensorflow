@@ -5,20 +5,27 @@ plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ li
 that provides developers with the means to train and run DNN models 
 efficiently on custom backends: GPU, CPU, and custom silicon.
 
-
 To enable the bridge from TensorFlow to Intel nGraph backends, two repos are 
 needed: `ngraph-tensorflow` and this repository, `ngraph-tensorflow-bridge`.  
 After everything is built, we end up with a [DSO] that acts like a plugin to 
-Intel nGraph backends, 
+Intel nGraph backends.
+
+IMPORTANT: The nGraph TensorFlow bridge currently uses an experimental plugin
+API that is not part of mainstream TensorFlow. You must build TensorFlow from
+a specific tag from the `NervanaSystems/ngraph-tensorflow` repo. Discussions
+about upstreaming the plugin API are ongoing. See the section "Future plans"
+below for more details.
 
 ## How to enable the bridge
 
 
-1. Clone the `ngraph-tensorflow` repository:
+1. Clone the `ngraph-tensorflow` repository and check out the correct tag
+   for this version of the bridge:
 
     ```
     git clone https://github.com/NervanaSystems/ngraph-tensorflow.git
     cd ngraph-tensorflow
+    git checkout ngraph-tensorflow-preview-0
     ```
 
 2. Now run `./configure` and choose `y` when prompted to build TensorFlow with 
