@@ -1456,24 +1456,24 @@ Status NGraphEmitter::ProcessBatchNormGrad(HloInstruction* bng) {
   }
 
   // TODO(amprocte): We are temporarily supplying a fake value for beta here
-  // (all NaN, same shape/et as gamma), because XLA does not give beta to us.
+  // (all zero, same shape/et as gamma), because XLA does not give beta to us.
   // This should work because nGraph should not actually use beta. The nGraph
   // op may change to discard this parameter. Update this when nGraph does.
-  std::shared_ptr<ngraph::Node> ng_nan_scalar_op =
+  std::shared_ptr<ngraph::Node> ng_zero_scalar_op =
       std::make_shared<ngraph::op::Constant>(ng_gamma_op->get_element_type(),
                                              ngraph::Shape{},
-                                             std::vector<std::string>{"NAN"});
+                                             std::vector<std::string>{"0"});
   ngraph::AxisSet ng_broadcast_axes;
   for (size_t i = 0; i < ng_gamma_op->get_shape().size(); i++) {
     ng_broadcast_axes.insert(i);
   }
-  std::shared_ptr<ngraph::Node> ng_nan_tensor_op =
+  std::shared_ptr<ngraph::Node> ng_zero_tensor_op =
       std::make_shared<ngraph::op::Broadcast>(
-          ng_nan_scalar_op, ng_gamma_op->get_shape(), ng_broadcast_axes);
+          ng_zero_scalar_op, ng_gamma_op->get_shape(), ng_broadcast_axes);
 
   std::shared_ptr<ngraph::Node> ng_result_op =
       std::make_shared<ngraph::op::BatchNormBackprop>(
-          epsilon, ng_gamma_op, /*beta=*/ng_nan_tensor_op, ng_input_op,
+          epsilon, ng_gamma_op, /*beta=*/ng_zero_tensor_op, ng_input_op,
           ng_mean_op, ng_variance_op, ng_delta_op);
 
   std::shared_ptr<ngraph::Node> ng_input_delta_op =
