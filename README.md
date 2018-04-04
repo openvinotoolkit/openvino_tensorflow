@@ -87,10 +87,9 @@ with nGraph backends.
 
 To see everything working together, you can run MNIST Softmax example with the 
 now-activated bridge to nGraph. The script named `mnist_softmax_ngraph.py` 
-can be found under the `ngraph-tensorflow/test` directory. It was modified from 
-the example explained in the TensorFlow* tutorial; the following changes were 
-made from the original script: 
-
+can be found under the `ngraph-tensorflow-bridge/test` directory. 
+It was modified from the example explained in the TensorFlow* tutorial; the 
+following changes were made from the original script: 
 
 ```python
 def main(_):
@@ -110,8 +109,8 @@ export OMP_NUM_THREADS=4
 export KMP_AFFINITY=granularity=fine,scatter
 ```
 
-Then run the script as follows from within the `/examples/mnist` directory of 
-your `ngraph-tensorflow` clone:
+Then run the script as follows from within the `/test` directory of 
+your `ngraph-tensorflow-bridge` clone:
 
 ```bash
 python mnist_softmax_ngraph.py
