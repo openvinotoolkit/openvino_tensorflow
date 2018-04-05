@@ -16,19 +16,66 @@ a specific tag from the `NervanaSystems/ngraph-tensorflow` repo. Discussions
 about upstreaming the plugin API are ongoing. See the section "Future plans"
 below for more details.
 
+## Preparing to install ngraph-tensorflow
+The installation prerequisites are the same as TensorFlow as described in the 
+TensorFlow [prepare environment] for linux.
+
+1. We use the standard build process which is a system called "bazel". These 
+   instructions were tested with [bazel version 0.11.0]. 
+
+   ```
+   $ wget https://github.com/bazelbuild/bazel/releases/download/0.11.0/bazel-0.11.0-installer-linux-x86_64.sh      
+   $ chmod +x bazel-0.11.0-installer-linux-x86_64.sh
+   $ ./bazel-0.11.0-installer-linux-x86_64.sh --user
+   ```
+
+2. Add and source the ``bin`` path to your ``~/.bashrc`` file in order to be 
+   able to call bazel from the user's installation we set up:
+
+   ```  
+   export PATH=$PATH:~/bin
+   $ source ~/.bashrc   
+   ```
+
+3. Ensure that all the TensorFlow dependencies are installed, as per the
+   TensorFlow [prepare environment] for linux.
+
+   **Note** You do not need CUDA in order to use the ngraph-tensorflow bridge.
+
+4. Once TensorFlow's dependencies are installed, clone the source of the 
+   [ngraph-tensorflow] repo to your machine; this is the required fork for 
+   this integration:
+
+## Python virtual environment setup
+We recommend using a virtualenv-based installation of ngraph-tensorflow and the ngraph-tensorflow-bridge. Please follow the steps outlined in the TensorFlow
+[installing with Virtualenv] document.
+
 ## How to enable the bridge
 
 
 1. Clone the `ngraph-tensorflow` repository and check out the correct tag
    for this version of the bridge:
 
-    ```
-    git clone https://github.com/NervanaSystems/ngraph-tensorflow.git
-    cd ngraph-tensorflow
-    git checkout ngraph-tensorflow-preview-0
-    ```
+   ```
+   git clone https://github.com/NervanaSystems/ngraph-tensorflow.git
+   cd ngraph-tensorflow
+   git checkout ngraph-tensorflow-preview-0
+   ```
+2. Now set up and activate the virtual environment:
 
-2. Now run `./configure` and choose `y` when prompted to build TensorFlow with 
+   ```
+   virtualenv --system-site-packages <your_virtual_env_dir> # for Python 2.7
+   ```
+   For Python 3.n version:
+   ```
+   virtualenv --system-site-packages -p python3 <your_virtual_env_dir> # for Python 3.n
+   ```
+   Activate virtual environment:
+   ```
+   source <your_virtual_env_dir>/bin/activate # bash, sh, ksh, or zsh
+   ```
+
+3. Now run `./configure` and choose `y` when prompted to build TensorFlow with 
    "XLA JIT support":
 
     ```
@@ -38,14 +85,14 @@ below for more details.
     XLA JIT support will be enabled for TensorFlow.
     ``` 
 
-3. Prepare the pip package:
+4. Prepare the pip package:
 
     ```
     bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
     bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
     ```
 
-4. Install the pip package, replacing the `tensorflow-1.*` with your 
+5. Install the pip package, replacing the `tensorflow-1.*` with your 
    version of TensorFlow:
 
     ```
@@ -56,7 +103,7 @@ below for more details.
     official version of TensorFlow as the `ngraph-tensorflow` repository is 
     synchronized frequently with the original TensorFlow repository.
 
-5. Now clone the `ngraph-tensorflow-bridge` repo one level above -- in the 
+6. Now clone the `ngraph-tensorflow-bridge` repo one level above -- in the 
   *parent* directory of the `ngraph-tensorflow` repo cloned in step 1:
 
     ```
@@ -65,7 +112,7 @@ below for more details.
     cd ngraph-tensorflow-bridge
     ```
 
-6. Finally, build and install `ngraph-tensorflow-bridge`:
+7. Next, build and install `ngraph-tensorflow-bridge`:
 
     ```
     mkdir build
@@ -73,7 +120,17 @@ below for more details.
     cmake ../
     make install
     ```
-   
+8. Finally test the installation by running the following python command
+   ```
+   cd ../test
+   python install_test.py
+   ```
+   You should see the following output:
+   ```
+   nGraph device available
+   Name:  /device:NGRAPH:0
+   ```
+
 This final step automatically downloads the necessary version of `ngraph` and 
 the dependencies. The resulting plugin [DSO] named `libngraph_plugin.so` gets 
 copied to the following directory inside the TensorFlow installation directory: 
@@ -123,6 +180,16 @@ a function of number of CPU cores that are available in your system.
 
 Please submit your questions, feature requests and bug reports via [GitHub issues].
 
+### Troubleshooting
+
+If the installation test fails, then run the script again with logging enabled:
+```
+TF_CPP_MIN_VLOG_LEVEL=1 python install_test.py 
+```
+This will create debug messages that you can analyze to detect the error or 
+when submitting the github issue.
+
+
 ## How to Contribute
 
 We welcome community contributions to nGraph. If you have an idea of how
@@ -160,3 +227,7 @@ Follow those [upstreaming discussions here].
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
+[bazel version 0.11.0]: https://github.com/bazelbuild/bazel/releases/tag/0.11.0
+[installation guide]: https://www.tensorflow.org/install/install_linux
+[prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
+[installing with Virtualenv]: https://www.tensorflow.org/install/install_linux#installing_with_virtualenv
