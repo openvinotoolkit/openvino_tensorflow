@@ -11,15 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include_directories(${TensorFlow_INCLUDE_DIR})
+include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
+include_directories(${NGRAPH_DIR}/include)
 
-add_library( tensorflow_xla_plugin_framework SHARED IMPORTED)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${TensorFlow_DIR}/plugins/ngraph/lib")
+
+add_library(tensorflow_xla_plugin_framework SHARED IMPORTED)
 set_target_properties( 
     tensorflow_xla_plugin_framework 
     PROPERTIES IMPORTED_LOCATION 
-    ${TENSORFLOW_DIR}/libtensorflow_framework.so
+    ${TensorFlow_DIR}/libtensorflow_framework.so
 )
 
-add_library( ngraph_lib SHARED IMPORTED)
+add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties( 
     ngraph_lib 
     PROPERTIES IMPORTED_LOCATION 
@@ -30,7 +36,7 @@ add_dependencies(ngraph_lib ext_ngraph)
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
-set( SRC 
+set(SRC 
    ngraph_plugin.cc 
    transfer_manager.cc
    ngraph_emitter.cc
@@ -43,7 +49,7 @@ set( SRC
    ngraph_xla_compat.cc
 )
 
-add_library( ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} SHARED ${SRC} )
+add_library(${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} SHARED ${SRC})
 target_link_libraries( 
     ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} 
     tensorflow_xla_plugin_framework 
@@ -56,13 +62,13 @@ target_link_libraries(
 
 target_compile_definitions( 
     ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} PRIVATE 
-    _GLIBCXX_USE_CXX11_ABI=1 
+    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI} 
 )
 
 # uninstall target
 if(NOT TARGET uninstall)
     configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.in.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/cmake_uninstall.in.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
         IMMEDIATE @ONLY)
 
@@ -70,11 +76,20 @@ if(NOT TARGET uninstall)
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
 
+# Installation
+# Ordering is key here as during the uninslall we will follow this
+# order to remove the directories that were installed
+
+# First install the dependencies
+install(
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../ngraph/ngraph_dist/lib
+    DESTINATION 
+    plugins/ngraph
+)
+
+# Next install the plugin library
 install(
     TARGETS 
     ${NGRAPH_TENSORFLOW_BRIDGE_LIB_NAME} 
     LIBRARY DESTINATION plugins
 )  
-
-
-
