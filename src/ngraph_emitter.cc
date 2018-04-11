@@ -98,11 +98,14 @@ Status NGraphEmitter::ProcessElementwiseUnary(HloInstruction* hlo,
       ng_op = std::make_shared<ngraph::op::Abs>(ng_operand);
       break;
     case HloOpcode::kCeil:
+      ng_op = std::make_shared<ngraph::op::Ceiling>(ng_operand);
+      break;
     case HloOpcode::kExp:
       ng_op = std::make_shared<ngraph::op::Exp>(ng_operand);
       break;
     case HloOpcode::kFloor:
-    case HloOpcode::kIsFinite:
+      ng_op = std::make_shared<ngraph::op::Floor>(ng_operand);
+      break;
     case HloOpcode::kLog:
       ng_op = std::make_shared<ngraph::op::Log>(ng_operand);
       break;
@@ -110,9 +113,21 @@ Status NGraphEmitter::ProcessElementwiseUnary(HloInstruction* hlo,
       ng_op = std::make_shared<ngraph::op::Negative>(ng_operand);
       break;
     case HloOpcode::kSign:
+      ng_op = std::make_shared<ngraph::op::Sign>(ng_operand);
+      break;
+    case HloOpcode::kSin:
+      ng_op = std::make_shared<ngraph::op::Sin>(ng_operand);
+      break;
     case HloOpcode::kCos:
+      ng_op = std::make_shared<ngraph::op::Cos>(ng_operand);
+      break;
     case HloOpcode::kTanh:
+      ng_op = std::make_shared<ngraph::op::Tanh>(ng_operand);
+      break;
     case HloOpcode::kNot:
+      ng_op = std::make_shared<ngraph::op::Not>(ng_operand);
+      break;
+    case HloOpcode::kIsFinite:
     case HloOpcode::kReducePrecision:
     default:
       return Unimplemented("unary op '%s'", HloOpcodeString(opcode).c_str());

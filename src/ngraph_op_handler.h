@@ -77,7 +77,7 @@ limitations under the License.
 // | kGt                 | NGraphOpHandler::HandleCompare            |YES
 // | kIndex              | Not handled by HloInstruction::Visit      |
 // | kInfeed             | NGraphOpHandler::HandleInfeed             |
-// | kIsFinite           | NGraphOpHandler::HandleElementwiseUnary   |YES
+// | kIsFinite           | NGraphOpHandler::HandleElementwiseUnary   |
 // | kLe                 | NGraphOpHandler::HandleCompare            |YES
 // | kLog                | NGraphOpHandler::HandleElementwiseUnary   |YES
 // | kLogicalAnd         | NGraphOpHandler::HandleElementwiseBinary  |YES
@@ -106,10 +106,11 @@ limitations under the License.
 // | kSelectAndScatter   | NGraphOpHandler::HandleSelectAndScatter   |YES
 // | kSend               | NGraphOpHandler::HandleSend               |
 // | kSign               | NGraphOpHandler::HandleElementwiseUnary   |YES
+// | kSin                | NGraphOpHandler::HandleElementwiseUnary   |YES
 // | kSlice              | NGraphOpHandler::HandleSlice              |YES
 // | kSort               | NGraphOpHandler::HandleSort               |
 // | kSubtract           | NGraphOpHandler::HandleElementwiseBinary  |YES
-// | kTanh               | NGraphOpHandler::HandleElementwiseUnary   |
+// | kTanh               | NGraphOpHandler::HandleElementwiseUnary   |YES
 // | kTrace              | Not handled by HloInstruction::Visit      |
 // | kTranspose          | NGraphOpHandler::HandleTranspose          |YES
 // | kTuple              | NGraphOpHandler::HandleTuple              |YES
