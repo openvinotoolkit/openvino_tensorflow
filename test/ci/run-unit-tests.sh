@@ -219,6 +219,76 @@ build_and_run_tests ${test_target} ${enabled_tests[@]}
 # xla/tests:array_elementwise_ops_test_dynamic_plugin
 test_target="tensorflow/compiler/xla/tests:array_elementwise_ops_test_dynamic_plugin"
 declare -a enabled_tests=(
+  "NegConstantZeroElementF32"
+  "NegConstantF32"
+  "NegConstantS32"
+  #"NegConstantZeroElementC64"
+  #"NegConstantC64"
+  "NegConstantS64"
+  #"IsFiniteZeroElementF32s"
+  #"IsFiniteScalarF32"
+  #"IsFiniteR1F32s"
+  "AddTwoConstantF32s"
+  "AddTwoConstantZeroElementF32s"
+  #"AddTwoConstantC64s"
+  #"AddTwoConstantZeroElementC64s"
+  #"AddTwoConstantU64s"
+  "SubTwoConstantS64s"
+  "SubTwoConstantF32s"
+  "SubTwoConstantZeroElementF32s"
+  "SubTwoConstantS32s"
+  #SubTwoConstantC64s
+  #SubTwoConstantZeroElementC64s
+  "SubTwoConstantZeroElementS32s"
+  "DivTwoConstantF32s"
+  "DivTwoConstantZeroElementF32s"
+  #"DivS32s"
+  #DivU32s
+  #DivTwoConstantC64s
+  #DivTwoConstantZeroElementC64s
+  #"RemF32s"
+  #"RemZeroElementF32s"
+  #RemF64s
+  "MulTwoConstantF32s"
+  "MulTwoConstantZeroElementF32s"
+  "MulTwoConstantS32s"
+  "MulTwoConstantZeroElementS32s"
+  #MulTwoConstantU32s
+  #MulTwoConstantC64s
+  #MulTwoConstantZeroElementC64s
+  #AndPredR1
+  #AndPredR2
+  #AndZeroElementPredR1
+  #AndS32R1
+  #AndS32R2
+  #AndZeroElementS32R1
+  #AndU32R1
+  #AndU32R2
+  #AndZeroElementU32R1
+  #OrPredR1
+  #OrPredR2
+  #OrZeroElementPredR1
+  #OrS32R1
+  #OrS32R2
+  #OrZeroElementS32R1
+  #OrU32R1
+  #OrU32R2
+  #OrZeroElementU32R1
+  #NotPredR1
+  #NotPredR2
+  #NotZeroElementPredR1
+  #NotS32R1
+  #NotS32R2
+  #NotZeroElementS32R1
+  #NotU32R1
+  #NotU32R2
+  #NotZeroElementU32R1
+  #ShiftLeftS32
+  #ShiftRightArithmeticS32
+  #ShiftRightLogicalS32
+  #ShiftLeftU32
+  #ShiftRightArithmeticU32
+  #ShiftRightLogicalU32
   "CompareEqF32s"
   "CompareEqZeroElementF32s"
   "CompareGeF32s"
@@ -227,12 +297,108 @@ declare -a enabled_tests=(
   "CompareLtF32s"
   "CompareEqS32s"
   "CompareEqZeroElementS32s"
+  #CompareEqC64s
+  #CompareEqZeroElementC64s
+  #CompareNeC64s
   "CompareNeF32s"
   "CompareNeS32s"
   "CompareGeS32s"
   "CompareGtS32s"
   "CompareLeS32s"
   "CompareLtS32s"
+  #CompareEqU32s
+  #CompareNeU32s
+  #CompareGeU32s
+  #CompareGtU32s
+  #CompareLeU32s
+  #CompareLtU32s
+  "PowF32s"
+  "PowNonIntegerF32s"
+  "PowZeroElementF32s"
+  "PowSpecialF32"
+  "PowOfExpF32"
+  "LogOfPowerF32"
+  "MulOfExpF32"
+  "DivOfExpF32"
+  "Div3_lhs_F32"
+  "Div3_rhs_F32"
+  "DivOfPowerF32"
+  "Div4F32"
+  "SquareIn4D"
+  "SquareIn4DZeroElements"
+  #"MinF32s"
+  #MinF64s
+  "MinZeroElementF32s"
+  #"MaxF32s"
+  "MaxZeroElementF32s"
+  #MaxF64s
+  "MaxS32s"
+  "MinS32s"
+  #MaxU32s
+  #MinU32s
+  "MaxTenF32s"
+  "MaxR1S1AndR1S0F32s"
+  #"MaxR1S0AndR2S0x2F32s"
+  "Max1DAnd2DF32s"
+  #"Max1DAnd2DZeroElementF32s"
+  "Max3DAndScalarS32s"
+  "Max3DAndScalarZeroElementS32s"
+  "Min2DTo1DF32s"
+  "Min2DTo1DZeroElementF32s"
+  "Min2DTo4DF32s"
+  "Min2DTo4DZeroElementF32s"
+  "MinTenS32s"
+  "MaxTenS32s"
+  #"RemTwoConstantS32s"
+  #NonNanClampF32
+  #ClampF32Scalar
+  #ClampF32ScalarVector
+  #ClampS32Vector
+  #ClampS32ScalarVector
+  #ClampU32Vector
+  #ClampU32ScalarVector
+  "AddTwoParametersF32s"
+  "AddTwoParametersZeroElementF32s"
+  "AddParameterToConstantF32s"
+  "CosF32s"
+  "SinF32s"
+  #Atan2F32s
+  "TanhF32s"
+  "TanhF32sVector"
+  "ExpF32sVector"
+  "LogF32sVector"
+  "AddChainFoldLeft"
+  "AddChainFoldRight"
+  "AddWithNeg"
+  "AddChainTwoSide"
+  "2DBinaryOpF32s"
+  "ScalarPlus2DF32"
+  "2DPlusScalarF32"
+  "Add1DTo2DF32"
+  "Compare1DTo2DS32Eq"
+  "Compare1DTo2DS32Ne"
+  "Compare1DTo2DS32Ge"
+  "Compare1DTo2DS32Gt"
+  "Compare1DTo2DS32Le"
+  "Compare1DTo2DS32Lt"
+  "Mul2Dby1DF32"
+  "Add2DTo2DWithDegenerateDim1"
+  "Add2DTo2DWithDegenerateDim0"
+  "Add2DsWithDegenerateDimsOuterProduct"
+  "Add1DTo2DF32TwoWaysOver1"
+  "Add1DTo2DF32TwoWaysOver0"
+  "3DBinaryOpF32s"
+  "Add1DTo3DTwoWaysOver2"
+  "Add1DTo3DTwoWaysOver0"
+  "Add2DTo3D"
+  "CompareGtR3F32sWithDegenerateDim2"
+  "4DBinaryOpF32s"
+  "R4PlusR1InDim1"
+  "R4_16x16x2x2_Plus_R1_16"
+  "CannotAddOpaques"
+  "IdentityBroadcastOfSameRankIsAllowed"
+  "NonIdentityBroadcastOfSameRankIsDisallowed"
+  "ImplictBroadcastInFusedExpressions"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
