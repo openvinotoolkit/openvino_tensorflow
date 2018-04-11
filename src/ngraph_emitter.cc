@@ -125,8 +125,6 @@ Status NGraphEmitter::ProcessElementwiseUnary(HloInstruction* hlo,
       ng_op = std::make_shared<ngraph::op::Tanh>(ng_operand);
       break;
     case HloOpcode::kNot:
-      ng_op = std::make_shared<ngraph::op::Not>(ng_operand);
-      break;
     case HloOpcode::kIsFinite:
     case HloOpcode::kReducePrecision:
     default:
