@@ -222,57 +222,57 @@ declare -a enabled_tests=(
   "NegConstantZeroElementF32"
   "NegConstantF32"
   "NegConstantS32"
-  #"NegConstantZeroElementC64" 			#complex type unimplemented
-  #"NegConstantC64" 				#complex type unimplemented
+  #"NegConstantZeroElementC64"                #complex type unimplemented
+  #"NegConstantC64"                           #complex type unimplemented
   "NegConstantS64"
-  #"IsFiniteZeroElementF32s" 			#IsFinite op unimplemented
-  #"IsFiniteScalarF32" 				#IsFinite op unimplemented
-  #"IsFiniteR1F32s" 				#IsFinite op unimplemented
+  #"IsFiniteZeroElementF32s"                  #IsFinite op unimplemented
+  #"IsFiniteScalarF32"                        #IsFinite op unimplemented
+  #"IsFiniteR1F32s"                           #IsFinite op unimplemented
   "AddTwoConstantF32s"
   "AddTwoConstantZeroElementF32s"
-  #"AddTwoConstantC64s" 			#complex type unimplemented
-  #"AddTwoConstantZeroElementC64s" 		#complex type unimplemented
-  #"AddTwoConstantU64s" 			#unsigned type not bridged
+  #"AddTwoConstantC64s"                       #complex type unimplemented
+  #"AddTwoConstantZeroElementC64s"            #complex type unimplemented
+  #"AddTwoConstantU64s"                       #unsigned type not bridged
   "SubTwoConstantS64s"
   "SubTwoConstantF32s"
   "SubTwoConstantZeroElementF32s"
   "SubTwoConstantS32s"
-  #SubTwoConstantC64s 				#complex type unimplemented
-  #SubTwoConstantZeroElementC64s 		#complex type unimplemented
+  #SubTwoConstantC64s                         #complex type unimplemented
+  #SubTwoConstantZeroElementC64s              #complex type unimplemented
   "SubTwoConstantZeroElementS32s"
   "DivTwoConstantF32s"
   "DivTwoConstantZeroElementF32s"
-  #"DivS32s" 					#remainder op unimplemented
-  #DivU32s 					#unsigned type not bridged
-  #DivTwoConstantC64s 				#complex type unimplemented
-  #DivTwoConstantZeroElementC64s 		#complex type unimplemented
-  #"RemF32s" 					#remainder op unimplemented
-  #"RemZeroElementF32s" 			#remainder op unimplemented
-  #RemF64s 					#remainder op unimplemented
+  #"DivS32s"                                  #remainder op unimplemented
+  #DivU32s                                    #unsigned type not bridged
+  #DivTwoConstantC64s                         #complex type unimplemented
+  #DivTwoConstantZeroElementC64s              #complex type unimplemented
+  #"RemF32s"                                  #remainder op unimplemented
+  #"RemZeroElementF32s"                       #remainder op unimplemented
+  #RemF64s                                    #remainder op unimplemented
   "MulTwoConstantF32s"
   "MulTwoConstantZeroElementF32s"
   "MulTwoConstantS32s"
   "MulTwoConstantZeroElementS32s"
-  #MulTwoConstantU32s 				#unsigned type not bridged
-  #MulTwoConstantC64s 				#complex type unimplemented
-  #MulTwoConstantZeroElementC64s 		#complex type unimplemented
-  #AndPredR1 					#BoolOps unimplemented
-  #AndPredR2 					#BoolOps unimplemented
-  #AndZeroElementPredR1 			#BoolOps unimplemented
-  #AndS32R1 					#BoolOps unimplemented
-  #AndS32R2 					#BoolOps unimplemented
-  #AndZeroElementS32R1 				#BoolOps unimplemented
-  #AndU32R1 					#BoolOps unimplemented
-  #AndU32R2 					#BoolOps unimplemented
-  #AndZeroElementU32R1 				#BoolOps unimplemented
-  #OrPredR1 					#BoolOps unimplemented
-  #OrPredR2 					#BoolOps unimplemented
-  #OrZeroElementPredR1 				#BoolOps unimplemented
-  #OrS32R1 					#BoolOps unimplemented
-  #OrS32R2 					#BoolOps unimplemented
-  #OrZeroElementS32R1 				#BoolOps unimplemented
-  #OrU32R1 					#BoolOps unimplemented
-  #OrU32R2 					#BoolOps unimplemented
+  #MulTwoConstantU32s                         #unsigned type not bridged
+  #MulTwoConstantC64s                         #complex type unimplemented
+  #MulTwoConstantZeroElementC64s              #complex type unimplemented
+  #AndPredR1                                  #BoolOps unimplemented
+  #AndPredR2
+  #AndZeroElementPredR1
+  #AndS32R1
+  #AndS32R2
+  #AndZeroElementS32R1
+  #AndU32R1
+  #AndU32R2
+  #AndZeroElementU32R1
+  #OrPredR1
+  #OrPredR2
+  #OrZeroElementPredR1
+  #OrS32R1
+  #OrS32R2
+  #OrZeroElementS32R1
+  #OrU32R1
+  #OrU32R2
   #OrZeroElementU32R1 
   #NotPredR1 
   #NotPredR2 
@@ -283,12 +283,12 @@ declare -a enabled_tests=(
   #NotU32R1 
   #NotU32R2 
   #NotZeroElementU32R1
-  #ShiftLeftS32 				#Shift ops unimplemented
-  #ShiftRightArithmeticS32 			#Shift ops unimplemented
-  #ShiftRightLogicalS32 			#Shift ops unimplemented
-  #ShiftLeftU32 				#Shift ops unimplemented
-  #ShiftRightArithmeticU32 			#Shift ops unimplemented
-  #ShiftRightLogicalU32 			#Shift ops unimplemented
+  #ShiftLeftS32                               #Shift ops unimplemented
+  #ShiftRightArithmeticS32                    #Shift ops unimplemented
+  #ShiftRightLogicalS32                       #Shift ops unimplemented
+  #ShiftLeftU32                               #Shift ops unimplemented
+  #ShiftRightArithmeticU32                    #Shift ops unimplemented
+  #ShiftRightLogicalU32                       #Shift ops unimplemented
   "CompareEqF32s"
   "CompareEqZeroElementF32s"
   "CompareGeF32s"
@@ -297,21 +297,21 @@ declare -a enabled_tests=(
   "CompareLtF32s"
   "CompareEqS32s"
   "CompareEqZeroElementS32s"
-  #CompareEqC64s 				#complex type unimplemented
-  #CompareEqZeroElementC64s 			#complex type unimplemented
-  #CompareNeC64s 				#complex type unimplemented
+  #CompareEqC64s                              #complex type unimplemented
+  #CompareEqZeroElementC64s                   #complex type unimplemented
+  #CompareNeC64s                              #complex type unimplemented
   "CompareNeF32s"
   "CompareNeS32s"
   "CompareGeS32s"
   "CompareGtS32s"
   "CompareLeS32s"
   "CompareLtS32s"
-  #CompareEqU32s 				#unsigned type not bridged
-  #CompareNeU32s 				#unsigned type not bridged
-  #CompareGeU32s 				#unsigned type not bridged
-  #CompareGtU32s 				#unsigned type not bridged
-  #CompareLeU32s 				#unsigned type not bridged
-  #CompareLtU32s 				#unsigned type not bridged
+  #CompareEqU32s                              #unsigned type not bridged
+  #CompareNeU32s                              #unsigned type not bridged
+  #CompareGeU32s                              #unsigned type not bridged
+  #CompareGtU32s                              #unsigned type not bridged
+  #CompareLeU32s                              #unsigned type not bridged
+  #CompareLtU32s                              #unsigned type not bridged
   "PowF32s"
   "PowNonIntegerF32s"
   "PowZeroElementF32s"
@@ -326,21 +326,21 @@ declare -a enabled_tests=(
   "Div4F32"
   "SquareIn4D"
   "SquareIn4DZeroElements"
-  #"MinF32s" 					#Unknown nGraph bug
-  #MinF64s 					#F64 type not bridged
+  #"MinF32s"                                  #Unknown nGraph bug
+  #MinF64s                                    #F64 type not bridged
   "MinZeroElementF32s"
-  #"MaxF32s" 					#Unknown nGraph bug
+  #"MaxF32s"                                  #Unknown nGraph bug
   "MaxZeroElementF32s"
-  #MaxF64s 					#F64 type not bridged
+  #MaxF64s                                    #F64 type not bridged
   "MaxS32s"
   "MinS32s"
-  #MaxU32s 					#unsigned type not bridged
-  #MinU32s 					#unsigned type not bridged
+  #MaxU32s                                    #unsigned type not bridged
+  #MinU32s                                    #unsigned type not bridged
   "MaxTenF32s"
   "MaxR1S1AndR1S0F32s"
-  #"MaxR1S0AndR2S0x2F32s" 			#Unknown nGraph bug
+  #"MaxR1S0AndR2S0x2F32s"                     #Unknown nGraph bug
   "Max1DAnd2DF32s"
-  #"Max1DAnd2DZeroElementF32s" 			#Unknown nGraph bug
+  #"Max1DAnd2DZeroElementF32s"                #Unknown nGraph bug
   "Max3DAndScalarS32s"
   "Max3DAndScalarZeroElementS32s"
   "Min2DTo1DF32s"
@@ -349,20 +349,20 @@ declare -a enabled_tests=(
   "Min2DTo4DZeroElementF32s"
   "MinTenS32s"
   "MaxTenS32s"
-  #"RemTwoConstantS32s" 			#remainder op unimplemented
-  #NonNanClampF32 				#clamp op unimplemented
-  #ClampF32Scalar 				#clamp op unimplemented
-  #ClampF32ScalarVector 			#clamp op unimplemented
-  #ClampS32Vector 				#clamp op unimplemented
-  #ClampS32ScalarVector 			#clamp op unimplemented
-  #ClampU32Vector 				#clamp op unimplemented
-  #ClampU32ScalarVector 			#clamp op unimplemented
+  #"RemTwoConstantS32s"                       #remainder op unimplemented
+  #NonNanClampF32                             #clamp op unimplemented
+  #ClampF32Scalar                             #clamp op unimplemented
+  #ClampF32ScalarVector                       #clamp op unimplemented
+  #ClampS32Vector                             #clamp op unimplemented
+  #ClampS32ScalarVector                       #clamp op unimplemented
+  #ClampU32Vector                             #clamp op unimplemented
+  #ClampU32ScalarVector                       #clamp op unimplemented
   "AddTwoParametersF32s"
   "AddTwoParametersZeroElementF32s"
   "AddParameterToConstantF32s"
   "CosF32s"
   "SinF32s"
-  #Atan2F32s 					#atan2 op unimplemented
+  #Atan2F32s                                  #atan2 op unimplemented
   "TanhF32s"
   "TanhF32sVector"
   "ExpF32sVector"
