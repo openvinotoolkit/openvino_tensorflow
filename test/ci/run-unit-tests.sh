@@ -220,6 +220,76 @@ build_and_run_tests ${test_target} ${enabled_tests[@]}
 # xla/tests:array_elementwise_ops_test_dynamic_plugin
 test_target="tensorflow/compiler/xla/tests:array_elementwise_ops_test_dynamic_plugin"
 declare -a enabled_tests=(
+  "NegConstantZeroElementF32"
+  "NegConstantF32"
+  "NegConstantS32"
+  #"NegConstantZeroElementC64"                #complex type unimplemented
+  #"NegConstantC64"                           #complex type unimplemented
+  "NegConstantS64"
+  #"IsFiniteZeroElementF32s"                  #IsFinite op unimplemented
+  #"IsFiniteScalarF32"                        #IsFinite op unimplemented
+  #"IsFiniteR1F32s"                           #IsFinite op unimplemented
+  "AddTwoConstantF32s"
+  "AddTwoConstantZeroElementF32s"
+  #"AddTwoConstantC64s"                       #complex type unimplemented
+  #"AddTwoConstantZeroElementC64s"            #complex type unimplemented
+  #"AddTwoConstantU64s"                       #unsigned type not bridged
+  "SubTwoConstantS64s"
+  "SubTwoConstantF32s"
+  "SubTwoConstantZeroElementF32s"
+  "SubTwoConstantS32s"
+  #SubTwoConstantC64s                         #complex type unimplemented
+  #SubTwoConstantZeroElementC64s              #complex type unimplemented
+  "SubTwoConstantZeroElementS32s"
+  "DivTwoConstantF32s"
+  "DivTwoConstantZeroElementF32s"
+  #"DivS32s"                                  #remainder op unimplemented
+  #DivU32s                                    #unsigned type not bridged
+  #DivTwoConstantC64s                         #complex type unimplemented
+  #DivTwoConstantZeroElementC64s              #complex type unimplemented
+  #"RemF32s"                                  #remainder op unimplemented
+  #"RemZeroElementF32s"                       #remainder op unimplemented
+  #RemF64s                                    #remainder op unimplemented
+  "MulTwoConstantF32s"
+  "MulTwoConstantZeroElementF32s"
+  "MulTwoConstantS32s"
+  "MulTwoConstantZeroElementS32s"
+  #MulTwoConstantU32s                         #unsigned type not bridged
+  #MulTwoConstantC64s                         #complex type unimplemented
+  #MulTwoConstantZeroElementC64s              #complex type unimplemented
+  #AndPredR1                                  #BoolOps unimplemented
+  #AndPredR2
+  #AndZeroElementPredR1
+  #AndS32R1
+  #AndS32R2
+  #AndZeroElementS32R1
+  #AndU32R1
+  #AndU32R2
+  #AndZeroElementU32R1
+  #OrPredR1
+  #OrPredR2
+  #OrZeroElementPredR1
+  #OrS32R1
+  #OrS32R2
+  #OrZeroElementS32R1
+  #OrU32R1
+  #OrU32R2
+  #OrZeroElementU32R1 
+  #NotPredR1 
+  #NotPredR2 
+  #NotZeroElementPredR1 
+  #NotS32R1 
+  #NotS32R2 
+  #NotZeroElementS32R1
+  #NotU32R1 
+  #NotU32R2 
+  #NotZeroElementU32R1
+  #ShiftLeftS32                               #Shift ops unimplemented
+  #ShiftRightArithmeticS32                    #Shift ops unimplemented
+  #ShiftRightLogicalS32                       #Shift ops unimplemented
+  #ShiftLeftU32                               #Shift ops unimplemented
+  #ShiftRightArithmeticU32                    #Shift ops unimplemented
+  #ShiftRightLogicalU32                       #Shift ops unimplemented
   "CompareEqF32s"
   "CompareEqZeroElementF32s"
   "CompareGeF32s"
@@ -228,12 +298,108 @@ declare -a enabled_tests=(
   "CompareLtF32s"
   "CompareEqS32s"
   "CompareEqZeroElementS32s"
+  #CompareEqC64s                              #complex type unimplemented
+  #CompareEqZeroElementC64s                   #complex type unimplemented
+  #CompareNeC64s                              #complex type unimplemented
   "CompareNeF32s"
   "CompareNeS32s"
   "CompareGeS32s"
   "CompareGtS32s"
   "CompareLeS32s"
   "CompareLtS32s"
+  #CompareEqU32s                              #unsigned type not bridged
+  #CompareNeU32s                              #unsigned type not bridged
+  #CompareGeU32s                              #unsigned type not bridged
+  #CompareGtU32s                              #unsigned type not bridged
+  #CompareLeU32s                              #unsigned type not bridged
+  #CompareLtU32s                              #unsigned type not bridged
+  "PowF32s"
+  "PowNonIntegerF32s"
+  "PowZeroElementF32s"
+  "PowSpecialF32"
+  "PowOfExpF32"
+  "LogOfPowerF32"
+  "MulOfExpF32"
+  "DivOfExpF32"
+  "Div3_lhs_F32"
+  "Div3_rhs_F32"
+  "DivOfPowerF32"
+  "Div4F32"
+  "SquareIn4D"
+  "SquareIn4DZeroElements"
+  #"MinF32s"                                  #Unknown nGraph bug
+  #MinF64s                                    #F64 type not bridged
+  "MinZeroElementF32s"
+  #"MaxF32s"                                  #Unknown nGraph bug
+  "MaxZeroElementF32s"
+  #MaxF64s                                    #F64 type not bridged
+  "MaxS32s"
+  "MinS32s"
+  #MaxU32s                                    #unsigned type not bridged
+  #MinU32s                                    #unsigned type not bridged
+  "MaxTenF32s"
+  "MaxR1S1AndR1S0F32s"
+  #"MaxR1S0AndR2S0x2F32s"                     #Unknown nGraph bug
+  "Max1DAnd2DF32s"
+  #"Max1DAnd2DZeroElementF32s"                #Unknown nGraph bug
+  "Max3DAndScalarS32s"
+  "Max3DAndScalarZeroElementS32s"
+  "Min2DTo1DF32s"
+  "Min2DTo1DZeroElementF32s"
+  "Min2DTo4DF32s"
+  "Min2DTo4DZeroElementF32s"
+  "MinTenS32s"
+  "MaxTenS32s"
+  #"RemTwoConstantS32s"                       #remainder op unimplemented
+  #NonNanClampF32                             #clamp op unimplemented
+  #ClampF32Scalar                             #clamp op unimplemented
+  #ClampF32ScalarVector                       #clamp op unimplemented
+  #ClampS32Vector                             #clamp op unimplemented
+  #ClampS32ScalarVector                       #clamp op unimplemented
+  #ClampU32Vector                             #clamp op unimplemented
+  #ClampU32ScalarVector                       #clamp op unimplemented
+  "AddTwoParametersF32s"
+  "AddTwoParametersZeroElementF32s"
+  "AddParameterToConstantF32s"
+  "CosF32s"
+  "SinF32s"
+  #Atan2F32s                                  #atan2 op unimplemented
+  "TanhF32s"
+  "TanhF32sVector"
+  "ExpF32sVector"
+  "LogF32sVector"
+  "AddChainFoldLeft"
+  "AddChainFoldRight"
+  "AddWithNeg"
+  "AddChainTwoSide"
+  "2DBinaryOpF32s"
+  "ScalarPlus2DF32"
+  "2DPlusScalarF32"
+  "Add1DTo2DF32"
+  "Compare1DTo2DS32Eq"
+  "Compare1DTo2DS32Ne"
+  "Compare1DTo2DS32Ge"
+  "Compare1DTo2DS32Gt"
+  "Compare1DTo2DS32Le"
+  "Compare1DTo2DS32Lt"
+  "Mul2Dby1DF32"
+  "Add2DTo2DWithDegenerateDim1"
+  "Add2DTo2DWithDegenerateDim0"
+  "Add2DsWithDegenerateDimsOuterProduct"
+  "Add1DTo2DF32TwoWaysOver1"
+  "Add1DTo2DF32TwoWaysOver0"
+  "3DBinaryOpF32s"
+  "Add1DTo3DTwoWaysOver2"
+  "Add1DTo3DTwoWaysOver0"
+  "Add2DTo3D"
+  "CompareGtR3F32sWithDegenerateDim2"
+  "4DBinaryOpF32s"
+  "R4PlusR1InDim1"
+  "R4_16x16x2x2_Plus_R1_16"
+  "CannotAddOpaques"
+  "IdentityBroadcastOfSameRankIsAllowed"
+  "NonIdentityBroadcastOfSameRankIsDisallowed"
+  "ImplictBroadcastInFusedExpressions"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
