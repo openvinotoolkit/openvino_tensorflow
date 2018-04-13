@@ -117,15 +117,15 @@ declare -a enabled_tests=(
   "Pad4D_2x0x3x2_FloatArray"
   "Pad4DFloat_1x1x3x2_Array"
   "Pad4DFloatArrayWithInteriorPadding"
-  #"Pad4DFloatArrayMinorFirstSmall"                     # expect fail for now: bridge does not yet handle non-row-major layout
-  #"Pad4DFloatArrayMinorFirstNonTrivialMinorDimensions" # expect fail for now: bridge does not yet handle non-row-major layout
-  #"Pad4DU8Array"                                       # expect fail for now: U8 not implemented by bridge
+  "Pad4DFloatArrayMinorFirstSmall"
+  "Pad4DFloatArrayMinorFirstNonTrivialMinorDimensions"
+  # "Pad4DU8Array"                                       # expect fail for now: U8 not implemented by bridge
   "Pad4DPredArray"
   "Large2DPad"
   "AllTypes2DPad"
   "High2DPad"
-  #"NegativePadding2D"                                  # expect fail for now: negative padding not implemented yet in nG++
-  #"NegativeAndInteriorPadding2D"                       # expect fail for now: negative padding not implemented yet in nG++
+  "NegativePadding2D"
+  "NegativeAndInteriorPadding2D"
   "ReducePad"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
@@ -135,6 +135,7 @@ test_target="tensorflow/compiler/xla/tests:convolution_dimension_numbers_test_dy
 declare -a enabled_tests=(
   "InvalidInputDimensionNumbers"
   "InvalidWeightDimensionNumbers"
+  "InvalidOutputDimensionNumbers"
   "TwoConvsWithDifferentDimensionNumbers"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
@@ -245,24 +246,24 @@ declare -a enabled_tests=(
     "ScalarTo2D_2x0"
     "ScalarTo2D_0x2"
     "1DTo2D"
-    # "LogicalAnd2DTo3D_Pred"
+    "LogicalAnd2DTo3D_Pred"
     "ZeroElement_1DTo2D"
     "1DToZeroElement2D"
-    # "InDimensionAndDegenerateBroadcasting"
-    # "Add3DTo3DDegenerate_1_2"
-    # "Add3DTo3DDegenerate_0_1"
-    # "Add3DTo3DDegenerate_0_2"
-    # "Add3DTo3DDegenerate_0"
-    # "Add3DTo3DDegenerate_1"
-    # "Add3DTo3DDegenerate_2"
-    # "Add3DTo3DDegenerate_0_1_2"
-    # "Add2DTo2DDegenerate_0"
-    # "Add2DTo2DDegenerate_1"
-    # "Add1DTo3DInDim0"
-    # "Add1DTo3DInDim1"
-    # "Add1DTo3DInDim2"
-    # "Add1DTo3DInDimAll"
-    # "Add1DTo3DInDimAllWithScalarBroadcast"
+    "InDimensionAndDegenerateBroadcasting"
+    "Add3DTo3DDegenerate_1_2"
+    "Add3DTo3DDegenerate_0_1"
+    "Add3DTo3DDegenerate_0_2"
+    "Add3DTo3DDegenerate_0"
+    "Add3DTo3DDegenerate_1"
+    "Add3DTo3DDegenerate_2"
+    "Add3DTo3DDegenerate_0_1_2"
+    "Add2DTo2DDegenerate_0"
+    "Add2DTo2DDegenerate_1"
+    "Add1DTo3DInDim0"
+    "Add1DTo3DInDim1"
+    "Add1DTo3DInDim2"
+    "Add1DTo3DInDimAll"
+    "Add1DTo3DInDimAllWithScalarBroadcast"
     "InvalidBinaryAndDegenerateBroadcasting"
     "InvalidInDimensionBroadcasting"
     "InvalidDegenerateBroadcasting"
@@ -352,37 +353,38 @@ declare -a enabled_tests=(
 # xla/tests:vector_ops_simple_test_dynamic_plugin
 test_target="tensorflow/compiler/xla/tests:vector_ops_simple_test_dynamic_plugin"
 declare -a enabled_tests=(
-    "ExpTenValues"
-    "ExpManyValues"
-    "ExpIn4D"
-  #"NegateTenFloatValues"
-  #"NegateTenInt32Values"
-  #"NegateUint32Values
-  #"SquareTenValues"
-  #"ReciprocalTenValues"
-  #"SqrtZeroes"
-  #"SqrtSixValues"
-  #"InvSqrtSevenValues"
-  #"AddTenValuesViaMap"
-  #"MaxTenValues"
-  #"MaxTenValuesFromParams"
-  #"Max15000ValuesFromParams"
-  #"MaxTenValuesWithScalar"
-  #"MinTenValues"
-  #"MinMaxTenValues"
-  #"ClampTenValuesConstant"
-  #"ClampTwoValuesConstant"
-  #"ClampTenValuesConstantNonzeroLower"
-  #"MapTenValues"
-  #"RemainderTenValuesS32"
-  #"VectorPredicateEqual"
-  #"VectorPredicateNotEqual"
+  "ExpTenValues"
+  "ExpManyValues"
+  "ExpIn4D"
+  "NegateTenFloatValues"
+  "NegateTenInt32Values"
+  # "NegateUint32Values" #Unsigned unimplemented
+  "SquareTenValues"
+  "ReciprocalTenValues"
+  "SqrtZeroes"
+  "SqrtSixValues"
+  "InvSqrtSevenValues"
+  # "AddTenValuesViaMap"
+  "MaxTenValues"
+  "MaxTenValuesFromParams"
+  "Max15000ValuesFromParams"
+  "MaxTenValuesWithScalar"
+  "MinTenValues"
+  "MinMaxTenValues"
+  # "ClampTenValuesConstant"
+  # "ClampTwoValuesConstant"
+  # "ClampTenValuesConstantNonzeroLower"
+  # "MapTenValues"
+  # "RemainderTenValuesS32"
+  "VectorPredicateEqual"
+  "VectorPredicateNotEqual"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
 # xla/tests:reduce_test_dynamic_plugin
 test_target="tensorflow/compiler/xla/tests:reduce_test_dynamic_plugin"
 declare -a enabled_tests=(
+  "ReduceR1_0_F32_To_R0"
   "ReduceR1_1_F32_To_R0"
   "ReduceR1_2_F32_To_R0"
   "ReduceR1_16_F32_To_R0"
@@ -391,15 +393,66 @@ declare -a enabled_tests=(
   "ReduceR1_240_F32_To_R0"
   "ReduceR1_256_F32_To_R0"
   "ReduceR1_1024_F32_To_R0"
+  "ReduceR1_2048_F32_To_R0"
   "ReduceR1_16K_F32_To_R0"
   "ReduceR1_16KP1_F32_To_R0"
   "ReduceR1_64K_F32_To_R0"
-  #"ReduceR1_1M_F32_To_R0"
-  #ReduceR1_16M_F32_To_R0
+  "ReduceR1_1M_F32_To_R0"
+  "ReduceR1_16M_F32_To_R0"
+  "ReduceR2_0x0_To_R0"
   "ReduceR2_0x2_To_R0"
   "ReduceR2_1x1_To_R0"
   "ReduceR2_2x0_To_R0"
   "ReduceR2_2x2_To_R0"
+  "ReduceR2_8x8_To_R0"
+  "ReduceR2_9x9_To_R0"
+  "ReduceR2_50x111_To_R0"
+  "ReduceR2_111x50_To_R0"
+  "ReduceR2_111x50_01_To_R0"
+  "ReduceR2_1024x1024_To_R0"
+  "ReduceR2_1000x1500_To_R0"
+  "ReduceR2_0x2_To_R1"
+  "ReduceR2_1x1_To_R1"
+  "ReduceR2_2x2_To_R1"
+  "ReduceR2_8x8_To_R1"
+  "ReduceR2_9x9_To_R1"
+  "ReduceR2_50x111_To_R1"
+  "ReduceR2_111x50_To_R1"
+  #"ReduceR2_111x50_01_To_R1"
+  "ReduceR2_1024x1024_To_R1"
+  "ReduceR2_1000x1500_To_R1"
+  #"AndReduceAllOnesR1_10_Pred" #BoolOps unimplemented
+  #"AndReduceOnesAndZerosR1_10_Pred" #BoolOps unimplemented
+  #"OrReduceAllOnesR1_10_Pred" #BoolOps unimplemented
+  #"OrReduceOnesAndZerosR1_10_Pred" #BoolOps unimplemented
+  "ReduceElementwiseR2_111x50_To_R1"
+  "TransposeAndReduceElementwiseR2_111x50_To_R1"
+  "TransposeAndReduceR3_12x111x50_To_R2"
+  #"Reshape_111x2x25Reduce_111x50_To_R1"
+  "AddReduce2DScalarToR0"
+  "MaxReduce2DScalarToR0"
+  "MaxReduce2DToR0"
+  "MinReduce2DToR0"
+  #"UnsignedInt_MinReduce" #Unsigned unimplemented
+  #"UnsignedInt_MaxReduce" #Unsigned unimplemented
+  "Reduce2DAmong1"
+  "Reduce2DAmong0and1"
+  "Reduce2DAmongY"
+  "ReduceR3AmongDims_1_2"
+  "ReduceR3AmongDims_0_1"
+  "ReduceR3ToR0"
+  "ReduceR3AmongDim0"
+  "ReduceR3AmongDim1"
+  "ReduceR3AmongDim2"
+  #"VectorizedReduce_Add" #Unsigned unimplemented
+  #"VectorizedReduce_Multiply" #Unsigned unimplemented
+  #"VectorizedReduce_Max" #Unsigned unimplemented
+  #"VectorizedReduce_Min" #Unsigned unimplemented
+  #"VectorizedReduce_BooleanAnd" #BoolOps unimplemented
+  #"VectorizedReduce_BooleanOr" #BoolOps unimplemented
+  "OperationOnConstantAsInitValue"
+  #"ReduceAndPredR2_128x64_To_R1" #Unsigned unimplemented
+  #"ReduceOrPredR2_64x32_To_R1" #Unsigned unimplemented
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
@@ -409,21 +462,17 @@ declare -a enabled_tests=(
   "Transpose0x0"
   "Transpose0x42"
   "Transpose7x0"
-  "Transpose2x2"
+  # "Transpose2x2"
   "Transpose0x2x3_2x3x0"
-  #"Transpose1x2x3_2x3x1"
-  #"Transpose1x2x3_3x2x1"
-  #"Transpose1x2x3_1x2x3"
-  "MultiTranspose3x2"
+  # "Transpose1x2x3_2x3x1"
+  # "Transpose1x2x3_3x2x1"
+  # "Transpose1x2x3_1x2x3"
+  # "MultiTranspose3x2"
   "Small_1x1"
-  "Small_2x2"
+  # "Small_2x2"
 
 )
-# DISABLED
-# For this test XLA is launching INTERPRETER device - which is causing 
-# a failure as a default device cannot be determined for unit tests
-# There is an ongoing discussions with XLA folks about this
-# build_and_run_tests ${test_target} ${enabled_tests[@]}
+build_and_run_tests ${test_target} ${enabled_tests[@]}
 
 # xla/tests:convert_test_dynamic_plugin
 test_target="tensorflow/compiler/xla/tests:convert_test_dynamic_plugin"
@@ -435,16 +484,22 @@ declare -a enabled_tests=(
   "ConvertR1PREDToR1F32"
   "ConvertR1S0S32ToR1S0F32"
   "ConvertR1F32ToR1S32"
-  #"ConvertR1S64ToR1F32"
-  #ConvertR1U8ToR1F32
-  #ConvertR1U8ToR1S32
-  #ConvertR1U8ToR1U32
-  #ConvertR1F32ToR1F64
-  #ConvertR1F64ToR1F32
+  "ConvertR1S64ToR1F32"
+  #"ConvertR1U32ToR1F32"
+  #"ConvertR1F32ToR1U32"
+  #"ConvertR1U32ToR1S64"
+  "ConvertR1S32ToR1S64"
+  #"ConvertR1U8ToR1F32"
+  #"ConvertR1U8ToR1S32"
+  #"ConvertR1U8ToR1U32"
+  #"ConvertR1F32ToR1F64"
+  #"ConvertR1F64ToR1F32"
   "ConvertS32Extremes"
-  #ConvertMapToS32
-  #ConvertMapToF32
+  #"ConvertMapToS32"
+  #"ConvertMapToF32"
   "ConvertReshape"
+  #"ConvertR1F16ToR1F32"
+  #"ConvertR1F32ToR1F16"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
@@ -461,11 +516,11 @@ declare -a enabled_tests=(
   "SelectR1F32WithCmpR1F32s"
   "SelectR1F32WithCmpR1F32sFromParamsSmall"
   "SelectR1F32WithCmpR1F32sFromParamsLarge"
-  #"SelectR1F32WithCmpR1S32ToScalar"
-  #"SelectR1F32WithCmpR1F32ToScalar"
-  #"SelectR1S0F32WithScalarPredicate"
-  #"SelectR1F32WithScalarPredicateTrue"
-  #"SelectR1F32WithScalarPredicateFalse"
+  "SelectR1F32WithCmpR1S32ToScalar"
+  "SelectR1F32WithCmpR1F32ToScalar"
+  "SelectR1S0F32WithScalarPredicate"
+  "SelectR1F32WithScalarPredicateTrue"
+  "SelectR1F32WithScalarPredicateFalse"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
@@ -492,21 +547,18 @@ declare -a enabled_tests=(
   "R1S32"
   "R1S32OverlappingWindow"
   "R2S32"
+  #"R2F32Tie" # same padding unimplemented
   "ReshapeR2S32"
   "R2S32OverlappingWindow"
-  # "R2S32SamePadding" # has padding
-  # "R2S32SamePaddingOverlappingWindow" # has padding
+  # "R2S32SamePadding" # same padding padding
+  # "R2S32SamePaddingOverlappingWindow" # same padding padding
   "R2F32OverlappingR2Source"
   "R4F32Valid"
   "R4F32Overlap"
   "R4F32OverlapSmall"
   "R4F32RefValidFixedSmall"
-  #"R4F32RefSameRandom" # has padding
-  #"R4F32RefSameRandomFullyPadded" # has padding
-  # "R4F32RefValidRandom" # CPU precision bug, works with INTERPRETER
-  # "R4F32RefValidRandomSmall" # CPU precision bug, works with INTERPRETER
   "R1F32OverlappingWindowMaxScatter"
-  # "R1F32OverlappingWindowMinScatter" #CPU precision bug, works with INTERPRETER
+  "R1F32OverlappingWindowMinScatter"
 )
 build_and_run_tests ${test_target} ${enabled_tests[@]}
 
