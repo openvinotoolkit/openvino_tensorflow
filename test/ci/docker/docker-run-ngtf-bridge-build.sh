@@ -20,8 +20,6 @@ else
     export PYTHON_VERSION_NUMBER="${3}"
 fi
 
-# The docker image ID is currently just the git SHA of this cloned repo.
-# We need this ID to know which docker image to run with.
 # Note that the docker image must have been previously built using the
 # make-docker-ngtf-bridge-ci.sh script (in the same directory as this script).
 #

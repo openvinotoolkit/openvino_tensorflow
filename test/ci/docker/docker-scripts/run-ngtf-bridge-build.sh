@@ -21,6 +21,9 @@ bbuild_dir="${bridge_dir}/BUILD-BRIDGE"
 ngtf_dir='/home/dockuser/ngtf'
 ci_dir="${bridge_dir}/test/ci/docker"
 venv_dir="/tmp/venv_python${PYTHON_VERSION_NUMBER}"
+plugins_src="${venv_dir}/lib/python2.7/site-packages/tensorflow/plugins"
+plugins_dir="${bridge_dir}/plugins"  # Directory to save plugin artifacts in
+plugins_tarball="plugins_dist.tgz"  # Tarball artifact to send to Artifactory
 
 # HOME is expected to be /home/dockuser.  See script run-as-user.sh, which
 # sets this up.
@@ -39,6 +42,9 @@ echo "  bbuild_dir=${bbuild_dir}"
 echo "  ngtf_dir=${ngtf_dir}"
 echo "  ci_dir=${ci_dir}"
 echo "  venv_dir=${venv_dir}"
+echo "  plugins_src=${plugins_src}"
+echo "  plugins_dir=${plugins_dir}"
+echo "  plugins_tarball=${plugins_tarball}"
 echo ''
 echo "  HOME=${HOME}"
 echo "  PYTHON_VERSION_NUMBER=${PYTHON_VERSION_NUMBER}"
@@ -58,6 +64,18 @@ fi
 if [ -d "${bbuild_dir}" ] ; then
     ( >&2 echo '***** Error: *****' )
     ( >&2 echo "Bridge build directory already exists -- please remove it before calling this script: ${bbuild_dir}" )
+    exit 1
+fi
+
+if [ -d "${venv_dir}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "Virtual-env build directory already exists -- please remove it before calling this script: ${venv_dir}" )
+    exit 1
+fi
+
+if [ -d "${plugins_dir}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "Plugins build directory already exists -- please remove it before calling this script: ${plugins_src}" )
     exit 1
 fi
 
@@ -118,7 +136,7 @@ echo  ' '
 # if PS2 is not set.
 PS1='prompt> '
 PS2='prompt-more> '
-virtualenv -p "${PYTHON_BIN_PATH}" "${venv_dir}"
+virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" "${venv_dir}"
 source "${venv_dir}/bin/activate"
 
 xtime="$(date)"
@@ -155,6 +173,37 @@ mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
 cmake ..
 make -j16
+make install
+
+xtime="$(date)"
+echo  ' '
+echo  "===== Run Sanity Check for Plugins at ${xtime} ====="
+echo  ' '
+
+cd "${bridge_dir}/test"
+python install_test.py
+
+xtime="$(date)"
+echo  ' '
+echo  "===== Saving plugins_dist.tgz at ${xtime} ====="
+echo  ' '
+
+cd "${bridge_dir}"
+
+if [ ! -d "${plugins_src}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "PLUGINS SOURCE directory does not exist -- this likely indicates a build failuire: ${plugins_src}" )
+    exit 1
+fi
+
+set -x
+cp -rv "${plugins_src}" "${plugins_dir}"
+pwd
+ls -l
+# We use the directory name only here because tar (understandably) does not
+# like an absolute path (to avoid making non-portable tarballs)
+tar czf "${plugins_tarball}" plugins
+set +x
 
 xtime="$(date)"
 echo  ' '

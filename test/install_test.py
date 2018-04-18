@@ -48,6 +48,8 @@ if __name__ == '__main__':
     [found, name] = check_for_ngraph_device()
     if not found:
         print("nGraph Device is not available")
+        sys.exit(1)
     else:
         print("Device nGraph available")
         print("Name: ", name)
+        sys.exit(0)
