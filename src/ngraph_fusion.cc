@@ -466,13 +466,13 @@ static bool MatchAvgPoolDivideByCountRHSPostBroadcast(
 
 static bool MatchBroadcastedConstant(
     HloInstruction* root, std::vector<HloInstruction*>& matched_instructions) {
-  if (root->opcode() == HloOpcode::kBroadcast) {
-    matched_instructions.push_back(root);
-    root = root->mutable_operand(0);
-  }
-
   if (root->opcode() == HloOpcode::kConstant) {
     matched_instructions.push_back(root);
+    return true;
+  } else if (root->opcode() == HloOpcode::kBroadcast &&
+             root->mutable_operand(0)->opcode() == HloOpcode::kConstant) {
+    matched_instructions.push_back(root);
+    matched_instructions.push_back(root->mutable_operand(0));
     return true;
   }
 
