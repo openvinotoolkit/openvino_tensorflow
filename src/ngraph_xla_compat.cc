@@ -36,7 +36,6 @@ limitations under the License.
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/parameter.hpp"
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/type/type.hpp"
 #include "ngraph_xla_compat.h"
@@ -157,25 +156,6 @@ void flatten(ngraph::runtime::TensorViewPtrs& tensors,
     }
   }
 }
-
-// Return a vector of the real tensors underlying a vector of tensors which may
-// contain tuples.
-ngraph::runtime::TensorViewPtrs flatten(
-    const ngraph::runtime::TensorViewPtrs& tensors) {
-  ngraph::runtime::TensorViewPtrs result;
-  for (auto tensor : tensors) {
-    flatten(result, tensor);
-  }
-  return result;
-}
-}
-
-void call(shared_ptr<ngraph::runtime::CallFrame> call_frame,
-          const ngraph::runtime::TensorViewPtrs& outputs,
-          const ngraph::runtime::TensorViewPtrs& inputs) {
-  ngraph::runtime::TensorViewPtrs flat_outputs(flatten(outputs));
-  ngraph::runtime::TensorViewPtrs flat_inputs(flatten(inputs));
-  call_frame->tensor_call(flat_outputs, flat_inputs);
 }
 
 }  // namespace compat
