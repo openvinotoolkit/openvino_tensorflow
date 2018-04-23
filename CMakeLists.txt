@@ -41,6 +41,7 @@ ExternalProject_Add(
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/build"
     BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -j $(nproc) ngraph
     UPDATE_COMMAND ""
+    INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
 )
 
 set( NGRAPH_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
@@ -49,7 +50,10 @@ set( NGRAPH_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 find_package(TensorFlow REQUIRED)
 
 # Set the Install Prefix, rpath etc. here (cannot be done in the sub directories)
-set(CMAKE_INSTALL_PREFIX ${TensorFlow_DIR})
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX ${TensorFlow_DIR})
+endif()
+MESSAGE("INSTALL DIR: ${CMAKE_INSTALL_PREFIX}")
 
 # Add the directories to be built
 add_subdirectory(src)
