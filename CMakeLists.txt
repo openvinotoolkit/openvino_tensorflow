@@ -41,6 +41,7 @@ set_target_properties(
 set(SRC 
    ngraph_device.cc 
    ngraph_op_kernels.cc 
+   ngraph_utils.cc 
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})

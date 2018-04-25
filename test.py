@@ -19,9 +19,11 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from ctypes import *
 
 import sys
 import time
+import getpass
 
 import numpy as np
 import tensorflow as tf
@@ -29,42 +31,74 @@ from tensorflow.python.client import device_lib
 from tensorflow.python import pywrap_tensorflow as py_tf
 from tensorflow.python.framework import errors_impl
 
+import tfgraphviz as tfg
+
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-with errors_impl.raise_exception_on_not_ok_status() as status:
-    lib = py_tf.TF_LoadLibrary(
-        '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so',
-        status)
+cdll.LoadLibrary(
+    '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so'
+)
+# with errors_impl.raise_exception_on_not_ok_status() as status:
+#     lib = py_tf.TF_LoadLibrary(
+#         '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so',
+#         status)
 
-print("Status: ", py_tf.TF_GetCode(status))
+# print("Status: ", py_tf.TF_GetCode(status))
 
 # Get the list of devices
 tf_devices = device_lib.list_local_devices()
 
-# Look for nGraph device
-for dev in tf_devices:
-    print("Device Name: ", dev.name)
-    print("Device Type: ", dev.device_type)
+# # Look for nGraph device
+# for dev in tf_devices:
+#     print("Device Name: ", dev.name)
+#     print("Device Type: ", dev.device_type)
 
 # Now try out some computation
+
+graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"
+print('Saving graph to: %s' % graph_location)
+
+train_writer = tf.summary.FileWriter(graph_location)
+
 x = tf.placeholder(tf.float32, shape=(2, 3))
 y = tf.placeholder(tf.float32, shape=(2, 3))
+z = tf.placeholder(tf.float32, shape=(2, 3))
 
 with tf.device("/device:NGRAPH_CPU:0"):
-    # Look for nGraph device
-    for dev in tf_devices:
-        print("Device Name: ", dev.name)
-        print("Device Type: ", dev.device_type)
+    #with tf.device("/device:CPU:0"):
 
     a = x + y
+    c = z * a
+    # d = y - c
+    # b = a * y + d
+
+    # Save the graphdef
 
     config = tf.ConfigProto(
-        allow_soft_placement=False,
-        log_device_placement=True,
+        allow_soft_placement=True,
+        log_device_placement=False,
         inter_op_parallelism_threads=1)
 
     with tf.Session(config=config) as sess:
         print("Python: Running with Session")
-        res = sess.run(a, feed_dict={x: np.ones((2, 3)), y: np.ones((2, 3))})
-        np.testing.assert_allclose(res, np.ones((2, 3)) * 2.)
-        print("result:", res)
+        sess.run(
+            (a, c),
+            feed_dict={
+                x: np.ones((2, 3)),
+                y: np.ones((2, 3)),
+                z: np.ones((2, 3)),
+            })
+        #print("result:", result_a)
+
+        # (result_a, result_b, _, _) = sess.run(
+        #     (a, b, c, d),
+        #     feed_dict={
+        #         x: np.ones((2, 3)),
+        #         y: np.ones((2, 3)),
+        #         z: np.ones((2, 3))
+        #     })
+        # print("result:", result_b)
+
+    train_writer.add_graph(tf.get_default_graph())
+    g = tfg.board(tf.get_default_graph())
+    g.render(filename="./test")
