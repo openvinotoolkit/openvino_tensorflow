@@ -1,14 +1,15 @@
 # Bridge TensorFlow*/XLA to run on Intel® nGraph™ backends
 
 This directory contains the bridge code needed to build a TensorFlow*/XLA 
-plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ library, compiler and runtime] 
-that provides developers with the means to train and run DNN models 
-efficiently on custom backends: GPU, CPU, and custom silicon.
+plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ 
+library, compiler and runtime] that provides developers with the means to 
+train and run DNN models efficiently on custom backends: GPU, CPU, and custom 
+silicon.
 
 To enable the bridge from TensorFlow to Intel nGraph backends, two repos are 
-needed: `ngraph-tensorflow` and this repository, `ngraph-tensorflow-bridge`.  
-After everything is built, we end up with a [DSO] that acts like a plugin to 
-Intel nGraph backends.
+needed: `ngraph-tensorflow` and this repository, `ngraph-tensorflow-bridge`. After 
+everything is built, we end up with a [DSO] that acts like a plugin to Intel 
+nGraph backends.
 
 IMPORTANT: The nGraph TensorFlow bridge currently uses an experimental plugin
 API that is not part of mainstream TensorFlow. You must build TensorFlow from
@@ -16,7 +17,8 @@ a specific tag from the `NervanaSystems/ngraph-tensorflow` repo. Discussions
 about upstreaming the plugin API are ongoing. See the section "Future plans"
 below for more details.
 
-## Preparing to install ngraph-tensorflow
+## Prepare the build environment
+
 The installation prerequisites are the same as TensorFlow as described in the 
 TensorFlow [prepare environment] for linux.
 
@@ -42,26 +44,22 @@ TensorFlow [prepare environment] for linux.
 
    **Note** You do not need CUDA in order to use the ngraph-tensorflow bridge.
 
-4. Once TensorFlow's dependencies are installed, clone the source of the 
-   [ngraph-tensorflow] repo to your machine; this is the required fork for 
-   this integration:
-
-## Python virtual environment setup
-We recommend using a virtualenv-based installation of ngraph-tensorflow and the ngraph-tensorflow-bridge. Please follow the steps outlined in the TensorFlow
-[installing with Virtualenv] document.
 
 ## How to enable the bridge
 
-
-1. Clone the `ngraph-tensorflow` repository and check out the correct tag
-   for this version of the bridge:
+1. Once TensorFlow's dependencies are installed, clone the source of the 
+   [ngraph-tensorflow] repo to your machine; this is the required fork for 
+   this integration. Then check out the correct tag for this version of the 
+   bridge:
 
    ```
    git clone https://github.com/NervanaSystems/ngraph-tensorflow.git
    cd ngraph-tensorflow
    git checkout ngraph-tensorflow-preview-0
    ```
-2. Now set up and activate the virtual environment:
+2. When setting up and activating the virtual environment with TensorFlow 
+   frameworks, you must use a specific kind of venv designed for 
+   ``system-site-packages``.  A regular venv tends to not detect nGraph installs:
 
    ```
    virtualenv --system-site-packages <your_virtual_env_dir> # for Python 2.7
@@ -76,13 +74,10 @@ We recommend using a virtualenv-based installation of ngraph-tensorflow and the 
    ```
 
 3. Now run `./configure` and choose `y` when prompted to build TensorFlow with 
-   "XLA JIT support":
+   "XLA JIT support"; when you come across this question, select `y`.  
 
     ```
-    Do you wish to build TensorFlow with Apache Kafka Platform support? [y/N]: 
-    No Apache Kafka Platform support will be enabled for TensorFlow.
     Do you wish to build TensorFlow with XLA JIT support? [y/N]: y
-    XLA JIT support will be enabled for TensorFlow.
     ``` 
 
 4. Prepare the pip package:
