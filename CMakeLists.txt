@@ -40,7 +40,7 @@ set_target_properties(
 #-----------------------------------------------------------------------------------------------
 set(SRC 
    ngraph_device.cc 
-   ngraph_op_kernels.cc 
+   ngraph_op_kernels_1.cc 
    ngraph_utils.cc 
 )
 

@@ -75,7 +75,7 @@ with tf.device("/device:NGRAPH_CPU:0"):
     # Save the graphdef
 
     config = tf.ConfigProto(
-        allow_soft_placement=True,
+        allow_soft_placement=False,
         log_device_placement=False,
         inter_op_parallelism_threads=1)
 
