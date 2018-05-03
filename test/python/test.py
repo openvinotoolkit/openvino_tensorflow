@@ -19,7 +19,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from ctypes import *
+import ctypes
 
 import sys
 import time
@@ -35,9 +35,8 @@ import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-cdll.LoadLibrary(
-    '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so'
-)
+lib = ctypes.cdll.LoadLibrary('./libngraph_device.so')
+
 # with errors_impl.raise_exception_on_not_ok_status() as status:
 #     lib = py_tf.TF_LoadLibrary(
 #         '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so',
