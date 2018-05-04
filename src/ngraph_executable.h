@@ -37,8 +37,7 @@ limitations under the License.
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/manager.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "tensorflow/compiler/xla/service/executable.h"
 #include "tensorflow/compiler/xla/service/hlo_module.h"
@@ -53,10 +52,9 @@ namespace ngraph_plugin {
 
 class NGraphExecutable : public Executable {
  public:
-  NGraphExecutable(
-      std::unique_ptr<HloModule> hlo_module,
-      std::shared_ptr<ngraph::runtime::Manager> ng_manager,
-      std::shared_ptr<ngraph::runtime::ExternalFunction> ng_runtime_function);
+  NGraphExecutable(std::unique_ptr<HloModule> hlo_module,
+                   std::shared_ptr<ngraph::runtime::Backend> ng_backend,
+                   std::shared_ptr<ngraph::Function> ng_function);
   ~NGraphExecutable() override;
 
   // StatusOr<se::DeviceMemoryBase>
@@ -82,16 +80,14 @@ class NGraphExecutable : public Executable {
  private:
   Status CreateInputTensorViews(
       const xla::HloComputation* entry_computation,
-      std::shared_ptr<ngraph::runtime::Backend>& ng_backend,
       tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
       std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& ng_arg_list);
 
   StatusOr<std::shared_ptr<ngraph::runtime::TensorView>> CreateNGraphTensor(
-      const xla::Shape& xla_shape,
-      const std::shared_ptr<ngraph::runtime::Backend>& ng_backend);
+      const xla::Shape& xla_shape);
 
-  std::shared_ptr<ngraph::runtime::Manager> m_ng_manager;
-  std::shared_ptr<ngraph::runtime::ExternalFunction> m_ng_runtime_function;
+  std::shared_ptr<ngraph::runtime::Backend> m_ng_backend;
+  std::shared_ptr<ngraph::Function> m_ng_function;
 
   TF_DISALLOW_COPY_AND_ASSIGN(NGraphExecutable);
 };

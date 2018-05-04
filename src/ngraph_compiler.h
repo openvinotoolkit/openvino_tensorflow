@@ -34,7 +34,7 @@ limitations under the License.
 
 #include <memory>
 #include <mutex>
-#include "ngraph/runtime/manager.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph_emitter.h"
 #include "ngraph_log.h"
@@ -68,7 +68,7 @@ class NGraphCompiler {
   se::Platform::Id PlatformId() const;
 
  private:
-  static std::shared_ptr<ngraph::runtime::Manager> m_ngraph_runtime_manager;
+  static std::shared_ptr<ngraph::runtime::Backend> m_ngraph_backend;
 
   std::mutex m_module_mutex;
   NGraphEmitter::FusedOpMap m_fusion_map;

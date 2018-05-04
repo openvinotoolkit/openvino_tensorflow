@@ -56,8 +56,7 @@ namespace ngraph_plugin {
 static const std::string XLA_NGRAPH_DEFAULT_BACKEND("CPU");
 
 NGraphCompiler::NGraphCompiler() {}
-std::shared_ptr<ngraph::runtime::Manager>
-    NGraphCompiler::m_ngraph_runtime_manager;
+std::shared_ptr<ngraph::runtime::Backend> NGraphCompiler::m_ngraph_backend;
 
 //---------------------------------------------------------------------------
 // RunHloOptimization
@@ -214,7 +213,7 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
   // Create the backend
   {
     std::lock_guard<std::mutex> lock(m_module_mutex);
-    if (m_ngraph_runtime_manager == nullptr) {
+    if (m_ngraph_backend == nullptr) {
       // Get the appropriate backend
       std::string ngraph_backend_name(XLA_NGRAPH_DEFAULT_BACKEND);
       if (const char* env_str = std::getenv(XLA_NGRAPH_BACKEND_ENV_VAR)) {
@@ -226,18 +225,14 @@ StatusOr<std::unique_ptr<Executable>> NGraphCompiler::RunBackend(
         }
       }
       NGRAPH_VLOG(1) << "Using ngraph backend: " << ngraph_backend_name;
-      m_ngraph_runtime_manager =
-          ngraph::runtime::Manager::get(ngraph_backend_name);
+      m_ngraph_backend = ngraph::runtime::Backend::create(ngraph_backend_name);
     }
   }
 
-  std::shared_ptr<ngraph::runtime::ExternalFunction> ng_runtime_function =
-      m_ngraph_runtime_manager->compile(ng_function);
-
   // Create executable from only the Hlo module
   std::unique_ptr<Executable> executable;
-  executable.reset(new NGraphExecutable(
-      std::move(hlo_module), m_ngraph_runtime_manager, ng_runtime_function));
+  executable.reset(new NGraphExecutable(std::move(hlo_module), m_ngraph_backend,
+                                        ng_function));
 
   return std::move(executable);
 }

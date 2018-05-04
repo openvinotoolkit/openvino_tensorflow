@@ -31,8 +31,6 @@ limitations under the License.
 
 #include "ngraph_executable.h"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
@@ -46,12 +44,12 @@ namespace ngraph_plugin {
 
 NGraphExecutable::NGraphExecutable(
     std::unique_ptr<HloModule> hlo_module,
-    std::shared_ptr<ngraph::runtime::Manager> ng_manager,
-    std::shared_ptr<ngraph::runtime::ExternalFunction> ng_runtime_function)
+    std::shared_ptr<ngraph::runtime::Backend> ng_backend,
+    std::shared_ptr<ngraph::Function> ng_function)
     : Executable(std::move(hlo_module), /*hlo_profile_printer=*/nullptr,
                  /*hlo_profile_index_map=*/nullptr),
-      m_ng_manager(ng_manager),
-      m_ng_runtime_function(ng_runtime_function) {}
+      m_ng_backend(ng_backend),
+      m_ng_function(ng_function) {}
 
 NGraphExecutable::~NGraphExecutable() {}
 
@@ -59,28 +57,26 @@ NGraphExecutable::~NGraphExecutable() {}
 //  NGraphExecutable::CreateNGraphTensor()
 //-----------------------------------------------------------------------------
 StatusOr<std::shared_ptr<ngraph::runtime::TensorView>>
-NGraphExecutable::CreateNGraphTensor(
-    const xla::Shape& xla_shape,
-    const std::shared_ptr<ngraph::runtime::Backend>& ng_backend) {
+NGraphExecutable::CreateNGraphTensor(const xla::Shape& xla_shape) {
   auto ng_tensor = std::shared_ptr<ngraph::runtime::TensorView>();
   auto ng_element_shape = ngraph::Shape(xla_shape.dimensions().begin(),
                                         xla_shape.dimensions().end());
   switch (xla_shape.element_type()) {
     case F32: {
-      ng_tensor = ng_backend->make_primary_tensor_view(
-          ngraph::element::f32, ngraph::Shape(ng_element_shape));
+      ng_tensor = m_ng_backend->create_tensor(ngraph::element::f32,
+                                              ngraph::Shape(ng_element_shape));
     } break;
     case S32: {
-      ng_tensor = ng_backend->make_primary_tensor_view(
-          ngraph::element::i32, ngraph::Shape(ng_element_shape));
+      ng_tensor = m_ng_backend->create_tensor(ngraph::element::i32,
+                                              ngraph::Shape(ng_element_shape));
     } break;
     case S64: {
-      ng_tensor = ng_backend->make_primary_tensor_view(
-          ngraph::element::i64, ngraph::Shape(ng_element_shape));
+      ng_tensor = m_ng_backend->create_tensor(ngraph::element::i64,
+                                              ngraph::Shape(ng_element_shape));
     } break;
     case PRED: {
-      ng_tensor = ng_backend->make_primary_tensor_view(
-          ngraph::element::boolean, ngraph::Shape(ng_element_shape));
+      ng_tensor = m_ng_backend->create_tensor(ngraph::element::boolean,
+                                              ngraph::Shape(ng_element_shape));
     } break;
     default:
       return Unimplemented(
@@ -96,7 +92,6 @@ NGraphExecutable::CreateNGraphTensor(
 //-----------------------------------------------------------------------------
 Status NGraphExecutable::CreateInputTensorViews(
     const xla::HloComputation* computation,
-    std::shared_ptr<ngraph::runtime::Backend>& ng_backend,
     tensorflow::gtl::ArraySlice<const ShapedBuffer*> arguments,
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&
         ng_input_tv_list) {
@@ -109,8 +104,7 @@ Status NGraphExecutable::CreateInputTensorViews(
       auto& device_mem_base = idx_bufs.second;
       auto& buffer_shape = ShapeUtil::GetSubshape(param->shape(), shape_index);
       if (buffer_shape.element_type() != TUPLE) {
-        TF_ASSIGN_OR_RETURN(auto ng_tv,
-                            CreateNGraphTensor(buffer_shape, ng_backend));
+        TF_ASSIGN_OR_RETURN(auto ng_tv, CreateNGraphTensor(buffer_shape));
         auto data_size = ShapeUtil::ByteSizeOf(buffer_shape);
         static_cast<ngraph::runtime::TensorView*>(ng_tv.get())
             ->write(device_mem_base.opaque(), 0, data_size);
@@ -140,14 +134,10 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
         "Mismatch between argument count and graph parameter count.");
   }
 
-  // ngraph backend
-  auto ng_backend = m_ng_manager->allocate_backend();
-
   // Create the arguments as ngraph Parameters
   std::vector<std::shared_ptr<ngraph::runtime::TensorView>> ng_input_tv_list;
   NGRAPH_VLOG(3) << "CreateInputTensorViews";
-  TF_CHECK_OK(CreateInputTensorViews(computation, ng_backend, arguments,
-                                     ng_input_tv_list));
+  TF_CHECK_OK(CreateInputTensorViews(computation, arguments, ng_input_tv_list));
   NGRAPH_VLOG(3) << "CreateInputTensorViews done";
 
   // Output tensor
@@ -193,8 +183,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
 
     // If this is a leaf node we will create an nGraph tensor.
     if (sub_buffer_shape.element_type() != TUPLE) {
-      TF_ASSIGN_OR_RETURN(auto ng_tv,
-                          CreateNGraphTensor(sub_buffer_shape, ng_backend));
+      TF_ASSIGN_OR_RETURN(auto ng_tv, CreateNGraphTensor(sub_buffer_shape));
       ng_result_tv_list.push_back(ng_tv);
     }
   }
@@ -223,8 +212,7 @@ StatusOr<std::unique_ptr<ShapedBuffer>> NGraphExecutable::ExecuteOnStream(
   NGRAPH_VLOG(3) << "output buffers done";
 
   // Call the nGraph executable.
-  auto call_frame = ng_backend->make_call_frame(m_ng_runtime_function);
-  call_frame->call(ng_result_tv_list, ng_input_tv_list);
+  m_ng_backend->call(m_ng_function, ng_result_tv_list, ng_input_tv_list);
 
   // Copy data back from the nGraph result tensors to each corresponding leaf
   // buffer.

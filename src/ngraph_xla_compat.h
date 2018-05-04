@@ -38,7 +38,6 @@ limitations under the License.
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -109,11 +108,6 @@ inline std::shared_ptr<XLATuple> make_tuple(const XLAValues& elements) {
 /// Convenience function for accessing a tuple element.
 std::shared_ptr<ngraph::runtime::TensorView> get_tuple_element(
     std::shared_ptr<XLATuple> xla_tuple, size_t i);
-
-/// Invoke a call frame where some arguments might be XLATuples
-void call(std::shared_ptr<ngraph::runtime::CallFrame> call_frame,
-          const ngraph::runtime::TensorViewPtrs& outputs,
-          const ngraph::runtime::TensorViewPtrs& inputs);
 }
 }
 }
