@@ -13,13 +13,7 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-add_library(tensorflow_framework_lib SHARED IMPORTED)
-set_target_properties( 
-    tensorflow_framework_lib 
-    PROPERTIES IMPORTED_LOCATION 
-    ${TensorFlow_DIR}/libtensorflow_framework.so
-)
-
-add_subdirectory(src)
-add_subdirectory(third-party)
-add_subdirectory(test)
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+include( ../../cmake/external_gtest.cmake )

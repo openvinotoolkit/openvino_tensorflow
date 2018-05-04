@@ -16,6 +16,7 @@
 #include "ngraph_utils.h"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #include "tensorflow/core/common_runtime/optimization_registry.h"
@@ -26,7 +27,19 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
-void DumpGraph(std::string label, tf::Graph* graph) {}
+using namespace std;
+
+void Init() { cout << "Init called\n"; }
+
+bool GraphToPbTextFile(const string& filename, tf::Graph* graph) {
+  tf::GraphDef g_def;
+  graph->ToGraphDef(&g_def);
+
+  string graph_pb_str;
+  tf::protobuf::TextFormat::PrintToString(g_def, &graph_pb_str);
+  std::ofstream ostrm_out(filename, std::ios_base::trunc);
+  ostrm_out << graph_pb_str;
+}
 
 void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out) {
   auto node_def = ctx->def();

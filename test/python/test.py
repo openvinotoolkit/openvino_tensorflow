@@ -35,7 +35,7 @@ import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-lib = ctypes.cdll.LoadLibrary('./libngraph_device.so')
+lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 
 # with errors_impl.raise_exception_on_not_ok_status() as status:
 #     lib = py_tf.TF_LoadLibrary(
@@ -99,5 +99,7 @@ with tf.device("/device:NGRAPH_CPU:0"):
         # print("result:", result_b)
 
     train_writer.add_graph(tf.get_default_graph())
+    tf.train.write_graph(
+        tf.get_default_graph(), '.', 'test_py.pbtxt', as_text=True)
     g = tfg.board(tf.get_default_graph())
     g.render(filename="./test")

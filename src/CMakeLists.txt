@@ -17,15 +17,10 @@ include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_DIR}/include)
 
+set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #set(CMAKE_INSTALL_RPATH "${TensorFlow_DIR}")
-
-add_library(tensorflow_xla_plugin_framework SHARED IMPORTED)
-set_target_properties( 
-    tensorflow_xla_plugin_framework 
-    PROPERTIES IMPORTED_LOCATION 
-    ${TensorFlow_DIR}/libtensorflow_framework.so
-)
 
 # add_library(ngraph_lib SHARED IMPORTED)
 # set_target_properties( 
@@ -47,8 +42,11 @@ set(SRC
 add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries( 
     ${LIB_NAME} 
-    tensorflow_xla_plugin_framework 
+    tensorflow_framework_lib 
 )
+
+target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
 
 # target_link_libraries( 
 #     ${LIB_NAME} 

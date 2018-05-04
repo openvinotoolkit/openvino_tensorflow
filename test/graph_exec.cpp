@@ -13,18 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include <ostream>
+#include "gtest/gtest.h"
 
-#include "tensorflow/core/framework/op_kernel.h"
+#include "ngraph_utils.h"
+
+#include "tensorflow/core/framework/graph.pb.h"
+#include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/graph_constructor.h"
+#include "tensorflow/core/platform/env.h"
 
 using namespace std;
 namespace tf = tensorflow;
 
-void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out);
-std::string GraphToDot(tf::Graph* graph, const std::string& title,
-                       bool annotate_device);
+TEST(graph_exec, simple) {
+  // tf::Graph graph(tf::OpRegistry::Global());
 
-bool GraphToPbTextFile(const string& filename, tf::Graph* graph);
+  tf::GraphDef gdef;
+  auto status = tf::ReadTextProto(tf::Env::Default(), "test_py.pbtxt", &gdef);
+  EXPECT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
 
-void Init();
+  tf::Graph input_graph(tf::OpRegistry::Global());
+  tf::GraphConstructorOptions opts;
+  ASSERT_EQ(tf::ConvertGraphDefToGraph(opts, gdef, &input_graph),
+            tf::Status::OK());
+
+  GraphToPbTextFile("./test_graph.pbtxt", &input_graph);
+
+  // graph.ToGraphDef(&g_def);
+
+  // Write
+
+  // DO some transformation
+
+  // Verify
+}
