@@ -6,7 +6,7 @@
 #   $ virtualenv -p /usr/bin/python venv-pytest
 #   $ source venv-pytest/bin/activate
 #   $ pip -U pytest
-#   $ pytest test_mnist_cpu_daily_validation.py
+#   $ pytest test_resnet20_cifar10_ngraph_cpu_validation.py
 #   $ deactivte
 #
 # This test has no command-line parameters, as it is run via pytest.
@@ -14,11 +14,17 @@
 #
 #     Parameter              Purpose & Default (if any)
 #
-#     TEST_RESNET20_CIFAR10_EPOCHS     Number of epochs (steps) to run;
-#                                      default=250
-#     TEST_RESNET20_CIFAR10_DATA_DIR   Directory where CIFAR10 datafiles are
-#                                      located
-#     TEST_RESNET20_CIFAR10_LOG_DIR    Optional: directory to write log files to
+#     TEST_RESNET20_CIFAR10_COMPARE_TO   Reference JSON file to compare ngraph
+#                                        run to; default = no file
+#     TEST_RESNET20_CIFAR10_EPOCHS       Number of epochs (steps) to run;
+#                                        default=250
+#     TEST_RESNET20_CIFAR10_EVAL_EPOCHS  Number of epoch to run between each
+#                                        eval; default=#-of-EPOCHS
+#     TEST_RESNET20_CIFAR10_BATCH_SIZE   Batch size per step; default=128
+#
+#     TEST_RESNET20_CIFAR10_DATA_DIR     Directory where CIFAR10 datafiles are
+#                                        located
+#     TEST_RESNET20_CIFAR10_LOG_DIR      Optional: dir to write log files to
 #
 # JUnit XML files can be generated using pytest's command-line options.
 # For example:
@@ -40,11 +46,9 @@ import lib_validation_testing as VT
 # Constants
 
 # Log files
-kResnet20CPURefLog         = 'test_resnet20_cifar10_cpu_reference.log'
 kResnet20CPUNgLog          = 'test_resnet20_cifar10_cpu_ngraph.log'
 kResnet20SummaryLog        = 'test_resnet20_cifar10_cpu_summary.log'
 kResnet20JenkinsSummaryLog = 'test_resnet20_cifar10_cpu_jenkins_oneline.log'
-kResnet20CPURefJson        = 'test_resnet20_cifar10_cpu_reference.json'
 kResnet20CPUNgJson         = 'test_resnet20_cifar10_cpu_ngraph.json'
 
 # Acceptable accuracy
@@ -72,7 +76,7 @@ kPythonProg = 'python'
 kRunDateTime = DT.datetime.now()
 
 
-def test_resnet20_cifar10_cpu_backend():
+def test_resnet20_cifar10_ngraph_cpu_backend():
 
     # This *must* be run inside the test, because env. var. PYTEST_CURRENT_TEST
     # only exists when inside the test function.
@@ -86,24 +90,21 @@ def test_resnet20_cifar10_cpu_backend():
 
     epochs = int(os.environ.get('TEST_RESNET20_CIFAR10_EPOCHS', kDefaultEpochs))
 
-    # Run with Google CPU defaults, saving timing and accuracy
-    referenceLog = VT.runResnetScript(logID=' Reference',
-                                      useNGraph=False,
-                                      script=script,
-                                      python=kPythonProg,
-                                      epochs=epochs,
-                                      batchSize=kTrainBatchSize,
-                                      dataDirectory=dataDir,
-                                      verbose=False)  # log-device-placement
-    referenceResults = \
-        VT.collect_resnet20_cifar10_results(runType='TensorFlow Default CPU',
-                                            log=referenceLog,
-                                            date=str(kRunDateTime),
-                                            epochs=epochs,
-                                            batchSize=kTrainBatchSize)
-    print
-    print('Collected results for *reference*:')
-    print(json.dumps(referenceResults, indent=4))
+    compareToFile = os.environ.get('TEST_RESNET20_CIFAR10_COMPARE_TO', None)
+
+    # If we have a compare-file, then read JSON data into referenceResults
+    if compareToFile:
+
+        print
+        print('Comparing ngraph results with reference results in %s'
+              % compareToFile)
+
+        fIn = open(compareToFile, 'r')
+        referenceResults = json.load(fIn)
+        fIn.close()
+
+    # if compareToFile
+    else:  referenceResults = None
 
     # Run with NGraph CPU backend, saving timing and accuracy
     VT.checkNGraphEnvironment()
@@ -121,27 +122,30 @@ def test_resnet20_cifar10_cpu_backend():
                                             date=str(kRunDateTime),
                                             epochs=epochs,
                                             batchSize=kTrainBatchSize)
+
+    if referenceResults:
+        print
+        print('Reference results (from JSON file) are:')
+        print(json.dumps(referenceResults, indent=4))
+
     print
-    print('Collected results for *nGraph*:')
+    print('Collected results for *nGraph* in this run are:')
     print(json.dumps(ngraphResults, indent=4))
     
     lDir = None
     if os.environ.has_key('TEST_RESNET20_CIFAR10_LOG_DIR'):
         lDir = os.path.abspath(os.environ['TEST_RESNET20_CIFAR10_LOG_DIR'])
         # Dump logs to files, for inclusion in Jenkins artifacts
-        VT.writeLogToFile(referenceLog,
-                          os.path.join(lDir, kResnet20CPURefLog))
         VT.writeLogToFile(ngraphLog,
                           os.path.join(lDir, kResnet20CPUNgLog))
-        VT.writeJsonToFile(json.dumps(referenceResults, indent=4),
-                           os.path.join(lDir, kResnet20CPURefJson))
         VT.writeJsonToFile(json.dumps(ngraphResults, indent=4),
                            os.path.join(lDir, kResnet20CPUNgJson))
         # Write Jenkins description, for quick perusal of results
-        VT.write_jenkins_resnet20_cifar10_description(referenceResults,
-                                                      ngraphResults, epochs,
-                                                      os.path.join(lDir,
-                                                                   kResnet20JenkinsSummaryLog))
+        if referenceResults:
+            VT.write_jenkins_resnet20_cifar10_description(referenceResults,
+                                                          ngraphResults, epochs,
+                                                          os.path.join(lDir,
+                                                                       kResnet20JenkinsSummaryLog))
 
     print
     print '----- RESNET20 CIFAR10 Testing Summary ----------------------------------------'
@@ -152,9 +156,26 @@ def test_resnet20_cifar10_cpu_backend():
 
     logOut = VT.LogAndOutput(logFile=summaryLog)
 
+    if referenceResults:
+        # Sanity checks on ngraph results vs compare-to reference results.
+        # Error messages are printed here, and assertions are triggered at the
+        # end of this function.
+
+        if referenceResults['epochs'] != ngraphResults['epochs']:
+            logOut.line('ERROR: epochs do not match -- ref: %s epochs, ngraph: %s epochs'
+                        % (str(referenceResults['epochs']),
+                           str(ngraphResults['epochs'])))
+
+        if referenceResults['batch-size'] != ngraphResults['batch-size']:
+            logOut.line('ERROR: batch-sizes do not match -- ref: %s, ngraph: %s'
+                        % (str(referenceResults['batch-size']),
+                           str(ngraphResults['batch-size'])))
+    # End: if referenceResults
+
     # Report commands
     logOut.line()
-    logOut.line('Run with default CPU: %s' % referenceResults['command'])
+    if referenceResults:
+        logOut.line('Run with default CPU: %s' % referenceResults['command'])
     logOut.line('Run with NGraph CPU: %s' % ngraphResults['command'])
 
     # Report parameters
@@ -166,28 +187,34 @@ def test_resnet20_cifar10_cpu_backend():
     logOut.line('nGraph back-end used:  %s' % 'CPU')
     logOut.line('Data directory:        %s' % dataDir)
 
-    refAccuracy = float(referenceResults['accuracy'])
+    if referenceResults:
+        refAccuracy = float(referenceResults['accuracy'])
     ngAccuracy = float(ngraphResults['accuracy'])
 
     # Report accuracy
-    acceptableDelta = refAccuracy * kAcceptableAccuracyDelta
-    deltaAccuracy = abs(refAccuracy - ngAccuracy)
+    if referenceResults:
+        acceptableDelta = refAccuracy * kAcceptableAccuracyDelta
+        deltaAccuracy = abs(refAccuracy - ngAccuracy)
     logOut.line()
-    logOut.line('Accuracy, in run with default CPU:             %7.6f' % refAccuracy)
-    logOut.line('Accuracy, in run with NGraph CPU:          %7.6f' % ngAccuracy)
-    logOut.line('Acceptable accuracy range (from reference) is: %4.2f%% of %7.6f'
-                % (kAcceptableAccuracyDelta * 100, refAccuracy))
-    logOut.line('Acceptable accuracy delta is <= %7.6f'
+    if referenceResults:
+        logOut.line('Accuracy, in reference results:             %7.6f' % refAccuracy)
+    logOut.line('Accuracy, in run with NGraph CPU:           %7.6f' % ngAccuracy)
+    if referenceResults:
+        logOut.line('Acceptable accuracy range (from reference) is: %4.2f%% of %7.6f'
+                    % (kAcceptableAccuracyDelta * 100, refAccuracy))
+        logOut.line('Acceptable accuracy delta is <= %7.6f'
                 % float(acceptableDelta))
-    logOut.line('Actual accuracy delta is %7.6f' % deltaAccuracy)
+        logOut.line('Actual accuracy delta is %7.6f' % deltaAccuracy)
     # Report on times
     logOut.line()
-    logOut.line('Run with default CPU took:    %f seconds'
-                % referenceResults['wallclock'])
+    if referenceResults:
+        logOut.line('Reference run took:       %f seconds'
+                    % referenceResults['wallclock'])
     logOut.line('Run with NGraph CPU took: %f seconds'
                 % ngraphResults['wallclock'])
-    logOut.line('NGraph was %f times longer than default (wall-clock measurement)'
-                % (ngraphResults['wallclock'] / referenceResults['wallclock']))
+    if referenceResults:
+        logOut.line('NGraph was %f times longer than reference (wall-clock measurement)'
+                    % (ngraphResults['wallclock'] / referenceResults['wallclock']))
 
     # Make sure all output has been flushed before running assertions
     logOut.flush()
@@ -195,6 +222,13 @@ def test_resnet20_cifar10_cpu_backend():
     # All assertions are now done at the very end of the run, after all of
     # the summary output has been written.
 
-    assert deltaAccuracy <= acceptableDelta  # Assert for out-of-bounds accuracy
+    if referenceResults:
+
+        assert referenceResults['epochs']     == ngraphResults['epochs']
+        assert referenceResults['batch-size'] == ngraphResults['batch-size']
+
+        assert deltaAccuracy <= acceptableDelta  # Assert for out-of-bounds accuracy
         
+    # End: if referenceResults
+
 # End: test_resnet20_cifar10_cpu_backend()

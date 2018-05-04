@@ -70,22 +70,22 @@ def test_mlp_mnist_cpu_backend():
     iterations = int(os.environ.get('TEST_MLP_MNIST_ITERATIONS', 100000))
 
     # Run with Google CPU defaults, saving timing and accuracy
-    referenceLog = VT.runMnistScript(logID=' Reference',
-                                     useNGraph=False,
-                                     script=script,
-                                     python=kPythonProg,
-                                     iterations=iterations,
-                                     dataDirectory=dataDir)
+    referenceLog = VT.runMlpMnistScript(logID=' Reference',
+                                        useNGraph=False,
+                                        script=script,
+                                        python=kPythonProg,
+                                        iterations=iterations,
+                                        dataDirectory=dataDir)
     referenceResults = processOutput(referenceLog)
 
     # Run with NGraph CPU backend, saving timing and accuracy
     VT.checkNGraphEnvironment()
-    ngraphLog = VT.runMnistScript(logID=' nGraph',
-                                  useNGraph=True,
-                                  script=script,
-                                  python=kPythonProg,
-                                  iterations=iterations,
-                                  dataDirectory=dataDir)
+    ngraphLog = VT.runMlpMnistScript(logID=' nGraph',
+                                     useNGraph=True,
+                                     script=script,
+                                     python=kPythonProg,
+                                     iterations=iterations,
+                                     dataDirectory=dataDir)
     ngraphResults = processOutput(ngraphLog)
     
     lDir = None
