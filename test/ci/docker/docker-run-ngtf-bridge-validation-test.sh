@@ -44,6 +44,7 @@ BUILD_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-ngtf-bridge
 #           TF_NG_MODEL_DATASET  Model and dataset to run
 #           TF_NG_ITERATIONS     Number of iterations (aka steps) to run (mlp)
 #           TF_NG_EPOCHS         Number of epochs to run (resnet)
+#           TF_NG_COMPARE_TO     JSON file of reference results to compare to
 #           TF_NG_DO_NOT_RUN     If defined and not empty, does not run pytest
 
 # TEST_NG_MODEL_DATASET *must* be defined to run any validation test in docker
@@ -59,6 +60,7 @@ docker run --rm \
        --env TF_NG_MODEL_DATASET="${TF_NG_MODEL_DATASET}" \
        --env TF_NG_ITERATIONS="${TF_NG_ITERATIONS}" \
        --env TF_NG_EPOCHS="${TF_NG_EPOCHS}" \
+       --env TF_NG_COMPARE_TO="${TF_NG_COMPARE_TO}" \
        --env TF_NG_DO_NOT_RUN="${TF_NG_DO_NOT_RUN}" \
        --env http_proxy=http://proxy-us.intel.com:911 \
        --env https_proxy=https://proxy-us.intel.com:911 \
