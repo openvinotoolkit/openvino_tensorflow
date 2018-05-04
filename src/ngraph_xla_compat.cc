@@ -115,7 +115,7 @@ XLATuple::XLATuple(const XLAValues& elements)
           make_shared<ngraph::descriptor::PrimaryTensorView>(
               make_shared<ngraph::TensorViewType>(ngraph::element::f32,
                                                   ngraph::Shape{}),
-              "XLATuple", false, false, false)),
+              "XLATuple")),
       m_elements(elements) {}
 
 const vector<shared_ptr<ngraph::runtime::TensorView>>& XLATuple::get_elements()
