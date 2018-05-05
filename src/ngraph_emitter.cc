@@ -228,7 +228,11 @@ Status NGraphEmitter::ProcessElementwiseBinary(HloInstruction* hlo,
       ng_op = std::make_shared<ngraph::op::LessEq>(ng_lhs, ng_rhs);
       break;
     case HloOpcode::kAnd:
+      ng_op = std::make_shared<ngraph::op::And>(ng_lhs, ng_rhs);
+      break;
     case HloOpcode::kOr:
+      ng_op = std::make_shared<ngraph::op::Or>(ng_lhs, ng_rhs);
+      break;
     default:
       return Unimplemented("ProcessElementwiseBinary OPCODE: '%s'",
                            HloOpcodeString(opcode).c_str());
