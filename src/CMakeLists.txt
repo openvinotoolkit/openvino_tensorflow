@@ -22,13 +22,13 @@ set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #set(CMAKE_INSTALL_RPATH "${TensorFlow_DIR}")
 
-# add_library(ngraph_lib SHARED IMPORTED)
-# set_target_properties( 
-#     ngraph_lib 
-#     PROPERTIES IMPORTED_LOCATION 
-#     ${NGRAPH_DIR}/lib/libngraph.so
-# )
-# add_dependencies(ngraph_lib ext_ngraph)
+add_library(ngraph_lib SHARED IMPORTED)
+set_target_properties( 
+    ngraph_lib 
+    PROPERTIES IMPORTED_LOCATION 
+    ${NGRAPH_DIR}/lib/libngraph.so
+)
+add_dependencies(ngraph_lib ext_ngraph)
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -37,6 +37,7 @@ set(SRC
    ngraph_device.cc 
    ngraph_op_kernels_1.cc 
    ngraph_utils.cc 
+   ngraph_builder.cc 
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})
@@ -48,10 +49,10 @@ target_link_libraries(
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DIR}/include")
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
 
-# target_link_libraries( 
-#     ${LIB_NAME} 
-#     ngraph_lib 
-# )
+target_link_libraries( 
+    ${LIB_NAME} 
+    ngraph_lib 
+)
 
 target_compile_definitions( 
     ${LIB_NAME} PRIVATE 

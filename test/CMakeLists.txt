@@ -31,6 +31,7 @@ set(SRC
 )
 
 set(TF_OP_DEF_SRC
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/array_ops.cc
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/sendrecv_ops.cc
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/math_ops.cc
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/no_op.cc
