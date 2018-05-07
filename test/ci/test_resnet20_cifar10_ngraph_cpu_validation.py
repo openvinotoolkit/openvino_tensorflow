@@ -143,7 +143,9 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
         # Write Jenkins description, for quick perusal of results
         if referenceResults:
             VT.write_jenkins_resnet20_cifar10_description(referenceResults,
-                                                          ngraphResults, epochs,
+                                                          ngraphResults,
+                                                          kAcceptableAccuracyDelta,
+                                                          epochs,
                                                           os.path.join(lDir,
                                                                        kResnet20JenkinsSummaryLog))
 
@@ -213,8 +215,8 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
     logOut.line('Run with NGraph CPU took: %f seconds'
                 % ngraphResults['wallclock'])
     if referenceResults:
-        logOut.line('NGraph was %f times longer than reference (wall-clock measurement)'
-                    % (ngraphResults['wallclock'] / referenceResults['wallclock']))
+        logOut.line('NGraph was %f times faster than reference (wall-clock measurement)'
+                    % (referenceResults['wallclock'] / ngraphResults['wallclock']))
 
     # Make sure all output has been flushed before running assertions
     logOut.flush()

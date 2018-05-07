@@ -445,6 +445,7 @@ def collect_resnet20_cifar10_results(runType=None, date=None,
 
 
 def write_jenkins_resnet20_cifar10_description(refResults, ngResults,
+                                               acceptableDelta,
                                                epochs, fileName):
 
     print 'Jenkins description written to %s' % fileName
@@ -456,12 +457,12 @@ def write_jenkins_resnet20_cifar10_description(refResults, ngResults,
         refAccuracy = float(refResults['accuracy'])
         ngAccuracy = float(ngResults['accuracy'])
 
-        acceptableDelta = refAccuracy * kAcceptableAccuracyDelta
+        acceptableDelta = refAccuracy * acceptableDelta
         deltaAccuracy = abs(refAccuracy - ngAccuracy)
 
-        fOut.write( 'Resnet-CIFAR10 accuracy - ref: %5.4f, ngraph: %5.4f, delta %5.4f; ngraph %4.2fx slower; %d epochs'
+        fOut.write( 'Resnet-CIFAR10 accuracy - ref: %5.4f, ngraph: %5.4f, delta %5.4f; ngraph %4.2fx faster; %d epochs'
                     % (refAccuracy, ngAccuracy, deltaAccuracy,
-                       (ngResults['wallclock']/refResults['wallclock']),
+                       (refResults['wallclock']/ngResults['wallclock']),
                        epochs))
 
         fOut.close()
