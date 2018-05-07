@@ -38,7 +38,7 @@ void GraphToDotFile(tf::Graph* graph, const std::string& filename,
                     const std::string& title, bool annotate_device);
 
 //
-bool GraphToPbTextFile(tf::Graph* graph, const string& filename);
+void GraphToPbTextFile(tf::Graph* graph, const string& filename);
 
 }  // namespace ngraph_bridge
 

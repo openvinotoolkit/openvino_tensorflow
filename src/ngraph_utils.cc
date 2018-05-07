@@ -31,7 +31,7 @@ using namespace std;
 
 namespace ngraph_bridge {
 
-bool GraphToPbTextFile(tf::Graph* graph, const string& filename) {
+void GraphToPbTextFile(tf::Graph* graph, const string& filename) {
   tf::GraphDef g_def;
   graph->ToGraphDef(&g_def);
 
@@ -84,11 +84,11 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
     tf::DataType datatype;
     if (GetNodeAttr(node->def(), "T", &datatype) == tf::Status::OK()) {
       dot_string << tf::DataTypeString(datatype) << "<br/>";
-      if (annotate_device) {
-        // For some reason the assigned_device_name results in a crash
-        // dot_string << " Device: " << node->assigned_device_name() << "<br/>";
-        dot_string << " Device: " << node->requested_device() << "<br/>";
-      }
+    }
+    if (annotate_device) {
+       // For some reason the assigned_device_name results in a crash
+       // dot_string << " Device: " << node->assigned_device_name() << "<br/>";
+       dot_string << " Device: " << node->requested_device() << "<br/>";
     }
 
     dot_string << ">, shape=rect, style=\"filled\", fontcolor=\"black\", "
