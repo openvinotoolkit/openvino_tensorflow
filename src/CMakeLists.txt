@@ -35,7 +35,8 @@ add_dependencies(ngraph_lib ext_ngraph)
 #-----------------------------------------------------------------------------------------------
 set(SRC 
    ngraph_device.cc 
-   ngraph_op_kernels_1.cc 
+   ngraph_op_kernels.cc 
+   ngraph_graph_rewrite_passes.cc 
    ngraph_utils.cc 
    ngraph_builder.cc 
 )

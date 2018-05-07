@@ -35,6 +35,12 @@ set(TF_OP_DEF_SRC
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/sendrecv_ops.cc
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/math_ops.cc
     ${TensorFlow_SRC_DIR}/tensorflow/core/ops/no_op.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/logging_ops.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/random_ops.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/training_ops.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/control_flow_ops.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/state_ops.cc
+    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/nn_ops.cc
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

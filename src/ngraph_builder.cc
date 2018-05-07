@@ -32,9 +32,9 @@ unique_ptr<ng::Function> Builder::TransformGraph(const tf::Graph* input_graph) {
   //     }
   //   }
   // Do a topological sort
+  // GetReversePostOrder will give us topological sort.
   vector<tf::Node*> ordered;
-  tf::GetReversePostOrder(*input_graph,
-                          &ordered);  // This will give us topological sort.
+  tf::GetReversePostOrder(*input_graph, &ordered);
 
   cout << "After Topological sort\n";
   //   for (auto n : ordered) {
@@ -63,7 +63,8 @@ unique_ptr<ng::Function> Builder::TransformGraph(const tf::Graph* input_graph) {
       }
 
       // Get the name of the node
-      cout << "Parameter: " << n->name() << "[" << tf::DataTypeString(dtype) << "] Shape: ";
+      cout << "Parameter: " << n->name() << "[" << tf::DataTypeString(dtype)
+           << "] Shape: ";
       tf::PartialTensorShape shape(shape_proto);
 
       for (int d = 0; d < shape.dims(); ++d) {
@@ -78,8 +79,9 @@ unique_ptr<ng::Function> Builder::TransformGraph(const tf::Graph* input_graph) {
     } else {
       // cout << "Node: " << n->name() << " Type: " << n->type_string() << endl;
       for (const tf::Edge* edge : n->in_edges()) {
-        cout << "\tEdge " << edge->src()->name() << " --> "
-             << edge->dst()->name() << endl;
+        cout << "\tEdge " << edge->src()->name() << "["
+             << edge->src()->type_string() << "] --> " << edge->dst()->name()
+             << "[" << edge->dst()->type_string() << "]" << endl;
       }
     }
   }

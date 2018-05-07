@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+#ifndef NGRAPH_TF_BRIDGE_UTILS_H_
+#define NGRAPH_TF_BRIDGE_UTILS_H_
+
 #include <ostream>
 
 #include "tensorflow/core/framework/op_kernel.h"
@@ -21,10 +24,22 @@
 using namespace std;
 namespace tf = tensorflow;
 
+namespace ngraph_bridge {
+
+//
 void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out);
+
+//
 std::string GraphToDot(tf::Graph* graph, const std::string& title,
                        bool annotate_device);
 
-bool GraphToPbTextFile(const string& filename, tf::Graph* graph);
+//
+void GraphToDotFile(tf::Graph* graph, const std::string& filename,
+                    const std::string& title, bool annotate_device);
 
-void Init();
+//
+bool GraphToPbTextFile(tf::Graph* graph, const string& filename);
+
+}  // namespace ngraph_bridge
+
+#endif

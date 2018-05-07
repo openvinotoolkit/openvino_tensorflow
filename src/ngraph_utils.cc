@@ -29,9 +29,9 @@
 
 using namespace std;
 
-void Init() { cout << "Init called\n"; }
+namespace ngraph_bridge {
 
-bool GraphToPbTextFile(const string& filename, tf::Graph* graph) {
+bool GraphToPbTextFile(tf::Graph* graph, const string& filename) {
   tf::GraphDef g_def;
   graph->ToGraphDef(&g_def);
 
@@ -51,145 +51,12 @@ void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out) {
   out << "\n";
 }
 
-class NGraphPass : public tensorflow::GraphOptimizationPass {
- public:
-  NGraphPass(const char* title) : m_title(title) {}
-  virtual ~NGraphPass() {}
-  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
-    VLOG(0) << "NGraph PASS: " << GetPassName();
-// std::cout << "Running NGraphPass: " << GetPassName() << std::endl;
-
-#if 0
-    // NOTE: If we need to dump the proto text then we need to ensure that 
-    // this is not POST_PATRITIONING
-    tf::Graph* graph = options.graph->get();
-    // Create the graphDef
-    tf::GraphDef g_def;
-    graph->ToGraphDef(&g_def);
-
-    // Create the filename
-    std::string path = "./ngraph_pass_" + GetPassName() + ".pb";
-    tf::Status status = tf::WriteTextProto(tf::Env::Default(), path, g_def);
-#endif
-
-    // Call the derived class's implementation
-    return RunImpl(options);
-  }
-
- protected:
-  virtual std::string GetPassName() = 0;
-  virtual tf::Status RunImpl(const tf::GraphOptimizationPassOptions& options) {
-    return tf::Status::OK();
-  }
-  void DumpDot(tf::Graph* graph, const std::string& filename,
-               const std::string& title, bool annotate_device) {
-    std::string dot = GraphToDot(graph, title, annotate_device);
-    std::ofstream ostrm(filename, std::ios_base::trunc);
-    ostrm << dot;
-  }
-
- private:
-  std::string m_title;
-};
-
-class NGraphPassPrePlacement : public NGraphPass {
- public:
-  NGraphPassPrePlacement() : NGraphPass("NGraph PRE_PLACEMENT Pass") {}
-
- protected:
-  std::string GetPassName() { return "PRE_PLACEMENT"; }
-  tf::Status RunImpl(const tf::GraphOptimizationPassOptions& options) {
-    // for (tf::Node* n : graph->op_nodes()) {
-    //   std::cout << "  Node: " << n->DebugString() << std::endl;
-    //   // In all cases, only try to compile computational nodes.
-    //   if (n->IsSend() || n->IsRecv() || n->IsControlFlow()) {
-    //     continue;
-    //   }
-
-    //   // if (VLOG_IS_ON(1)) {
-    //   //   dump_graph::DumpGraphToFile("build_xla_launch_ops", *graph,
-    //   //                               options.flib_def);
-    // }
-
-    // for (tf::Edge const* edge : graph->edges()) {
-    //   std::cout << "    Edge: " << edge->DebugString() << std::endl;
-    // }
-
-    // std::cout << "Done\n" << std::endl;
-    DumpDot(options.graph->get(), "./ngraph_pass_" + GetPassName() + ".dot",
-            "NGraph POST_PLACEMENT", false);
-    return tf::Status::OK();
-  }
-};
-
-class NGraphPassPostPlacement : public NGraphPass {
- public:
-  NGraphPassPostPlacement() : NGraphPass("NGraph POST_PLACEMENT") {}
-  tf::Status RunImpl(const tf::GraphOptimizationPassOptions& options) {
-    DumpDot(options.graph->get(), "./ngraph_pass_" + GetPassName() + ".dot",
-            "NGraph POST_PLACEMENT", true);
-    return tf::Status::OK();
-  }
-
- protected:
-  std::string GetPassName() { return "POST_PLACEMENT"; }
-};
-
-class NGraphPassPostReWrite : public NGraphPass {
- public:
-  NGraphPassPostReWrite() : NGraphPass("NGraph POST_REWRITE_FOR_EXEC Pass") {}
-
-  tf::Status RunImpl(const tf::GraphOptimizationPassOptions& options) {
-    static int count = 1;
-    std::ostringstream filename;
-    filename << "./ngraph_pass_" << GetPassName() << count << ".dot";
-    count++;
-    DumpDot(options.graph->get(), filename.str(),
-            "NGraph POST_REWRITE_FOR_EXEC", true);
-    return tf::Status::OK();
-  }
-
- protected:
-  std::string GetPassName() { return "POST_REWRITE_FOR_EXEC"; }
-};
-
-class NGraphPostPartitioning : public NGraphPass {
- public:
-  NGraphPostPartitioning() : NGraphPass("NGraph POST_PARTITIONING Pass") {}
-
-  tf::Status RunImpl(const tf::GraphOptimizationPassOptions& options) {
-    if (options.graph == nullptr || options.partition_graphs == nullptr) {
-      std::cout << "POST_PARTITIONING: No partitioned graph remaining"
-                << std::endl;
-      return tf::Status::OK();
-    }
-
-    static int count = 1;
-    for (auto& pg : *options.partition_graphs) {
-      tf::Graph* graph = pg.second.get();
-      std::ostringstream filename;
-      filename << "./ngraph_pass_" << GetPassName() << count << ".dot";
-      count++;
-      DumpDot(graph, filename.str(), "NGraph POST_PARTITIONING", false);
-    }
-
-    return tf::Status::OK();
-  }
-
- protected:
-  std::string GetPassName() { return "POST_PARTITIONING"; }
-};
-
-namespace tensorflow {
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::PRE_PLACEMENT, 100,
-                      NGraphPassPrePlacement);
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PLACEMENT, 100,
-                      NGraphPassPostPlacement);
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 100,
-                      NGraphPassPostReWrite);
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 100,
-                      NGraphPostPartitioning);
-}  // namespace tensorflow
+void GraphToDotFile(tf::Graph* graph, const std::string& filename,
+                    const std::string& title, bool annotate_device) {
+  std::string dot = GraphToDot(graph, title, annotate_device);
+  std::ofstream ostrm_out(filename, std::ios_base::trunc);
+  ostrm_out << dot;
+}
 
 std::string GraphToDot(tf::Graph* graph, const std::string& title,
                        bool annotate_device) {
@@ -269,30 +136,4 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
   return dot_string.str();
 }
 
-// std::string SummarizeAttributes(tf::AttrSlice attrs, tf::StringPiece device)
-// {
-//   string ret;
-
-//   // We sort the attrs so the output is deterministic.
-//   std::vector<string> attr_names;
-//   attr_names.reserve(attrs.size());
-//   for (const auto& attr : attrs) {
-//     attr_names.push_back(attr.first);
-//   }
-//   std::sort(attr_names.begin(), attr_names.end());
-//   bool first = true;
-//   for (const string& attr_name : attr_names) {
-//     if (!first) strings::StrAppend(&ret, ", ");
-//     first = false;
-//     strings::StrAppend(&ret, attr_name, "=",
-//                        SummarizeAttrValue(*attrs.Find(attr_name)));
-//   }
-
-//   // Consider the device to be a final attr with name "_device".
-//   if (!device.empty()) {
-//     if (!first) strings::StrAppend(&ret, ", ");
-//     first = false;
-//     strings::StrAppend(&ret, "_device=\"", device, "\"");
-//   }
-//   return ret;
-// }
+}  // namespace ngraph_bridge

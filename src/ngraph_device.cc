@@ -129,27 +129,6 @@ class NGraphDevice : public Device {
   // Overwrite MaybeRewriteGraph
   Status MaybeRewriteGraph(std::unique_ptr<Graph>* graph) override {
     VLOG(0) << "NGraphDevice::MaybeRewriteGraph() called";
-
-    std::string dot =
-        GraphToDot(graph->get(), "NGraphDevice::MaybeRewriteGraph", true);
-
-    static int count = 1;
-    std::ostringstream filename;
-    filename << "./ngraph_MaybeRewriteGraph_" << count << ".dot";
-    count++;
-
-    std::ofstream ostrm(filename.str(), std::ios_base::trunc);
-    ostrm << dot;
-
-    // auto graph_def = graph->get()->ToGraphDefDebug();
-    // std::cout << "-----------------------------------------------------\n"
-    //           << graph_def.DebugString()
-    //           << "-----------------------------------------------------\n"
-    //           << std::endl;
-
-    // for (Edge const* edge : graph->get()->edges()) {
-    //   std::cout << "Edge: " << edge->DebugString() << std::endl;
-    // }
     return Status::OK();
   }
 

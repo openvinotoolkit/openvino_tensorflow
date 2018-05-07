@@ -28,9 +28,11 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
 from ctypes import *
-cdll.LoadLibrary(
-    '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so'
-)
+
+# Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
+# Eventually this won't be needed as the library will be available in either
+# the Python site-packages or some other means
+cdll.LoadLibrary('libngraph_device.so')
 
 FLAGS = None
 
@@ -90,6 +92,10 @@ def run_mnist(_):
 
     # Save the TF graph as pdf
     g = tfg.board(tf.get_default_graph())
+
+    tf.train.write_graph(
+        tf.get_default_graph(), '.', 'mnist_fprop_py.pbtxt', as_text=True)
+
     g.render(filename="./mnist_fprop_only")
 
     print("Inference time: %f seconds" % (end - start))

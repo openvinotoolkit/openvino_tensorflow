@@ -35,6 +35,9 @@ import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
+# Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
+# Eventually this won't be needed as the library will be available in either
+# the Python site-packages or some other means
 lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 
 # with errors_impl.raise_exception_on_not_ok_status() as status:
