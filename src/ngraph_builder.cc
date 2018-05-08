@@ -66,6 +66,9 @@ unique_ptr<ng::Function> Builder::TransformGraph(const tf::Graph* input_graph) {
       cout << "Parameter: " << n->name() << "[" << tf::DataTypeString(dtype)
            << "] Shape: ";
       tf::PartialTensorShape shape(shape_proto);
+      if (!shape.IsFullyDefined()) {
+        cout << "Error: cannot use partially defined shapes" << endl;
+      }
 
       for (int d = 0; d < shape.dims(); ++d) {
         if (d > 0) cout << ", ";
@@ -74,6 +77,7 @@ unique_ptr<ng::Function> Builder::TransformGraph(const tf::Graph* input_graph) {
 
       // Create the nGraph::op::Parameter
       // TODO
+
       //<< " Shape: " << tf::ProtoShortDebugString(shape) << endl;
       cout << endl;
     } else {
