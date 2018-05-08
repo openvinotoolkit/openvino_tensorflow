@@ -52,7 +52,8 @@ def run_mnist(_):
     x = tf.placeholder(tf.float32, [None, 784])
     W = tf.Variable(tf.zeros([784, 10]))
     b = tf.Variable(tf.zeros([10]))
-    y = tf.matmul(x, W) + b
+    with tf.device('/device:NGRAPH_CPU:0'):
+        y = tf.matmul(x, W) + b
 
     # Define loss and optimizer
     y_ = tf.placeholder(tf.float32, [None, 10])
