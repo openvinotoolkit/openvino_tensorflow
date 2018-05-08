@@ -24,6 +24,7 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/lib/strings/str_util.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
@@ -68,6 +69,7 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
   dot_string << "label=<<b>TensorFlow Graph: " << title << "</b><br/><br/>>;\n";
 
   // Input edges
+  string fill_color = "#f2f2f2";
   std::vector<const tf::Edge*> inputs;
   for (auto id = 0; id < graph->num_node_ids(); ++id) {
     const tf::Node* node = graph->FindNodeId(id);
@@ -77,27 +79,34 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
     //      pad=2_2x2_2}<br/>dim_labels=b01f_01io-&gt;b01f<br/>f32[10000,14,14,64]{3,2,1,0}>,
     //      shape=rect, tooltip=" ", style="filled", fontcolor="white",
     //      color="#003c8f", fillcolor="#1565c0"];
+    //
     dot_string << "node_" << node;
     dot_string << " [label=<<b>" << node->type_string() << "</b><br/>";
     dot_string << node->name() << "<br/>";
+
     // Print the data type if this node an op node
     tf::DataType datatype;
     if (GetNodeAttr(node->def(), "T", &datatype) == tf::Status::OK()) {
       dot_string << tf::DataTypeString(datatype) << "<br/>";
     }
     if (annotate_device) {
-       // For some reason the assigned_device_name results in a crash
-       // dot_string << " Device: " << node->assigned_device_name() << "<br/>";
-       dot_string << " Device: " << node->requested_device() << "<br/>";
+      // For some reason the assigned_device_name results in a crash
+      // dot_string << " Device: " << node->assigned_device_name() << "<br/>";
+      auto device_name = node->requested_device();
+      if (tf::str_util::StrContains(device_name, "NGRAPH_CPU")) {
+        fill_color = "#cee9fd";
+      } else if (tf::str_util::StrContains(device_name, "XLA_CPU")) {
+        fill_color = "#ffcc99";
+      } else if (tf::str_util::StrContains(device_name, "CPU")) {
+        fill_color = "#ffffcc";
+      }
+      dot_string << " Device: " << device_name << "<br/>";
     }
 
     dot_string << ">, shape=rect, style=\"filled\", fontcolor=\"black\", "
-                  "color=\"#003c8f\", fillcolor=\"#C3E4FD\"";
+                  "color=\"#003c8f\", fillcolor=\""
+               << fill_color << "\"";
     dot_string << " ];\n";
-
-    // printf("Node: %s Type: %s Id: %d\n", node->name().c_str(),
-    //        node->type_string().c_str(), node->id());
-    // printf("  %s\n", tf::SummarizeNode(*node).c_str());
 
     // Get the inputs for this Node.  We make sure control inputs are
     // after data inputs, as required by GraphDef.

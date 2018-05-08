@@ -19,7 +19,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import ctypes
 
 import sys
 import time
@@ -38,6 +37,7 @@ print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 # Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
 # Eventually this won't be needed as the library will be available in either
 # the Python site-packages or some other means
+import ctypes
 lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 
 # with errors_impl.raise_exception_on_not_ok_status() as status:
