@@ -72,6 +72,11 @@ public:
 protected:
   std::string GetPassName() { return "PRE_PLACEMENT"; }
   tf::Status RunImpl(const tf::GraphOptimizationPassOptions &options) {
+    // Save the graph as ptoro text
+    GraphToPbTextFile(options.graph->get(),
+                      "./ngraph_pass_" + GetPassName() + ".pbtxt");
+
+    // Save as DOT
     GraphToDotFile(options.graph->get(),
                    "./ngraph_pass_" + GetPassName() + ".dot",
                    "NGraph POST_PLACEMENT", false);
@@ -148,6 +153,35 @@ public:
 protected:
   std::string GetPassName() { return "POST_PARTITIONING"; }
 };
+
+class NGraphPostEncapsulation : public NGraphPass {
+public:
+  NGraphPostEncapsulation() : NGraphPass("NGraph POST_ENCAPSULATION Pass") {}
+
+  tf::Status RunImpl(const tf::GraphOptimizationPassOptions &options) {
+    static int count = 1;
+
+    if (options.partition_graphs != nullptr) {
+      for (auto &pg : *options.partition_graphs) {
+        tf::Graph *graph = pg.second.get();
+        std::ostringstream filename;
+        filename << "./ngraph_pass_" << GetPassName() << count;
+        count++;
+        // Save the graph as ptoro text
+        GraphToPbTextFile(graph, filename.str() + ".pbtxt");
+
+        // Save as DOT
+        GraphToDotFile(graph, filename.str() + ".dot",
+                       "NGraph POST_ENCAPSULATION", true);
+      }
+    }
+
+    return tf::Status::OK();
+  }
+
+protected:
+  std::string GetPassName() { return "POST_ENCAPSULATION"; }
+};
 } // namespace ngraph_bridge
 
 namespace tensorflow {
@@ -159,4 +193,6 @@ REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 100,
                       ngraph_bridge::NGraphPassPostReWrite);
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 100,
                       ngraph_bridge::NGraphPostPartitioning);
+REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 110,
+                      ngraph_bridge::NGraphPostEncapsulation);
 } // namespace tensorflow

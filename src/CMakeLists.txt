@@ -34,11 +34,12 @@ add_dependencies(ngraph_lib ext_ngraph)
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 set(SRC 
-   ngraph_device.cc 
-   ngraph_op_kernels.cc 
-   ngraph_graph_rewrite_passes.cc 
-   ngraph_utils.cc 
-   ngraph_builder.cc 
+   ngraph_device.cc
+   ngraph_encapsulate.cc
+   ngraph_op_kernels.cc
+   ngraph_graph_rewrite_passes.cc
+   ngraph_utils.cc
+   ngraph_builder.cc
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})
