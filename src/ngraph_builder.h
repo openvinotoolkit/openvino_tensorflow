@@ -29,7 +29,7 @@ namespace ng = ngraph;
 namespace ngraph_bridge {
 class Builder {
  public:
-  static unique_ptr<ng::Function> TransformGraph(const tf::Graph* tf_graph);
+  static unique_ptr<ng::Function> TranslateGraph(const tf::Graph* tf_graph);
 
  private:
 };

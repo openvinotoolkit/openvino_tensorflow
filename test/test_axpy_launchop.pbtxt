@@ -1,0 +1,102 @@
+node {
+  name: "mul/x"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:XLA_CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 5
+      }
+    }
+  }
+}
+node {
+  name: "mul"
+  op: "Mul"
+  input: "mul/x"
+  input: "_arg_Placeholder_0_0_0_arg"
+  device: "/job:localhost/replica:0/task:0/device:XLA_CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "add"
+  op: "Add"
+  input: "mul"
+  input: "_arg_Placeholder_1_0_1_0_arg"
+  device: "/job:localhost/replica:0/task:0/device:XLA_CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "_arg_Placeholder_0_0_0_arg"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "_arg_Placeholder_1_0_1_0_arg"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "add_0_retval"
+  op: "_Retval"
+  input: "add"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+library {
+}
+versions {
+  producer: 26
+}

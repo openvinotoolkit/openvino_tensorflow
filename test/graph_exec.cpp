@@ -30,18 +30,27 @@ namespace tf = tensorflow;
 
 namespace ngraph_bridge {
 
-TEST(graph_exec, builder) {
+TEST(graph_exec, axpy) {
   tf::GraphDef gdef;
   // auto status = tf::ReadTextProto(tf::Env::Default(), "test_py.pbtxt",
   // &gdef);
   auto status =
-      tf::ReadTextProto(tf::Env::Default(), "mnist_fprop_py.pbtxt", &gdef);
+      tf::ReadTextProto(tf::Env::Default(), "test_axpy_launchop.pbtxt", &gdef);
   ASSERT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
 
   tf::Graph input_graph(tf::OpRegistry::Global());
+
   tf::GraphConstructorOptions opts;
+  // Set the allow_internal_ops to true so that graphs with node names such as
+  // _arg_Placeholder_1_0_1_0_arg are allowed. These op names are generated
+  // during the graph rewrite passes and considered internal
+  opts.allow_internal_ops = true;
+
   ASSERT_EQ(tf::ConvertGraphDefToGraph(opts, gdef, &input_graph),
             tf::Status::OK());
-  auto ng_function = ngraph_bridge::Builder::TransformGraph(&input_graph);
+  // Create the inputs for this graph
+  // Inside TensorFlow execution, call this:
+  // OpKernelContext->input(index).shape()
+  auto ng_function = ngraph_bridge::Builder::TranslateGraph(&input_graph);
 }
-}
+}  // namespace ngraph_bridge
