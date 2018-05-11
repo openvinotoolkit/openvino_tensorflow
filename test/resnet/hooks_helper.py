@@ -23,14 +23,17 @@ parameters.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import collections
 import tensorflow as tf
 
 #from official.utils.logging import hooks
 import hooks
-_TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
-                                        'cross_entropy',
-                                        'train_accuracy'])
+
+_TENSORS_TO_LOG= collections.OrderedDict()
+_TENSORS_TO_LOG['step']='global_step'
+_TENSORS_TO_LOG['loss']='cross_entropy'
+_TENSORS_TO_LOG['train_accuracy']='train_accuracy'
+_TENSORS_TO_LOG['learning_rate']='learning_rate'
 
 
 def get_train_hooks(name_list, **kwargs):

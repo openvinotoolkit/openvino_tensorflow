@@ -77,8 +77,8 @@ def run_mnist(_):
         if (i == 1):
             start = time.time()
         batch_xs, batch_ys = mnist.train.next_batch(100)
-        sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
-        print("Step: ", i)
+        _,loss=sess.run([train_step,cross_entropy], feed_dict={x: batch_xs, y_: batch_ys})
+        print("step= %d loss= %f" % (i,loss))
 
     end = time.time()
 
