@@ -115,7 +115,7 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
                            os.path.join(lDir, kResnet20CPURefJson))
 
     print
-    print '----- RESNET20 CIFAR10 ReferenceTesting Summary -------------------------------'
+    print '----- RESNET20 CIFAR10 Reference Testing Summary -------------------------------'
 
     summaryLog = None
     if lDir != None:

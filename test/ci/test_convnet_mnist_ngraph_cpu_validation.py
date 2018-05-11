@@ -6,32 +6,29 @@
 #   $ virtualenv -p /usr/bin/python venv-pytest
 #   $ source venv-pytest/bin/activate
 #   $ pip -U pytest
-#   $ pytest test_resnet20_cifar10_ngraph_cpu_validation.py
-#   $ deactivte
+#   $ pytest test_convnet_mnist_ngraph_cpu_validation.py
+#   $ deactivate
 #
 # This test has no command-line parameters, as it is run via pytest.
 # This test does have environment variables that can alter how the run happens:
 #
 #     Parameter              Purpose & Default (if any)
 #
-#     TEST_RESNET20_CIFAR10_COMPARE_TO   Reference JSON file to compare ngraph
-#                                        run to; default = no file
-#     TEST_RESNET20_CIFAR10_EPOCHS       Number of epochs (steps) to run;
-#                                        default=250
-#     TEST_RESNET20_CIFAR10_EVAL_EPOCHS  Number of epoch to run between each
-#                                        eval; default=#-of-EPOCHS
-#     TEST_RESNET20_CIFAR10_BATCH_SIZE   Batch size per step; default=128
+#     TEST_CONVNET_MNIST_COMPARE_TO  Reference JSON file to compare ngraph
+#                                      run to; default = no file
+#     TEST_CONVNET_MNIST_ITER        Number of iterations (steps) to run;
+#                                      default=1000
+#     TEST_CONVNET_MNIST_BATCH_SIZE  Batch size per step; default=128
 #
-#     TEST_RESNET20_CIFAR10_DATA_DIR     Directory where CIFAR10 datafiles are
-#                                        located
-#     TEST_RESNET20_CIFAR10_LOG_DIR      Optional: dir to write log files to
+#     TEST_CONVNET_MNIST_DATA_DIR    Directory where MNIST datafiles are located
+#     TEST_CONVNET_MNIST_LOG_DIR     Optional: dir to write log files to
 #
 # JUnit XML files can be generated using pytest's command-line options.
 # For example:
-# $ pytest -s ./test_resnet20_cifar10_cpu_daily_validation.py --junit-xml=../validation_tests_resnet20_cifar10_cpu.xml --junit-prefix=daily_validation_resnet20_cifar10_cpu
+# $ pytest -s ./test_convnet_mnist_cpu_daily_validation.py --junit-xml=../validation_tests_convnet_mnist_cpu.xml --junit-prefix=daily_validation_convnet_mnist_cpu
 #
 # Example of ngraph command-line used:
-# $ KMP_BLOCKTIME=1 OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python cifar10_main.py --data_dir /tmp/cifar10_input_data --train_epochs 1 --batch_size 128 --resnet_size=20 --select_device NGRAPH --model_dir /tmp/cifar10-ngraph --epochs_between_evals 1 --inter_op 2
+# $ TODO
 #
 
 import sys
@@ -46,26 +43,26 @@ import lib_validation_testing as VT
 # Constants
 
 # Log files
-kResnet20CPUNgLog          = 'test_resnet20_cifar10_cpu_ngraph.log'
-kResnet20SummaryLog        = 'test_resnet20_cifar10_cpu_summary.log'
-kResnet20JenkinsSummaryLog = 'test_resnet20_cifar10_cpu_jenkins_oneline.log'
-kResnet20CPUNgJson         = 'test_resnet20_cifar10_cpu_ngraph.json'
+kConvnetCPUNgLog          = 'test_convnet_mnist_cpu_ngraph.log'
+kConvnetSummaryLog        = 'test_convnet_mnist_cpu_summary.log'
+kConvnetJenkinsSummaryLog = 'test_convnet_mnist_cpu_jenkins_oneline.log'
+kConvnetCPUNgJson         = 'test_convnet_mnist_cpu_ngraph.json'
 
 # Acceptable accuracy
 kAcceptableAccuracyDelta = 0.02  # 0.02 = 2%
 
-# Default number of epochs (steps) is 250
-kDefaultEpochs = 250
+# Default number of iterations (steps) is 1000
+kDefaultIter = 1000
 
-# As per Alex Krizhevsky's description of the CIFAR-10 dataset at:
-#   https://www.cs.toronto.edu/~kriz/cifar.html
-kTrainEpochSize = 50000  
+# As per Yann Lecun's description of the MNIST data-files at URL:
+#   http://yann.lecun.com/exdb/mnist/
+kTrainEpochSize = 60000  
 
-# Batch size is set with --data_dir.  For now, it is a constant
+# For now, batch size is a constant
 kTrainBatchSize = 128
 
 # Relative path (from top of bridge repo) to cifar10_main.py script
-kResnet20ScriptPath = 'test/resnet/cifar10_main.py'
+kConvnetScriptPath = 'test/mnist_deep_simplified.py'
 
 # Python program to run script.  This should just be "python" (or "python2"),
 # as the virtualenv relies on PATH resolution to find the python executable
@@ -76,21 +73,20 @@ kPythonProg = 'python'
 kRunDateTime = DT.datetime.now()
 
 
-def test_resnet20_cifar10_ngraph_cpu_backend():
+def test_convnet_mnist_ngraph_cpu_backend():
 
     # This *must* be run inside the test, because env. var. PYTEST_CURRENT_TEST
     # only exists when inside the test function.
     ngtfDir = VT.findBridgeRepoDirectory()
-    script = os.path.join(ngtfDir, kResnet20ScriptPath)
+    script = os.path.join(ngtfDir, kConvnetScriptPath)
     VT.checkScript(script)
 
-    dataDir = os.environ.get('TEST_RESNET20_CIFAR10_DATA_DIR', None)
-    if not os.path.isdir(dataDir):
-        raise Exception('Directory %s does not exist' % str(dataDir))
+    iterations = int(os.environ.get('TEST_CONVNET_MNIST_ITER', kDefaultIter))
 
-    epochs = int(os.environ.get('TEST_RESNET20_CIFAR10_EPOCHS', kDefaultEpochs))
+    dataDir = os.environ.get('TEST_CONVNET_MNIST_DATA_DIR', None)
+    VT.checkMnistData(dataDir)
 
-    compareToFile = os.environ.get('TEST_RESNET20_CIFAR10_COMPARE_TO', None)
+    compareToFile = os.environ.get('TEST_CONVNET_MNIST_COMPARE_TO', None)
 
     # If we have a compare-file, then read JSON data into referenceResults
     if compareToFile:
@@ -108,20 +104,20 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
 
     # Run with NGraph CPU backend, saving timing and accuracy
     VT.checkNGraphEnvironment()
-    ngraphLog = VT.runResnetScript(logID=' nGraph',
-                                   useNGraph=True,
-                                   script=script,
-                                   python=kPythonProg,
-                                   epochs=epochs,
-                                   batchSize=kTrainBatchSize,
-                                   dataDirectory=dataDir,
-                                   verbose=False)  # log-device-placement
+    ngraphLog = VT.runConvnetScript(logID=' nGraph',
+                                    useNGraph=True,
+                                    script=script,
+                                    python=kPythonProg,
+                                    iterations=iterations,
+                                    batchSize=kTrainBatchSize,
+                                    dataDirectory=dataDir,
+                                    verbose=False)  # log-device-placement
     ngraphResults = \
-        VT.collect_resnet20_cifar10_results(runType='nGraph CPU backend',
-                                            log=ngraphLog,
-                                            date=str(kRunDateTime),
-                                            epochs=epochs,
-                                            batchSize=kTrainBatchSize)
+        VT.collect_convnet_mnist_results(runType='nGraph CPU backend',
+                                         log=ngraphLog,
+                                         date=str(kRunDateTime),
+                                         iterations=iterations,
+                                         batchSize=kTrainBatchSize)
 
     if referenceResults:
         print
@@ -133,28 +129,28 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
     print(json.dumps(ngraphResults, indent=4))
     
     lDir = None
-    if os.environ.has_key('TEST_RESNET20_CIFAR10_LOG_DIR'):
-        lDir = os.path.abspath(os.environ['TEST_RESNET20_CIFAR10_LOG_DIR'])
+    if os.environ.has_key('TEST_CONVNET_MNIST_LOG_DIR'):
+        lDir = os.path.abspath(os.environ['TEST_CONVNET_MNIST_LOG_DIR'])
         # Dump logs to files, for inclusion in Jenkins artifacts
         VT.writeLogToFile(ngraphLog,
-                          os.path.join(lDir, kResnet20CPUNgLog))
+                          os.path.join(lDir, kConvnetCPUNgLog))
         VT.writeJsonToFile(json.dumps(ngraphResults, indent=4),
-                           os.path.join(lDir, kResnet20CPUNgJson))
+                           os.path.join(lDir, kConvnetCPUNgJson))
         # Write Jenkins description, for quick perusal of results
         if referenceResults:
-            VT.write_jenkins_resnet20_cifar10_description(referenceResults,
-                                                          ngraphResults,
-                                                          kAcceptableAccuracyDelta,
-                                                          epochs,
-                                                          os.path.join(lDir,
-                                                                       kResnet20JenkinsSummaryLog))
+            VT.write_jenkins_convnet_mnist_description(referenceResults,
+                                                       ngraphResults,
+                                                       kAcceptableAccuracyDelta,
+                                                       iterations,
+                                                       os.path.join(lDir,
+                                                                    kConvnetJenkinsSummaryLog))
 
     print
-    print '----- RESNET20 CIFAR10 Testing Summary ----------------------------------------'
+    print '----- CONVNET MNIST Testing Summary ----------------------------------------'
 
     summaryLog = None
     if lDir != None:
-        summaryLog = os.path.join(lDir, kResnet20SummaryLog)
+        summaryLog = os.path.join(lDir, kConvnetSummaryLog)
 
     logOut = VT.LogAndOutput(logFile=summaryLog)
 
@@ -163,10 +159,10 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
         # Error messages are printed here, and assertions are triggered at the
         # end of this function.
 
-        if referenceResults['epochs'] != ngraphResults['epochs']:
-            logOut.line('ERROR: epochs do not match -- ref: %s epochs, ngraph: %s epochs'
-                        % (str(referenceResults['epochs']),
-                           str(ngraphResults['epochs'])))
+        if referenceResults['iterations'] != ngraphResults['iterations']:
+            logOut.line('ERROR: iterations do not match -- ref: %s iterations, ngraph: %s iterations'
+                        % (str(referenceResults['iterations']),
+                           str(ngraphResults['iterations'])))
 
         if referenceResults['batch-size'] != ngraphResults['batch-size']:
             logOut.line('ERROR: batch-sizes do not match -- ref: %s, ngraph: %s'
@@ -182,9 +178,9 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
 
     # Report parameters
     logOut.line()
-    logOut.line('Epochs:                %d' % epochs)
+    logOut.line('Iterationss:           %d' % iterations)
     logOut.line('Batch size:            %d' % kTrainBatchSize)
-    logOut.line('Epoch size:            %d (fixed in CIFAR10)'
+    logOut.line('Epoch size:            %d (fixed in MNIST)'
                 % kTrainEpochSize)
     logOut.line('nGraph back-end used:  %s' % 'CPU')
     logOut.line('Data directory:        %s' % dataDir)
@@ -199,8 +195,8 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
         deltaAccuracy = abs(refAccuracy - ngAccuracy)
     logOut.line()
     if referenceResults:
-        logOut.line('Accuracy, in reference results:             %7.6f' % refAccuracy)
-    logOut.line('Accuracy, in run with NGraph CPU:           %7.6f' % ngAccuracy)
+        logOut.line('Accuracy, in reference results:   %7.6f' % refAccuracy)
+    logOut.line('Accuracy, in run with NGraph CPU: %7.6f' % ngAccuracy)
     if referenceResults:
         logOut.line('Acceptable accuracy range (from reference) is: %4.2f%% of %7.6f'
                     % (kAcceptableAccuracyDelta * 100, refAccuracy))
@@ -226,11 +222,11 @@ def test_resnet20_cifar10_ngraph_cpu_backend():
 
     if referenceResults:
 
-        assert referenceResults['epochs']     == ngraphResults['epochs']
+        assert referenceResults['iterations'] == ngraphResults['iterations']
         assert referenceResults['batch-size'] == ngraphResults['batch-size']
 
         assert deltaAccuracy <= acceptableDelta  # Assert for out-of-bounds accuracy
         
     # End: if referenceResults
 
-# End: test_resnet20_cifar10_cpu_backend()
+# End: test_convnet_mnist_cpu_backend()

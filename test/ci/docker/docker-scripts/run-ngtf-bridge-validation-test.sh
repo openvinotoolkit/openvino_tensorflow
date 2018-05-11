@@ -254,6 +254,107 @@ run_MLP_MNIST() {
 }  # run_MLP_MNIST()
 
 
+run_convnet_MNIST() {
+
+    cd "${HOME}/bridge/test/ci"
+
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Running Tensorflow Daily Validation on CPU-Backend at ${xtime} ====="
+    echo  ' '
+    echo  "===== PWD is $PWD ====="
+    # Test parameters
+    export TEST_CONVNET_MNIST_DATA_DIR="${dataDir}"
+    export TEST_CONVNET_MNIST_LOG_DIR="${HOME}/bridge"
+    export TEST_CONVNET_MNIST_ITER="${TF_NG_ITERATIONS:-}"
+    if [ -z "${TEST_CONVNET_MNIST_ITER}" ] ; then
+        export TEST_CONVNET_MNIST_ITER=1000  # Default is 1000 epochs
+    fi
+    # Run the test
+
+    pytest -s test_convnet_mnist_cpu_daily_validation.py --junit-xml=../../validation_tests_convnet_mnist_cpu.xml --junit-prefix=daily_validation_convnet_mnist_cpu
+    echo "===== Daily Validation CPU-Backend Pipeline Exited with $? ====="
+
+}  # run_convnet_MNIST()
+
+
+run_convnet_MNIST_ngraph_reference() {
+
+    cd "${HOME}/bridge/test/ci"
+
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Running Tensorflow Daily Validation on CPU-Backend at ${xtime} ====="
+    echo  ' '
+    echo  "===== PWD is $PWD ====="
+    # Test parameters
+    export TEST_CONVNET_MNIST_DATA_DIR="${dataDir}"
+    export TEST_CONVNET_MNIST_LOG_DIR="${HOME}/bridge"
+    export TEST_CONVNET_MNIST_ITER="${TF_NG_ITERATIONS:-}"
+    if [ -z "${TEST_CONVNET_MNIST_ITER}" ] ; then
+        export TEST_CONVNET_MNIST_ITER=1000  # Default is 1000 epochs
+    fi
+    # Run the test
+
+    pytest -s test_convnet_mnist_reference_cpu_validation.py --junit-xml=../../validation_tests_convnet_mnist_reference_cpu.xml --junit-prefix=daily_validation_convnet_mnist_reference_cpu
+    echo "===== Daily Validation CPU-Backend Pipeline Exited with $? ====="
+
+}  # run_convnet_MNIST_ngraph()
+
+
+run_convnet_MNIST_ngraph() {
+
+    cd "${HOME}/bridge/test/ci"
+
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Running Tensorflow Daily Validation on CPU-Backend at ${xtime} ====="
+    echo  ' '
+    echo  "===== PWD is $PWD ====="
+    # Test parameters
+    export TEST_CONVNET_MNIST_DATA_DIR="${dataDir}"
+    export TEST_CONVNET_MNIST_LOG_DIR="${HOME}/bridge"
+    export TEST_CONVNET_MNIST_ITER="${TF_NG_ITERATIONS:-}"
+    if [ -z "${TEST_CONVNET_MNIST_ITER}" ] ; then
+        export TEST_CONVNET_MNIST_ITER=1000  # Default is 1000 epochs
+    fi
+    # Make sure the comparison env. var. is not present
+    unset TEST_CONVNET_ITER_COMPARE_TO
+    # Run the test
+
+    pytest -s test_convnet_mnist_ngraph_cpu_validation.py --junit-xml=../../validation_tests_convnet_mnist_ngraph_cpu.xml --junit-prefix=daily_validation_convnet_mnist_ngraph_cpu
+    echo "===== Daily Validation CPU-Backend Pipeline Exited with $? ====="
+
+}  # run_convnet_MNIST_ngraph()
+
+
+run_convnet_MNIST_ngraph_compare() {
+
+    cd "${HOME}/bridge/test/ci"
+
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Running Tensorflow Daily Validation on CPU-Backend at ${xtime} ====="
+    echo  ' '
+    echo  "===== PWD is $PWD ====="
+    # Test parameters
+    export TEST_CONVNET_MNIST_DATA_DIR="${dataDir}"
+    export TEST_CONVNET_MNIST_LOG_DIR="${HOME}/bridge"
+    export TEST_CONVNET_MNIST_ITER="${TF_NG_ITERATIONS:-}"
+    export TEST_CONVNET_MNIST_COMPARE_TO="${TF_NG_COMPARE_TO:-}"
+    if [ -z "${TEST_CONVNET_MNIST_ITER}" ] ; then
+        export TEST_CONVNET_MNIST_ITER=1000  # Default is 1000 epochs
+    fi
+    # Make sure the comparison env. var. is not present
+    unset TEST_CONVNET_ITER_COMPARE_TO
+    # Run the test
+
+    pytest -s test_convnet_mnist_ngraph_cpu_validation.py --junit-xml=../../validation_tests_convnet_mnist_ngraph_cpu.xml --junit-prefix=daily_validation_convnet_mnist_ngraph_cpu
+    echo "===== Daily Validation CPU-Backend Pipeline Exited with $? ====="
+
+}  # run_convnet_MNIST_ngraph_compare()
+
+
 run_resnet20_CIFAR10() {
 
     cd "${HOME}/bridge/test/ci"
@@ -397,12 +498,23 @@ case "${model_dataset}" in
 # nGraph-only run, but compares to provide results (in JSON format)
 # Produces an ngraph results JSON file.
 #
+convnet-mnist-ngraph)
+    setup_tf_and_ngraph_plugin
+    setup_MNIST_dataset
+    run_convnet_MNIST_ngraph
+    ;;
 resnet20-cifar10-ngraph)
     setup_tf_and_ngraph_plugin
     setup_CIFAR10_dataset
     run_resnet20_CIFAR10_ngraph
     ;;
-# nGraph+comparison: Resnet20 with CIFAR10 dataset
+
+# nGraph+comparison
+convnet-mnist-ngraph-compare)
+    setup_tf_and_ngraph_plugin
+    setup_MNIST_dataset
+    run_convnet_MNIST_ngraph_compare
+    ;;
 resnet20-cifar10-ngraph-compare)
     setup_tf_and_ngraph_plugin
     setup_CIFAR10_dataset
@@ -411,6 +523,11 @@ resnet20-cifar10-ngraph-compare)
 
 # Reference-only run, with tf-mkldnn.  Produces a reference results JSON file.
 #
+convnet-mnist-ngraph-ref)
+    setup_tf_and_ngraph_plugin
+    setup_MNIST_dataset
+    run_convnet_MNIST_ngraph_reference
+    ;;
 resnet20-cifar10-ref)  # nGraph+comparison: Resnet20 with CIFAR10 dataset
     setup_tf_mkldnn
     setup_CIFAR10_dataset
@@ -427,6 +544,11 @@ mlp-mnist)  # Ref+nGraph: Multi-Layer Perceptron (MLP) with MNIST dataset
     setup_tf_and_ngraph_plugin
     setup_MNIST_dataset
     run_MLP_MNIST
+    ;;
+convnet-mnist)
+    setup_tf_and_ngraph_plugin
+    setup_MNIST_dataset
+    run_convnet_MNIST
     ;;
 resnet20-cifar10)  # Ref+nGraph: Resnet20 with CIFAR10 dataset
     setup_tf_and_ngraph_plugin

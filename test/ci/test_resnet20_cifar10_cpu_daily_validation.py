@@ -96,7 +96,7 @@ def test_resnet20_cifar10_cpu_backend():
                                       dataDirectory=dataDir,
                                       verbose=False)  # log-device-placement
     referenceResults = \
-        VT.collect_resnet20_cifar10_results(runType='TensorFlow Default CPU',
+        VT.collect_resnet20_cifar10_results(runType='Reference CPU backend',
                                             log=referenceLog,
                                             date=str(kRunDateTime),
                                             epochs=epochs,
@@ -156,8 +156,8 @@ def test_resnet20_cifar10_cpu_backend():
 
     # Report commands
     logOut.line()
-    logOut.line('Run with default CPU: %s' % referenceResults['command'])
-    logOut.line('Run with NGraph CPU: %s' % ngraphResults['command'])
+    logOut.line('Reference run using CPU: %s' % referenceResults['command'])
+    logOut.line('Run with NGraph CPU:     %s' % ngraphResults['command'])
 
     # Report parameters
     logOut.line()
@@ -175,8 +175,8 @@ def test_resnet20_cifar10_cpu_backend():
     acceptableDelta = refAccuracy * kAcceptableAccuracyDelta
     deltaAccuracy = abs(refAccuracy - ngAccuracy)
     logOut.line()
-    logOut.line('Accuracy, in run with default CPU:             %7.6f' % refAccuracy)
-    logOut.line('Accuracy, in run with NGraph CPU:          %7.6f' % ngAccuracy)
+    logOut.line('Accuracy, in reference run using CPU: %7.6f' % refAccuracy)
+    logOut.line('Accuracy, in run with NGraph CPU:     %7.6f' % ngAccuracy)
     logOut.line('Acceptable accuracy range (from reference) is: %4.2f%% of %7.6f'
                 % (kAcceptableAccuracyDelta * 100, refAccuracy))
     logOut.line('Acceptable accuracy delta is <= %7.6f'
@@ -184,11 +184,11 @@ def test_resnet20_cifar10_cpu_backend():
     logOut.line('Actual accuracy delta is %7.6f' % deltaAccuracy)
     # Report on times
     logOut.line()
-    logOut.line('Run with default CPU took:    %f seconds'
+    logOut.line('Reference run using CPU took: %f seconds'
                 % referenceResults['wallclock'])
-    logOut.line('Run with NGraph CPU took: %f seconds'
+    logOut.line('Run with NGraph CPU took:     %f seconds'
                 % ngraphResults['wallclock'])
-    logOut.line('NGraph was %f times faster than default (wall-clock measurement)'
+    logOut.line('NGraph was %f times faster than reference (wall-clock measurement)'
                 % (referenceResults['wallclock'] / ngraphResults['wallclock']))
 
     # Make sure all output has been flushed before running assertions

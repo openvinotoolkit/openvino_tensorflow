@@ -200,7 +200,7 @@ def  checkMnistData(dataDir):
                  'train-labels-idx1-ubyte.gz']
 
     if dataDir == None:
-        raise Exception('Data directory was not specified in TEST_MLP_MNIST_DATA_DIR')
+        raise Exception('Data directory was not specified in TEST_*_MNIST_DATA_DIR')
 
     if not os.path.isdir(dataDir):
         raise Exception('Data directory %s is not actually a directory'
@@ -263,6 +263,198 @@ def runMlpMnistScript(script=None,          # Script to run
     return runLog
 
 # End: def runMnistScript()
+
+
+# =============================================================================
+# Convnet-Specific Functions
+# =============================================================================
+
+
+def runConvnetScript(script=None,        # Script to run
+                     useNGraph=True,     # False->reference, True->nGraph++
+                     dataDirectory=None, # --data_dir, where MNIST data is
+                     iterations=None,    # Epochs to run
+                     batchSize=128,      # Batch size for training
+                     python=None,        # Which python to use
+                     verbose=False,      # If True, enable log_device_placement
+                     logID=''):          # Log line prefix
+
+    print
+    print 'Convnet script being run with:'
+    print '    script:         %s' % str(script)
+    print '    useNGraph:      %s' % str(useNGraph)
+    print '    dataDirectory:  %s' % str(dataDirectory)
+    print '    iterations:     %s' % str(iterations)
+    print '    python:         %s' % str(python)
+    print '    logID:          %s' % str(logID)
+
+
+    if iterations is None:
+        raise Exception('runConvnetScript() called without parameter iterations')
+
+    if batchSize is None:
+        raise Exception('runConvnetScript() called without parameter batchSize')
+
+    # -u puts python in unbuffered mode
+    cmd = ('%s -u %s --data_dir %s --train_loop_count %d --batch_size %d'
+           % (python, script, dataDirectory, int(iterations), int(batchSize)))
+
+    if useNGraph:
+        print 'Setting up run in nGraph environment'
+        cmd = 'OMP_NUM_THREADS=44 KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,compact,1,0 %s' % cmd
+    else:
+        print 'Setting up run in reference CPU environment (no nGraph)'
+        # Now that we use MKLDNN for reference runs, we need to make sure it
+        # runs using appropriate OMP and KMP settings
+        cmd = 'OMP_NUM_THREADS=44 KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,compact,1,0 %s' % cmd
+        cmd = '%s --use_xla_cpu 1' % cmd
+
+    if verbose:
+        print 'Enabling verbose output (--log_device_placement)'
+        cmd = '%s --log_device_placement True' % cmd
+
+    # Hook for testing results detection without having to run multi-hour
+    # Framework+Dataset tests
+    if (os.environ.has_key('TF_NG_DO_NOT_RUN')
+        and len(os.environ['TF_NG_DO_NOT_RUN']) > 0):
+        runLog = runFakeCommand(command=cmd, logID=logID)
+    else:
+        runLog = runCommand(command=cmd, logID=logID)
+
+    return runLog
+
+# End: def runConvnetScript()
+
+
+# Returns dictionary with results extracted from the run:
+#     'run-type':       Short description of run being done
+#     'command':        Command that was run
+#     'date-time':      Date and time (on server) when command was run
+#     'server':         Name of server on which command was run
+#     'cpu-model-name': Model-name of CPUs on the server
+#     'iterations':     Iterationss run
+#     'batch-size':     Batch size for run
+#     'accuracy':       Accuracy reported for the run
+#     'loss':           Loss reported at the end of the run
+#     'wallclock':      How many seconds the job took to run
+def collect_convnet_mnist_results(runType=None, date=None,
+                                  iterations=None, batchSize=None,
+                                  log=None):
+
+    runType = runType        # Passed in as a paramter
+    command = None           # Derived from log
+    date_time = date         # Passed in as a parameter
+    server = None            # Derived from process environment
+    cpu_model = None         # Derived from /proc/cpuinfo, if present
+    iterations = iterations  # Passed in as a parameter
+    batchSize = batchSize    # Passed in as a parameter
+    accuracy = None          # Derived from log
+    loss = None              # Derived from log
+    wallclock = None         # Derived from log
+
+    for line in log:  # Read through log
+
+        if re.match('Command is:', line):
+            if command == None:
+                lArray = line.split('"')
+                command = str(lArray[1].strip('"'))
+                print 'Found command = [%s]' % command
+            else:
+                raise Exception('Multiple command-is lines found')
+
+        if re.search("test accuracy", line):
+            if accuracy == None:
+                print('Found accuracy: "%s"' % line.strip())
+                lArray = line.split()
+                accuracy = float(lArray[2].strip())
+                print('Computed accuracy = %f' % accuracy)
+            else:
+                raise Exception('Multiple accuracy lines found')
+                
+        if re.match("{'loss':", line):
+            if loss == None:
+                print('Found loss: "%s"' % line.strip())
+                lArray = line.split()
+                loss = float(lArray[1].strip().rstrip(','))
+                print('Computed loss = %f' % loss)
+            else:
+                raise Exception('Multiple loss lines found')
+                
+        if re.match('^Run length:', line):
+            if wallclock == None:
+                print('Found run-length: "%s"' % line.strip())
+                lArray = line.split()
+                wallclock = float(lArray[2].strip())
+                print('Computed wallclock = %f' % wallclock)
+            else:
+                raise Exception('Multiple time-elapsed lines found')
+
+    # Derive the server used.  This is a little tricky, as often this script
+    # is run in a Docker container.  Therefore, looked for a passed in
+    # environment variable (HOST_HOSTNAME) first, followed by HOSTNAME
+    if os.environ.has_key('HOST_HOSTNAME'):
+        server = '%s-docker' % os.environ['HOST_HOSTNAME']
+    elif os.environ.has_key('HOSTNAME'):
+        server = os.environ['HOSTNAME']
+   
+
+    # Derive the CPU model-name from /proc/cpuinfo
+    if os.path.isfile('/proc/cpuinfo'):
+        fIn = open('/proc/cpuinfo', 'r')
+        lines = filter(lambda x: re.match('model name', x), fIn.readlines())
+        fIn.close()
+        if len(lines) > 0:
+            # Strip the first line of edge-whitespace, then break into fields
+            fields = (lines[0].strip()).split(':')
+            # The model name is field 1 (with key "model name" as field 0)
+            cpu_model = fields[1].strip()
+
+    # Make exact zero instead be a very tiny number, to avoid divide-by-zero
+    # calculations
+    if accuracy == 0.0 or accuracy == None:  accuracy = 0.000000001
+    if wallclock == 0.0 or wallclock == None:  wallclock = 0.000000001
+
+    return {'run-type': runType,
+            'command': command,
+            'date-time': date_time,
+            'server': server,
+            'cpu-model-name': cpu_model,
+            'iterations': iterations,
+            'batch-size': batchSize,
+            'accuracy': accuracy,
+            'loss': loss,
+            'wallclock': wallclock}
+
+# End: collect_convnet_mnist_results
+
+
+def write_jenkins_convnet_mnist_description(refResults, ngResults,
+                                            acceptableDelta,
+                                            iterations, fileName):
+
+    print 'Jenkins description written to %s' % fileName
+
+    try: 
+
+        fOut = open( fileName, 'w')
+
+        refAccuracy = float(refResults['accuracy'])
+        ngAccuracy = float(ngResults['accuracy'])
+
+        acceptableDelta = refAccuracy * acceptableDelta
+        deltaAccuracy = abs(refAccuracy - ngAccuracy)
+
+        fOut.write( 'Convnet-MNIST accuracy - ref: %5.4f, ngraph: %5.4f, delta %5.4f; ngraph %4.2fx faster; %d iterations'
+                    % (refAccuracy, ngAccuracy, deltaAccuracy,
+                       (refResults['wallclock']/ngResults['wallclock']),
+                       iterations))
+
+        fOut.close()
+
+    except Exception as e:
+        print 'Unable to write Jenkins description file - %s' % e
+
+# End: write_jenkins_convnet_mnist_description()
 
 
 # =============================================================================
