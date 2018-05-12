@@ -35,12 +35,9 @@ namespace ngraph_bridge {
 class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 public:
   tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
-    VLOG(0) << "NGraphEncapsulatePass start";
-
     if (options.partition_graphs != nullptr) {
       for (auto &pg : *options.partition_graphs) {
         if (!ShouldEncapsulate(pg.first)) {
-          VLOG(0) << "Skipping graph for " << pg.first;
           continue;
         }
 
@@ -50,8 +47,6 @@ public:
         TF_RETURN_IF_ERROR(EncapsulateFunction(pg.first, graph));
       }
     }
-
-    VLOG(0) << "NGraphEncapsulatePass finish";
 
     return tf::Status::OK();
   }
@@ -63,10 +58,10 @@ private:
 
     // TODO(amprocte): should this error out?
     if (!tf::DeviceNameUtils::ParseFullName(device_string, &parsed)) {
-      VLOG(0) << "Could not parse device name: " << device_string;
       return false;
     }
 
+    // TODO(amprocte): change to DEVICE_NGRAPH constant
     return (parsed.has_type && parsed.type == "NGRAPH_CPU");
   }
 
@@ -80,7 +75,8 @@ private:
 
     signature.set_name(encapsulated_name);
 
-    // Pass 1: Find send and receive nodes.
+    // Pass 1: Find send and receive nodes, and create corresponding arguments
+    // in the function signature
     // TODO(amprocte): use something other than vector?
     std::vector<tf::Node *> recv_nodes;
     std::vector<tf::Node *> send_nodes;
@@ -109,7 +105,11 @@ private:
     // and adding them to the fdef as we go.
     for (auto node : graph->op_nodes()) {
       if (!node->IsRecv() && !node->IsSend()) {
-        VLOG(0) << "ENCAPSULATING: " << node->DebugString();
+        // TODO(amprocte): this is the "original" node def per the docs. Is
+        // there a way to "convert" the possibly-updated node to a node def
+        // (and is this what we want to do?)
+        // GraphToGraphDefSubrange in graph.cc has an example of how they do
+        // it.
         *fdef.add_node_def() = node->def();
         graph->RemoveNode(node);
       }
@@ -125,7 +125,6 @@ private:
     launch_node_def.set_name(encapsulated_name);
     launch_node_def.set_op(encapsulated_name);
     for (auto node : recv_nodes) {
-      VLOG(0) << "ADDING INPUT: " << node->name();
       launch_node_def.add_input(node->name());
     }
     launch_node_def.set_device(device);
@@ -140,17 +139,11 @@ private:
 
     pos = 0;
     for (auto node : recv_nodes) {
-      VLOG(0) << "Adding edge from: " << node->DebugString();
-      VLOG(0) << "Adding edge to: " << launch_node->DebugString();
-      VLOG(0) << "Pos is: " << pos;
       graph->AddEdge(node,0,launch_node,pos++);
     }
 
     pos = 0;
     for (auto node : send_nodes) {
-      VLOG(0) << "Adding edge from: " << launch_node->DebugString();
-      VLOG(0) << "Adding edge to: " << node->DebugString();
-      VLOG(0) << "Pos is: " << pos;
       graph->AddEdge(launch_node,pos++,node,0);
     }
 
@@ -161,7 +154,7 @@ private:
 };
 } // namespace ngraph_bridge
 
-namespace tensorflow {
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 105,
-                      ngraph_bridge::NGraphEncapsulatePass);
-} // namespace tensorflow
+//namespace tensorflow {
+//REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 105,
+//                      ngraph_bridge::NGraphEncapsulatePass);
+//} // namespace tensorflow

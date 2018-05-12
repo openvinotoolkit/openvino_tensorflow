@@ -52,7 +52,8 @@ def run_mnist(_):
     x = tf.placeholder(tf.float32, [None, 784])
     W = tf.Variable(tf.zeros([784, 10]))
     b = tf.Variable(tf.zeros([10]))
-    y = tf.matmul(x, W) + b
+    with tf.device('/device:NGRAPH_CPU:0'):
+        y = tf.matmul(x, W) + b
 
     # Define loss and optimizer
     y_ = tf.placeholder(tf.float32, [None, 10])
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--select_device',
         type=str,
-        default='NGRAPH_CPU',
+        default='CPU',
         help='Enter the device')
 
     FLAGS, unparsed = parser.parse_known_args()

@@ -352,9 +352,9 @@ class NGraphSend : public OpKernel {
 REGISTER_KERNEL_BUILDER(
     Name("Add").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphAddOp<float>);
-REGISTER_KERNEL_BUILDER(
+/*REGISTER_KERNEL_BUILDER(
     Name("Sub").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
+    NGraphOp<float>);*/
 REGISTER_KERNEL_BUILDER(
     Name("Mul").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphMulOp<float>);
@@ -384,6 +384,7 @@ REGISTER_KERNEL_BUILDER(Name("PlaceholderV2").Device(DEVICE_NGRAPH),
                         NgPlaceholderOp);
 REGISTER_KERNEL_BUILDER(Name("_Recv").Device(DEVICE_NGRAPH), NGraphRecv);
 REGISTER_KERNEL_BUILDER(Name("_Send").Device(DEVICE_NGRAPH), NGraphSend);
+REGISTER_KERNEL_BUILDER(Name("_HostSend").Device(DEVICE_NGRAPH), NGraphSend);
 
 REGISTER_KERNEL_BUILDER(Name("Const").Device(DEVICE_NGRAPH), NGraphNoOp);
 REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(DEVICE_NGRAPH),
@@ -425,6 +426,12 @@ REGISTER_KERNEL_BUILDER(Name("Slice")
                             .TypeConstraint<int32>("Index"),
                         NGraphOp<int32>);
 
+REGISTER_KERNEL_BUILDER(Name("Slice")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T")
+                            .TypeConstraint<int32>("Index"),
+                        NGraphOp<float>);
+
 REGISTER_KERNEL_BUILDER(
     Name("Maximum").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
     NGraphOp<int32>);
@@ -461,6 +468,10 @@ REGISTER_KERNEL_BUILDER(
 
 REGISTER_KERNEL_BUILDER(
     Name("Identity").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Snapshot").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(
@@ -514,6 +525,14 @@ REGISTER_KERNEL_BUILDER(
     NGraphOp<int64>);
 
 REGISTER_KERNEL_BUILDER(
+    Name("Equal").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<bool>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Greater").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<bool>);
+
+REGISTER_KERNEL_BUILDER(
     Name("Neg").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
@@ -521,9 +540,9 @@ REGISTER_KERNEL_BUILDER(
     Name("LogSoftmax").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
+/*REGISTER_KERNEL_BUILDER(
     Name("ScalarSummary").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+    NGraphOp<float>);*/
 
 REGISTER_KERNEL_BUILDER(
     Name("ReluGrad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
@@ -562,6 +581,18 @@ REGISTER_KERNEL_BUILDER(Name("Cast")
                             .TypeConstraint<float>("DstT"),
                         NGraphOp<float>);
 
+REGISTER_KERNEL_BUILDER(Name("Cast")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<int64>("SrcT")
+                            .TypeConstraint<int32>("DstT"),
+                        NGraphOp<int32>);
+
+REGISTER_KERNEL_BUILDER(Name("Cast")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<bool>("SrcT")
+                            .TypeConstraint<int32>("DstT"),
+                        NGraphOp<int32>);
+
 REGISTER_KERNEL_BUILDER(Name("Tile")
                             .Device(DEVICE_NGRAPH)
                             .TypeConstraint<float>("T")
@@ -573,6 +604,75 @@ REGISTER_KERNEL_BUILDER(Name("ExpandDims")
                             .TypeConstraint<float>("T")
                             .TypeConstraint<int32>("Tdim"),
                         NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("FusedBatchNorm")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("FusedBatchNormGrad")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("L2Loss")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("AddN")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("AvgPool").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("AvgPoolGrad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Sub").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Pad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T")
+               .TypeConstraint<int32>("Tpaddings"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Greater").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
+    NGraphOp<bool>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("LessEqual").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
+    NGraphOp<bool>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("LogicalAnd").Device(DEVICE_NGRAPH),
+    NGraphOp<bool>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Select").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("BiasAdd").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("BiasAddGrad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("OneHot").Device(DEVICE_NGRAPH).TypeConstraint<float>("T").TypeConstraint<int64>("TI"),
+    NGraphOp<int64>);
+
+REGISTER_KERNEL_BUILDER(
+    Name("Transpose").Device(DEVICE_NGRAPH).TypeConstraint<float>("T").TypeConstraint<int32>("Tperm"),
+    NGraphOp<int32>);
 
 #define REGISTER_NG_KERNEL(NAME, TYPE)                                  \
   REGISTER_KERNEL_BUILDER(                                              \
