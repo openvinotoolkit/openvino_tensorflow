@@ -36,6 +36,7 @@ TEST(graph_exec, axpy) {
   // &gdef);
   auto status =
       tf::ReadTextProto(tf::Env::Default(), "test_axpy_launchop.pbtxt", &gdef);
+  // tf::ReadTextProto(tf::Env::Default(), "test_launch_op.pbtxt", &gdef);
   ASSERT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
 
   tf::Graph input_graph(tf::OpRegistry::Global());
@@ -49,8 +50,16 @@ TEST(graph_exec, axpy) {
   ASSERT_EQ(tf::ConvertGraphDefToGraph(opts, gdef, &input_graph),
             tf::Status::OK());
   // Create the inputs for this graph
+  tf::Tensor x(tf::DT_FLOAT, tf::TensorShape({2, 3}));
+  tf::Tensor y(tf::DT_FLOAT, tf::TensorShape({2, 3}));
+
+  std::vector<tf::TensorShape> inputs;
+  inputs.push_back(x.shape());
+  inputs.push_back(y.shape());
+
   // Inside TensorFlow execution, call this:
   // OpKernelContext->input(index).shape()
-  auto ng_function = ngraph_bridge::Builder::TranslateGraph(&input_graph);
+  auto ng_function =
+      ngraph_bridge::Builder::TranslateGraph(inputs, &input_graph);
 }
 }  // namespace ngraph_bridge

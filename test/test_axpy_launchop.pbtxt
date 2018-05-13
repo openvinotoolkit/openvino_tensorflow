@@ -14,8 +14,14 @@ node {
       tensor {
         dtype: DT_FLOAT
         tensor_shape {
+          dim {
+            size: 2
+          }
+          dim {
+            size: 3
+          }
         }
-        float_val: 5
+        tensor_content: "\000\000\200?\000\000\200?\000\000\200?\000\000\200?\000\000\200?\000\000\200?"
       }
     }
   }

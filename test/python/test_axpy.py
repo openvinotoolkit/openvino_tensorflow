@@ -46,7 +46,8 @@ print('Saving graph to: %s' % graph_location)
 
 train_writer = tf.summary.FileWriter(graph_location)
 
-a = 5.0
+a = np.ones((2, 3))
+#a = 5.0
 x = tf.placeholder(tf.float32, [None, 3])
 y = tf.placeholder(tf.float32, shape=(2, 3))
 
