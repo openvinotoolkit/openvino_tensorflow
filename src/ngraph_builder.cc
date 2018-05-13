@@ -26,28 +26,10 @@
 namespace ngraph_bridge {
 unique_ptr<ng::Function> Builder::TranslateGraph(
     const std::vector<tf::TensorShape>& inputs, const tf::Graph* input_graph) {
-  //   for (const tf::Node* n : input_graph->nodes()) {
-  //     cout << "Node: " << n->name() << " Type: " << n->type_string() << endl;
-  //     for (const tf::Edge* edge : n->in_edges()) {
-  //       cout << "\tEdge " << edge->src()->name() << " --> " <<
-  //       edge->dst()->name()
-  //            << endl;
-  //     }
-  //   }
   // Do a topological sort
   // GetReversePostOrder will give us topological sort.
   vector<tf::Node*> ordered;
   tf::GetReversePostOrder(*input_graph, &ordered);
-
-  cout << "After Topological sort\n";
-  //   for (auto n : ordered) {
-  //     cout << "Node: " << n->name() << " Type: " << n->type_string() << endl;
-  //     for (const tf::Edge* edge : n->in_edges()) {
-  //       cout << "\tEdge " << edge->src()->name() << " --> " <<
-  //       edge->dst()->name()
-  //            << endl;
-  //     }
-  //   }
 
   // Now start building the nGraph.
   vector<tf::Node*> tf_params;
@@ -60,9 +42,6 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
       continue;
     }
 
-    // if (n->IsConstant()) {
-    //   std::cout << "Constant Node: " << n->type_string() << endl;
-    // }
     if (n->IsVariable()) {
       std::cout << "Variable Node: " << n->type_string() << endl;
     }
@@ -76,6 +55,7 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
   }
 
   unordered_map<string, shared_ptr<ng::Node>> ng_op_map;
+  vector<shared_ptr<ng::op::Parameter>> ng_parameter_list;
   cout << "Parameters\n";
   for (auto parm : tf_params) {
     tf::DataType dtype;
@@ -100,6 +80,7 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
 
     auto ng_param = make_shared<ng::op::Parameter>(ng::element::f32, ng_shape);
     ng_op_map[parm->name()] = ng_param;
+    ng_parameter_list.push_back(ng_param);
   }
 
   cout << "Ops\n";
@@ -125,21 +106,22 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
       if (!ValuesFromConstNode<float>(op->def(), &shape_proto, &const_values)) {
         cout << "Error: Cannot get values from Constant!" << endl;
       }
-      // Shape of the tensor
-      // if (tf::GetNodeAttr(op->attrs(), "tensor_shape", &shape_proto) !=
-      //     tf::Status::OK()) {
-      //   cout << "Error: No shape type defined for Constant!\n";
-      //   return nullptr;
-      // }
+
+      cout << "Constant: " << endl;
+      for (auto val : const_values) {
+        cout << val << " ";
+      }
+      cout << endl;
+
       tf::TensorShape const_shape(shape_proto);
       ng::Shape ng_shape(const_shape.dims());
       for (int i = 0; i < const_shape.dims(); ++i) {
         ng_shape[i] = const_shape.dim_size(i);
       }
 
-      vector<float> float_t(ng::shape_size(ng_shape), 0);
-      auto ng_node =
-          make_shared<ng::op::Constant>(ng::element::f32, ng_shape, float_t);
+      // vector<float> float_t(ng::shape_size(ng_shape), 0);
+      auto ng_node = make_shared<ng::op::Constant>(ng::element::f32, ng_shape,
+                                                   const_values);
       ng_op_map[op->name()] = ng_node;
 
     } else if ((op->type_string() == "Mul") || (op->type_string() == "Add")) {
@@ -175,80 +157,33 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
 
       // Add to the map
       ng_op_map[op->name()] = ng_op;
-
-      // Get the inputs for this node
     }
   }
 
   cout << "Return Values\n";
+  vector<shared_ptr<ng::Node>> ng_node_list;
+
   for (auto n : tf_ret_vals) {
-    tf::DataType dtype;
-    if (tf::GetNodeAttr(n->attrs(), "T", &dtype) != tf::Status::OK()) {
-      cout << "Error: No data type defined for _Arg!\n";
+    tf::Node* tf_node;
+    if (n->input_node(0, &tf_node) != tf::Status::OK()) {
+      cout << "Error: Cannot find the source of the return node!\n";
       return nullptr;
     }
-    int index;
-    if (tf::GetNodeAttr(n->attrs(), "index", &index) != tf::Status::OK()) {
-      cout << "Error: No index defined for _Arg!\n";
-      return nullptr;
-    }
-    cout << "RetVal: " << index << endl;
-    for (const tf::Edge* edge : n->in_edges()) {
-      cout << "\tSrc: " << edge->src()->name() << "("
-           << edge->src()->type_string() << ")" << endl;
+
+    // Get the corresponding nGraph node
+    auto item = ng_op_map.find(tf_node->name());
+    if (item != ng_op_map.end()) {
+      ng_node_list.push_back(item->second);
+    } else {
+      cout << "Error: Cannot find return node! " << tf_node->name() << endl;
     }
   }
 
-  // for (auto n : ordered) {
-  //   tf::AttrSlice n_attrs = n->attrs();
-  //   if (n->type_string() == "_Arg") {
-  //     tf::DataType dtype;
-  //     if (tf::GetNodeAttr(n_attrs, "T", &dtype) != tf::Status::OK()) {
-  //       cout << "Error: No data type defined for _Arg!\n";
-  //       return nullptr;
-  //     }
-  //     int index;
-  //     if (tf::GetNodeAttr(n_attrs, "index", &index) != tf::Status::OK()) {
-  //       cout << "Error: No index defined for _Arg!\n";
-  //       return nullptr;
-  //     }
+  // Now create the nGraph function
+  auto ng_func = unique_ptr<ng::Function>(
+      new ng::Function(ng_node_list, ng_parameter_list));
 
-  //     // tf::TensorShapeProto shape_proto;
-  //     // if (tf::GetNodeAttr(n_attrs, "shape", &shape_proto) !=
-  //     // tf::Status::OK()) {
-  //     //   cout << "Error: No shape type defined for Parameter!\n";
-  //     //   return nullptr;
-  //     // }
-
-  //     // Get the name of the node
-  //     cout << "_Arg: " << n->name() << "[" << tf::DataTypeString(dtype)
-  //          << "] Index: " << index << endl;
-  //     // tf::PartialTensorShape shape(shape_proto);
-  //     // if (!shape.IsFullyDefined()) {
-  //     //   cout << "Error: cannot use partially defined shapes" << endl;
-  //     // }
-
-  //     // for (int d = 0; d < shape.dims(); ++d) {
-  //     //   if (d > 0) cout << ", ";
-  //     //   cout << shape.dim_size(d);
-  //     // }
-
-  //     // Create the nGraph::op::Parameter
-  //     // TODO
-
-  //     //<< " Shape: " << tf::ProtoShortDebugString(shape) << endl;
-  //     // cout << endl;
-  //   } else {
-  //     // cout << "Node: " << n->name() << " Type: " << n->type_string() <<
-  //     endl; for (const tf::Edge* edge : n->in_edges()) {
-  //       cout << "\tEdge " << edge->src()->name() << "["
-  //            << edge->src()->type_string() << "] --> " << edge->dst()->name()
-  //            << "[" << edge->dst()->type_string() << "]" << endl;
-  //     }
-  //   }
-  // }
-
-  return nullptr;
+  return move(ng_func);
 }
 
 }  // namespace ngraph_bridge

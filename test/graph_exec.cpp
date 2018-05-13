@@ -61,5 +61,28 @@ TEST(graph_exec, axpy) {
   // OpKernelContext->input(index).shape()
   auto ng_function =
       ngraph_bridge::Builder::TranslateGraph(inputs, &input_graph);
+  ASSERT_TRUE(ng_function != nullptr);
+
+#if 0
+  // Create the nGraph backend
+  auto backend = ng::runtime::Backend::create("CPU");
+
+  // Allocate tensors for arguments a, b, c
+  ng::Shape ng_shape_x(x.shape().dims());
+  for (int i = 0; i < x.shape().dims(); ++i) {
+    ng_shape_x[i] = x.shape().dim_size(i);
+  }
+
+  ng::Shape ng_shape_y(y.shape().dims());
+  for (int i = 0; i < y.shape().dims(); ++i) {
+    ng_shape_y[i] = y.shape().dim_size(i);
+  }
+
+  auto t_x = backend->create_tensor(ng::element::f32, ng_shape_x);
+  auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
+
+  // Allocate tensor for the result
+  auto t_result = backend->create_tensor(element::f32, ng_shape_x);
+#endif
 }
 }  // namespace ngraph_bridge
