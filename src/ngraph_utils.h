@@ -18,6 +18,8 @@
 
 #include <ostream>
 
+#include "ngraph/ngraph.hpp"
+
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/platform/tensor_coding.h"
@@ -97,6 +99,20 @@ bool ValuesFromConstNode(const tf::NodeDef& node,
   cout << "CONST Node has empty tensor\n";
   return false;
 }
+
+// Get a scalar value from a tensor, optionally at an element offset
+template <typename T>
+T GetScalarFromTensorView(const std::shared_ptr<ngraph::runtime::TensorView>& t,
+                          size_t element_offset = 0) {
+  T result;
+  t->read(&result, element_offset * sizeof(T), sizeof(T));
+  return result;
+}
+
+// Prints the tensor to the given output stream
+std::ostream& DumpNGTensor(
+    std::ostream& s, const string& name,
+    const std::shared_ptr<ngraph::runtime::TensorView>& t);
 
 }  // namespace ngraph_bridge
 

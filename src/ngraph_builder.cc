@@ -144,8 +144,10 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
       auto ng_lhs = ng_op_map.find(tf_lhs->name())->second;
       auto ng_rhs = ng_op_map.find(tf_rhs->name())->second;
 
-      cout << "NG LHS node: " << ng_lhs->get_name() << endl;
-      cout << "NG RHS node: " << ng_rhs->get_name() << endl;
+      cout << "NG LHS node: " << ng_lhs->get_name()
+           << " TF Node: " << tf_lhs->name() << endl;
+      cout << "NG RHS node: " << ng_rhs->get_name()
+           << " TF Node: " << tf_rhs->name() << endl;
 
       shared_ptr<ng::Node> ng_op;
 
@@ -162,20 +164,28 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
 
   cout << "Return Values\n";
   vector<shared_ptr<ng::Node>> ng_node_list;
-
   for (auto n : tf_ret_vals) {
-    tf::Node* tf_node;
-    if (n->input_node(0, &tf_node) != tf::Status::OK()) {
+    cout << "_RetVal: " << n->name() << endl;
+    // Make sure that this _RetVal ONLY has one input node
+    if (n->num_inputs() != 1) {
+      cout << "ERROR: _RetVal number of inputs wrong: " << n->num_inputs()
+           << endl;
+      return nullptr;
+    }
+
+    tf::Node* tf_input_node;
+    if (n->input_node(0, &tf_input_node) != tf::Status::OK()) {
       cout << "Error: Cannot find the source of the return node!\n";
       return nullptr;
     }
 
     // Get the corresponding nGraph node
-    auto item = ng_op_map.find(tf_node->name());
+    auto item = ng_op_map.find(tf_input_node->name());
     if (item != ng_op_map.end()) {
       ng_node_list.push_back(item->second);
     } else {
-      cout << "Error: Cannot find return node! " << tf_node->name() << endl;
+      cout << "Error: Cannot find return node! " << tf_input_node->name()
+           << endl;
     }
   }
 

@@ -101,6 +101,23 @@ node {
     }
   }
 }
+node {
+  name: "mul_0_retval"
+  op: "_Retval"
+  input: "mul"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
 library {
 }
 versions {

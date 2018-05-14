@@ -223,4 +223,48 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
   return dot_string.str();
 }
 
+std::ostream& DumpNGTensor(
+    std::ostream& s, const string& name,
+    const std::shared_ptr<ngraph::runtime::TensorView>& t) {
+  // std::shared_ptr<ngraph::runtime::TensorView> t{get_tensor()};
+  const ngraph::Shape& shape = t->get_shape();
+  s << "Tensor<" << name << ": ";
+
+  for (size_t i = 0; i < shape.size(); ++i) {
+    s << shape.at(i);
+    if (i + 1 < shape.size()) {
+      s << ", ";
+    }
+  }
+  size_t pos = 0;
+  s << ">{";
+  size_t rank = shape.size();
+  if (rank == 0) {
+    s << GetScalarFromTensorView<float>(t, pos++);
+  } else if (rank <= 2) {
+    s << "[";
+    for (size_t i = 0; i < shape.at(0); ++i) {
+      if (rank == 1) {
+        s << GetScalarFromTensorView<float>(t, pos++);
+      } else if (rank == 2) {
+        s << "[";
+        for (size_t j = 0; j < shape.at(1); ++j) {
+          s << GetScalarFromTensorView<float>(t, pos++);
+
+          if (j + 1 < shape.at(1)) {
+            s << ", ";
+          }
+        }
+        s << "]";
+      }
+      if (i + 1 < shape.at(0)) {
+        s << ", ";
+      }
+    }
+    s << "]";
+  }
+  s << "}";
+  return s;
+}
+
 }  // namespace ngraph_bridge
