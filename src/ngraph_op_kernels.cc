@@ -348,6 +348,48 @@ class NGraphSend : public OpKernel {
   bool hostmem_sendrecv_;
 };
 
+//----------------------------- Taken from TF implementation
+//------------------------
+namespace {
+
+std::unique_ptr<const tf::NodeDef> StripTensorDataFromNodeDef(
+    tf::OpKernelConstruction* ctx) {
+  const tf::NodeDef& original = ctx->def();
+  NodeDef* ret = new NodeDef;
+  ret->set_name(original.name());
+  ret->set_op(original.op());
+  ret->set_device(original.device());
+  // Strip the "value" attr from the returned NodeDef.
+  // NOTE(mrry): The present implementation of `OpKernel::OpKernel()` only uses
+  // attrs that affect the cardinality of list-typed inputs and outputs, so it
+  // is safe to drop other attrs from the NodeDef.
+  tf::AddNodeAttr("dtype", ctx->output_type(0), ret);
+  return std::unique_ptr<const tf::NodeDef>(ret);
+}
+}  // namespace
+//-----------------------------------------------------------------------------
+
+// ConstantOp returns a tensor specified by ConstantOpDef.
+class NGraphConstOp : public tf::OpKernel {
+ public:
+  explicit NGraphConstOp(tf::OpKernelConstruction* ctx)
+      : tf::OpKernel(ctx, StripTensorDataFromNodeDef(ctx)) {}
+  void Compute(tf::OpKernelContext* ctx) override {
+    // Get the input tensor
+    // const tf::Tensor& input_tensor = ctx->input(0);
+
+    // Create an output tensor
+    tf::Tensor* output_tensor = nullptr;
+    OP_REQUIRES_OK(
+        ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output_tensor));
+  }
+  bool IsExpensive() override { return false; }
+  ~NGraphConstOp() override{};
+
+ private:
+  // Tensor tensor_;
+};
+
 // This form allows you to specify a list of types as the constraint.
 REGISTER_KERNEL_BUILDER(
     Name("Add").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
@@ -366,13 +408,6 @@ REGISTER_KERNEL_BUILDER(
     Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphOp<float>);
 
-// REGISTER_KERNEL_BUILDER(
-//     Name("Const").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-//     NGraphOp<float>);ß
-// REGISTER_KERNEL_BUILDER(
-//     Name("Const").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_STRING}),
-//     NGraphOp<std::string>);
-
 REGISTER_KERNEL_BUILDER(
     Name("Fill").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphOp<float>);
@@ -385,8 +420,8 @@ REGISTER_KERNEL_BUILDER(Name("PlaceholderV2").Device(DEVICE_NGRAPH),
 REGISTER_KERNEL_BUILDER(Name("_Recv").Device(DEVICE_NGRAPH), NGraphRecv);
 REGISTER_KERNEL_BUILDER(Name("_Send").Device(DEVICE_NGRAPH), NGraphSend);
 REGISTER_KERNEL_BUILDER(Name("_HostSend").Device(DEVICE_NGRAPH), NGraphSend);
+REGISTER_KERNEL_BUILDER(Name("Const").Device(DEVICE_NGRAPH), NGraphConstOp);
 
-REGISTER_KERNEL_BUILDER(Name("Const").Device(DEVICE_NGRAPH), NGraphNoOp);
 REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(DEVICE_NGRAPH),
                         NGraphNoOp);
 

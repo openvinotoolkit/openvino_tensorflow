@@ -17,9 +17,11 @@
 #define NGRAPH_TF_BRIDGE_BUILDER_H_
 
 #include <ostream>
+#include <vector>
 
 #include "ngraph/ngraph.hpp"
 
+#include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
 
 using namespace std;
@@ -29,7 +31,8 @@ namespace ng = ngraph;
 namespace ngraph_bridge {
 class Builder {
  public:
-  static unique_ptr<ng::Function> TransformGraph(const tf::Graph* tf_graph);
+  static shared_ptr<ng::Function> TranslateGraph(
+      const std::vector<tf::TensorShape>& inputs, const tf::Graph* tf_graph);
 
  private:
 };

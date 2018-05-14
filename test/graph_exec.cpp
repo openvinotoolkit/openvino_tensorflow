@@ -30,18 +30,79 @@ namespace tf = tensorflow;
 
 namespace ngraph_bridge {
 
-TEST(graph_exec, builder) {
+TEST(graph_exec, axpy) {
   tf::GraphDef gdef;
   // auto status = tf::ReadTextProto(tf::Env::Default(), "test_py.pbtxt",
   // &gdef);
   auto status =
-      tf::ReadTextProto(tf::Env::Default(), "mnist_fprop_py.pbtxt", &gdef);
+      tf::ReadTextProto(tf::Env::Default(), "test_axpy_launchop.pbtxt", &gdef);
+  // tf::ReadTextProto(tf::Env::Default(), "test_launch_op.pbtxt", &gdef);
   ASSERT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
 
   tf::Graph input_graph(tf::OpRegistry::Global());
+
   tf::GraphConstructorOptions opts;
+  // Set the allow_internal_ops to true so that graphs with node names such as
+  // _arg_Placeholder_1_0_1_0_arg are allowed. These op names are generated
+  // during the graph rewrite passes and considered internal
+  opts.allow_internal_ops = true;
+
   ASSERT_EQ(tf::ConvertGraphDefToGraph(opts, gdef, &input_graph),
             tf::Status::OK());
-  auto ng_function = ngraph_bridge::Builder::TransformGraph(&input_graph);
+  // Create the inputs for this graph
+  tf::Tensor x(tf::DT_FLOAT, tf::TensorShape({2, 3}));
+  tf::Tensor y(tf::DT_FLOAT, tf::TensorShape({2, 3}));
+
+  std::vector<tf::TensorShape> inputs;
+  inputs.push_back(x.shape());
+  inputs.push_back(y.shape());
+
+  // Inside TensorFlow execution, call this:
+  // OpKernelContext->input(index).shape()
+  auto ng_function =
+      ngraph_bridge::Builder::TranslateGraph(inputs, &input_graph);
+  ASSERT_TRUE(ng_function != nullptr);
+
+  // Create the nGraph backend
+  auto backend = ng::runtime::Backend::create("CPU");
+
+  // Allocate tensors for arguments a, b, c
+  ng::Shape ng_shape_x(x.shape().dims());
+  for (int i = 0; i < x.shape().dims(); ++i) {
+    ng_shape_x[i] = x.shape().dim_size(i);
+  }
+
+  ng::Shape ng_shape_y(y.shape().dims());
+  for (int i = 0; i < y.shape().dims(); ++i) {
+    ng_shape_y[i] = y.shape().dim_size(i);
+  }
+
+  auto t_x = backend->create_tensor(ng::element::f32, ng_shape_x);
+  float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
+  t_x->write(&v_x, 0, sizeof(v_x));
+
+  auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
+  t_y->write(&v_x, 0, sizeof(v_x));
+
+  // Allocate tensor for the result
+  auto t_result = backend->create_tensor(ng::element::f32, ng_shape_x);
+  backend->call(ng_function, {t_result}, {t_x, t_y});
+
+  // Print the results
+  float r[2][3];
+  t_result->read(&r, 0, sizeof(r));
+
+  std::cout << "[" << std::endl;
+  for (size_t i = 0; i < ng_shape_x[0]; ++i) {
+    std::cout << " [";
+    for (size_t j = 0; j < ng_shape_x[1]; ++j) {
+      std::cout << r[i][j] << ' ';
+    }
+    std::cout << ']' << std::endl;
+  }
+  std::cout << ']' << std::endl;
+
+  // Add the validation logic
+  // TODO
 }
-}
+}  // namespace ngraph_bridge
