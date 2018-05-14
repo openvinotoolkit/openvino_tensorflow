@@ -84,24 +84,23 @@ TEST(graph_exec, axpy) {
   auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
   t_y->write(&v_x, 0, sizeof(v_x));
 
-  // Allocate tensor for the result
-  auto t_result = backend->create_tensor(ng::element::f32, ng_shape_x);
-  backend->call(ng_function, {t_result}, {t_x, t_y});
-
-  // Print the results
-  float r[2][3];
-  t_result->read(&r, 0, sizeof(r));
-
-  std::cout << "[" << std::endl;
-  for (size_t i = 0; i < ng_shape_x[0]; ++i) {
-    std::cout << " [";
-    for (size_t j = 0; j < ng_shape_x[1]; ++j) {
-      std::cout << r[i][j] << ' ';
-    }
-    std::cout << ']' << std::endl;
+  // Allocate tensor for the result(s)
+  vector<shared_ptr<ng::runtime::TensorView>> outputs;
+  for (auto i = 0; i < ng_function->get_output_size(); i++) {
+    auto shape = ng_function->get_output_shape(i);
+    auto elem_type = ng_function->get_output_element_type(i);
+    auto t_result = backend->create_tensor(elem_type, shape);
+    outputs.push_back(t_result);
   }
-  std::cout << ']' << std::endl;
 
+  // Execute the nGraph function.
+  cout << "Calling nGraph function\n";
+  backend->call(ng_function, outputs, {t_x, t_y});
+
+  for (auto i = 0; i < ng_function->get_output_size(); i++) {
+    DumpNGTensor(cout, ng_function->get_output_op(i)->get_name(), outputs[i]);
+    cout << endl;
+  }
   // Add the validation logic
   // TODO
 }

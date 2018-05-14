@@ -47,12 +47,12 @@ print('Saving graph to: %s' % graph_location)
 train_writer = tf.summary.FileWriter(graph_location)
 
 a = np.full((2, 3), 5.0)
-#a = 5.0
 x = tf.placeholder(tf.float32, [None, 3])
 y = tf.placeholder(tf.float32, shape=(2, 3))
 
 with tf.device("/device:XLA_CPU:0"):
-    axpy = a * x + y
+    c = a * x
+    axpy = c + y
 
     # Save the graphdef
     config = tf.ConfigProto(
@@ -62,12 +62,13 @@ with tf.device("/device:XLA_CPU:0"):
 
     with tf.Session(config=config) as sess:
         print("Python: Running with Session")
-        (result) = sess.run(
-            (axpy), feed_dict={
+        (result_axpy, result_c) = sess.run(
+            (axpy, c), feed_dict={
                 x: np.ones((2, 3)),
                 y: np.ones((2, 3)),
             })
-        print("result:", result)
+        print("result:", result_axpy)
+        print("result C:", result_c)
 
     train_writer.add_graph(tf.get_default_graph())
     tf.train.write_graph(
