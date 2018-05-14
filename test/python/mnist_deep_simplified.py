@@ -41,7 +41,7 @@ import tfgraphviz as tfg
 
 from ctypes import *
 cdll.LoadLibrary(
-    '/home/avijitch/Projects-Mac/ngraph-tensorflow-bridge/build/experiments/libngraph_device.so'
+    'libngraph_device.so'
 )
 
 FLAGS = None
