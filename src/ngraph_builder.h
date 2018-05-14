@@ -31,7 +31,7 @@ namespace ng = ngraph;
 namespace ngraph_bridge {
 class Builder {
  public:
-  static unique_ptr<ng::Function> TranslateGraph(
+  static shared_ptr<ng::Function> TranslateGraph(
       const std::vector<tf::TensorShape>& inputs, const tf::Graph* tf_graph);
 
  private:

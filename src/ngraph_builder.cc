@@ -24,7 +24,7 @@
 #include "tensorflow/core/graph/edgeset.h"
 
 namespace ngraph_bridge {
-unique_ptr<ng::Function> Builder::TranslateGraph(
+shared_ptr<ng::Function> Builder::TranslateGraph(
     const std::vector<tf::TensorShape>& inputs, const tf::Graph* input_graph) {
   // Do a topological sort
   // GetReversePostOrder will give us topological sort.
@@ -180,10 +180,8 @@ unique_ptr<ng::Function> Builder::TranslateGraph(
   }
 
   // Now create the nGraph function
-  auto ng_func = unique_ptr<ng::Function>(
-      new ng::Function(ng_node_list, ng_parameter_list));
-
-  return move(ng_func);
+  auto ng_func = make_shared<ng::Function>(ng_node_list, ng_parameter_list);
+  return ng_func;
 }
 
 }  // namespace ngraph_bridge

@@ -63,7 +63,6 @@ TEST(graph_exec, axpy) {
       ngraph_bridge::Builder::TranslateGraph(inputs, &input_graph);
   ASSERT_TRUE(ng_function != nullptr);
 
-#if 0
   // Create the nGraph backend
   auto backend = ng::runtime::Backend::create("CPU");
 
@@ -79,10 +78,31 @@ TEST(graph_exec, axpy) {
   }
 
   auto t_x = backend->create_tensor(ng::element::f32, ng_shape_x);
+  float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
+  t_x->write(&v_x, 0, sizeof(v_x));
+
   auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
+  t_y->write(&v_x, 0, sizeof(v_x));
 
   // Allocate tensor for the result
-  auto t_result = backend->create_tensor(element::f32, ng_shape_x);
-#endif
+  auto t_result = backend->create_tensor(ng::element::f32, ng_shape_x);
+  backend->call(ng_function, {t_result}, {t_x, t_y});
+
+  // Print the results
+  float r[2][3];
+  t_result->read(&r, 0, sizeof(r));
+
+  std::cout << "[" << std::endl;
+  for (size_t i = 0; i < ng_shape_x[0]; ++i) {
+    std::cout << " [";
+    for (size_t j = 0; j < ng_shape_x[1]; ++j) {
+      std::cout << r[i][j] << ' ';
+    }
+    std::cout << ']' << std::endl;
+  }
+  std::cout << ']' << std::endl;
+
+  // Add the validation logic
+  // TODO
 }
 }  // namespace ngraph_bridge
