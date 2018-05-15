@@ -47,10 +47,11 @@ print('Saving graph to: %s' % graph_location)
 train_writer = tf.summary.FileWriter(graph_location)
 
 a = np.full((2, 3), 5.0)
-x = tf.placeholder(tf.float32, [None, 3])
-y = tf.placeholder(tf.float32, shape=(2, 3))
+x = tf.placeholder(tf.float32, [None, 3], name='x')
+y = tf.placeholder(tf.float32, shape=(2, 3), name='y')
 
-with tf.device("/device:XLA_CPU:0"):
+with tf.device("/device:CPU:0"):
+    #with tf.device("/device:XLA_CPU:0"):
     c = a * x
     axpy = c + y
 

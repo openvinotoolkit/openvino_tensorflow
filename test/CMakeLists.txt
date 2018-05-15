@@ -21,13 +21,20 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 set(TensorFlow_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../ngraph-tensorflow")
 include_directories(${TensorFlow_SRC_DIR})
 
-# include_directories(
-#     ${NGRAPH_INCLUDE_DIR}
-#     )
+# Files that are generated during TF build are here
+include_directories(${TensorFlow_SRC_DIR}/bazel-genfiles)
+
+add_library(tensorflow_cc_lib SHARED IMPORTED)
+set_target_properties( 
+    tensorflow_cc_lib 
+    PROPERTIES IMPORTED_LOCATION 
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so
+)
 
 set(SRC
     main.cpp
     graph_exec.cpp
+    tf_exec.cpp
 )
 
 set(TF_OP_DEF_SRC
@@ -46,6 +53,13 @@ set(TF_OP_DEF_SRC
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-add_executable(gtest_ngtf ${SRC} ${TF_OP_DEF_SRC})
-target_link_libraries(gtest_ngtf ngraph_device libgtest pthread tensorflow_framework_lib)
-#add_dependencies(gtest_ngtf libgtest tensorflow_framework_lib)
+#add_executable(gtest_ngtf ${SRC} ${TF_OP_DEF_SRC})
+add_executable(gtest_ngtf ${SRC})
+target_link_libraries(
+    gtest_ngtf 
+    ngraph_device 
+    libgtest 
+    pthread 
+    tensorflow_framework_lib
+    tensorflow_cc_lib
+)
