@@ -394,19 +394,16 @@ class NGraphConstOp : public tf::OpKernel {
 REGISTER_KERNEL_BUILDER(
     Name("Add").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphAddOp<float>);
-/*REGISTER_KERNEL_BUILDER(
-    Name("Sub").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);*/
 REGISTER_KERNEL_BUILDER(
     Name("Mul").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphMulOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Assign").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
-REGISTER_KERNEL_BUILDER(
-    Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
+//REGISTER_KERNEL_BUILDER(
+//    Name("Assign").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
+//    NGraphOp<float>);
+//REGISTER_KERNEL_BUILDER(
+//    Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
+//    NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(
     Name("Fill").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
@@ -422,8 +419,8 @@ REGISTER_KERNEL_BUILDER(Name("_Send").Device(DEVICE_NGRAPH), NGraphSend);
 REGISTER_KERNEL_BUILDER(Name("_HostSend").Device(DEVICE_NGRAPH), NGraphSend);
 REGISTER_KERNEL_BUILDER(Name("Const").Device(DEVICE_NGRAPH), NGraphConstOp);
 
-REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(DEVICE_NGRAPH),
-                        NGraphNoOp);
+// REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(DEVICE_NGRAPH),
+//                         NGraphNoOp);
 
 REGISTER_KERNEL_BUILDER(Name("Prod")
                             .Device(DEVICE_NGRAPH)
@@ -485,7 +482,7 @@ REGISTER_KERNEL_BUILDER(
     Name("Pack").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
     NGraphOp<int32>);
 
-REGISTER_KERNEL_BUILDER(
+/*REGISTER_KERNEL_BUILDER(
     Name("RefSwitch").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
@@ -499,7 +496,7 @@ REGISTER_KERNEL_BUILDER(
 
 REGISTER_KERNEL_BUILDER(
     Name("Merge").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+    NGraphOp<float>);*/
 
 REGISTER_KERNEL_BUILDER(
     Name("Identity").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
@@ -714,7 +711,7 @@ REGISTER_KERNEL_BUILDER(
       Name((NAME)).Device(DEVICE_NGRAPH).TypeConstraint<TYPE>("dtype"), \
       NGraphNoOp);
 // REGISTER_NG_KERNEL("Const", float);
-REGISTER_NG_KERNEL("VariableV2", float);
+// REGISTER_NG_KERNEL("VariableV2", float);
 REGISTER_NG_KERNEL("RandomUniform", float);
 
-REGISTER_KERNEL_BUILDER(Name("MergeSummary").Device(DEVICE_NGRAPH), NGraphNoOp);
+//REGISTER_KERNEL_BUILDER(Name("MergeSummary").Device(DEVICE_NGRAPH), NGraphNoOp);

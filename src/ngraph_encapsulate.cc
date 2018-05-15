@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+//
+// !!!!!!!!! THIS SOURCE FILE IS OBSOLETE AND NOT USED !!!!!!!!!
+//
 #include "ngraph_utils.h"
 
 #include <algorithm>

@@ -36,6 +36,13 @@ namespace ngraph_bridge {
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
 public:
   tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
+    // TODO(amprocte): Remove this when we have proper support for graphs with
+    // cycles.
+    if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
+      VLOG(0) << "NGRAPH_TF_SKIP_CLUSTERING is set. Skipping clustering step.";
+      return tf::Status::OK();
+    }
+
     tf::Graph *graph = options.graph->get();
 
     TF_RETURN_IF_ERROR(IdentifyClusters(graph));
@@ -136,24 +143,22 @@ private:
       }
 
       if (seen.count(cluster) == 0) {
-        std::stringstream ss;
-        ss << "cluster_" << cluster_count;
-        string cluster_name = ss.str();
-
         seen.insert(cluster);
         VLOG(0) << "cluster " << cluster_count << ": " << cluster->nodes.size()
                 << " nodes";
 
         for (auto node : cluster->nodes) {
           if (!IsNGraphNode(node)) {
-            return tf::errors::InvalidArgument("Node ", node->DebugString(), " is not an nGraph node but was placed in an nGraph cluster.");
+            return tf::errors::InvalidArgument(
+                "Node ", node->DebugString(),
+                " is not an nGraph node but was placed in an nGraph cluster.");
           }
 
           VLOG(0) << ">> cluster " << cluster_count << ": " << node
                   << " :: " << node->name() << " [" << node->type_string()
                   << "]";
 
-          node->AddAttr("_ngraph_cluster", cluster_name);
+          node->AddAttr("_ngraph_cluster", cluster_count);
         }
         cluster_count++;
       }
