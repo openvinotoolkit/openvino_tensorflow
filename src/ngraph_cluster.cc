@@ -136,24 +136,22 @@ private:
       }
 
       if (seen.count(cluster) == 0) {
-        std::stringstream ss;
-        ss << "cluster_" << cluster_count;
-        string cluster_name = ss.str();
-
         seen.insert(cluster);
         VLOG(0) << "cluster " << cluster_count << ": " << cluster->nodes.size()
                 << " nodes";
 
         for (auto node : cluster->nodes) {
           if (!IsNGraphNode(node)) {
-            return tf::errors::InvalidArgument("Node ", node->DebugString(), " is not an nGraph node but was placed in an nGraph cluster.");
+            return tf::errors::InvalidArgument(
+                "Node ", node->DebugString(),
+                " is not an nGraph node but was placed in an nGraph cluster.");
           }
 
           VLOG(0) << ">> cluster " << cluster_count << ": " << node
                   << " :: " << node->name() << " [" << node->type_string()
                   << "]";
 
-          node->AddAttr("_ngraph_cluster", cluster_name);
+          node->AddAttr("_ngraph_cluster", cluster_count);
         }
         cluster_count++;
       }

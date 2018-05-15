@@ -44,24 +44,26 @@ public:
     std::string filename_prefix = ss.str();
 
     if (options.graph != nullptr) {
-      tf::Graph* g = options.graph->get();
+      tf::Graph *g = options.graph->get();
 
       GraphToPbTextFile(g, filename_prefix + ".pbtxt");
-      GraphToDotFile(g, filename_prefix + ".dot", "nGraph Dump: " + m_pass_name, false);
+      GraphToDotFile(g, filename_prefix + ".dot", "nGraph Dump: " + m_pass_name,
+                     false);
     }
 
     if (options.partition_graphs != nullptr) {
       int sub_idx = 0;
 
-      for (auto& kv : *options.partition_graphs) {
-        tf::Graph* pg = kv.second.get();
-        
+      for (auto &kv : *options.partition_graphs) {
+        tf::Graph *pg = kv.second.get();
+
         std::stringstream ss;
         ss << filename_prefix << "_" << sub_idx;
         std::string sub_filename_prefix = ss.str();
 
         GraphToPbTextFile(pg, sub_filename_prefix + ".pbtxt");
-        GraphToDotFile(pg, sub_filename_prefix + ".dot", "nGraph Subgraph Dump: " + m_pass_name, false);
+        GraphToDotFile(pg, sub_filename_prefix + ".dot",
+                       "nGraph Subgraph Dump: " + m_pass_name, false);
 
         sub_idx++;
       }
@@ -74,10 +76,10 @@ public:
 
 private:
   std::string m_pass_name;
-  static std::map<std::string,int> s_counter_map;
+  static std::map<std::string, int> s_counter_map;
 };
 
-std::map<std::string,int> NGraphDumpPass::s_counter_map;
+std::map<std::string, int> NGraphDumpPass::s_counter_map;
 
 class NGraphDumpPrePlacement : public NGraphDumpPass {
 public:
@@ -117,7 +119,7 @@ REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PLACEMENT, 100,
                       ngraph_bridge::NGraphDumpPostPlacement);
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 100,
                       ngraph_bridge::NGraphDumpPostReWrite);
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 110,
+REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 105,
                       ngraph_bridge::NGraphDumpPostClustering);
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 115,
                       ngraph_bridge::NGraphDumpPostEncapsulation);
