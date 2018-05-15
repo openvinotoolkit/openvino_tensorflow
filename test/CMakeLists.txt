@@ -18,6 +18,8 @@ include_directories(${GTEST_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 
+# TODO (avijit)
+# Get this location from the CMAKE variables passed during the cmake time
 set(TensorFlow_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../ngraph-tensorflow")
 include_directories(${TensorFlow_SRC_DIR})
 
@@ -37,23 +39,8 @@ set(SRC
     tf_exec.cpp
 )
 
-set(TF_OP_DEF_SRC
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/array_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/sendrecv_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/math_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/no_op.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/logging_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/random_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/training_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/control_flow_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/state_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/nn_ops.cc
-    ${TensorFlow_SRC_DIR}/tensorflow/core/ops/function_ops.cc
-)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-#add_executable(gtest_ngtf ${SRC} ${TF_OP_DEF_SRC})
 add_executable(gtest_ngtf ${SRC})
 target_link_libraries(
     gtest_ngtf 
@@ -62,4 +49,21 @@ target_link_libraries(
     pthread 
     tensorflow_framework_lib
     tensorflow_cc_lib
+)
+
+# The following custom commands are used to create symlinks for various 
+# input files needed by the unit test
+add_custom_command( 
+    TARGET gtest_ngtf
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink 
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt 
+        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy.pbtxt
+)
+add_custom_command( 
+    TARGET gtest_ngtf
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink 
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt 
+        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
 )
