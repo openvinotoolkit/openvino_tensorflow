@@ -172,9 +172,15 @@ private:
 
         std::stringstream ss;
         ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
+        string output_name = ss.str();
+
         auto new_output_arg = fdef_map[src_cluster_idx].mutable_signature()->add_output_arg();
-        new_output_arg->set_name(ss.str());
+        new_output_arg->set_name(output_name);
         new_output_arg->set_type(dt);
+
+        std::stringstream ss_ret;
+        ss_ret << src->name() << ":" << edge->src_output();
+        (*(fdef_map[src_cluster_idx].mutable_ret()))[output_name] = ss_ret.str();
 
         std::stringstream ss_desc;
         ss_desc << "Output replacing " << src->name() << ":" << edge->src_output();
