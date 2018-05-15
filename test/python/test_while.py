@@ -17,6 +17,10 @@
 #
 # Simple while-loop example.
 #
+# !!!NOTE!!!: For the time being it is necessary to run this with the
+# environment variable NGRAPH_TF_SKIP_CLUSTERING=1. Otherwise the nGraph
+# clustering step will choke, because the graph (of course) contains a cycle.
+#
 
 from __future__ import absolute_import
 from __future__ import division

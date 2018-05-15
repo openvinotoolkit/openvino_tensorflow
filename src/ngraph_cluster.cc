@@ -36,6 +36,13 @@ namespace ngraph_bridge {
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
 public:
   tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
+    // TODO(amprocte): Remove this when we have proper support for graphs with
+    // cycles.
+    if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
+      VLOG(0) << "NGRAPH_TF_SKIP_CLUSTERING is set. Skipping clustering step.";
+      return tf::Status::OK();
+    }
+
     tf::Graph *graph = options.graph->get();
 
     TF_RETURN_IF_ERROR(IdentifyClusters(graph));
