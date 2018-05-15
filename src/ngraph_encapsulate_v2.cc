@@ -29,6 +29,7 @@
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
+#include "tensorflow/core/graph/tensor_id.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
@@ -43,27 +44,20 @@ public:
   }
 
 private:
-  static std::string Mangle(std::string name) {
-    std::stringstream ss;
-
-    for (char c : name) {
-      if (!std::isalpha(c) && !std::isdigit(c)) {
-        ss << "_" << std::setw(2) << std::setfill('0') << int(c);
-      } else {
-        ss << c;
-      }
-    }
-
-    return ss.str();
-  }
-
-  static std::string MakeCrossFlowName(std::string src_node_name,
-                                       int src_output) {
-    std::stringstream ss;
-
-    ss << "ngraph_crossflow_" << Mangle(src_node_name) << "_" << src_output;
-    return ss.str();
-  }
+  // TODO(amprocte): integrate this into the input names
+  // static std::string Mangle(std::string name) {
+  //   std::stringstream ss;
+  // 
+  //   for (char c : name) {
+  //     if (!std::isalpha(c) && !std::isdigit(c)) {
+  //       ss << "_" << std::setw(2) << std::setfill('0') << int(c);
+  //     } else {
+  //       ss << c;
+  //     }
+  //   }
+  // 
+  //   return ss.str();
+  // }
 
   static bool GetClusterId(const tf::Node *node, int *cluster_id) {
     if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", cluster_id) !=
@@ -75,6 +69,18 @@ private:
     }
   }
 
+  // begin code copied and pasted (and modified) from graph.cc...
+  static void AddInput(tf::NodeDef* dst, tf::StringPiece src_name, int src_slot) {
+    if (src_slot == tf::Graph::kControlSlot) {
+      dst->add_input(tf::strings::StrCat("^", src_name));
+    } else if (src_slot == 0) {
+      dst->add_input(src_name.data(), src_name.size());
+    } else {
+      dst->add_input(tf::strings::StrCat(src_name, ":", src_slot));
+    }
+  }
+  // ...end code copied and pasted (and modified) from graph.cc
+
   tf::Status EncapsulateFunctions(tf::Graph *graph) {
     // A map from cluster indices to function definitions.
     std::map<int, tf::FunctionDef> fdef_map;
@@ -83,6 +89,7 @@ private:
     // this comment.
     std::map<std::tuple<int, int>, std::tuple<int, int>> output_remap_map;
     std::map<std::tuple<int, int, int>, int> input_remap_map;
+    std::map<std::tuple<int, std::string, int>, string> input_rename_map;
 
     // A map from cluster indices to a vector of input data types.
     std::map<int, std::vector<std::tuple<int, int, tf::DataType>>>
@@ -153,9 +160,6 @@ private:
               << dst->name() << "[" << edge->dst_input() << "] in "
               << dst_cluster_idx << ", datatype: " << dt;
 
-      std::string cross_flow_name =
-          MakeCrossFlowName(src->name(), edge->src_output());
-
       // If the source node lies within a cluster, we must create an output for
       // it from the source cluster. For the moment we will just store this
       // fact in the output_remap_map.
@@ -165,6 +169,17 @@ private:
         output_remap_map[std::make_tuple(src->id(), edge->src_output())] =
             std::make_tuple(src_cluster_idx,
                             cluster_output_dt_map[src_cluster_idx].size());
+
+        std::stringstream ss;
+        ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
+        auto new_output_arg = fdef_map[src_cluster_idx].mutable_signature()->add_output_arg();
+        new_output_arg->set_name(ss.str());
+        new_output_arg->set_type(dt);
+
+        std::stringstream ss_desc;
+        ss_desc << "Output replacing " << src->name() << ":" << edge->src_output();
+        new_output_arg->set_description(ss_desc.str());
+
         cluster_output_dt_map[src_cluster_idx].push_back(dt);
       }
 
@@ -178,15 +193,31 @@ private:
         input_remap_map[std::make_tuple(dst_cluster_idx, src->id(),
                                         edge->src_output())] =
             cluster_input_map[dst_cluster_idx].size();
+
+        std::stringstream ss;
+        ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
+        std::string new_input_name = ss.str();
+
+        input_rename_map[std::make_tuple(dst_cluster_idx, src->name(), edge->src_output())] =
+            new_input_name;
+
+        auto new_input_arg = fdef_map[dst_cluster_idx].mutable_signature()->add_input_arg();
+        new_input_arg->set_name(new_input_name);
+        new_input_arg->set_type(dt);
+
+        std::stringstream ss_desc;
+        ss_desc << "Input replacing " << src->name() << ":" << edge->src_output();
+        new_input_arg->set_description(ss_desc.str());
+
         cluster_input_map[dst_cluster_idx].push_back(
             std::make_tuple(src->id(), edge->src_output(), dt));
       }
     }
 
-    // Pass 3: Create the function library and add in all the function defs.
+    // Pass 3: Create the function library and add in a (stub) function def
+    // for the NGraphEncapsulate op itself.
     tf::FunctionDefLibrary flib_def_for_encaps;
 
-    // Add a stub definition for the "_NGraphEncapsulate" op itself.
     auto fdef_encaps = flib_def_for_encaps.add_function();
     fdef_encaps->mutable_signature()->set_name("NGraphEncapsulate");
 
@@ -252,21 +283,24 @@ private:
       cluster_node_map[cluster_idx] = n;
     }
 
-    // Pass 5: Remap all inputs that are reading from encapsulated nodes, and
-    // control edges that involve clustered nodes.
+    // Pass 5: Remap all non-clustered inputs that are reading from
+    // encapsulated edges, and all control edges that cross cluster
+    // boundaries.
     for (auto edge : graph->edges()) {
-      if (edge->IsControlEdge()) {
-        int src_cluster_idx;
-        bool src_clustered = GetClusterId(edge->src(), &src_cluster_idx);
-        int dst_cluster_idx;
-        bool dst_clustered = GetClusterId(edge->dst(), &dst_cluster_idx);
+      int src_cluster_idx;
+      bool src_clustered = GetClusterId(edge->src(), &src_cluster_idx);
+      int dst_cluster_idx;
+      bool dst_clustered = GetClusterId(edge->dst(), &dst_cluster_idx);
 
+      if (src_cluster_idx == dst_cluster_idx) {
+        continue;
+      }
+
+      if (edge->IsControlEdge()) {
         if (src_clustered && dst_clustered) {
-          if (src_cluster_idx != dst_cluster_idx) {
-            graph->RemoveControlEdge(edge);
-            graph->AddControlEdge(cluster_node_map[src_cluster_idx],
-                                  cluster_node_map[dst_cluster_idx]);
-          }
+          graph->RemoveControlEdge(edge);
+          graph->AddControlEdge(cluster_node_map[src_cluster_idx],
+                                cluster_node_map[dst_cluster_idx]);
         } else if (src_clustered) {
           tf::Node *dst = edge->dst();
           graph->RemoveControlEdge(edge);
@@ -277,6 +311,11 @@ private:
           graph->AddControlEdge(src, cluster_node_map[dst_cluster_idx]);
         }
       } else {
+        // This is handled at a later stage (TODO(amprocte): explain)
+        if (dst_clustered) {
+          continue;
+        }
+
         auto it = output_remap_map.find(
             std::make_tuple(edge->src()->id(), edge->src_output()));
 
@@ -293,8 +332,8 @@ private:
       }
     }
 
-    // Pass 6: Encapsulate all clustered nodes, removing them from graph
-    // and adding them to the corresponding fdef as we go.
+    // Pass 6: Make copies of all clustured nodes inside the cluster functions,
+    // rewiring the inputs in their NodeDefs as we go.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
@@ -303,16 +342,78 @@ private:
         continue;
       }
 
-      // TODO(amprocte): this is the "original" node def per the docs. Is
-      // there a way to "convert" the possibly-updated node to a node def
-      // (and is this what we want to do?)
-      // GraphToGraphDefSubrange in graph.cc has an example of how they do
-      // it.
-      *fdef_map[cluster_idx].add_node_def() = node->def();
+      // Because the input names may have changed from the original node def,
+      // we will need to borrow some code from Graph::ToGraphDefSubRange in
+      // tensorflow/core/graph/graph.cc that rewrites the node's input list.
+
+      // begin code copied and pasted (and modified) from graph.cc...
+      tf::NodeDef original_def = node->def();
+
+      // Get the inputs for this Node.  We make sure control inputs are
+      // after data inputs, as required by GraphDef.
+      std::vector<const tf::Edge*> inputs;
+      // inputs.clear();
+      inputs.resize(node->num_inputs(), nullptr);
+      for (const tf::Edge* edge : node->in_edges()) {
+        if (edge->IsControlEdge()) {
+          inputs.push_back(edge);
+        } else {
+          CHECK(inputs[edge->dst_input()] == nullptr)
+              << "Edge " << edge->src()->DebugString() << ":"
+              << edge->dst()->DebugString() << " with dst_input "
+              << edge->dst_input() << " and had pre-existing input edge "
+              << inputs[edge->dst_input()]->src()->DebugString() << ":"
+              << inputs[edge->dst_input()]->dst()->DebugString();
+
+          inputs[edge->dst_input()] = edge;
+        }
+      }
+      original_def.clear_input();
+      original_def.mutable_input()->Reserve(inputs.size());
+
+      for (size_t i = 0; i < inputs.size(); ++i) {
+        const tf::Edge* edge = inputs[i];
+        if (edge == nullptr) {
+          if (i < node->requested_inputs().size()) {
+            original_def.add_input(node->requested_inputs()[i]);
+          } else {
+            original_def.add_input("");
+          }
+        } else {
+          const tf::Node* src = edge->src();
+          if (!src->IsOp()) continue;
+          AddInput(&original_def, src->name(), edge->src_output());
+        }
+      }
+      // ...end code copied and pasted (and modified) from graph.cc
+
+      auto node_def = fdef_map[cluster_idx].add_node_def();
+      *node_def = original_def;
+
+      for (auto& input : *(node_def->mutable_input())) {
+        tf::TensorId tensor_id = tf::ParseTensorName(input);
+
+        auto it = input_rename_map.find(std::make_tuple(cluster_idx,tensor_id.first.ToString(),tensor_id.second));
+
+        if (it != input_rename_map.end()) {
+          input = it->second;
+        }
+      }
+    }
+
+    // Pass 7: Remove clustered nodes from the graph.
+    for (auto node : graph->op_nodes()) {
+      int cluster_idx;
+
+      if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
+          tf::Status::OK()) {
+        continue;
+      }
+
       graph->RemoveNode(node);
     }
 
-    // Pass 7: Create and add the function library.
+    // Pass 8: Create and add the function library.
     tf::FunctionDefLibrary flib_def;
 
     // Add definitions for each cluster function.

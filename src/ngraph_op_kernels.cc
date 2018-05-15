@@ -394,19 +394,16 @@ class NGraphConstOp : public tf::OpKernel {
 REGISTER_KERNEL_BUILDER(
     Name("Add").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphAddOp<float>);
-/*REGISTER_KERNEL_BUILDER(
-    Name("Sub").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);*/
 REGISTER_KERNEL_BUILDER(
     Name("Mul").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphMulOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Assign").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
-REGISTER_KERNEL_BUILDER(
-    Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
+//REGISTER_KERNEL_BUILDER(
+//    Name("Assign").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
+//    NGraphOp<float>);
+//REGISTER_KERNEL_BUILDER(
+//    Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
+//    NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(
     Name("Fill").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
