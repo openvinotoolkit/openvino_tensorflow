@@ -34,7 +34,7 @@ import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-# Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
+# Define LD_LIBRARY_PATH indicating where nGraph library is located for now.
 # Eventually this won't be needed as the library will be available in either
 # the Python site-packages or some other means
 import ctypes
