@@ -47,7 +47,7 @@ private:
   // TODO(amprocte): integrate this into the input names
   // static std::string Mangle(std::string name) {
   //   std::stringstream ss;
-  // 
+  //
   //   for (char c : name) {
   //     if (!std::isalpha(c) && !std::isdigit(c)) {
   //       ss << "_" << std::setw(2) << std::setfill('0') << int(c);
@@ -55,7 +55,7 @@ private:
   //       ss << c;
   //     }
   //   }
-  // 
+  //
   //   return ss.str();
   // }
 
@@ -70,7 +70,8 @@ private:
   }
 
   // begin code copied and pasted (and modified) from graph.cc...
-  static void AddInput(tf::NodeDef* dst, tf::StringPiece src_name, int src_slot) {
+  static void AddInput(tf::NodeDef *dst, tf::StringPiece src_name,
+                       int src_slot) {
     if (src_slot == tf::Graph::kControlSlot) {
       dst->add_input(tf::strings::StrCat("^", src_name));
     } else if (src_slot == 0) {
@@ -84,6 +85,10 @@ private:
   tf::Status EncapsulateFunctions(tf::Graph *graph) {
     // A map from cluster indices to function definitions.
     std::map<int, tf::FunctionDef> fdef_map;
+
+    // A map from cluster indices to the expected device name for nodes
+    // in that cluster.
+    std::map<int, std::string> device_name_map;
 
     // As we build the graph we will be tracking the.. TODO(amprocte): finish
     // this comment.
@@ -100,12 +105,31 @@ private:
     // A map from cluster indices to corresponding NGraphEncapsulate nodes.
     std::map<int, tf::Node *> cluster_node_map;
 
-    // Pass 1: Create FunctionDefs for each existing cluster.
+    // Pass 1: Create FunctionDefs and populate the cluster-index-to-device
+    // name map for each existing cluster.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
       if (!GetClusterId(node, &cluster_idx)) {
         continue;
+      }
+
+      auto it = device_name_map.find(cluster_idx);
+
+      if (it != device_name_map.end()) {
+        if (it->second != node->requested_device()) {
+          std::stringstream ss_err;
+          ss_err << "Node " << node->name() << " in cluster " << cluster_idx
+                 << " has requested device " << node->requested_device()
+                 << " but another node with requested device " << it->second
+                 << " has already been seen in the same cluster";
+
+          return tf::errors::Internal(ss_err.str());
+        }
+      } else {
+        VLOG(0) << "setting cluster " << cluster_idx << " requested device to '"
+                << node->requested_device() << "'";
+        device_name_map[cluster_idx] = node->requested_device();
       }
 
       if (fdef_map.find(cluster_idx) != fdef_map.end()) {
@@ -174,16 +198,19 @@ private:
         ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
         string output_name = ss.str();
 
-        auto new_output_arg = fdef_map[src_cluster_idx].mutable_signature()->add_output_arg();
+        auto new_output_arg =
+            fdef_map[src_cluster_idx].mutable_signature()->add_output_arg();
         new_output_arg->set_name(output_name);
         new_output_arg->set_type(dt);
 
         std::stringstream ss_ret;
         ss_ret << src->name() << ":" << edge->src_output();
-        (*(fdef_map[src_cluster_idx].mutable_ret()))[output_name] = ss_ret.str();
+        (*(fdef_map[src_cluster_idx].mutable_ret()))[output_name] =
+            ss_ret.str();
 
         std::stringstream ss_desc;
-        ss_desc << "Output replacing " << src->name() << ":" << edge->src_output();
+        ss_desc << "Output replacing " << src->name() << ":"
+                << edge->src_output();
         new_output_arg->set_description(ss_desc.str());
 
         cluster_output_dt_map[src_cluster_idx].push_back(dt);
@@ -204,15 +231,17 @@ private:
         ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
         std::string new_input_name = ss.str();
 
-        input_rename_map[std::make_tuple(dst_cluster_idx, src->name(), edge->src_output())] =
-            new_input_name;
+        input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
+                                         edge->src_output())] = new_input_name;
 
-        auto new_input_arg = fdef_map[dst_cluster_idx].mutable_signature()->add_input_arg();
+        auto new_input_arg =
+            fdef_map[dst_cluster_idx].mutable_signature()->add_input_arg();
         new_input_arg->set_name(new_input_name);
         new_input_arg->set_type(dt);
 
         std::stringstream ss_desc;
-        ss_desc << "Input replacing " << src->name() << ":" << edge->src_output();
+        ss_desc << "Input replacing " << src->name() << ":"
+                << edge->src_output();
         new_input_arg->set_description(ss_desc.str());
 
         cluster_input_map[dst_cluster_idx].push_back(
@@ -283,6 +312,7 @@ private:
               .Attr("ngraph_cluster", cluster_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+              .Device(device_name_map[cluster_idx])
               .Input(inputs)
               .Finalize(graph, &n);
       TF_RETURN_IF_ERROR(status);
@@ -357,10 +387,10 @@ private:
 
       // Get the inputs for this Node.  We make sure control inputs are
       // after data inputs, as required by GraphDef.
-      std::vector<const tf::Edge*> inputs;
+      std::vector<const tf::Edge *> inputs;
       // inputs.clear();
       inputs.resize(node->num_inputs(), nullptr);
-      for (const tf::Edge* edge : node->in_edges()) {
+      for (const tf::Edge *edge : node->in_edges()) {
         if (edge->IsControlEdge()) {
           inputs.push_back(edge);
         } else {
@@ -378,7 +408,7 @@ private:
       original_def.mutable_input()->Reserve(inputs.size());
 
       for (size_t i = 0; i < inputs.size(); ++i) {
-        const tf::Edge* edge = inputs[i];
+        const tf::Edge *edge = inputs[i];
         if (edge == nullptr) {
           if (i < node->requested_inputs().size()) {
             original_def.add_input(node->requested_inputs()[i]);
@@ -386,8 +416,9 @@ private:
             original_def.add_input("");
           }
         } else {
-          const tf::Node* src = edge->src();
-          if (!src->IsOp()) continue;
+          const tf::Node *src = edge->src();
+          if (!src->IsOp())
+            continue;
           AddInput(&original_def, src->name(), edge->src_output());
         }
       }
@@ -396,10 +427,11 @@ private:
       auto node_def = fdef_map[cluster_idx].add_node_def();
       *node_def = original_def;
 
-      for (auto& input : *(node_def->mutable_input())) {
+      for (auto &input : *(node_def->mutable_input())) {
         tf::TensorId tensor_id = tf::ParseTensorName(input);
 
-        auto it = input_rename_map.find(std::make_tuple(cluster_idx,tensor_id.first.ToString(),tensor_id.second));
+        auto it = input_rename_map.find(std::make_tuple(
+            cluster_idx, tensor_id.first.ToString(), tensor_id.second));
 
         if (it != input_rename_map.end()) {
           input = it->second;
