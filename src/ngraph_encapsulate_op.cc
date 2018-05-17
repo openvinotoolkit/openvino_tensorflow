@@ -20,16 +20,15 @@
 
 namespace tf = tensorflow;
 
+
 namespace ngraph_bridge {
+extern const char* const DEVICE_NGRAPH_CPU;
 
 REGISTER_OP("NGraphEncapsulate")
     .Input("args: Targuments")
     .Attr("Targuments: list(type) >= 0")
     .Output("results: Tresults")
     .Attr("Tresults: list(type) >= 0")
-    //.Attr("function: func")
-    .Attr("library_index: int")
-    .Attr("ngraph_cluster: int")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
@@ -43,11 +42,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     // OP_REQUIRES_OK(ctx, ctx->GetAttr("Nresources", &num_resource_args_));
     VLOG(0) << "NGraphEncapsulateOp::Number of inputs: " << ctx->num_inputs();
     VLOG(0) << "NGraphEncapsulateOp::Number of outputs: " << ctx->num_outputs();
-
-    // Get the functions
-    auto function_lib = ctx->function_library();
-    auto function_lib_def = function_lib->GetFunctionLibraryDefinition();
-    VLOG(0) << "Number of functions: " << function_lib_def->num_functions();
   }
   ~NGraphEncapsulateOp() override {
     // d-tor
@@ -76,6 +70,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 }  // namespace ngraph_bridge
 
 namespace tensorflow {
-REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device("NGRAPH_CPU"),
+REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
                         ngraph_bridge::NGraphEncapsulateOp);
 }

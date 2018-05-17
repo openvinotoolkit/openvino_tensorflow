@@ -33,6 +33,8 @@
 using namespace std;
 namespace ngraph_bridge {
 
+extern const char* const DEVICE_NGRAPH_CPU;
+
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
 public:
   tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
@@ -60,7 +62,7 @@ private:
     }
 
     // TODO(amprocte): change to DEVICE_NGRAPH constant
-    return (parsed.has_type && parsed.type == "NGRAPH_CPU");
+    return (parsed.has_type && parsed.type == DEVICE_NGRAPH_CPU);
   }
 
   struct Cluster {

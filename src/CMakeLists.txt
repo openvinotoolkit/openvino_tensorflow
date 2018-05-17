@@ -48,6 +48,7 @@ set(SRC
    ngraph_op_kernels.cc
    ngraph_utils.cc
    tf_graphcycles.cc
+   ngraph_send_recv_ops.cc
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})

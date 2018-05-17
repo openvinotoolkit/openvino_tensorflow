@@ -32,6 +32,7 @@
 using namespace std;
 
 namespace ngraph_bridge {
+extern const char* const DEVICE_NGRAPH_CPU;
 
 void GraphToPbTextFile(tf::Graph *graph, const string &filename) {
   tf::GraphDef g_def;
@@ -130,7 +131,7 @@ std::string GraphToDot(tf::Graph *graph, const std::string &title,
       // For some reason the assigned_device_name results in a crash
       // dot_string << " Device: " << node->assigned_device_name() << "<br/>";
       auto device_name = node->requested_device();
-      if (tf::str_util::StrContains(device_name, "NGRAPH_CPU")) {
+      if (tf::str_util::StrContains(device_name, DEVICE_NGRAPH_CPU)) {
         fill_color = "#cee9fd";
       } else if (tf::str_util::StrContains(device_name, "XLA_CPU")) {
         fill_color = "#ffcc99";
