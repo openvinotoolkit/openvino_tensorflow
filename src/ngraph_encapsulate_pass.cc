@@ -38,12 +38,12 @@ using namespace std;
 namespace ngraph_bridge {
 
 class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
-public:
-  tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
+ public:
+  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     return EncapsulateFunctions(options.graph->get());
   }
 
-private:
+ private:
   // TODO(amprocte): integrate this into the input names
   // static std::string Mangle(std::string name) {
   //   std::stringstream ss;
@@ -59,7 +59,7 @@ private:
   //   return ss.str();
   // }
 
-  static bool GetClusterId(const tf::Node *node, int *cluster_id) {
+  static bool GetClusterId(const tf::Node* node, int* cluster_id) {
     if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", cluster_id) !=
         tf::Status::OK()) {
       *cluster_id = -1;
@@ -82,7 +82,7 @@ private:
   }
   // ...end code copied and pasted (and modified) from graph.cc
 
-  tf::Status EncapsulateFunctions(tf::Graph *graph) {
+  tf::Status EncapsulateFunctions(tf::Graph* graph) {
     // A map from cluster indices to function definitions.
     std::map<int, tf::FunctionDef> fdef_map;
 
@@ -103,7 +103,7 @@ private:
     std::map<int, std::vector<tf::DataType>> cluster_output_dt_map;
 
     // A map from cluster indices to corresponding NGraphEncapsulate nodes.
-    std::map<int, tf::Node *> cluster_node_map;
+    std::map<int, tf::Node*> cluster_node_map;
 
     // Pass 1: Create FunctionDefs and populate the cluster-index-to-device
     // name map for each existing cluster.
@@ -152,8 +152,8 @@ private:
         continue;
       }
 
-      tf::Node *src = edge->src();
-      tf::Node *dst = edge->dst();
+      tf::Node* src = edge->src();
+      tf::Node* dst = edge->dst();
 
       // TODO(amprocte): the following rejects edges involving source/sink. Is
       // that what we want to do?
@@ -219,10 +219,9 @@ private:
       // If the destination node lies within a cluster, we must create an input
       // for the source node to the destination cluster. For the moment we will
       // just store this fact in the input_remap_map.
-      if (dst_clustered &&
-          input_remap_map.find(std::make_tuple(dst_cluster_idx, src->id(),
-                                               edge->src_output())) ==
-              input_remap_map.end()) {
+      if (dst_clustered && input_remap_map.find(std::make_tuple(
+                               dst_cluster_idx, src->id(),
+                               edge->src_output())) == input_remap_map.end()) {
         input_remap_map[std::make_tuple(dst_cluster_idx, src->id(),
                                         edge->src_output())] =
             cluster_input_map[dst_cluster_idx].size();
@@ -249,6 +248,7 @@ private:
       }
     }
 
+#if 0
     // Pass 3: Create the function library and add in a (stub) function def
     // for the NGraphEncapsulate op itself.
     tf::FunctionDefLibrary flib_def_for_encaps;
@@ -272,20 +272,20 @@ private:
     attr_tresults->set_type("list(type)");
     attr_tresults->set_description("List of types for each result");
 
-    tf::OpDef::ArgDef &input_arg_def =
+    tf::OpDef::ArgDef& input_arg_def =
         *(fdef_encaps->mutable_signature()->add_input_arg());
     input_arg_def.set_name("arguments");
     input_arg_def.set_type_list_attr("Targuments");
 
-    tf::OpDef::ArgDef &output_arg_def =
+    tf::OpDef::ArgDef& output_arg_def =
         *(fdef_encaps->mutable_signature()->add_output_arg());
     output_arg_def.set_name("results");
     output_arg_def.set_type_list_attr("Tresults");
 
     TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(flib_def_for_encaps));
-
+#endif
     // Pass 4: Create encapsulation nodes for all clusters.
-    for (auto &kv : fdef_map) {
+    for (auto& kv : fdef_map) {
       int cluster_idx = kv.first;
 
       std::stringstream ss;
@@ -294,7 +294,7 @@ private:
       std::vector<tf::DataType> input_types;
       std::vector<tf::NodeBuilder::NodeOut> inputs;
 
-      for (auto &tup : cluster_input_map[cluster_idx]) {
+      for (auto& tup : cluster_input_map[cluster_idx]) {
         int src_node_id;
         int src_output_idx;
         tf::DataType dt;
@@ -306,14 +306,16 @@ private:
             graph->FindNodeId(src_node_id), src_output_idx));
       }
 
-      tf::Node *n;
+      tf::Node* n;
       tf::Status status =
-          tf::NodeBuilder(ss.str(), &fdef_encaps->signature())
+          // tf::NodeBuilder(ss.str(), &fdef_encaps->signature())
+          tf::NodeBuilder(ss.str(), "NGraphEncapsulate")
               .Attr("ngraph_cluster", cluster_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
+              .Device("/job:localhost/replica:0/task:0/device:CPU:0")
               .Finalize(graph, &n);
       n->set_assigned_device_name(device_name_map[cluster_idx]);
       TF_RETURN_IF_ERROR(status);
@@ -339,11 +341,11 @@ private:
           graph->AddControlEdge(cluster_node_map[src_cluster_idx],
                                 cluster_node_map[dst_cluster_idx]);
         } else if (src_clustered) {
-          tf::Node *dst = edge->dst();
+          tf::Node* dst = edge->dst();
           graph->RemoveControlEdge(edge);
           graph->AddControlEdge(cluster_node_map[src_cluster_idx], dst);
         } else if (dst_clustered) {
-          tf::Node *src = edge->src();
+          tf::Node* src = edge->src();
           graph->RemoveControlEdge(edge);
           graph->AddControlEdge(src, cluster_node_map[dst_cluster_idx]);
         }
@@ -457,7 +459,7 @@ private:
 
     // Add definitions for each cluster function.
     for (auto kv : fdef_map) {
-      auto &fdef = kv.second;
+      auto& fdef = kv.second;
       TF_RETURN_IF_ERROR(ValidateOpDef(fdef.signature()));
       *flib_def.add_function() = fdef;
     }
@@ -467,9 +469,9 @@ private:
     return tf::Status::OK();
   }
 };
-} // namespace ngraph_bridge
+}  // namespace ngraph_bridge
 
 namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 110,
                       ngraph_bridge::NGraphEncapsulatePass);
-} // namespace tensorflow
+}  // namespace tensorflow
