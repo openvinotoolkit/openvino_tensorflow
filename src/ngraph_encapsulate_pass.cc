@@ -25,14 +25,17 @@
 #include "tensorflow/core/framework/function.pb.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
+#include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/graph_constructor.h"
 #include "tensorflow/core/graph/node_builder.h"
 #include "tensorflow/core/graph/tensor_id.h"
+#include "tensorflow/core/graph/validate.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
-#include "ngraph_library_manager.h"
+#include "ngraph_cluster_manager.h"
 
 using namespace std;
 namespace ngraph_bridge {
@@ -83,9 +86,6 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
   // ...end code copied and pasted (and modified) from graph.cc
 
   tf::Status EncapsulateFunctions(tf::Graph* graph) {
-    // A map from cluster indices to function definitions.
-    std::map<int, tf::FunctionDef> fdef_map;
-
     // A map from cluster indices to the expected device name for nodes
     // in that cluster.
     std::map<int, std::string> device_name_map;
@@ -105,12 +105,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
     // A map from cluster indices to corresponding NGraphEncapsulate nodes.
     std::map<int, tf::Node*> cluster_node_map;
 
-    // Create a managed function definition library.
-    int flib_idx = NGraphLibraryManager::MakeNewLibrary();
-    tf::FunctionDefLibrary *flib_def = NGraphLibraryManager::GetLibrary(flib_idx);
-
-    // Pass 1: Create FunctionDefs and populate the cluster-index-to-device
-    // name map for each existing cluster.
+    // Pass 1: Populate the cluster-index-to-device name map for each existing
+    // cluster.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
@@ -135,19 +131,13 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
                 << node->requested_device() << "'";
         device_name_map[cluster_idx] = node->requested_device();
       }
-
-      if (fdef_map.find(cluster_idx) != fdef_map.end()) {
-        continue;
-      }
-
-      std::stringstream ss;
-      ss << "_NGraphCluster" << cluster_idx;
-
-      fdef_map[cluster_idx].mutable_signature()->set_name(ss.str());
     }
 
     // Pass 2: Find all nodes that are feeding into/out of each cluster, and
     // add inputs for them to the corresponding FunctionDef(s).
+    std::map<int,int> retval_index_count;
+    std::map<int,int> arg_index_count;
+
     for (auto edge : graph->edges()) {
       // TODO(amprocte): should actually keep of these. During clustering we
       // will already have identified any intra-cluster control deps. Should
@@ -202,20 +192,19 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
         string output_name = ss.str();
 
-        auto new_output_arg =
-            fdef_map[src_cluster_idx].mutable_signature()->add_output_arg();
-        new_output_arg->set_name(output_name);
-        new_output_arg->set_type(dt);
+        auto new_output_node_def = NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+        new_output_node_def->set_name(output_name);
+        new_output_node_def->set_op("_Retval");
 
-        std::stringstream ss_ret;
-        ss_ret << src->name() << ":" << edge->src_output();
-        (*(fdef_map[src_cluster_idx].mutable_ret()))[output_name] =
-            ss_ret.str();
+        std::stringstream ss_input_to_retval;
+        ss_input_to_retval << src->name() << ":" << edge->src_output();
 
-        std::stringstream ss_desc;
-        ss_desc << "Output replacing " << src->name() << ":"
-                << edge->src_output();
-        new_output_arg->set_description(ss_desc.str());
+        new_output_node_def->add_input(ss_input_to_retval.str());
+
+        SetAttrValue(dt,&((*(new_output_node_def->mutable_attr()))["T"]));
+        SetAttrValue(retval_index_count[src_cluster_idx],&((*(new_output_node_def->mutable_attr()))["index"]));
+
+        retval_index_count[src_cluster_idx]++;
 
         cluster_output_dt_map[src_cluster_idx].push_back(dt);
       }
@@ -237,60 +226,22 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
                                          edge->src_output())] = new_input_name;
 
-        auto new_input_arg =
-            fdef_map[dst_cluster_idx].mutable_signature()->add_input_arg();
-        new_input_arg->set_name(new_input_name);
-        new_input_arg->set_type(dt);
+        auto new_input_node_def = NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
+        new_input_node_def->set_name(new_input_name);
+        new_input_node_def->set_op("_Arg");
 
-        std::stringstream ss_desc;
-        ss_desc << "Input replacing " << src->name() << ":"
-                << edge->src_output();
-        new_input_arg->set_description(ss_desc.str());
+        SetAttrValue(dt,&((*(new_input_node_def->mutable_attr()))["T"]));
+        SetAttrValue(arg_index_count[dst_cluster_idx],&((*(new_input_node_def->mutable_attr()))["index"]));
+
+        arg_index_count[dst_cluster_idx]++;
 
         cluster_input_map[dst_cluster_idx].push_back(
             std::make_tuple(src->id(), edge->src_output(), dt));
       }
     }
 
-#if 0
-    // Pass 3: Create the function library and add in a (stub) function def
-    // for the NGraphEncapsulate op itself.
-    tf::FunctionDefLibrary flib_def_for_encaps;
-
-    auto fdef_encaps = flib_def_for_encaps.add_function();
-    fdef_encaps->mutable_signature()->set_name("NGraphEncapsulate");
-
-    auto attr_ngraph_cluster = fdef_encaps->mutable_signature()->add_attr();
-    attr_ngraph_cluster->set_name("ngraph_cluster");
-    attr_ngraph_cluster->set_type("int");
-    attr_ngraph_cluster->set_description(
-        "Index of the nGraph cluster that is being encapsulated");
-
-    auto attr_targuments = fdef_encaps->mutable_signature()->add_attr();
-    attr_targuments->set_name("Targuments");
-    attr_targuments->set_type("list(type)");
-    attr_targuments->set_description("List of types for each argument");
-
-    auto attr_tresults = fdef_encaps->mutable_signature()->add_attr();
-    attr_tresults->set_name("Tresults");
-    attr_tresults->set_type("list(type)");
-    attr_tresults->set_description("List of types for each result");
-
-    tf::OpDef::ArgDef& input_arg_def =
-        *(fdef_encaps->mutable_signature()->add_input_arg());
-    input_arg_def.set_name("arguments");
-    input_arg_def.set_type_list_attr("Targuments");
-
-    tf::OpDef::ArgDef& output_arg_def =
-        *(fdef_encaps->mutable_signature()->add_output_arg());
-    output_arg_def.set_name("results");
-    output_arg_def.set_type_list_attr("Tresults");
-
-    TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(flib_def_for_encaps));
-#endif
-
-    // Pass 4: Create encapsulation nodes for all clusters.
-    for (auto& kv : fdef_map) {
+    // Pass 3: Create encapsulation nodes for all clusters.
+    for (auto& kv : device_name_map) {
       int cluster_idx = kv.first;
 
       std::stringstream ss;
@@ -313,10 +264,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
       tf::Node* n;
       tf::Status status =
-          // tf::NodeBuilder(ss.str(), &fdef_encaps->signature())
           tf::NodeBuilder(ss.str(), "NGraphEncapsulate")
               .Attr("ngraph_cluster", cluster_idx)
-              .Attr("library_index", flib_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
               .Device(device_name_map[cluster_idx])
@@ -328,7 +277,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       cluster_node_map[cluster_idx] = n;
     }
 
-    // Pass 5: Remap all non-clustered inputs that are reading from
+    // Pass 4: Remap all non-clustered inputs that are reading from
     // encapsulated edges, and all control edges that cross cluster
     // boundaries.
     for (auto edge : graph->edges()) {
@@ -377,7 +326,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       }
     }
 
-    // Pass 6: Make copies of all clustered nodes inside the cluster functions,
+    // Pass 5: Make copies of all clustered nodes inside the cluster graphs,
     // rewiring the inputs in their NodeDefs as we go.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
@@ -397,7 +346,6 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       // Get the inputs for this Node.  We make sure control inputs are
       // after data inputs, as required by GraphDef.
       std::vector<const tf::Edge *> inputs;
-      // inputs.clear();
       inputs.resize(node->num_inputs(), nullptr);
       for (const tf::Edge *edge : node->in_edges()) {
         if (edge->IsControlEdge()) {
@@ -433,7 +381,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       }
       // ...end code copied and pasted (and modified) from graph.cc
 
-      auto node_def = fdef_map[cluster_idx].add_node_def();
+      auto node_def = NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
       *node_def = original_def;
 
       for (auto &input : *(node_def->mutable_input())) {
@@ -448,7 +396,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       }
     }
 
-    // Pass 7: Remove clustered nodes from the graph.
+    // Pass 6: Remove clustered nodes from the graph.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
@@ -460,14 +408,20 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       graph->RemoveNode(node);
     }
 
-    // Pass 8: Populate the function library.
-    for (auto kv : fdef_map) {
-      auto& fdef = kv.second;
-      TF_RETURN_IF_ERROR(ValidateOpDef(fdef.signature()));
-      *(flib_def->add_function()) = fdef;
-    }
+    // Pass 7 (optional, only run if environment variable
+    // NGRAPH_VALIDATE_CLUSTER_GRAPHS is set): validate the graph def, and make
+    // sure we can construct a graph from it.
+    if (std::getenv("NGRAPH_VALIDATE_CLUSTER_GRAPHS")) {
+      for (auto& kv : device_name_map) {
+        int cluster_idx = kv.first;
+        TF_RETURN_IF_ERROR(tf::graph::ValidateGraphDef(*NGraphClusterManager::GetClusterGraph(cluster_idx),*tf::OpRegistry::Global()));
 
-    TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(*flib_def));
+        tf::Graph g(tf::OpRegistry::Global());
+        tf::GraphConstructorOptions opts;
+        opts.allow_internal_ops = true;
+        TF_RETURN_IF_ERROR(tf::ConvertGraphDefToGraph(opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
+      }
+    }
 
     return tf::Status::OK();
   }

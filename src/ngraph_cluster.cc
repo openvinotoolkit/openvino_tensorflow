@@ -13,9 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_utils.h"
-#include "tf_graphcycles.h"
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -29,6 +26,10 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
+
+#include "ngraph_cluster_manager.h"
+#include "ngraph_utils.h"
+#include "tf_graphcycles.h"
 
 using namespace std;
 namespace ngraph_bridge {
@@ -127,7 +128,6 @@ private:
     } while (changed);
 
     std::set<Cluster *> seen;
-    int cluster_count = 0;
 
     for (auto kv : cluster_map) {
       auto cluster = kv.second.get();
@@ -145,8 +145,10 @@ private:
       }
 
       if (seen.count(cluster) == 0) {
+        int cluster_idx = NGraphClusterManager::NewCluster();
+
         seen.insert(cluster);
-        VLOG(0) << "cluster " << cluster_count << ": " << cluster->nodes.size()
+        VLOG(0) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
                 << " nodes";
 
         for (auto node : cluster->nodes) {
@@ -156,17 +158,14 @@ private:
                 " is not an nGraph node but was placed in an nGraph cluster.");
           }
 
-          VLOG(0) << ">> cluster " << cluster_count << ": " << node
+          VLOG(0) << ">> cluster " << cluster_idx << ": " << node
                   << " :: " << node->name() << " [" << node->type_string()
                   << "]";
 
-          node->AddAttr("_ngraph_cluster", cluster_count);
+          node->AddAttr("_ngraph_cluster", cluster_idx);
         }
-        cluster_count++;
       }
     }
-
-    VLOG(0) << cluster_count << " total clusters";
 
     return tf::Status::OK();
   }
