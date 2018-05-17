@@ -27,6 +27,7 @@ REGISTER_OP("NGraphEncapsulate")
     .Output("results: Tresults")
     .Attr("Tresults: list(type) >= 0")
     //.Attr("function: func")
+    .Attr("library_index: int")
     .Attr("ngraph_cluster: int")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
