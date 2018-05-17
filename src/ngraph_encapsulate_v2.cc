@@ -315,6 +315,7 @@ private:
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
               .Finalize(graph, &n);
+      n->set_assigned_device_name(device_name_map[cluster_idx]);
       TF_RETURN_IF_ERROR(status);
       cluster_node_map[cluster_idx] = n;
     }
