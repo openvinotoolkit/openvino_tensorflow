@@ -36,6 +36,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "ngraph_cluster_manager.h"
+#include "ngraph_utils.h"
 
 using namespace std;
 namespace ngraph_bridge {
@@ -420,6 +421,13 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         tf::GraphConstructorOptions opts;
         opts.allow_internal_ops = true;
         TF_RETURN_IF_ERROR(tf::ConvertGraphDefToGraph(opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
+
+        std::stringstream ss;
+        ss << "ngraph_cluster_" << cluster_idx;
+        std::string filename_prefix = ss.str();
+
+        GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
+        GraphToDotFile(&g, filename_prefix + ".dot", "nGraph Cluster Dump: " + filename_prefix, false);
       }
     }
 
