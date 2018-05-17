@@ -46,6 +46,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 }  // namespace ngraph_bridge
 
 namespace tensorflow {
-REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device("CPU"),
+REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device("NGRAPH_CPU"),
                         ngraph_bridge::NGraphEncapsulateOp);
 }
