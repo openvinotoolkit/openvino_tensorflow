@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_utils.h"
-
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -33,6 +31,8 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
+
+#include "ngraph_library_manager.h"
 
 using namespace std;
 namespace ngraph_bridge {
@@ -104,6 +104,10 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
     // A map from cluster indices to corresponding NGraphEncapsulate nodes.
     std::map<int, tf::Node*> cluster_node_map;
+
+    // Create a managed function definition library.
+    int flib_idx = NGraphLibraryManager::MakeNewLibrary();
+    tf::FunctionDefLibrary *flib_def = NGraphLibraryManager::GetLibrary(flib_idx);
 
     // Pass 1: Create FunctionDefs and populate the cluster-index-to-device
     // name map for each existing cluster.
@@ -284,6 +288,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
     TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(flib_def_for_encaps));
 #endif
+
     // Pass 4: Create encapsulation nodes for all clusters.
     for (auto& kv : fdef_map) {
       int cluster_idx = kv.first;
@@ -311,14 +316,15 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
           // tf::NodeBuilder(ss.str(), &fdef_encaps->signature())
           tf::NodeBuilder(ss.str(), "NGraphEncapsulate")
               .Attr("ngraph_cluster", cluster_idx)
+              .Attr("library_index", flib_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
-              .Device("/job:localhost/replica:0/task:0/device:CPU:0")
               .Finalize(graph, &n);
-      n->set_assigned_device_name(device_name_map[cluster_idx]);
       TF_RETURN_IF_ERROR(status);
+      n->set_assigned_device_name(device_name_map[cluster_idx]);
+
       cluster_node_map[cluster_idx] = n;
     }
 
@@ -371,7 +377,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       }
     }
 
-    // Pass 6: Make copies of all clustured nodes inside the cluster functions,
+    // Pass 6: Make copies of all clustered nodes inside the cluster functions,
     // rewiring the inputs in their NodeDefs as we go.
     for (auto node : graph->op_nodes()) {
       int cluster_idx;
@@ -454,17 +460,14 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       graph->RemoveNode(node);
     }
 
-    // Pass 8: Create and add the function library.
-    tf::FunctionDefLibrary flib_def;
-
-    // Add definitions for each cluster function.
+    // Pass 8: Populate the function library.
     for (auto kv : fdef_map) {
       auto& fdef = kv.second;
       TF_RETURN_IF_ERROR(ValidateOpDef(fdef.signature()));
-      *flib_def.add_function() = fdef;
+      *(flib_def->add_function()) = fdef;
     }
 
-    TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(flib_def));
+    TF_RETURN_IF_ERROR(graph->AddFunctionLibrary(*flib_def));
 
     return tf::Status::OK();
   }
