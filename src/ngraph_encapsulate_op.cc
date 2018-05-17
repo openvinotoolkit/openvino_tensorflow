@@ -14,9 +14,15 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "tensorflow/core/framework/function.h"
+#include "tensorflow/core/common_runtime/optimization_registry.h"
+#include "tensorflow/core/framework/graph.pb.h"
+#include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/graph_constructor.h"
+
+#include "ngraph_cluster_manager.h"
 
 namespace tf = tensorflow;
 
@@ -27,8 +33,6 @@ REGISTER_OP("NGraphEncapsulate")
     .Attr("Targuments: list(type) >= 0")
     .Output("results: Tresults")
     .Attr("Tresults: list(type) >= 0")
-    //.Attr("function: func")
-    .Attr("library_index: int")
     .Attr("ngraph_cluster: int")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
@@ -36,41 +40,27 @@ REGISTER_OP("NGraphEncapsulate")
 class NGraphEncapsulateOp : public tf::OpKernel {
  public:
   explicit NGraphEncapsulateOp(tf::OpKernelConstruction* ctx)
-      : tf::OpKernel(ctx) {
-    // DataTypeVector constant_types;
-    // OP_REQUIRES_OK(ctx, ctx->GetAttr("Tconstants", &constant_types));
-    // num_constant_args_ = constant_types.size();
-    // OP_REQUIRES_OK(ctx, ctx->GetAttr("Nresources", &num_resource_args_));
-    VLOG(0) << "NGraphEncapsulateOp::Number of inputs: " << ctx->num_inputs();
-    VLOG(0) << "NGraphEncapsulateOp::Number of outputs: " << ctx->num_outputs();
+      : tf::OpKernel(ctx)
+      , m_graph(tf::OpRegistry::Global()) {
+    int ngraph_cluster;
+    tf::GraphDef* graph_def;
 
-    // Get the functions
-    auto function_lib = ctx->function_library();
-    auto function_lib_def = function_lib->GetFunctionLibraryDefinition();
-    VLOG(0) << "Number of functions: " << function_lib_def->num_functions();
+    // TODO(amprocte): need to check status result here.
+    tf::Status status = ctx->GetAttr<int>("ngraph_cluster",&ngraph_cluster);
+    graph_def = NGraphClusterManager::GetClusterGraph(ngraph_cluster);
+
+    tf::GraphConstructorOptions opts;
+    opts.allow_internal_ops = true;
+    // TODO(amprocte): need to check status result here.
+    tf::ConvertGraphDefToGraph(opts, *graph_def, &m_graph);
   }
   ~NGraphEncapsulateOp() override {
     // d-tor
   }
   void Compute(tf::OpKernelContext* ctx) override {
-    VLOG(0) << "NGraphMulOp::Compute() Step: " << ctx->step_id()
-            << " Op: " << ctx->op_kernel().name();
-    VLOG(0) << "Inputs: " << ctx->num_inputs()
-            << " Outputs: " << ctx->num_outputs();
-    // Get the inputs
-    const tf::Tensor& input_tensor_1 = ctx->input(0);
-    const tf::Tensor& input_tensor_2 = ctx->input(1);
-
-    // DO the Math
-
-    // Save the output
-    // Create an output tensor
-    tf::Tensor* output_tensor = nullptr;
-    OP_REQUIRES_OK(
-        ctx, ctx->allocate_output(0, input_tensor_1.shape(), &output_tensor));
-    OP_REQUIRES_OK(
-        ctx, ctx->allocate_output(1, input_tensor_1.shape(), &output_tensor));
   }
+ private:
+  tf::Graph m_graph;
 };
 
 }  // namespace ngraph_bridge

@@ -40,11 +40,11 @@ add_dependencies(ngraph_lib ext_ngraph)
 set(SRC 
    ngraph_builder.cc
    ngraph_cluster.cc
+   ngraph_cluster_manager.cc
    ngraph_device.cc
    ngraph_encapsulate_op.cc
    ngraph_encapsulate_pass.cc
    ngraph_graph_rewrite_passes.cc
-   ngraph_library_manager.cc
    ngraph_op_kernels.cc
    ngraph_utils.cc
    tf_graphcycles.cc
