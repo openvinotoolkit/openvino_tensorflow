@@ -12,7 +12,7 @@
 //
 // This is one way to get the graph and do the necessary analysis, fusion etc
 // Check out:
-// /Users/avijitch/Projects/ngraph-tensorflow/tensorflow/compiler/jit/build_xla_launch_ops_pass.cc
+// tensorflow/compiler/jit/build_xla_launch_ops_pass.cc
 // to see how XLALaunchOps are used. Can we do something similar?
 
 const char* const DEVICE_NGRAPH = "NGRAPH_CPU";
@@ -398,10 +398,10 @@ REGISTER_KERNEL_BUILDER(
     Name("Mul").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
     NGraphMulOp<float>);
 
-//REGISTER_KERNEL_BUILDER(
+// REGISTER_KERNEL_BUILDER(
 //    Name("Assign").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
 //    NGraphOp<float>);
-//REGISTER_KERNEL_BUILDER(
+// REGISTER_KERNEL_BUILDER(
 //    Name("ApplyAdam").Device(DEVICE_NGRAPH).TypeConstraint("T", {DT_FLOAT}),
 //    NGraphOp<float>);
 
@@ -637,25 +637,21 @@ REGISTER_KERNEL_BUILDER(Name("ExpandDims")
                             .TypeConstraint<int32>("Tdim"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("FusedBatchNorm")
-                            .Device(DEVICE_NGRAPH)
-                            .TypeConstraint<float>("T"),
-                        NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(
+    Name("FusedBatchNorm").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("FusedBatchNormGrad")
-                            .Device(DEVICE_NGRAPH)
-                            .TypeConstraint<float>("T"),
-                        NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(
+    Name("FusedBatchNormGrad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("L2Loss")
-                            .Device(DEVICE_NGRAPH)
-                            .TypeConstraint<float>("T"),
-                        NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(
+    Name("L2Loss").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("AddN")
-                            .Device(DEVICE_NGRAPH)
-                            .TypeConstraint<float>("T"),
-                        NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(
+    Name("AddN").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
+    NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(
     Name("AvgPool").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
@@ -669,10 +665,11 @@ REGISTER_KERNEL_BUILDER(
     Name("Sub").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Pad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T")
-               .TypeConstraint<int32>("Tpaddings"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Pad")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T")
+                            .TypeConstraint<int32>("Tpaddings"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(
     Name("Greater").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
@@ -682,9 +679,8 @@ REGISTER_KERNEL_BUILDER(
     Name("LessEqual").Device(DEVICE_NGRAPH).TypeConstraint<int32>("T"),
     NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("LogicalAnd").Device(DEVICE_NGRAPH),
-    NGraphOp<bool>);
+REGISTER_KERNEL_BUILDER(Name("LogicalAnd").Device(DEVICE_NGRAPH),
+                        NGraphOp<bool>);
 
 REGISTER_KERNEL_BUILDER(
     Name("Select").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
@@ -698,13 +694,17 @@ REGISTER_KERNEL_BUILDER(
     Name("BiasAddGrad").Device(DEVICE_NGRAPH).TypeConstraint<float>("T"),
     NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("OneHot").Device(DEVICE_NGRAPH).TypeConstraint<float>("T").TypeConstraint<int64>("TI"),
-    NGraphOp<int64>);
+REGISTER_KERNEL_BUILDER(Name("OneHot")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T")
+                            .TypeConstraint<int64>("TI"),
+                        NGraphOp<int64>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Transpose").Device(DEVICE_NGRAPH).TypeConstraint<float>("T").TypeConstraint<int32>("Tperm"),
-    NGraphOp<int32>);
+REGISTER_KERNEL_BUILDER(Name("Transpose")
+                            .Device(DEVICE_NGRAPH)
+                            .TypeConstraint<float>("T")
+                            .TypeConstraint<int32>("Tperm"),
+                        NGraphOp<int32>);
 
 #define REGISTER_NG_KERNEL(NAME, TYPE)                                  \
   REGISTER_KERNEL_BUILDER(                                              \
@@ -714,4 +714,5 @@ REGISTER_KERNEL_BUILDER(
 // REGISTER_NG_KERNEL("VariableV2", float);
 REGISTER_NG_KERNEL("RandomUniform", float);
 
-//REGISTER_KERNEL_BUILDER(Name("MergeSummary").Device(DEVICE_NGRAPH), NGraphNoOp);
+// REGISTER_KERNEL_BUILDER(Name("MergeSummary").Device(DEVICE_NGRAPH),
+// NGraphNoOp);
