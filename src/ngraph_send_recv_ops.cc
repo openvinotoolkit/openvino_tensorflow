@@ -215,7 +215,7 @@ class NGraphSend : public OpKernel {
     VLOG(0) << "NGraphSend: Step: " << ctx->step_id()
             << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES(ctx, ctx->rendezvous() != nullptr,
-                tf ::errors::Internal(
+                tf::errors::Internal(
                     "Op kernel context needs to provide a rendezvous."));
 
     // The device context may be passed between the Send/Recv

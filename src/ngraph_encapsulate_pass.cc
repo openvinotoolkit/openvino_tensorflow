@@ -74,7 +74,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
   }
 
   // begin code copied and pasted (and modified) from graph.cc...
-  static void AddInput(tf::NodeDef *dst, tf::StringPiece src_name,
+  static void AddInput(tf::NodeDef* dst, tf::StringPiece src_name,
                        int src_slot) {
     if (src_slot == tf::Graph::kControlSlot) {
       dst->add_input(tf::strings::StrCat("^", src_name));
@@ -136,8 +136,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
     // Pass 2: Find all nodes that are feeding into/out of each cluster, and
     // add inputs for them to the corresponding FunctionDef(s).
-    std::map<int,int> retval_index_count;
-    std::map<int,int> arg_index_count;
+    std::map<int, int> retval_index_count;
+    std::map<int, int> arg_index_count;
 
     for (auto edge : graph->edges()) {
       // TODO(amprocte): should actually keep of these. During clustering we
@@ -193,7 +193,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
         string output_name = ss.str();
 
-        auto new_output_node_def = NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+        auto new_output_node_def =
+            NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
         new_output_node_def->set_name(output_name);
         new_output_node_def->set_op("_Retval");
 
@@ -202,8 +203,9 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
         new_output_node_def->add_input(ss_input_to_retval.str());
 
-        SetAttrValue(dt,&((*(new_output_node_def->mutable_attr()))["T"]));
-        SetAttrValue(retval_index_count[src_cluster_idx],&((*(new_output_node_def->mutable_attr()))["index"]));
+        SetAttrValue(dt, &((*(new_output_node_def->mutable_attr()))["T"]));
+        SetAttrValue(retval_index_count[src_cluster_idx],
+                     &((*(new_output_node_def->mutable_attr()))["index"]));
 
         retval_index_count[src_cluster_idx]++;
 
@@ -213,9 +215,10 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       // If the destination node lies within a cluster, we must create an input
       // for the source node to the destination cluster. For the moment we will
       // just store this fact in the input_remap_map.
-      if (dst_clustered && input_remap_map.find(std::make_tuple(
-                               dst_cluster_idx, src->id(),
-                               edge->src_output())) == input_remap_map.end()) {
+      if (dst_clustered &&
+          input_remap_map.find(std::make_tuple(dst_cluster_idx, src->id(),
+                                               edge->src_output())) ==
+              input_remap_map.end()) {
         input_remap_map[std::make_tuple(dst_cluster_idx, src->id(),
                                         edge->src_output())] =
             cluster_input_map[dst_cluster_idx].size();
@@ -227,12 +230,14 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
                                          edge->src_output())] = new_input_name;
 
-        auto new_input_node_def = NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
+        auto new_input_node_def =
+            NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
         new_input_node_def->set_name(new_input_name);
         new_input_node_def->set_op("_Arg");
 
-        SetAttrValue(dt,&((*(new_input_node_def->mutable_attr()))["T"]));
-        SetAttrValue(arg_index_count[dst_cluster_idx],&((*(new_input_node_def->mutable_attr()))["index"]));
+        SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
+        SetAttrValue(arg_index_count[dst_cluster_idx],
+                     &((*(new_input_node_def->mutable_attr()))["index"]));
 
         arg_index_count[dst_cluster_idx]++;
 
@@ -346,9 +351,9 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
       // Get the inputs for this Node.  We make sure control inputs are
       // after data inputs, as required by GraphDef.
-      std::vector<const tf::Edge *> inputs;
+      std::vector<const tf::Edge*> inputs;
       inputs.resize(node->num_inputs(), nullptr);
-      for (const tf::Edge *edge : node->in_edges()) {
+      for (const tf::Edge* edge : node->in_edges()) {
         if (edge->IsControlEdge()) {
           inputs.push_back(edge);
         } else {
@@ -366,7 +371,7 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
       original_def.mutable_input()->Reserve(inputs.size());
 
       for (size_t i = 0; i < inputs.size(); ++i) {
-        const tf::Edge *edge = inputs[i];
+        const tf::Edge* edge = inputs[i];
         if (edge == nullptr) {
           if (i < node->requested_inputs().size()) {
             original_def.add_input(node->requested_inputs()[i]);
@@ -374,18 +379,18 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
             original_def.add_input("");
           }
         } else {
-          const tf::Node *src = edge->src();
-          if (!src->IsOp())
-            continue;
+          const tf::Node* src = edge->src();
+          if (!src->IsOp()) continue;
           AddInput(&original_def, src->name(), edge->src_output());
         }
       }
       // ...end code copied and pasted (and modified) from graph.cc
 
-      auto node_def = NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+      auto node_def =
+          NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
       *node_def = original_def;
 
-      for (auto &input : *(node_def->mutable_input())) {
+      for (auto& input : *(node_def->mutable_input())) {
         tf::TensorId tensor_id = tf::ParseTensorName(input);
 
         auto it = input_rename_map.find(std::make_tuple(
@@ -415,19 +420,23 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
     if (std::getenv("NGRAPH_VALIDATE_CLUSTER_GRAPHS")) {
       for (auto& kv : device_name_map) {
         int cluster_idx = kv.first;
-        TF_RETURN_IF_ERROR(tf::graph::ValidateGraphDef(*NGraphClusterManager::GetClusterGraph(cluster_idx),*tf::OpRegistry::Global()));
+        TF_RETURN_IF_ERROR(tf::graph::ValidateGraphDef(
+            *NGraphClusterManager::GetClusterGraph(cluster_idx),
+            *tf::OpRegistry::Global()));
 
         tf::Graph g(tf::OpRegistry::Global());
         tf::GraphConstructorOptions opts;
         opts.allow_internal_ops = true;
-        TF_RETURN_IF_ERROR(tf::ConvertGraphDefToGraph(opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
+        TF_RETURN_IF_ERROR(tf::ConvertGraphDefToGraph(
+            opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
 
         std::stringstream ss;
         ss << "ngraph_cluster_" << cluster_idx;
         std::string filename_prefix = ss.str();
 
         GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
-        GraphToDotFile(&g, filename_prefix + ".dot", "nGraph Cluster Dump: " + filename_prefix, false);
+        GraphToDotFile(&g, filename_prefix + ".dot",
+                       "nGraph Cluster Dump: " + filename_prefix, false);
       }
     }
 

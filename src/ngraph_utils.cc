@@ -34,7 +34,7 @@ using namespace std;
 namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU;
 
-void GraphToPbTextFile(tf::Graph *graph, const string &filename) {
+void GraphToPbTextFile(tf::Graph* graph, const string& filename) {
   tf::GraphDef g_def;
   graph->ToGraphDef(&g_def);
 
@@ -44,18 +44,18 @@ void GraphToPbTextFile(tf::Graph *graph, const string &filename) {
   ostrm_out << graph_pb_str;
 }
 
-void SummarizeOp(tf::OpKernelConstruction *ctx, std::ostream &out) {
+void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out) {
   auto node_def = ctx->def();
   out << "Node name: " << node_def.name() << " Op: " << node_def.op() << "\n";
   out << "Inputs: " << node_def.input().size() << "\n    ";
-  for (const std::string &input : node_def.input()) {
+  for (const std::string& input : node_def.input()) {
     out << input << "\n    ";
   }
   out << "\n";
 }
 
-void GraphToDotFile(tf::Graph *graph, const std::string &filename,
-                    const std::string &title, bool annotate_device) {
+void GraphToDotFile(tf::Graph* graph, const std::string& filename,
+                    const std::string& title, bool annotate_device) {
   std::string dot = GraphToDot(graph, title, annotate_device);
   std::ofstream ostrm_out(filename, std::ios_base::trunc);
   ostrm_out << dot;
@@ -68,7 +68,7 @@ static std::string color_string(unsigned int color) {
   return ss.str();
 }
 
-std::string GraphToDot(tf::Graph *graph, const std::string &title,
+std::string GraphToDot(tf::Graph* graph, const std::string& title,
                        bool annotate_device) {
   //
   // Output containing the DOT representation of the Graph
@@ -101,14 +101,13 @@ std::string GraphToDot(tf::Graph *graph, const std::string &title,
   std::map<int, unsigned int> cluster_color_map;
 
   // Input edges
-  std::vector<const tf::Edge *> inputs;
+  std::vector<const tf::Edge*> inputs;
   for (auto id = 0; id < graph->num_node_ids(); ++id) {
     string fill_color = "#f2f2f2";
     string style = "filled";
 
-    const tf::Node *node = graph->FindNodeId(id);
-    if (node == nullptr)
-      continue;
+    const tf::Node* node = graph->FindNodeId(id);
+    if (node == nullptr) continue;
     // Sample node:
     // node_name [label=<<b>convolution.1</b><br/>window={size=5x5
     //      pad=2_2x2_2}<br/>dim_labels=b01f_01io-&gt;b01f<br/>f32[10000,14,14,64]{3,2,1,0}>,
@@ -183,7 +182,7 @@ std::string GraphToDot(tf::Graph *graph, const std::string &title,
     // after data inputs, as required by GraphDef.
     inputs.clear();
     inputs.resize(node->num_inputs(), nullptr);
-    for (const tf::Edge *edge : node->in_edges()) {
+    for (const tf::Edge* edge : node->in_edges()) {
       if (edge->IsControlEdge()) {
         inputs.push_back(edge);
       } else {
@@ -198,14 +197,12 @@ std::string GraphToDot(tf::Graph *graph, const std::string &title,
       }
     }
     for (size_t i = 0; i < inputs.size(); ++i) {
-      const tf::Edge *edge = inputs[i];
+      const tf::Edge* edge = inputs[i];
       if (edge != nullptr) {
-        const tf::Node *src = edge->src();
-        if (!src->IsOp())
-          continue;
-        const tf::Node *dst = edge->dst();
-        if (!dst->IsOp())
-          continue;
+        const tf::Node* src = edge->src();
+        if (!src->IsOp()) continue;
+        const tf::Node* dst = edge->dst();
+        if (!dst->IsOp()) continue;
 
         string arrow_color = "#000000";
 
@@ -225,11 +222,11 @@ std::string GraphToDot(tf::Graph *graph, const std::string &title,
   return dot_string.str();
 }
 
-std::ostream &
-DumpNGTensor(std::ostream &s, const string &name,
-             const std::shared_ptr<ngraph::runtime::TensorView> &t) {
+std::ostream& DumpNGTensor(
+    std::ostream& s, const string& name,
+    const std::shared_ptr<ngraph::runtime::TensorView>& t) {
   // std::shared_ptr<ngraph::runtime::TensorView> t{get_tensor()};
-  const ngraph::Shape &shape = t->get_shape();
+  const ngraph::Shape& shape = t->get_shape();
   s << "Tensor<" << name << ": ";
 
   for (size_t i = 0; i < shape.size(); ++i) {
@@ -269,4 +266,36 @@ DumpNGTensor(std::ostream &s, const string &name,
   return s;
 }
 
-} // namespace ngraph_bridge
+tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
+                                         ngraph::element::Type* ng_et) {
+  switch (tf_dt) {
+    case tf::DataType::DT_FLOAT:
+      *ng_et = ng::element::f32;
+      break;
+    case tf::DataType::DT_DOUBLE:
+      *ng_et = ng::element::f64;
+      break;
+    case tf::DataType::DT_INT32:
+      *ng_et = ng::element::i32;
+      break;
+    case tf::DataType::DT_UINT8:
+      *ng_et = ng::element::u8;
+      break;
+    case tf::DataType::DT_INT64:
+      *ng_et = ng::element::i64;
+      break;
+    case tf::DataType::DT_UINT32:
+      *ng_et = ng::element::u32;
+      break;
+    case tf::DataType::DT_UINT64:
+      *ng_et = ng::element::u64;
+      break;
+    default:
+      return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
+                                       tf::DataType_Name(tf_dt));
+  }
+
+  return tf::Status::OK();
+}
+
+}  // namespace ngraph_bridge

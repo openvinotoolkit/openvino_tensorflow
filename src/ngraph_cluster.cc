@@ -37,8 +37,8 @@ namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU;
 
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
-public:
-  tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
+ public:
+  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     // TODO(amprocte): Remove this when we have proper support for graphs with
     // cycles.
     if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
@@ -46,16 +46,16 @@ public:
       return tf::Status::OK();
     }
 
-    tf::Graph *graph = options.graph->get();
+    tf::Graph* graph = options.graph->get();
 
     TF_RETURN_IF_ERROR(IdentifyClusters(graph));
 
     return tf::Status::OK();
   }
 
-private:
+ private:
   // TODO(amprocte): do we need to look at job name, replica, task?
-  bool IsNGraphNode(const tf::Node *node) {
+  bool IsNGraphNode(const tf::Node* node) {
     tf::DeviceNameUtils::ParsedName parsed;
 
     if (!tf::DeviceNameUtils::ParseFullName(node->def().device(), &parsed)) {
@@ -68,11 +68,11 @@ private:
 
   struct Cluster {
     int index;
-    std::set<tf::Node *> nodes;
+    std::set<tf::Node*> nodes;
   };
 
-  tf::Status IdentifyClusters(tf::Graph *graph) {
-    std::map<tf::Node *, std::shared_ptr<Cluster>> cluster_map;
+  tf::Status IdentifyClusters(tf::Graph* graph) {
+    std::map<tf::Node*, std::shared_ptr<Cluster>> cluster_map;
 
     tf::GraphCycles gc;
 
@@ -84,8 +84,8 @@ private:
     }
 
     for (auto edge : graph->edges()) {
-      tf::Node *src = edge->src();
-      tf::Node *dst = edge->dst();
+      tf::Node* src = edge->src();
+      tf::Node* dst = edge->dst();
 
       // Skip source/sink
       if (!src->IsOp() || !dst->IsOp()) {
@@ -106,8 +106,8 @@ private:
       changed = false;
 
       for (auto edge : graph->edges()) {
-        tf::Node *src = edge->src();
-        tf::Node *dst = edge->dst();
+        tf::Node* src = edge->src();
+        tf::Node* dst = edge->dst();
 
         if (!IsNGraphNode(src) || !IsNGraphNode(dst)) {
           continue;
@@ -127,7 +127,7 @@ private:
       }
     } while (changed);
 
-    std::set<Cluster *> seen;
+    std::set<Cluster*> seen;
 
     for (auto kv : cluster_map) {
       auto cluster = kv.second.get();
@@ -170,9 +170,9 @@ private:
     return tf::Status::OK();
   }
 };
-} // namespace ngraph_bridge
+}  // namespace ngraph_bridge
 
 namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 105,
                       ngraph_bridge::NGraphClusterPass);
-} // namespace tensorflow
+}  // namespace tensorflow

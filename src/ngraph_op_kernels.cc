@@ -31,7 +31,7 @@
 // tensorflow/compiler/jit/build_xla_launch_ops_pass.cc
 // to see how XLALaunchOps are used. Can we do something similar?
 
-namespace ngraph_bridge{
+namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU;
 }
 
@@ -75,7 +75,7 @@ class NGraphAddOp : public OpKernel {
             << " Outputs: " << ctx->num_outputs();
     // Get the inputs
     const tf::Tensor& input_tensor_1 = ctx->input(0);
-    const tf::Tensor& input_tensor_2 = ctx->input(1);
+    // const tf::Tensor& input_tensor_2 = ctx->input(1);
 
     // DO the Math
 
@@ -103,7 +103,7 @@ class NGraphMulOp : public OpKernel {
             << " Outputs: " << ctx->num_outputs();
     // Get the inputs
     const tf::Tensor& input_tensor_1 = ctx->input(0);
-    const tf::Tensor& input_tensor_2 = ctx->input(1);
+    // const tf::Tensor& input_tensor_2 = ctx->input(1);
 
     // DO the Math
 
@@ -166,7 +166,6 @@ class NGraphConstantOp : public OpKernel {
  private:
 };
 
-
 //----------------------------- Taken from TF implementation
 //------------------------
 namespace {
@@ -210,31 +209,40 @@ class NGraphConstOp : public tf::OpKernel {
 };
 
 // This form allows you to specify a list of types as the constraint.
-REGISTER_KERNEL_BUILDER(
-    Name("Add").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T", {DT_FLOAT}),
-    NGraphAddOp<float>);
-REGISTER_KERNEL_BUILDER(
-    Name("Mul").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T", {DT_FLOAT}),
-    NGraphMulOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Add")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint("T", {DT_FLOAT}),
+                        NGraphAddOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Mul")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint("T", {DT_FLOAT}),
+                        NGraphMulOp<float>);
 
 // REGISTER_KERNEL_BUILDER(
-//    Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T", {DT_FLOAT}),
+//    Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T",
+//    {DT_FLOAT}),
 //    NGraphOp<float>);
 // REGISTER_KERNEL_BUILDER(
-//    Name("ApplyAdam").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T", {DT_FLOAT}),
+//    Name("ApplyAdam").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T",
+//    {DT_FLOAT}),
 //    NGraphOp<float>);
 
+REGISTER_KERNEL_BUILDER(Name("Fill")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint("T", {DT_FLOAT}),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("NoOp").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+                        NGraphNoOp);
 REGISTER_KERNEL_BUILDER(
-    Name("Fill").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T", {DT_FLOAT}),
-    NGraphOp<float>);
+    Name("Placeholder").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    NgPlaceholderOp);
+REGISTER_KERNEL_BUILDER(
+    Name("PlaceholderV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    NgPlaceholderOp);
 
-REGISTER_KERNEL_BUILDER(Name("NoOp").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphNoOp);
-REGISTER_KERNEL_BUILDER(Name("Placeholder").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-                        NgPlaceholderOp);
-REGISTER_KERNEL_BUILDER(Name("PlaceholderV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-                        NgPlaceholderOp);
-
-REGISTER_KERNEL_BUILDER(Name("Const").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphConstOp);
+REGISTER_KERNEL_BUILDER(Name("Const").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+                        NGraphConstOp);
 
 // REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
 //                         NGraphNoOp);
@@ -281,13 +289,15 @@ REGISTER_KERNEL_BUILDER(Name("Slice")
                             .TypeConstraint<int32>("Index"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Maximum").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<int32>);
+REGISTER_KERNEL_BUILDER(Name("Maximum")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
+                        NGraphOp<int32>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Sub").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<int32>);
+REGISTER_KERNEL_BUILDER(Name("Sub")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
+                        NGraphOp<int32>);
 
 REGISTER_KERNEL_BUILDER(Name("Sum")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -295,9 +305,10 @@ REGISTER_KERNEL_BUILDER(Name("Sum")
                             .TypeConstraint<int32>("Tidx"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Pack").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<int32>);
+REGISTER_KERNEL_BUILDER(Name("Pack")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
+                        NGraphOp<int32>);
 
 /*REGISTER_KERNEL_BUILDER(
     Name("RefSwitch").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
@@ -315,33 +326,40 @@ REGISTER_KERNEL_BUILDER(
     Name("Merge").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
     NGraphOp<float>);*/
 
-REGISTER_KERNEL_BUILDER(
-    Name("Identity").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Identity")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Snapshot").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Snapshot")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Identity").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<bool>("T"),
-    NGraphOp<bool>);
+REGISTER_KERNEL_BUILDER(Name("Identity")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<bool>("T"),
+                        NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("StopGradient").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("StopGradient")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Shape").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Shape")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("ShapeN").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("ShapeN")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Conv2D").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Conv2D")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("Conv2DBackpropFilter")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -357,66 +375,79 @@ REGISTER_KERNEL_BUILDER(Name("BroadcastGradientArgs")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<int32>("T"),
                         NGraphOp<int32>);
-REGISTER_KERNEL_BUILDER(
-    Name("Relu").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Relu")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("MaxPool").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("MaxPool")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("MatMul").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("MatMul")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Equal").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int64>("T"),
-    NGraphOp<int64>);
+REGISTER_KERNEL_BUILDER(Name("Equal")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int64>("T"),
+                        NGraphOp<int64>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Equal").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<bool>);
+REGISTER_KERNEL_BUILDER(Name("Equal")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Greater").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<bool>);
+REGISTER_KERNEL_BUILDER(Name("Greater")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Neg").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Neg")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("LogSoftmax").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("LogSoftmax")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 /*REGISTER_KERNEL_BUILDER(
     Name("ScalarSummary").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
     NGraphOp<float>);*/
 
-REGISTER_KERNEL_BUILDER(
-    Name("ReluGrad").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("ReluGrad")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("MaxPoolGrad").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("MaxPoolGrad")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("SoftmaxCrossEntropyWithLogits")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("ZerosLike").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("ZerosLike")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("FloorDiv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<int32>);
+REGISTER_KERNEL_BUILDER(Name("FloorDiv")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
+                        NGraphOp<int32>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("RealDiv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("RealDiv")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("Cast")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -454,33 +485,40 @@ REGISTER_KERNEL_BUILDER(Name("ExpandDims")
                             .TypeConstraint<int32>("Tdim"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("FusedBatchNorm").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("FusedBatchNorm")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("FusedBatchNormGrad").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("FusedBatchNormGrad")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("L2Loss").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("L2Loss")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("AddN").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("AddN")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("AvgPool").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("AvgPool")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("AvgPoolGrad").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("AvgPoolGrad")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Sub").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Sub")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("Pad")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -488,28 +526,34 @@ REGISTER_KERNEL_BUILDER(Name("Pad")
                             .TypeConstraint<int32>("Tpaddings"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("Greater").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<bool>);
+REGISTER_KERNEL_BUILDER(Name("Greater")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
+                        NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("LessEqual").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<int32>("T"),
-    NGraphOp<bool>);
-
-REGISTER_KERNEL_BUILDER(Name("LogicalAnd").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+REGISTER_KERNEL_BUILDER(Name("LessEqual")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<int32>("T"),
                         NGraphOp<bool>);
 
 REGISTER_KERNEL_BUILDER(
-    Name("Select").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+    Name("LogicalAnd").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    NGraphOp<bool>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("BiasAdd").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("Select")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(
-    Name("BiasAddGrad").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
-    NGraphOp<float>);
+REGISTER_KERNEL_BUILDER(Name("BiasAdd")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("BiasAddGrad")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("OneHot")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -524,9 +568,10 @@ REGISTER_KERNEL_BUILDER(Name("Transpose")
                         NGraphOp<int32>);
 
 #define REGISTER_NG_KERNEL(NAME, TYPE)                                  \
-  REGISTER_KERNEL_BUILDER(                                              \
-      Name((NAME)).Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<TYPE>("dtype"), \
-      NGraphNoOp);
+  REGISTER_KERNEL_BUILDER(Name((NAME))                                  \
+                              .Device(ngraph_bridge::DEVICE_NGRAPH_CPU) \
+                              .TypeConstraint<TYPE>("dtype"),           \
+                          NGraphNoOp);
 // REGISTER_NG_KERNEL("Const", float);
 // REGISTER_NG_KERNEL("VariableV2", float);
 REGISTER_NG_KERNEL("RandomUniform", float);
