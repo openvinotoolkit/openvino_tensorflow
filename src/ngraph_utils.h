@@ -27,6 +27,7 @@
 
 using namespace std;
 namespace tf = tensorflow;
+namespace ng = ngraph;
 
 namespace ngraph_bridge {
 
@@ -113,6 +114,12 @@ T GetScalarFromTensorView(const std::shared_ptr<ngraph::runtime::TensorView>& t,
 std::ostream& DumpNGTensor(
     std::ostream& s, const string& name,
     const std::shared_ptr<ngraph::runtime::TensorView>& t);
+
+// Converts a TensorFlow DataType to an nGraph element::Type. Returns
+// tf::errors::Unimplemented if the element type is not supported by nGraph
+// Core. Otherwise returns Status::OK().
+tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
+                                         ngraph::element::Type* ng_et);
 
 }  // namespace ngraph_bridge
 

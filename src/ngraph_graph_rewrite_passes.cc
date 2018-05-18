@@ -31,10 +31,10 @@ using namespace std;
 namespace ngraph_bridge {
 
 class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
-public:
+ public:
   NGraphDumpPass(std::string pass_name) : m_pass_name(pass_name) {}
   virtual ~NGraphDumpPass() {}
-  tf::Status Run(const tf::GraphOptimizationPassOptions &options) {
+  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     VLOG(0) << "nGraph dump pass start: " << m_pass_name;
 
     int idx = s_counter_map[m_pass_name]++;
@@ -44,7 +44,7 @@ public:
     std::string filename_prefix = ss.str();
 
     if (options.graph != nullptr) {
-      tf::Graph *g = options.graph->get();
+      tf::Graph* g = options.graph->get();
 
       GraphToPbTextFile(g, filename_prefix + ".pbtxt");
       GraphToDotFile(g, filename_prefix + ".dot", "nGraph Dump: " + m_pass_name,
@@ -54,8 +54,8 @@ public:
     if (options.partition_graphs != nullptr) {
       int sub_idx = 0;
 
-      for (auto &kv : *options.partition_graphs) {
-        tf::Graph *pg = kv.second.get();
+      for (auto& kv : *options.partition_graphs) {
+        tf::Graph* pg = kv.second.get();
 
         std::stringstream ss;
         ss << filename_prefix << "_" << sub_idx;
@@ -74,7 +74,7 @@ public:
     return tf::Status::OK();
   }
 
-private:
+ private:
   std::string m_pass_name;
   static std::map<std::string, int> s_counter_map;
 };
@@ -82,35 +82,35 @@ private:
 std::map<std::string, int> NGraphDumpPass::s_counter_map;
 
 class NGraphDumpPrePlacement : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPrePlacement() : NGraphDumpPass("pre_placement") {}
 };
 
 class NGraphDumpPostPlacement : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPostPlacement() : NGraphDumpPass("post_placement") {}
 };
 
 class NGraphDumpPostReWrite : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPostReWrite() : NGraphDumpPass("post_rewrite") {}
 };
 
 class NGraphDumpPostClustering : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPostClustering() : NGraphDumpPass("post_clustering") {}
 };
 
 class NGraphDumpPostEncapsulation : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPostEncapsulation() : NGraphDumpPass("post_encapsulation") {}
 };
 
 class NGraphDumpPostPartitioning : public NGraphDumpPass {
-public:
+ public:
   NGraphDumpPostPartitioning() : NGraphDumpPass("post_partitioning") {}
 };
-} // namespace ngraph_bridge
+}  // namespace ngraph_bridge
 
 namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::PRE_PLACEMENT, 100,
@@ -125,4 +125,4 @@ REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 115,
                       ngraph_bridge::NGraphDumpPostEncapsulation);
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_PARTITIONING, 100,
                       ngraph_bridge::NGraphDumpPostPartitioning);
-} // namespace tensorflow
+}  // namespace tensorflow

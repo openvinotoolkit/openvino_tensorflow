@@ -25,6 +25,7 @@
 
 #include "ngraph_builder.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_utils.h"
 
 namespace tf = tensorflow;
 
@@ -55,9 +56,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     opts.allow_internal_ops = true;
     // TODO(amprocte): need to check status result here.
     OP_REQUIRES_OK(ctx, tf::ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
-
-    VLOG(0) << "NGraphEncapsulateOp::Number of inputs: " << ctx->num_inputs();
-    VLOG(0) << "NGraphEncapsulateOp::Number of outputs: " << ctx->num_outputs();
   }
 
   ~NGraphEncapsulateOp() override {
@@ -65,10 +63,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
   }
 
   void Compute(tf::OpKernelContext* ctx) override {
-    VLOG(0) << "NGraphMulOp::Compute() Step: " << ctx->step_id()
-            << " Op: " << ctx->op_kernel().name();
-    VLOG(0) << "Inputs: " << ctx->num_inputs()
-            << " Outputs: " << ctx->num_outputs();
     // Get the inputs
     std::vector<tf::TensorShape> input_shapes;
     for (int i = 0; i < ctx->num_inputs(); i++) {
@@ -76,17 +70,20 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       input_shapes.push_back(input_tensor.shape());
     }
 
-    // Compile the graph using nGraph
+    // Compile the graph using nGraph. (TODO(amprocte): need a compilation
+    // cache.
     auto ng_function =
         ngraph_bridge::Builder::TranslateGraph(input_shapes, &m_graph);
     OP_REQUIRES(
         ctx, ng_function != nullptr,
         tf::errors::InvalidArgument("Cannot convert TF graph to nGraph"));
 
-    // Create the nGraph backend
+    // Create the nGraph backend (TODO(amprocte): should probably put this
+    // into the resource manager rather than re-create each time, though I
+    // don't know how expensive this actually is.)
     auto backend = ng::runtime::Backend::create("CPU");
 
-    // Allocate tensors for arguments a, b, c
+    // Allocate tensors for arguments.
     vector<shared_ptr<ng::runtime::TensorView>> ng_inputs;
     for (int i = 0; i < input_shapes.size(); i++) {
       ng::Shape ng_shape(input_shapes[i].dims());
@@ -94,51 +91,50 @@ class NGraphEncapsulateOp : public tf::OpKernel {
         ng_shape[j] = input_shapes[i].dim_size(j);
       }
 
-      auto t_x = backend->create_tensor(ng::element::f32, ng_shape);
-      float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
-      t_x->write(&v_x, 0, sizeof(v_x));
-      ng_inputs.push_back(t_x);
+      ng::element::Type ng_element_type;
+      OP_REQUIRES_OK(ctx, TFDataTypeToNGraphElementType(ctx->input(i).dtype(),
+                                                        &ng_element_type));
+
+      void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
+      auto t = backend->create_tensor(ng_element_type, ng_shape, src_ptr);
+      ng_inputs.push_back(t);
     }
 
-    // Allocate tensor for the result(s)
+    // Allocate tensors for the results.
     vector<shared_ptr<ng::runtime::TensorView>> outputs;
     for (auto i = 0; i < ng_function->get_output_size(); i++) {
       auto shape = ng_function->get_output_shape(i);
       auto elem_type = ng_function->get_output_element_type(i);
-      auto t_result = backend->create_tensor(elem_type, shape);
-      outputs.push_back(t_result);
-    }
 
-    // Execute the nGraph function.
-    cout << "Calling nGraph function\n";
-    backend->call(ng_function, outputs, ng_inputs);
-
-    // Save the output
-    for (auto i = 0; i < ng_function->get_output_size(); i++) {
-      auto shape = ng_function->get_output_shape(i);
+      // Create the TF output tensor
       vector<tf::int64> dims;
       for (auto dim : shape) {
         dims.push_back(dim);
       }
       tf::TensorShape tf_shape(dims);
-      // Create the TF output tensors
       tf::Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-      VLOG(0) << "Output Tensor size: " << output_tensor->TotalBytes()
-              << " bytes";
+      // Make sure the nGraph-inferred element type agrees with what TensorFlow
+      // expected.
+      ng::element::Type expected_elem_type;
+      OP_REQUIRES_OK(
+          ctx, TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
+                                             &expected_elem_type));
+      OP_REQUIRES(
+          ctx, elem_type == expected_elem_type,
+          tf::errors::Internal("Element type inferred by nGraph does not match "
+                               "the element type expected by TensorFlow"));
 
-      const tf::int64 total_bytes = output_tensor->TotalBytes();
+      // Create the nGraph output tensor
       void* dst_ptr = tf::DMAHelper::base(output_tensor);
+      auto t_result = backend->create_tensor(elem_type, shape, dst_ptr);
 
-      /// @brief Read bytes directly from the tensor
-      /// @param p Pointer to destination for data
-      /// @param tensor_offset Offset into tensor storage to begin reading. Must
-      /// be element-aligned.
-      /// @param n Number of bytes to read, must be integral number of elements.
-      outputs[i]->read(dst_ptr, 0, total_bytes);
-      // auto elem_type = ng_function->get_output_element_type(i);
+      outputs.push_back(t_result);
     }
+
+    // Execute the nGraph function.
+    backend->call(ng_function, outputs, ng_inputs);
   }
 
  private:

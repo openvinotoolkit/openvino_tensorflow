@@ -57,9 +57,8 @@ class NGraphDeviceContext : public tf::DeviceContext {
     if (cpu_tensor->NumElements() > 0) {
       VLOG(0) << "CopyCPUTensorToDevice "
               << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
-              << " "
-              << reinterpret_cast<const void*>(
-                     device_tensor->tensor_data().data())
+              << " " << reinterpret_cast<const void*>(
+                            device_tensor->tensor_data().data())
               << " " << cpu_tensor->NumElements();
 
       void* src_ptr = const_cast<void*>(DMAHelper::base(cpu_tensor));
