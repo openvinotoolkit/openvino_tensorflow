@@ -22,12 +22,15 @@
 
 #include "ngraph_utils.h"
 
-namespace ngraph_bridge{
+namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU;
 }
 
 using namespace tensorflow;
 
+//-----------------------------------------------------------------------------
+//  GetRendezvousKeyPrefix
+//-----------------------------------------------------------------------------
 static string GetRendezvousKeyPrefix(const string& send_device,
                                      const string& recv_device,
                                      const uint64 send_device_incarnation,
@@ -37,6 +40,9 @@ static string GetRendezvousKeyPrefix(const string& send_device,
                          recv_device, ";", tensor_name);
 }
 
+//-----------------------------------------------------------------------------
+//  GetRendezvousKey
+//-----------------------------------------------------------------------------
 static void GetRendezvousKey(const string& key_prefix,
                              const tf::FrameAndIter& frame_iter, string* key) {
   key->clear();
@@ -44,6 +50,9 @@ static void GetRendezvousKey(const string& key_prefix,
                      frame_iter.iter_id);
 }
 
+//-----------------------------------------------------------------------------
+//  GetFrameAndIter
+//-----------------------------------------------------------------------------
 static tf::FrameAndIter GetFrameAndIter(OpKernelContext* ctx,
                                         bool hostmem_sendrecv) {
   if (hostmem_sendrecv && ctx->call_frame() != nullptr) {
@@ -56,7 +65,11 @@ static tf::FrameAndIter GetFrameAndIter(OpKernelContext* ctx,
     return ctx->frame_iter();
   }
 }
+
 namespace {
+//-----------------------------------------------------------------------------
+//  make_recv_callback
+//-----------------------------------------------------------------------------
 tf::Rendezvous::DoneCallback make_recv_callback(
     tf::OpKernelContext* ctx, tf::AsyncOpKernel::DoneCallback done) {
   using namespace std::placeholders;
@@ -81,6 +94,9 @@ tf::Rendezvous::DoneCallback make_recv_callback(
       std::move(done), _1, _2, _3, _4, _5);
 }
 }  // namespace
+
+//-----------------------------------------------------------------------------
+//  NGraphSend
 //-----------------------------------------------------------------------------
 class NGraphRecv : public AsyncOpKernel {
  public:
@@ -122,9 +138,12 @@ class NGraphRecv : public AsyncOpKernel {
     }
   }
 
+  //-----------------------------------------------------------------------------
+  //  ComputeAsync
+  //-----------------------------------------------------------------------------
   void ComputeAsync(OpKernelContext* ctx, DoneCallback done) override {
-    std::cout << "NGraphRecv: Step: " << ctx->step_id()
-              << " Op: " << ctx->op_kernel().name() << std::endl;
+    VLOG(0) << "NGraphRecv: Step: " << ctx->step_id()
+            << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES_ASYNC(
         ctx, ctx->rendezvous() != nullptr,
         errors::Internal("Op kernel context needs to provide a rendezvous."),
@@ -134,7 +153,7 @@ class NGraphRecv : public AsyncOpKernel {
     args.device_context = ctx->op_device_context();
     args.alloc_attrs = ctx->output_alloc_attr(0);
 
-    std::cout << "ComputeAsync: DEV-CTX: " << args.device_context << std::endl;
+    VLOG(0) << "ComputeAsync: DEV-CTX: " << args.device_context;
 
     tf::FrameAndIter frame_iter = GetFrameAndIter(ctx, hostmem_sendrecv_);
     if (frame_iter == FrameAndIter(0, 0)) {
@@ -159,6 +178,9 @@ class NGraphRecv : public AsyncOpKernel {
   bool hostmem_sendrecv_;
 };
 
+//-----------------------------------------------------------------------------
+//  NGraphSend
+//-----------------------------------------------------------------------------
 class NGraphSend : public OpKernel {
  public:
   explicit NGraphSend(OpKernelConstruction* ctx) : OpKernel(ctx) {
@@ -186,10 +208,12 @@ class NGraphSend : public OpKernel {
       hostmem_sendrecv_ = false;
     }
   }
-
+  //-----------------------------------------------------------------------------
+  //  NGraphSend::Compute
+  //-----------------------------------------------------------------------------
   void Compute(OpKernelContext* ctx) override {
-    std::cout << "NGraphSend: Step: " << ctx->step_id()
-              << " Op: " << ctx->op_kernel().name() << std::endl;
+    VLOG(0) << "NGraphSend: Step: " << ctx->step_id()
+            << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES(ctx, ctx->rendezvous() != nullptr,
                 tf ::errors::Internal(
                     "Op kernel context needs to provide a rendezvous."));
@@ -228,6 +252,9 @@ class NGraphSend : public OpKernel {
   bool hostmem_sendrecv_;
 };
 
-REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphRecv);
-REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphSend);
-REGISTER_KERNEL_BUILDER(Name("_HostSend").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphSend);
+REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+                        NGraphRecv);
+REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+                        NGraphSend);
+REGISTER_KERNEL_BUILDER(
+    Name("_HostSend").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphSend);

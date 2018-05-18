@@ -14,6 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
@@ -113,12 +114,9 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     backend->call(ng_function, outputs, ng_inputs);
 
     // Save the output
-    // First determine the outpuit shapes
-    // Allocate tensor for the result(s)
-    // vector<shared_ptr<ng::runtime::TensorView>> outputs;
     for (auto i = 0; i < ng_function->get_output_size(); i++) {
       auto shape = ng_function->get_output_shape(i);
-      vector<long long int> dims;
+      vector<tf::int64> dims;
       for (auto dim : shape) {
         dims.push_back(dim);
       }
@@ -127,19 +125,19 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       tf::Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-      // auto t_result = backend->create_tensor(elem_type, shape);
-      // outputs.push_back(t_result);
+      VLOG(0) << "Output Tensor size: " << output_tensor->TotalBytes()
+              << " bytes";
 
-      auto elem_type = ng_function->get_output_element_type(i);
+      const tf::int64 total_bytes = output_tensor->TotalBytes();
+      void* dst_ptr = tf::DMAHelper::base(output_tensor);
 
-      // Create the TF output tensors
-      // tf::Tensor* output_tensor = nullptr;
-      // OP_REQUIRES_OK(
-      //     ctx, ctx->allocate_output(0, input_shapes.shape(),
-      //     &output_tensor));
-
-      // auto t_result = backend->create_tensor(elem_type, shape);
-      // outputs.push_back(t_result);
+      /// @brief Read bytes directly from the tensor
+      /// @param p Pointer to destination for data
+      /// @param tensor_offset Offset into tensor storage to begin reading. Must
+      /// be element-aligned.
+      /// @param n Number of bytes to read, must be integral number of elements.
+      outputs[i]->read(dst_ptr, 0, total_bytes);
+      // auto elem_type = ng_function->get_output_element_type(i);
     }
   }
 

@@ -20,18 +20,17 @@ limitations under the License.
 #include "tensorflow/core/common_runtime/device_factory.h"
 #include "tensorflow/core/common_runtime/device_mgr.h"
 #include "tensorflow/core/common_runtime/device_set.h"
+#include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/local_device.h"
+#include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/lib/core/status.h"
-#include "tensorflow/core/public/session_options.h"
-
-#include "tensorflow/core/framework/allocator.h"
-
 #include "tensorflow/core/platform/default/logging.h"
+#include "tensorflow/core/public/session_options.h"
 
 #include "ngraph_utils.h"
 
-namespace ngraph_bridge{
+namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU = "NGRAPH_CPU";
 }
 
@@ -63,14 +62,23 @@ class NGraphDeviceContext : public tf::DeviceContext {
                      device_tensor->tensor_data().data())
               << " " << cpu_tensor->NumElements();
 
-      VLOG(0) << cpu_tensor->DebugString();
+      void* src_ptr = const_cast<void*>(DMAHelper::base(cpu_tensor));
+      const int64 total_bytes = cpu_tensor->TotalBytes();
+      void* dst_ptr = DMAHelper::base(device_tensor);
+      memcpy(dst_ptr, src_ptr, total_bytes);
+
+      VLOG(0) << "CPU Tensor: " << cpu_tensor->DebugString();
       // done(errors::Internal("Unrecognized device type in CPU-to-device
       // Copy"));
+
       done(tf::Status::OK());
       return;
     }
+
     VLOG(0) << "CopyCPUTensorToDevice empty tensor";
     VLOG(0) << cpu_tensor->DebugString();
+
+    // Call the done callback
     done(tf::Status::OK());
   }
 
@@ -90,6 +98,12 @@ class NGraphDeviceContext : public tf::DeviceContext {
       VLOG(0) << device_tensor->DebugString();
       // done(errors::Internal("Unrecognized device type in device-to-CPU
       // Copy"));
+
+      void* src_ptr = const_cast<void*>(DMAHelper::base(device_tensor));
+      const int64 total_bytes = device_tensor->TotalBytes();
+      void* dst_ptr = DMAHelper::base(cpu_tensor);
+      memcpy(dst_ptr, src_ptr, total_bytes);
+
       done(tf::Status::OK());
       return;
     }
@@ -110,6 +124,7 @@ class NGraphDevice : public Device {
   ~NGraphDevice() { m_device_context->Unref(); }
 
   Status Sync() override { return Status::OK(); }
+
   Allocator* GetAllocator(AllocatorAttributes attrs) override {
     std::cout << "NGraphDevice::GetAllocator called. OnHost: "
               << attrs.on_host()
@@ -157,7 +172,8 @@ class NGraphDeviceFactory : public DeviceFactory {
 };
 
 // Assumes the default priority is '50'.
-REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU, NGraphDeviceFactory, 50);
+REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU,
+                              NGraphDeviceFactory, 50);
 
 static bool InitModule() {
   std::cout << "InitModule called" << std::endl;
