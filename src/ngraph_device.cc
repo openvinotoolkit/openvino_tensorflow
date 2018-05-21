@@ -190,10 +190,40 @@ public:
 REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU,
                               NGraphDeviceFactory, 50);
 
+
+#include <dlfcn.h>
 static bool InitModule()
 {
-  std::cout << "InitModule called" << std::endl;
+  // Determine the full path of this DSO
+  Dl_info dlInfo;
 
+  dladdr((const void*)&ngraph::aligned_free, &dlInfo);
+  if (dlInfo.dli_sname == NULL || dlInfo.dli_saddr == NULL) {
+    std::cerr << "Cannot determine location of the DSO. "
+                 "nGraph device won't be available"
+              << std::endl;
+    return false;
+  }
+
+  std::string dso_path(dlInfo.dli_fname);
+  size_t loc = dso_path.find_last_of("/\\");
+  std::string ngraph_directory = dso_path.substr(0, loc);
+
+  auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
+                       RTLD_NOW | RTLD_GLOBAL);
+  if (handle == nullptr) {
+    VLOG(0) << "Error loading the plugin library. "
+               "nGraph device won't be available";
+    return false;
+  }
+
+  handle = dlopen((ngraph_directory + "/libngraph.so").c_str(),
+                  RTLD_NOW | RTLD_GLOBAL);
+  if (handle == nullptr) {
+    VLOG(0) << "Error loading the plugin library. "
+               "nGraph device won't be available";
+    return false;
+  }
   return true;
 }
 
