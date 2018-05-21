@@ -144,11 +144,11 @@ def train_mnist_cnn(FLAGS):
     # Import data
     mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
-    xla_device = '/device:XLA_CPU:0'
+    device = '/device:CPU:0'
     if FLAGS.use_xla_cpu:
-        xla_device = '/device:XLA_CPU:0'
+        device = '/device:XLA_CPU:0'
 
-    with tf.device(xla_device):
+    with tf.device(device):
         # Create the model
         x = tf.placeholder(tf.float32, [None, 784])
 
