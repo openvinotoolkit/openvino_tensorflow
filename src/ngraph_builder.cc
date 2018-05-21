@@ -22,10 +22,13 @@
 #include "tensorflow/core/framework/tensor_shape.pb_text.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/edgeset.h"
+#include "tensorflow/core/lib/core/errors.h"
 
 namespace ngraph_bridge {
-shared_ptr<ng::Function> Builder::TranslateGraph(
-    const std::vector<tf::TensorShape>& inputs, const tf::Graph* input_graph) {
+
+tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
+                          const tf::Graph* input_graph,
+                          shared_ptr<ng::Function>& ng_function) {
   // Do a topological sort
   // GetReversePostOrder will give us topological sort.
   vector<tf::Node*> ordered;
@@ -60,13 +63,12 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
   for (auto parm : tf_params) {
     tf::DataType dtype;
     if (tf::GetNodeAttr(parm->attrs(), "T", &dtype) != tf::Status::OK()) {
-      cout << "Error: No data type defined for _Arg!\n";
-      return nullptr;
+      return tf::errors::InvalidArgument(
+          "Error: No data type defined for _Arg!");
     }
     int index;
     if (tf::GetNodeAttr(parm->attrs(), "index", &index) != tf::Status::OK()) {
-      cout << "Error: No index defined for _Arg!\n";
-      return nullptr;
+      return tf::errors::InvalidArgument("Error: No index defined for _Arg!");
     }
 
     const tf::TensorShape& tf_shape = inputs[index];
@@ -96,15 +98,16 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
       // Data type first
       tf::DataType dtype;
       if (tf::GetNodeAttr(op->attrs(), "dtype", &dtype) != tf::Status::OK()) {
-        cout << "Error: No data type defined for Constant!\n";
-        return nullptr;
+        return tf::errors::InvalidArgument(
+            "Error: No data type defined for Constant!");
       }
 
       // TODO: Create a type based on the DataType
       tf::TensorShapeProto shape_proto;
       vector<float> const_values;
       if (!ValuesFromConstNode<float>(op->def(), &shape_proto, &const_values)) {
-        cout << "Error: Cannot get values from Constant!" << endl;
+        return tf::errors::InvalidArgument(
+            "Error: Cannot get values from Constant!");
       }
 
       cout << "Constant: " << endl;
@@ -123,22 +126,19 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
       auto ng_node = make_shared<ng::op::Constant>(ng::element::f32, ng_shape,
                                                    const_values);
       ng_op_map[op->name()] = ng_node;
-
     } else if ((op->type_string() == "Mul") || (op->type_string() == "Add")) {
       if (op->num_inputs() != 2) {
-        cout << "Error: Number of inputs is not 2 for elementwise op\n";
-        return nullptr;
+        return tf::errors::InvalidArgument(
+            "Error: Number of inputs is not 2 for elementwise op!");
       }
       tf::Node* tf_lhs;
       if (op->input_node(0, &tf_lhs) != tf::Status::OK()) {
-        cout << "Cannot get the input node 0";
-        return nullptr;
+        return tf::errors::InvalidArgument("Cannot get the input node 0!");
       }
 
       tf::Node* tf_rhs;
       if (op->input_node(1, &tf_rhs) != tf::Status::OK()) {
-        cout << "Cannot get the input node 1";
-        return nullptr;
+        return tf::errors::InvalidArgument("Cannot get the input node 1");
       }
 
       auto ng_lhs = ng_op_map.find(tf_lhs->name())->second;
@@ -159,6 +159,11 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
 
       // Add to the map
       ng_op_map[op->name()] = ng_op;
+    } else {
+      VLOG(0) << "Unsupported Op: " << op->name() << " (" << op->type_string()
+              << ")";
+      return tf::errors::InvalidArgument("Unsupported Op: ", op->name(), " (",
+                                         op->type_string(), ")");
     }
   }
 
@@ -168,15 +173,14 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
     cout << "_RetVal: " << n->name() << endl;
     // Make sure that this _RetVal ONLY has one input node
     if (n->num_inputs() != 1) {
-      cout << "ERROR: _RetVal number of inputs wrong: " << n->num_inputs()
-           << endl;
-      return nullptr;
+      return tf::errors::InvalidArgument(
+          "ERROR: _RetVal number of inputs wrong: ", n->num_inputs());
     }
 
     tf::Node* tf_input_node;
     if (n->input_node(0, &tf_input_node) != tf::Status::OK()) {
-      cout << "Error: Cannot find the source of the return node!\n";
-      return nullptr;
+      return tf::errors::InvalidArgument(
+          "Error: Cannot find the source of the return node!");
     }
 
     // Get the corresponding nGraph node
@@ -184,14 +188,14 @@ shared_ptr<ng::Function> Builder::TranslateGraph(
     if (item != ng_op_map.end()) {
       ng_node_list.push_back(item->second);
     } else {
-      cout << "Error: Cannot find return node! " << tf_input_node->name()
-           << endl;
+      return tf::errors::InvalidArgument("Error: Cannot find return node! ",
+                                         tf_input_node->name());
     }
   }
 
   // Now create the nGraph function
-  auto ng_func = make_shared<ng::Function>(ng_node_list, ng_parameter_list);
-  return ng_func;
+  ng_function = make_shared<ng::Function>(ng_node_list, ng_parameter_list);
+  return tf::Status::OK();
 }
 
 #include <dlfcn.h>

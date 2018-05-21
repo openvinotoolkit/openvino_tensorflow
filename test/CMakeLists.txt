@@ -20,7 +20,7 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 
 # TODO (avijit)
 # Get this location from the CMAKE variables passed during the cmake time
-set(TensorFlow_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ngraph-tensorflow")
+set(TensorFlow_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tensorflow")
 include_directories(${TensorFlow_SRC_DIR})
 
 # Files that are generated during TF build are here

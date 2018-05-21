@@ -72,11 +72,10 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
     // Compile the graph using nGraph. (TODO(amprocte): need a compilation
     // cache.
-    auto ng_function =
-        ngraph_bridge::Builder::TranslateGraph(input_shapes, &m_graph);
-    OP_REQUIRES(
-        ctx, ng_function != nullptr,
-        tf::errors::InvalidArgument("Cannot convert TF graph to nGraph"));
+    // auto ng_function =
+    shared_ptr<ng::Function> ng_function;
+    OP_REQUIRES_OK(
+        ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
 
     // Create the nGraph backend (TODO(amprocte): should probably put this
     // into the resource manager rather than re-create each time, though I
