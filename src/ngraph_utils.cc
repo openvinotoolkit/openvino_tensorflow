@@ -108,6 +108,9 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
 
     const tf::Node* node = graph->FindNodeId(id);
     if (node == nullptr) continue;
+    if (node->IsSource()) continue;
+    if (node->IsSink()) continue;
+
     // Sample node:
     // node_name [label=<<b>convolution.1</b><br/>window={size=5x5
     //      pad=2_2x2_2}<br/>dim_labels=b01f_01io-&gt;b01f<br/>f32[10000,14,14,64]{3,2,1,0}>,
@@ -173,8 +176,9 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
     }
 
     dot_string << ">, shape=rect, style=\"" << style << "\", fontcolor=\""
-               << text_color << "\", "
-                                "color=\"black\", fillcolor=\""
+               << text_color
+               << "\", "
+                  "color=\"black\", fillcolor=\""
                << fill_color << "\"";
     dot_string << " ];\n";
 
