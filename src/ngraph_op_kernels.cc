@@ -124,12 +124,7 @@ class NGraphNoOp : public OpKernel {
     // SummarizeOp(ctx, std::cout);
   }
 
-  void Compute(OpKernelContext* ctx) override {
-    VLOG(0) << "NGraphNoOp::Compute() Step: " << ctx->step_id()
-            << " Op: " << ctx->op_kernel().name();
-    // std::cout << "Step: " << ctx->step_id()
-    //           << " Op: " << ctx->op_kernel().name() << std::endl;
-  }
+  void Compute(OpKernelContext* ctx) override {}
 };
 
 class NgPlaceholderOp : public OpKernel {
@@ -241,8 +236,13 @@ REGISTER_KERNEL_BUILDER(
     Name("PlaceholderV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
     NgPlaceholderOp);
 
-REGISTER_KERNEL_BUILDER(Name("Const").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-                        NGraphConstOp);
+#define REGISTER_CONST(T)                                               \
+  REGISTER_KERNEL_BUILDER(Name("Const")                                 \
+                              .Device(ngraph_bridge::DEVICE_NGRAPH_CPU) \
+                              .TypeConstraint<T>("dtype"),              \
+                          NGraphConstOp);
+
+REGISTER_CONST(float);
 
 // REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
 //                         NGraphNoOp);
@@ -326,20 +326,34 @@ REGISTER_KERNEL_BUILDER(
     Name("Merge").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint<float>("T"),
     NGraphOp<float>);*/
 
-REGISTER_KERNEL_BUILDER(Name("Identity")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
-                            .TypeConstraint<float>("T"),
-                        NGraphOp<float>);
+class NGraphIdentityOp : public OpKernel {
+ public:
+  explicit NGraphIdentityOp(OpKernelConstruction* context)
+      : OpKernel(context) {}
+
+  void Compute(OpKernelContext* context) override {
+    if (IsRefType(context->input_dtype(0))) {
+      context->forward_ref_input_to_ref_output(0, 0);
+    } else {
+      context->set_output(0, context->input(0));
+    }
+  }
+
+  bool IsExpensive() override { return false; }
+};
+
+#define REGISTER_IDENTITY(T)                                            \
+  REGISTER_KERNEL_BUILDER(Name("Identity")                              \
+                              .Device(ngraph_bridge::DEVICE_NGRAPH_CPU) \
+                              .TypeConstraint<float>("T"),              \
+                          NGraphIdentityOp);
+
+REGISTER_IDENTITY(float);
 
 REGISTER_KERNEL_BUILDER(Name("Snapshot")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T"),
                         NGraphOp<float>);
-
-REGISTER_KERNEL_BUILDER(Name("Identity")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
-                            .TypeConstraint<bool>("T"),
-                        NGraphOp<bool>);
 
 REGISTER_KERNEL_BUILDER(Name("StopGradient")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)

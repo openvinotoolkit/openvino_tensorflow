@@ -26,6 +26,59 @@
 
 namespace ngraph_bridge {
 
+// Helper for Builder::TranslateGraph ("Const" op)
+template <typename T>
+tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
+                       std::shared_ptr<ng::Node>* ng_node) {
+  vector<T> const_values;
+  tf::TensorShapeProto shape_proto;
+
+  TF_RETURN_IF_ERROR(
+      ValuesFromConstNode<T>(op->def(), &shape_proto, &const_values));
+
+  tf::TensorShape const_shape(shape_proto);
+  ng::Shape ng_shape;
+  TF_RETURN_IF_ERROR(TFTensorShapeToNGraphShape(const_shape, &ng_shape));
+
+  *ng_node = make_shared<ng::op::Constant>(et, ng_shape, const_values);
+  return tf::Status::OK();
+}
+
+template <typename T>
+tf::Status TranslateBinOp(tf::Node* op, Builder::OpMap& ng_op_map) {
+  if (op->num_inputs() != 2) {
+    return tf::errors::InvalidArgument(
+        "Number of inputs is not 2 for elementwise op");
+  }
+  tf::Node* tf_lhs;
+  if (op->input_node(0, &tf_lhs) != tf::Status::OK()) {
+    return tf::errors::InvalidArgument("Cannot get the input node 0");
+  }
+
+  tf::Node* tf_rhs;
+  if (op->input_node(1, &tf_rhs) != tf::Status::OK()) {
+    return tf::errors::InvalidArgument("Cannot get the input node 1");
+  }
+
+  auto ng_lhs = ng_op_map.find(tf_lhs->name())->second;
+  auto ng_rhs = ng_op_map.find(tf_rhs->name())->second;
+
+  // FIXME(amprocte): super-duper specific kludge to get this going...
+  if (ng_rhs->get_shape().size() == 1 && ng_lhs->get_shape().size() == 2 &&
+      ng_rhs->get_shape()[0] == ng_lhs->get_shape()[1]) {
+    ng_rhs = make_shared<ngraph::op::Broadcast>(ng_rhs, ng_lhs->get_shape(),
+                                                ngraph::AxisSet{0});
+  }
+
+  shared_ptr<ng::Node> ng_op;
+
+  ng_op = make_shared<T>(ng_lhs, ng_rhs);
+
+  // Add to the map
+  ng_op_map[op->name()] = ng_op;
+  return tf::Status::OK();
+}
+
 tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
                                    const tf::Graph* input_graph,
                                    shared_ptr<ng::Function>& ng_function) {
@@ -45,9 +98,6 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       continue;
     }
 
-    if (n->IsVariable()) {
-      std::cout << "Variable Node: " << n->type_string() << endl;
-    }
     if (n->type_string() == "_Arg") {
       tf_params.push_back(n);
     } else if (n->type_string() == "_Retval") {
@@ -57,9 +107,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     }
   }
 
-  unordered_map<string, shared_ptr<ng::Node>> ng_op_map;
-  vector<shared_ptr<ng::op::Parameter>> ng_parameter_list;
-  cout << "Parameters\n";
+  Builder::OpMap ng_op_map;
+  vector<shared_ptr<ng::op::Parameter>> ng_parameter_list(tf_params.size());
   for (auto parm : tf_params) {
     tf::DataType dtype;
     if (tf::GetNodeAttr(parm->attrs(), "T", &dtype) != tf::Status::OK()) {
@@ -72,8 +121,6 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     }
 
     const tf::TensorShape& tf_shape = inputs[index];
-    cout << "Param: " << index << " Name: " << parm->name()
-         << " Rank: " << tf_shape.dims() << " Shape: " << tf_shape << endl;
     // TODO: Convert tf::Type to ng::type
     ng::Shape ng_shape(tf_shape.dims());
     for (int i = 0; i < tf_shape.dims(); ++i) {
@@ -82,58 +129,87 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
     auto ng_param = make_shared<ng::op::Parameter>(ng::element::f32, ng_shape);
     ng_op_map[parm->name()] = ng_param;
-    ng_parameter_list.push_back(ng_param);
+    ng_parameter_list[index] = ng_param;
   }
 
-  cout << "Ops\n";
   for (auto op : tf_ops) {
-    cout << "Op: " << op->name() << "(" << op->type_string() << ")" << endl;
-    for (const tf::Edge* edge : op->in_edges()) {
-      cout << "\tSrc: " << edge->src()->name() << "("
-           << edge->src()->type_string() << ")" << endl;
-    }
+    //
+    // Now create the ng ops from tf ops.
+    //
 
-    // Now create the ng ops from tf ops
+    // -----
+    // Const
+    // -----
     if (op->type_string() == "Const") {
-      // Data type first
       tf::DataType dtype;
-      if (tf::GetNodeAttr(op->attrs(), "dtype", &dtype) != tf::Status::OK()) {
-        return tf::errors::InvalidArgument(
-            "Error: No data type defined for Constant!");
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "dtype", &dtype));
+
+      std::shared_ptr<ng::Node> ng_node;
+
+      switch (dtype) {
+        case tf::DataType::DT_FLOAT:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<float>(op, ng::element::f32, &ng_node));
+          break;
+        case tf::DataType::DT_DOUBLE:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<double>(op, ng::element::f64, &ng_node));
+          break;
+        case tf::DataType::DT_INT8:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::int8>(op, ng::element::i8, &ng_node));
+          break;
+        case tf::DataType::DT_INT16:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::int16>(op, ng::element::i16, &ng_node));
+          break;
+        case tf::DataType::DT_INT32:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::int32>(op, ng::element::i32, &ng_node));
+          break;
+        case tf::DataType::DT_INT64:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::int64>(op, ng::element::i64, &ng_node));
+          break;
+        case tf::DataType::DT_UINT8:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::uint8>(op, ng::element::u8, &ng_node));
+          break;
+        case tf::DataType::DT_UINT16:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<tf::uint16>(op, ng::element::u16, &ng_node));
+          break;
+        // For some reason the following do not work (no specialization of
+        // tensorflow::checkpoint::SavedTypeTraits...)
+        // case tf::DataType::DT_UINT32:
+        //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint32>(op, ng::element::u32,
+        //   &ng_node));
+        //   break;
+        // case tf::DataType::DT_UINT64:
+        //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint64>(op, ng::element::u64,
+        //   &ng_node));
+        //   break;
+        default:
+          return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
+                                           tf::DataType_Name(dtype));
       }
 
-      // TODO: Create a type based on the DataType
-      tf::TensorShapeProto shape_proto;
-      vector<float> const_values;
-      if (!ValuesFromConstNode<float>(op->def(), &shape_proto, &const_values)) {
-        return tf::errors::InvalidArgument(
-            "Error: Cannot get values from Constant!");
-      }
-
-      cout << "Constant: " << endl;
-      for (auto val : const_values) {
-        cout << val << " ";
-      }
-      cout << endl;
-
-      tf::TensorShape const_shape(shape_proto);
-      ng::Shape ng_shape(const_shape.dims());
-      for (int i = 0; i < const_shape.dims(); ++i) {
-        ng_shape[i] = const_shape.dim_size(i);
-      }
-
-      // vector<float> float_t(ng::shape_size(ng_shape), 0);
-      auto ng_node = make_shared<ng::op::Constant>(ng::element::f32, ng_shape,
-                                                   const_values);
       ng_op_map[op->name()] = ng_node;
-    } else if ((op->type_string() == "Mul") || (op->type_string() == "Add")) {
+    } else if (op->type_string() == "Mul") {
+      TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Multiply>(op, ng_op_map));
+    } else if (op->type_string() == "Add") {
+      TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Add>(op, ng_op_map));
+    } else if (op->type_string() == "NoOp") {
+      // Do nothing!
+    } else if (op->type_string() == "MatMul") {
+      // TODO(amprocte): need to handle transpose_a and transpose_b.
       if (op->num_inputs() != 2) {
         return tf::errors::InvalidArgument(
-            "Error: Number of inputs is not 2 for elementwise op!");
+            "Number of inputs is not 2 for elementwise op");
       }
       tf::Node* tf_lhs;
       if (op->input_node(0, &tf_lhs) != tf::Status::OK()) {
-        return tf::errors::InvalidArgument("Cannot get the input node 0!");
+        return tf::errors::InvalidArgument("Cannot get the input node 0");
       }
 
       tf::Node* tf_rhs;
@@ -144,21 +220,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       auto ng_lhs = ng_op_map.find(tf_lhs->name())->second;
       auto ng_rhs = ng_op_map.find(tf_rhs->name())->second;
 
-      cout << "NG LHS node: " << ng_lhs->get_name()
-           << " TF Node: " << tf_lhs->name() << endl;
-      cout << "NG RHS node: " << ng_rhs->get_name()
-           << " TF Node: " << tf_rhs->name() << endl;
-
-      shared_ptr<ng::Node> ng_op;
-
-      if (op->type_string() == "Mul") {
-        ng_op = make_shared<ngraph::op::Multiply>(ng_lhs, ng_rhs);
-      } else if (op->type_string() == "Add") {
-        ng_op = make_shared<ngraph::op::Add>(ng_lhs, ng_rhs);
-      }
-
-      // Add to the map
-      ng_op_map[op->name()] = ng_op;
+      ng_op_map[op->name()] = make_shared<ngraph::op::Dot>(ng_lhs, ng_rhs);
     } else {
       VLOG(0) << "Unsupported Op: " << op->name() << " (" << op->type_string()
               << ")";
@@ -167,10 +229,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     }
   }
 
-  cout << "Return Values\n";
   vector<shared_ptr<ng::Node>> ng_node_list;
   for (auto n : tf_ret_vals) {
-    cout << "_RetVal: " << n->name() << endl;
     // Make sure that this _RetVal ONLY has one input node
     if (n->num_inputs() != 1) {
       return tf::errors::InvalidArgument(

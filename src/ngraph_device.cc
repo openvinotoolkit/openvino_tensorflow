@@ -126,9 +126,6 @@ class NGraphDevice : public Device {
   Status Sync() override { return Status::OK(); }
 
   Allocator* GetAllocator(AllocatorAttributes attrs) override {
-    std::cout << "NGraphDevice::GetAllocator called. OnHost: "
-              << attrs.on_host()
-              << " GPU Compatible: " << attrs.gpu_compatible() << std::endl;
     return m_allocator;
   }
 
@@ -160,8 +157,6 @@ class NGraphDeviceFactory : public DeviceFactory {
  public:
   Status CreateDevices(const SessionOptions& options, const string& name_prefix,
                        std::vector<Device*>* devices) override {
-    std::cout << "NGraphDeviceFactory::CreateDevices() called: Name: "
-              << name_prefix << std::endl;
     DeviceAttributes attr;
     attr.set_name(strings::StrCat(name_prefix, "/device:NGRAPH_CPU:0"));
     attr.set_device_type(ngraph_bridge::DEVICE_NGRAPH_CPU);
