@@ -272,11 +272,17 @@ REGISTER_KERNEL_BUILDER(Name("ConcatV2")
                             .TypeConstraint<int32>("Tidx"),
                         NGraphOp<int32>);
 
-/*REGISTER_KERNEL_BUILDER(Name("Mean")
+REGISTER_KERNEL_BUILDER(Name("ConcatV2")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T")
                             .TypeConstraint<int32>("Tidx"),
-                        NGraphOp<int32>);*/
+                        NGraphOp<float>);
+
+REGISTER_KERNEL_BUILDER(Name("Mean")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .TypeConstraint<float>("T")
+                            .TypeConstraint<int32>("Tidx"),
+                        NGraphOp<float>);
 
 REGISTER_KERNEL_BUILDER(Name("Slice")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)

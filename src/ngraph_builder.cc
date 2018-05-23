@@ -72,36 +72,35 @@ static tf::Status TranslateBinOp(tf::Node* op, Builder::OpMap& ng_op_map) {
   return tf::Status::OK();
 }
 
-static tf::Status GetShapeDataFromConstant(std::shared_ptr<ng::Node> ng_node,
-                                           std::vector<tf::int64>* ng_shape) {
+template <typename T>
+static tf::Status GetDataFromConstant(std::shared_ptr<ng::Node> ng_node,
+                                      std::vector<T>* data) {
   if (ng_node->description() != "Constant") {
     return tf::errors::Unimplemented(
         "Tried to get shape data from a non-constant node");
   }
 
-  if (ng_node->get_shape().size() != 1) {
-    return tf::errors::InvalidArgument(
-        "Tried to get shape data from a non-vector node (rank != 1)");
-  }
-
   auto ng_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_node);
 
-  size_t rank = ng::shape_size(ng_const->get_shape());
+  size_t n_items = ng::shape_size(ng_const->get_shape());
 
-  ng_shape->clear();
-  ng_shape->resize(rank);
+  data->clear();
+  data->resize(n_items);
 
+  // TODO(amprocte): support more data types here
   if (ng_const->get_element_type() == ng::element::i64) {
-    memcpy(ng_shape->data(), ng_const->get_data_ptr(),
-           rank * sizeof(tf::int64));
+    const tf::int64* p = (const tf::int64*)ng_const->get_data_ptr();
+    for (size_t i = 0; i < n_items; i++) {
+      (*data)[i] = T(p[i]);
+    }
   } else if (ng_const->get_element_type() == ng::element::i32) {
     const tf::int32* p = (const tf::int32*)ng_const->get_data_ptr();
-    for (size_t i = 0; i < rank; i++) {
-      (*ng_shape)[i] = p[i];
+    for (size_t i = 0; i < n_items; i++) {
+      (*data)[i] = T(p[i]);
     }
   } else {
     return tf::errors::Unimplemented(
-        "Cannot get shape data from node with element type that is not int32 "
+        "Cannot get data from const node with element type that is not int32 "
         "or int64");
   }
   return tf::Status::OK();
@@ -190,6 +189,225 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // ---
     if (op->type_string() == "Add") {
       TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Add>(op, ng_op_map));
+    }
+    // -------
+    // AvgPool
+    // -------
+    else if (op->type_string() == "AvgPool") {
+      VLOG(LL) << op->name();
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for AvgPool");
+      }
+
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+
+      std::vector<tf::int32> tf_strides;
+      std::vector<tf::int32> tf_ksize;
+      std::string tf_padding_type;
+      std::string tf_data_format;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "strides", &tf_strides));
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+      if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+        return tf::errors::InvalidArgument(
+            "AvgPool data format is neither NHWC nor NCHW");
+      }
+
+      bool is_nhwc = (tf_data_format == "NHWC");
+
+      VLOG(LL) << ng::join(tf_strides);
+      VLOG(LL) << ng::join(tf_ksize);
+      VLOG(LL) << tf_padding_type;
+      VLOG(LL) << tf_data_format;
+
+      ng::Strides ng_strides(2);
+      ng::Shape ng_image_shape(2);
+      ng::Shape ng_kernel_shape(2);
+
+      if (is_nhwc) {
+        auto& s = ng_input->get_shape();
+        ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
+
+        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+
+        ng_input = make_shared<ng::op::Reshape>(
+            ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
+
+        ng_strides[0] = tf_strides[1];
+        ng_strides[1] = tf_strides[2];
+
+        ng_image_shape[0] = s[1];
+        ng_image_shape[1] = s[2];
+
+        ng_kernel_shape[0] = tf_ksize[1];
+        ng_kernel_shape[1] = tf_ksize[2];
+      } else {
+        auto& s = ng_input->get_shape();
+
+        ng_strides[0] = tf_strides[2];
+        ng_strides[1] = tf_strides[3];
+
+        ng_image_shape[0] = s[2];
+        ng_image_shape[1] = s[3];
+
+        ng_kernel_shape[0] = tf_ksize[2];
+        ng_kernel_shape[1] = tf_ksize[3];
+      }
+
+      VLOG(LL) << "ng_strides: " << ng::join(ng_strides);
+      VLOG(LL) << "ng_image_shape: " << ng::join(ng_image_shape);
+      VLOG(LL) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+
+      // TODO: change this once nGraph supports negative padding
+      // (CoordinateDiff) for AvgPool
+      // ng::CoordinateDiff ng_padding_below{0,0};
+      // ng::CoordinateDiff ng_padding_above{0,0};
+      ng::Shape ng_padding_below{0, 0};
+      ng::Shape ng_padding_above{0, 0};
+
+      if (tf_padding_type == "SAME") {
+        for (size_t i = 0; i < 2; i++) {
+          size_t image_size = ng_image_shape[i];
+          size_t filter_shape = ng_kernel_shape[i];
+          size_t filter_stride = ng_strides[i];
+
+          tf::int64 padding_needed;
+          if (image_size % filter_stride == 0) {
+            padding_needed = filter_shape - filter_stride;
+          } else {
+            padding_needed = filter_shape - (image_size % filter_stride);
+          }
+          if (padding_needed < 0) {
+            padding_needed = 0;
+          }
+
+          size_t padding_lhs = padding_needed / 2;
+          size_t padding_rhs = padding_needed - padding_lhs;
+          ng_padding_below[i] = padding_lhs;
+          ng_padding_above[i] = padding_rhs;
+        }
+      }
+
+      VLOG(LL) << "ng_padding_below: " << ng::join(ng_padding_below);
+      VLOG(LL) << "ng_padding_above: " << ng::join(ng_padding_above);
+
+      std::shared_ptr<ng::Node> ng_avgpool = make_shared<ng::op::AvgPool>(
+          ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
+          ng_padding_above, false);
+
+      if (is_nhwc) {
+        auto& s = ng_avgpool->get_shape();
+        ng::Shape reshaped_shape{s[0], s[2], s[3], s[1]};
+
+        ng_avgpool = make_shared<ng::op::Reshape>(
+            ng_avgpool, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
+      }
+
+      VLOG(LL) << "avgpool outshape: {" << ng::join(ng_avgpool->get_shape())
+               << "}";
+
+      ng_op_map[op->name()] = ng_avgpool;
+    }
+    // -------
+    // BiasAdd
+    // -------
+    else if (op->type_string() == "BiasAdd") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 2 for BiasAdd");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_bias;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_bias));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_bias = ng_op_map.at(tf_bias->name());
+
+      std::string tf_data_format;
+      if (tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format) !=
+          tf::Status::OK()) {
+        tf_data_format = "NHWC";
+      }
+
+      if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+        return tf::errors::InvalidArgument(
+            "BiasAdd data format is neither NHWC nor NCHW");
+      }
+
+      auto ng_input_shape = ng_input->get_shape();
+      auto ng_bias_shape = ng_bias->get_shape();
+      if (ng_bias_shape.size() != 1) {
+        return tf::errors::InvalidArgument(
+            "Bias argument to BiasAdd does not have one dimension");
+      }
+
+      bool is_nhwc = (tf_data_format == "NHWC");
+
+      ng::AxisSet ng_broadcast_axes;
+
+      if (is_nhwc) {
+        for (size_t i = 0; i < ng_input_shape.size() - 1; i++) {
+          ng_broadcast_axes.insert(i);
+        }
+      } else {
+        for (size_t i = 0; i < ng_input_shape.size(); i++) {
+          if (i != 1) {
+            ng_broadcast_axes.insert(i);
+          }
+        }
+      }
+
+      auto ng_bias_broadcasted = make_shared<ng::op::Broadcast>(
+          ng_bias, ng_input_shape, ng_broadcast_axes);
+      auto ng_add = ng_input + ng_bias_broadcasted;
+
+      ng_op_map[op->name()] = ng_add;
+    }
+    // --------
+    // ConcatV2
+    // --------
+    else if (op->type_string() == "ConcatV2") {
+      if (op->num_inputs() < 2) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not at least 2 for ConcatV2");
+      }
+
+      tf::Node* tf_axis_node;
+      TF_RETURN_IF_ERROR(op->input_node(op->num_inputs() - 1, &tf_axis_node));
+
+      auto ng_axis_op = ng_op_map.at(tf_axis_node->name());
+
+      //
+      // Extract the desired concatenation axis from the input constant.
+      // TODO(amprocte): need to support more complex cases here, i.e., paddings
+      // that are not constant but can be determined once parameter shapes are
+      // known.
+      //
+      std::vector<tf::int64> constant_values;
+      TF_RETURN_IF_ERROR(GetDataFromConstant(ng_axis_op, &constant_values));
+
+      size_t ng_concatenation_axis = constant_values[0];
+
+      ng::NodeVector ng_args;
+
+      for (int i = 0; i < op->num_inputs() - 1; i++) {
+        tf::Node* tf_arg;
+        TF_RETURN_IF_ERROR(op->input_node(i, &tf_arg));
+        ng_args.push_back(ng_op_map[tf_arg->name()]);
+      }
+
+      ng_op_map[op->name()] =
+          make_shared<ng::op::Concat>(ng_args, ng_concatenation_axis);
     }
     // -----
     // Const
@@ -391,6 +609,102 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     else if (op->type_string() == "Equal") {
       TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Equal>(op, ng_op_map));
     }
+    // --------------
+    // FusedBatchNorm
+    // --------------
+    else if (op->type_string() == "FusedBatchNorm") {
+      if (op->num_inputs() != 5) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 5 for FusedBatchNorm");
+      }
+
+      bool tf_is_training;
+      if (tf::GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
+          tf::Status::OK()) {
+        VLOG(LL) << "is_training attribute not present, setting to true";
+        tf_is_training = true;
+      }
+
+      VLOG(LL) << "is_training: " << tf_is_training;
+
+      tf::Node* tf_input;
+      tf::Node* tf_scale;
+      tf::Node* tf_offset;
+      tf::Node* tf_mean;
+      tf::Node* tf_variance;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_scale));
+      TF_RETURN_IF_ERROR(op->input_node(2, &tf_offset));
+      TF_RETURN_IF_ERROR(op->input_node(3, &tf_mean));
+      TF_RETURN_IF_ERROR(op->input_node(4, &tf_variance));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_scale = ng_op_map.at(tf_scale->name());
+      auto ng_offset = ng_op_map.at(tf_offset->name());
+      auto ng_mean = ng_op_map.at(tf_mean->name());
+      auto ng_variance = ng_op_map.at(tf_variance->name());
+
+      std::string tf_data_format;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+      if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+        return tf::errors::InvalidArgument(
+            "Conv2D data format is neither NHWC nor NCHW");
+      }
+
+      bool is_nhwc = (tf_data_format == "NHWC");
+
+      VLOG(LL) << "data_format: " << tf_data_format;
+
+      float tf_epsilon;
+      if (tf::GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) !=
+          tf::Status::OK()) {
+        VLOG(LL) << "epsilon attribute not present, setting to zero";
+        tf_epsilon = 0;  // FIXME(amprocte):
+      }
+
+      VLOG(LL) << "epsilon: " << tf_epsilon;
+
+      if (is_nhwc) {
+        auto& s = ng_input->get_shape();
+        ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
+
+        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+
+        ng_input = make_shared<ng::op::Reshape>(
+            ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
+      }
+
+      std::shared_ptr<ng::Node> ng_batch_norm;
+
+      ng_batch_norm = make_shared<ng::op::BatchNorm>(
+          tf_epsilon, ng_scale, ng_offset, ng_input, ng_mean, ng_variance,
+          tf_is_training);
+
+      if (is_nhwc) {
+        auto& s = ng_batch_norm->get_shape();
+        ng::Shape reshaped_shape{s[0], s[2], s[3], s[1]};
+
+        ng_batch_norm = make_shared<ng::op::Reshape>(
+            ng_batch_norm, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
+      }
+
+      ng_op_map[op->name()] = ng_batch_norm;
+    }
+    // --------
+    // Identity
+    // --------
+    else if (op->type_string() == "Identity") {
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Identity");
+      }
+
+      tf::Node* tf_arg;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
+      ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
+    }
     // ------
     // MatMul
     // ------
@@ -553,6 +867,59 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] = ng_maxpool;
     }
+    // ----
+    // Mean
+    // ----
+    else if (op->type_string() == "Mean") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 2 for Mean");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_axes_node;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_axes_node));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_axes_op = ng_op_map.at(tf_axes_node->name());
+
+      bool tf_keep_dims;
+      if (tf::GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) !=
+          tf::Status::OK()) {
+        tf_keep_dims = false;
+      }
+
+      if (tf_keep_dims) {
+        return tf::errors::Unimplemented(
+            "keep_dims is not implemented for Mean");
+      }
+
+      //
+      // Extract the desired reduction axes from the input constant.
+      // TODO(amprocte): need to support more complex cases here, i.e., paddings
+      // that are not constant but can be determined once parameter shapes are
+      // known.
+      //
+      std::vector<tf::int64> constant_values;
+      TF_RETURN_IF_ERROR(GetDataFromConstant(ng_axes_op, &constant_values));
+
+      size_t input_rank = ng_input->get_shape().size();
+
+      ng::AxisSet ng_reduction_axes;
+
+      for (auto i : constant_values) {
+        if (i < 0) {
+          ng_reduction_axes.insert(input_rank + i);
+        } else {
+          ng_reduction_axes.insert(i);
+        }
+      }
+
+      auto ng_mean = ng::builder::mean(ng_input, ng_reduction_axes);
+
+      ng_op_map[op->name()] = ng_mean;
+    }
     // ---
     // Mul
     // ---
@@ -565,6 +932,61 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     else if (op->type_string() == "NoOp") {
       // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
       // reasons, but they have no data flow inputs or outputs.
+    }
+    // ---
+    // Pad
+    // ---
+    else if (op->type_string() == "Pad") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument("Number of inputs is not 2 for Pad");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_paddings_node;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_paddings_node));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_paddings_op = ng_op_map.at(tf_paddings_node->name());
+
+      //
+      // Extract the desired paddings from the input constant.
+      // TODO(amprocte): need to support more complex cases here, i.e., paddings
+      // that are not constant but can be determined once parameter shapes are
+      // known.
+      //
+      std::vector<tf::int64> constant_values;
+      TF_RETURN_IF_ERROR(GetDataFromConstant(ng_paddings_op, &constant_values));
+
+      VLOG(LL) << "{" << ng::join(constant_values) << "}";
+
+      if (constant_values.size() % 2 != 0) {
+        return tf::errors::InvalidArgument(
+            "Constant node for paddings does not have an even number of "
+            "elements");
+      }
+
+      ng::Shape padding_below(constant_values.size() / 2);
+      ng::Shape padding_above(constant_values.size() / 2);
+      ng::Shape padding_interior(constant_values.size() / 2);
+
+      for (size_t i = 0; i < constant_values.size() / 2; i++) {
+        padding_below[i] = constant_values[2 * i];
+        padding_above[i] = constant_values[2 * i + 1];
+        padding_interior[i] = 0;
+      }
+
+      VLOG(LL) << "{" << ng::join(padding_below) << "}";
+      VLOG(LL) << "{" << ng::join(padding_above) << "}";
+
+      // For PadV1 it seems the value is always zero.
+      auto pad_val_op = make_shared<ng::op::Constant>(
+          ng_input->get_element_type(), ng::Shape{},
+          std::vector<std::string>{"0"});
+      auto pad_op = make_shared<ng::op::Pad>(
+          ng_input, pad_val_op, padding_below, padding_above, padding_interior);
+
+      ng_op_map[op->name()] = pad_op;
     }
     // ----
     // Relu
@@ -606,8 +1028,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       // known.
       //
       std::vector<tf::int64> constant_values;
-      TF_RETURN_IF_ERROR(
-          GetShapeDataFromConstant(ng_shape_op, &constant_values));
+      TF_RETURN_IF_ERROR(GetDataFromConstant(ng_shape_op, &constant_values));
 
       VLOG(LL) << "{" << ng::join(ng_shape_op->get_shape()) << "}";
 
@@ -664,6 +1085,99 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape);
+    }
+    // ---
+    // Sum
+    // ---
+    else if (op->type_string() == "Sum") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument("Number of inputs is not 2 for Sum");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_axes_node;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_axes_node));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_axes_op = ng_op_map.at(tf_axes_node->name());
+
+      bool tf_keep_dims;
+      if (tf::GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) !=
+          tf::Status::OK()) {
+        tf_keep_dims = false;
+      }
+
+      if (tf_keep_dims) {
+        return tf::errors::Unimplemented(
+            "keep_dims is not implemented for Sum");
+      }
+
+      //
+      // Extract the desired reduction axes from the input constant.
+      // TODO(amprocte): need to support more complex cases here, i.e., paddings
+      // that are not constant but can be determined once parameter shapes are
+      // known.
+      //
+      std::vector<tf::int64> constant_values;
+      TF_RETURN_IF_ERROR(GetDataFromConstant(ng_axes_op, &constant_values));
+
+      size_t input_rank = ng_input->get_shape().size();
+
+      ng::AxisSet ng_reduction_axes;
+
+      for (auto i : constant_values) {
+        if (i < 0) {
+          ng_reduction_axes.insert(input_rank + i);
+        } else {
+          ng_reduction_axes.insert(i);
+        }
+      }
+
+      auto ng_sum = make_shared<ng::op::Sum>(ng_input, ng_reduction_axes);
+
+      ng_op_map[op->name()] = ng_sum;
+    }
+    // ---------
+    // Transpose
+    // ---------
+    else if (op->type_string() == "Transpose") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 2 for Transpose");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_permutation_node;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_permutation_node));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_permutation_op = ng_op_map.at(tf_permutation_node->name());
+
+      //
+      // Extract the desired permutation from the input constant.
+      // TODO(amprocte): need to support more complex cases here, i.e., shapes
+      // that are not constant but can be determined once parameter shapes are
+      // known.
+      //
+      std::vector<tf::int64> constant_values;
+      TF_RETURN_IF_ERROR(
+          GetDataFromConstant(ng_permutation_op, &constant_values));
+
+      ng::AxisVector ng_axis_order;
+      ng_axis_order.reserve(constant_values.size());
+
+      VLOG(LL) << ng::join(constant_values);
+
+      for (auto i : constant_values) {
+        ng_axis_order.push_back(i);
+      }
+
+      VLOG(LL) << ng::join(ng_axis_order);
+
+      ng_op_map[op->name()] =
+          ng::builder::numpy_transpose(ng_input, ng_axis_order);
     }
     // -----------------------------
     // Catch-all for unsupported ops
