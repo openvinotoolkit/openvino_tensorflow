@@ -159,15 +159,15 @@ def train_mnist_cnn(FLAGS):
             correct_prediction = tf.cast(correct_prediction, tf.float32)
 
         accuracy = tf.reduce_mean(correct_prediction)
-        #tf.summary.scalar('test accuracy', accuracy)
+        tf.summary.scalar('test accuracy', accuracy)
 
 
         graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/mnist-convnet"
         print('Saving graph to: %s' % graph_location)
 
-        #merged = tf.summary.merge_all()
-        #train_writer = tf.summary.FileWriter(graph_location)
-        #train_writer.add_graph(tf.get_default_graph())
+        merged = tf.summary.merge_all()
+        train_writer = tf.summary.FileWriter(graph_location)
+        train_writer.add_graph(tf.get_default_graph())
 
         with tf.Session(config=config) as sess:
             sess.run(tf.global_variables_initializer())
@@ -176,10 +176,8 @@ def train_mnist_cnn(FLAGS):
             for i in range(num_eval_cycles):
                 batch = mnist.test.next_batch(FLAGS.batch_size)
                 t = time.time()
-                #summary, test_accuracy = sess.run(
-                #2    [merged, accuracy],
-                test_accuracy = sess.run(
-                    [accuracy],
+                summary, test_accuracy = sess.run(
+                    [merged, accuracy],
                     feed_dict={
                         x: batch[0],
                         y_: batch[1],
@@ -187,7 +185,7 @@ def train_mnist_cnn(FLAGS):
                     })
                     
                 print('step %d, test_accuracy %g, %g sec for infernce step' % (i, test_accuracy, time.time() - t ))
-                #train_writer.add_summary(summary, i)
+                train_writer.add_summary(summary, i)
 
             print( "Inference  finished")
 
