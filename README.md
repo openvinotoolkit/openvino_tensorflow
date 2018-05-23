@@ -46,12 +46,12 @@ TensorFlow [prepare environment] for linux.
 ## How to enable the bridge
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
-   [ngraph-tensorflow] repo to your machine; this is the required for running the unit
+   [tensorflow] repo to your machine; this is the required for running the unit
    test. If you want to run nGraph without the unit tests then you can 
    install the binary TensorFlow wheel and skip this section.
 
    ```
-   git clone https://github.com/NervanaSystems/ngraph-tensorflow.git
+   git clone https://github.com/tensorflow/tensorflow.git
    cd tensorflow
    ```
 2. When setting up and activating the virtual environment with TensorFlow 
@@ -84,11 +84,7 @@ TensorFlow [prepare environment] for linux.
 
     ```
     pip install -U /tmp/tensorflow_pkg/tensorflow-1.*whl
-    ```
-   
-    **Note** The actual name of the Python wheel file will be updated to the 
-    official version of TensorFlow as the `ngraph-tensorflow` repository is 
-    synchronized frequently with the original TensorFlow repository.
+    ```  
 
 6. If you want to run the unit tests, build the TensorFlow C++ library: 
 
@@ -96,13 +92,13 @@ TensorFlow [prepare environment] for linux.
     bazel build --config=opt //tensorflow:libtensorflow_cc.so
     ```
 
-7. Now clone the `ngraph-tensorflow-bridge` repo one level above -- in the 
-  *parent* directory of the `ngraph-tensorflow` repo cloned in step 1:
+7. Now clone the `ngraph-tf` repo one level above -- in the 
+  *parent* directory of the `tensorflow` repo cloned in step 1:
 
     ```
     cd ..
-    git clone https://github.com/NervanaSystems/ngraph-tensorflow-bridge.git
-    cd ngraph-tensorflow-bridge
+    git clone https://github.com/NervanaSystems/ngraph-tf.git
+    cd ngraph-tf
     ```
 
 8. Next, build and install `ngraph-tensorflow-bridge`:
@@ -110,15 +106,12 @@ TensorFlow [prepare environment] for linux.
     ```
     mkdir build
     cd build
-    cmake ../
-    cd experiments
+    cmake ..
     make
     ```
 
 This final step automatically downloads the necessary version of `ngraph` and 
-the dependencies. The resulting plugin [DSO] named `libngraph_plugin.so` gets 
-copied to the following directory inside the TensorFlow installation directory: 
-`<Python site-packages>/tensorflow/plugins`
+the dependencies. The resulting plugin [DSO] is named `libngraph_device.so`.
 
 Once the build and installation steps are complete, you can start experimenting 
 with nGraph backends. 
@@ -128,9 +121,9 @@ In order to run the unit tests, you need a copy of the [tensorflow] source tree.
 We assume that you have done that using the instructions above. 
 
 Now you need to build the tensorflow C++ library using the following instructions:
-1. Go to the ngraph-tensorflow-bridge/build/experiments directory
+1. Go to the ngraph-tf/build/test directory
     ```
-    cd build/experiments/test
+    cd build/test
     ./gtest_ngtf
     ```
 
