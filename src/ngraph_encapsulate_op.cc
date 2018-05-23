@@ -72,10 +72,11 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
     // Compile the graph using nGraph. (TODO(amprocte): need a compilation
     // cache.
-    // auto ng_function =
-    shared_ptr<ng::Function> ng_function;
-    OP_REQUIRES_OK(
-        ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
+    // shared_ptr<ng::Function> ng_function;
+    if (ng_function == nullptr) {
+      OP_REQUIRES_OK(
+          ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
+    }
 
     // Create the nGraph backend (TODO(amprocte): should probably put this
     // into the resource manager rather than re-create each time, though I
@@ -138,6 +139,7 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
  private:
   tf::Graph m_graph;
+  std::shared_ptr<ngraph::Function> ng_function;
 };
 
 }  // namespace ngraph_bridge

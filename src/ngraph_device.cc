@@ -56,12 +56,12 @@ class NGraphDeviceContext : public tf::DeviceContext {
                              Tensor* device_tensor,
                              StatusCallback done) const override {
     if (cpu_tensor->NumElements() > 0) {
-      VLOG(99)
-          << "CopyCPUTensorToDevice "
-          << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
-          << " "
-          << reinterpret_cast<const void*>(device_tensor->tensor_data().data())
-          << " " << cpu_tensor->NumElements();
+      VLOG(99) << "CopyCPUTensorToDevice "
+               << reinterpret_cast<const void*>(
+                      cpu_tensor->tensor_data().data())
+               << " " << reinterpret_cast<const void*>(
+                             device_tensor->tensor_data().data())
+               << " " << cpu_tensor->NumElements();
 
       void* src_ptr = const_cast<void*>(DMAHelper::base(cpu_tensor));
       const int64 total_bytes = cpu_tensor->TotalBytes();
@@ -127,9 +127,6 @@ class NGraphDevice : public Device {
   Status Sync() override { return Status::OK(); }
 
   Allocator* GetAllocator(AllocatorAttributes attrs) override {
-    std::cout << "NGraphDevice::GetAllocator called. OnHost: "
-              << attrs.on_host()
-              << " GPU Compatible: " << attrs.gpu_compatible() << std::endl;
     return m_allocator;
   }
 
@@ -161,8 +158,6 @@ class NGraphDeviceFactory : public DeviceFactory {
  public:
   Status CreateDevices(const SessionOptions& options, const string& name_prefix,
                        std::vector<Device*>* devices) override {
-    std::cout << "NGraphDeviceFactory::CreateDevices() called: Name: "
-              << name_prefix << std::endl;
     DeviceAttributes attr;
     attr.set_name(strings::StrCat(name_prefix, "/device:NGRAPH_CPU:0"));
     attr.set_device_type(ngraph_bridge::DEVICE_NGRAPH_CPU);

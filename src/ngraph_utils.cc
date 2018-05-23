@@ -120,4 +120,21 @@ tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
   return tf::Status::OK();
 }
 
+tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
+                                      ngraph::Shape* ng_shape) {
+  for (int i = 0; i < tf_shape.dims(); i++) {
+    if (tf_shape.dim_size(i) < 0) {
+      return tf::errors::InvalidArgument(
+          "TensorFlow shape has a negative dimension size");
+    }
+  }
+
+  *ng_shape = ngraph::Shape(tf_shape.dims());
+  for (int i = 0; i < tf_shape.dims(); i++) {
+    (*ng_shape)[i] = tf_shape.dim_size(i);
+  }
+
+  return tf::Status::OK();
+}
+
 }  // namespace ngraph_bridge
