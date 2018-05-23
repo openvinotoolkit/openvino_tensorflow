@@ -17,6 +17,7 @@
 #define NGRAPH_TF_BRIDGE_UTILS_H_
 
 #include <ostream>
+#include <sstream>
 
 #include "ngraph/ngraph.hpp"
 
@@ -48,18 +49,18 @@ void GraphToPbTextFile(tf::Graph* graph, const string& filename);
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
 // Extract values from a Const op to `values`. Returns true if succeeds.
 template <typename T>
-bool ValuesFromConstNode(const tf::NodeDef& node,
-                         tf::TensorShapeProto* const_tensor_shape,
-                         std::vector<T>* values) {
+tf::Status ValuesFromConstNode(const tf::NodeDef& node,
+                               tf::TensorShapeProto* const_tensor_shape,
+                               std::vector<T>* values) {
   if (node.op() != "Const") {
-    cout << "Node Not a CONST\n";
-    return false;
+    return tf::errors::InvalidArgument("Node not a Const");
   }
 
   if (node.attr().at("dtype").type() != tf::DataTypeToEnum<T>::value) {
-    cout << "Node Not a valid data type defined for CONST. Defined: "
-         << node.attr().at("dtype").type() << endl;
-    return false;
+    std::stringstream ss;
+    ss << "Invalid data type defined for Const. Defined: "
+       << node.attr().at("dtype").type();
+    return tf::errors::InvalidArgument(ss.str());
   }
 
   // TensorProto represents the content of the tensor in either <type>_val or
@@ -72,33 +73,59 @@ bool ValuesFromConstNode(const tf::NodeDef& node,
   const tf::TensorShapeProto& shape = tensor.tensor_shape();
   *const_tensor_shape = shape;
   if (!tensor_values->empty() && tensor.has_tensor_shape()) {
-    cout << "CONST Node has tensor shape\n";
-
     // When tensor_shape is set, theoretically the representation of the data
     // could be compressed. So, before copying values to the returned vector,
     // make sure no compression happens.
     if (shape.dim_size() == 1 && shape.dim(0).size() == tensor_values->size()) {
       values->insert(values->end(), tensor_values->begin(),
                      tensor_values->end());
-      return true;
+      return tf::Status::OK();
     }
   }
 
   const auto tensor_content_size = tensor.tensor_content().size();
-  cout << "CONST Node tensor size: " << tensor_content_size << endl;
+  CHECK_EQ(0, tensor_content_size % sizeof(T))
+      << " tensor_content_size (" << tensor_content_size
+      << ") is not a multiple of " << sizeof(T);
 
-  if (tensor_content_size > 0) {
-    CHECK_EQ(0, tensor_content_size % sizeof(T))
-        << " tensor_content_size (" << tensor_content_size
-        << ") is not a multiple of " << sizeof(T);
+  // If tensor_content_size is zero, we'll have to take the values from
+  // int_val, float_val, etc.
+  if (tensor_content_size == 0) {
+    tf::int64 n_elements = 1;
+    for (size_t i = 0; i < shape.dim_size(); i++) {
+      if (shape.dim(i).size() < 0) {
+        return tf::errors::InvalidArgument(
+            "Const node has empty tensor and an unknown dimension size");
+      }
+      n_elements *= shape.dim(i).size();
+    }
+    values->resize(n_elements);
+    for (size_t i = 0; i < n_elements; i++) {
+      auto& tensor = node.attr().at("value").tensor();
+      switch (node.attr().at("dtype").type()) {
+        // TODO(amprocte): there are more element types to support here
+        case tf::DT_INT32:
+          values->data()[i] = tensor.int_val()[i];
+          break;
+        case tf::DT_FLOAT:
+          values->data()[i] = tensor.float_val()[i];
+          break;
+        default:
+          VLOG(0) << "Const node has empty tensor and we don't know how to "
+                     "handle this element type";
+          VLOG(0) << node.DebugString();
+          VLOG(0) << shape.DebugString();
+          return tf::errors::Unimplemented(
+              "Encountered unknown element type on an empty tensor");
+      }
+    }
+  } else {
     values->resize(tensor_content_size / sizeof(T));
     tf::port::CopyToArray(tensor.tensor_content(),
                           reinterpret_cast<char*>(values->data()));
-    return true;
   }
 
-  cout << "CONST Node has empty tensor\n";
-  return false;
+  return tf::Status::OK();
 }
 
 // Get a scalar value from a tensor, optionally at an element offset
@@ -120,6 +147,11 @@ std::ostream& DumpNGTensor(
 // Core. Otherwise returns Status::OK().
 tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
                                          ngraph::element::Type* ng_et);
+
+// Converts a TensorFlow TensorShape to an nGraph Shape. Requires that none of
+// the dimension lengths in tf_shape are negative.
+tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
+                                      ngraph::Shape* ng_shape);
 
 }  // namespace ngraph_bridge
 

@@ -151,23 +151,32 @@ std::string GraphToDot(tf::Graph* graph, const std::string& title,
         int cluster_idx;
         if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) ==
             tf::Status::OK()) {
-          unsigned int bg_color;
-          unsigned int fg_color;
-          if (cluster_color_map.find(cluster_idx) == cluster_color_map.end()) {
-            bg_color = cluster_bg_colors[seen_cluster_count];
-            cluster_color_map[cluster_idx] = bg_color;
-            if (seen_cluster_count < num_cluster_colors - 1) {
-              seen_cluster_count++;
-            }
-          } else {
-            bg_color = cluster_color_map[cluster_idx];
-          }
-          fg_color = make_fg_color(bg_color);
+          bool rejected;
 
-          fill_color = color_string(bg_color);
-          text_color = color_string(fg_color);
+          if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster_rejected",
+                              &rejected) != tf::Status::OK() ||
+              !rejected) {
+            unsigned int bg_color;
+            unsigned int fg_color;
+            if (cluster_color_map.find(cluster_idx) ==
+                cluster_color_map.end()) {
+              bg_color = cluster_bg_colors[seen_cluster_count];
+              cluster_color_map[cluster_idx] = bg_color;
+              if (seen_cluster_count < num_cluster_colors - 1) {
+                seen_cluster_count++;
+              }
+            } else {
+              bg_color = cluster_color_map[cluster_idx];
+            }
+            fg_color = make_fg_color(bg_color);
+
+            fill_color = color_string(bg_color);
+            text_color = color_string(fg_color);
+          } else {
+            style = "filled";
+          }
         } else {
-          style = "dashed,filled";
+          style = "dashed, filled";
         }
       }
     }
@@ -293,6 +302,23 @@ tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
     default:
       return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
                                        tf::DataType_Name(tf_dt));
+  }
+
+  return tf::Status::OK();
+}
+
+tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
+                                      ngraph::Shape* ng_shape) {
+  for (int i = 0; i < tf_shape.dims(); i++) {
+    if (tf_shape.dim_size(i) < 0) {
+      return tf::errors::InvalidArgument(
+          "TensorFlow shape has a negative dimension size");
+    }
+  }
+
+  *ng_shape = ngraph::Shape(tf_shape.dims());
+  for (int i = 0; i < tf_shape.dims(); i++) {
+    (*ng_shape)[i] = tf_shape.dim_size(i);
   }
 
   return tf::Status::OK();

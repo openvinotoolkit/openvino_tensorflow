@@ -36,14 +36,20 @@ namespace ngraph_bridge {
 
 extern const char* const DEVICE_NGRAPH_CPU;
 
+#define MINIMUM_CLUSTER_NODES 2
+
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
  public:
   tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     // TODO(amprocte): Remove this when we have proper support for graphs with
     // cycles.
     if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
-      VLOG(0) << "NGRAPH_TF_SKIP_CLUSTERING is set. Skipping clustering step.";
       return tf::Status::OK();
+    }
+
+    if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
+      VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
+                 "experimental and unlikely to work.";
     }
 
     tf::Graph* graph = options.graph->get();
@@ -56,14 +62,72 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
  private:
   // TODO(amprocte): do we need to look at job name, replica, task?
   bool IsNGraphNode(const tf::Node* node) {
-    tf::DeviceNameUtils::ParsedName parsed;
+    if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
+      if (tf::str_util::StartsWith(node->name(), "accuracy/")) {
+        return false;
+      }
 
-    if (!tf::DeviceNameUtils::ParseFullName(node->def().device(), &parsed)) {
-      return false;
+      // clang-format off
+      std::set<std::string> supported_ops{
+          "Add",
+          "AddN",
+          "ArgMax",
+          "AvgPool",
+          "AvgPoolGrad",
+          "BiasAdd",
+          "BiasAddGrad",
+          "BroadcastGradientArgs",
+          "Cast",
+          "ConcatV2",
+          "Const",
+          "Conv2D",
+          "Conv2DBackpropFilter",
+          "Conv2DBackpropInput",
+          "Equal",
+          "ExpandDims",
+          "Fill",
+          "FusedBatchNorm",
+          "FusedBatchNormGrad",
+          "Greater",
+          "Identity",
+          "L2Loss",
+          "LessEqual",
+          "LogicalAnd",
+          "MatMul",
+          "MaxPool",
+          "MaxPoolGrad",
+          "Mean",
+          "Mul",
+          "NoOp",
+          "Pad",
+          "Prod",
+          "RealDiv",
+          "Relu",
+          "ReluGrad",
+          "ReluGrad",
+          "Reshape",
+          "Select",
+          "Shape",
+          "ShapeN",
+          "Slice",
+          "Snapshot",
+          "SoftmaxCrossEntropyWithLogits",
+          "Sub",
+          "Sum",
+          "Tile",
+      };
+      // clang-format on
+
+      return (supported_ops.count(node->type_string()) > 0);
+    } else {
+      tf::DeviceNameUtils::ParsedName parsed;
+
+      if (!tf::DeviceNameUtils::ParseFullName(node->def().device(), &parsed)) {
+        return false;
+      }
+
+      return (parsed.has_type && parsed.type == DEVICE_NGRAPH_CPU);
     }
-
-    // TODO(amprocte): change to DEVICE_NGRAPH constant
-    return (parsed.has_type && parsed.type == DEVICE_NGRAPH_CPU);
   }
 
   struct Cluster {
@@ -109,6 +173,10 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
         tf::Node* src = edge->src();
         tf::Node* dst = edge->dst();
 
+        if (!src->IsOp() || !dst->IsOp()) {
+          continue;
+        }
+
         if (!IsNGraphNode(src) || !IsNGraphNode(dst)) {
           continue;
         }
@@ -147,9 +215,11 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
       if (seen.count(cluster) == 0) {
         int cluster_idx = NGraphClusterManager::NewCluster();
 
+        bool rejected = cluster->nodes.size() < MINIMUM_CLUSTER_NODES;
+
         seen.insert(cluster);
         VLOG(0) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
-                << " nodes";
+                << " nodes" << (rejected ? " (rejected)" : "");
 
         for (auto node : cluster->nodes) {
           if (!IsNGraphNode(node)) {
@@ -163,6 +233,9 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
                   << "]";
 
           node->AddAttr("_ngraph_cluster", cluster_idx);
+          if (rejected) {
+            node->AddAttr("_ngraph_cluster_rejected", rejected);
+          }
         }
       }
     }

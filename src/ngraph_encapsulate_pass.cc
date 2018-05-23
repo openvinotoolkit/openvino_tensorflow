@@ -39,18 +39,21 @@
 #include "ngraph_utils.h"
 
 using namespace std;
-namespace ngraph_bridge
-{
+namespace ngraph_bridge {
 
-class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass
-{
-public:
-  tf::Status Run(const tf::GraphOptimizationPassOptions &options)
-  {
+class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
+ public:
+  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
+    if (std::getenv("NGRAPH_TF_SKIP_ENCAPSULATION") != nullptr) {
+      VLOG(0) << "NGRAPH_TF_SKIP_ENCAPSULATION is set. Skipping encapsulation "
+                 "step.";
+      return tf::Status::OK();
+    }
+
     return EncapsulateFunctions(options.graph->get());
   }
 
-private:
+ private:
   // TODO(amprocte): integrate this into the input names
   // static std::string Mangle(std::string name) {
   //   std::stringstream ss;
@@ -66,41 +69,30 @@ private:
   //   return ss.str();
   // }
 
-  static bool GetClusterId(const tf::Node *node, int *cluster_id)
-  {
+  static bool GetClusterId(const tf::Node* node, int* cluster_id) {
     if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", cluster_id) !=
-        tf::Status::OK())
-    {
+        tf::Status::OK()) {
       *cluster_id = -1;
       return false;
-    }
-    else
-    {
+    } else {
       return true;
     }
   }
 
   // begin code copied and pasted (and modified) from graph.cc...
-  static void AddInput(tf::NodeDef *dst, tf::StringPiece src_name,
-                       int src_slot)
-  {
-    if (src_slot == tf::Graph::kControlSlot)
-    {
+  static void AddInput(tf::NodeDef* dst, tf::StringPiece src_name,
+                       int src_slot) {
+    if (src_slot == tf::Graph::kControlSlot) {
       dst->add_input(tf::strings::StrCat("^", src_name));
-    }
-    else if (src_slot == 0)
-    {
+    } else if (src_slot == 0) {
       dst->add_input(src_name.data(), src_name.size());
-    }
-    else
-    {
+    } else {
       dst->add_input(tf::strings::StrCat(src_name, ":", src_slot));
     }
   }
   // ...end code copied and pasted (and modified) from graph.cc
 
-  tf::Status EncapsulateFunctions(tf::Graph *graph)
-  {
+  tf::Status EncapsulateFunctions(tf::Graph* graph) {
     // A map from cluster indices to the expected device name for nodes
     // in that cluster.
     std::map<int, std::string> device_name_map;
@@ -118,25 +110,21 @@ private:
     std::map<int, std::vector<tf::DataType>> cluster_output_dt_map;
 
     // A map from cluster indices to corresponding NGraphEncapsulate nodes.
-    std::map<int, tf::Node *> cluster_node_map;
+    std::map<int, tf::Node*> cluster_node_map;
 
     // Pass 1: Populate the cluster-index-to-device name map for each existing
     // cluster.
-    for (auto node : graph->op_nodes())
-    {
+    for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
-      if (!GetClusterId(node, &cluster_idx))
-      {
+      if (!GetClusterId(node, &cluster_idx)) {
         continue;
       }
 
       auto it = device_name_map.find(cluster_idx);
 
-      if (it != device_name_map.end())
-      {
-        if (it->second != node->requested_device())
-        {
+      if (it != device_name_map.end()) {
+        if (it->second != node->requested_device()) {
           std::stringstream ss_err;
           ss_err << "Node " << node->name() << " in cluster " << cluster_idx
                  << " has requested device " << node->requested_device()
@@ -145,11 +133,9 @@ private:
 
           return tf::errors::Internal(ss_err.str());
         }
-      }
-      else
-      {
-        VLOG(99) << "setting cluster " << cluster_idx << " requested device to '"
-                 << node->requested_device() << "'";
+      } else {
+        VLOG(99) << "setting cluster " << cluster_idx
+                 << " requested device to '" << node->requested_device() << "'";
         device_name_map[cluster_idx] = node->requested_device();
       }
     }
@@ -159,23 +145,20 @@ private:
     std::map<int, int> retval_index_count;
     std::map<int, int> arg_index_count;
 
-    for (auto edge : graph->edges())
-    {
+    for (auto edge : graph->edges()) {
       // TODO(amprocte): should actually keep of these. During clustering we
       // will already have identified any intra-cluster control deps. Should
       // maintain inter-cluster control deps.
-      if (edge->IsControlEdge())
-      {
+      if (edge->IsControlEdge()) {
         continue;
       }
 
-      tf::Node *src = edge->src();
-      tf::Node *dst = edge->dst();
+      tf::Node* src = edge->src();
+      tf::Node* dst = edge->dst();
 
       // TODO(amprocte): the following rejects edges involving source/sink. Is
       // that what we want to do?
-      if (!src->IsOp() || !dst->IsOp())
-      {
+      if (!src->IsOp() || !dst->IsOp()) {
         continue;
       }
 
@@ -187,8 +170,7 @@ private:
 
       // Ignore edges within a cluster. (Note that this test also works when
       // both nodes are unclustered; GetClusterId gives us -1 in that case.
-      if (dst_cluster_idx == src_cluster_idx)
-      {
+      if (dst_cluster_idx == src_cluster_idx) {
         continue;
       }
 
@@ -208,8 +190,7 @@ private:
       // fact in the output_remap_map.
       if (src_clustered &&
           output_remap_map.find(std::make_tuple(
-              src->id(), edge->src_output())) == output_remap_map.end())
-      {
+              src->id(), edge->src_output())) == output_remap_map.end()) {
         output_remap_map[std::make_tuple(src->id(), edge->src_output())] =
             std::make_tuple(src_cluster_idx,
                             cluster_output_dt_map[src_cluster_idx].size());
@@ -243,8 +224,7 @@ private:
       if (dst_clustered &&
           input_remap_map.find(std::make_tuple(dst_cluster_idx, src->id(),
                                                edge->src_output())) ==
-              input_remap_map.end())
-      {
+              input_remap_map.end()) {
         input_remap_map[std::make_tuple(dst_cluster_idx, src->id(),
                                         edge->src_output())] =
             cluster_input_map[dst_cluster_idx].size();
@@ -273,8 +253,7 @@ private:
     }
 
     // Pass 3: Create encapsulation nodes for all clusters.
-    for (auto &kv : device_name_map)
-    {
+    for (auto& kv : device_name_map) {
       int cluster_idx = kv.first;
 
       std::stringstream ss;
@@ -282,9 +261,11 @@ private:
 
       std::vector<tf::DataType> input_types;
       std::vector<tf::NodeBuilder::NodeOut> inputs;
+      std::vector<tf::int32> input_hostmem;
 
-      for (auto &tup : cluster_input_map[cluster_idx])
-      {
+      tf::int32 i = 0;
+
+      for (auto& tup : cluster_input_map[cluster_idx]) {
         int src_node_id;
         int src_output_idx;
         tf::DataType dt;
@@ -294,14 +275,27 @@ private:
 
         inputs.push_back(tf::NodeBuilder::NodeOut(
             graph->FindNodeId(src_node_id), src_output_idx));
+
+        input_hostmem.push_back(i++);
       }
 
-      tf::Node *n;
+      std::vector<tf::int32> output_hostmem;
+
+      i = 0;
+
+      for (auto it = cluster_output_dt_map[cluster_idx].begin();
+           it != cluster_output_dt_map[cluster_idx].end(); it++) {
+        output_hostmem.push_back(i++);
+      }
+
+      tf::Node* n;
       tf::Status status =
           tf::NodeBuilder(ss.str(), "NGraphEncapsulate")
               .Attr("ngraph_cluster", cluster_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+              .Attr("_input_hostmem", input_hostmem)
+              .Attr("_output_hostmem", output_hostmem)
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
               .Finalize(graph, &n);
@@ -314,52 +308,40 @@ private:
     // Pass 4: Remap all non-clustered inputs that are reading from
     // encapsulated edges, and all control edges that cross cluster
     // boundaries.
-    for (auto edge : graph->edges())
-    {
+    for (auto edge : graph->edges()) {
       int src_cluster_idx;
       bool src_clustered = GetClusterId(edge->src(), &src_cluster_idx);
       int dst_cluster_idx;
       bool dst_clustered = GetClusterId(edge->dst(), &dst_cluster_idx);
 
-      if (src_cluster_idx == dst_cluster_idx)
-      {
+      if (src_cluster_idx == dst_cluster_idx) {
         continue;
       }
 
-      if (edge->IsControlEdge())
-      {
-        if (src_clustered && dst_clustered)
-        {
+      if (edge->IsControlEdge()) {
+        if (src_clustered && dst_clustered) {
           graph->RemoveControlEdge(edge);
           graph->AddControlEdge(cluster_node_map[src_cluster_idx],
                                 cluster_node_map[dst_cluster_idx]);
-        }
-        else if (src_clustered)
-        {
-          tf::Node *dst = edge->dst();
+        } else if (src_clustered) {
+          tf::Node* dst = edge->dst();
           graph->RemoveControlEdge(edge);
           graph->AddControlEdge(cluster_node_map[src_cluster_idx], dst);
-        }
-        else if (dst_clustered)
-        {
-          tf::Node *src = edge->src();
+        } else if (dst_clustered) {
+          tf::Node* src = edge->src();
           graph->RemoveControlEdge(edge);
           graph->AddControlEdge(src, cluster_node_map[dst_cluster_idx]);
         }
-      }
-      else
-      {
+      } else {
         // This is handled at a later stage (TODO(amprocte): explain)
-        if (dst_clustered)
-        {
+        if (dst_clustered) {
           continue;
         }
 
         auto it = output_remap_map.find(
             std::make_tuple(edge->src()->id(), edge->src_output()));
 
-        if (it == output_remap_map.end())
-        {
+        if (it == output_remap_map.end()) {
           continue;
         }
 
@@ -374,13 +356,11 @@ private:
 
     // Pass 5: Make copies of all clustered nodes inside the cluster graphs,
     // rewiring the inputs in their NodeDefs as we go.
-    for (auto node : graph->op_nodes())
-    {
+    for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
       if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
-          tf::Status::OK())
-      {
+          tf::Status::OK()) {
         continue;
       }
 
@@ -393,16 +373,12 @@ private:
 
       // Get the inputs for this Node.  We make sure control inputs are
       // after data inputs, as required by GraphDef.
-      std::vector<const tf::Edge *> inputs;
+      std::vector<const tf::Edge*> inputs;
       inputs.resize(node->num_inputs(), nullptr);
-      for (const tf::Edge *edge : node->in_edges())
-      {
-        if (edge->IsControlEdge())
-        {
+      for (const tf::Edge* edge : node->in_edges()) {
+        if (edge->IsControlEdge()) {
           inputs.push_back(edge);
-        }
-        else
-        {
+        } else {
           CHECK(inputs[edge->dst_input()] == nullptr)
               << "Edge " << edge->src()->DebugString() << ":"
               << edge->dst()->DebugString() << " with dst_input "
@@ -416,25 +392,17 @@ private:
       original_def.clear_input();
       original_def.mutable_input()->Reserve(inputs.size());
 
-      for (size_t i = 0; i < inputs.size(); ++i)
-      {
-        const tf::Edge *edge = inputs[i];
-        if (edge == nullptr)
-        {
-          if (i < node->requested_inputs().size())
-          {
+      for (size_t i = 0; i < inputs.size(); ++i) {
+        const tf::Edge* edge = inputs[i];
+        if (edge == nullptr) {
+          if (i < node->requested_inputs().size()) {
             original_def.add_input(node->requested_inputs()[i]);
-          }
-          else
-          {
+          } else {
             original_def.add_input("");
           }
-        }
-        else
-        {
-          const tf::Node *src = edge->src();
-          if (!src->IsOp())
-            continue;
+        } else {
+          const tf::Node* src = edge->src();
+          if (!src->IsOp()) continue;
           AddInput(&original_def, src->name(), edge->src_output());
         }
       }
@@ -444,28 +412,24 @@ private:
           NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
       *node_def = original_def;
 
-      for (auto &input : *(node_def->mutable_input()))
-      {
+      for (auto& input : *(node_def->mutable_input())) {
         tf::TensorId tensor_id = tf::ParseTensorName(input);
 
         auto it = input_rename_map.find(std::make_tuple(
             cluster_idx, tensor_id.first.ToString(), tensor_id.second));
 
-        if (it != input_rename_map.end())
-        {
+        if (it != input_rename_map.end()) {
           input = it->second;
         }
       }
     }
 
     // Pass 6: Remove clustered nodes from the graph.
-    for (auto node : graph->op_nodes())
-    {
+    for (auto node : graph->op_nodes()) {
       int cluster_idx;
 
       if (tf::GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
-          tf::Status::OK())
-      {
+          tf::Status::OK()) {
         continue;
       }
 
@@ -473,12 +437,10 @@ private:
     }
 
     // Pass 7 (optional, only run if environment variable
-    // NGRAPH_VALIDATE_CLUSTER_GRAPHS is set): validate the graph def, and make
-    // sure we can construct a graph from it.
-    if (std::getenv("NGRAPH_VALIDATE_CLUSTER_GRAPHS"))
-    {
-      for (auto &kv : device_name_map)
-      {
+    // NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS is set): validate the graph def, and
+    // make sure we can construct a graph from it.
+    if (std::getenv("NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS")) {
+      for (auto& kv : device_name_map) {
         int cluster_idx = kv.first;
         TF_RETURN_IF_ERROR(tf::graph::ValidateGraphDef(
             *NGraphClusterManager::GetClusterGraph(cluster_idx),
@@ -503,10 +465,9 @@ private:
     return tf::Status::OK();
   }
 };
-} // namespace ngraph_bridge
+}  // namespace ngraph_bridge
 
-namespace tensorflow
-{
+namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 110,
                       ngraph_bridge::NGraphEncapsulatePass);
-} // namespace tensorflow
+}  // namespace tensorflow
