@@ -88,8 +88,8 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
       << " tensor_content_size (" << tensor_content_size
       << ") is not a multiple of " << sizeof(T);
 
-  // TODO(amprocte): If the prototxt has no data for the tensor, fill with
-  // zeros. Is this correct?? NO: need to take float_val etc.
+  // If tensor_content_size is zero, we'll have to take the values from
+  // int_val, float_val, etc.
   if (tensor_content_size == 0) {
     tf::int64 n_elements = 1;
     for (size_t i = 0; i < shape.dim_size(); i++) {
@@ -103,6 +103,7 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
     for (size_t i = 0; i < n_elements; i++) {
       auto& tensor = node.attr().at("value").tensor();
       switch (node.attr().at("dtype").type()) {
+        // TODO(amprocte): there are more element types to support here
         case tf::DT_INT32:
           values->data()[i] = tensor.int_val()[i];
           break;
@@ -118,7 +119,6 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
               "Encountered unknown element type on an empty tensor");
       }
     }
-    // return tf::errors::InvalidArgument("Const node has empty tensor");
   } else {
     values->resize(tensor_content_size / sizeof(T));
     tf::port::CopyToArray(tensor.tensor_content(),
