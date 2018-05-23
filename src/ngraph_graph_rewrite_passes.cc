@@ -27,6 +27,8 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "tf_graph_writer.h"
+
 using namespace std;
 namespace ngraph_bridge {
 
@@ -35,7 +37,7 @@ class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
   NGraphDumpPass(std::string pass_name) : m_pass_name(pass_name) {}
   virtual ~NGraphDumpPass() {}
   tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
-    VLOG(0) << "nGraph dump pass start: " << m_pass_name;
+    //NGRAPH_VLOG(0) << "nGraph dump pass start: " << m_pass_name;
 
     int idx = s_counter_map[m_pass_name]++;
 
@@ -47,8 +49,8 @@ class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
       tf::Graph* g = options.graph->get();
 
       GraphToPbTextFile(g, filename_prefix + ".pbtxt");
-      GraphToDotFile(g, filename_prefix + ".dot", "nGraph Dump: " + m_pass_name,
-                     false);
+      //GraphToDotFile(g, filename_prefix + ".dot", "nGraph Dump: " + m_pass_name,
+      //               false);
     }
 
     if (options.partition_graphs != nullptr) {
@@ -62,8 +64,8 @@ class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
         std::string sub_filename_prefix = ss.str();
 
         GraphToPbTextFile(pg, sub_filename_prefix + ".pbtxt");
-        GraphToDotFile(pg, sub_filename_prefix + ".dot",
-                       "nGraph Subgraph Dump: " + m_pass_name, false);
+        //GraphToDotFile(pg, sub_filename_prefix + ".dot",
+        //               "nGraph Subgraph Dump: " + m_pass_name, false);
 
         sub_idx++;
       }
