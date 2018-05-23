@@ -45,7 +45,7 @@ cdll.LoadLibrary(
     'libngraph_device.so'
 )
 
-def deepnn_inference(x):
+def deepnn_inference(x,FLAGS):
     """deepnn builds the graph for a deep net for classifying digits.
 
   Args:
@@ -61,28 +61,42 @@ def deepnn_inference(x):
     # Reshape to use within a convolutional neural net.
     # Last dimension is for "features" - there is only one here, since images are
     # grayscale -- it would be 3 for an RGB image, 4 for RGBA, etc.
+    data_format=FLAGS.data_format
     with tf.name_scope('reshape'):
-        x_image = tf.reshape(x, [-1, 28, 28, 1])
+        if data_format=='NHWC':
+            x_image = tf.reshape(x, [-1, 28, 28, 1])
+        else:
+            x_image = tf.reshape(x, [-1, 1, 28, 28])
 
     # First convolutional layer - maps one grayscale image to 32 feature maps.
     with tf.name_scope('conv1'):
+
         W_conv1 = weight_variable([5, 5, 1, 32], "W_conv1")
-        b_conv1 = bias_variable([32])
-        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+        if data_format=='NHWC':
+            b_conv1 = bias_variable([32])
+        else:
+            b_conv1 = bias_variable([32,1,1])
+
+        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1,data_format) + b_conv1)
 
     # Pooling layer - downsamples by 2X.
     with tf.name_scope('pool1'):
-        h_pool1 = max_pool_2x2(h_conv1)
+        h_pool1 = max_pool_2x2(h_conv1,data_format)
 
     # Second convolutional layer -- maps 32 feature maps to 64.
     with tf.name_scope('conv2'):
+
         W_conv2 = weight_variable([5, 5, 32, 64], "W_conv2")
-        b_conv2 = bias_variable([64])
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+        if data_format=='NHWC':
+            b_conv2 = bias_variable([64])
+        else:
+            b_conv2 = bias_variable([64,1,1])
+        #b_conv2 = bias_variable([64])
+        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2,data_format) + b_conv2)
 
     # Second pooling layer.
     with tf.name_scope('pool2'):
-        h_pool2 = max_pool_2x2(h_conv2)
+        h_pool2 = max_pool_2x2(h_conv2,data_format)
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
     # is down to 7x7x64 feature maps -- maps this to 1024 features.
@@ -103,15 +117,20 @@ def deepnn_inference(x):
     return y_conv, tf.placeholder(tf.float32)
 
 
-def conv2d(x, W):
+def conv2d(x, W,data_format):
     """conv2d returns a 2d convolution layer with full stride."""
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME',data_format=data_format)
 
 
-def max_pool_2x2(x):
+
+def max_pool_2x2(x,data_format):
     """max_pool_2x2 downsamples a feature map by 2X."""
-    return tf.nn.max_pool(
-        x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+    if data_format=='NHWC':
+        return tf.nn.max_pool(
+            x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME',data_format='NHWC')
+    else:
+        return tf.nn.max_pool(
+            x, ksize=[1, 1, 2, 2], strides=[1, 1, 2, 2], padding='SAME',data_format='NCHW')
 
 
 def weight_variable(shape, name):
@@ -130,7 +149,7 @@ def train_mnist_cnn(FLAGS):
     config = tf.ConfigProto(
         allow_soft_placement=True,
         log_device_placement=True,
-        inter_op_parallelism_threads=4)
+        inter_op_parallelism_threads=1)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
@@ -151,7 +170,7 @@ def train_mnist_cnn(FLAGS):
         y_ = tf.placeholder(tf.float32, [None, 10])
 
         # Build the graph for the deep net
-        y_conv, keep_prob = deepnn_inference(x)
+        y_conv, keep_prob = deepnn_inference(x,FLAGS)
 
         with tf.name_scope('accuracy'):
             correct_prediction = tf.equal(
@@ -177,19 +196,19 @@ def train_mnist_cnn(FLAGS):
                 batch = mnist.test.next_batch(FLAGS.batch_size)
                 t = time.time()
                 #summary, test_accuracy = sess.run(
-                #2    [merged, accuracy],
+                #    [merged, accuracy],
                 test_accuracy = sess.run(
-                    [accuracy],
+                    accuracy,
                     feed_dict={
                         x: batch[0],
                         y_: batch[1],
                         keep_prob: 0.5
                     })
-                    
+
                 print('step %d, test_accuracy %g, %g sec for infernce step' % (i, test_accuracy, time.time() - t ))
                 #train_writer.add_summary(summary, i)
 
-            print( "Inference  finished")
+            print( "Inference finished")
 
             return test_accuracy
 
@@ -220,6 +239,13 @@ if __name__ == '__main__':
         type=int,
         default=128,
         help='Batch Size')
+
+    parser.add_argument(
+        '--data_format',
+        type=str,
+        default='NCHW',
+        help='Data Format')
+
 
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

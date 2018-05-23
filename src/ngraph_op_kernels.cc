@@ -243,6 +243,7 @@ REGISTER_KERNEL_BUILDER(
                           NGraphConstOp);
 
 REGISTER_CONST(float);
+REGISTER_CONST(int32);
 
 // REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
 //                         NGraphNoOp);
@@ -253,11 +254,11 @@ REGISTER_KERNEL_BUILDER(Name("Prod")
                             .TypeConstraint<int32>("Tidx"),
                         NGraphOp<int32>);
 
-REGISTER_KERNEL_BUILDER(Name("ArgMax")
+/*REGISTER_KERNEL_BUILDER(Name("ArgMax")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T")
                             .TypeConstraint<int32>("Tidx"),
-                        NGraphOp<float>);
+                        NGraphOp<float>);*/
 
 REGISTER_KERNEL_BUILDER(Name("Reshape")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -271,11 +272,11 @@ REGISTER_KERNEL_BUILDER(Name("ConcatV2")
                             .TypeConstraint<int32>("Tidx"),
                         NGraphOp<int32>);
 
-REGISTER_KERNEL_BUILDER(Name("Mean")
+/*REGISTER_KERNEL_BUILDER(Name("Mean")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T")
                             .TypeConstraint<int32>("Tidx"),
-                        NGraphOp<int32>);
+                        NGraphOp<int32>);*/
 
 REGISTER_KERNEL_BUILDER(Name("Slice")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -404,7 +405,7 @@ REGISTER_KERNEL_BUILDER(Name("MatMul")
                             .TypeConstraint<float>("T"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("Equal")
+/*REGISTER_KERNEL_BUILDER(Name("Equal")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<int64>("T"),
                         NGraphOp<int64>);
@@ -412,7 +413,7 @@ REGISTER_KERNEL_BUILDER(Name("Equal")
 REGISTER_KERNEL_BUILDER(Name("Equal")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<float>("T"),
-                        NGraphOp<bool>);
+                        NGraphOp<bool>);*/
 
 REGISTER_KERNEL_BUILDER(Name("Greater")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -463,7 +464,7 @@ REGISTER_KERNEL_BUILDER(Name("RealDiv")
                             .TypeConstraint<float>("T"),
                         NGraphOp<float>);
 
-REGISTER_KERNEL_BUILDER(Name("Cast")
+/*REGISTER_KERNEL_BUILDER(Name("Cast")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<bool>("SrcT")
                             .TypeConstraint<float>("DstT"),
@@ -485,7 +486,7 @@ REGISTER_KERNEL_BUILDER(Name("Cast")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
                             .TypeConstraint<bool>("SrcT")
                             .TypeConstraint<int32>("DstT"),
-                        NGraphOp<int32>);
+                        NGraphOp<int32>);*/
 
 REGISTER_KERNEL_BUILDER(Name("Tile")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)

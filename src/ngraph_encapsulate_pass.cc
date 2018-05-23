@@ -261,6 +261,9 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
       std::vector<tf::DataType> input_types;
       std::vector<tf::NodeBuilder::NodeOut> inputs;
+      std::vector<tf::int32> input_hostmem;
+
+      tf::int32 i = 0;
 
       for (auto& tup : cluster_input_map[cluster_idx]) {
         int src_node_id;
@@ -272,6 +275,17 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
         inputs.push_back(tf::NodeBuilder::NodeOut(
             graph->FindNodeId(src_node_id), src_output_idx));
+
+        input_hostmem.push_back(i++);
+      }
+
+      std::vector<tf::int32> output_hostmem;
+
+      i = 0;
+
+      for (auto it = cluster_output_dt_map[cluster_idx].begin();
+           it != cluster_output_dt_map[cluster_idx].end(); it++) {
+        output_hostmem.push_back(i++);
       }
 
       tf::Node* n;
@@ -280,6 +294,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
               .Attr("ngraph_cluster", cluster_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+              .Attr("_input_hostmem", input_hostmem)
+              .Attr("_output_hostmem", output_hostmem)
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
               .Finalize(graph, &n);

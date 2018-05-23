@@ -91,10 +91,6 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
   // TODO(amprocte): If the prototxt has no data for the tensor, fill with
   // zeros. Is this correct?? NO: need to take float_val etc.
   if (tensor_content_size == 0) {
-    VLOG(0) << "Const node has empty tensor";
-    VLOG(0) << node.DebugString();
-    VLOG(0) << shape.DebugString();
-
     tf::int64 n_elements = 1;
     for (size_t i = 0; i < shape.dim_size(); i++) {
       if (shape.dim(i).size() < 0) {
@@ -105,7 +101,22 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
     }
     values->resize(n_elements);
     for (size_t i = 0; i < n_elements; i++) {
-      values->data()[i] = 0;
+      auto& tensor = node.attr().at("value").tensor();
+      switch (node.attr().at("dtype").type()) {
+        case tf::DT_INT32:
+          values->data()[i] = tensor.int_val()[i];
+          break;
+        case tf::DT_FLOAT:
+          values->data()[i] = tensor.float_val()[i];
+          break;
+        default:
+          VLOG(0) << "Const node has empty tensor and we don't know how to "
+                     "handle this element type";
+          VLOG(0) << node.DebugString();
+          VLOG(0) << shape.DebugString();
+          return tf::errors::Unimplemented(
+              "Encountered unknown element type on an empty tensor");
+      }
     }
     // return tf::errors::InvalidArgument("Const node has empty tensor");
   } else {
