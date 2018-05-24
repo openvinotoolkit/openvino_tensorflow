@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+#include <fstream>
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
@@ -22,6 +23,8 @@
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
+
+#include "ngraph/serializer.hpp"
 
 #include "ngraph_builder.h"
 #include "ngraph_cluster_manager.h"
@@ -76,6 +79,17 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     if (ng_function == nullptr) {
       OP_REQUIRES_OK(
           ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
+    }
+
+    // Serialize to nGraph if needed
+    if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
+      std::string file_name = "tf_function_" + ctx->op_kernel().name() + ".js";
+      VLOG(0) << "Serializing graph to: " << file_name;
+      std::string js = ngraph::serialize(ng_function, 4);
+      {
+        std::ofstream f(file_name);
+        f << js;
+      }
     }
 
     // Create the nGraph backend (TODO(amprocte): should probably put this
