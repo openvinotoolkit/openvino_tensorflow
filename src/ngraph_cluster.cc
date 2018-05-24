@@ -122,7 +122,7 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
     } else {
       tf::DeviceNameUtils::ParsedName parsed;
 
-      if (!tf::DeviceNameUtils::ParseFullName(node->def().device(), &parsed)) {
+      if (!tf::DeviceNameUtils::ParseFullName(node->assigned_device_name(), &parsed)) {
         return false;
       }
 
