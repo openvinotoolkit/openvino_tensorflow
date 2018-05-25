@@ -37,6 +37,7 @@
 
 #include "ngraph_cluster_manager.h"
 #include "ngraph_utils.h"
+#include "tf_graph_writer.h"
 
 using namespace std;
 namespace ngraph_bridge {

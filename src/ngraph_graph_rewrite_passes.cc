@@ -27,6 +27,9 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "ngraph_log.h"
+#include "tf_graph_writer.h"
+
 using namespace std;
 namespace ngraph_bridge {
 
@@ -35,7 +38,7 @@ class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
   NGraphDumpPass(std::string pass_name) : m_pass_name(pass_name) {}
   virtual ~NGraphDumpPass() {}
   tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
-    VLOG(0) << "nGraph dump pass start: " << m_pass_name;
+    NGRAPH_VLOG(2) << "nGraph dump pass start: " << m_pass_name;
 
     int idx = s_counter_map[m_pass_name]++;
 
@@ -69,7 +72,7 @@ class NGraphDumpPass : public tensorflow::GraphOptimizationPass {
       }
     }
 
-    VLOG(0) << "nGraph dump pass done: " << m_pass_name;
+    NGRAPH_VLOG(2) << "nGraph dump pass done: " << m_pass_name;
 
     return tf::Status::OK();
   }
