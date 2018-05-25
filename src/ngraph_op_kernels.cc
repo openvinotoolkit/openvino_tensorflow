@@ -92,8 +92,6 @@ class NGraphConstOp : public tf::OpKernel {
             ") and dtype (", DataTypeString(ctx->output_type(0)), ")"));
   }
   void Compute(tf::OpKernelContext* ctx) override {
-    VLOG(0) << "NGraphConstOp: " << name();
-
     ctx->set_output(0, m_tensor);
     if (TF_PREDICT_FALSE(ctx->track_allocations())) {
       ctx->record_persistent_memory_allocation(m_tensor.AllocatedBytes());
