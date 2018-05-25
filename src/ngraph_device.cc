@@ -23,6 +23,7 @@ limitations under the License.
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/local_device.h"
 #include "tensorflow/core/framework/allocator.h"
+#include "tensorflow/core/framework/tensor.pb_text.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/default/logging.h"
@@ -146,6 +147,20 @@ class NGraphDevice : public Device {
   Status MaybeRewriteGraph(std::unique_ptr<Graph>* graph) override {
     VLOG(99) << "NGraphDevice::MaybeRewriteGraph() called";
     return Status::OK();
+  }
+
+  Status MakeTensorFromProto(const TensorProto& tensor_proto,
+                             const AllocatorAttributes alloc_attrs,
+                             Tensor* tensor) override {
+    if (tensor_proto.dtype() > 0 && tensor_proto.dtype() <= DataType_MAX) {
+      Tensor parsed(tensor_proto.dtype());
+      if (parsed.FromProto(cpu_allocator(), tensor_proto)) {
+        *tensor = std::move(parsed);
+        return Status::OK();
+      }
+    }
+    return errors::InvalidArgument("Cannot parse tensor from proto: ",
+                                   ProtoDebugString(tensor_proto));
   }
 
  private:
