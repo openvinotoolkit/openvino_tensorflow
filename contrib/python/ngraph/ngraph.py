@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import sys
 import time
 import getpass
@@ -40,5 +41,6 @@ print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 # example: export LD_LIBRARY_PATH=/nfs/site/home/langjian/ngraph-tf:$LD_LIBRARY_PATH
 import ctypes
 if tf.VERSION=='1.8.0' or tf.VERSION=='1.9.0':
-   lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
+   libpath = os.path.dirname(__file__)
+   lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.so'))
 
