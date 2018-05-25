@@ -35,17 +35,6 @@ namespace ngraph_bridge {
 //
 void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out);
 
-//
-std::string GraphToDot(tf::Graph* graph, const std::string& title,
-                       bool annotate_device);
-
-//
-void GraphToDotFile(tf::Graph* graph, const std::string& filename,
-                    const std::string& title, bool annotate_device);
-
-//
-void GraphToPbTextFile(tf::Graph* graph, const string& filename);
-
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
 // Extract values from a Const op to `values`. Returns true if succeeds.
 template <typename T>

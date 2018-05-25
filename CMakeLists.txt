@@ -61,6 +61,8 @@ set_target_properties(
 )
 
 # Add the directories to be built
+add_subdirectory(logging)
 add_subdirectory(src)
 add_subdirectory(third-party)
 add_subdirectory(test)
+add_subdirectory(tools)

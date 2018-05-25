@@ -11,55 +11,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(LIB_NAME ngraph_device)
+set(LIB_NAME ngraph_logger)
 
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-include_directories(${NGRAPH_DIR}/include)
-
-set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 
-add_library(ngraph_lib SHARED IMPORTED)
-set_target_properties( 
-    ngraph_lib 
-    PROPERTIES IMPORTED_LOCATION 
-    ${NGRAPH_DIR}/lib/libngraph.so
-)
-add_dependencies(ngraph_lib ext_ngraph)
-
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 set(SRC 
-   ngraph_builder.cc
-   ngraph_cluster.cc
-   ngraph_cluster_manager.cc
-   ngraph_device.cc
-   ngraph_encapsulate_op.cc
-   ngraph_encapsulate_pass.cc
-   ngraph_graph_rewrite_passes.cc
-   ngraph_op_kernels.cc
-   ngraph_utils.cc
-   tf_graphcycles.cc
-   ngraph_send_recv_ops.cc
+   ngraph_log.cc
+   tf_graph_writer.cc
 )
 
-add_library(${LIB_NAME} SHARED ${SRC})
+add_library(${LIB_NAME} ${SRC})
+target_link_libraries( 
+    ${LIB_NAME} 
+    tensorflow_framework_lib 
+)
 
-target_link_libraries( ${LIB_NAME} ngraph_logger) 
-target_link_libraries( ${LIB_NAME} tensorflow_framework_lib )
-target_link_libraries( ${LIB_NAME} ngraph_lib )
+target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}")
+target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}/external/nsync/public")
 
 target_compile_definitions( 
     ${LIB_NAME} PRIVATE 
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI} 
 )
-
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DIR}/include")
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
+set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)

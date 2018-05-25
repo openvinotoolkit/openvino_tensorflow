@@ -28,6 +28,7 @@ limitations under the License.
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/public/session_options.h"
 
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 
 namespace ngraph_bridge {
@@ -172,6 +173,7 @@ REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU,
 
 #include <dlfcn.h>
 static bool InitModule() {
+  NGRAPH_VLOG(0) << "InitModule() called";
   // Determine the full path of this DSO
   Dl_info dlInfo;
 
