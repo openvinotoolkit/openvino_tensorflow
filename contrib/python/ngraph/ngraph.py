@@ -31,16 +31,13 @@ from tensorflow.python.client import device_lib
 from tensorflow.python import pywrap_tensorflow as py_tf
 from tensorflow.python.framework import errors_impl
 
-import tfgraphviz as tfg
-
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-# Define LD_LIBRARY_PATH indicating where nGraph library is located for now.
-# Eventually this won't be needed as the library will be available in either
-# the Python site-packages or some other means
-# example: export LD_LIBRARY_PATH=/nfs/site/home/langjian/ngraph-tf:$LD_LIBRARY_PATH
 import ctypes
-if tf.VERSION=='1.8.0' or tf.VERSION=='1.9.0':
+
+if tf.VERSION >= '1.8.0':
    libpath = os.path.dirname(__file__)
    lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.so'))
+else:
+   raise ValueError("Error: ngraph-tf requires tensorflow version >= 1.8.0!")
 
