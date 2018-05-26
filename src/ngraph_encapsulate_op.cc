@@ -101,8 +101,7 @@ class NGraphEncapsulateOp : public tf::OpKernel {
         }
       }
 
-      // TODO(amprocte): compilation cache is disabled for now
-      // m_ng_functions[signature] = ng_function;
+      m_ng_functions[signature] = ng_function;
     } else {
       ng_function = it->second;
     }
@@ -164,10 +163,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
     // Execute the nGraph function.
     backend->call(ng_function, outputs, ng_inputs);
-
-    // TODO(amprocte): get rid of this when the compilation cache is re-enabled
-    // Remove the compiled function.
-    backend->remove_compiled_function(ng_function);
   }
 
  private:
