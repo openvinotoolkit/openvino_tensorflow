@@ -256,7 +256,11 @@ REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
                         NGraphRecv);
 REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
                         NGraphSend);
-REGISTER_KERNEL_BUILDER(
-    Name("_HostRecv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphRecv);
-REGISTER_KERNEL_BUILDER(
-    Name("_HostSend").Device(ngraph_bridge::DEVICE_NGRAPH_CPU), NGraphSend);
+REGISTER_KERNEL_BUILDER(Name("_HostRecv")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .HostMemory("tensor"),
+                        NGraphRecv);
+REGISTER_KERNEL_BUILDER(Name("_HostSend")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .HostMemory("tensor"),
+                        NGraphSend);

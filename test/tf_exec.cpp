@@ -87,13 +87,13 @@ TEST(tf_exec, axpy) {
   TF_CHECK_OK(session->Run({{"x", x}, {"y", y}}, {"mul", "add"}, {}, &outputs));
 
   ASSERT_EQ(outputs.size(), 2);
-  auto mat = outputs[0].matrix<float>();
-  EXPECT_FLOAT_EQ(5.0, mat(0, 0));
-  EXPECT_FLOAT_EQ(5.0, mat(1, 0));
+  auto mat1 = outputs[0].matrix<float>();
+  EXPECT_FLOAT_EQ(5.0, mat1(0, 0));
+  EXPECT_FLOAT_EQ(5.0, mat1(1, 0));
 
-  mat = outputs[1].matrix<float>();
-  EXPECT_FLOAT_EQ(6.0, mat(0, 0));
-  EXPECT_FLOAT_EQ(6.0, mat(1, 0));
+  auto mat2 = outputs[1].matrix<float>();
+  EXPECT_FLOAT_EQ(6.0, mat2(0, 0));
+  EXPECT_FLOAT_EQ(6.0, mat2(1, 0));
 
   for (auto output : outputs) {
     auto output_flat = output.flat<float>();

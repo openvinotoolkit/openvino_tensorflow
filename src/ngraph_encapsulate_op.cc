@@ -68,28 +68,42 @@ class NGraphEncapsulateOp : public tf::OpKernel {
   void Compute(tf::OpKernelContext* ctx) override {
     // Get the inputs
     std::vector<tf::TensorShape> input_shapes;
+    std::stringstream signature_ss;
     for (int i = 0; i < ctx->num_inputs(); i++) {
       const tf::Tensor& input_tensor = ctx->input(i);
       input_shapes.push_back(input_tensor.shape());
+      for (const auto& x : input_tensor.shape()) {
+        signature_ss << x.size << ",";
+      }
+      signature_ss << ";";
     }
 
-    // Compile the graph using nGraph. (TODO(amprocte): need a compilation
-    // cache.
-    // shared_ptr<ng::Function> ng_function;
-    if (ng_function == nullptr) {
+    std::shared_ptr<ngraph::Function> ng_function;
+    std::string signature = signature_ss.str();
+    auto it = m_ng_functions.find(signature);
+
+    // Compile the graph using nGraph.
+    //
+    // TODO(amprocte): Investigate performance of the compilation cache.
+    if (it == m_ng_functions.end()) {
       OP_REQUIRES_OK(
           ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
-    }
 
-    // Serialize to nGraph if needed
-    if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-      std::string file_name = "tf_function_" + ctx->op_kernel().name() + ".js";
-      VLOG(0) << "Serializing graph to: " << file_name;
-      std::string js = ngraph::serialize(ng_function, 4);
-      {
-        std::ofstream f(file_name);
-        f << js;
+      // Serialize to nGraph if needed
+      if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
+        std::string file_name =
+            "tf_function_" + ctx->op_kernel().name() + ".js";
+        VLOG(0) << "Serializing graph to: " << file_name;
+        std::string js = ngraph::serialize(ng_function, 4);
+        {
+          std::ofstream f(file_name);
+          f << js;
+        }
       }
+
+      m_ng_functions[signature] = ng_function;
+    } else {
+      ng_function = it->second;
     }
 
     // Create the nGraph backend (TODO(amprocte): should probably put this
@@ -153,7 +167,8 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
  private:
   tf::Graph m_graph;
-  std::shared_ptr<ngraph::Function> ng_function;
+  std::unordered_map<std::string, std::shared_ptr<ngraph::Function>>
+      m_ng_functions;
 };
 
 }  // namespace ngraph_bridge
