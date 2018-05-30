@@ -18,4 +18,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function 
 
-from ngraph import ngraph
+import os
+import sys
+import time
+import getpass
+   
+import numpy as np
+import tensorflow as tf
+from tensorflow.python.client import device_lib
+from tensorflow.python import pywrap_tensorflow as py_tf
+from tensorflow.python.framework import errors_impl
+ 
+print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+ 
+import ctypes
+ 
+# We need to revisit this later. We can automate that using cmake configure command.
+if tf.VERSION >= '1.8.0':
+   libpath = os.path.dirname(__file__)
+   lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.so'))
+else:
+   raise ValueError("Error: ngraph-tf requires tensorflow version >= 1.8.0!")
+
