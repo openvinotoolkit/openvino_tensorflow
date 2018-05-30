@@ -35,7 +35,8 @@ print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
 import ctypes
 
-if tf.VERSION >= '1.8.0':
+# We need to revisit this later. We can automate that using cmake configure command.
+if tf.VERSION >= '1.8.0': 
    libpath = os.path.dirname(__file__)
    lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.so'))
 else:
