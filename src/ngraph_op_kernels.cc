@@ -131,10 +131,6 @@ REGISTER_KERNEL_BUILDER(Name("Mul")
                         NGraphStubOp);
 
 // REGISTER_KERNEL_BUILDER(
-//    Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T",
-//    {DT_FLOAT}),
-//    NGraphStubOp);
-// REGISTER_KERNEL_BUILDER(
 //    Name("ApplyAdam").Device(ngraph_bridge::DEVICE_NGRAPH_CPU).TypeConstraint("T",
 //    {DT_FLOAT}),
 //    NGraphStubOp);
@@ -160,9 +156,6 @@ REGISTER_KERNEL_BUILDER(
 
 REGISTER_CONST(float);
 REGISTER_CONST(int32);
-
-// REGISTER_KERNEL_BUILDER(Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-//                         NGraphNoOp);
 
 REGISTER_KERNEL_BUILDER(Name("Prod")
                             .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
@@ -486,15 +479,3 @@ REGISTER_KERNEL_BUILDER(Name("Transpose")
                             .TypeConstraint<float>("T")
                             .TypeConstraint<int32>("Tperm"),
                         NGraphStubOp);
-
-#define REGISTER_NG_KERNEL(NAME, TYPE)                                  \
-  REGISTER_KERNEL_BUILDER(Name((NAME))                                  \
-                              .Device(ngraph_bridge::DEVICE_NGRAPH_CPU) \
-                              .TypeConstraint<TYPE>("dtype"),           \
-                          NGraphNoOp);
-// REGISTER_NG_KERNEL("Const", float);
-// REGISTER_NG_KERNEL("VariableV2", float);
-REGISTER_NG_KERNEL("RandomUniform", float);
-
-// REGISTER_KERNEL_BUILDER(Name("MergeSummary").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-// NGraphNoOp);
