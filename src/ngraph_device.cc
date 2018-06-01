@@ -57,7 +57,7 @@ class NGraphDeviceContext : public tf::DeviceContext {
                              Tensor* device_tensor,
                              StatusCallback done) const override {
     if (cpu_tensor->NumElements() > 0) {
-      VLOG(99) << "CopyCPUTensorToDevice "
+      NGRAPH_VLOG(3) << "CopyCPUTensorToDevice "
                << reinterpret_cast<const void*>(
                       cpu_tensor->tensor_data().data())
                << " " << reinterpret_cast<const void*>(
@@ -69,7 +69,7 @@ class NGraphDeviceContext : public tf::DeviceContext {
       void* dst_ptr = DMAHelper::base(device_tensor);
       memcpy(dst_ptr, src_ptr, total_bytes);
 
-      VLOG(99) << "CPU Tensor: " << cpu_tensor->DebugString();
+      NGRAPH_VLOG(3) << "CPU Tensor: " << cpu_tensor->DebugString();
       // done(errors::Internal("Unrecognized device type in CPU-to-device
       // Copy"));
 
@@ -77,8 +77,8 @@ class NGraphDeviceContext : public tf::DeviceContext {
       return;
     }
 
-    VLOG(99) << "CopyCPUTensorToDevice empty tensor";
-    VLOG(99) << cpu_tensor->DebugString();
+    NGRAPH_VLOG(3) << "CopyCPUTensorToDevice empty tensor";
+    NGRAPH_VLOG(3) << cpu_tensor->DebugString();
 
     // Call the done callback
     done(tf::Status::OK());
@@ -91,13 +91,13 @@ class NGraphDeviceContext : public tf::DeviceContext {
                              StringPiece tensor_name, Device* device,
                              Tensor* cpu_tensor, StatusCallback done) override {
     if (device_tensor->NumElements() > 0) {
-      VLOG(2) << "CopyDeviceTensorToCPU "
-              << reinterpret_cast<const void*>(
-                     device_tensor->tensor_data().data())
-              << " "
-              << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
-              << device_tensor->NumElements();
-      VLOG(99) << device_tensor->DebugString();
+      NGRAPH_VLOG(3) << "CopyDeviceTensorToCPU "
+                     << reinterpret_cast<const void*>(
+                          device_tensor->tensor_data().data())
+                     << " "
+                     << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
+                     << device_tensor->NumElements();
+      NGRAPH_VLOG(3) << device_tensor->DebugString();
       // done(errors::Internal("Unrecognized device type in device-to-CPU
       // Copy"));
 
@@ -109,8 +109,8 @@ class NGraphDeviceContext : public tf::DeviceContext {
       done(tf::Status::OK());
       return;
     }
-    VLOG(99) << "CopyDeviceTensorToCPU empty tensor";
-    VLOG(99) << device_tensor->DebugString();
+    NGRAPH_VLOG(3) << "CopyDeviceTensorToCPU empty tensor";
+    NGRAPH_VLOG(3) << device_tensor->DebugString();
     done(tf::Status::OK());
   }
 };  // namespace tensorflow
@@ -133,11 +133,11 @@ class NGraphDevice : public Device {
 
   tf::Status FillContextMap(const Graph* graph,
                             DeviceContextMap* device_context_map) override {
-    VLOG(99) << "NGraphDevice::FillContextMap";
+    NGRAPH_VLOG(3) << "NGraphDevice::FillContextMap";
     device_context_map->resize(graph->num_node_ids());
 
     for (Node* n : graph->nodes()) {
-      // VLOG(99) << n->id() << " : " << n->type_string() << " : " << n->name();
+      // NGRAPH_VLOG(3) << n->id() << " : " << n->type_string() << " : " << n->name();
       m_device_context->Ref();
       (*device_context_map)[n->id()] = m_device_context;
     }
@@ -146,7 +146,7 @@ class NGraphDevice : public Device {
 
   // Overwrite MaybeRewriteGraph
   Status MaybeRewriteGraph(std::unique_ptr<Graph>* graph) override {
-    VLOG(99) << "NGraphDevice::MaybeRewriteGraph() called";
+    NGRAPH_VLOG(3) << "NGraphDevice::MaybeRewriteGraph() called";
     return Status::OK();
   }
 
@@ -188,7 +188,7 @@ REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU,
 
 #include <dlfcn.h>
 static bool InitModule() {
-  NGRAPH_VLOG(0) << "InitModule() called";
+  NGRAPH_VLOG(1) << "InitModule() called";
   // Determine the full path of this DSO
   Dl_info dlInfo;
 
@@ -207,7 +207,7 @@ static bool InitModule() {
   auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
                        RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
-    VLOG(0) << "Error loading the plugin library. "
+    NGRAPH_VLOG(0) << "Error loading the plugin library. "
                "nGraph device won't be available";
     return false;
   }
@@ -215,8 +215,8 @@ static bool InitModule() {
   handle = dlopen((ngraph_directory + "/libngraph.so").c_str(),
                   RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
-    VLOG(0) << "Error loading the plugin library. "
-               "nGraph device won't be available";
+    NGRAPH_VLOG(0) << "Error loading the plugin library. "
+                      "nGraph device won't be available";
     return false;
   }
   return true;

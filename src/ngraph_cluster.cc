@@ -28,6 +28,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "ngraph_cluster_manager.h"
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 #include "tf_graphcycles.h"
 
@@ -48,8 +49,8 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
     }
 
     if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
-      VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
-                 "experimental and unlikely to work.";
+      NGRAPH_VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
+                        "experimental and unlikely to work.";
     }
 
     tf::Graph* graph = options.graph->get();
@@ -251,8 +252,8 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
         bool is_trivial = cluster->nodes.size() < MINIMUM_CLUSTER_NODES;
 
         seen.insert(cluster);
-        VLOG(0) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
-                << " nodes" << (is_trivial ? " (trivial)" : "");
+        NGRAPH_VLOG(2) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
+                       << " nodes" << (is_trivial ? " (trivial)" : "");
 
         for (auto node : cluster->nodes) {
           if (!IsNGraphNode(node)) {
@@ -267,9 +268,9 @@ class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
                 " is not a clusterable node but was placed in an nGraph cluster.");
           }
 
-          VLOG(0) << ">> cluster " << cluster_idx << ": " << node
-                  << " :: " << node->name() << " [" << node->type_string()
-                  << "]";
+          NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
+                         << " :: " << node->name() << " [" << node->type_string()
+                         << "]";
 
           node->AddAttr("_ngraph_cluster", cluster_idx);
           if (is_trivial) {
