@@ -14,6 +14,11 @@
 #  limitations under the License.
 # ==============================================================================
 from setuptools import setup
+from setuptools.dist import Distribution
+
+class BinaryDistribution(Distribution):
+    def is_pure(self):
+        return False
 
 setup( 
     name='ngraph',
@@ -21,5 +26,10 @@ setup(
     description='Intel nGraph device',
     packages=['ngraph'], 
     author='Intel-Nervana AIPG', 
+    include_package_data=True,
+    distclass=BinaryDistribution,
+    package_data={
+            'ngraph': ['libngraph_device.so'],
+                },
 )
 
