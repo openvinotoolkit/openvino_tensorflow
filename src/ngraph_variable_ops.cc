@@ -33,6 +33,12 @@ using namespace tensorflow;
 //
 // BEGIN VARIABLE OP STUFF COPIED, WITH MODIFICATION, FROM TF CODE BASE.
 //
+// Copied from:
+//
+//   tensorflow/core/kernels/variable_ops.{cc,h}
+//   tensorflow/core/kernels/assign_op.h
+//   tensorflow/core/kernels/dense_update_ops.cc
+//
 // The general pattern is that we've taken classes and stuck "NGraph" on the
 // front of their names, just so we can get variables placed on NGRAPH_CPU. As
 // we go, we will be adding nGraph-specific features to these ops.
