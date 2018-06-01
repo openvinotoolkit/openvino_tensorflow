@@ -61,6 +61,10 @@ tf::Status NGraphClusterPass::Run(const tf::GraphOptimizationPassOptions& option
 
 // TODO(amprocte): do we need to look at job name, replica, task?
 bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
+  //
+  // This is just a debugging aid to experiment with clustering without
+  // actually mapping things to nGraph. It will probably go away soon.
+  //
   if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
     if (tf::str_util::StartsWith(node->name(), "accuracy/")) {
       return false;
