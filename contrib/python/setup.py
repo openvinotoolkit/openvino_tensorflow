@@ -17,8 +17,8 @@ from setuptools import setup
 
 setup( 
     name='ngraph',
-    version='0.1.0',
-    description='direct integration of ngraph to tensorflow',
+    version='0.0.0',
+    description='Intel nGraph device',
     packages=['ngraph'], 
     author='Intel-Nervana AIPG', 
 )
