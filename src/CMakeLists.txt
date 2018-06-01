@@ -44,10 +44,12 @@ set(SRC
    ngraph_encapsulate_op.cc
    ngraph_encapsulate_pass.cc
    ngraph_graph_rewrite_passes.cc
+   ngraph_liberate_pass.cc
    ngraph_op_kernels.cc
    ngraph_utils.cc
    tf_graphcycles.cc
    ngraph_send_recv_ops.cc
+   ngraph_variable_ops.cc
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})
