@@ -46,6 +46,7 @@ set(SRC
    ngraph_graph_rewrite_passes.cc
    ngraph_liberate_pass.cc
    ngraph_op_kernels.cc
+   ngraph_stub_ops.cc
    ngraph_utils.cc
    tf_graphcycles.cc
    ngraph_send_recv_ops.cc
