@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_utils.h"
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -28,6 +26,7 @@
 #include "tensorflow/core/platform/protobuf.h"
 
 #include "ngraph_log.h"
+#include "ngraph_utils.h"
 #include "tf_graph_writer.h"
 
 using namespace std;

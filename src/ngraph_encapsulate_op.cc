@@ -28,6 +28,7 @@
 
 #include "ngraph_builder.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 
 namespace tf = tensorflow;
@@ -93,7 +94,7 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
         std::string file_name =
             "tf_function_" + ctx->op_kernel().name() + ".js";
-        VLOG(0) << "Serializing graph to: " << file_name;
+        NGRAPH_VLOG(0) << "Serializing graph to: " << file_name;
         std::string js = ngraph::serialize(ng_function, 4);
         {
           std::ofstream f(file_name);

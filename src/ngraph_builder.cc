@@ -15,6 +15,7 @@
  *******************************************************************************/
 
 #include "ngraph_builder.h"
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 
 #include "ngraph/builder/autobroadcast.hpp"
@@ -26,8 +27,6 @@
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
-
-#define LL 99
 
 namespace ngraph_bridge {
 
@@ -194,7 +193,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // AvgPool
     // -------
     else if (op->type_string() == "AvgPool") {
-      VLOG(LL) << op->name();
+      NGRAPH_VLOG(3) << op->name();
       if (op->num_inputs() != 1) {
         return tf::errors::InvalidArgument(
             "Number of inputs is not 1 for AvgPool");
@@ -223,10 +222,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       bool is_nhwc = (tf_data_format == "NHWC");
 
-      VLOG(LL) << ng::join(tf_strides);
-      VLOG(LL) << ng::join(tf_ksize);
-      VLOG(LL) << tf_padding_type;
-      VLOG(LL) << tf_data_format;
+      NGRAPH_VLOG(3) << ng::join(tf_strides);
+      NGRAPH_VLOG(3) << ng::join(tf_ksize);
+      NGRAPH_VLOG(3) << tf_padding_type;
+      NGRAPH_VLOG(3) << tf_data_format;
 
       ng::Strides ng_strides(2);
       ng::Shape ng_image_shape(2);
@@ -236,7 +235,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         auto& s = ng_input->get_shape();
         ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
 
-        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+        NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
 
         ng_input = make_shared<ng::op::Reshape>(
             ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
@@ -262,9 +261,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         ng_kernel_shape[1] = tf_ksize[3];
       }
 
-      VLOG(LL) << "ng_strides: " << ng::join(ng_strides);
-      VLOG(LL) << "ng_image_shape: " << ng::join(ng_image_shape);
-      VLOG(LL) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+      NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+      NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+      NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
       // TODO: change this once nGraph supports negative padding
       // (CoordinateDiff) for AvgPool
@@ -296,8 +295,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         }
       }
 
-      VLOG(LL) << "ng_padding_below: " << ng::join(ng_padding_below);
-      VLOG(LL) << "ng_padding_above: " << ng::join(ng_padding_above);
+      NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+      NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
 
       std::shared_ptr<ng::Node> ng_avgpool = make_shared<ng::op::AvgPool>(
           ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
@@ -311,7 +310,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
             ng_avgpool, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
       }
 
-      VLOG(LL) << "avgpool outshape: {" << ng::join(ng_avgpool->get_shape())
+      NGRAPH_VLOG(3) << "avgpool outshape: {" << ng::join(ng_avgpool->get_shape())
                << "}";
 
       ng_op_map[op->name()] = ng_avgpool;
@@ -504,10 +503,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       bool is_nhwc = (tf_data_format == "NHWC");
 
-      VLOG(LL) << ng::join(tf_strides);
-      VLOG(LL) << ng::join(tf_dilations);
-      VLOG(LL) << tf_padding_type;
-      VLOG(LL) << tf_data_format;
+      NGRAPH_VLOG(3) << ng::join(tf_strides);
+      NGRAPH_VLOG(3) << ng::join(tf_dilations);
+      NGRAPH_VLOG(3) << tf_padding_type;
+      NGRAPH_VLOG(3) << tf_data_format;
 
       ng::Strides ng_strides(2);
       ng::Strides ng_dilations(2);
@@ -518,7 +517,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         auto& s = ng_input->get_shape();
         ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
 
-        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+        NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
 
         ng_input = make_shared<ng::op::Reshape>(
             ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
@@ -544,9 +543,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         ng_image_shape[1] = s[3];
       }
 
-      VLOG(LL) << "ng_strides: " << ng::join(ng_strides);
-      VLOG(LL) << "ng_dilations: " << ng::join(ng_dilations);
-      VLOG(LL) << "ng_image_shape: " << ng::join(ng_image_shape);
+      NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+      NGRAPH_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
+      NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
 
       {
         auto& s = ng_filter->get_shape();
@@ -558,7 +557,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         ng_kernel_shape[1] = s[1];
       }
 
-      VLOG(LL) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+      NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
       ng::CoordinateDiff ng_padding_below{0, 0};
       ng::CoordinateDiff ng_padding_above{0, 0};
@@ -586,8 +585,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         }
       }
 
-      VLOG(LL) << "ng_padding_below: " << ng::join(ng_padding_below);
-      VLOG(LL) << "ng_padding_above: " << ng::join(ng_padding_above);
+      NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+      NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
 
       std::shared_ptr<ng::Node> ng_conv = make_shared<ng::op::Convolution>(
           ng_input, ng_filter, ng_strides, ng_dilations, ng_padding_below,
@@ -621,11 +620,11 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       bool tf_is_training;
       if (tf::GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
           tf::Status::OK()) {
-        VLOG(LL) << "is_training attribute not present, setting to true";
+        NGRAPH_VLOG(3) << "is_training attribute not present, setting to true";
         tf_is_training = true;
       }
 
-      VLOG(LL) << "is_training: " << tf_is_training;
+      NGRAPH_VLOG(3) << "is_training: " << tf_is_training;
 
       tf::Node* tf_input;
       tf::Node* tf_scale;
@@ -655,22 +654,22 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       bool is_nhwc = (tf_data_format == "NHWC");
 
-      VLOG(LL) << "data_format: " << tf_data_format;
+      NGRAPH_VLOG(3) << "data_format: " << tf_data_format;
 
       float tf_epsilon;
       if (tf::GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) !=
           tf::Status::OK()) {
-        VLOG(LL) << "epsilon attribute not present, setting to zero";
+        NGRAPH_VLOG(3) << "epsilon attribute not present, setting to zero";
         tf_epsilon = 0;  // FIXME(amprocte):
       }
 
-      VLOG(LL) << "epsilon: " << tf_epsilon;
+      NGRAPH_VLOG(3) << "epsilon: " << tf_epsilon;
 
       if (is_nhwc) {
         auto& s = ng_input->get_shape();
         ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
 
-        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+        NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
 
         ng_input = make_shared<ng::op::Reshape>(
             ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
@@ -745,7 +744,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // MaxPool
     // -------
     else if (op->type_string() == "MaxPool") {
-      VLOG(LL) << op->name();
+      NGRAPH_VLOG(3) << op->name();
       if (op->num_inputs() != 1) {
         return tf::errors::InvalidArgument(
             "Number of inputs is not 1 for MaxPool");
@@ -774,10 +773,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       bool is_nhwc = (tf_data_format == "NHWC");
 
-      VLOG(LL) << ng::join(tf_strides);
-      VLOG(LL) << ng::join(tf_ksize);
-      VLOG(LL) << tf_padding_type;
-      VLOG(LL) << tf_data_format;
+      NGRAPH_VLOG(3) << ng::join(tf_strides);
+      NGRAPH_VLOG(3) << ng::join(tf_ksize);
+      NGRAPH_VLOG(3) << tf_padding_type;
+      NGRAPH_VLOG(3) << tf_data_format;
 
       ng::Strides ng_strides(2);
       ng::Shape ng_image_shape(2);
@@ -787,7 +786,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         auto& s = ng_input->get_shape();
         ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
 
-        VLOG(LL) << "reshaped_shape: " << ng::join(reshaped_shape);
+        NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
 
         ng_input = make_shared<ng::op::Reshape>(
             ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
@@ -813,9 +812,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         ng_kernel_shape[1] = tf_ksize[3];
       }
 
-      VLOG(LL) << "ng_strides: " << ng::join(ng_strides);
-      VLOG(LL) << "ng_image_shape: " << ng::join(ng_image_shape);
-      VLOG(LL) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+      NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+      NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+      NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
       // TODO: change this once nGraph supports negative padding
       // (CoordinateDiff) for MaxPool
@@ -847,8 +846,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         }
       }
 
-      VLOG(LL) << "ng_padding_below: " << ng::join(ng_padding_below);
-      VLOG(LL) << "ng_padding_above: " << ng::join(ng_padding_above);
+      NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+      NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
 
       std::shared_ptr<ng::Node> ng_maxpool =
           make_shared<ng::op::MaxPool>(ng_input, ng_kernel_shape, ng_strides,
@@ -862,7 +861,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
             ng_maxpool, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
       }
 
-      VLOG(LL) << "maxpool outshape: {" << ng::join(ng_maxpool->get_shape())
+      NGRAPH_VLOG(3) << "maxpool outshape: {" << ng::join(ng_maxpool->get_shape())
                << "}";
 
       ng_op_map[op->name()] = ng_maxpool;
@@ -958,7 +957,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       std::vector<tf::int64> constant_values;
       TF_RETURN_IF_ERROR(GetDataFromConstant(ng_paddings_op, &constant_values));
 
-      VLOG(LL) << "{" << ng::join(constant_values) << "}";
+      NGRAPH_VLOG(3) << "{" << ng::join(constant_values) << "}";
 
       if (constant_values.size() % 2 != 0) {
         return tf::errors::InvalidArgument(
@@ -976,8 +975,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         padding_interior[i] = 0;
       }
 
-      VLOG(LL) << "{" << ng::join(padding_below) << "}";
-      VLOG(LL) << "{" << ng::join(padding_above) << "}";
+      NGRAPH_VLOG(3) << "{" << ng::join(padding_below) << "}";
+      NGRAPH_VLOG(3) << "{" << ng::join(padding_above) << "}";
 
       // For PadV1 it seems the value is always zero.
       auto pad_val_op = make_shared<ng::op::Constant>(
@@ -1030,7 +1029,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       std::vector<tf::int64> constant_values;
       TF_RETURN_IF_ERROR(GetDataFromConstant(ng_shape_op, &constant_values));
 
-      VLOG(LL) << "{" << ng::join(ng_shape_op->get_shape()) << "}";
+      NGRAPH_VLOG(3) << "{" << ng::join(ng_shape_op->get_shape()) << "}";
 
       size_t output_rank = ng::shape_size(ng_shape_op->get_shape());
       size_t num_input_elements = ng::shape_size(ng_input->get_shape());
@@ -1057,9 +1056,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       if (seen_inferred) {
         if (num_input_elements % product_of_rest != 0) {
-          VLOG(LL) << tf_input->name();
-          VLOG(LL) << "{" << ng::join(ng_input->get_shape()) << "}";
-          VLOG(LL) << "{" << ng::join(constant_values) << "}";
+          NGRAPH_VLOG(3) << tf_input->name();
+          NGRAPH_VLOG(3) << "{" << ng::join(ng_input->get_shape()) << "}";
+          NGRAPH_VLOG(3) << "{" << ng::join(constant_values) << "}";
           return tf::errors::InvalidArgument(
               "Product of known dimensions (", product_of_rest,
               ") does not evenly divide the number of input elements (",
@@ -1168,13 +1167,13 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::AxisVector ng_axis_order;
       ng_axis_order.reserve(constant_values.size());
 
-      VLOG(LL) << ng::join(constant_values);
+      NGRAPH_VLOG(3) << ng::join(constant_values);
 
       for (auto i : constant_values) {
         ng_axis_order.push_back(i);
       }
 
-      VLOG(LL) << ng::join(ng_axis_order);
+      NGRAPH_VLOG(3) << ng::join(ng_axis_order);
 
       ng_op_map[op->name()] =
           ng::builder::numpy_transpose(ng_input, ng_axis_order);
@@ -1183,9 +1182,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // Catch-all for unsupported ops
     // -----------------------------
     else {
-      VLOG(LL) << "Unsupported Op: " << op->name() << " (" << op->type_string()
+      NGRAPH_VLOG(3) << "Unsupported Op: " << op->name() << " (" << op->type_string()
                << ")";
-      VLOG(LL) << op->def().DebugString();
+      NGRAPH_VLOG(3) << op->def().DebugString();
       return tf::errors::InvalidArgument("Unsupported Op: ", op->name(), " (",
                                          op->type_string(), ")");
     }

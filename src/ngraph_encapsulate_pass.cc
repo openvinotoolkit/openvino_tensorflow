@@ -36,6 +36,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "ngraph_cluster_manager.h"
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 #include "tf_graph_writer.h"
 
@@ -46,8 +47,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
  public:
   tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     if (std::getenv("NGRAPH_TF_SKIP_ENCAPSULATION") != nullptr) {
-      VLOG(0) << "NGRAPH_TF_SKIP_ENCAPSULATION is set. Skipping encapsulation "
-                 "step.";
+      NGRAPH_VLOG(0) << "NGRAPH_TF_SKIP_ENCAPSULATION is set. Skipping encapsulation "
+                        "step.";
       return tf::Status::OK();
     }
 
@@ -135,8 +136,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
           return tf::errors::Internal(ss_err.str());
         }
       } else {
-        VLOG(99) << "setting cluster " << cluster_idx
-                 << " requested device to '" << node->requested_device() << "'";
+        NGRAPH_VLOG(3) << "setting cluster " << cluster_idx
+                       << " requested device to '" << node->requested_device() << "'";
         device_name_map[cluster_idx] = node->requested_device();
       }
     }
@@ -181,10 +182,10 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
                                   ? "cross-flow"
                                   : dst_clustered ? "in-flow" : "out-flow";
 
-      VLOG(99) << "found " << flow_kind << ": " << src->name() << "["
-               << edge->src_output() << "] in " << src_cluster_idx << " to "
-               << dst->name() << "[" << edge->dst_input() << "] in "
-               << dst_cluster_idx << ", datatype: " << dt;
+      NGRAPH_VLOG(4) << "found " << flow_kind << ": " << src->name() << "["
+                     << edge->src_output() << "] in " << src_cluster_idx << " to "
+                     << dst->name() << "[" << edge->dst_input() << "] in "
+                     << dst_cluster_idx << ", datatype: " << dt;
 
       // If the source node lies within a cluster, we must create an output for
       // it from the source cluster. For the moment we will just store this

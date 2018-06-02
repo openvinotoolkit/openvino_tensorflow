@@ -29,6 +29,7 @@
 
 #include "ngraph_cluster.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_log.h"
 #include "ngraph_utils.h"
 #include "tf_graphcycles.h"
 
@@ -47,8 +48,8 @@ tf::Status NGraphClusterPass::Run(const tf::GraphOptimizationPassOptions& option
   }
 
   if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
-    VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
-               "experimental and unlikely to work.";
+    NGRAPH_VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
+                      "experimental and unlikely to work.";
   }
 
   tf::Graph* graph = options.graph->get();
@@ -60,6 +61,10 @@ tf::Status NGraphClusterPass::Run(const tf::GraphOptimizationPassOptions& option
 
 // TODO(amprocte): do we need to look at job name, replica, task?
 bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
+  //
+  // This is just a debugging aid to experiment with clustering without
+  // actually mapping things to nGraph. It will probably go away soon.
+  //
   if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
     if (tf::str_util::StartsWith(node->name(), "accuracy/")) {
       return false;
@@ -228,8 +233,8 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
       bool is_trivial = cluster->nodes.size() < MINIMUM_CLUSTER_NODES;
 
       seen.insert(cluster);
-      VLOG(0) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
-              << " nodes" << (is_trivial ? " (trivial)" : "");
+      NGRAPH_VLOG(2) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
+                     << " nodes" << (is_trivial ? " (trivial)" : "");
 
       for (auto node : cluster->nodes) {
         if (!IsNGraphNode(node)) {
@@ -244,9 +249,9 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
               " is not a clusterable node but was placed in an nGraph cluster.");
         }
 
-        VLOG(0) << ">> cluster " << cluster_idx << ": " << node
-                << " :: " << node->name() << " [" << node->type_string()
-                << "]";
+        NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
+                       << " :: " << node->name() << " [" << node->type_string()
+                       << "]";
 
         node->AddAttr("_ngraph_cluster", cluster_idx);
         if (is_trivial) {
