@@ -28,10 +28,12 @@
 
 #include "ngraph_builder.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_freshness_tracker.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
 
 namespace tf = tensorflow;
+namespace ngb = ngraph_bridge;
 
 namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH_CPU;
@@ -112,6 +114,17 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     // don't know how expensive this actually is.)
     auto backend = ng::runtime::Backend::create("CPU");
 
+    auto creator = [this](ngb::NGraphFreshnessTracker** tracker) {
+      *tracker = new ngb::NGraphFreshnessTracker();
+      return tf::Status::OK();
+    };
+    ngb::NGraphFreshnessTracker* tracker;
+    OP_REQUIRES_OK(
+        ctx,
+        ctx->resource_manager()->LookupOrCreate<ngb::NGraphFreshnessTracker>(
+            ctx->resource_manager()->default_container(),
+            "ngraph_freshness_tracker", &tracker, creator));
+
     // Allocate tensors for arguments.
     vector<shared_ptr<ng::runtime::TensorView>> ng_inputs;
     for (int i = 0; i < input_shapes.size(); i++) {
@@ -126,7 +139,23 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
       void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
       auto t = backend->create_tensor(ng_element_type, ng_shape, src_ptr);
+      // TODO(amprocte): this check is not quite enough. We also need to make
+      // sure that this is the same base pointer that was supplied last time.
+      if (tracker->IsFresh(src_ptr)) {
+        t->set_stale(false);
+      } else {
+        t->set_stale(true);
+      }
       ng_inputs.push_back(t);
+    }
+
+    // Mark input tensors as fresh.
+    // TODO(amprocte): need to do this on a per-function basis.
+    for (int i = 0; i < input_shapes.size(); i++) {
+      void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
+      if (tracker->IsRegistered(src_ptr)) {
+        tracker->MarkFresh(src_ptr);
+      }
     }
 
     // Allocate tensors for the results.

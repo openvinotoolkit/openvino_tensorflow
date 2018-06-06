@@ -75,7 +75,8 @@ class NGraphLiberatePass : public tensorflow::GraphOptimizationPass {
       if (node->IsOp() && IsNGraphNode(node)) {
         std::vector<std::string> colo;
 
-        if (tf::GetNodeAttr(node->attrs(), tf::kColocationAttrName, &colo) == tf::Status::OK()) {
+        if (tf::GetNodeAttr(node->attrs(), tf::kColocationAttrName, &colo) ==
+            tf::Status::OK()) {
           for (auto& s : colo) {
             std::stringstream ss;
             ss << s << "/LIBERATED_" << (i++);

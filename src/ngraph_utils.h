@@ -102,8 +102,9 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
           values->data()[i] = tensor.float_val()[i];
           break;
         default:
-          NGRAPH_VLOG(0) << "Const node has empty tensor and we don't know how to "
-                            "handle this element type";
+          NGRAPH_VLOG(0)
+              << "Const node has empty tensor and we don't know how to "
+                 "handle this element type";
           NGRAPH_VLOG(0) << node.DebugString();
           NGRAPH_VLOG(0) << shape.DebugString();
           return tf::errors::Unimplemented(

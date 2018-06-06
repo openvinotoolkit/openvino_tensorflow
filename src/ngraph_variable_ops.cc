@@ -22,6 +22,7 @@
 
 #include "tensorflow/core/platform/default/logging.h"
 
+#include "ngraph_freshness_tracker.h"
 #include "ngraph_utils.h"
 
 namespace ngraph_bridge {
@@ -29,6 +30,7 @@ extern const char* const DEVICE_NGRAPH_CPU;
 }
 
 using namespace tensorflow;
+namespace ngb = ngraph_bridge;
 
 //
 // BEGIN VARIABLE OP STUFF COPIED, WITH MODIFICATION, FROM TF CODE BASE.
@@ -52,7 +54,8 @@ using namespace tensorflow;
 // (legacy, ref-style version).
 class NGraphVar : public ResourceBase {
  public:
-  explicit NGraphVar(DataType dtype,const TensorShape& shape) : tensor_(dtype,shape) {}
+  explicit NGraphVar(DataType dtype, const TensorShape& shape)
+      : tensor_(dtype, shape) {}
   // Not copyable or movable.
   NGraphVar(const NGraphVar&) = delete;
   NGraphVar& operator=(const NGraphVar&) = delete;
@@ -88,7 +91,8 @@ class NGraphVariableOp : public OpKernel {
   TF_DISALLOW_COPY_AND_ASSIGN(NGraphVariableOp);
 };
 
-NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context) : OpKernel(context) {
+NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
+    : OpKernel(context) {
   OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
   dtype_ = RemoveRefType(context->output_type(0));
 }
@@ -101,10 +105,16 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     initialized_ = true;
   }
   auto creator = [this](NGraphVar** var) {
-    *var = new NGraphVar(dtype_,shape_);
-    // tf::Variable has friend access to the following method, but we don't.
-    // Fortunately we can just tweak NGraphVar to do this in the constructor.
-    //(*var)->tensor()->set_shape(shape_);
+    // This part is modified slightly. The TF implementation does this:
+    //
+    //   *var = new LocalVar(dtype_);
+    //   (*var)->tensor()->set_shape(shape_);
+    //
+    // but VariableOp is a friend of tensor and set_shape is private. I believe
+    // what this is doing is setting the shape of the tensor without allocating
+    // any memory for it, since Assign will do that later if necessary. For us,
+    // pre-allocation is okay for now.
+    *var = new NGraphVar(dtype_, shape_);
     return Status::OK();
   };
   NGraphVar* var;
@@ -125,8 +135,8 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
 }
 
 REGISTER_KERNEL_BUILDER(
-   Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-   NGraphVariableOp);
+    Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    NGraphVariableOp);
 
 class NGraphAssignOp : public OpKernel {
  public:
@@ -142,83 +152,48 @@ class NGraphAssignOp : public OpKernel {
   void Compute(OpKernelContext* context) override {
     const Tensor& rhs = context->input(1);
 
+    // Mark the underlying tensor as stale.
+    auto creator = [this](ngb::NGraphFreshnessTracker** tracker) {
+      *tracker = new ngb::NGraphFreshnessTracker();
+      return Status::OK();
+    };
+    ngb::NGraphFreshnessTracker* tracker;
+    OP_REQUIRES_OK(context,
+                   context->resource_manager()
+                       ->LookupOrCreate<ngb::NGraphFreshnessTracker>(
+                           context->resource_manager()->default_container(),
+                           "ngraph_freshness_tracker", &tracker, creator));
+    tracker->MarkStale(DMAHelper::base(&context->input(0)));
+
     // We always return the input ref.
     context->forward_ref_input_to_ref_output(0, 0);
-
-    // We can't always know how this value will be used downstream,
-    // so make conservative assumptions in specifying constraints on
-    // the memory allocation attributes.
-    // TODO(rmlarsen): These conservative constraints make buffer
-    // forwarding unlikely to happen very often. Try to use graph analysis
-    // (possibly the InferAllocAttr pass in the executer) to improve the
-    // situation.
-    AllocatorAttributes attr;
-    attr.set_gpu_compatible(true);
-    attr.set_nic_compatible(true);
 
     {
       mutex_lock l(*context->input_ref_mutex(0));
       const Tensor& old_lhs = context->mutable_input(0, /* lock_held */ true);
       const bool same_shape = old_lhs.shape().IsSameSize(rhs.shape());
-      if (m_validate_shape) {
-        OP_REQUIRES(
-            context, same_shape,
-            errors::InvalidArgument(
-                "Assign requires shapes of both tensors to match. lhs shape= ",
-                old_lhs.shape().DebugString(),
-                " rhs shape= ", rhs.shape().DebugString()));
-      }
 
-      // In the code below we try to minimize the amount of memory allocation
-      // and copying by trying the following two shortcuts:
-      // 1. If we can reuse the rhs buffer we avoid both a memory allocation
-      //   and copying.
-      // 2. If the lhs is initialized and has the same number of elements as the
-      //    rhs we can avoid a memory allocation.
+      // For now, nGraph bridge only works if the rhs shape matches. This means
+      // that the tensor we are assigning to must previously have been
+      // allocated with a matching shape, and we cannot change its shape here
+      // at assignment time.
+      //
+      // It should be possible to remove this restriction, but it may require
+      // some tricky interactions with the freshness tracker, since we will
+      // need to allocate new space. Since we don't yet have any use cases that
+      // will exercise this functionality, it's best not try to implement it
+      // yet.
+      OP_REQUIRES(
+          context, same_shape,
+          errors::InvalidArgument("Assign for nGraph requires shapes of both "
+                                  "tensors to match. lhs shape= ",
+                                  old_lhs.shape().DebugString(), " rhs shape= ",
+                                  rhs.shape().DebugString()));
 
-      // 1. Try to reuse the rhs.
-      std::unique_ptr<Tensor> input_alias = context->forward_input(
-          1, OpKernelContext::Params::kNoReservation /*output_index*/,
-          old_lhs.dtype(), old_lhs.shape(), DEVICE_MEMORY, attr);
-      if (input_alias != nullptr) {
-        // Transfer ownership to the ref.
-        context->replace_ref_input(0, *input_alias.release(),
-                                   /* lock_held */ true);
+      if (m_use_exclusive_lock) {
+        Tensor lhs = context->mutable_input(0, /* lock_held */ true);
+        Copy(context, &lhs, rhs);
         return;
-      }
-
-      // 2. Try to copy into an existing buffer.
-      if (old_lhs.IsInitialized() &&
-          old_lhs.shape().num_elements() == rhs.shape().num_elements()) {
-        // The existing lhs tensor has already been initialized and the right
-        // hand side can fit in the underlying buffer.
-        Tensor reshaped_old_lhs;
-        if (same_shape) {
-          reshaped_old_lhs = old_lhs;
-        } else {
-          CHECK(reshaped_old_lhs.CopyFrom(old_lhs, rhs.shape()));
-          context->replace_ref_input(0, reshaped_old_lhs, /* lock_held */ true);
-        }
-        if (m_use_exclusive_lock) {
-          Copy(context, &reshaped_old_lhs, rhs);
-          return;
-        }
-      } else {
-        // Create a new persistent tensor whose shape matches the right hand
-        // side, hand off to lhs and copy the rhs into it.
-        PersistentTensor copy;
-        Tensor* copyTensor = nullptr;
-        OP_REQUIRES_OK(
-            context, context->allocate_persistent(old_lhs.dtype(), rhs.shape(),
-                                                  &copy, &copyTensor, attr));
-        // We track memory of variables in variable ops instead of in this
-        // assign op.
-        context->clear_recorded_memory();
-        context->replace_ref_input(0, *copyTensor, /* lock_held */ true);
-        if (m_use_exclusive_lock) {
-          Copy(context, copyTensor, rhs);
-          return;
-        }
       }
     }
 
@@ -240,9 +215,8 @@ class NGraphAssignOp : public OpKernel {
   bool m_validate_shape;
 };
 
-REGISTER_KERNEL_BUILDER(
-   Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-   NGraphAssignOp);
+REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+                        NGraphAssignOp);
 
 class NGraphIsVariableInitializedOp : public OpKernel {
  public:
@@ -262,8 +236,8 @@ class NGraphIsVariableInitializedOp : public OpKernel {
 };
 
 REGISTER_KERNEL_BUILDER(
-   Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
-   NGraphIsVariableInitializedOp);
+    Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    NGraphIsVariableInitializedOp);
 //
 // END VARIABLE OP STUFF COPIED, WITH MODIFICATION, FROM TF CODE BASE
 //
