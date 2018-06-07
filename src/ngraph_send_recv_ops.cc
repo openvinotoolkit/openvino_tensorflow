@@ -23,7 +23,7 @@
 #include "ngraph_utils.h"
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 }
 
 using namespace tensorflow;
@@ -252,15 +252,15 @@ class NGraphSend : public OpKernel {
   bool hostmem_sendrecv_;
 };
 
-REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH),
                         NGraphRecv);
-REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH),
                         NGraphSend);
 REGISTER_KERNEL_BUILDER(Name("_HostRecv")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .Device(ngraph_bridge::DEVICE_NGRAPH)
                             .HostMemory("tensor"),
                         NGraphRecv);
 REGISTER_KERNEL_BUILDER(Name("_HostSend")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                            .Device(ngraph_bridge::DEVICE_NGRAPH)
                             .HostMemory("tensor"),
                         NGraphSend);

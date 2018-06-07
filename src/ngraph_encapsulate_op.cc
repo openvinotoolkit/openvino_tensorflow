@@ -34,7 +34,7 @@
 namespace tf = tensorflow;
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 
 REGISTER_OP("NGraphEncapsulate")
     .Input("args: Targuments")
@@ -176,6 +176,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
 namespace tensorflow {
 REGISTER_KERNEL_BUILDER(
-    Name("NGraphEncapsulate").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+    Name("NGraphEncapsulate").Device(ngraph_bridge::DEVICE_NGRAPH),
     ngraph_bridge::NGraphEncapsulateOp);
 }

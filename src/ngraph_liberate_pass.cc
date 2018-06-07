@@ -23,7 +23,7 @@ using namespace std;
 namespace ngraph_bridge {
 
 // TODO(amprocte): this decl should probably be in a header.
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 
 //
 // At graph construction time, TensorFlow likes to place colocation constraints
@@ -33,14 +33,14 @@ extern const char* const DEVICE_NGRAPH_CPU;
 //
 // The workaround implemented here is to "liberate" nGraph-placed ops from
 // colocation constraints. This pass only applies to nodes with a requested
-// placement on NGRAPH_CPU, meaning that the graph will be unchanged except
+// placement on NGRAPH, meaning that the graph will be unchanged except
 // where the user has explicitly requested nGraph.
 //
 // General algorithm:
 //
 //   i := 0
 //   For each node n in the graph:
-//     If n has been placed on device NGRAPH_CPU:
+//     If n has been placed on device NGRAPH:
 //       For each colocation constraint s on n:
 //         Append the string ("/LIBERATED_" + i) to s
 //         i++
@@ -65,7 +65,7 @@ class NGraphLiberatePass : public tensorflow::GraphOptimizationPass {
       return false;
     }
 
-    return (parsed.has_type && parsed.type == DEVICE_NGRAPH_CPU);
+    return (parsed.has_type && parsed.type == DEVICE_NGRAPH);
   }
 
   tf::Status LiberateNGraphPlacement(tf::Graph* graph) {

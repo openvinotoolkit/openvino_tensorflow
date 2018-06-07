@@ -24,7 +24,7 @@
 
 //
 // Kernels for some ops that should work even when they are placed on
-// NGRAPH_CPU but _not_ assigned to any cluster. This can happen for a few
+// NGRAPH but _not_ assigned to any cluster. This can happen for a few
 // reasons, one of which is that the partitioning pass seems to insert things
 // like Identity (and perhaps sometimes Const?), _after_ we've done
 // encapsulation. Sometimes it also makes sense not to cluster these ops,
@@ -33,7 +33,7 @@
 //
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 }
 
 using namespace tensorflow;
@@ -111,17 +111,17 @@ class NGraphIdentityOp : public OpKernel {
   bool IsExpensive() override { return false; }
 };
 
-REGISTER_KERNEL_BUILDER(Name("NoOp").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+REGISTER_KERNEL_BUILDER(Name("NoOp").Device(ngraph_bridge::DEVICE_NGRAPH),
                         NGraphNoOp);
 
 REGISTER_KERNEL_BUILDER(Name("Const")                                      \
-                            .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)      \
+                            .Device(ngraph_bridge::DEVICE_NGRAPH)      \
                             .TypeConstraint("dtype", {DT_FLOAT,DT_INT32}), \
                         NGraphConstOp);
 
 #define REGISTER_IDENTITY(T)                                            \
   REGISTER_KERNEL_BUILDER(Name("Identity")                              \
-                              .Device(ngraph_bridge::DEVICE_NGRAPH_CPU) \
+                              .Device(ngraph_bridge::DEVICE_NGRAPH) \
                               .TypeConstraint<T>("T"),                  \
                           NGraphIdentityOp);
 

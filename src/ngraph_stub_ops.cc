@@ -29,7 +29,7 @@
 //
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 }
 
 using namespace tensorflow;
@@ -52,59 +52,59 @@ class NGraphStubOp : public OpKernel {
 //
 
 REGISTER_NGRAPH_STUB(Name("Add")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T", {DT_FLOAT,DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("AvgPool")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("BiasAdd")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("ConcatV2")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T",{DT_INT32,DT_FLOAT})
                        .TypeConstraint("Tidx",{DT_INT32,DT_INT64}));
 // "Const" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB(Name("Conv2D")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Equal")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T",{DT_FLOAT,DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("FusedBatchNorm")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 // "Identity" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB(Name("MatMul")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("MaxPool")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Mean")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T")
                        .TypeConstraint("Tidx",{DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Mul")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T", {DT_FLOAT,DT_INT32}));
 // "NoOp" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB(Name("Pad")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T")
                        .TypeConstraint("Tpaddings",{DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Relu")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Reshape")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T",{DT_FLOAT,DT_INT32})
                        .TypeConstraint("Tshape",{DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Sum")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T")
                        .TypeConstraint("Tidx",{DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Transpose")
-                       .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T")
                        .TypeConstraint("Tperm",{DT_INT32,DT_INT64}));
