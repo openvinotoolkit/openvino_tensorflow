@@ -19,29 +19,53 @@ using namespace std;
 
 namespace ngraph_bridge {
 
-void NGraphFreshnessTracker::MarkFresh(const void* base_pointer) {
-  tf::mutex_lock l(mu_);
-  freshness_map_[base_pointer] = true;
-}
-
-void NGraphFreshnessTracker::MarkStale(const void* base_pointer) {
-  tf::mutex_lock l(mu_);
-  freshness_map_[base_pointer] = false;
-}
-
-bool NGraphFreshnessTracker::IsRegistered(const void* base_pointer) {
+void NGraphFreshnessTracker::MarkFresh(const void* base_pointer,
+                                       std::shared_ptr<ngraph::Function> user) {
   tf::mutex_lock l(mu_);
   auto it = freshness_map_.find(base_pointer);
-  return (it != freshness_map_.end());
+  if (it != freshness_map_.end()) {
+    it->second.insert(user);
+  }
 }
 
-bool NGraphFreshnessTracker::IsFresh(const void* base_pointer) {
+bool NGraphFreshnessTracker::IsFresh(const void* base_pointer,
+                                     std::shared_ptr<ngraph::Function> user) {
   tf::mutex_lock l(mu_);
   auto it = freshness_map_.find(base_pointer);
   if (it == freshness_map_.end()) {
     return false;
   } else {
-    return it->second;
+    return (it->second.count(user) > 0);
+  }
+}
+
+void NGraphFreshnessTracker::MarkStale(const void* base_pointer) {
+  tf::mutex_lock l(mu_);
+  auto it = freshness_map_.find(base_pointer);
+  if (it != freshness_map_.end()) {
+    it->second.clear();
+  }
+}
+
+void NGraphFreshnessTracker::AddTensor(const void* base_pointer) {
+  tf::mutex_lock l(mu_);
+  auto it = freshness_map_.find(base_pointer);
+  if (it == freshness_map_.end()) {
+    freshness_map_[base_pointer] =
+        std::set<std::shared_ptr<ngraph::Function>>{};
+  }
+}
+
+void NGraphFreshnessTracker::RemoveTensor(const void* base_pointer) {
+  tf::mutex_lock l(mu_);
+  freshness_map_.erase(base_pointer);
+}
+
+void NGraphFreshnessTracker::RemoveUser(
+    std::shared_ptr<ngraph::Function> user) {
+  tf::mutex_lock l(mu_);
+  for (auto kv : freshness_map_) {
+    kv.second.erase(user);
   }
 }
 

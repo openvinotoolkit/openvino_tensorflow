@@ -17,6 +17,7 @@
 #define NGRAPH_FRESHNESS_TRACKER_H_
 
 #include <set>
+#include "ngraph_utils.h"
 
 #include "tensorflow/core/framework/resource_mgr.h"
 
@@ -65,14 +66,20 @@ class NGraphFreshnessTracker : public tf::ResourceBase {
 
   std::string DebugString() override { return "FreshnessTracker"; }
 
-  void MarkFresh(const void* base_pointer);
+  void MarkFresh(const void* base_pointer,
+                 std::shared_ptr<ngraph::Function> user);
+  bool IsFresh(const void* base_pointer,
+               std::shared_ptr<ngraph::Function> user);
   void MarkStale(const void* base_pointer);
-  bool IsRegistered(const void* base_pointer);
-  bool IsFresh(const void* base_pointer);
+
+  void AddTensor(const void* base_pointer);
+  void RemoveTensor(const void* base_pointer);
+  void RemoveUser(std::shared_ptr<ngraph::Function> user);
 
  private:
   tf::mutex mu_;
-  std::map<const void*, bool> freshness_map_;
+  std::map<const void*, std::set<std::shared_ptr<ngraph::Function>>>
+      freshness_map_;
 
   ~NGraphFreshnessTracker() override {}
 };

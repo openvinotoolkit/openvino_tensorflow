@@ -163,6 +163,7 @@ class NGraphAssignOp : public OpKernel {
                        ->LookupOrCreate<ngb::NGraphFreshnessTracker>(
                            context->resource_manager()->default_container(),
                            "ngraph_freshness_tracker", &tracker, creator));
+    tracker->AddTensor(DMAHelper::base(&context->input(0)));
     tracker->MarkStale(DMAHelper::base(&context->input(0)));
 
     // We always return the input ref.
