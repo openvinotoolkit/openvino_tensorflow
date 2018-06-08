@@ -33,29 +33,53 @@ namespace ngraph_bridge {
 // General usage:
 //
 //   NGraphFreshnessTracker* tracker;
+//   Tensor* t = ...;
+//   std::shared_ptr<ngraph::Function> ng_func1 = something;
+//   std::shared_ptr<ngraph::Function> ng_func2 = something_else;
 //   ...
-//   Tensor* t;
 //   const void* tensor_base_ptr = (const void *)tf::DMAHelper::base(t);
 //
-//   [tracker->IsRegistered(tensor_base_ptr) will return false]
-//   [tracker->IsFresh(tensor_base_ptr) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
 //
-//   tracker->MarkFresh(tensor_base_ptr); // marks t as "fresh"
+//   tracker->MarkFresh(tensor_base_ptr,ng_func1);
+//                                        // TRIES to mark "t" as fresh for
+//                                        // ng_func1, but has no effect
+//                                        // because t has not been registered
+//                                        // yet.
 //
-//   [tracker->IsRegistered(tensor_base_ptr) will return true]
-//   [tracker->IsFresh(tensor_base_ptr) will return true]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will _still_ return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
 //
-//   tracker->MarkStale(tensor_base_ptr); // marks t as "stale"
+//   tracker->AddTensor(tensor_base_ptr); // registers "t"
+//   tracker->MarkFresh(tensor_base_ptr); // marks "t" fresh for ng_func1
 //
-//   [tracker->IsRegistered(tensor_base_ptr) will return true]
-//   [tracker->IsFresh(tensor_base_ptr) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return true]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
+//
+//   tracker->MarkStale(tensor_base_ptr); // marks t as "stale" for all funcs
+//
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
+//
+//   tracker->MarkFresh(tensor_base_ptr,ng_func1); // marks "t" fresh for
+//                                                 // ng_func1
+//   tracker->RemoveUser(ng_func1);                // removes all freshness
+//                                                 // info for ng_func1
+//
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
+//
+//   tracker->MarkFresh(tensor_base_ptr,ng_func2); // marks "t" fresh for
+//                                                 // ng_func2
+//   tracker->RemoveTensor(tensor_base_ptr);       // de-registers "t"
+//
+//   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return false]
+//   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
 //
 // Inside the nGraph bridge, the freshness tracker is stored as a resource in
 // the ResourceMgr's default container, with the resource name
 // "ngraph_freshness_tracker".
-//
-// TODO(amprocte): Freshness really needs to be tracked on a _per-function_
-// basis.
 //
 class NGraphFreshnessTracker : public tf::ResourceBase {
  public:
