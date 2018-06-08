@@ -68,6 +68,9 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     // d-tor
   }
 
+  // TODO(amprocte): this needs to be made thread-safe (compilation cache, and
+  // our use of the freshness-tracking stuff probably means we can only execute
+  // one instance at a time).
   void Compute(tf::OpKernelContext* ctx) override {
     // Get the inputs
     std::vector<tf::TensorShape> input_shapes;
