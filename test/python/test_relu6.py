@@ -38,27 +38,25 @@ print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 # Get the list of devices
 tf_devices = device_lib.list_local_devices()
 
-# # Look for nGraph device
-# for dev in tf_devices:
-#     print("Device Name: ", dev.name)
-#     print("Device Type: ", dev.device_type)
-
-
-
 x = tf.placeholder(tf.float32, shape=(2, 3))
 y = tf.placeholder(tf.float32, shape=(2, 3))
 z = tf.placeholder(tf.float32, shape=(2, 3))
 
-with tf.device("/device:NGRAPH_CPU:0"):
-    #with tf.device("/device:CPU:0"):
+with tf.device("/device:NGRAPH:0"):
 
-    a = x + y + z + x + y + z + x
-    c = z * a
+    a = x + y + z
+    b = x + y + z
+    c = b * a
     d = tf.nn.relu6(c)
-    # d = y - c
-    # b = a * y + d
 
-    # Save the graphdef
+    # input value and expected value
+    x_np = np.ones((2, 3))
+    y_np = np.ones((2, 3))
+    z_np = np.ones((2, 3))
+    a_np = x_np + y_np + z_np
+    b_np = x_np + y_np + z_np 
+    c_np = a_np * b_np
+    expected = np.minimum(c_np,np.full(c_np.shape, 6.0)) 
 
     config = tf.ConfigProto(
         allow_soft_placement=False,
@@ -70,18 +68,12 @@ with tf.device("/device:NGRAPH_CPU:0"):
         (result_a, result_c, result_d) = sess.run(
             (a, c, d),
             feed_dict={
-                x: np.ones((2, 3)),
-                y: np.ones((2, 3)),
-                z: np.ones((2, 3)),
+                x: x_np,
+                y: y_np,
+                z: z_np,
             })
         print("result:", result_d)
+        print("expected:", expected) 
+        np.testing.assert_allclose(result_d, expected, atol=1e-5, verbose=True)
 
-        # (result_a, result_b, _, _) = sess.run(
-        #     (a, b, c, d),
-        #     feed_dict={
-        #         x: np.ones((2, 3)),
-        #         y: np.ones((2, 3)),
-        #         z: np.ones((2, 3))
-        #     })
-        # print("result:", result_b)
-
+    
