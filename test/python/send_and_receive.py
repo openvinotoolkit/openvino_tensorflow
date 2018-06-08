@@ -36,7 +36,7 @@ lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 with tf.device("/device:CPU:0"):
     x = tf.constant(42,dtype='float32')
 
-with tf.device("/device:NGRAPH_CPU:0"):
+with tf.device("/device:NGRAPH:0"):
     first_var = tf.placeholder(tf.float32,shape=())
     y = x + first_var
 
@@ -44,7 +44,7 @@ with tf.device("/device:CPU:0"):
     second_var = tf.placeholder(tf.float32,shape=())
     z = y + second_var
 
-with tf.device("/device:NGRAPH_CPU:0"):
+with tf.device("/device:NGRAPH:0"):
     w = z + y
 
 with tf.device("/device:CPU:0"):

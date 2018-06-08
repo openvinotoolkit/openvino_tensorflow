@@ -33,7 +33,7 @@ limitations under the License.
 #include "ngraph_utils.h"
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU = "NGRAPH_CPU";
+extern const char* const DEVICE_NGRAPH = "NGRAPH";
 }
 
 namespace tensorflow {
@@ -175,8 +175,8 @@ class NGraphDeviceFactory : public DeviceFactory {
   Status CreateDevices(const SessionOptions& options, const string& name_prefix,
                        std::vector<Device*>* devices) override {
     DeviceAttributes attr;
-    attr.set_name(strings::StrCat(name_prefix, "/device:NGRAPH_CPU:0"));
-    attr.set_device_type(ngraph_bridge::DEVICE_NGRAPH_CPU);
+    attr.set_name(strings::StrCat(name_prefix, "/device:NGRAPH:0"));
+    attr.set_device_type(ngraph_bridge::DEVICE_NGRAPH);
 
     devices->push_back(new NGraphDevice(attr));
     return Status::OK();
@@ -184,8 +184,8 @@ class NGraphDeviceFactory : public DeviceFactory {
 };
 
 // Assumes the default priority is '50'.
-REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH_CPU,
-                              NGraphDeviceFactory, 50);
+REGISTER_LOCAL_DEVICE_FACTORY(ngraph_bridge::DEVICE_NGRAPH, NGraphDeviceFactory,
+                              50);
 
 #include <dlfcn.h>
 static bool InitModule() {

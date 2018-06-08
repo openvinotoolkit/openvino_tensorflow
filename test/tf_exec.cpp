@@ -60,7 +60,7 @@ TEST(tf_exec, axpy) {
   auto status = tf::ReadTextProto(tf::Env::Default(), "test_axpy.pbtxt", &gdef);
   ASSERT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
 
-  // tf::graph::SetDefaultDevice("/device:NGRAPH_CPU:0", &gdef);
+  // tf::graph::SetDefaultDevice("/device:NGRAPH:0", &gdef);
 
   tf::SessionOptions options;
   tf::ConfigProto& config = options.config;

@@ -32,7 +32,7 @@
 using namespace std;
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 
 void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out) {
   auto node_def = ctx->def();

@@ -42,7 +42,7 @@ from tensorflow.python.framework import errors_impl
 import ctypes
 lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 
-#with tf.device("/device:NGRAPH_CPU:0"):
+#with tf.device("/device:NGRAPH:0"):
 if True:
   i = tf.constant(0)
   j = tf.constant(10)
