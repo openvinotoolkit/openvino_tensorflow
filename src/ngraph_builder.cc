@@ -1020,9 +1020,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
           ng_input->get_element_type(), 
           ng_input->get_shape(),
           std::vector<std::string>(ng::shape_size(ng_input->get_shape()),"6"));
-      auto Relu6_op = make_shared<ng::op::Minimum>(make_shared<ng::op::Relu>(ng_input), constant_6);
+      auto relu6_op = make_shared<ng::op::Minimum>(make_shared<ng::op::Relu>(ng_input), constant_6);
 
-      ng_op_map[op->name()] = Relu6_op;
+      ng_op_map[op->name()] = relu6_op;
     }
     // -------
     // Reshape
