@@ -51,7 +51,7 @@ x = tf.placeholder(tf.float32, [None, 3], name='x')
 y = tf.placeholder(tf.float32, shape=(2, 3), name='y')
 
 # PLace this computation to NGRAPH
-with tf.device("/device:NGRAPH_CPU:0"):
+with tf.device("/device:NGRAPH:0"):
     c = a * x
 
 axpy = c + y

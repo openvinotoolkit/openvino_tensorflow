@@ -36,7 +36,7 @@
 using namespace std;
 namespace ngraph_bridge {
 
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 
 #define MINIMUM_CLUSTER_NODES 2
 
@@ -130,7 +130,7 @@ bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
       return false;
     }
 
-    return (parsed.has_type && parsed.type == DEVICE_NGRAPH_CPU);
+    return (parsed.has_type && parsed.type == DEVICE_NGRAPH);
   }
 }
 

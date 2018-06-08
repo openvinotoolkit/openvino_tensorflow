@@ -25,7 +25,7 @@
 #include "ngraph_utils.h"
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH_CPU;
+extern const char* const DEVICE_NGRAPH;
 }
 
 using namespace tensorflow;
@@ -40,7 +40,7 @@ using namespace tensorflow;
 //   tensorflow/core/kernels/dense_update_ops.cc
 //
 // The general pattern is that we've taken classes and stuck "NGraph" on the
-// front of their names, just so we can get variables placed on NGRAPH_CPU. As
+// front of their names, just so we can get variables placed on NGRAPH. As
 // we go, we will be adding nGraph-specific features to these ops.
 //
 // For the time being, everything here conforms to TF-style naming conventions
@@ -125,7 +125,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
 }
 
 REGISTER_KERNEL_BUILDER(
-   Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+   Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
    NGraphVariableOp);
 
 class NGraphAssignOp : public OpKernel {
@@ -241,7 +241,7 @@ class NGraphAssignOp : public OpKernel {
 };
 
 REGISTER_KERNEL_BUILDER(
-   Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+   Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
    NGraphAssignOp);
 
 class NGraphIsVariableInitializedOp : public OpKernel {
@@ -262,7 +262,7 @@ class NGraphIsVariableInitializedOp : public OpKernel {
 };
 
 REGISTER_KERNEL_BUILDER(
-   Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),
+   Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH),
    NGraphIsVariableInitializedOp);
 //
 // END VARIABLE OP STUFF COPIED, WITH MODIFICATION, FROM TF CODE BASE
