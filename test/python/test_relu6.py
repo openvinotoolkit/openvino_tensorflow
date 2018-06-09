@@ -46,16 +46,17 @@ with tf.device("/device:NGRAPH:0"):
 
     a = x + y + z
     b = x + y + z
-    c = b * a
+    c = a * b
     d = tf.nn.relu6(c)
 
     # input value and expected value
-    x_np = np.ones((2, 3))
-    y_np = np.ones((2, 3))
-    z_np = np.ones((2, 3))
+    x_np = np.full((2, 3),1.0)
+    y_np = np.full((2, 3),1.0)
+    z_np = np.full((2, 3),1.0)
     a_np = x_np + y_np + z_np
     b_np = x_np + y_np + z_np 
     c_np = a_np * b_np
+    c_np = np.maximum(c_np, np.full(c_np.shape, 0.0))
     expected = np.minimum(c_np,np.full(c_np.shape, 6.0)) 
 
     config = tf.ConfigProto(
