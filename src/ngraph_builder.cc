@@ -1199,6 +1199,71 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] =
           ng::builder::numpy_transpose(ng_input, ng_axis_order);
     }
+    // -------
+    // Squeeze
+    // -------
+    else if (op->type_string() == "Squeeze") {
+      if (op->num_inputs() < 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs should be 1 for Squeeze");
+      }
+
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input)); 
+      auto ng_input = ng_op_map.at(tf_input->name());
+
+      std::vector<tf::int32> tf_axis;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "squeeze_dims", 
+                             &tf_axis));
+      std::set<int> axis_set(tf_axis.begin(), tf_axis.end()); 
+ 
+      size_t input_dims = ng_input->get_shape().size();
+ 
+      ng::Shape input_shape = ng_input->get_shape();
+      std::vector<int> dims;
+ 
+      if (axis_set.size() == 0) {
+      for (size_t i = 0; i < input_dims; i++) {
+          if (input_shape[i] > 1) {
+              dims.push_back(input_shape[i]);
+          }
+        }
+      }
+      else {
+      for (size_t i = 0; i < input_dims; i++) {
+            bool skip= false;
+            if (axis_set.find(i) != axis_set.end()) {
+	       if (input_shape[i] == 1) {
+                  skip = true;
+               } else {
+                  throw tensorflow::errors::InvalidArgument(
+                      "Tried to explicitly squeeze "
+                      "dimension ",
+                      i, " but dimension was not 1: ", input_shape[i]);  
+               }
+            }
+            if (!skip) { 
+               dims.push_back(input_shape[i]);
+            }
+         }
+      }
+
+      ng::Shape output_shape(dims.size());
+      for (size_t i = 0;i < dims.size(); ++i) {
+         output_shape[i] = dims[i];
+      }
+
+      ng::AxisVector ng_axis_order(ng_input->get_shape().size());
+      for (size_t i = 0; i < ng_input->get_shape().size(); i++) {
+         ng_axis_order[i] = i;
+      }
+
+      ng_op_map[op->name()] =
+          make_shared<ng::op::Reshape>(ng_input, ng_axis_order, output_shape);
+    }
+
+
+
     // -----------------------------
     // Catch-all for unsupported ops
     // -----------------------------

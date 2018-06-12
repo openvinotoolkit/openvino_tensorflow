@@ -103,6 +103,9 @@ REGISTER_NGRAPH_STUB(Name("Reshape")
                        .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint("T",{DT_FLOAT,DT_INT32})
                        .TypeConstraint("Tshape",{DT_INT32,DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Squeeze")
+                       .Device(ngraph_bridge::DEVICE_NGRAPH)
+                       .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Sum")
                        .Device(ngraph_bridge::DEVICE_NGRAPH)
                        .TypeConstraint<float>("T")
