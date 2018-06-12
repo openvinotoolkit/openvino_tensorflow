@@ -107,6 +107,7 @@ bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
         "Prod",
         "RealDiv",
         "Relu",
+        "Relu6",
         "ReluGrad",
         "ReluGrad",
         "Reshape",

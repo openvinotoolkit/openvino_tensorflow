@@ -1003,6 +1003,27 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] = make_shared<ng::op::Relu>(ng_input);
     }
+    // ----
+    // Relu6
+    // ----
+    else if (op->type_string() == "Relu6") {
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Relu6");
+      }
+
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto constant_6 = make_shared<ng::op::Constant>(
+          ng_input->get_element_type(), 
+          ng_input->get_shape(),
+          std::vector<std::string>(ng::shape_size(ng_input->get_shape()),"6"));
+      auto relu6_op = make_shared<ng::op::Minimum>(make_shared<ng::op::Relu>(ng_input), constant_6);
+
+      ng_op_map[op->name()] = relu6_op;
+    }
     // -------
     // Reshape
     // -------

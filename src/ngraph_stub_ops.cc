@@ -96,6 +96,9 @@ REGISTER_NGRAPH_STUB(Name("Pad")
 REGISTER_NGRAPH_STUB(Name("Relu")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("Relu6")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH_CPU)
+                         .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Reshape")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32})
