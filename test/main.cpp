@@ -22,6 +22,12 @@
 
 #include "tensorflow/core/platform/env.h"
 
+#ifdef __APPLE__
+#define EXT "dylib"
+#else
+#define EXT "so"
+#endif
+
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -49,7 +55,7 @@ int main(int argc, char** argv) {
 
   void* handle;
   auto result =
-      tensorflow::Env::Default()->LoadLibrary("libngraph_device.so", &handle);
+      tensorflow::Env::Default()->LoadLibrary("libngraph_device." EXT, &handle);
   if (result != tensorflow::Status::OK()) {
     cout << "Cannot load library: " << result.error_message() << endl;
     return -1;

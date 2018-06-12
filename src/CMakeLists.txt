@@ -25,11 +25,17 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # (There must be some dependency on it in the struct/class definitions.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 
+if(APPLE)
+    set(LIBNGRAPH_SO "libngraph.dylib")
+else()
+    set(LIBNGRAPH_SO "libngraph.so")
+endif(APPLE)
+
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties( 
     ngraph_lib 
     PROPERTIES IMPORTED_LOCATION 
-    ${NGRAPH_DIR}/lib/libngraph.so
+    ${NGRAPH_DIR}/lib/${LIBNGRAPH_SO}
 )
 add_dependencies(ngraph_lib ext_ngraph)
 
@@ -60,8 +66,8 @@ target_link_libraries( ${LIB_NAME} tensorflow_framework_lib )
 target_link_libraries( ${LIB_NAME} ngraph_lib )
 
 target_compile_definitions( 
-    ${LIB_NAME} PRIVATE 
-    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI} 
+    ${LIB_NAME} PRIVATE
+    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DIR}/include")

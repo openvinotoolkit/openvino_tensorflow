@@ -13,8 +13,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
+from platform import system
 from setuptools import setup
 from setuptools.dist import Distribution
+
+ext = 'dylib' if system() == 'Darwin' else 'so'
 
 class BinaryDistribution(Distribution):
     def is_pure(self):
@@ -29,7 +32,7 @@ setup(
     include_package_data=True,
     distclass=BinaryDistribution,
     package_data={
-            'ngraph': ['libngraph_device.so'],
+            'ngraph': ['libngraph_device.' + ext],
                 },
 )
 

@@ -27,7 +27,7 @@ include(FindPackageHandleStandardArgs)
 message( STATUS "Looking for TensorFlow installation" )
 
 execute_process(
-    COMMAND 
+    COMMAND
     python -c "import tensorflow as tf; print(tf.sysconfig.get_include())"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE TEMP
@@ -35,51 +35,51 @@ execute_process(
 )
 
 if( NOT ${result} )
-  string(REGEX REPLACE "\n$" "" TensorFlow_INCLUDE_DIR "${TEMP}")
+    string(REGEX REPLACE "\n$" "" TensorFlow_INCLUDE_DIR "${TEMP}")
 else()
-   message( FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR} )
+    message( FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR} )
 endif()
 MESSAGE( STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR} )
 
 execute_process(
-    COMMAND 
+    COMMAND
     python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE TEMP
     ERROR_VARIABLE ERR
 )
 if( NOT ${result} )
-  string(REGEX REPLACE "\n$" "" TensorFlow_DIR "${TEMP}")
+    string(REGEX REPLACE "\n$" "" TensorFlow_DIR "${TEMP}")
 else()
-   message( FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR} )
+    message( FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR} )
 endif()
 message( STATUS "TensorFlow_DIR: " ${TensorFlow_DIR} )
 
 execute_process(
-    COMMAND 
+    COMMAND
     python -c "import tensorflow as tf; print(tf.__cxx11_abi_flag__)"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE TEMP
     ERROR_VARIABLE ERR
 )
 if( NOT ${result} )
-  string(REGEX REPLACE "\n$" "" TensorFlow_CXX_ABI "${TEMP}")
+    string(REGEX REPLACE "\n$" "" TensorFlow_CXX_ABI "${TEMP}")
 else()
-   message( FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR} )
+    message( FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR} )
 endif()
 message( STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI} )
 
 execute_process(
-    COMMAND 
+    COMMAND
     python -c "import tensorflow as tf; print(tf.__git_version__)"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE TEMP
     ERROR_VARIABLE ERR
 )
 if( NOT ${result} )
-  string(REGEX REPLACE "\n$" "" TensorFlow_GIT_VERSION "${TEMP}")
+    string(REGEX REPLACE "\n$" "" TensorFlow_GIT_VERSION "${TEMP}")
 else()
-   message( FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR} )
+    message( FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR} )
 endif()
 message( STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION} )
 
@@ -92,13 +92,12 @@ find_library(
 )
 
 find_package_handle_standard_args(
-  TensorFlow 
-  FOUND_VAR TensorFlow_FOUND   
-  REQUIRED_VARS 
-    TensorFlow_DIR  
-    TensorFlow_INCLUDE_DIR   
-    TensorFlow_CXX_ABI  
-    TensorFlow_GIT_VERSION  
+  TensorFlow
+  FOUND_VAR TensorFlow_FOUND
+  REQUIRED_VARS
+    TensorFlow_DIR
+    TensorFlow_INCLUDE_DIR
+    TensorFlow_GIT_VERSION
     TensorFlow_FRAMEWORK_LIBRARY
 )
 

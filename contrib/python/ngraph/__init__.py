@@ -22,6 +22,7 @@ import os
 import sys
 import time
 import getpass
+from platform import system
    
 import numpy as np
 import tensorflow as tf
@@ -32,11 +33,14 @@ from tensorflow.python.framework import errors_impl
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
  
 import ctypes
+
+
+ext = 'dylib' if system() == 'Darwin' else 'so'
  
 # We need to revisit this later. We can automate that using cmake configure command.
 if tf.VERSION >= '1.8.0':
    libpath = os.path.dirname(__file__)
-   lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.so'))
+   lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.'+ext))
 else:
    raise ValueError("Error: ngraph-tf requires tensorflow version >= 1.8.0!")
 
