@@ -38,12 +38,7 @@ class TestFloorOperations(NgraphTest):
         with tf.device(self.test_device):
             out = tf.floor(val)
 
-            config = tf.ConfigProto(
-                allow_soft_placement=self.soft_placement,
-                log_device_placement=self.log_placement,
-                inter_op_parallelism_threads=1)
-
-            with tf.Session(config=config) as sess:
+            with tf.Session(config=self.config) as sess:
                 print("Python: Running with Session")
                 result = sess.run((out,), feed_dict={val: (test_input,)})
                 print("value: {}".format(result[0]))
@@ -60,12 +55,7 @@ class TestFloorOperations(NgraphTest):
         with tf.device(self.test_device):
             out = tf.floor(val)
 
-            config = tf.ConfigProto(
-                allow_soft_placement=self.soft_placement,
-                log_device_placement=self.log_placement,
-                inter_op_parallelism_threads=1)
-
-            with tf.Session(config=config) as sess:
+            with tf.Session(config=self.config) as sess:
                 print("Python: Running with Session")
                 (result,) = sess.run((out,), feed_dict={val: test_input})
                 assert (result == expected).all()

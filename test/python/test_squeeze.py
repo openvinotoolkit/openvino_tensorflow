@@ -42,12 +42,7 @@ class TestSqueezeOperations(NgraphTest):
             a_val = np.random.random_sample(shape)
             a_sq = np.squeeze(a_val, axis=axis)
 
-            config = tf.ConfigProto(
-                allow_soft_placement=self.soft_placement,
-                log_device_placement=self.log_placement,
-                inter_op_parallelism_threads=1)
-
-            with tf.Session(config=config) as sess:
+            with tf.Session(config=self.config) as sess:
                 print("Python: Running with Session")
                 (result_a,) = sess.run((a1,), feed_dict={a: a_val})
                 print("shape:", result_a.shape)
