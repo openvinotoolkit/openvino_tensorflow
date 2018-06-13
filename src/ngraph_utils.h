@@ -39,10 +39,15 @@ void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out);
 
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
 // Extract values from a Const op to `values`. Returns true if succeeds.
-template <typename T>
+//
+// Modified with an extra `VecT` parameter to handle the case where the type
+// in the vector does not match TensorFlow's notion of what the C++ type
+// should be (e.g. when T is `bool`, we actually need a vector of `char` for
+// compatibility with nGraph).
+template <typename T, typename VecT = T>
 tf::Status ValuesFromConstNode(const tf::NodeDef& node,
                                tf::TensorShapeProto* const_tensor_shape,
-                               std::vector<T>* values) {
+                               std::vector<VecT>* values) {
   if (node.op() != "Const") {
     return tf::errors::InvalidArgument("Node not a Const");
   }
@@ -75,9 +80,9 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
   }
 
   const auto tensor_content_size = tensor.tensor_content().size();
-  CHECK_EQ(0, tensor_content_size % sizeof(T))
+  CHECK_EQ(0, tensor_content_size % sizeof(VecT))
       << " tensor_content_size (" << tensor_content_size
-      << ") is not a multiple of " << sizeof(T);
+      << ") is not a multiple of " << sizeof(VecT);
 
   // If tensor_content_size is zero, we'll have to take the values from
   // int_val, float_val, etc.
@@ -96,14 +101,19 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
       switch (node.attr().at("dtype").type()) {
         // TODO(amprocte): there are more element types to support here
         case tf::DT_INT32:
-          values->data()[i] =
+          (*values)[i] =
               (tensor.int_val_size() == 1 ? tensor.int_val()[0]
                                           : tensor.int_val()[i]);
           break;
         case tf::DT_FLOAT:
-          values->data()[i] =
+          (*values)[i] =
               (tensor.float_val_size() == 1 ? tensor.float_val()[0]
                                             : tensor.float_val()[i]);
+          break;
+        case tf::DT_BOOL:
+          (*values)[i] =
+              (tensor.bool_val_size() == 1 ? tensor.bool_val()[0]
+                                           : tensor.bool_val()[i]);
           break;
         default:
           NGRAPH_VLOG(0)
@@ -116,7 +126,7 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
       }
     }
   } else {
-    values->resize(tensor_content_size / sizeof(T));
+    values->resize(tensor_content_size / sizeof(VecT));
     tf::port::CopyToArray(tensor.tensor_content(),
                           reinterpret_cast<char*>(values->data()));
   }

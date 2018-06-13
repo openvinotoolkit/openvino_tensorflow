@@ -31,14 +31,14 @@
 namespace ngraph_bridge {
 
 // Helper for Builder::TranslateGraph ("Const" op)
-template <typename T>
+template <typename T, typename VecT = T>
 static tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
                               std::shared_ptr<ng::Node>* ng_node) {
-  vector<T> const_values;
+  vector<VecT> const_values;
   tf::TensorShapeProto shape_proto;
 
   TF_RETURN_IF_ERROR(
-      ValuesFromConstNode<T>(op->def(), &shape_proto, &const_values));
+      ValuesFromConstNode<T,VecT>(op->def(), &shape_proto, &const_values));
 
   tf::TensorShape const_shape(shape_proto);
   ng::Shape ng_shape;
@@ -460,6 +460,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint64>(op, ng::element::u64,
         //   &ng_node));
         //   break;
+        case tf::DataType::DT_BOOL:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<bool,char>(op, ng::element::boolean, &ng_node));
+          break;
         default:
           return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
                                            tf::DataType_Name(dtype));
