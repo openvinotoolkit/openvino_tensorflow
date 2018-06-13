@@ -24,9 +24,14 @@ namespace ngraph_bridge {
 
 class NGraphClusterPass : public tensorflow::GraphOptimizationPass {
  public:
-  tensorflow::Status Run(const tensorflow::GraphOptimizationPassOptions& options);
-  static const std::set<std::string>& GetUnclusterableOps() { return s_unclusterable_ops; }
-  static const std::set<std::string>& GetCanBeOutsideClusterOps() { return s_can_be_outside_cluster_ops; }
+  tensorflow::Status Run(
+      const tensorflow::GraphOptimizationPassOptions& options);
+  static const std::set<std::string>& GetUnclusterableOps() {
+    return s_unclusterable_ops;
+  }
+  static const std::set<std::string>& GetCanBeOutsideClusterOps() {
+    return s_can_be_outside_cluster_ops;
+  }
 
  private:
   bool IsNGraphNode(const tensorflow::Node* node);

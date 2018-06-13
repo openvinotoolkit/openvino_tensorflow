@@ -96,14 +96,19 @@ tf::Status ValuesFromConstNode(const tf::NodeDef& node,
       switch (node.attr().at("dtype").type()) {
         // TODO(amprocte): there are more element types to support here
         case tf::DT_INT32:
-          values->data()[i] = tensor.int_val()[i];
+          values->data()[i] =
+              (tensor.int_val_size() == 1 ? tensor.int_val()[0]
+                                          : tensor.int_val()[i]);
           break;
         case tf::DT_FLOAT:
-          values->data()[i] = tensor.float_val()[i];
+          values->data()[i] =
+              (tensor.float_val_size() == 1 ? tensor.float_val()[0]
+                                            : tensor.float_val()[i]);
           break;
         default:
-          NGRAPH_VLOG(0) << "Const node has empty tensor and we don't know how to "
-                            "handle this element type";
+          NGRAPH_VLOG(0)
+              << "Const node has empty tensor and we don't know how to "
+                 "handle this element type";
           NGRAPH_VLOG(0) << node.DebugString();
           NGRAPH_VLOG(0) << shape.DebugString();
           return tf::errors::Unimplemented(

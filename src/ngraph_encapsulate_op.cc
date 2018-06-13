@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+o * Copyright 2017-2018 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,12 @@
 
 #include "ngraph_builder.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_freshness_tracker.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
 
 namespace tf = tensorflow;
+namespace ngb = ngraph_bridge;
 
 namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH;
@@ -48,7 +50,9 @@ REGISTER_OP("NGraphEncapsulate")
 class NGraphEncapsulateOp : public tf::OpKernel {
  public:
   explicit NGraphEncapsulateOp(tf::OpKernelConstruction* ctx)
-      : tf::OpKernel(ctx), m_graph(tf::OpRegistry::Global()) {
+      : tf::OpKernel(ctx),
+        m_graph(tf::OpRegistry::Global()),
+        m_freshness_tracker(nullptr) {
     int ngraph_cluster;
     tf::GraphDef* graph_def;
 
@@ -63,9 +67,19 @@ class NGraphEncapsulateOp : public tf::OpKernel {
   }
 
   ~NGraphEncapsulateOp() override {
+    // If the kernel goes away, we must de-register all of its cached functions
+    // from the freshness tracker.
+    if (m_freshness_tracker != nullptr) {
+      for (auto kv : m_ng_functions) {
+        m_freshness_tracker->RemoveUser(kv.second);
+      }
+    }
     // d-tor
   }
 
+  // TODO(amprocte): this needs to be made thread-safe (compilation cache, and
+  // our use of the freshness-tracking stuff probably means we can only execute
+  // one instance at a time).
   void Compute(tf::OpKernelContext* ctx) override {
     // Get the inputs
     std::vector<tf::TensorShape> input_shapes;
@@ -112,8 +126,24 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     // don't know how expensive this actually is.)
     auto backend = ng::runtime::Backend::create("CPU");
 
+    if (m_freshness_tracker == nullptr) {
+      auto creator = [this](ngb::NGraphFreshnessTracker** tracker) {
+        *tracker = new ngb::NGraphFreshnessTracker();
+        return tf::Status::OK();
+      };
+      OP_REQUIRES_OK(
+          ctx,
+          ctx->resource_manager()->LookupOrCreate<ngb::NGraphFreshnessTracker>(
+              ctx->resource_manager()->default_container(),
+              "ngraph_freshness_tracker", &m_freshness_tracker, creator));
+    }
+
     // Allocate tensors for arguments.
     vector<shared_ptr<ng::runtime::TensorView>> ng_inputs;
+
+    auto& last_used_src_ptrs = m_last_used_src_ptrs_map[ng_function];
+    last_used_src_ptrs.resize(input_shapes.size());
+
     for (int i = 0; i < input_shapes.size(); i++) {
       ng::Shape ng_shape(input_shapes[i].dims());
       for (int j = 0; j < input_shapes[i].dims(); ++j) {
@@ -126,6 +156,20 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
       void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
       auto t = backend->create_tensor(ng_element_type, ng_shape, src_ptr);
+
+      // Mark each tensor as non-stale if:
+      //
+      //   1. the freshness tracker says the tensor has not changed since
+      //      the last time ng_function was called, and
+      //   2. we are using the same tensor in this argument position as
+      //      the one we used last time ng_function was called.
+      if (m_freshness_tracker->IsFresh(src_ptr, ng_function) &&
+          src_ptr == last_used_src_ptrs[i]) {
+        t->set_stale(false);
+      } else {
+        t->set_stale(true);
+      }
+      last_used_src_ptrs[i] = src_ptr;
       ng_inputs.push_back(t);
     }
 
@@ -164,12 +208,21 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
     // Execute the nGraph function.
     backend->call(ng_function, outputs, ng_inputs);
+
+    // Mark input tensors as fresh for the next time around.
+    for (int i = 0; i < input_shapes.size(); i++) {
+      void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
+      m_freshness_tracker->MarkFresh(src_ptr, ng_function);
+    }
   }
 
  private:
   tf::Graph m_graph;
   std::unordered_map<std::string, std::shared_ptr<ngraph::Function>>
       m_ng_functions;
+  std::map<std::shared_ptr<ngraph::Function>, std::vector<const void*>>
+      m_last_used_src_ptrs_map;
+  ngb::NGraphFreshnessTracker* m_freshness_tracker;
 };
 
 }  // namespace ngraph_bridge

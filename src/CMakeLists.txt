@@ -49,6 +49,7 @@ set(SRC
    ngraph_device.cc
    ngraph_encapsulate_op.cc
    ngraph_encapsulate_pass.cc
+   ngraph_freshness_tracker.cc
    ngraph_graph_rewrite_passes.cc
    ngraph_liberate_pass.cc
    ngraph_op_kernels.cc

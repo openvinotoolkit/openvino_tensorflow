@@ -310,8 +310,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
             ng_avgpool, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
       }
 
-      NGRAPH_VLOG(3) << "avgpool outshape: {" << ng::join(ng_avgpool->get_shape())
-               << "}";
+      NGRAPH_VLOG(3) << "avgpool outshape: {"
+                     << ng::join(ng_avgpool->get_shape()) << "}";
 
       ng_op_map[op->name()] = ng_avgpool;
     }
@@ -875,8 +875,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
             ng_maxpool, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
       }
 
-      NGRAPH_VLOG(3) << "maxpool outshape: {" << ng::join(ng_maxpool->get_shape())
-               << "}";
+      NGRAPH_VLOG(3) << "maxpool outshape: {"
+                     << ng::join(ng_maxpool->get_shape()) << "}";
 
       ng_op_map[op->name()] = ng_maxpool;
     }
@@ -1280,8 +1280,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // Catch-all for unsupported ops
     // -----------------------------
     else {
-      NGRAPH_VLOG(3) << "Unsupported Op: " << op->name() << " (" << op->type_string()
-               << ")";
+      NGRAPH_VLOG(3) << "Unsupported Op: " << op->name() << " ("
+                     << op->type_string() << ")";
       NGRAPH_VLOG(3) << op->def().DebugString();
       return tf::errors::InvalidArgument("Unsupported Op: ", op->name(), " (",
                                          op->type_string(), ")");

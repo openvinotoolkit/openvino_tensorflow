@@ -47,8 +47,9 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
  public:
   tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
     if (std::getenv("NGRAPH_TF_SKIP_ENCAPSULATION") != nullptr) {
-      NGRAPH_VLOG(0) << "NGRAPH_TF_SKIP_ENCAPSULATION is set. Skipping encapsulation "
-                        "step.";
+      NGRAPH_VLOG(0)
+          << "NGRAPH_TF_SKIP_ENCAPSULATION is set. Skipping encapsulation "
+             "step.";
       return tf::Status::OK();
     }
 
@@ -137,7 +138,8 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
         }
       } else {
         NGRAPH_VLOG(3) << "setting cluster " << cluster_idx
-                       << " requested device to '" << node->requested_device() << "'";
+                       << " requested device to '" << node->requested_device()
+                       << "'";
         device_name_map[cluster_idx] = node->requested_device();
       }
     }
@@ -183,9 +185,9 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
                                   : dst_clustered ? "in-flow" : "out-flow";
 
       NGRAPH_VLOG(4) << "found " << flow_kind << ": " << src->name() << "["
-                     << edge->src_output() << "] in " << src_cluster_idx << " to "
-                     << dst->name() << "[" << edge->dst_input() << "] in "
-                     << dst_cluster_idx << ", datatype: " << dt;
+                     << edge->src_output() << "] in " << src_cluster_idx
+                     << " to " << dst->name() << "[" << edge->dst_input()
+                     << "] in " << dst_cluster_idx << ", datatype: " << dt;
 
       // If the source node lies within a cluster, we must create an output for
       // it from the source cluster. For the moment we will just store this
@@ -263,9 +265,6 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
       std::vector<tf::DataType> input_types;
       std::vector<tf::NodeBuilder::NodeOut> inputs;
-      std::vector<tf::int32> input_hostmem;
-
-      tf::int32 i = 0;
 
       for (auto& tup : cluster_input_map[cluster_idx]) {
         int src_node_id;
@@ -277,17 +276,6 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
 
         inputs.push_back(tf::NodeBuilder::NodeOut(
             graph->FindNodeId(src_node_id), src_output_idx));
-
-        input_hostmem.push_back(i++);
-      }
-
-      std::vector<tf::int32> output_hostmem;
-
-      i = 0;
-
-      for (auto it = cluster_output_dt_map[cluster_idx].begin();
-           it != cluster_output_dt_map[cluster_idx].end(); it++) {
-        output_hostmem.push_back(i++);
       }
 
       tf::Node* n;
@@ -296,8 +284,6 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
               .Attr("ngraph_cluster", cluster_idx)
               .Attr("Targuments", input_types)
               .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-              .Attr("_input_hostmem", input_hostmem)
-              .Attr("_output_hostmem", output_hostmem)
               .Device(device_name_map[cluster_idx])
               .Input(inputs)
               .Finalize(graph, &n);

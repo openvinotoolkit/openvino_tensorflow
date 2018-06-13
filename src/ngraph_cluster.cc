@@ -40,7 +40,8 @@ extern const char* const DEVICE_NGRAPH;
 
 #define MINIMUM_CLUSTER_NODES 2
 
-tf::Status NGraphClusterPass::Run(const tf::GraphOptimizationPassOptions& options) {
+tf::Status NGraphClusterPass::Run(
+    const tf::GraphOptimizationPassOptions& options) {
   // TODO(amprocte): Remove this when we have proper support for graphs with
   // cycles.
   if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
@@ -140,7 +141,8 @@ bool NGraphClusterPass::IsClusterable(const tf::Node* node) {
 }
 
 bool NGraphClusterPass::CanBeOutsideCluster(const tf::Node* node) {
-  return (!IsClusterable(node) || s_can_be_outside_cluster_ops.count(node->type_string()) > 0);
+  return (!IsClusterable(node) ||
+          s_can_be_outside_cluster_ops.count(node->type_string()) > 0);
 }
 
 tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
@@ -185,7 +187,8 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
         continue;
       }
 
-      if (!IsNGraphNode(src) || !IsNGraphNode(dst) || !IsClusterable(src) || !IsClusterable(dst)) {
+      if (!IsNGraphNode(src) || !IsNGraphNode(dst) || !IsClusterable(src) ||
+          !IsClusterable(dst)) {
         continue;
       }
 
@@ -238,8 +241,9 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
       bool is_trivial = cluster->nodes.size() < MINIMUM_CLUSTER_NODES;
 
       seen.insert(cluster);
-      NGRAPH_VLOG(2) << "cluster " << cluster_idx << ": " << cluster->nodes.size()
-                     << " nodes" << (is_trivial ? " (trivial)" : "");
+      NGRAPH_VLOG(2) << "cluster " << cluster_idx << ": "
+                     << cluster->nodes.size() << " nodes"
+                     << (is_trivial ? " (trivial)" : "");
 
       for (auto node : cluster->nodes) {
         if (!IsNGraphNode(node)) {
@@ -249,9 +253,10 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
         }
 
         if (!IsClusterable(node)) {
-          return tf::errors::InvalidArgument(
-              "Node ", node->DebugString(),
-              " is not a clusterable node but was placed in an nGraph cluster.");
+          return tf::errors::InvalidArgument("Node ", node->DebugString(),
+                                             " is not a clusterable node but "
+                                             "was placed in an nGraph "
+                                             "cluster.");
         }
 
         NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
@@ -291,4 +296,3 @@ namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 105,
                       ngraph_bridge::NGraphClusterPass);
 }  // namespace tensorflow
-

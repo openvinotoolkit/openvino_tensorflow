@@ -103,7 +103,7 @@ class NGraphRecv : public AsyncOpKernel {
   explicit NGraphRecv(OpKernelConstruction* ctx) : AsyncOpKernel(ctx) {
     auto node_def = ctx->def();
     NGRAPH_VLOG(4) << "NGraphRecv::ctor(): Node: " << node_def.name()
-             << " Op: " << node_def.op();
+                   << " Op: " << node_def.op();
 
     string send_device;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("send_device", &send_device));
@@ -143,7 +143,7 @@ class NGraphRecv : public AsyncOpKernel {
   //-----------------------------------------------------------------------------
   void ComputeAsync(OpKernelContext* ctx, DoneCallback done) override {
     NGRAPH_VLOG(4) << "NGraphRecv: Step: " << ctx->step_id()
-            << " Op: " << ctx->op_kernel().name();
+                   << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES_ASYNC(
         ctx, ctx->rendezvous() != nullptr,
         errors::Internal("Op kernel context needs to provide a rendezvous."),
@@ -186,7 +186,7 @@ class NGraphSend : public OpKernel {
   explicit NGraphSend(OpKernelConstruction* ctx) : OpKernel(ctx) {
     auto node_def = ctx->def();
     NGRAPH_VLOG(4) << "NGraphSend::ctor(): Node: " << node_def.name()
-             << " Op: " << node_def.op();
+                   << " Op: " << node_def.op();
     string send_device;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("send_device", &send_device));
     string recv_device;
@@ -256,11 +256,9 @@ REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH),
                         NGraphRecv);
 REGISTER_KERNEL_BUILDER(Name("_Send").Device(ngraph_bridge::DEVICE_NGRAPH),
                         NGraphSend);
-REGISTER_KERNEL_BUILDER(Name("_HostRecv")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH)
-                            .HostMemory("tensor"),
-                        NGraphRecv);
-REGISTER_KERNEL_BUILDER(Name("_HostSend")
-                            .Device(ngraph_bridge::DEVICE_NGRAPH)
-                            .HostMemory("tensor"),
-                        NGraphSend);
+REGISTER_KERNEL_BUILDER(
+    Name("_HostRecv").Device(ngraph_bridge::DEVICE_NGRAPH).HostMemory("tensor"),
+    NGraphRecv);
+REGISTER_KERNEL_BUILDER(
+    Name("_HostSend").Device(ngraph_bridge::DEVICE_NGRAPH).HostMemory("tensor"),
+    NGraphSend);
