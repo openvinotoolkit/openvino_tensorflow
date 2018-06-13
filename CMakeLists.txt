@@ -26,6 +26,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+set(NGRAPH_USE_PREBUILT_LLVM "True" CACHE STRING "Using prebuilt LLVM by default")
+
 # Find and build ngraph
 ExternalProject_Add(
     ext_ngraph
