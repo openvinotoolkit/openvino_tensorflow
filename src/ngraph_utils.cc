@@ -113,7 +113,7 @@ tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
       *ng_et = ng::element::u64;
       break;
     case tf::DataType::DT_BOOL:
-      *ng_et = ng::element:boolean;
+      *ng_et = ng::element::boolean;
       break;
     default:
       return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
