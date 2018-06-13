@@ -13,26 +13,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-from platform import system
-from setuptools import setup
-from setuptools.dist import Distribution
+from ctypes import cdll
 
-ext = 'dylib' if system() == 'Darwin' else 'so'
+import pytest
 
-class BinaryDistribution(Distribution):
-    def is_pure(self):
-        return False
+from common import LIBNGRAPH_DEVICE
 
-setup( 
-    name='ngraph',
-    version='0.0.0',
-    description='Intel nGraph device',
-    packages=['ngraph'], 
-    author='Intel-Nervana AIPG', 
-    include_package_data=True,
-    distclass=BinaryDistribution,
-    package_data={
-            'ngraph': ['libngraph_device.' + ext],
-                },
-)
 
+@pytest.fixture(autouse=True)
+def load_ngraph_device():
+    cdll.LoadLibrary(LIBNGRAPH_DEVICE)

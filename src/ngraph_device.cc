@@ -32,6 +32,12 @@ limitations under the License.
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
 
+#ifdef __APPLE__
+#define EXT "dylib"
+#else
+#define EXT "so"
+#endif
+
 namespace ngraph_bridge {
 extern const char* const DEVICE_NGRAPH = "NGRAPH";
 }
@@ -205,7 +211,7 @@ static bool InitModule() {
   size_t loc = dso_path.find_last_of("/\\");
   std::string ngraph_directory = dso_path.substr(0, loc);
 
-  auto handle = dlopen((ngraph_directory + "/libiomp5.so").c_str(),
+  auto handle = dlopen((ngraph_directory + "/libiomp5." EXT).c_str(),
                        RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
     NGRAPH_VLOG(0) << "Error loading the plugin library. "
@@ -213,7 +219,7 @@ static bool InitModule() {
     return false;
   }
 
-  handle = dlopen((ngraph_directory + "/libngraph.so").c_str(),
+  handle = dlopen((ngraph_directory + "/libngraph." EXT).c_str(),
                   RTLD_NOW | RTLD_GLOBAL);
   if (handle == nullptr) {
     NGRAPH_VLOG(0) << "Error loading the plugin library. "

@@ -39,7 +39,7 @@ target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}")
 target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}/external/nsync/public")
 
 target_compile_definitions( 
-    ${LIB_NAME} PRIVATE 
-    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI} 
+    ${LIB_NAME} PRIVATE
+    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)

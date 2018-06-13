@@ -32,7 +32,7 @@ target_link_libraries( ${LIB_NAME} tensorflow_framework_lib )
 target_link_libraries( ${LIB_NAME} ngraph_logger) 
 
 target_compile_definitions( 
-    ${LIB_NAME} PRIVATE 
-    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI} 
+    ${LIB_NAME} PRIVATE
+    _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)

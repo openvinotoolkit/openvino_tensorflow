@@ -1,2 +1,9 @@
 .vscode/
 build
+
+.pytest_cache/
+__pycache__/
+cpu_codegen/
+
+*.pbtxt
+*.dot
