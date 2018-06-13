@@ -24,12 +24,10 @@ import pytest
 
 import tensorflow as tf
 
+from common import NgraphTest
 
-class TestFloorOperations(object):
-    test_device = "/device:NGRAPH:0"
-    soft_placement = False
-    log_placement = True
 
+class TestFloorOperations(NgraphTest):
     @pytest.mark.parametrize(("test_input", "expected"),
                              ((1.4, 1.0), (0.5, 0.0), (-0.3, -1.0)))
     def test_floor_1d(self, test_input, expected):

@@ -13,23 +13,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-"""nGraph TensorFlow installation test
+"""nGraph TensorFlow axpy
 
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import time
 import getpass
+import ctypes
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.client import device_lib
-from tensorflow.python import pywrap_tensorflow as py_tf
-from tensorflow.python.framework import errors_impl
-
 import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
@@ -42,11 +37,10 @@ train_writer = tf.summary.FileWriter(graph_location)
 # Define LD_LIBRARY_PATH indicating where nGraph library is located for now.
 # Eventually this won't be needed as the library will be available in either
 # the Python site-packages or some other means
-import ctypes
 lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
 
 # Define the data
-a = tf.constant( np.full((2, 3), 5.0, dtype=np.float32), name='alpha')
+a = tf.constant(np.full((2, 3), 5.0, dtype=np.float32), name='alpha')
 x = tf.placeholder(tf.float32, [None, 3], name='x')
 y = tf.placeholder(tf.float32, shape=(2, 3), name='y')
 
@@ -77,6 +71,6 @@ with tf.Session(config=config) as sess:
 
 train_writer.add_graph(tf.get_default_graph())
 tf.train.write_graph(
-    tf.get_default_graph(), '.', 'test_axpy.pbtxt', as_text=True)
+    tf.get_default_graph(), '.', 'axpy.pbtxt', as_text=True)
 g = tfg.board(tf.get_default_graph())
-g.render(filename="./test_axpy")
+g.render(filename="./axpy")

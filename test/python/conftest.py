@@ -20,6 +20,6 @@ import pytest
 from common import LIBNGRAPH_DEVICE
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def load_ngraph_device():
     cdll.LoadLibrary(LIBNGRAPH_DEVICE)
