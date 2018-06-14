@@ -26,14 +26,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-set(NGRAPH_USE_PREBUILT_LLVM "True" CACHE STRING "Using prebuilt LLVM by default")
-
 # Find and build ngraph
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
     GIT_TAG 894aed9a61d33fa32eb5d2f226fa26733bb416b1
-    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist  -DNGRAPH_USE_PREBUILT_LLVM=${NGRAPH_USE_PREBUILT_LLVM}
     TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
     STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
     DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"
