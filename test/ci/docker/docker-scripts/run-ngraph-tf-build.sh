@@ -180,7 +180,7 @@ cd "${bridge_dir}"
 
 mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
-cmake ..
+cmake -DNGRAPH_USE_PREBUILT_LLVM=TRUE ..
 make -j16
 
 xtime="$(date)"
