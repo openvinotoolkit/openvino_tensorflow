@@ -21,25 +21,24 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
-import time
 
 import tensorflow as tf
 
+
 def check_for_ngraph_device():
     try:
-        import ngraph
-        found = True
-    except ValueError:
-        found = False
-    return found
+        import ngraph  # noqa
+        return True
+    except ModuleNotFoundError:
+        return False
+
 
 if __name__ == '__main__':
     print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-    found = check_for_ngraph_device()
-    if not found:
+    if not check_for_ngraph_device():
         print("nGraph Device is not available")
         sys.exit(1)
-    else:
-        print("Device nGraph available")
-        sys.exit(0)
+
+    print("nGraph Device is available")
+    sys.exit(0)

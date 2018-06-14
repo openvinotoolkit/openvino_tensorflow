@@ -14,12 +14,25 @@
 #  limitations under the License.
 # ==============================================================================
 from ctypes import cdll
+import glob
+import os
+import shutil
 
 import pytest
 
 from common import LIBNGRAPH_DEVICE
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def load_ngraph_device():
     cdll.LoadLibrary(LIBNGRAPH_DEVICE)
+
+
+@pytest.fixture(scope='session', autouse=True)
+def cleanup():
+    yield
+    for f in glob.glob('*.dot'):
+        os.remove(f)
+    for f in glob.glob('*.pbtxt'):
+        os.remove(f)
+    shutil.rmtree('cpu_codegen')
