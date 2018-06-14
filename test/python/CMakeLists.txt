@@ -13,6 +13,11 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-add_custom_target(test
-    COMMAND flake8 *.py && pytest
+file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.py")
+foreach(file ${files})
+    execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        ${CMAKE_CURRENT_BINARY_DIR}/${file}
 )
+endforeach()
