@@ -67,3 +67,5 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt 
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
 )
+
+add_subdirectory(python)

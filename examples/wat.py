@@ -20,8 +20,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import time
 import getpass
 
 import numpy as np
@@ -103,6 +101,6 @@ with tf.device("/device:NGRAPH:0"):
 
     train_writer.add_graph(tf.get_default_graph())
     tf.train.write_graph(
-        tf.get_default_graph(), '.', 'test_py.pbtxt', as_text=True)
+        tf.get_default_graph(), '.', 'wat.pbtxt', as_text=True)
     g = tfg.board(tf.get_default_graph())
-    g.render(filename="./test")
+    g.render(filename="./wat")

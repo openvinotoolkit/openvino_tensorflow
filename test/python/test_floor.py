@@ -24,12 +24,10 @@ import pytest
 
 import tensorflow as tf
 
+from common import NgraphTest
 
-class TestFloorOperations(object):
-    test_device = "/device:NGRAPH:0"
-    soft_placement = False
-    log_placement = True
 
+class TestFloorOperations(NgraphTest):
     @pytest.mark.parametrize(("test_input", "expected"),
                              ((1.4, 1.0), (0.5, 0.0), (-0.3, -1.0)))
     def test_floor_1d(self, test_input, expected):
@@ -40,12 +38,7 @@ class TestFloorOperations(object):
         with tf.device(self.test_device):
             out = tf.floor(val)
 
-            config = tf.ConfigProto(
-                allow_soft_placement=self.soft_placement,
-                log_device_placement=self.log_placement,
-                inter_op_parallelism_threads=1)
-
-            with tf.Session(config=config) as sess:
+            with tf.Session(config=self.config) as sess:
                 print("Python: Running with Session")
                 result = sess.run((out,), feed_dict={val: (test_input,)})
                 print("value: {}".format(result[0]))
@@ -62,12 +55,7 @@ class TestFloorOperations(object):
         with tf.device(self.test_device):
             out = tf.floor(val)
 
-            config = tf.ConfigProto(
-                allow_soft_placement=self.soft_placement,
-                log_device_placement=self.log_placement,
-                inter_op_parallelism_threads=1)
-
-            with tf.Session(config=config) as sess:
+            with tf.Session(config=self.config) as sess:
                 print("Python: Running with Session")
                 (result,) = sess.run((out,), feed_dict={val: test_input})
                 assert (result == expected).all()

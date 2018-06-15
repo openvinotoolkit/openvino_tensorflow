@@ -26,18 +26,39 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# Invoke a command to determine how many CPU cores we have, and set
+# NUM_MAKE_PROCESSES accordingly so we know what number to pass to make -j.
+if(APPLE)
+   set (PROCESSOR_COUNT_COMMAND sysctl -n hw.physicalcpu)
+else()
+   set (PROCESSOR_COUNT_COMMAND nproc)
+endif()
+
+execute_process(
+    COMMAND ${PROCESSOR_COUNT_COMMAND}
+    RESULT_VARIABLE NPROC_RESULT
+    OUTPUT_VARIABLE NUM_MAKE_PROCESSES
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Default to four jobs if the command fails.
+if(NPROC_RESULT)
+    message (WARNING "Unable to detect number of processors. Building nGraph with make -j4.")
+    set(NUM_MAKE_PROCESSES 4)
+endif()
+
 # Find and build ngraph
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
     GIT_TAG 894aed9a61d33fa32eb5d2f226fa26733bb416b1
-    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist  -DNGRAPH_USE_PREBUILT_LLVM=${NGRAPH_USE_PREBUILT_LLVM}
+    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=${NGRAPH_USE_PREBUILT_LLVM}
     TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
     STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
     DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/src"
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/build"
-    BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -j $(nproc) ngraph
+    BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -j ${NUM_MAKE_PROCESSES} ngraph
     UPDATE_COMMAND ""
     INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
 )

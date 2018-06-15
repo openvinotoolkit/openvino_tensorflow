@@ -26,15 +26,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import time
-import getpass
-
-import numpy as np
 import tensorflow as tf
-from tensorflow.python.client import device_lib
-from tensorflow.python import pywrap_tensorflow as py_tf
-from tensorflow.python.framework import errors_impl
 
 # Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
 # Eventually this won't be needed as the library will be available in either
