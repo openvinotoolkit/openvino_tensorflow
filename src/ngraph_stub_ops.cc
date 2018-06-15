@@ -115,6 +115,9 @@ REGISTER_NGRAPH_STUB(Name("Reshape")
 REGISTER_NGRAPH_STUB(Name("Sign")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
+REGISTER_NGRAPH_STUB(Name("Snapshot")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Squeeze")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T",{DT_FLOAT,DT_INT32}));

@@ -31,14 +31,14 @@
 namespace ngraph_bridge {
 
 // Helper for Builder::TranslateGraph ("Const" op)
-template <typename T>
+template <typename T, typename VecT = T>
 static tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
                               std::shared_ptr<ng::Node>* ng_node) {
-  vector<T> const_values;
+  vector<VecT> const_values;
   tf::TensorShapeProto shape_proto;
 
   TF_RETURN_IF_ERROR(
-      ValuesFromConstNode<T>(op->def(), &shape_proto, &const_values));
+      ValuesFromConstNode<T,VecT>(op->def(), &shape_proto, &const_values));
 
   tf::TensorShape const_shape(shape_proto);
   ng::Shape ng_shape;
@@ -91,7 +91,7 @@ static tf::Status GetDataFromConstant(std::shared_ptr<ng::Node> ng_node,
                                       std::vector<T>* data) {
   if (ng_node->description() != "Constant") {
     return tf::errors::Unimplemented(
-        "Tried to get shape data from a non-constant node");
+        "Tried to get constant data from a non-constant node");
   }
 
   auto ng_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_node);
@@ -481,6 +481,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint64>(op, ng::element::u64,
         //   &ng_node));
         //   break;
+        case tf::DataType::DT_BOOL:
+          TF_RETURN_IF_ERROR(
+              MakeConstOp<bool,char>(op, ng::element::boolean, &ng_node));
+          break;
         default:
           return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
                                            tf::DataType_Name(dtype));
@@ -1286,6 +1290,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // ---
     else if (op->type_string() == "Sign") {
       TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Sign>(op, ng_op_map));
+    }
+    // --------
+    // Snapshot
+    // --------
+    else if (op->type_string() == "Snapshot") {
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Snapshot");
+      }
+
+      tf::Node* tf_arg;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
+      ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
     // -------
     // Squeeze
