@@ -76,7 +76,7 @@ static tf::Status GetDataFromConstant(std::shared_ptr<ng::Node> ng_node,
                                       std::vector<T>* data) {
   if (ng_node->description() != "Constant") {
     return tf::errors::Unimplemented(
-        "Tried to get shape data from a non-constant node");
+        "Tried to get constant data from a non-constant node");
   }
 
   auto ng_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_node);
@@ -1123,6 +1123,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape);
+    }
+    // --------
+    // Snapshot
+    // --------
+    else if (op->type_string() == "Snapshot") {
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Snapshot");
+      }
+
+      tf::Node* tf_arg;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
+      ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
     // -------
     // Squeeze
