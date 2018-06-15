@@ -25,7 +25,7 @@ from common import LIBNGRAPH_DEVICE
 
 @pytest.fixture(scope='session', autouse=True)
 def load_ngraph_device():
-    cdll.LoadLibrary(LIBNGRAPH_DEVICE)
+    cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
 
 
 @pytest.fixture(scope='session', autouse=True)
