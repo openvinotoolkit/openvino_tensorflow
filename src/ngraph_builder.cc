@@ -603,6 +603,154 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] = ng_conv;
     }
     // -----
+    // DepthwiseConv2D
+    // -----
+    else if (op->type_string() == "DepthwiseConv2dNative") {
+      if (op->num_inputs() != 2) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 2 for DepthwiseConv2d");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_filter;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_filter));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_filter = ng_op_map.at(tf_filter->name());
+
+      std::vector<tf::int32> tf_strides;
+      std::vector<tf::int32> tf_rate;
+      std::string tf_padding_type;
+      std::string tf_data_format;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "strides", &tf_strides));
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "rate", &tf_rate));
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+      if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+        return tf::errors::InvalidArgument(
+            "DepthwiseConv2D data format is neither NHWC nor NCHW");
+      }
+
+      bool is_nhwc = (tf_data_format == "NHWC");
+
+      NGRAPH_VLOG(3) << ng::join(tf_strides);
+      NGRAPH_VLOG(3) << ng::join(tf_rate);
+      NGRAPH_VLOG(3) << tf_padding_type;
+      NGRAPH_VLOG(3) << tf_data_format;
+
+      ng::Strides ng_strides(2);
+      ng::Strides ng_dilations(2);
+      ng::Shape ng_image_shape(2);
+      ng::Shape ng_kernel_shape(2);
+
+      if (is_nhwc) {
+        auto& s = ng_input->get_shape();
+        ng::Shape reshaped_shape{s[0], s[3], s[1], s[2]};
+
+        NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
+
+        ng_input = make_shared<ng::op::Reshape>(
+            ng_input, ng::AxisVector{0, 3, 1, 2}, reshaped_shape);
+
+        ng_strides[0] = tf_strides[1];
+        ng_strides[1] = tf_strides[2];
+
+        ng_dilations[0] = tf_rate[0];
+        ng_dilations[1] = tf_rate[1];
+
+        ng_image_shape[0] = s[1];
+        ng_image_shape[1] = s[2];
+      } else {
+        auto& s = ng_input->get_shape();
+
+        ng_strides[0] = tf_strides[1];
+        ng_strides[1] = tf_strides[2];
+
+        ng_dilations[0] = tf_rate[0];
+        ng_dilations[1] = tf_rate[1];
+
+        ng_image_shape[0] = s[2];
+        ng_image_shape[1] = s[3];
+      }
+
+      NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+      NGRAPH_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
+      NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+
+      {
+        auto& s = ng_filter->get_shape();
+        ng::Shape reshaped_shape{s[3], s[2], s[0], s[1]};
+        ng_filter = make_shared<ng::op::Reshape>(
+            ng_filter, ng::AxisVector{3, 2, 0, 1}, reshaped_shape);
+
+        ng_kernel_shape[0] = s[0];
+        ng_kernel_shape[1] = s[1];
+      }
+
+      NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+
+      ng::CoordinateDiff ng_padding_below{0, 0};
+      ng::CoordinateDiff ng_padding_above{0, 0};
+
+      if (tf_padding_type == "SAME") {
+        for (size_t i = 0; i < 2; i ++) {
+          size_t image_size = ng_image_shape[i];
+          size_t filter_shape = ng_kernel_shape[i];
+          size_t filter_stride = ng_strides[i];
+
+          tf::int64 padding_needed;
+          if (image_size % filter_stride == 0) {
+            padding_needed = filter_shape - filter_stride;
+          } else {
+            padding_needed = filter_shape - (image_size % filter_stride);
+          }
+          if (padding_needed < 0) {
+            padding_needed = 0;
+          }
+
+          size_t padding_lhs = padding_needed / 2;
+          size_t padding_rhs = padding_needed - padding_lhs;
+          ng_padding_below[i] = padding_lhs;
+          ng_padding_above[i] = padding_rhs;
+        }
+      }
+
+      NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+      NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+
+      // ng input shape is NCHW
+      auto& input_shape = ng_input->get_shape();
+      ng::NodeVector ng_args;
+
+      for (size_t i = 0; i < input_shape[1]; i++) {
+        const std::vector<size_t> lower_bound{0, i, 0, 0};
+        const std::vector<size_t> upper_bound{
+            input_shape[0], i, input_shape[2], input_shape[3]};
+        auto ng_sliced_input = make_shared<ng::op::Slice>(
+            ng_input, lower_bound, upper_bound);
+        auto ng_conv = make_shared<ng::op::Convolution>(
+            ng_sliced_input, ng_filter, ng_strides, 
+            ng_dilations, ng_padding_below,ng_padding_above);
+        ng_args.push_back(ng_conv);
+      }
+
+      size_t ng_concatenation_axis = 1; // channel axis
+      std::shared_ptr<ng::Node> ng_concat = make_shared<ng::op::Concat>(ng_args, ng_concatenation_axis);
+ 
+      if (is_nhwc) {
+        auto& s = ng_concat->get_shape();
+        ng::Shape reshaped_shape{s[0], s[2], s[3], s[1]};
+        ng_concat = make_shared<ng::op::Reshape>(
+            ng_concat, ng::AxisVector{0, 2, 3, 1}, reshaped_shape);
+      }
+
+      ng_op_map[op->name()] = ng_concat;
+    }
+    // -----
     // Equal
     // -----
     else if (op->type_string() == "Equal") {
