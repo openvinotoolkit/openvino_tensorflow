@@ -48,9 +48,24 @@ static tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
   return tf::Status::OK();
 }
 
+template <typename T>
+static tf::Status TranslateUnaryOp(tf::Node* op, Builder::OpMap& ng_op_map) {
+  if (op->num_inputs() != 1) {
+    return tf::errors::InvalidArgument(
+        "Number of inputs is not 1 for unary op");
+  }
+
+  tf::Node* tf_input;
+  TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+  auto ng_input = ng_op_map.at(tf_input->name());
+  ng_op_map[op->name()] = make_shared<T>(ng_input);
+
+  return tf::Status::OK();
+}
+
 // Helper for Builder::TranslateGraph (elementwise binops)
 template <typename T>
-static tf::Status TranslateBinOp(tf::Node* op, Builder::OpMap& ng_op_map) {
+static tf::Status TranslateBinaryOp(tf::Node* op, Builder::OpMap& ng_op_map) {
   if (op->num_inputs() != 2) {
     return tf::errors::InvalidArgument(
         "Number of inputs is not 2 for elementwise binary op");
@@ -184,10 +199,16 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // NOTE: The following cases should be kept in alphabetical order.
 
     // ---
+    // Abs
+    // ---
+    if (op->type_string() == "Abs") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Abs>(op, ng_op_map));
+    }
+    // ---
     // Add
     // ---
-    if (op->type_string() == "Add") {
-      TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Add>(op, ng_op_map));
+    else if (op->type_string() == "Add") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Add>(op, ng_op_map));
     }
     // -------
     // AvgPool
@@ -754,21 +775,13 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // Equal
     // -----
     else if (op->type_string() == "Equal") {
-      TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Equal>(op, ng_op_map));
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Equal>(op, ng_op_map));
     }
     // --------
     // Floor
     // --------
     else if (op->type_string() == "Floor") {
-      if (op->num_inputs() != 1) {
-        return tf::errors::InvalidArgument(
-            "Number of inputs is not 1 for Floor");
-      }
-
-      tf::Node* tf_input;
-      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
-      auto ng_input = ng_op_map.at(tf_input->name());
-      ng_op_map[op->name()] = make_shared<ng::op::Floor>(ng_input);
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Floor>(op, ng_op_map));
     }
     // --------------
     // FusedBatchNorm
@@ -1085,7 +1098,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // Mul
     // ---
     else if (op->type_string() == "Mul") {
-      TF_RETURN_IF_ERROR(TranslateBinOp<ngraph::op::Multiply>(op, ng_op_map));
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Multiply>(op, ng_op_map));
     }
     // ----
     // NoOp
@@ -1267,6 +1280,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape);
+    }
+    // ---
+    // Sign
+    // ---
+    else if (op->type_string() == "Sign") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Sign>(op, ng_op_map));
     }
     // -------
     // Squeeze
