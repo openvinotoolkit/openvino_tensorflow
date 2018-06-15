@@ -35,4 +35,7 @@ def cleanup():
         os.remove(f)
     for f in glob.glob('*.pbtxt'):
         os.remove(f)
-    shutil.rmtree('cpu_codegen')
+    try:
+        shutil.rmtree('cpu_codegen')
+    except FileNotFoundError:
+        pass

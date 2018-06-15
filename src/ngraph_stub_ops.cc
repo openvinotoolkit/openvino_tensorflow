@@ -51,6 +51,9 @@ class NGraphStubOp : public OpKernel {
 // Please keep these in alphabetical order.
 //
 
+REGISTER_NGRAPH_STUB(Name("Abs")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Add")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
@@ -66,6 +69,9 @@ REGISTER_NGRAPH_STUB(Name("ConcatV2")
                          .TypeConstraint("Tidx", {DT_INT32, DT_INT64}));
 // "Const" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB(Name("Conv2D")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("DepthwiseConv2dNative")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Equal")
@@ -106,6 +112,9 @@ REGISTER_NGRAPH_STUB(Name("Reshape")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32})
                          .TypeConstraint("Tshape", {DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Sign")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Snapshot")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
