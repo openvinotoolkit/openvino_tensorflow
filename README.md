@@ -1,21 +1,15 @@
-# Bridge TensorFlow*/XLA to run on Intel® nGraph™ backends
+# Bridge TensorFlow to run on Intel® nGraph™ backends
 
-This directory contains the bridge code needed to build a TensorFlow*/XLA 
+This directory contains the code needed to build a TensorFlow 
 plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ 
 library, compiler and runtime] that provides developers with the means to 
 train and run DNN models efficiently on custom backends: GPU, CPU, and custom 
 silicon.
 
-To enable the bridge from TensorFlow to Intel nGraph backends, two repos are 
-needed: `ngraph-tensorflow` and this repository, `ngraph-tensorflow-bridge`. After 
-everything is built, we end up with a [DSO] that acts like a plugin to Intel 
-nGraph backends.
 
-**Note**
-Currently we are using ngraph-tensorflow but eventually this will no longer 
-be needed. You will be able to use official tensorflow distribution.
+## Linux instructions
 
-## Prepare the build environment
+### Prepare the build environment
 
 The installation prerequisites are the same as TensorFlow as described in the 
 TensorFlow [prepare environment] for linux.
@@ -40,19 +34,22 @@ TensorFlow [prepare environment] for linux.
 3. Ensure that all the TensorFlow dependencies are installed, as per the
    TensorFlow [prepare environment] for linux.
 
-   **Note** You do not need CUDA in order to use the ngraph-tensorflow bridge.
+   **Note:** You do not need CUDA in order to use the ngraph-tensorflow bridge.
 
 
-## How to enable the bridge
+### Installation
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
-   [tensorflow] repo to your machine; this is the required for running the unit
+   [tensorflow] repo to your machine; this is required for running the unit
    test. If you want to run nGraph without the unit tests then you can 
    install the binary TensorFlow wheel and skip this section.
 
    ```
-   git clone https://github.com/tensorflow/tensorflow.git
-   cd tensorflow
+   $ git clone https://github.com/tensorflow/tensorflow.git
+   $ cd tensorflow
+   $ git checkout v1.8.0
+   $ git status
+   HEAD detached at v1.8.0
    ```
 2. When setting up and activating the virtual environment with TensorFlow 
    frameworks, you must use a specific kind of venv designed for 
@@ -101,7 +98,7 @@ TensorFlow [prepare environment] for linux.
     cd ngraph-tf
     ```
 
-8. Next, build and install `ngraph-tensorflow-bridge`:
+8. Next, build and install:
 
     ```
     mkdir build
@@ -116,25 +113,109 @@ the dependencies. The resulting plugin [DSO] is named `libngraph_device.so`.
 Once the build and installation steps are complete, you can start experimenting 
 with nGraph backends. 
 
-## How to run unit tests
-In order to run the unit tests, you need a copy of the [tensorflow] source tree.
-We assume that you have done that using the instructions above. 
+
+### Running tests
+
+In order to run the unit tests, you need a copy of the [tensorflow] source tree
+and build the [tensorflow] C++ library using the step 6 mentioned above.
+
+You also need `pytest` installed:
+```
+pip install pytest
+```
 
 Now you need to build the tensorflow C++ library using the following instructions:
 1. Go to the ngraph-tf/build/test directory
     ```
     cd build/test
     ./gtest_ngtf
+    cd python
+    pytest
     ```
 
+Next is to run a few DL models to validate the end-to-end functionality.
+
+2. Go to the ngraph-tf/examples directory and run the following models. First 
+setup the `LD_LIBRARY_PATH` to point to the build/src where the `libngraph_device.so`
+is found.
+    ```
+    export LD_LIBRARY_PATH=build/src
+    cd examples
+    python ...
+    <TBD>
+    ```
+
+<!--
 ### Run MNIST Softmax with the activated bridge 
 TODO
+-->
+
+
+## OS X Instructions (Experimental)
+
+### Prepare the build environment
+
+1. Install [bazel](https://github.com/bazelbuild/bazel/releases).  [0.11.1 works](https://github.com/bazelbuild/bazel/releases/tag/0.11.1), or, if you're feeling adventurous, you could try a later version.
+2. `port install coreutils`, then add `/opt/local/libexec/gnubin` **in front** of your `$PATH`.  Both `tensorflow` and `ngraph` assume GNU userland tools, and you'll run into errors otherwise.
+3. Make and activate yourself a virtualenv that we'll be using for our custom-built TensorFlow.
+
+
+### Installation
+
+1. Build TensorFlow and its framework for unit tests. This step is identical to 
+how you would build TensorFlow for Linux mentioned above.
+
+	```
+	git clone git@github.com:tensorflow/tensorflow.git
+	pushd tensorflow
+	git checkout r1.8
+	./configure # you can disable everything here if you like, or stick with defaults
+	bazel run //tensorflow/tools/pip_package:build_pip_package /tmp/tensorflow_pkg
+	pip install /tmp/tensorflow_pkg/tensorflow*.whl
+	bazel build --config=opt //tensorflow:libtensorflow_cc.so
+	popd
+	```
+
+2. Prepare `ngraph-tf` for the build:
+
+	```
+	git clone git@github.com:NervanaSystems/ngraph-tf.git
+	pushd ngraph-tf.git
+	ln -s ../tensorflow
+	mkdir build && cd build
+	cmake -DNGRAPH_USE_PREBUILT_LLVM=False ..
+	```
+
+Note: If you want to build a version with no optimization for debugging
+then you can use the `-DCMAKE_BUILD_TYPE=Debug` flag during the cmake step
+mentioned above.
+
+3. `make -j <your-core-count>`
+
+### Running tests
+
+#### C++
+
+1. `cd test && make -j <your-core-count>`
+2. Add `<path-to-tensorflow-repo>/bazel-out/darwin-py3-opt/bin/tensorflow` and `<path-to-ngraph-tf-repo>/build/ngraph/ngraph_dist/lib` to your `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH`
+3. `./gtest_ngtf`
+
+
+#### Python
+
+1. `pip install pytest` if you don't already have it, then
+2. `cd build/test/python`
+3. `pytest`
+
+
+### Debugging
+
+Don't just use `lldb` -- it likely refers to `/usr/bin/lldb` and OS X security preferences will prevent it from inheriting your `LD_LIBRARY_PATH`.  Instead, alias it to `/Applications/Xcode.app/Contents/Developer/usr/bin/lldb`.
+
 
 ## Support
 
 Please submit your questions, feature requests and bug reports via [GitHub issues].
-
-### Troubleshooting
 
 
 ## How to Contribute
@@ -150,9 +231,11 @@ to improve the library:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 
+
 ## About Intel® nGraph™
 
-See the full documentation here:  http://ngraph.nervanasys.com/docs/latest
+See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
+
 
 ## Future plans
 
