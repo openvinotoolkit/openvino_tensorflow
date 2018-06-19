@@ -36,7 +36,6 @@ TensorFlow [prepare environment] for linux.
 
    **Note:** You do not need CUDA in order to use the ngraph-tensorflow bridge.
 
-
 ### Installation
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
@@ -56,7 +55,7 @@ TensorFlow [prepare environment] for linux.
    ``system-site-packages``.  A regular venv tends to not detect nGraph installs:
 
    ```
-   virtualenv --system-site-packages <your_virtual_env_dir> # for Python 2.7
+   virtualenv --system-site-packages -p /usr/bin/python2 <your_virtual_env_dir> # for Python 2.7
    ```
    For Python 3.n version:
    ```
@@ -74,6 +73,17 @@ TensorFlow [prepare environment] for linux.
     ```
     bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
     bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+    ```
+
+   **Note:** You may run into the following error:
+    ```
+    AttributeError: 'int' object attribute '__doc__' is read-only
+    Target //tensorflow/tools/pip_package:build_pip_package failed to build
+    Use --verbose_failures to see the command lines of failed build steps.
+    ```
+    in which case you need to install enum34:
+    ```
+    pip install enum43
     ```
 
 5. Install the pip package, replacing the `tensorflow-1.*` with your 
