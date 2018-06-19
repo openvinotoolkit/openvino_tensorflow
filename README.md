@@ -83,7 +83,7 @@ TensorFlow [prepare environment] for linux.
     ```
     in which case you need to install enum34:
     ```
-    pip install enum43
+    pip install enum34
     ```
 
 5. Install the pip package, replacing the `tensorflow-1.*` with your 
@@ -93,13 +93,7 @@ TensorFlow [prepare environment] for linux.
     pip install -U /tmp/tensorflow_pkg/tensorflow-1.*whl
     ```  
 
-6. If you want to run the unit tests, build the TensorFlow C++ library: 
-
-    ```
-    bazel build --config=opt //tensorflow:libtensorflow_cc.so
-    ```
-
-7. Now clone the `ngraph-tf` repo one level above -- in the 
+6. Now clone the `ngraph-tf` repo one level above -- in the 
   *parent* directory of the `tensorflow` repo cloned in step 1:
 
     ```
@@ -108,13 +102,15 @@ TensorFlow [prepare environment] for linux.
     cd ngraph-tf
     ```
 
-8. Next, build and install:
+7. Next, build and install nGraph bridge:
 
     ```
     mkdir build
     cd build
     cmake ..
-    make
+    make -j <your_processor_cores>
+    make install 
+    pip install python/dist/ngraph-0.0.0-py2-none-any.whl
     ```
 
 This final step automatically downloads the necessary version of `ngraph` and 
@@ -126,15 +122,11 @@ with nGraph backends.
 
 ### Running tests
 
-In order to run the unit tests, you need a copy of the [tensorflow] source tree
-and build the [tensorflow] C++ library using the step 6 mentioned above.
-
-You also need `pytest` installed:
+In order to run the unit tests, you need `pytest` installed:
 ```
 pip install pytest
 ```
-
-Now you need to build the tensorflow C++ library using the following instructions:
+Now run the tests using the following instructions:
 1. Go to the ngraph-tf/build/test directory
     ```
     cd build/test
@@ -145,14 +137,16 @@ Now you need to build the tensorflow C++ library using the following instruction
 
 Next is to run a few DL models to validate the end-to-end functionality.
 
-2. Go to the ngraph-tf/examples directory and run the following models. First 
-setup the `LD_LIBRARY_PATH` to point to the build/src where the `libngraph_device.so`
-is found.
+2. Go to the ngraph-tf/examples directory and run the following models.
     ```
-    export LD_LIBRARY_PATH=build/src
     cd examples
-    python ...
-    <TBD>
+    python mnist_fprop_only.py \
+        --data_dir <input_data_location> --select_device NGRAPH
+    python tf_cnn_benchmarks.py --model=resnet50 --eval \
+        --num_inter_threads=1 --batch_size=1 \
+        --train_dir <rep-trained-model-location>/resnet50 \
+        --data_format NCHW --select_device NGRAPH \
+        --num_batches=10
     ```
 
 <!--

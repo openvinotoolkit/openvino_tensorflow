@@ -42,14 +42,7 @@ set(SRC
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_executable(gtest_ngtf ${SRC})
-target_link_libraries(
-    gtest_ngtf 
-    ngraph_device 
-    libgtest 
-    pthread 
-    tensorflow_framework_lib
-    tensorflow_cc_lib
-)
+message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
 # The following custom commands are used to create symlinks for various 
 # input files needed by the unit test
@@ -59,13 +52,26 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E create_symlink 
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt 
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy.pbtxt
-)
-add_custom_command( 
-    TARGET gtest_ngtf
-    PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink 
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt 
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
+
+)
+add_custom_target( 
+    build_tf_cc
+    COMMAND bazel build --config=opt //tensorflow:libtensorflow_cc.so
+        WORKING_DIRECTORY ${TensorFlow_SRC_DIR}/
+)
+
+add_dependencies(gtest_ngtf build_tf_cc)
+
+target_link_libraries(
+    gtest_ngtf 
+    ngraph_device 
+    libgtest 
+    pthread 
+    tensorflow_framework_lib
+    tensorflow_cc_lib
 )
 
 add_subdirectory(python)

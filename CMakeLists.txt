@@ -63,16 +63,10 @@ ExternalProject_Add(
     INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
 )
 
-set( NGRAPH_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
+set( NGRAPH_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 
 # Find TensorFlow
 find_package(TensorFlow REQUIRED)
-
-# Set the Install Prefix, rpath etc. here (cannot be done in the sub directories)
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${TensorFlow_DIR})
-endif()
-MESSAGE("INSTALL DIR: ${CMAKE_INSTALL_PREFIX}")
 
 add_library(tensorflow_framework_lib SHARED IMPORTED)
 set_target_properties( 
@@ -80,6 +74,23 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION 
     ${TensorFlow_DIR}/libtensorflow_framework.so
 )
+
+# Need to setup the RPATH here - else it won't work.
+# During installation, a Python pip package is created which when
+# installed is located in the same level as the tensorflow directory
+# site-packages/
+#     /ngraph
+#       libngraph_device.so
+#       ...
+#     /tensorflow
+#       libtensorflow_framework.so
+#       python/
+#           _pywrap....so
+# Therefore we are setting two entries in the RPATH:
+# 1. $ORIGIN/.
+# 2. $ORIGIN/../tensorflow/
+# 
+set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
 
 # Add the directories to be built
 add_subdirectory(logging)

@@ -29,7 +29,7 @@ def check_for_ngraph_device():
     try:
         import ngraph  # noqa
         return True
-    except ModuleNotFoundError:
+    except ImportError:
         return False
 
 

@@ -15,11 +15,9 @@ set(LIB_NAME ngraph_device)
 
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-include_directories(${NGRAPH_DIR}/include)
+include_directories(${NGRAPH_INSTALL_DIR}/include)
 
 set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
@@ -35,7 +33,7 @@ add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties( 
     ngraph_lib 
     PROPERTIES IMPORTED_LOCATION 
-    ${NGRAPH_DIR}/lib/${LIBNGRAPH_SO}
+    ${NGRAPH_INSTALL_DIR}/lib/${LIBNGRAPH_SO}
 )
 add_dependencies(ngraph_lib ext_ngraph)
 
@@ -71,5 +69,25 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
+
+#------------------------------------------------------------------------------
+#installation 
+#------------------------------------------------------------------------------
+if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+else()
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
+endif()
+
+# First install the libngraph_device.so
+install(TARGETS ngraph_device DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")  
+
+# Next install all the other prerequisites
+install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" )
+
+# Now create the Python pip package
+install(CODE "set(NGTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}/lib\")")
+install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
+install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../contrib/python/CreatePipWhl.cmake")

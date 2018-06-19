@@ -37,13 +37,9 @@ import time
 from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
+import ngraph
 
 FLAGS = None
-
-from ctypes import *
-cdll.LoadLibrary(
-    'libngraph_device.so'
-)
 
 def deepnn_inference(x):
     """deepnn builds the graph for a deep net for classifying digits.

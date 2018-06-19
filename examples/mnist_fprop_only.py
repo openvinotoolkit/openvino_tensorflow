@@ -27,11 +27,7 @@ import time
 from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
-from ctypes import *
-# Define LD_LIBRARY_PATH indicating where nGraph library is located fornow.
-# Eventually this won't be needed as the library will be available in either
-# the Python site-packages or some other means
-cdll.LoadLibrary('libngraph_device.so')
+import ngraph
 
 FLAGS = None
 

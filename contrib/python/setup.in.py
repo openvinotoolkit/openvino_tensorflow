@@ -32,7 +32,7 @@ setup(
     include_package_data=True,
     distclass=BinaryDistribution,
     package_data={
-            'ngraph': ['libngraph_device.' + ext],
+            'ngraph': [@ngraph_libraries@],
                 },
 )
 
