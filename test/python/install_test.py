@@ -26,19 +26,19 @@ import tensorflow as tf
 
 
 def check_for_ngraph_device():
-    try:
-        import ngraph  # noqa
-        return True
-    except ImportError:
-        return False
+  try:
+    import ngraph  # noqa pylint: disable=unused-variable
+    return True
+  except ImportError:
+    return False
 
 
 if __name__ == '__main__':
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+  print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
-    if not check_for_ngraph_device():
-        print("nGraph Device is not available")
-        sys.exit(1)
+  if not check_for_ngraph_device():
+    print("nGraph Device is not available")
+    sys.exit(1)
 
-    print("nGraph Device is available")
-    sys.exit(0)
+  print("nGraph Device is available")
+  sys.exit(0)

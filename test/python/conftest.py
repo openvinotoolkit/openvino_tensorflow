@@ -25,17 +25,17 @@ from common import LIBNGRAPH_DEVICE
 
 @pytest.fixture(scope='session', autouse=True)
 def load_ngraph_device():
-    cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
+  cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
 
 
 @pytest.fixture(scope='session', autouse=True)
 def cleanup():
-    yield
-    for f in glob.glob('*.dot'):
-        os.remove(f)
-    for f in glob.glob('*.pbtxt'):
-        os.remove(f)
-    try:
-        shutil.rmtree('cpu_codegen')
-    except FileNotFoundError:
-        pass
+  yield
+  for f in glob.glob('*.dot'):
+    os.remove(f)
+  for f in glob.glob('*.pbtxt'):
+    os.remove(f)
+  try:
+    shutil.rmtree('cpu_codegen')
+  except FileNotFoundError:
+    pass

@@ -14,6 +14,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.py")
+list(APPEND files "tox.ini" ".pylintrc")
 foreach(file ${files})
     execute_process(
     COMMAND ${CMAKE_COMMAND} -E create_symlink
