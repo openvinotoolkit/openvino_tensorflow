@@ -44,6 +44,7 @@ set(SRC
    ngraph_builder.cc
    ngraph_cluster.cc
    ngraph_cluster_manager.cc
+   ngraph_confirm_pass.cc
    ngraph_device.cc
    ngraph_encapsulate_op.cc
    ngraph_encapsulate_pass.cc

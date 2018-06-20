@@ -53,12 +53,11 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       : tf::OpKernel(ctx),
         m_graph(tf::OpRegistry::Global()),
         m_freshness_tracker(nullptr) {
-    int ngraph_cluster;
     tf::GraphDef* graph_def;
 
     // TODO(amprocte): need to check status result here.
-    OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ngraph_cluster", &ngraph_cluster));
-    graph_def = NGraphClusterManager::GetClusterGraph(ngraph_cluster);
+    OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ngraph_cluster", &m_ngraph_cluster));
+    graph_def = NGraphClusterManager::GetClusterGraph(m_ngraph_cluster);
 
     tf::GraphConstructorOptions opts;
     opts.allow_internal_ops = true;
@@ -207,7 +206,9 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     }
 
     // Execute the nGraph function.
+    NGRAPH_VLOG(4) << "call starting for cluster " << m_ngraph_cluster;
     backend->call(ng_function, outputs, ng_inputs);
+    NGRAPH_VLOG(4) << "call done for cluster " << m_ngraph_cluster;
 
     // Mark input tensors as fresh for the next time around.
     for (int i = 0; i < input_shapes.size(); i++) {
@@ -223,6 +224,7 @@ class NGraphEncapsulateOp : public tf::OpKernel {
   std::map<std::shared_ptr<ngraph::Function>, std::vector<const void*>>
       m_last_used_src_ptrs_map;
   ngb::NGraphFreshnessTracker* m_freshness_tracker;
+  int m_ngraph_cluster;
 };
 
 }  // namespace ngraph_bridge

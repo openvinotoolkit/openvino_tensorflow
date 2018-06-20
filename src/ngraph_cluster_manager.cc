@@ -31,6 +31,7 @@ int NGraphClusterManager::NewCluster() {
 }
 
 tf::GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
+  std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
   return s_cluster_graphs[idx];
 }
 }
