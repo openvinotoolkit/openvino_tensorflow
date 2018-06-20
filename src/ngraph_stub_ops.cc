@@ -110,7 +110,7 @@ REGISTER_NGRAPH_STUB(Name("Relu6")
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Reshape")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64})
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64,DT_BOOL})
                          .TypeConstraint("Tshape", {DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Sign")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
@@ -120,7 +120,7 @@ REGISTER_NGRAPH_STUB(Name("Snapshot")
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Squeeze")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32,DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Sum")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32})
