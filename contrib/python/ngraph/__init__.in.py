@@ -31,14 +31,14 @@ from tensorflow.python import pywrap_tensorflow as py_tf
 from tensorflow.python.framework import errors_impl
  
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-print("Version needed: ", '${TensorFlow_GIT_VERSION}' ) 
+print("Version needed: ", "${TensorFlow_GIT_VERSION}" ) 
 import ctypes
 
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
  
 # We need to revisit this later. We can automate that using cmake configure command.
-if tf.GIT_VERSION == '${TensorFlow_GIT_VERSION}':
+if tf.GIT_VERSION == "${TensorFlow_GIT_VERSION}":
    libpath = os.path.dirname(__file__)
    lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.'+ext))
 else:
