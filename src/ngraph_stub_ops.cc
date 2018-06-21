@@ -83,6 +83,9 @@ REGISTER_NGRAPH_STUB(Name("Floor")
 REGISTER_NGRAPH_STUB(Name("FusedBatchNorm")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("Log")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
 // "Identity" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB(Name("MatMul")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)

@@ -867,6 +867,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
       ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
+    // ---
+    // Log
+    // ---
+    else if (op->type_string() == "Log") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Log>(op, ng_op_map));
+    }
     // ------
     // MatMul
     // ------

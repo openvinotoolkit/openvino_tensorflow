@@ -203,6 +203,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Equal"] = always;
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
+        confirmation_functions["Log"] = always;
         confirmation_functions["MatMul"] = always;
         confirmation_functions["MaxPool"] = always;
 
