@@ -199,12 +199,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Conv2D"] = always;
-
-        // TODO: The DepthwiseConv2dNative implementation does not work yet, so
-        // placement is rejected for now. Change this to "always" (or whatever
-        // else is appropriate) once DepthwiseConv2dNative works.
-        confirmation_functions["DepthwiseConv2dNative"] = never;
-
+        confirmation_functions["DepthwiseConv2dNative"] = always;
         confirmation_functions["Equal"] = always;
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;

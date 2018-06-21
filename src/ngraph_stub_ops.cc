@@ -71,9 +71,9 @@ REGISTER_NGRAPH_STUB(Name("ConcatV2")
 REGISTER_NGRAPH_STUB(Name("Conv2D")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
-// REGISTER_NGRAPH_STUB(Name("DepthwiseConv2dNative")
-//                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-//                         .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("DepthwiseConv2dNative")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Equal")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
