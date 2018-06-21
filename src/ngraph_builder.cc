@@ -1271,6 +1271,29 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape);
     }
+    // ---------
+    // Sigmoid
+    // ---------
+    else if (op->type_string() == "Sigmoid") {
+      if (op->num_inputs() != 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Sigmoid");
+      }
+
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto exp_op = make_shared<ng::op::Exp>( make_shared<ng::op::Negative>(ng_input) );
+      auto constant_1 = make_shared<ng::op::Constant>(
+          ng_input->get_element_type(),
+          ng_input->get_shape(),
+          std::vector<std::string>(ng::shape_size(ng_input->get_shape()),"1"));
+
+      auto denominator_op = make_shared<ng::op::Add>( constant_1, exp_op );
+
+      ng_op_map[op->name()] = make_shared<ng::op::Divide>(constant_1, denominator_op);
+    }
     // ---
     // Sign
     // ---
@@ -1432,29 +1455,6 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           ng::builder::numpy_transpose(ng_input, ng_axis_order);
-    }
-    // ---------
-    // Sigmoid
-    // ---------
-    else if (op->type_string() == "Sigmoid") {
-      if (op->num_inputs() != 1) {
-        return tf::errors::InvalidArgument(
-            "Number of inputs is not 1 for Sigmoid");
-      }
-      
-      tf::Node* tf_input;
-      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
-
-      auto ng_input = ng_op_map.at(tf_input->name());
-      auto exp_op = make_shared<ng::op::Exp>( make_shared<ng::op::Negative>(ng_input) );
-      auto constant_1 = make_shared<ng::op::Constant>(
-          ng_input->get_element_type(),
-          ng_input->get_shape(),
-          std::vector<std::string>(ng::shape_size(ng_input->get_shape()),"1"));
-
-      auto denominator_op = make_shared<ng::op::Add>( constant_1, exp_op );
-
-      ng_op_map[op->name()] = make_shared<ng::op::Divide>(constant_1, denominator_op);
     }
     // -----------------------------
     // Catch-all for unsupported ops

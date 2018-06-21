@@ -273,6 +273,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           return tf::Status::OK();
         };
 
+        confirmation_functions["Sigmoid"] = always;
         confirmation_functions["Sign"] = always;
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Squeeze"] = always;
