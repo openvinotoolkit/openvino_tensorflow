@@ -77,6 +77,9 @@ REGISTER_NGRAPH_STUB(Name("DepthwiseConv2dNative")
 REGISTER_NGRAPH_STUB(Name("Equal")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Exp")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Floor")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
@@ -105,6 +108,9 @@ REGISTER_NGRAPH_STUB(Name("Pad")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T")
                          .TypeConstraint("Tpaddings", {DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Pow")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Relu")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));

@@ -765,6 +765,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     else if (op->type_string() == "Equal") {
       TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Equal>(op, ng_op_map));
     }
+    // -----
+    // Exp
+    // -----
+    else if (op->type_string() == "Exp") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Exp>(op, ng_op_map));
+    }
     // --------
     // Floor
     // --------
@@ -1146,6 +1152,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
           ng_input, pad_val_op, padding_below, padding_above, padding_interior);
 
       ng_op_map[op->name()] = pad_op;
+    }
+    // ---
+    // Pow
+    // ---
+    else if (op->type_string() == "Pow") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ng::op::Power>(op, ng_op_map));
     }
     // ----
     // Relu

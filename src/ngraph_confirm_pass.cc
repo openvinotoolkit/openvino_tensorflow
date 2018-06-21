@@ -201,6 +201,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Conv2D"] = always;
         confirmation_functions["DepthwiseConv2dNative"] = always;
         confirmation_functions["Equal"] = always;
+        confirmation_functions["Exp"] = always;
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
         confirmation_functions["Log"] = always;
@@ -251,6 +252,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           return tf::Status::OK();
         };
 
+        confirmation_functions["Pow"] = always;
         confirmation_functions["Relu"] = always;
         confirmation_functions["Relu6"] = always;
 
