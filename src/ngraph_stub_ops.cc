@@ -63,6 +63,10 @@ REGISTER_NGRAPH_STUB(Name("AvgPool")
 REGISTER_NGRAPH_STUB(Name("BiasAdd")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("Cast")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("SrcT", {DT_FLOAT, DT_DOUBLE, DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_BOOL})
+                         .TypeConstraint("DstT", {DT_FLOAT, DT_DOUBLE, DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_BOOL}));
 REGISTER_NGRAPH_STUB(Name("ConcatV2")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_INT32, DT_FLOAT})

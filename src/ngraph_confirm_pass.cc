@@ -179,6 +179,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Add"] = always;
         confirmation_functions["AvgPool"] = always;
         confirmation_functions["BiasAdd"] = always;
+        confirmation_functions["Cast"] = always;
 
         // Constraint: axis selection input must be Const.
         confirmation_functions["ConcatV2"] = [](tf::Node* n, bool* result) {
