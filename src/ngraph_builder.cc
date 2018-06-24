@@ -1354,6 +1354,40 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
       ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
+    // --------- 
+    // Softmax  
+    // ---------
+    else if (op->type_string() == "Softmax") {
+      if (op->num_inputs() != 1) { 
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 1 for Softmax");  
+      }
+
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+
+      try {
+        ng_op_map.at(tf_input->name()); 
+      }
+      catch (const std::out_of_range&) {
+        return tf::errors::NotFound(tf_input->name(), " is not found in the ng_op_map");
+      }
+      auto ng_input = ng_op_map.at(tf_input->name());
+      auto ng_input_shape = ng_input->get_shape();
+
+      // We apply softmax on the 2nd dimension by following TF
+      // And we restrict the softmax input argument to be 2D for now
+      ng::AxisSet ng_axes_softmax;
+      auto shape_size = ng_input_shape.size();
+
+      if (shape_size !=2) {
+        return tf::errors::InvalidArgument("TF Softmax logits must be 2-dimensional");
+      }
+
+      ng_axes_softmax.insert(1);
+
+      ng_op_map[op->name()] = make_shared<ng::op::Softmax>(ng_input, ng_axes_softmax);
+    }
     // -------
     // Squeeze
     // -------
@@ -1414,6 +1448,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, output_shape);
+    }
+    // ---
+    // Subtract
+    // ---
+    else if (op->type_string() == "Sub") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Subtract>(op, ng_op_map));
     }
     // ---
     // Sum

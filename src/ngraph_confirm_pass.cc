@@ -277,7 +277,9 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Sigmoid"] = always;
         confirmation_functions["Sign"] = always;
         confirmation_functions["Snapshot"] = always;
+        confirmation_functions["Softmax"] = always;
         confirmation_functions["Squeeze"] = always;
+        confirmation_functions["Sub"] = always;
 
         // Constraints: "keep_dims" is not supported, reduction-axes input
         // must be Const.
