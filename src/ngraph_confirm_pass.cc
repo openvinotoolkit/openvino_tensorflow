@@ -307,6 +307,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           return tf::Status::OK();
         };
 
+        confirmation_functions["Tanh"] = always;
         // Constraint: permutation input must be Const.
         confirmation_functions["Transpose"] = [](tf::Node* n, bool* result) {
           tf::Node* tf_permutation_node;

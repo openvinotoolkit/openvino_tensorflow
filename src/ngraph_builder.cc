@@ -1503,6 +1503,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] = ng_sum;
     }
     // ---------
+    // Tanh
+    // ---------
+    else if (op->type_string() == "Tanh") {  
+      TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Tanh>(op, ng_op_map));
+    }
+    // ---------
     // Transpose
     // ---------
     else if (op->type_string() == "Transpose") {

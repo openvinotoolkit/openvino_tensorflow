@@ -147,6 +147,9 @@ REGISTER_NGRAPH_STUB(Name("Sum")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32})
                          .TypeConstraint("Tidx", {DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Tanh")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Transpose")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T")
