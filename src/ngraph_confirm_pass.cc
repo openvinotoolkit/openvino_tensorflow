@@ -203,6 +203,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["DepthwiseConv2dNative"] = always;
         confirmation_functions["Equal"] = always;
         confirmation_functions["Exp"] = always;
+        confirmation_functions["ExpandDims"] = always;
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
         confirmation_functions["Log"] = always;

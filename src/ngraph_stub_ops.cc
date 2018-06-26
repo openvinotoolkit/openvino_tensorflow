@@ -84,6 +84,9 @@ REGISTER_NGRAPH_STUB(Name("Equal")
 REGISTER_NGRAPH_STUB(Name("Exp")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
+REGISTER_NGRAPH_STUB(Name("ExpandDims")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Floor")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint<float>("T"));
