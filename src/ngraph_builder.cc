@@ -943,6 +943,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] = ng_batch_norm;
     }
+    // -----
+    // Greater
+    // -----
+    else if (op->type_string() == "Greater") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Greater>(op, ng_op_map));
+    }
+    // -----
+    // GreaterEqual
+    // -----
+    else if (op->type_string() == "GreaterEqual") {
+      TF_RETURN_IF_ERROR(
+          TranslateBinaryOp<ngraph::op::GreaterEq>(op, ng_op_map));
+    }
     // --------
     // Identity
     // --------
@@ -956,11 +969,29 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
       ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
+    // -----
+    // Less
+    // -----
+    else if (op->type_string() == "Less") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Less>(op, ng_op_map));
+    }
+    // -----
+    // LessEqual
+    // -----
+    else if (op->type_string() == "LessEqual") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::LessEq>(op, ng_op_map));
+    }
     // ---
     // Log
     // ---
     else if (op->type_string() == "Log") {
       TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Log>(op, ng_op_map));
+    }
+    // -----
+    // LogicalAnd
+    // -----
+    else if (op->type_string() == "LogicalAnd") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::And>(op, ng_op_map));
     }
     // ------
     // MatMul
@@ -997,6 +1028,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       // The default axis count for nGraph's Dot op is 1, which is just what
       // we need here.
       ng_op_map[op->name()] = make_shared<ngraph::op::Dot>(ng_lhs, ng_rhs);
+    }
+    // -----
+    // Maximum
+    // -----
+    else if (op->type_string() == "Maximum") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Maximum>(op, ng_op_map));
     }
     // -------
     // MaxPool
@@ -1367,15 +1404,16 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
 
       auto ng_input = ng_op_map.at(tf_input->name());
-      auto exp_op = make_shared<ng::op::Exp>( make_shared<ng::op::Negative>(ng_input) );
+      auto exp_op =
+          make_shared<ng::op::Exp>(make_shared<ng::op::Negative>(ng_input));
       auto constant_1 = make_shared<ng::op::Constant>(
-          ng_input->get_element_type(),
-          ng_input->get_shape(),
-          std::vector<std::string>(ng::shape_size(ng_input->get_shape()),"1"));
+          ng_input->get_element_type(), ng_input->get_shape(),
+          std::vector<std::string>(ng::shape_size(ng_input->get_shape()), "1"));
 
-      auto denominator_op = make_shared<ng::op::Add>( constant_1, exp_op );
+      auto denominator_op = make_shared<ng::op::Add>(constant_1, exp_op);
 
-      ng_op_map[op->name()] = make_shared<ng::op::Divide>(constant_1, denominator_op);
+      ng_op_map[op->name()] =
+          make_shared<ng::op::Divide>(constant_1, denominator_op);
     }
     // ---
     // Sign
