@@ -63,6 +63,13 @@ class NGraphEncapsulateOp : public tf::OpKernel {
     opts.allow_internal_ops = true;
     // TODO(amprocte): need to check status result here.
     OP_REQUIRES_OK(ctx, tf::ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
+
+    // Create the backend
+    if (m_cpu_backend == nullptr) {
+      m_cpu_backend = ng::runtime::Backend::create("CPU");
+      OP_REQUIRES(ctx, m_cpu_backend != nullptr,
+                  tf::errors::InvalidArgument("Cannot create CPU backend"));
+    }
   }
 
   ~NGraphEncapsulateOp() override {
@@ -120,11 +127,6 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       ng_function = it->second;
     }
 
-    // Create the nGraph backend (TODO(amprocte): should probably put this
-    // into the resource manager rather than re-create each time, though I
-    // don't know how expensive this actually is.)
-    auto backend = ng::runtime::Backend::create("CPU");
-
     if (m_freshness_tracker == nullptr) {
       auto creator = [this](ngb::NGraphFreshnessTracker** tracker) {
         *tracker = new ngb::NGraphFreshnessTracker();
@@ -154,7 +156,7 @@ class NGraphEncapsulateOp : public tf::OpKernel {
                                                         &ng_element_type));
 
       void* src_ptr = (void*)tf::DMAHelper::base(&ctx->input(i));
-      auto t = backend->create_tensor(ng_element_type, ng_shape, src_ptr);
+      auto t = m_cpu_backend->create_tensor(ng_element_type, ng_shape, src_ptr);
 
       // Mark each tensor as non-stale if:
       //
@@ -200,14 +202,14 @@ class NGraphEncapsulateOp : public tf::OpKernel {
 
       // Create the nGraph output tensor
       void* dst_ptr = tf::DMAHelper::base(output_tensor);
-      auto t_result = backend->create_tensor(elem_type, shape, dst_ptr);
+      auto t_result = m_cpu_backend->create_tensor(elem_type, shape, dst_ptr);
 
       outputs.push_back(t_result);
     }
 
     // Execute the nGraph function.
     NGRAPH_VLOG(4) << "call starting for cluster " << m_ngraph_cluster;
-    backend->call(ng_function, outputs, ng_inputs);
+    m_cpu_backend->call(ng_function, outputs, ng_inputs);
     NGRAPH_VLOG(4) << "call done for cluster " << m_ngraph_cluster;
 
     // Mark input tensors as fresh for the next time around.
@@ -225,7 +227,9 @@ class NGraphEncapsulateOp : public tf::OpKernel {
       m_last_used_src_ptrs_map;
   ngb::NGraphFreshnessTracker* m_freshness_tracker;
   int m_ngraph_cluster;
+  static std::shared_ptr<ng::runtime::Backend> m_cpu_backend;
 };
+std::shared_ptr<ng::runtime::Backend> NGraphEncapsulateOp::m_cpu_backend;
 
 }  // namespace ngraph_bridge
 
