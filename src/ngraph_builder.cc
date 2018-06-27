@@ -30,17 +30,16 @@
 
 namespace ngraph_bridge {
 
-const static std::map<tf::DataType, ngraph::element::Type> TF_NGRAPH_TYPE_MAP = {
-    { tf::DataType::DT_FLOAT, ng::element::f32 },
-    { tf::DataType::DT_DOUBLE, ng::element::f64 },
-    { tf::DataType::DT_INT8, ng::element::i8 },
-    { tf::DataType::DT_INT16, ng::element::i16 },
-    { tf::DataType::DT_INT32, ng::element::i32 },
-    { tf::DataType::DT_INT64, ng::element::i64 },
-    { tf::DataType::DT_UINT8, ng::element::u8 },
-    { tf::DataType::DT_UINT16, ng::element::u16 },
-    { tf::DataType::DT_BOOL, ng::element::boolean }
-};
+const static std::map<tf::DataType, ngraph::element::Type> TF_NGRAPH_TYPE_MAP =
+    {{tf::DataType::DT_FLOAT, ng::element::f32},
+     {tf::DataType::DT_DOUBLE, ng::element::f64},
+     {tf::DataType::DT_INT8, ng::element::i8},
+     {tf::DataType::DT_INT16, ng::element::i16},
+     {tf::DataType::DT_INT32, ng::element::i32},
+     {tf::DataType::DT_INT64, ng::element::i64},
+     {tf::DataType::DT_UINT8, ng::element::u8},
+     {tf::DataType::DT_UINT16, ng::element::u16},
+     {tf::DataType::DT_BOOL, ng::element::boolean}};
 
 // Helper for Builder::TranslateGraph ("Const" op)
 template <typename T, typename VecT = T>
@@ -383,20 +382,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       tf::Node* tf_input;
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
       try {
-          auto ng_input = ng_op_map.at(tf_input->name());
-          tf::DataType dtype;
-          TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "DstT", &dtype));
+        auto ng_input = ng_op_map.at(tf_input->name());
+        tf::DataType dtype;
+        TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "DstT", &dtype));
 
-          try {
-              ng_op_map[op->name()] = make_shared<ng::op::Convert>(
-                      ng_input, TF_NGRAPH_TYPE_MAP.at(dtype));
-          } catch(const std::out_of_range&) {
-              return tf::errors::Unimplemented(
-                      "Unsupported TensorFlow data type: ",
-                      tf::DataType_Name(dtype));
-          }
-      } catch(const std::out_of_range&) {
-          return tf::errors::NotFound("Input not found: ", tf_input->name());
+        try {
+          ng_op_map[op->name()] = make_shared<ng::op::Convert>(
+              ng_input, TF_NGRAPH_TYPE_MAP.at(dtype));
+        } catch (const std::out_of_range&) {
+          return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
+                                           tf::DataType_Name(dtype));
+        }
+      } catch (const std::out_of_range&) {
+        return tf::errors::NotFound("Input not found: ", tf_input->name());
       }
 
     }
@@ -828,20 +826,24 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       auto ng_input = ng_op_map.find(tf_input->name());
       if (ng_input == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_input->name());
       }
       auto ng_dim = ng_op_map.find(tf_dim->name());
       if (ng_dim == ng_op_map.end()) {
         return tf::errors::InvalidArgument("Missing input: " + tf_dim->name());
       }
 
-      auto ng_dim_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_dim->second);
+      auto ng_dim_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_dim->second);
       if (ng_dim_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument dim is null for ExpandDims");
+        return tf::errors::InvalidArgument(
+            "The argument dim is null for ExpandDims");
       }
       auto dim_vec = ng_dim_const->get_vector<int>();
       if (dim_vec.size() != 1) {
-        return tf::errors::InvalidArgument("The size of argument dim is not 1 for ExpandDims");
+        return tf::errors::InvalidArgument(
+            "The size of argument dim is not 1 for ExpandDims");
       }
 
       auto& shape = ng_input->second->get_shape();
@@ -849,8 +851,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       out_shape.insert(out_shape.begin() + size_t(dim_vec[0]), 1);
       std::vector<size_t> shape_dimensions(shape.size());
       std::iota(shape_dimensions.begin(), shape_dimensions.end(), 0);
-      std::shared_ptr<ng::Node> ng_expand_dim =
-          make_shared<ng::op::Reshape>(ng_input->second, shape_dimensions, out_shape);
+      std::shared_ptr<ng::Node> ng_expand_dim = make_shared<ng::op::Reshape>(
+          ng_input->second, shape_dimensions, out_shape);
 
       ng_op_map[op->name()] = ng_expand_dim;
     }
@@ -1501,28 +1503,33 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       auto ng_input = ng_op_map.find(tf_input->name());
       if (ng_input == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_input->name());
       }
       auto ng_begin = ng_op_map.find(tf_begin->name());
       if (ng_begin == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_begin->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_begin->name());
       }
       auto ng_size = ng_op_map.find(tf_size->name());
       if (ng_size == ng_op_map.end()) {
         return tf::errors::InvalidArgument("Missing input: " + tf_size->name());
       }
 
-
       // TODO support -1 in size
-      auto ng_begin_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
+      auto ng_begin_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
       if (ng_begin_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument begin is null for Slice");
+        return tf::errors::InvalidArgument(
+            "The argument begin is null for Slice");
       }
       auto lower_vec = ng_begin_const->get_vector<int>();
 
-      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
+      auto ng_size_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
       if (ng_size_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument size is null for Slice");
+        return tf::errors::InvalidArgument(
+            "The argument size is null for Slice");
       }
       auto size_vec = ng_size_const->get_vector<int>();
 
@@ -1549,23 +1556,23 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_arg));
       ng_op_map[op->name()] = ng_op_map.at(tf_arg->name());
     }
-    // --------- 
-    // Softmax  
+    // ---------
+    // Softmax
     // ---------
     else if (op->type_string() == "Softmax") {
-      if (op->num_inputs() != 1) { 
+      if (op->num_inputs() != 1) {
         return tf::errors::InvalidArgument(
-            "Number of inputs is not 1 for Softmax");  
+            "Number of inputs is not 1 for Softmax");
       }
 
       tf::Node* tf_input;
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
 
       try {
-        ng_op_map.at(tf_input->name()); 
-      }
-      catch (const std::out_of_range&) {
-        return tf::errors::NotFound(tf_input->name(), " is not found in the ng_op_map");
+        ng_op_map.at(tf_input->name());
+      } catch (const std::out_of_range&) {
+        return tf::errors::NotFound(tf_input->name(),
+                                    " is not found in the ng_op_map");
       }
       auto ng_input = ng_op_map.at(tf_input->name());
       auto ng_input_shape = ng_input->get_shape();
@@ -1575,13 +1582,15 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::AxisSet ng_axes_softmax;
       auto shape_size = ng_input_shape.size();
 
-      if (shape_size !=2) {
-        return tf::errors::InvalidArgument("TF Softmax logits must be 2-dimensional");
+      if (shape_size != 2) {
+        return tf::errors::InvalidArgument(
+            "TF Softmax logits must be 2-dimensional");
       }
 
       ng_axes_softmax.insert(1);
 
-      ng_op_map[op->name()] = make_shared<ng::op::Softmax>(ng_input, ng_axes_softmax);
+      ng_op_map[op->name()] =
+          make_shared<ng::op::Softmax>(ng_input, ng_axes_softmax);
     }
     // -------
     // Squeeze
@@ -1665,11 +1674,13 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       auto ng_input = ng_op_map.find(tf_input->name());
       if (ng_input == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_input->name());
       }
       auto ng_begin = ng_op_map.find(tf_begin->name());
       if (ng_begin == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_begin->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_begin->name());
       }
       auto ng_size = ng_op_map.find(tf_size->name());
       if (ng_size == ng_op_map.end()) {
@@ -1677,19 +1688,24 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       }
       auto ng_stride = ng_op_map.find(tf_stride->name());
       if (ng_stride == ng_op_map.end()) {
-        return tf::errors::InvalidArgument("Missing input: " + tf_stride->name());
+        return tf::errors::InvalidArgument("Missing input: " +
+                                           tf_stride->name());
       }
 
       // TODO support -1 in size
-      auto ng_begin_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
+      auto ng_begin_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
       if (ng_begin_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument begin is null for StridedSlice");
+        return tf::errors::InvalidArgument(
+            "The argument begin is null for StridedSlice");
       }
       auto lower_vec = ng_begin_const->get_vector<int>();
 
-      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
+      auto ng_size_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
       if (ng_size_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument size is null for StridedSlice");
+        return tf::errors::InvalidArgument(
+            "The argument size is null for StridedSlice");
       }
       auto size_vec = ng_size_const->get_vector<int>();
 
@@ -1697,16 +1713,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       std::transform(lower_vec.begin(), lower_vec.end(), size_vec.begin(),
                      upper_vec.begin(), std::plus<int>());
 
-      auto ng_stride_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_stride->second);
+      auto ng_stride_const =
+          std::dynamic_pointer_cast<ng::op::Constant>(ng_stride->second);
       if (ng_stride_const == nullptr) {
-        return tf::errors::InvalidArgument("The argument stride is null for StridedSlice");
+        return tf::errors::InvalidArgument(
+            "The argument stride is null for StridedSlice");
       }
       auto stride_vec = ng_stride_const->get_vector<int>();
 
       std::vector<size_t> l(lower_vec.begin(), lower_vec.end());
       std::vector<size_t> u(upper_vec.begin(), upper_vec.end());
       std::vector<size_t> s(stride_vec.begin(), stride_vec.end());
-      auto ng_strided_slice = make_shared<ng::op::Slice>(ng_input->second, l, u, s);
+      auto ng_strided_slice =
+          make_shared<ng::op::Slice>(ng_input->second, l, u, s);
       ng_op_map[op->name()] = ng_strided_slice;
 
     }
@@ -1714,7 +1733,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // Subtract
     // ---
     else if (op->type_string() == "Sub") {
-      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Subtract>(op, ng_op_map));
+      TF_RETURN_IF_ERROR(
+          TranslateBinaryOp<ngraph::op::Subtract>(op, ng_op_map));
     }
     // ---
     // Sum
@@ -1766,7 +1786,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     // ---------
     // Tanh
     // ---------
-    else if (op->type_string() == "Tanh") {  
+    else if (op->type_string() == "Tanh") {
       TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Tanh>(op, ng_op_map));
     }
     // ---------
