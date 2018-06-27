@@ -1422,6 +1422,59 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Sign>(op, ng_op_map));
     }
     // --------
+    // Slice
+    // --------
+    else if (op->type_string() == "Slice") {
+      if (op->num_inputs() != 3) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 3 for Slice");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_begin;
+      tf::Node* tf_size;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_begin));
+      TF_RETURN_IF_ERROR(op->input_node(2, &tf_size));
+
+      auto ng_input = ng_op_map.find(tf_input->name());
+      if (ng_input == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+      }
+      auto ng_begin = ng_op_map.find(tf_begin->name());
+      if (ng_begin == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_begin->name());
+      }
+      auto ng_size = ng_op_map.find(tf_size->name());
+      if (ng_size == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_size->name());
+      }
+
+
+      // TODO support -1 in size
+      auto ng_begin_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
+      if (ng_begin_const == nullptr) {
+        return tf::errors::InvalidArgument("The argument begin is null for Slice");
+      }
+      auto lower_vec = ng_begin_const->get_vector<int>();
+
+      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
+      if (ng_size_const == nullptr) {
+        return tf::errors::InvalidArgument("The argument size is null for Slice");
+      }
+      auto size_vec = ng_size_const->get_vector<int>();
+
+      std::vector<int> upper_vec(lower_vec.size());
+      std::transform(lower_vec.begin(), lower_vec.end(), size_vec.begin(),
+                     upper_vec.begin(), std::plus<int>());
+
+      std::vector<size_t> l(lower_vec.begin(), lower_vec.end());
+      std::vector<size_t> u(upper_vec.begin(), upper_vec.end());
+      auto ng_slice = make_shared<ng::op::Slice>(ng_input->second, l, u);
+      ng_op_map[op->name()] = ng_slice;
+
+    }
+    // --------
     // Snapshot
     // --------
     else if (op->type_string() == "Snapshot") {
@@ -1529,6 +1582,72 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, output_shape);
     }
+    // --------
+    // StridedSlice
+    // --------
+    else if (op->type_string() == "StridedSlice") {
+      // TODO refactor StrideSlice with Slice op
+      if (op->num_inputs() != 4) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs is not 4 for Slice");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_begin;
+      tf::Node* tf_size;
+      tf::Node* tf_stride;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_begin));
+      TF_RETURN_IF_ERROR(op->input_node(2, &tf_size));
+      TF_RETURN_IF_ERROR(op->input_node(3, &tf_stride));
+
+      auto ng_input = ng_op_map.find(tf_input->name());
+      if (ng_input == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+      }
+      auto ng_begin = ng_op_map.find(tf_begin->name());
+      if (ng_begin == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_begin->name());
+      }
+      auto ng_size = ng_op_map.find(tf_size->name());
+      if (ng_size == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_size->name());
+      }
+      auto ng_stride = ng_op_map.find(tf_stride->name());
+      if (ng_stride == ng_op_map.end()) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_stride->name());
+      }
+
+      // TODO support -1 in size
+      auto ng_begin_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_begin->second);
+      if (ng_begin_const == nullptr) {
+        return tf::errors::InvalidArgument("The argument begin is null for StridedSlice");
+      }
+      auto lower_vec = ng_begin_const->get_vector<int>();
+
+      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size->second);
+      if (ng_size_const == nullptr) {
+        return tf::errors::InvalidArgument("The argument size is null for StridedSlice");
+      }
+      auto size_vec = ng_size_const->get_vector<int>();
+
+      std::vector<int> upper_vec(lower_vec.size());
+      std::transform(lower_vec.begin(), lower_vec.end(), size_vec.begin(),
+                     upper_vec.begin(), std::plus<int>());
+
+      auto ng_stride_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_stride->second);
+      if (ng_stride_const == nullptr) {
+        return tf::errors::InvalidArgument("The argument stride is null for StridedSlice");
+      }
+      auto stride_vec = ng_stride_const->get_vector<int>();
+
+      std::vector<size_t> l(lower_vec.begin(), lower_vec.end());
+      std::vector<size_t> u(upper_vec.begin(), upper_vec.end());
+      std::vector<size_t> s(stride_vec.begin(), stride_vec.end());
+      auto ng_strided_slice = make_shared<ng::op::Slice>(ng_input->second, l, u, s);
+      ng_op_map[op->name()] = ng_strided_slice;
+
+    }
     // ---
     // Subtract
     // ---
@@ -1623,6 +1742,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] =
           ng::builder::numpy_transpose(ng_input, ng_axis_order);
     }
+
     // -----------------------------
     // Catch-all for unsupported ops
     // -----------------------------
