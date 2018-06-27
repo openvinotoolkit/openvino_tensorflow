@@ -65,8 +65,13 @@ REGISTER_NGRAPH_STUB(Name("BiasAdd")
                          .TypeConstraint<float>("T"));
 REGISTER_NGRAPH_STUB(Name("Cast")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("SrcT", {DT_FLOAT, DT_DOUBLE, DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_BOOL})
-                         .TypeConstraint("DstT", {DT_FLOAT, DT_DOUBLE, DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_BOOL}));
+                         .TypeConstraint("SrcT", {DT_FLOAT, DT_DOUBLE, DT_INT8,
+                                                  DT_INT16, DT_INT32, DT_INT64,
+                                                  DT_UINT8, DT_UINT16, DT_BOOL})
+                         .TypeConstraint("DstT",
+                                         {DT_FLOAT, DT_DOUBLE, DT_INT8,
+                                          DT_INT16, DT_INT32, DT_INT64,
+                                          DT_UINT8, DT_UINT16, DT_BOOL}));
 REGISTER_NGRAPH_STUB(Name("ConcatV2")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_INT32, DT_FLOAT})
@@ -132,6 +137,9 @@ REGISTER_NGRAPH_STUB(Name("Pad")
                          .TypeConstraint<float>("T")
                          .TypeConstraint("Tpaddings", {DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Pow")
+                         .Device(ngraph_bridge::DEVICE_NGRAPH)
+                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB(Name("Prod")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Relu")

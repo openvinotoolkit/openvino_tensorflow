@@ -1279,6 +1279,68 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
     else if (op->type_string() == "Pow") {
       TF_RETURN_IF_ERROR(TranslateBinaryOp<ng::op::Power>(op, ng_op_map));
     }
+    // ---
+    // Prod
+    // ---
+    else if (op->type_string() == "Prod") {
+      tf::Node* tf_input;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+
+      try {
+        ng_op_map.at(tf_input->name()); 
+      }
+      catch (const std::out_of_range&) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+      }
+
+      auto ng_input = ng_op_map.at(tf_input->name());
+
+      ng::AxisSet ng_axis_set;
+      if (op->num_inputs() == 2) {
+        tf::Node* tf_axis;
+        TF_RETURN_IF_ERROR(op->input_node(1, &tf_axis));
+        auto ng_axis = ng_op_map.find(tf_axis->name());
+
+        if (ng_axis == ng_op_map.end()) {
+          return tf::errors::InvalidArgument("Missing input: " + tf_axis->name());
+        }
+        
+        auto ng_axis_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_axis->second);
+        if (ng_axis_const == nullptr) {
+          for (size_t i = 0; i < ng_input->get_shape().size(); i++) {
+            ng_axis_set.insert(i);
+          }
+        } 
+        else {
+          auto axis_vec = ng_axis_const->get_vector<int>();
+          for (size_t i = 0; i < axis_vec.size(); ++i) {
+            if (axis_vec[i] >= 0) {
+              ng_axis_set.insert(axis_vec[i]);       
+            }
+            else {
+              // ng_axis_set has unsigned type, converting negative axis 
+              ng_axis_set.insert(ng_input->get_shape().size() + axis_vec[i]);
+            }
+	  }
+	}
+      }
+      else {
+        return tf::errors::InvalidArgument("Prod operation requires 2 inputs");
+      }
+
+      bool tf_keep_dims;
+      if (tf::GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) !=
+          tf::Status::OK()) {
+        tf_keep_dims = false;
+      }
+
+      if (tf_keep_dims) {
+        return tf::errors::Unimplemented(
+            "keep_dims is not implemented for Prod");
+      }
+
+      ng_op_map[op->name()] = make_shared<ng::op::Product>(ng_input, ng_axis_set);
+    }
     // ----
     // Relu
     // ----
