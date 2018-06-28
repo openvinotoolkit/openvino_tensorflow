@@ -1,8 +1,7 @@
-# Bridge TensorFlow to run on Intel® nGraph™ backends
+# Bridge TensorFlow* to run on Intel® nGraph™ backends
 
 This directory contains the code needed to build a TensorFlow 
-plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ 
-library, compiler and runtime] that provides developers with the means to 
+plugin that can be used with Intel® nGraph™. nGraph is an [open-source C++ library, compiler and runtime] that provides developers with the means to 
 train and run DNN models efficiently on custom backends: GPU, CPU, and custom 
 silicon.
 
@@ -159,9 +158,13 @@ TODO
 
 ### Prepare the build environment
 
-1. Install [bazel](https://github.com/bazelbuild/bazel/releases).  [0.11.1 works](https://github.com/bazelbuild/bazel/releases/tag/0.11.1), or, if you're feeling adventurous, you could try a later version.
-2. `port install coreutils`, then add `/opt/local/libexec/gnubin` **in front** of your `$PATH`.  Both `tensorflow` and `ngraph` assume GNU userland tools, and you'll run into errors otherwise.
-3. Make and activate yourself a virtualenv that we'll be using for our custom-built TensorFlow.
+1. Install [bazel], as per step 1 in the "Prepare build environment" section 
+above. Note that bazel version [0.11.1 also works]; if you're feeling adventurous, 
+you could try a later version.
+2. Run `$ port install coreutils`, then add `/opt/local/libexec/gnubin` **in front** 
+of your `$PATH`.  Both `tensorflow` and `ngraph` assume GNU userland tools, and 
+you'll run into errors without them.
+3. Make and activate a virtualenv for our custom-built TensorFlow.
 
 
 ### Installation
@@ -214,7 +217,9 @@ mentioned above.
 
 ### Debugging
 
-Don't just use `lldb` -- it likely refers to `/usr/bin/lldb` and OS X security preferences will prevent it from inheriting your `LD_LIBRARY_PATH`.  Instead, alias it to `/Applications/Xcode.app/Contents/Developer/usr/bin/lldb`.
+Don't just use `lldb` -- it likely refers to `/usr/bin/lldb` and OS X security 
+preferences will prevent it from inheriting your `LD_LIBRARY_PATH`.  Instead, 
+a better approach is to alias it to `/Applications/Xcode.app/Contents/Developer/usr/bin/lldb`.
 
 
 ## Support
@@ -224,8 +229,8 @@ Please submit your questions, feature requests and bug reports via [GitHub issue
 
 ## How to Contribute
 
-We welcome community contributions to nGraph. If you have an idea of how
-to improve the library:
+We welcome community contributions to nGraph. If you have an idea for how to 
+improve it:
 
 * Share your proposal via [GitHub issues].
 * Ensure you can build the product and run all the examples with your patch.
@@ -257,3 +262,4 @@ See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
 [installation guide]: https://www.tensorflow.org/install/install_linux
 [prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
 [installing with Virtualenv]: https://www.tensorflow.org/install/install_linux#installing_with_virtualenv
+[0.11.1 also works]:https://github.com/bazelbuild/bazel/releases/tag/0.11.1
