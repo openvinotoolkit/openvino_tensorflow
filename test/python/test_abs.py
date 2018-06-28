@@ -31,14 +31,12 @@ class TestAbsOperations(NgraphTest):
   @pytest.mark.parametrize(("test_input", "expected"),
                            ((1.4, 1.4), (-0.5, 0.5), (-1, 1)))
   def test_abs_1d(self, test_input, expected):
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-
     val = tf.placeholder(tf.float32, shape=(1,))
 
-    with tf.device(self.test_device):
+    with self.device:
       out = tf.abs(val)
 
-      with tf.Session(config=self.config) as sess:
+      with self.session as sess:
         result = sess.run((out,), feed_dict={val: (test_input,)})
         assert result[0] == expected
 
@@ -46,13 +44,11 @@ class TestAbsOperations(NgraphTest):
     test_input = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
     expected = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
 
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-
     val = tf.placeholder(tf.float32, shape=(2, 3))
 
-    with tf.device(self.test_device):
+    with self.device:
       out = tf.abs(val)
 
-      with tf.Session(config=self.config) as sess:
+      with self.session as sess:
         (result,) = sess.run((out,), feed_dict={val: test_input})
         assert (result == expected).all()

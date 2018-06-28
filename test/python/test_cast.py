@@ -28,36 +28,35 @@ from common import NgraphTest
 
 
 class TestCastOperations(NgraphTest):
-    def test_cast_1d(self):
-        val = tf.placeholder(tf.float32, shape=(1, ))
+  def test_cast_1d(self):
+    val = tf.placeholder(tf.float32, shape=(1,))
 
-        with tf.device(self.test_device):
-            out = tf.cast(val, dtype=tf.int32)
+    with self.device:
+      out = tf.cast(val, dtype=tf.int32)
 
-            with tf.Session(config=self.config) as sess:
-                result = sess.run((out, ), feed_dict={val: (5.5, )})
-                assert result[0] == 5
+      with self.session as sess:
+        result = sess.run((out,), feed_dict={val: (5.5,)})
+        assert result[0] == 5
 
-    def test_cast_2d(self):
-        test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
-        expected = ((1, 2, 3), (4, 5, 6))
+  def test_cast_2d(self):
+    test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
+    expected = ((1, 2, 3), (4, 5, 6))
 
-        val = tf.placeholder(tf.float32, shape=(2, 3))
+    val = tf.placeholder(tf.float32, shape=(2, 3))
 
-        with tf.device(self.test_device):
-            out = tf.cast(val, dtype=tf.int32)
+    with self.device:
+      out = tf.cast(val, dtype=tf.int32)
 
-            with tf.Session(config=self.config) as sess:
-                (result, ) = sess.run((out, ), feed_dict={val: test_input})
-                assert (result == expected).all()
+      with self.session as sess:
+        (result,) = sess.run((out,), feed_dict={val: test_input})
+        assert (result == expected).all()
 
-    @pytest.mark.skip(reason="This test causing other tests to fail")
-    def test_cast_fail(self):
-        val = tf.placeholder(tf.float32, shape=(1, ))
+  def test_cast_fail(self):
+    val = tf.placeholder(tf.float32, shape=(1,))
 
-        with tf.device(self.test_device):
-            out = tf.cast(val, dtype=tf.string)
+    with self.device:
+      out = tf.cast(val, dtype=tf.string)
 
-            with tf.Session(config=self.config) as sess:
-                with pytest.raises(tf.errors.InvalidArgumentError):
-                    sess.run((out, ), feed_dict={val: (5.5, )})
+      with self.session as sess:
+        with pytest.raises(tf.errors.InvalidArgumentError):
+          sess.run((out,), feed_dict={val: (5.5,)})

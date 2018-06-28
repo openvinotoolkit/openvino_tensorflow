@@ -33,25 +33,21 @@ class TestSqueezeOperations(NgraphTest):
       (((1, 2, 3, 1), None), ((2, 1, 3), None),
        ((2, 1, 3, 1, 1), (1, 4)), ((1, 1), None), ((1,), None)))
   def test_squeeze(self, shape, axis):
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-
     a = tf.placeholder(tf.float32, shape=shape)
 
-    with tf.device(self.test_device):
+    with self.device:
       a1 = tf.squeeze(a, axis)
       a_val = np.random.random_sample(shape)
       a_sq = np.squeeze(a_val, axis=axis)
 
-      with tf.Session(config=self.config) as sess:
-        print("Python: Running with Session")
+      with self.session as sess:
         (result_a,) = sess.run((a1,), feed_dict={a: a_val})
-        print("shape:", result_a.shape)
         assert result_a.shape == a_sq.shape
         assert np.allclose(result_a, a_sq)
 
   def test_incorrect_squeeze(self):
     shape1 = (1, 2, 3, 1)
     a = tf.placeholder(tf.float32, shape=shape1)
-    with tf.device(self.test_device):
+    with self.device:
       with pytest.raises(ValueError):
         tf.squeeze(a, [0, 1])

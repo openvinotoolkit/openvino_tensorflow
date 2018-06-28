@@ -20,12 +20,20 @@ import shutil
 
 import pytest
 
+from tensorflow.python.framework import ops
+
 from common import LIBNGRAPH_DEVICE
 
 
 @pytest.fixture(scope='session', autouse=True)
 def load_ngraph_device():
   cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
+
+
+@pytest.fixture(autouse=True)
+def reset_graph():
+  yield
+  ops.reset_default_graph()
 
 
 @pytest.fixture(scope='session', autouse=True)

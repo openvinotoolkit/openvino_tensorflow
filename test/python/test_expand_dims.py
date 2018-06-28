@@ -26,17 +26,18 @@ import tensorflow as tf
 
 from common import NgraphTest
 
+
 class TestExpandDims(NgraphTest):
-    @pytest.mark.parametrize("axis", ([0, 2, 3]))
-    def test_expand_dims(self, axis):
-        s = [2, 3, 5]
-        val = tf.ones(s, tf.float32)
+  @pytest.mark.parametrize("axis", ([0, 2, 3]))
+  def test_expand_dims(self, axis):
+    shape = [2, 3, 5]
+    val = tf.ones(shape, tf.float32)
 
-        with tf.device(self.test_device):
-            out = tf.expand_dims(val, axis) 
-            with tf.Session(config=self.config) as sess:
-                result = sess.run(out)
+    with self.device:
+      out = tf.expand_dims(val, axis)
+      with self.session as sess:
+        result = sess.run(out)
 
-        s.insert(axis, 1)
-        expected = tuple(s)
-        assert result.shape == expected
+    shape.insert(axis, 1)
+    expected = tuple(shape)
+    assert result.shape == expected

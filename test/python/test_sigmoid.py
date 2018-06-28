@@ -20,44 +20,32 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from common import NgraphTest
 import tensorflow as tf
 import numpy as np
 
+from common import NgraphTest
+
+
 class TestSigmoid(NgraphTest):
-    log_placement = False
+  def test_sigmoid(self):
+    x = tf.placeholder(tf.float32, shape=(2, 3))
+    y = tf.placeholder(tf.float32, shape=(2, 3))
+    z = tf.placeholder(tf.float32, shape=(2, 3))
 
-    def test_sigmoid(self):
+    with self.device:
+      a = x + y + z
+      b = tf.nn.sigmoid(a)
 
-        x = tf.placeholder(tf.float32, shape=(2, 3))
-        y = tf.placeholder(tf.float32, shape=(2, 3))
-        z = tf.placeholder(tf.float32, shape=(2, 3))
+      # input value and expected value
+      x_np = np.full((2, 3), 1.0)
+      y_np = np.full((2, 3), 1.0)
+      z_np = np.full((2, 3), 1.0)
+      a_np = x_np + y_np + z_np
+      b_np = 1. / (1. + np.exp(-a_np))
+      expected = b_np
 
-        with tf.device("/device:NGRAPH:0"):
-            a = x + y + z
-            b = tf.nn.sigmoid(a)
-
-            # input value and expected value
-            x_np = np.full((2, 3), 1.0)
-            y_np = np.full((2, 3), 1.0)
-            z_np = np.full((2, 3), 1.0)
-            a_np = x_np + y_np + z_np
-            b_np = 1./(1.+np.exp(-a_np))
-            expected = b_np
-
-            with tf.Session(config=self.config) as sess:
-                print("Python: Running with Session")
-                (result_a, result_b) = sess.run(
-                    (a, b),
-                    feed_dict={
-                        x: x_np,
-                        y: y_np,
-                        z: z_np,
-                    })
-                print("result:", result_b)
-                print("expected:", expected)
-                atol = 1e-5
-                error = np.absolute(result_b-expected)
-                assert np.amax(error) <= atol
-
-                
+      with self.session as sess:
+        (_, result_b) = sess.run((a, b), feed_dict={x: x_np, y: y_np, z: z_np})
+        atol = 1e-5
+        error = np.absolute(result_b - expected)
+        assert np.amax(error) <= atol

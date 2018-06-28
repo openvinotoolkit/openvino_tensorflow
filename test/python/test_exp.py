@@ -34,14 +34,12 @@ class TestExpOperations(NgraphTest):
   @pytest.mark.parametrize(("test_input", "expected"),
                            ((1.4, e**1.4), (-0.5, e**-0.5), (-1, e**-1)))
   def test_exp_1d(self, test_input, expected):
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-
     val = tf.placeholder(tf.float32, shape=(1,))
 
-    with tf.device(self.test_device):
+    with self.device:
       out = tf.exp(val)
 
-      with tf.Session(config=self.config) as sess:
+      with self.session as sess:
         result = sess.run((out,), feed_dict={val: (test_input,)})
         assert result[0] == expected
 
@@ -49,13 +47,11 @@ class TestExpOperations(NgraphTest):
     test_input = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
     expected = tuple([tuple([e**i for i in j]) for j in test_input])
 
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
-
     val = tf.placeholder(tf.float32, shape=(2, 3))
 
-    with tf.device(self.test_device):
+    with self.device:
       out = tf.exp(val)
 
-      with tf.Session(config=self.config) as sess:
+      with self.session as sess:
         (result,) = sess.run((out,), feed_dict={val: test_input})
         assert np.allclose(result, expected)
