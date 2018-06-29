@@ -31,7 +31,6 @@ from common import NgraphTest
 
 class TestDepthwiseConv2dOperations(NgraphTest):
   @pytest.mark.parametrize("padding", ("VALID", "SAME"))
-  @pytest.mark.skip(reason="This test causing SEGFAULT")
   def test_depthwise_conv2d(self, padding):
     tensor_in_sizes = [1, 2, 3, 2]
     filter_in_sizes = [2, 2, 2, 2]
