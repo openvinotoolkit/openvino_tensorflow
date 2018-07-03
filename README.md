@@ -35,6 +35,11 @@ TensorFlow [prepare environment] for linux.
 
    **Note:** You do not need CUDA in order to use the ngraph-tensorflow bridge.
 
+4. Additional dependencies.
+   - Install ```apt-get install libicu-dev``` to avoid the following (potential) error:
+     ```unicode/ucnv.h: No such file or directory```.
+
+
 ### Installation
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
@@ -84,6 +89,9 @@ TensorFlow [prepare environment] for linux.
     ```
     pip install enum34
     ```
+
+    You may also need to install a Python package named ```mock``` to prevent an import 
+    error during the build process.
 
 5. Install the pip package, replacing the `tensorflow-1.*` with your 
    version of TensorFlow:
