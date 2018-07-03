@@ -155,7 +155,7 @@ REGISTER_NGRAPH_STUB(Name("Reshape")
                          .TypeConstraint("Tshape", {DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("Slice")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
+                         .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Sign")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
@@ -173,7 +173,7 @@ REGISTER_NGRAPH_STUB(Name("Squeeze")
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
 REGISTER_NGRAPH_STUB(Name("StridedSlice")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
+                         .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
 REGISTER_NGRAPH_STUB(Name("Sub")
                          .Device(ngraph_bridge::DEVICE_NGRAPH)
                          .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
