@@ -156,6 +156,18 @@ tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
 tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
                                       ngraph::Shape* ng_shape);
 
+// Returns an ArraySlice containing all TensorFlow dtypes supported by the
+// nGraph bridge.
+const tf::gtl::ArraySlice<tf::DataType>& NGraphDTypes();
+
+// Returns an ArraySlice containing all *numeric* TensorFlow dtypes supported
+// by the nGraph bridge.
+const tf::gtl::ArraySlice<tf::DataType>& NGraphNumericDTypes();
+
+// Returns an ArraySlice containing all data types that can be used for
+// axis/tensor indices.
+const tf::gtl::ArraySlice<tf::DataType>& NGraphIndexDTypes();
+
 }  // namespace ngraph_bridge
 
 #endif

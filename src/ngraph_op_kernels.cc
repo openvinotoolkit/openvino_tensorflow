@@ -117,15 +117,10 @@ REGISTER_KERNEL_BUILDER(Name("NoOp").Device(ngraph_bridge::DEVICE_NGRAPH),
 REGISTER_KERNEL_BUILDER(Name("Const")
                             .Device(ngraph_bridge::DEVICE_NGRAPH)
                             .TypeConstraint("dtype",
-                                            {DT_FLOAT, DT_INT32, DT_BOOL}),
+                                            ngraph_bridge::NGraphDTypes()),
                         NGraphConstOp);
 
-#define REGISTER_IDENTITY(T)                                        \
-  REGISTER_KERNEL_BUILDER(Name("Identity")                          \
-                              .Device(ngraph_bridge::DEVICE_NGRAPH) \
-                              .TypeConstraint<T>("T"),              \
-                          NGraphIdentityOp);
-
-REGISTER_IDENTITY(float);
-REGISTER_IDENTITY(int32);
-REGISTER_IDENTITY(int64);
+REGISTER_KERNEL_BUILDER(Name("Identity")
+                            .Device(ngraph_bridge::DEVICE_NGRAPH)
+                            .TypeConstraint("T", ngraph_bridge::NGraphDTypes()),
+                        NGraphIdentityOp);

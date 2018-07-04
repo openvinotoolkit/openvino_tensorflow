@@ -34,13 +34,13 @@ extern const char* const DEVICE_NGRAPH;
 // For example, we can only handle Reshape if the "shape" input is a constant,
 // so this is okay:
 //
-//   Foo       Const[2,4,2]
+//   ...       Const[2,4,2]
 //     \       /
 //      Reshape                     (1)
 //
 // but this is not:
 //
-//   Foo       Placeholder
+//   ...       Placeholder
 //     \       /
 //      Reshape                     (2)
 //
@@ -55,28 +55,47 @@ extern const char* const DEVICE_NGRAPH;
 // will check every node that has a requested placement on NGRAPH, and make
 // sure that it conforms to certain (op-dependent) constraints. If the
 // constraints are satisfied, we will tag the node with a "_kernel" value of
-// "ngraph". The stub kernels, in turn, are registered with the constraint
-// that _kernel="ngraph". This means that during the placement pass, our
-// kernels will not be allowed for nodes we did not mark during this pass, and
-// placement will fall back on CPU.
+// "ngraph", along with some op-specific metadata (if applicable). The stub
+// kernels, in turn, are registered with the constraint that _kernel="ngraph".
+// This means that during the placement pass, our kernels will not be allowed
+// for nodes we did not mark during this pass, and placement will fall back on
+// CPU.
 //
-// The per-op checks are implemented by callbacks of the type:
+// Taking Reshape as an example, the pass ensures that the "shape" input is
+// constant, and if so, it adds to the Reshape node the "_kernel=ngraph"
+// attribute, along with some metadata recording the value of the constant.
+// Thus graph (1) is transformed as follows:
+//
+//   ...       Const[2,4,2][_kernel="ngraph"]
+//     \       /
+//      Reshape[_kernel="ngraph",
+//              _ngraph_reshape_static_shape={2,4,2}]
+//
+// while graph (2) would be left unchanged, meaning that soft placement will
+// fall back on non-nGraph implementations.
+//
+// Internally, there are two pieces. The first is a type constraint checker,
+// which supplants the type checking machinery usually used with
+// REGISTER_KERNEL_BUILDER. This ensures that any constraints on the data types
+// of input tensors are satisfied---for example, we do not support DT_STRING.
+// The second part is a set of finer-grained per-op checks called "confirmation
+// functions", implementing more specific checks like the one described for
+// Reshape above.
+//
+// The confirmation functions are implemented as callbacks of the type:
 //
 //      std::function<tf::Status(tf::Node*, bool*)>.
 //
-// A confirmation function should return true/false by reference through its
-// second parameter: true if placement is "accepted", and false if it is
-// "rejected". For example, the confirmation function for "Reshape" will return
-// true for (1) above, and false for (2) above.
+// A confirmation function returns true/false by reference through its second
+// parameter: true if placement is "accepted", and false if it is "rejected".
+// For example, the confirmation function for "Reshape" will return true
+// for (1) above, and false for (2).
 //
 // A confirmation function can also, as a side effect, add attributes to the
-// node being checked, which can be used later in ngraph_builder. In this case,
-// the "Reshape" confirmation function extracts the tensor data from the Const
-// input node, and adds an attribute to the "Reshape" node with the name
-// "_ngraph_reshape_static_shape", which is an array of int values (here, the
-// values [2,4,2]). (Note that in general such attributes will need to start
-// with "_" to mark them as "internal" or "system" attributes, as otherwise
-// TensorFlow attempts to validate them as against the op schema.)
+// node being checked, which can be used later in ngraph_builder. (Note that in
+// general such attributes will need to start with "_" to mark them as
+// "internal" or "system" attributes, as otherwise TensorFlow attempts to
+// validate them as against the op schema.)
 //
 class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
  public:
@@ -146,34 +165,135 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
   // Main entry point for the confirmation pass.
   //
   tf::Status ConfirmPlacement(tf::Graph* graph) {
-    // A map of op types (e.g. "Add") to confirmation functions.
+    //
+    // A map of op types (e.g. "Add") to type constraint maps. For (fake)
+    // example:
+    //
+    //  type_constraint_map["Cast"]["SrcT"] = {tf::DT_FLOAT, tf::DT_BOOL};
+    //  type_constraint_map["Cast"]["DstT"] = {tf::DT_DOUBLE, tf::DT_INT16};
+    //
+    // ...would mean that for the "Cast" op, the "SrcT" type variable can be
+    // DT_FLOAT or DT_BOOL, and the "DstT" type variable can be DT_DOUBLE or
+    // DT_INT16.
+    //
+    static std::map<std::string,
+                    std::map<std::string, tf::gtl::ArraySlice<tf::DataType>>>
+        type_constraint_map;
+
+    //
+    // A map of op types (e.g. "Add") to confirmation functions. These can be
+    // used to check arbitrary constraints, and attach information to the node
+    // in the process. For example:
+    //
+    //    confirmation_functions["MyOp"] = [](tf::Node* n, bool* result) {
+    //      tf::Node* tf_arg_node;
+    //      TF_RETURN_IF_ERROR(n->input_node(0, &tf_arg_node));
+    //
+    //      std::vector<tf::int64> tf_const_data;
+    //      if (ExtractConstantData(tf_arg_node, &tf_const_data) !=
+    //              tf::Status::OK() ||
+    //          tf_const_data.size() != 1) {
+    //        *result = false;
+    //        return tf::Status::OK();
+    //      }
+    //
+    //      n->AddAttr("_ngraph_myop_constant_input", tf_const_data[0]);
+    //      *result = true;
+    //      return tf::Status::OK();
+    //    };
+    //
+    // The foregoing function checks every "MyOp" node to make sure that its
+    // zeroth input node is a constant scalar, and if it is, extracts the value
+    // of that scalar, and attaches it to the node as the
+    // "_ngraph_myop_constant_input" attribute. Placement fails if the input is
+    // not a constant scalar (since "false" is written to *result).
+    //
     static std::map<std::string, ConfirmationFunction> confirmation_functions;
 
     tf::mutex init_mu;
     static bool initialized = false;
 
-    // If the confirmation function map has not been initialized, initialize
-    // it.
+    // If the type constraint and confirmation function maps have not been
+    // initialized, initialize them.
     //
-    // IF YOU ARE ADDING A NEW OP IMPLEMENTATION, ADD A CONFIRMATION FUNCTION
-    // FOR THE OP HERE.
+    // IF YOU ARE ADDING A NEW OP IMPLEMENTATION, ADD TYPE CONSTRAINTS AND A
+    // CONFIRMATION FUNCTION FOR THE OP HERE. The constraint function should
+    // refuse placement if the node is not supported in the builder, and tag
+    // the node with any data that will be needed in case the graph is broken
+    // up in a later rewrite pass (for example, constant data).
     {
       tf::mutex_lock l(init_mu);
 
       if (!initialized) {
+        //
+        // Initialize type constraint map.
+        //
+        type_constraint_map["Abs"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Add"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["BiasAdd"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
+        type_constraint_map["Cast"]["DstT"] = NGraphDTypes();
+        type_constraint_map["ConcatV2"]["T"] = NGraphDTypes();
+        type_constraint_map["ConcatV2"]["Tidx"] = NGraphIndexDTypes();
+        type_constraint_map["Conv2D"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["DepthwiseConv2dNative"]["T"] =
+            NGraphNumericDTypes();
+        type_constraint_map["Equal"]["T"] = NGraphDTypes();
+        type_constraint_map["Exp"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
+        type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Greater"]["T"] = NGraphDTypes();
+        type_constraint_map["GreaterEqual"]["T"] = NGraphDTypes();
+        type_constraint_map["Less"]["T"] = NGraphDTypes();
+        type_constraint_map["LessEqual"]["T"] = NGraphDTypes();
+        type_constraint_map["Log"]["T"] = NGraphNumericDTypes();
+        // LogicalAnd has no type attributes, ("T", if it existed, would always
+        // be bool).
+        type_constraint_map["MatMul"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Maximum"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["MaxPool"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Mean"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Mean"]["Tidx"] = NGraphIndexDTypes();
+        type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Pad"]["T"] = NGraphDTypes();
+        type_constraint_map["Pad"]["Tpaddings"] = NGraphIndexDTypes();
+        type_constraint_map["Pow"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Prod"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Prod"]["Tidx"] = NGraphIndexDTypes();
+        type_constraint_map["Relu"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Relu6"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Reshape"]["T"] = NGraphDTypes();
+        type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
+        type_constraint_map["Slice"]["T"] = NGraphDTypes();
+        type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
+        type_constraint_map["Sign"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
+        type_constraint_map["Squeeze"]["T"] = NGraphDTypes();
+        type_constraint_map["StridedSlice"]["T"] = NGraphDTypes();
+        type_constraint_map["StridedSlice"]["Index"] = NGraphIndexDTypes();
+        type_constraint_map["Sub"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Sum"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Sum"]["Tidx"] = NGraphIndexDTypes();
+        type_constraint_map["Tanh"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Transpose"]["T"] = NGraphDTypes();
+        type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
+
+        //
+        // Initialize confirmation function map.
+        //
+
         // Trivial confirmation function which always accepts placement.
         ConfirmationFunction always = [](tf::Node* n, bool* result) {
           *result = true;
           return tf::Status::OK();
         };
-        // Trivial confirmation function which always rejects placement.
-        ConfirmationFunction never = [](tf::Node* n, bool* result) {
-          *result = false;
-          return tf::Status::OK();
-        };
 
         //
-        // Please keep these in alphabetical order.
+        // Please keep these in alphabetical order by op name.
         //
         confirmation_functions["Abs"] = always;
         confirmation_functions["Add"] = always;
@@ -346,6 +466,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Tanh"] = always;
+
         // Constraint: permutation input must be Const.
         confirmation_functions["Transpose"] = [](tf::Node* n, bool* result) {
           tf::Node* tf_permutation_node;
@@ -363,22 +484,48 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           *result = true;
           return tf::Status::OK();
         };
-      }
 
-      initialized = true;
+        initialized = true;
+      }
     }
 
     for (auto node : graph->op_nodes()) {
       if (NGraphPlacementRequested(node)) {
-        bool confirmed = false;
+        bool type_constraints_ok = true;
 
-        auto it = confirmation_functions.find(node->type_string());
+        // First check type constraints.
+        for (auto& name_and_set : type_constraint_map[node->type_string()]) {
+          auto& type_attr_name = name_and_set.first;
+          auto& allowed_types = name_and_set.second;
 
-        if (it != confirmation_functions.end()) {
-          TF_RETURN_IF_ERROR(it->second(node, &confirmed));
+          tf::DataType dt;
+
+          if (tf::GetNodeAttr(node->attrs(), type_attr_name, &dt) !=
+                  tf::Status::OK() ||
+              std::find(allowed_types.begin(), allowed_types.end(), dt) ==
+                  allowed_types.end()) {
+            type_constraints_ok = false;
+            break;
+          }
         }
 
+        // If type constraints are satisfied, check for a confirmation
+        // function.
+        bool confirmed = false;
+
+        if (type_constraints_ok) {
+          auto it = confirmation_functions.find(node->type_string());
+
+          if (it != confirmation_functions.end()) {
+            TF_RETURN_IF_ERROR(it->second(node, &confirmed));
+          }
+        }
+
+        // Set the _kernel attribute if type constraints are satisfied and the
+        // confirmation function (if any) has returned true.
         if (confirmed) {
+          NGRAPH_VLOG(4) << "Accepting: " << node->name() << "["
+                         << node->type_string() << "]";
           node->AddAttr("_kernel", "ngraph");
         } else {
           NGRAPH_VLOG(4) << "Rejecting: " << node->name() << "["

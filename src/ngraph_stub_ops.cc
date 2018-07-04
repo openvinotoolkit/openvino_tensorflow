@@ -44,147 +44,56 @@ class NGraphStubOp : public OpKernel {
   }
 };
 
-#define REGISTER_NGRAPH_STUB(builder) \
-  REGISTER_KERNEL_BUILDER(builder.Label("ngraph"), NGraphStubOp);
+#define REGISTER_NGRAPH_STUB(name)                                     \
+  REGISTER_KERNEL_BUILDER(                                             \
+      Name(name).Device(ngraph_bridge::DEVICE_NGRAPH).Label("ngraph"), \
+      NGraphStubOp);
 
 //
 // Please keep these in alphabetical order.
 //
 
-REGISTER_NGRAPH_STUB(Name("Abs")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
-REGISTER_NGRAPH_STUB(Name("Add")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("AvgPool")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("BiasAdd")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Cast")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("SrcT", {DT_FLOAT, DT_DOUBLE, DT_INT8,
-                                                  DT_INT16, DT_INT32, DT_INT64,
-                                                  DT_UINT8, DT_UINT16, DT_BOOL})
-                         .TypeConstraint("DstT",
-                                         {DT_FLOAT, DT_DOUBLE, DT_INT8,
-                                          DT_INT16, DT_INT32, DT_INT64,
-                                          DT_UINT8, DT_UINT16, DT_BOOL}));
-REGISTER_NGRAPH_STUB(Name("ConcatV2")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_INT32, DT_FLOAT})
-                         .TypeConstraint("Tidx", {DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB("Abs");
+REGISTER_NGRAPH_STUB("Add");
+REGISTER_NGRAPH_STUB("AvgPool");
+REGISTER_NGRAPH_STUB("BiasAdd");
+REGISTER_NGRAPH_STUB("Cast");
+REGISTER_NGRAPH_STUB("ConcatV2");
 // "Const" can occur outside of clusters and is registered elsewhere.
-REGISTER_NGRAPH_STUB(Name("Conv2D")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("DepthwiseConv2dNative")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Equal")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Exp")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("ExpandDims")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Floor")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("FusedBatchNorm")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Greater")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("GreaterEqual")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB("Conv2D");
+REGISTER_NGRAPH_STUB("DepthwiseConv2dNative");
+REGISTER_NGRAPH_STUB("Equal");
+REGISTER_NGRAPH_STUB("Exp");
+REGISTER_NGRAPH_STUB("ExpandDims");
+REGISTER_NGRAPH_STUB("Floor");
+REGISTER_NGRAPH_STUB("FusedBatchNorm");
+REGISTER_NGRAPH_STUB("Greater");
+REGISTER_NGRAPH_STUB("GreaterEqual");
 // "Identity" can occur outside of clusters and is registered elsewhere.
-REGISTER_NGRAPH_STUB(Name("Less")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("LessEqual")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Log")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("LogicalAnd").Device(ngraph_bridge::DEVICE_NGRAPH));
-REGISTER_NGRAPH_STUB(Name("MatMul")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Maximum")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("MaxPool")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Mean")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T")
-                         .TypeConstraint("Tidx", {DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Mul")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
+REGISTER_NGRAPH_STUB("Less");
+REGISTER_NGRAPH_STUB("LessEqual");
+REGISTER_NGRAPH_STUB("Log");
+REGISTER_NGRAPH_STUB("LogicalAnd");
+REGISTER_NGRAPH_STUB("MatMul");
+REGISTER_NGRAPH_STUB("Maximum");
+REGISTER_NGRAPH_STUB("MaxPool");
+REGISTER_NGRAPH_STUB("Mean");
+REGISTER_NGRAPH_STUB("Mul");
 // "NoOp" can occur outside of clusters and is registered elsewhere.
-REGISTER_NGRAPH_STUB(Name("Pad")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T")
-                         .TypeConstraint("Tpaddings", {DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Pow")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Prod")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Relu")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Relu6")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Reshape")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64,
-                                               DT_BOOL})
-                         .TypeConstraint("Tshape", {DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Slice")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
-REGISTER_NGRAPH_STUB(Name("Sign")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
-REGISTER_NGRAPH_STUB(Name("Sigmoid")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Softmax")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Snapshot")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32}));
-REGISTER_NGRAPH_STUB(Name("Squeeze")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("StridedSlice")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T",{DT_FLOAT,DT_INT32}));
-REGISTER_NGRAPH_STUB(Name("Sub")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Sum")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint("T", {DT_FLOAT, DT_INT32})
-                         .TypeConstraint("Tidx", {DT_INT32, DT_INT64}));
-REGISTER_NGRAPH_STUB(Name("Tanh")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T"));
-REGISTER_NGRAPH_STUB(Name("Transpose")
-                         .Device(ngraph_bridge::DEVICE_NGRAPH)
-                         .TypeConstraint<float>("T")
-                         .TypeConstraint("Tperm", {DT_INT32, DT_INT64}));
+REGISTER_NGRAPH_STUB("Pad");
+REGISTER_NGRAPH_STUB("Pow");
+REGISTER_NGRAPH_STUB("Prod");
+REGISTER_NGRAPH_STUB("Relu");
+REGISTER_NGRAPH_STUB("Relu6");
+REGISTER_NGRAPH_STUB("Reshape");
+REGISTER_NGRAPH_STUB("Slice");
+REGISTER_NGRAPH_STUB("Sign");
+REGISTER_NGRAPH_STUB("Sigmoid");
+REGISTER_NGRAPH_STUB("Softmax");
+REGISTER_NGRAPH_STUB("Snapshot");
+REGISTER_NGRAPH_STUB("Squeeze");
+REGISTER_NGRAPH_STUB("StridedSlice");
+REGISTER_NGRAPH_STUB("Sub");
+REGISTER_NGRAPH_STUB("Sum");
+REGISTER_NGRAPH_STUB("Tanh");
+REGISTER_NGRAPH_STUB("Transpose");

@@ -140,4 +140,24 @@ tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
   return tf::Status::OK();
 }
 
+const tf::gtl::ArraySlice<tf::DataType>& NGraphDTypes() {
+  static tf::gtl::ArraySlice<tf::DataType> result{
+      tf::DT_FLOAT,  tf::DT_DOUBLE, tf::DT_INT8,  tf::DT_INT16,
+      tf::DT_INT32,  tf::DT_INT64,  tf::DT_UINT8, tf::DT_UINT16,
+      tf::DT_UINT32, tf::DT_UINT64, tf::DT_BOOL};
+  return result;
+}
+
+const tf::gtl::ArraySlice<tf::DataType>& NGraphNumericDTypes() {
+  static tf::gtl::ArraySlice<tf::DataType> result{
+      tf::DT_FLOAT, tf::DT_DOUBLE, tf::DT_INT8,   tf::DT_INT16,  tf::DT_INT32,
+      tf::DT_INT64, tf::DT_UINT8,  tf::DT_UINT16, tf::DT_UINT32, tf::DT_UINT64};
+  return result;
+}
+
+const tf::gtl::ArraySlice<tf::DataType>& NGraphIndexDTypes() {
+  static tf::gtl::ArraySlice<tf::DataType> result{tf::DT_INT32, tf::DT_INT64};
+  return result;
+}
+
 }  // namespace ngraph_bridge
