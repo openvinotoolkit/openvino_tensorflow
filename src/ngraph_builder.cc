@@ -1186,15 +1186,11 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         tf_keep_dims = false;
       }
 
-      if (tf_keep_dims) {
-        return tf::errors::Unimplemented(
-            "keep_dims is not implemented for Mean");
-      }
-
       std::vector<tf::int64> mean_axes;
       TF_RETURN_IF_ERROR(
           tf::GetNodeAttr(op->attrs(), "_ngraph_mean_static_axes", &mean_axes));
 
+      ng::Shape input_shape = ng_input->get_shape();
       size_t input_rank = ng_input->get_shape().size();
 
       ng::AxisSet ng_reduction_axes;
@@ -1207,7 +1203,30 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         }
       }
 
-      auto ng_mean = ng::builder::mean(ng_input, ng_reduction_axes);
+      std::shared_ptr<ng::Node> ng_mean = ng::builder::mean(ng_input, ng_reduction_axes);
+
+      // If keep_dims is specified we need to reshape to put back the reduced
+      // axes, with length 1.
+      if (tf_keep_dims) {
+        ng::Shape ng_result_shape_with_keep(input_rank);
+
+        for (size_t i = 0; i < input_rank; i++) {
+          if (ng_reduction_axes.count(i) == 0) {
+            ng_result_shape_with_keep[i] = input_shape[i];
+          }
+          else {
+            ng_result_shape_with_keep[i] = 1;
+          }
+        }
+
+        ng::AxisVector ng_axis_order(ng_mean->get_shape().size());
+
+        for (size_t i = 0; i < ng_mean->get_shape().size(); i++) {
+          ng_axis_order[i] = i;
+        }
+
+        ng_mean = make_shared<ng::op::Reshape>(ng_mean, ng_axis_order, ng_result_shape_with_keep);
+      }
 
       ng_op_map[op->name()] = ng_mean;
     }
@@ -1790,16 +1809,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         tf_keep_dims = false;
       }
 
-      if (tf_keep_dims) {
-        return tf::errors::Unimplemented(
-            "keep_dims is not implemented for Sum");
-      }
-
       std::vector<tf::int64> sum_axes;
       TF_RETURN_IF_ERROR(
           tf::GetNodeAttr(op->attrs(), "_ngraph_sum_static_axes", &sum_axes));
 
-      size_t input_rank = ng_input->get_shape().size();
+      ng::Shape input_shape = ng_input->get_shape();
+      size_t input_rank = input_shape.size();
 
       ng::AxisSet ng_reduction_axes;
 
@@ -1811,7 +1826,30 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
         }
       }
 
-      auto ng_sum = make_shared<ng::op::Sum>(ng_input, ng_reduction_axes);
+      std::shared_ptr<ng::Node> ng_sum = make_shared<ng::op::Sum>(ng_input, ng_reduction_axes);
+
+      // If keep_dims is specified we need to reshape to put back the reduced
+      // axes, with length 1.
+      if (tf_keep_dims) {
+        ng::Shape ng_result_shape_with_keep(input_rank);
+
+        for (size_t i = 0; i < input_rank; i++) {
+          if (ng_reduction_axes.count(i) == 0) {
+            ng_result_shape_with_keep[i] = input_shape[i];
+          }
+          else {
+            ng_result_shape_with_keep[i] = 1;
+          }
+        }
+
+        ng::AxisVector ng_axis_order(ng_sum->get_shape().size());
+
+        for (size_t i = 0; i < ng_sum->get_shape().size(); i++) {
+          ng_axis_order[i] = i;
+        }
+
+        ng_sum = make_shared<ng::op::Reshape>(ng_sum, ng_axis_order, ng_result_shape_with_keep);
+      }
 
       ng_op_map[op->name()] = ng_sum;
     }

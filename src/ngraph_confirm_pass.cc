@@ -339,13 +339,6 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         // Constraints: "keep_dims" is not supported, reduction-axes input
         // must be Const.
         confirmation_functions["Mean"] = [](tf::Node* n, bool* result) {
-          bool tf_keep_dims;
-
-          if (tf::GetNodeAttr(n->attrs(), "keep_dims", &tf_keep_dims) !=
-              tf::Status::OK()) {
-            tf_keep_dims = false;
-          }
-
           tf::Node* tf_axes_node;
           TF_RETURN_IF_ERROR(n->input_node(1, &tf_axes_node));
 
@@ -439,17 +432,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["StridedSlice"] = always;
         confirmation_functions["Sub"] = always;
 
-        // Constraints: "keep_dims" is not supported, reduction-axes input
-        // must be Const.
+        // Constraints: reduction-axes input must be Const.
         confirmation_functions["Sum"] = [](tf::Node* n, bool* result) {
-          // For now, the "keep_dims" option is not supported.
-          bool tf_keep_dims;
-
-          if (tf::GetNodeAttr(n->attrs(), "keep_dims", &tf_keep_dims) !=
-              tf::Status::OK()) {
-            tf_keep_dims = false;
-          }
-
           tf::Node* tf_axes_node;
           TF_RETURN_IF_ERROR(n->input_node(1, &tf_axes_node));
 
