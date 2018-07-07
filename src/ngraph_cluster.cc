@@ -48,11 +48,6 @@ tf::Status NGraphClusterPass::Run(
     return tf::Status::OK();
   }
 
-  if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
-    NGRAPH_VLOG(0) << "NGRAPH_TF_CLUSTER_BY_OP_NAME is set. This mode is "
-                      "experimental and unlikely to work.";
-  }
-
   tf::Graph* graph = options.graph->get();
 
   TF_RETURN_IF_ERROR(IdentifyClusters(graph));
@@ -62,78 +57,14 @@ tf::Status NGraphClusterPass::Run(
 
 // TODO(amprocte): do we need to look at job name, replica, task?
 bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
-  //
-  // This is just a debugging aid to experiment with clustering without
-  // actually mapping things to nGraph. It will probably go away soon.
-  //
-  if (std::getenv("NGRAPH_TF_CLUSTER_BY_OP_NAME") != nullptr) {
-    if (tf::str_util::StartsWith(node->name(), "accuracy/")) {
-      return false;
-    }
+  tf::DeviceNameUtils::ParsedName parsed;
 
-    // clang-format off
-    static std::set<std::string> supported_ops{
-        "Add",
-        "AddN",
-        "ArgMax",
-        "AvgPool",
-        "AvgPoolGrad",
-        "BiasAdd",
-        "BiasAddGrad",
-        "BroadcastGradientArgs",
-        "Cast",
-        "ConcatV2",
-        "Const",
-        "Conv2D",
-        "Conv2DBackpropFilter",
-        "Conv2DBackpropInput",
-        "Equal",
-        "ExpandDims",
-        "Fill",
-        "FusedBatchNorm",
-        "FusedBatchNormGrad",
-        "Greater",
-        "Identity",
-        "L2Loss",
-        "LessEqual",
-        "LogicalAnd",
-        "MatMul",
-        "MaxPool",
-        "MaxPoolGrad",
-        "Mean",
-        "Mul",
-        "NoOp",
-        "Pad",
-        "Prod",
-        "RealDiv",
-        "Relu",
-        "Relu6",
-        "ReluGrad",
-        "ReluGrad",
-        "Reshape",
-        "Select",
-        "Shape",
-        "ShapeN",
-        "Slice",
-        "Snapshot",
-        "SoftmaxCrossEntropyWithLogits",
-        "Sub",
-        "Sum",
-        "Tile",
-    };
-    // clang-format on
-
-    return (supported_ops.count(node->type_string()) > 0);
-  } else {
-    tf::DeviceNameUtils::ParsedName parsed;
-
-    if (!tf::DeviceNameUtils::ParseFullName(node->assigned_device_name(),
-                                            &parsed)) {
-      return false;
-    }
-
-    return (parsed.has_type && parsed.type == DEVICE_NGRAPH);
+  if (!tf::DeviceNameUtils::ParseFullName(node->assigned_device_name(),
+                                          &parsed)) {
+    return false;
   }
+
+  return (parsed.has_type && parsed.type == DEVICE_NGRAPH);
 }
 
 bool NGraphClusterPass::IsClusterable(const tf::Node* node) {
