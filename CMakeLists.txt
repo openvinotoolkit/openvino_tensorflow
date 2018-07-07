@@ -47,6 +47,28 @@ if(NPROC_RESULT)
     set(NUM_MAKE_PROCESSES 4)
 endif()
 
+# Need to setup the RPATH here - else it won't work.
+# During installation, a Python pip package is created which when
+# installed is located in the same level as the tensorflow directory
+# site-packages/
+#     /ngraph
+#       libngraph_device.so
+#       ...
+#     /tensorflow
+#       libtensorflow_framework.so
+#       python/
+#           _pywrap....so
+# Therefore we are setting two entries in the RPATH:
+# 1. $ORIGIN/.
+# 2. $ORIGIN/../tensorflow/
+# 
+set(CMAKE_MACOSX_RPATH 1)
+if(APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path/;@loader_path/../tensorflow;")
+else()
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
+endif()
+
 # Find and build ngraph
 ExternalProject_Add(
     ext_ngraph
@@ -74,23 +96,6 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION 
     ${TensorFlow_DIR}/libtensorflow_framework.so
 )
-
-# Need to setup the RPATH here - else it won't work.
-# During installation, a Python pip package is created which when
-# installed is located in the same level as the tensorflow directory
-# site-packages/
-#     /ngraph
-#       libngraph_device.so
-#       ...
-#     /tensorflow
-#       libtensorflow_framework.so
-#       python/
-#           _pywrap....so
-# Therefore we are setting two entries in the RPATH:
-# 1. $ORIGIN/.
-# 2. $ORIGIN/../tensorflow/
-# 
-set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
 
 # Add the directories to be built
 add_subdirectory(logging)

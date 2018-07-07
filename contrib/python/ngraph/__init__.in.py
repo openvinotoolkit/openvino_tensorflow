@@ -30,7 +30,7 @@ from tensorflow.python.client import device_lib
 from tensorflow.python import pywrap_tensorflow as py_tf
 from tensorflow.python.framework import errors_impl
  
-print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+print("TensorFlow version installed: ", tf.VERSION, " (", tf.GIT_VERSION, ")" )
 print("Version needed: ", "${TensorFlow_GIT_VERSION}" ) 
 import ctypes
 
@@ -41,9 +41,10 @@ ext = 'dylib' if system() == 'Darwin' else 'so'
 if tf.GIT_VERSION == "${TensorFlow_GIT_VERSION}":
    libpath = os.path.dirname(__file__)
    lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.'+ext))
+   print("Module nGraph loaded. Use '/device:NGRAPH:0' as device name")
 else:
    raise ValueError(
        "Error: Wrong TensorFlow version " + tf.GIT_VERSION +
-       " Needed: ${TensorFlow_GIT_VERSION}"
+       "\nNeeded: ${TensorFlow_GIT_VERSION}"
    )
 

@@ -73,6 +73,14 @@ target_compile_definitions(
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
 
+add_custom_target( 
+    dump_ngraph_so_name
+    ALL
+    COMMAND ${CMAKE_COMMAND} -E 
+    echo $<TARGET_FILE:ngraph_lib> > ${CMAKE_BINARY_DIR}/ngraph_lib_so_name.txt
+    VERBATIM
+)    
+
 #------------------------------------------------------------------------------
 #installation 
 #------------------------------------------------------------------------------

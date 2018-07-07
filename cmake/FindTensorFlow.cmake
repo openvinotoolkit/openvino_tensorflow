@@ -24,64 +24,66 @@
 #  TensorFlow_DIR
 
 include(FindPackageHandleStandardArgs)
-message( STATUS "Looking for TensorFlow installation" )
+message(STATUS "Looking for TensorFlow installation")
 
 execute_process(
     COMMAND
     python -c "import tensorflow as tf; print(tf.sysconfig.get_include())"
     RESULT_VARIABLE result
-    OUTPUT_VARIABLE TEMP
+    OUTPUT_VARIABLE TensorFlow_INCLUDE_DIR
     ERROR_VARIABLE ERR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
 )
 
-if( NOT ${result} )
-    string(REGEX REPLACE "\n$" "" TensorFlow_INCLUDE_DIR "${TEMP}")
-else()
-    message( FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR} )
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR})
 endif()
-MESSAGE( STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR} )
+MESSAGE(STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR})
 
 execute_process(
     COMMAND
     python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())"
     RESULT_VARIABLE result
-    OUTPUT_VARIABLE TEMP
+    OUTPUT_VARIABLE TensorFlow_DIR
     ERROR_VARIABLE ERR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
 )
-if( NOT ${result} )
-    string(REGEX REPLACE "\n$" "" TensorFlow_DIR "${TEMP}")
-else()
-    message( FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR} )
+
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR})
 endif()
-message( STATUS "TensorFlow_DIR: " ${TensorFlow_DIR} )
+message(STATUS "TensorFlow_DIR: " ${TensorFlow_DIR})
 
 execute_process(
     COMMAND
     python -c "import tensorflow as tf; print(tf.__cxx11_abi_flag__)"
     RESULT_VARIABLE result
-    OUTPUT_VARIABLE TEMP
+    OUTPUT_VARIABLE TensorFlow_CXX_ABI
     ERROR_VARIABLE ERR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
 )
-if( NOT ${result} )
-    string(REGEX REPLACE "\n$" "" TensorFlow_CXX_ABI "${TEMP}")
-else()
-    message( FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR} )
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR})
 endif()
-message( STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI} )
+message(STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI})
 
 execute_process(
     COMMAND
     python -c "import tensorflow as tf; print(tf.__git_version__)"
     RESULT_VARIABLE result
-    OUTPUT_VARIABLE TEMP
+    OUTPUT_VARIABLE TensorFlow_GIT_VERSION
     ERROR_VARIABLE ERR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
 )
-if( NOT ${result} )
-    string(REGEX REPLACE "\n$" "" TensorFlow_GIT_VERSION "${TEMP}")
-else()
-    message( FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR} )
+
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR})
 endif()
-message( STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION} )
+message(STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION})
 
 # Make sure that the TF library exists
 find_library(
@@ -100,8 +102,3 @@ find_package_handle_standard_args(
     TensorFlow_GIT_VERSION
     TensorFlow_FRAMEWORK_LIBRARY
 )
-
-# if(CUDNN_FOUND)
-#   message(STATUS "Found cuDNN: v${CUDNN_VERSION}  (include: ${CUDNN_INCLUDE_DIR}, library: ${CUDNN_LIBRARY})")
-#   mark_as_advanced(CUDNN_ROOT_DIR CUDNN_LIBRARY CUDNN_INCLUDE_DIR)
-# endif()

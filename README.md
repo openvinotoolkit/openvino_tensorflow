@@ -117,7 +117,7 @@ TensorFlow [prepare environment] for linux.
     cmake ..
     make -j <your_processor_cores>
     make install 
-    pip install python/dist/ngraph-0.0.0-py2-none-any.whl
+    pip install python/dist/python/dist/<ngraph-0.0.0-py2.py3-none-linux_x86_64.whl>
     ```
 
 This final step automatically downloads the necessary version of `ngraph` and 
@@ -126,6 +126,8 @@ the dependencies. The resulting plugin [DSO] is named `libngraph_device.so`.
 Once the build and installation steps are complete, you can start experimenting 
 with nGraph backends. 
 
+Note: The actual filename for the pip package may be different as it's version 
+dependent. Please check the `build/python/dist` directory for the actual pip wheel.
 
 ### Running tests
 
@@ -146,7 +148,7 @@ Next is to run a few DL models to validate the end-to-end functionality.
 
 2. Go to the ngraph-tf/examples directory and run the following models.
     ```
-    cd examples
+    cd examples/resnet
     python mnist_fprop_only.py \
         --data_dir <input_data_location> --select_device NGRAPH
     python tf_cnn_benchmarks.py --model=resnet50 --eval \
@@ -185,9 +187,9 @@ how you would build TensorFlow for Linux mentioned above.
 	pushd tensorflow
 	git checkout r1.8
 	./configure # you can disable everything here if you like, or stick with defaults
-	bazel run //tensorflow/tools/pip_package:build_pip_package /tmp/tensorflow_pkg
+	bazel build //tensorflow/tools/pip_package:build_pip_package 
+    bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 	pip install /tmp/tensorflow_pkg/tensorflow*.whl
-	bazel build --config=opt //tensorflow:libtensorflow_cc.so
 	popd
 	```
 
@@ -206,6 +208,19 @@ then you can use the `-DCMAKE_BUILD_TYPE=Debug` flag during the cmake step
 mentioned above.
 
 3. `make -j <your-core-count>`
+
+4. `make install`
+
+This step will prepare the pip package for nGraph. Install the `ngraph` package 
+by using the following commands:
+
+5. pip install -U python/dist/ngraph-0.0.0-py2.py3-none-macosx_10_12_x86_64.whl
+
+Verify the installation:
+
+6. python -c "import ngraph"
+
+This step should succeed i.e., you will not see any error message.
 
 ### Running tests
 

@@ -15,13 +15,21 @@
 # ==============================================================================
 from platform import system
 from setuptools import setup
-from setuptools.dist import Distribution
+from wheel.bdist_wheel import bdist_wheel
+
+
+# https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
+class BinaryBdistWheel(bdist_wheel):
+    def finalize_options(self):
+        # bdist_wheel is old-style class in python 2, so can't `super`
+        bdist_wheel.finalize_options(self)
+        self.root_is_pure = False
+
+    def get_tag(self):
+        _, _, plat = bdist_wheel.get_tag(self)
+        return ('py2.py3', 'none', plat)
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
-
-class BinaryDistribution(Distribution):
-    def is_pure(self):
-        return False
 
 setup( 
     name='ngraph',
@@ -30,9 +38,8 @@ setup(
     packages=['ngraph'], 
     author='Intel-Nervana AIPG', 
     include_package_data=True,
-    distclass=BinaryDistribution,
     package_data={
-            'ngraph': [@ngraph_libraries@],
-                },
+        'ngraph': [@ngraph_libraries@],
+                 },
+    cmdclass={'bdist_wheel': BinaryBdistWheel},
 )
-
