@@ -65,11 +65,11 @@ REGISTER_NGRAPH_STUB("DepthwiseConv2dNative");
 REGISTER_NGRAPH_STUB("Equal");
 REGISTER_NGRAPH_STUB("Exp");
 REGISTER_NGRAPH_STUB("ExpandDims");
+REGISTER_NGRAPH_STUB("Fill")
 REGISTER_NGRAPH_STUB("Floor");
 REGISTER_NGRAPH_STUB("FusedBatchNorm");
 REGISTER_NGRAPH_STUB("Greater");
 REGISTER_NGRAPH_STUB("GreaterEqual");
-// "Identity" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB("Less");
 REGISTER_NGRAPH_STUB("LessEqual");
 REGISTER_NGRAPH_STUB("Log");

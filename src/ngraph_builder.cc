@@ -857,6 +857,35 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] = ng_expand_dim;
     }
     // --------
+    // Fill
+    // --------
+    else if (op->type_string() == "Fill") {
+
+      tf::Node* tf_value;
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_value));
+
+      shared_ptr<ng::Node> ng_value;
+      try {
+        ng_value = ng_op_map.at(tf_value->name()); 
+      } catch (const std::out_of_range&) {
+        return tf::errors::InvalidArgument("Missing input: " + tf_value->name());
+      }
+      ng_value = ng_op_map.at(tf_value->name());
+     
+      std::vector<tf::int64> dims_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_fill_static_dims", &dims_vec));
+
+      ng::Shape ng_output_shape(dims_vec.size());
+      ng::AxisSet ng_axis_set;
+      for (size_t i = 0; i < dims_vec.size(); ++i) {
+        ng_output_shape[i] = dims_vec[i];
+        ng_axis_set.insert(i);
+      }
+      ng_op_map[op->name()] = make_shared<ng::op::Broadcast>(ng_value,
+        ng_output_shape, ng_axis_set);
+    }
+    // --------
     // Floor
     // --------
     else if (op->type_string() == "Floor") {
@@ -1307,14 +1336,14 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       tf::Node* tf_input;
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
 
+      shared_ptr<ng::Node> ng_input;
       try {
-        ng_op_map.at(tf_input->name()); 
-      }
-      catch (const std::out_of_range&) {
+        ng_input = ng_op_map.at(tf_input->name()); 
+      } catch (const std::out_of_range&) {
         return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
       }
 
-      auto ng_input = ng_op_map.at(tf_input->name());
+      ng_input = ng_op_map.at(tf_input->name());
 
       ng::AxisSet ng_axis_set;
       if (op->num_inputs() == 2) {
@@ -1603,13 +1632,13 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       tf::Node* tf_input;
       TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
 
+      shared_ptr<ng::Node> ng_input;
       try {
-        ng_op_map.at(tf_input->name());
+        ng_input = ng_op_map.at(tf_input->name());
       } catch (const std::out_of_range&) {
         return tf::errors::NotFound(tf_input->name(),
                                     " is not found in the ng_op_map");
       }
-      auto ng_input = ng_op_map.at(tf_input->name());
       auto ng_input_shape = ng_input->get_shape();
 
       // We apply softmax on the 2nd dimension by following TF

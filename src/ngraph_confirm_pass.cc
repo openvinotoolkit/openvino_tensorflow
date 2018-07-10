@@ -324,6 +324,23 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Equal"] = always;
         confirmation_functions["Exp"] = always;
         confirmation_functions["ExpandDims"] = always;
+        confirmation_functions["Fill"] = [](tf::Node* n, bool* result) {
+ 
+          tf::Node* tf_dims_node;
+          TF_RETURN_IF_ERROR(n->input_node(0, &tf_dims_node));
+
+          std::vector<tf::int64> tf_dims;
+          if (ExtractConstantData(tf_dims_node, &tf_dims) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_fill_static_dims", tf_dims);
+          *result = true;
+          return tf::Status::OK();
+        };
+
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
         confirmation_functions["Greater"] = always;
