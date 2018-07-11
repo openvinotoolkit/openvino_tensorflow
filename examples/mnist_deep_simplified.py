@@ -39,10 +39,8 @@ from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
 import tfgraphviz as tfg
 
-from ctypes import *
-cdll.LoadLibrary(
-    'libngraph_device.so'
-)
+
+import ngraph
 
 FLAGS = None
 

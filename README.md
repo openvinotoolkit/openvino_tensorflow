@@ -43,16 +43,16 @@ TensorFlow [prepare environment] for linux.
 ### Installation
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
-   [tensorflow] repo to your machine; this is required for running the unit
-   test. If you want to run nGraph without the unit tests then you can 
-   install the binary TensorFlow wheel and skip this section.
+   [tensorflow] repo to your machine. 
+
+   :warning: You need the following version of TensorFlow: `v1.9.0`
 
    ```
    $ git clone https://github.com/tensorflow/tensorflow.git
    $ cd tensorflow
-   $ git checkout v1.8.0
+   $ git checkout v1.9.0
    $ git status
-   HEAD detached at v1.8.0
+   HEAD detached at v1.9.0
    ```
 2. When setting up and activating the virtual environment with TensorFlow 
    frameworks, you must use a specific kind of venv designed for 
@@ -109,7 +109,8 @@ TensorFlow [prepare environment] for linux.
     cd ngraph-tf
     ```
 
-7. Next, build and install nGraph bridge:
+7. Next, build and install nGraph bridge. 
+   :warning: You must be inside the `virtualenv` during the ngraph-tf build.
 
     ```
     mkdir build
@@ -133,7 +134,7 @@ dependent. Please check the `build/python/dist` directory for the actual pip whe
 
 In order to run the unit tests, you need `pytest` installed:
 ```
-pip install pytest
+pip install -U pytest
 ```
 Now run the tests using the following instructions:
 1. Go to the ngraph-tf/build/test directory
@@ -141,7 +142,7 @@ Now run the tests using the following instructions:
     cd build/test
     ./gtest_ngtf
     cd python
-    pytest
+    python -m pytest
     ```
 
 Next is to run a few DL models to validate the end-to-end functionality.
@@ -181,17 +182,7 @@ you'll run into errors without them.
 
 1. Build TensorFlow and its framework for unit tests. This step is identical to 
 how you would build TensorFlow for Linux mentioned above.
-
-	```
-	git clone git@github.com:tensorflow/tensorflow.git
-	pushd tensorflow
-	git checkout r1.8
-	./configure # you can disable everything here if you like, or stick with defaults
-	bazel build //tensorflow/tools/pip_package:build_pip_package 
-    bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
-	pip install /tmp/tensorflow_pkg/tensorflow*.whl
-	popd
-	```
+:warning: You must be inside the `virtualenv` created in step 3 above.
 
 2. Prepare `ngraph-tf` for the build:
 
@@ -216,6 +207,9 @@ by using the following commands:
 
 5. pip install -U python/dist/ngraph-0.0.0-py2.py3-none-macosx_10_12_x86_64.whl
 
+:warning: The actual file name for the Python whl will vary depending on specific 
+version of macOS.
+
 Verify the installation:
 
 6. python -c "import ngraph"
@@ -224,19 +218,8 @@ This step should succeed i.e., you will not see any error message.
 
 ### Running tests
 
-#### C++
-
-1. `cd test && make -j <your-core-count>`
-2. Add `<path-to-tensorflow-repo>/bazel-out/darwin-py3-opt/bin/tensorflow` and `<path-to-ngraph-tf-repo>/build/ngraph/ngraph_dist/lib` to your `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH`
-3. `./gtest_ngtf`
-
-
-#### Python
-
-1. `pip install pytest` if you don't already have it, then
-2. `cd build/test/python`
-3. `pytest`
-
+1. Add `<path-to-tensorflow-repo>/bazel-out/darwin-py3-opt/bin/tensorflow` and `<path-to-ngraph-tf-repo>/build/ngraph/ngraph_dist/lib` to your `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH`
+2. Follow the C++ and Python instructions from the Linux based testing described above.
 
 ### Debugging
 

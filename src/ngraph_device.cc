@@ -46,12 +46,12 @@ namespace tensorflow {
 
 class NGraphDeviceContext : public tf::DeviceContext {
  public:
-  perftools::gputools::Stream* stream() const override {
+  stream_executor::Stream* stream() const override {
     tf::errors::Internal("NGraphDeviceContext::stream() called");
     return nullptr;
   }
   void MaintainLifetimeOnStream(
-      const Tensor* t, perftools::gputools::Stream* stream) const override {
+      const Tensor* t, stream_executor::Stream* stream) const override {
     tf::errors::Internal(
         "NGraphDeviceContext::MaintainLifetimeOnStream() called");
   }

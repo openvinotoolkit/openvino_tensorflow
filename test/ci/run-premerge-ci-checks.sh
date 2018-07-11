@@ -24,7 +24,7 @@ echo "Running TensorFlow unit tests"
 ./gtest_ngtf
 
 pushd python
-pytest
+python -m pytest
 popd
 
 echo "Running a quick inference test"

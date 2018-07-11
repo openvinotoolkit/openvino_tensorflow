@@ -18,7 +18,7 @@
 find_program(PYTHON "python")
 
 message( STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_LIST_DIR}")
-message( STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+message( STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 
 if (PYTHON)
     set(SETUP_PY_IN "${CMAKE_CURRENT_LIST_DIR}/setup.in.py")
@@ -27,13 +27,14 @@ if (PYTHON)
     set(INIT_PY     "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/__init__.py")
     set(PIP_PACKAGE "${CMAKE_CURRENT_BINARY_DIR}/build_pip")
 
+    # Create the python/ngraph directory
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python/ngraph)
+
     # Get the list of libraries we need for the Python pip package
     file(GLOB NGRAPH_LIB_FILES "${NGTF_INSTALL_DIR}/lib*")
     
     # Copy the ngraph libraries from install
     foreach(DEP_FILE ${NGRAPH_LIB_FILES})
-        get_filename_component(foo ${DEP_FILE} NAME)
-        message(STATUS ${foo})
         get_filename_component(lib_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lib_file_name ${DEP_FILE} NAME)
         set(ngraph_libraries "${ngraph_libraries}\"${lib_file_name}\",\n")
