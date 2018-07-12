@@ -71,6 +71,3 @@ RUN dpkg -i bazel_0.11.0-linux-x86_64.deb || true
 # be run as the user who runs "docker run".  This then allows the mounted
 # directory to be properly deleted by the user later (e.g. by jenkins).
 WORKDIR /home
-
-#TODO: remove or reenable this line, when appropriate
-#DISABLED  ADD docker-scripts/run-as-user.sh /home/run-as-user.sh

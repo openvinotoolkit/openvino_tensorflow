@@ -40,6 +40,7 @@ tf_dir='/home/dockuser/tensorflow'
 ci_dir="${bridge_dir}/test/ci/docker"
 venv_dir="/tmp/venv_python${PYTHON_VERSION_NUMBER}"
 ngraph_dist_dir="${bbuild_dir}/ngraph/ngraph_dist"
+ngraph_wheel_dir="${bbuild_dir}/python/dist"
 libngraph_so="${bbuild_dir}/src/libngraph_device.so"
 libngraph_dist_dir="${bridge_dir}/libngraph_dist"  # Directory to save plugin artifacts in
 libngraph_tarball="${bridge_dir}/libngraph_dist.tgz"  # Tarball artifact to send to Artifactory
@@ -51,9 +52,6 @@ libngraph_tarball="${bridge_dir}/libngraph_dist.tgz"  # Tarball artifact to send
 # the wheel from later.  If the directory already exists, remove it.
 export WHEEL_BUILD_DIR="${tf_dir}/BUILD_WHEEL"
 
-# Point to the ngraph dynamic libraries
-export LD_LIBRARY_PATH="${libngraph_dist_dir}:${libngraph_dist_dir}/ngraph_dist/lib"
-
 echo "In $(basename ${0}):"
 echo ''
 echo "  bridge_dir=${bridge_dir}"
@@ -62,6 +60,7 @@ echo "  tf_dir=${tf_dir}"
 echo "  ci_dir=${ci_dir}"
 echo "  venv_dir=${venv_dir}"
 echo "  ngraph_dist_dir=${ngraph_dist_dir}"
+echo "  ngraph_wheel_dir=${ngraph_wheel_dir}"
 echo "  libngraph_so=${libngraph_so}"
 echo "  libngraph_dist_dir=${libngraph_dist_dir}"
 echo "  libngraph_tarball=${libngraph_tarball}"
@@ -69,7 +68,6 @@ echo ''
 echo "  HOME=${HOME}"
 echo "  PYTHON_VERSION_NUMBER=${PYTHON_VERSION_NUMBER}"
 echo "  PYTHON_BIN_PATH=${PYTHON_BIN_PATH}"
-echo "  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
 echo "  WHEEL_BUILD_DIR=${WHEEL_BUILD_DIR}  (Used by maint/build-install-tf.sh)"
 
 # Do some up-front checks, to make sure necessary directories are in-place and
@@ -198,6 +196,7 @@ mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
 cmake -DNGRAPH_USE_PREBUILT_LLVM=TRUE ..
 make -j16
+make install
 
 xtime="$(date)"
 echo  ' '
@@ -223,6 +222,9 @@ set -x
 # Create the directory for libngraph distibution
 mkdir "${libngraph_dist_dir}"
 
+# Copy the ngraph wheel into the build directory, for easy access in Jenkins
+cp "${ngraph_wheel_dir}"/*.whl "${bridge_dir}"
+
 # Copy the ngraph_dist directory into the libngraph distribution directory
 cp -r "${ngraph_dist_dir}" "${libngraph_dist_dir}/ngraph_dist"
 
@@ -238,17 +240,21 @@ tar czf "${libngraph_tarball}" libngraph_dist
 
 set +x
 
-# FUTURE: reenable when CI tests are available
-#xtime="$(date)"
-#echo  ' '
-#echo  "===== Run Bridge CI Test Scripts at ${xtime} ====="
-#echo  ' '
-#
-#cd "${bridge_dir}/test/ci"
-#
-#export USER_PLUGIN_PATH="${bbuild_dir}/src/libngraph_plugin.so"
-#export TF_ROOT="${tf_dir}"
-#"${bridge_dir}/test/ci/run-premerge-ci-checks.sh"
+xtime="$(date)"
+echo  ' '
+echo  "===== Installing nGraph Wheel at ${xtime} ====="
+echo  ' '
+
+cd "${bridge_dir}"
+pip install ngraph*.whl
+
+xtime="$(date)"
+echo  ' '
+echo  "===== Run Bridge CI Test Scripts at ${xtime} ====="
+echo  ' '
+
+cd "${bbuild_dir}/test"
+"${bridge_dir}/test/ci/run-premerge-ci-checks.sh"
 
 xtime="$(date)"
 echo  ' '
@@ -256,8 +262,6 @@ echo  "===== Run Sanity Check for Plugins at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}/test"
-
-# LD_LIBRARY_PATH is set at the beginning of this script
 
 python install_test.py
 

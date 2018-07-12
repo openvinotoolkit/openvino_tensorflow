@@ -26,8 +26,7 @@ import time
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 
-import ctypes
-lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
+import ngraph
 
 def check_for_ngraph_device():
     # Get the list of devices
