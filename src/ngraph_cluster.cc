@@ -81,7 +81,8 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 
   for (auto node : graph->op_nodes()) {
     int new_index = gc.NewNode();
-    NGRAPH_VLOG(5) << "Creating cycle graph node: " << new_index << " for " << node->name() << "[" << node->type_string() << "]";
+    NGRAPH_VLOG(5) << "Creating cycle graph node: " << new_index << " for "
+                   << node->name() << "[" << node->type_string() << "]";
     cluster_map[node] = std::make_shared<Cluster>();
     cluster_map[node]->index = new_index;
     cluster_map[node]->nodes.insert(node);
@@ -93,6 +94,11 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 
     // Skip source/sink
     if (!src->IsOp() || !dst->IsOp()) {
+      continue;
+    }
+
+    // Skip NextIteration
+    if (src->IsNextIteration() || dst->IsNextIteration()) {
       continue;
     }
 
@@ -182,16 +188,16 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 
       for (auto node : cluster->nodes) {
         if (!IsNGraphNode(node)) {
-          return tf::errors::InvalidArgument(
+          return tf::errors::Internal(
               "Node ", node->DebugString(),
               " is not an nGraph node but was placed in an nGraph cluster.");
         }
 
         if (!IsClusterable(node)) {
-          return tf::errors::InvalidArgument("Node ", node->DebugString(),
-                                             " is not a clusterable node but "
-                                             "was placed in an nGraph "
-                                             "cluster.");
+          return tf::errors::Internal("Node ", node->DebugString(),
+                                      " is not a clusterable node but "
+                                      "was placed in an nGraph "
+                                      "cluster.");
         }
 
         NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
@@ -213,7 +219,12 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 // clang-format off
 const std::set<std::string> NGraphClusterPass::s_unclusterable_ops{
     "Assign",
+    "Enter",
+    "Exit",
     "IsVariableInitialized",
+    "Merge",
+    "NextIteration",
+    "Switch",
     "VariableV2",
 };
 // clang-format on
