@@ -258,6 +258,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Mean"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Mean"]["Tidx"] = NGraphIndexDTypes();
         type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Pack"]["T"] = NGraphDTypes();
         type_constraint_map["Pad"]["T"] = NGraphDTypes();
         type_constraint_map["Pad"]["Tpaddings"] = NGraphIndexDTypes();
         type_constraint_map["Pow"]["T"] = NGraphNumericDTypes();
@@ -465,6 +466,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Softmax"] = always;
         confirmation_functions["Squeeze"] = always;
         confirmation_functions["StridedSlice"] = always;
+        confirmation_functions["Pack"] = always;
         confirmation_functions["Sub"] = always;
 
         // Constraints: reduction-axes input must be Const.

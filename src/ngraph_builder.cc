@@ -1428,6 +1428,72 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
       // reasons, but they have no data flow inputs or outputs.
     }
+    // -------
+    // Pack
+    // -------
+    else if (op->type_string() == "Pack") {
+
+      std::cout << "Number of inputs : " << op->num_inputs() << std::endl;
+      if (op->num_inputs() < 1) {
+        return tf::errors::InvalidArgument(
+            "Number of inputs should be at least 1 for Pack");
+      }
+
+      ng::NodeVector ng_concat_inputs;
+
+      for (size_t i = 0;i < op->num_inputs();++i) {  
+        tf::Node* tf_input;
+        TF_RETURN_IF_ERROR(op->input_node(i, &tf_input));
+        shared_ptr<ng::Node> ng_input;
+        try {
+          ng_input = ng_op_map.at(tf_input->name());
+        } catch (const std::out_of_range&) {
+          return tf::errors::InvalidArgument("Missing input: " + tf_input->name());
+        }
+        ng_concat_inputs.push_back(ng_input);
+      }
+
+      tf::int32 tf_axis;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "axis", &tf_axis));
+      size_t input_rank = ng_concat_inputs[0]->get_shape().size();
+
+      auto concat_axis = tf_axis;
+      if (concat_axis == -1) {
+        concat_axis = input_rank;
+      }
+
+      ng::Shape input_shape = ng_concat_inputs[0]->get_shape();
+      ng::Shape output_shape(input_rank + 1);
+
+      // if inputs shape is (2, 3, 4), and axis is 1, then we want
+      // to create output_shape (2, num_inputs, 3, 4)
+      for (size_t i = 0; i < input_rank; ++i) {
+        output_shape[(i < concat_axis) ? i : i + 1] = input_shape[i];        
+      }
+      output_shape[concat_axis] = op->num_inputs();
+
+      ng::AxisVector ng_axis_order(input_rank);
+      for (size_t i = 0; i < input_rank; i++) {
+        ng_axis_order[i] = i;
+      }
+
+      if (concat_axis == input_rank) {
+        // need to add extra dimension before we concatenate
+        // along it
+        ng::Shape extended_shape = input_shape;
+        extended_shape.push_back( 1 );
+        for (size_t i = 0;i < ng_concat_inputs.size(); ++i) {
+          ng_concat_inputs[i] = make_shared<ng::op::Reshape>(
+            ng_concat_inputs[i], ng_axis_order, extended_shape); 
+        }
+        ng_axis_order.push_back(input_rank);
+      }
+
+      auto concat = make_shared<ng::op::Concat>(ng_concat_inputs, concat_axis);
+      ng_op_map[op->name()] =
+          make_shared<ng::op::Reshape>(concat, ng_axis_order, output_shape);
+    }
+
     // ---
     // Pad
     // ---
