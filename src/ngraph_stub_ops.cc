@@ -61,6 +61,7 @@ REGISTER_NGRAPH_STUB("Cast");
 REGISTER_NGRAPH_STUB("ConcatV2");
 // "Const" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB("Conv2D");
+REGISTER_NGRAPH_STUB("Conv2DBackpropInput");
 REGISTER_NGRAPH_STUB("DepthwiseConv2dNative");
 REGISTER_NGRAPH_STUB("Equal");
 REGISTER_NGRAPH_STUB("Exp");
