@@ -239,6 +239,13 @@ We welcome community contributions to nGraph. If you have an idea for how to
 improve it:
 
 * Share your proposal via [GitHub issues].
+* Make sure your patch is in line with Google style by setting up your git `pre-commit` hooks.  First, ensure `clang-format` is in your path, then:
+
+   ```
+   pip install pre-commit autopep8 pylint
+   pre-commit install
+   ```
+
 * Ensure you can build the product and run all the examples with your patch.
 * In the case of a larger feature, create a test.
 * Submit a [pull request].

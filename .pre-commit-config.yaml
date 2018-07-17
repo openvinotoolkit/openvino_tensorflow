@@ -1,0 +1,20 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: autopep8
+        name: autopep8
+        entry: autopep8 -i
+        language: system
+        files: ^test/python/
+        types: [python]
+    -   id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        files: ^test/python/
+        types: [python]
+    -   id: clang-format
+        name: clang-format
+        entry: clang-format --style=file -i
+        language: system
+        types: [c++]
