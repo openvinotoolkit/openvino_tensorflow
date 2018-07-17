@@ -59,8 +59,30 @@ static tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
   return tf::Status::OK();
 }
 
-template <typename T>
-static tf::Status TranslateUnaryOp(tf::Node* op, Builder::OpMap& ng_op_map) {
+// Helper function to translate a unary op.
+//
+// Parameters:
+//
+//    tf::Node* op               - TF op being translated. Must have one input.
+//    Builder::OpMap& ng_op_map  - The TF-to-nGraph op map.
+//
+//    std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>>
+//      build_graph              - Function to construct the graph implementing
+//                                 the unary op, given the input to the unop
+//                                 as an argument.
+//
+// Example usage:
+//
+//  if (n->type_string == "Square") {
+//    TF_RETURN_IF_ERROR(TranslateUnaryOp(n, ng_op_map,
+//                       [] (std::shared_ptr<ng::Node> n) {
+//                           return (std::make_shared<ng::op::Multiply>(n,n));
+//                       });
+//  }
+static tf::Status TranslateUnaryOp(
+    tf::Node* op, Builder::OpMap& ng_op_map,
+    std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>)>
+        build_graph) {
   if (op->num_inputs() != 1) {
     return tf::errors::InvalidArgument(
         "Number of inputs is not 1 for unary op");
@@ -68,10 +90,33 @@ static tf::Status TranslateUnaryOp(tf::Node* op, Builder::OpMap& ng_op_map) {
 
   tf::Node* tf_input;
   TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
-  auto ng_input = ng_op_map.at(tf_input->name());
-  ng_op_map[op->name()] = make_shared<T>(ng_input);
+
+  std::shared_ptr<ng::Node> ng_input;
+
+  try {
+    ng_input = ng_op_map.at(tf_input->name());
+  } catch (const std::out_of_range&) {
+    return tf::errors::NotFound("Input to unary op not found: %s",
+                                tf_input->name());
+  }
+
+  ng_op_map[op->name()] = build_graph(ng_input);
 
   return tf::Status::OK();
+}
+
+// Helper function to translate a unary op in cases where there is a one-to-one
+// mapping from TensorFlow ops to nGraph ops.
+//
+// Example usage:
+//
+//  if (n->type_string == "Abs") {
+//    TF_RETURN_IF_ERROR(TranslateUnaryOp<ng::op::Abs>(n, ng_op_map));
+//  }
+//
+template <typename T>
+static tf::Status TranslateUnaryOp(tf::Node* op, Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> n) { return make_shared<T>(n); });
 }
 
 // Helper for Builder::TranslateGraph (elementwise binops)
@@ -173,6 +218,8 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
   // Now create the nGraph ops from TensorFlow ops.
   //
   for (auto op : tf_ops) {
+    NGRAPH_VLOG(2) << "Constructing op " << op->name() << " which is " << op->type_string();
+
     // NOTE: The following cases should be kept in alphabetical order.
 
     // ---
@@ -596,7 +643,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       if (tf_padding_type == "SAME") {
         for (size_t i = 0; i < 2; i++) {
           size_t image_size = ng_image_shape[i];
-          size_t filter_shape = ng_kernel_shape[i];
+          size_t filter_shape = (ng_kernel_shape[i] - 1) * ng_dilations[i] + 1;
           size_t filter_stride = ng_strides[i];
 
           tf::int64 padding_needed;
@@ -886,7 +933,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       if (tf_padding_type == "SAME") {
         for (size_t i = 0; i < 2; i++) {
           size_t image_size = ng_image_shape[i];
-          size_t filter_shape = ng_kernel_shape[i];
+          size_t filter_shape = (ng_kernel_shape[i] - 1) * ng_dilations[i] + 1;
           size_t filter_stride = ng_strides[i];
 
           tf::int64 padding_needed;
@@ -1672,9 +1719,13 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       auto ng_input = ng_op_map.at(tf_input->name());
       auto ng_shape_op = ng_op_map.at(tf_shape_node->name());
 
+      NGRAPH_VLOG(3) << "Input shape: " << ng::join(ng_input->get_shape());
+
       std::vector<tf::int64> shape;
       TF_RETURN_IF_ERROR(
           tf::GetNodeAttr(op->attrs(), "_ngraph_reshape_static_shape", &shape));
+
+      NGRAPH_VLOG(3) << "Requested result shape: " << ng::join(shape);
 
       size_t output_rank = shape.size();
       size_t num_input_elements = ng::shape_size(ng_input->get_shape());
@@ -1729,6 +1780,22 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape);
+    }
+    // -----
+    // Rsqrt
+    // -----
+    else if (op->type_string() == "Rsqrt") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp(op, ng_op_map,
+         [](std::shared_ptr<ng::Node> n) {
+           // Create a constant tensor populated with the value -1/2. (1/sqrt(x) = x^(-1/2))
+           auto et = n->get_element_type();
+           auto shape = n->get_shape();
+           std::vector<std::string> constant_values(ng::shape_size(shape),"-0.5");
+           auto ng_exponent = std::make_shared<ng::op::Constant>(et,shape,constant_values);
+
+           // Raise each element of the input to the power -0.5.
+           return std::make_shared<ng::op::Power>(n,ng_exponent);
+         }));
     }
     // ---------
     // Sigmoid
@@ -1882,6 +1949,16 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] =
           make_shared<ng::op::Softmax>(ng_input, ng_axes_softmax);
+    }
+    // ------
+    // Square
+    // ------
+    else if (op->type_string() == "Square") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp(op, ng_op_map,
+        [](std::shared_ptr<ng::Node> n)
+        {
+          return std::make_shared<ng::op::Multiply>(n,n);
+        }));
     }
     // -------
     // Squeeze
