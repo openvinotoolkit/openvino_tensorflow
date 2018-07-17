@@ -1392,6 +1392,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng_op_map[op->name()] = make_shared<ng::op::Product>(ng_input, ng_axis_set);
     }
     // ----
+    // RealDiv
+    // ----
+    else if (op->type_string() == "RealDiv") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Divide>(op, ng_op_map));
+    }
+    // ----
     // Relu
     // ----
     else if (op->type_string() == "Relu") {

@@ -38,6 +38,8 @@ namespace ngraph_bridge {
 
 TEST(tf_exec, hello_world) {
   tf::Scope root = tf::Scope::NewRootScope();
+ 
+  root = root.WithDevice("/device:NGRAPH:0"); 
   // Matrix A = [3 2; -1 0]
   auto A = tf::ops::Const(root, {{3.f, 2.f}, {-1.f, 0.f}});
   // Vector b = [3 5]
@@ -102,6 +104,31 @@ TEST(tf_exec, axpy) {
     }
     cout << endl;
   }
+}
+
+// Test Op :"Op_RealDiv"
+
+TEST(tf_exec, Op_RealDiv) {
+  tf::Scope root = tf::Scope::NewRootScope();
+  root = root.WithDevice("/device:NGRAPH:0");
+
+  auto A = tf::ops::Const(root, {{3.f, 5.f}, {2.f, 0.f}});
+  auto B = tf::ops::Const(root, {{3.f, 2.f}, {.1f, 1.f}});
+  auto r = tf::ops::RealDiv(root.WithOpName("r"), A, B);
+
+  std::vector<tf::Tensor> outputs;
+  tf::ClientSession session(root);
+
+  TF_CHECK_OK(session.Run({r}, &outputs));
+  
+  ASSERT_EQ(outputs[0].shape(), tf::TensorShape({2,2}));
+
+  auto mat = outputs[0].matrix<float>();
+  EXPECT_FLOAT_EQ(1.0, mat(0, 0));
+  EXPECT_FLOAT_EQ(2.5, mat(0, 1));
+  EXPECT_FLOAT_EQ(20.0, mat(1, 0));
+  EXPECT_FLOAT_EQ(0.0, mat(1, 1));
+
 }
 
 }  // namespace ngraph_bridge
