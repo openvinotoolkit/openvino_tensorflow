@@ -1172,7 +1172,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       auto& shape = ng_input->second->get_shape();
       auto shape_size = shape.size();
       if (dim_vec[0] < 0) {
-        dim_vec[0] = shape_size + dim_vec[0];
+        // allow range [-rank(input) - 1, rank(input)]
+        // where -1 append new axis at the end
+        dim_vec[0] = shape_size + dim_vec[0] + 1;
       }
       auto out_shape = shape;
       out_shape.insert(out_shape.begin() + size_t(dim_vec[0]), 1);
@@ -2006,7 +2008,7 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       auto size_vec = ng_size_const->get_vector<int>();
 
       auto& input_shape = ng_input->second->get_shape();
-      NGRAPH_VLOG(3) << "Begin input for StridedSlice: " << ng::join(lower_vec);
+      NGRAPH_VLOG(3) << "Begin input for Slice: " << ng::join(lower_vec);
       NGRAPH_VLOG(3) << "Size input for Slice: " << ng::join(size_vec);
       if (std::any_of(size_vec.begin(), size_vec.end(), [](int i){ return i <= 0; })) {
         std::transform(size_vec.begin(), size_vec.end(), input_shape.begin(),
