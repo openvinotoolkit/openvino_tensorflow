@@ -231,6 +231,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Abs"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Add"]["T"] = NGraphNumericDTypes();
         type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["BatchMatMul"]["T"] = NGraphNumericDTypes();
         type_constraint_map["BiasAdd"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
         type_constraint_map["Cast"]["DstT"] = NGraphDTypes();
@@ -305,6 +306,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Add"] = always;
         confirmation_functions["AvgPool"] = always;
         confirmation_functions["BiasAdd"] = always;
+        confirmation_functions["BatchMatMul"] = always;
         confirmation_functions["Cast"] = always;
 
         // Constraint: axis selection input must be Const.
