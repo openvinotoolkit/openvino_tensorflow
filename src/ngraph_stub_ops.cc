@@ -79,6 +79,7 @@ REGISTER_NGRAPH_STUB("MatMul");
 REGISTER_NGRAPH_STUB("Maximum");
 REGISTER_NGRAPH_STUB("MaxPool");
 REGISTER_NGRAPH_STUB("Mean");
+REGISTER_NGRAPH_STUB("Minimum");
 REGISTER_NGRAPH_STUB("Mul");
 // "NoOp" can occur outside of clusters and is registered elsewhere.
 REGISTER_NGRAPH_STUB("Pack");

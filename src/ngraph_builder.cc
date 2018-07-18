@@ -1461,6 +1461,12 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       ng_op_map[op->name()] = ng_mean;
     }
+    // -----
+    // Minimum
+    // -----
+    else if (op->type_string() == "Minimum") {
+      TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Minimum>(op, ng_op_map));
+    }
     // ---
     // Mul
     // ---

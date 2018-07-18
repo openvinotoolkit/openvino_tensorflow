@@ -57,6 +57,30 @@ if (PYTHON)
             install_name_tool -change 
             libngraph.0.4.dylib 
             @loader_path/libngraph.0.4.dylib 
+            ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
+            RESULT_VARIABLE result
+            ERROR_VARIABLE ERR
+            ERROR_STRIP_TRAILING_WHITESPACE
+        )
+        if(${result})
+            message(FATAL_ERROR "Cannot update @loader_path")
+        endif()
+        execute_process(COMMAND 
+            install_name_tool -change 
+            libcodegen.0.4.dylib 
+            @loader_path/libcodegen.0.4.dylib 
+            ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
+            RESULT_VARIABLE result
+            ERROR_VARIABLE ERR
+            ERROR_STRIP_TRAILING_WHITESPACE
+        )
+        if(${result})
+            message(FATAL_ERROR "Cannot update @loader_path")
+        endif()
+        execute_process(COMMAND 
+            install_name_tool -change 
+            libngraph.0.4.dylib 
+            @loader_path/libngraph.0.4.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libngraph_device.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
