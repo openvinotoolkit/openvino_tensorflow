@@ -39,7 +39,7 @@ set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 # ===== Function Defitions ====================================================
 
 
-setup_tf_and_ngraph_plugin() {
+setup_tf_and_ngraph_wheels() {
 
     # ----- Pre-Wheel-Install Sanity Checks -----------------------------------
 
@@ -48,11 +48,16 @@ setup_tf_and_ngraph_plugin() {
         exit 1
     fi
 
-    # ------ Install TF-Wheel and Activate Virtual Environment -----------------
+    if [ ! -f "${NGTF_WHEEL}" ] ; then
+        ( >&2 echo "ngraph wheel not found at ${NGTF_WHEEL}" )
+        exit 1
+    fi
+
+    # ------ Install nGraph and TF Wheels and Activate Virtual Environment -----------------
 
     xtime="$(date)"
     echo  ' '
-    echo  "===== Installing nGraph-TensorFlow Wheel and Activating Virtual Environment at ${xtime} ====="
+    echo  "===== Installing nGraph and TensorFlow Wheels and Activating Virtual Environment at ${xtime} ====="
     echo  ' '
 
     cd "${HOME}"
@@ -69,27 +74,29 @@ setup_tf_and_ngraph_plugin() {
     echo "Python being used is:"
     which python
 
-    # sudo -E pip install "${TF_WHEEL}"
     pip install "${TF_WHEEL}"
 
-    # ------ Define LD_LIBRARY_PATH, based on NGTF_DIST  -----------------------
+    pip install "${NGTF_WHEEL}"
 
-    xtime="$(date)"
-    echo  ' '
-    echo  "===== Installing nGraph-Plugin into TF Installation at ${xtime} ====="
-    echo  ' '
-    echo  "PWD is: ${PWD}"
-
-    echo  ' '
-    echo  "Contents of NGTF_DIST library ($NGTF_DIST):"
-    ls -l "${NGTF_DIST}"
-
-    echo  ' '
-    echo  "Contents of NGTF_DIST/ngraph_dist/lib library ($NGTF_DIST/ngraph_dist/lib):"
-    ls -l "${NGTF_DIST}/ngraph_dist/lib"
-
-    export LD_LIBRARY_PATH="${NGTF_DIST}:${NGTF_DIST}/ngraph_dist/lib"
-    echo "LD_LIBRARY_PATH is ${LD_LIBRARY_PATH}"
+    # TODO: Remove when appropriate
+    # # ------ Define LD_LIBRARY_PATH, based on NGTF_DIST  -----------------------
+    #
+    # xtime="$(date)"
+    # echo  ' '
+    # echo  "===== Installing nGraph-Plugin into TF Installation at ${xtime} ====="
+    # echo  ' '
+    # echo  "PWD is: ${PWD}"
+    # 
+    # echo  ' '
+    # echo  "Contents of NGTF_DIST library ($NGTF_DIST):"
+    # ls -l "${NGTF_DIST}"
+    # 
+    # echo  ' '
+    # echo  "Contents of NGTF_DIST/ngraph_dist/lib library ($NGTF_DIST/ngraph_dist/lib):"
+    # ls -l "${NGTF_DIST}/ngraph_dist/lib"
+    #
+    # export LD_LIBRARY_PATH="${NGTF_DIST}:${NGTF_DIST}/ngraph_dist/lib"
+    # echo "LD_LIBRARY_PATH is ${LD_LIBRARY_PATH}"
 
     # ----- Pre-Wheel-Install Sanity Checks ------------------------------------
 
@@ -98,20 +105,21 @@ setup_tf_and_ngraph_plugin() {
     echo  "===== Run Additional Sanity Check for Plugins at ${xtime} ====="
     echo  ' '
 
-    if [ ! -f "${NGTF_DIST}/libngraph_device.so" ] ; then
-        ( >&2 echo "FATAL ERROR: libngraph_device.so not found in ${NGTF_DIST}" )
-        exit 1
-    fi
-
-    if [ ! -f "${NGTF_DIST}/ngraph_dist/lib/libngraph.so" ] ; then
-        ( >&2 echo "FATAL ERROR: libngraph.so not found in ${NGTF_DIST}/ngraph_dist/lib" )
-        exit 1
-    fi
-
-    if [ ! -f "${NGTF_DIST}/ngraph_dist/lib/libmkldnn.so" ] ; then
-        ( >&2 echo "FATAL ERROR: libmkldnn.so not found in ${NGTF_DIST}/ngraph_dist/lib" )
-        exit 1
-    fi
+    # TODO: Remove when appropriate
+    # if [ ! -f "${NGTF_DIST}/libngraph_device.so" ] ; then
+    #     ( >&2 echo "FATAL ERROR: libngraph_device.so not found in ${NGTF_DIST}" )
+    #     exit 1
+    # fi
+    # 
+    # if [ ! -f "${NGTF_DIST}/ngraph_dist/lib/libngraph.so" ] ; then
+    #     ( >&2 echo "FATAL ERROR: libngraph.so not found in ${NGTF_DIST}/ngraph_dist/lib" )
+    #     exit 1
+    # fi
+    # 
+    # if [ ! -f "${NGTF_DIST}/ngraph_dist/lib/libmkldnn.so" ] ; then
+    #     ( >&2 echo "FATAL ERROR: libmkldnn.so not found in ${NGTF_DIST}/ngraph_dist/lib" )
+    #     exit 1
+    # fi
 
     cd "${HOME}/bridge"
     python test/install_test.py
@@ -242,9 +250,11 @@ export PYTHON_BIN_PATH="/usr/bin/python$PYTHON_VERSION_NUMBER"
 cd "$HOME/bridge"
 
 # FUTURE: figure out how to prevent this from needing to be hardcoded
-export NGTF_DIST="$HOME/bridge/libngraph_dist"
-export TF_WHEEL="$HOME/bridge/tensorflow-1.8.0-cp27-cp27mu-linux_x86_64.whl"
-export TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.8.0-cp27-cp27mu-linux_x86_64.whl"
+# TODO: Remove this when appropriate
+# export NGTF_DIST="$HOME/bridge/libngraph_dist"
+export NGTF_WHEEL="$HOME/bridge/ngraph-0.0.0-py2.py3-none-linux_x86_64.whl"
+export TF_WHEEL="$HOME/bridge/tensorflow-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+export TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.9.0-cp27-cp27mu-linux_x86_64.whl"
 
 echo "In $(basename ${0}):"
 echo "  CMDLINE=[${CMDLINE}]"
@@ -255,8 +265,9 @@ echo "  HOSTNAME=${HOSTNAME}"
 echo "  HOME=${HOME}"
 echo "  PYTHON_VERSION_NUMBER=${PYTHON_VERSION_NUMBER}"
 echo "  PYTHON_BIN_PATH=${PYTHON_BIN_PATH}"
+echo "  NGTF_WHEEL=${NGTF_WHEEL}"
 echo "  TF_WHEEL=${TF_WHEEL}"
-echo "  TF_WHEEL=${TF_WHEEL_MKLDNN}"
+echo "  TF_WHEEL_MKLDNN=${TF_WHEEL_MKLDNN}"
 
 # ----- Report on Optional Mounted Directories ---------------------------------
 
@@ -277,7 +288,7 @@ fi
 # test/ci is located in the mounted ngraph-tensorflow-bridge cloned repo
 cd "${HOME}/bridge/test/ci"
 
-setup_tf_and_ngraph_plugin
+setup_tf_and_ngraph_wheels
 
 # If a dataset is requested, then set it up
 case "${NG_TF_DATASET}" in
