@@ -46,7 +46,8 @@ if (PYTHON)
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})
     if (APPLE)
-        # Note: Currently the ngraph version number (i.e., libngraph.0.4.dylib)
+        set(NGRAPH_VERSION 0.5)
+        # Note: Currently the ngraph version number (i.e., libngraph.0.5.dylib)
         # is hardcoded as there is no way to get this from the nGraph library.
         # Once we figure that out, we will replace this.
         # Possible solutions:
@@ -55,8 +56,8 @@ if (PYTHON)
         # dependency list?
         execute_process(COMMAND 
             install_name_tool -change 
-            libngraph.0.4.dylib 
-            @loader_path/libngraph.0.4.dylib 
+            libngraph.${NGRAPH_VERSION}.dylib 
+            @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
@@ -67,8 +68,8 @@ if (PYTHON)
         endif()
         execute_process(COMMAND 
             install_name_tool -change 
-            libcodegen.0.4.dylib 
-            @loader_path/libcodegen.0.4.dylib 
+            libcodegen.${NGRAPH_VERSION}.dylib 
+            @loader_path/libcodegen.${NGRAPH_VERSION}.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
@@ -79,8 +80,8 @@ if (PYTHON)
         endif()
         execute_process(COMMAND 
             install_name_tool -change 
-            libngraph.0.4.dylib 
-            @loader_path/libngraph.0.4.dylib 
+            libngraph.${NGRAPH_VERSION}.dylib 
+            @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libngraph_device.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR

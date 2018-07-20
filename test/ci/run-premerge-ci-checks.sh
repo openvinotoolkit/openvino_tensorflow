@@ -34,6 +34,7 @@ popd
 # dataset is only available on NFS, which won't work in Docker containers or
 # when testing in the cloud.
 echo "Inference test disabled for now -- see comments in script."
+
 # echo "Running a quick inference test"
 # pushd ../../examples/resnet
 # python tf_cnn_benchmarks.py --model=resnet50 --eval --num_inter_threads=1 \
