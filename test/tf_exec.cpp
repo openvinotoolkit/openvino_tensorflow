@@ -278,21 +278,22 @@ TEST(tf_exec, BatchMatMul_2D) {
   AssertTensorEquals(outputs[0],outputs_cpu[0]);
 }
 
-
 // Test Op :"Op_RealDiv"
-
+// With Const inputs tensorflow's constant folding optimisation converts the op to "Mul". 
+// To test "RealDiv" operator, explicitly placed the op on NGRAPH and the inputs as placeholders
 TEST(tf_exec, Op_RealDiv) {
   tf::Scope root = tf::Scope::NewRootScope();
-  root = root.WithDevice("/device:NGRAPH:0");
+  tf::Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
+  root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
 
-  auto A = tf::ops::Const(root, {{3.f, 5.f}, {2.f, 0.f}});
-  auto B = tf::ops::Const(root, {{3.f, 2.f}, {.1f, 1.f}});
-  auto r = tf::ops::RealDiv(root.WithOpName("r"), A, B);
+  auto A = tf::ops::Placeholder(root, tf::DataType::DT_FLOAT);
+  auto B = tf::ops::Placeholder(root, tf::DataType::DT_FLOAT);
+  auto r = tf::ops::RealDiv(root_ngraph.WithOpName("r"), A, B);
 
   std::vector<tf::Tensor> outputs;
   tf::ClientSession session(root);
 
-  TF_CHECK_OK(session.Run({r}, &outputs));
+  TF_CHECK_OK(session.Run({{A, {{3.f, 5.f}, {2.f, 0.f}}}, {B, {{3.f, 2.f}, {.1f, 1.f}}}}, {r}, &outputs));
   
   ASSERT_EQ(outputs[0].shape(), tf::TensorShape({2,2}));
 
