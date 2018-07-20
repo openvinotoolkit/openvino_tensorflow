@@ -296,7 +296,14 @@ class NGraphEncapsulatePass : public tensorflow::GraphOptimizationPass {
     // Pass 4: Remap all non-clustered inputs that are reading from
     // encapsulated edges, and all control edges that cross cluster
     // boundaries.
+
+    // Copy the edge pointers, so as not to invalidate the iterator.
+    std::vector<tf::Edge*> edges;
     for (auto edge : graph->edges()) {
+      edges.push_back(edge);
+    }
+
+    for (auto edge : edges) {
       int src_cluster_idx;
       bool src_clustered = GetClusterId(edge->src(), &src_cluster_idx);
       int dst_cluster_idx;
