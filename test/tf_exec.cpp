@@ -278,6 +278,38 @@ TEST(tf_exec, BatchMatMul_2D) {
   AssertTensorEquals(outputs[0],outputs_cpu[0]);
 }
 
+TEST(tf_exec, Tile) { 
+  tf::Scope root = tf::Scope::NewRootScope();
+  auto dev_scope = root.WithDevice("/device:NGRAPH:0");
+  tf::Tensor A(tf::DT_FLOAT, tf::TensorShape({2, 3, 4}));
+  auto A_flat = A.flat<float>();
+  for (int i = 0; i < A_flat.size(); i++) {
+    A_flat.data()[i] = -1.1f*i;
+  }
+  auto X = tf::ops::Const(root, {tf::int64(3),  tf::int64(4), tf::int64(2)}, tf::TensorShape({3})); 
+  auto Y = tf::ops::Const(root, {tf::int64(1),  tf::int64(0), tf::int64(3)}, tf::TensorShape({3}));
+  auto C = tf::ops::Tile(dev_scope.WithOpName("C"), A, X);
+  auto D = tf::ops::Tile(dev_scope.WithOpName("D"), A, Y);
+  std::vector<tf::Tensor> outputs_C;
+  std::vector<tf::Tensor> outputs_D;
+
+  tf::ClientSession session(dev_scope);
+  TF_CHECK_OK(session.Run({C}, &outputs_C));
+  TF_CHECK_OK(session.Run({D}, &outputs_D));
+
+  tf::ClientSession sess(root);
+  std::vector<tf::Tensor> outputs_C_cpu;
+  std::vector<tf::Tensor> outputs_D_cpu;
+  auto C_cpu = tf::ops::Tile(root.WithOpName("C_cpu"), A, X);
+  auto D_cpu = tf::ops::Tile(root.WithOpName("D_cpu"), A, Y);
+  TF_CHECK_OK(sess.Run({C_cpu}, &outputs_C_cpu));
+  TF_CHECK_OK(sess.Run({D_cpu}, &outputs_D_cpu));
+  ASSERT_EQ(outputs_C[0].shape(),outputs_C_cpu[0].shape());
+  ASSERT_EQ(outputs_D[0].shape(),outputs_D_cpu[0].shape());
+  AssertTensorEquals(outputs_C[0],outputs_C_cpu[0]);
+  AssertTensorEquals(outputs_D[0],outputs_D_cpu[0]);
+}
+
 // Test Op :"Op_RealDiv"
 // With Const inputs tensorflow's constant folding optimisation converts the op to "Mul". 
 // To test "RealDiv" operator, explicitly placed the op on NGRAPH and the inputs as placeholders

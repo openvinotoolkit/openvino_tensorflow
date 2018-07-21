@@ -150,7 +150,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
       } break;
       case tf::DataType::DT_INT64:
         TF_RETURN_IF_ERROR(
-            ValuesFromConstNode<tf::int32>(node->def(), &shape_proto, values));
+            ValuesFromConstNode<tf::int64>(node->def(), &shape_proto, values));
         break;
       default:
         return tf::errors::InvalidArgument(
@@ -286,6 +286,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Sum"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Sum"]["Tidx"] = NGraphIndexDTypes();
         type_constraint_map["Tanh"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Tile"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes(); 
         type_constraint_map["Transpose"]["T"] = NGraphDTypes();
         type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
 
@@ -495,6 +497,20 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Tanh"] = always;
+        confirmation_functions["Tile"] = [](tf::Node* n, bool* result){
+          tf::Node* tf_multiples;
+          TF_RETURN_IF_ERROR(n->input_node(1, &tf_multiples));
+
+          std::vector<tf::int64> tf_static_multiples;
+          if (ExtractConstantData(tf_multiples, &tf_static_multiples) != tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_tile_static_multiples", tf_static_multiples);
+          *result = true;
+          return tf::Status::OK();
+        }; 
 
         // Constraint: permutation input must be Const.
         confirmation_functions["Transpose"] = [](tf::Node* n, bool* result) {

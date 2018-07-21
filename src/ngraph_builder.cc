@@ -2258,6 +2258,72 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(TranslateUnaryOp<ngraph::op::Tanh>(op, ng_op_map));
     }
     // ---------
+    // Tile
+    // ---------
+    else if (op->type_string() == "Tile") {
+      if (op->num_inputs() != 2) { 
+        return tf::errors::InvalidArgument( 
+            "Number of inputs is not 2 for Tile");
+      }
+
+      tf::Node* tf_input;
+      tf::Node* tf_multiples;
+      TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+      TF_RETURN_IF_ERROR(op->input_node(1, &tf_multiples));
+
+      shared_ptr<ng::Node> ng_input;
+      shared_ptr<ng::Node> ng_multiples;
+      try {
+        ng_input = ng_op_map.at(tf_input->name()); 
+      } catch (const std::out_of_range&) {
+        return tf::errors::NotFound("Input to tile op not found: %s",
+                                tf_input->name());
+      }
+      try {
+        ng_multiples = ng_op_map.at(tf_multiples->name()); 
+      } catch (const std::out_of_range&) {
+        return tf::errors::NotFound("Input to tile op not found: %s",
+                                tf_multiples->name());
+      }
+      std::vector<tf::int64> multiples;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(
+          op->attrs(), "_ngraph_tile_static_multiples", &multiples));
+      auto ng_input_shape = ng_input->get_shape();
+      if (ng_input_shape.size() != multiples.size()) {
+        return tf::errors::InvalidArgument(
+            "dimension of input does not match length of multiples");
+      }
+      std::shared_ptr<ng::Node> ng_output = ng_input;
+      ng::Shape output_shape = ng_input_shape;
+      bool is_empty = false;
+      for (int i=0; i<ng_input_shape.size(); i++) {
+        if (multiples[i] == 0) {
+          is_empty = true;
+        }
+        output_shape[i] = ng_input_shape[i] * multiples[i];
+      }
+      if (is_empty) {
+        ng_op_map[op->name()] = make_shared<ngraph::op::Constant>( 
+                       ng_input->get_element_type(),
+                       output_shape,
+                       std::vector<std::string>(ng::shape_size(output_shape), "0"));
+      } else {
+        for (int i=0; i<ng_input_shape.size(); i++) {
+          if (multiples[i] < 0) {
+            return tf::errors::InvalidArgument("Expected multiples[", i, "] >= 0, but got ",
+                                  multiples[i]); 
+          }
+          vector<shared_ptr<ng::Node>> tmp_tensors;
+          for (int k=0; k<multiples[i]; k++) {
+            tmp_tensors.push_back(ng_output);
+          }
+          auto ng_concat = make_shared<ngraph::op::Concat>(tmp_tensors, i);
+          ng_output = ng_concat;
+        }
+        ng_op_map[op->name()] = ng_output;
+      }
+    }
+    // ---------
     // Transpose
     // ---------
     else if (op->type_string() == "Transpose") {
