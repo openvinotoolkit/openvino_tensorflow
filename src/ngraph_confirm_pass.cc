@@ -279,6 +279,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
         type_constraint_map["Square"]["T"] = NGraphDTypes();
+        type_constraint_map["SquaredDifference"]["T"] = NGraphDTypes();
         type_constraint_map["Squeeze"]["T"] = NGraphDTypes();
         type_constraint_map["StridedSlice"]["T"] = NGraphDTypes();
         type_constraint_map["StridedSlice"]["Index"] = NGraphIndexDTypes();
@@ -474,6 +475,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Softmax"] = always;
         confirmation_functions["Square"] = always;
+        confirmation_functions["SquaredDifference"] = always; 
         confirmation_functions["Squeeze"] = always;
         confirmation_functions["StridedSlice"] = always;
         confirmation_functions["Pack"] = always;
