@@ -337,6 +337,28 @@ TEST(tf_exec, Op_RealDiv) {
 
 }
 
+TEST(tf_exec, Op_Reciprocal) {
+  tf::Scope root = tf::Scope::NewRootScope();
+  tf::Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
+  root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
+  
+  auto A = tf::ops::Placeholder(root, tf::DataType::DT_FLOAT);
+  auto r = tf::ops::Reciprocal(root_ngraph.WithOpName("r"), A);
+
+  std::vector<tf::Tensor> outputs;
+  tf::ClientSession session(root);
+
+  TF_CHECK_OK(session.Run({{A, {{1.f, 5.f}, {2.f, 1.f}}}}, {r}, &outputs));
+  ASSERT_EQ(outputs[0].shape(), tf::TensorShape({2,2}));
+  
+  auto mat = outputs[0].matrix<float>();
+  EXPECT_FLOAT_EQ(1.0, mat(0, 0));
+  EXPECT_FLOAT_EQ(0.2, mat(0, 1));
+  EXPECT_FLOAT_EQ(0.5, mat(1, 0));
+  EXPECT_FLOAT_EQ(1.0, mat(1, 1));
+  
+}
+
 TEST(tf_exec, Op_Square) {
   tf::Scope root = tf::Scope::NewRootScope();
   root = root.WithDevice("/device:NGRAPH:0");

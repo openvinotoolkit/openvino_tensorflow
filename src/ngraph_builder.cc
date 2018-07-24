@@ -1829,6 +1829,25 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       TF_RETURN_IF_ERROR(TranslateBinaryOp<ngraph::op::Divide>(op, ng_op_map));
     }
     // ----
+    // Reciprocal
+    // ----
+    else if (op->type_string() == "Reciprocal") {
+      TF_RETURN_IF_ERROR(TranslateUnaryOp(
+          op, ng_op_map, [](std::shared_ptr<ng::Node> n) {
+            // Create a constant tensor populated with the value -1.
+            // (1/x = x^(-1))
+            auto et = n->get_element_type();
+            auto shape = n->get_shape();
+            std::vector<std::string> constant_values(ng::shape_size(shape),
+                                                     "-1");
+            auto ng_exponent =
+                std::make_shared<ng::op::Constant>(et, shape, constant_values);
+
+            // Raise each element of the input to the power -1.
+            return std::make_shared<ng::op::Power>(n, ng_exponent);
+          }));
+    }
+    // ----
     // Relu
     // ----
     else if (op->type_string() == "Relu") {
