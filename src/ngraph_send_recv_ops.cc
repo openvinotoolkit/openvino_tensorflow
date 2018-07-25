@@ -87,7 +87,6 @@ tf::Rendezvous::DoneCallback make_recv_callback(
           if (!is_dead) {
             ctx->set_output(0, val);
           }
-          *ctx->is_output_dead() = is_dead;
         }
         done();
       },
