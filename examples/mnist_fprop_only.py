@@ -47,8 +47,7 @@ def run_mnist(_):
     x = tf.placeholder(tf.float32, [None, 784])
     W = tf.Variable(tf.zeros([784, 10]))
     b = tf.Variable(tf.zeros([10]))
-    with tf.device('/device:NGRAPH:0'):
-        y = tf.matmul(x, W) + b
+    y = tf.matmul(x, W) + b
 
     # Define loss and optimizer
     y_ = tf.placeholder(tf.float32, [None, 10])
@@ -70,7 +69,7 @@ def run_mnist(_):
     # Enable soft placement and tracing as needed
     config = tf.ConfigProto(
         allow_soft_placement=True,
-        log_device_placement=False,
+        log_device_placement=True,
         inter_op_parallelism_threads=1)
 
     sess = tf.Session(config=config)

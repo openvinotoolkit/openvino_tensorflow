@@ -33,7 +33,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
 import ctypes
-lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
+import ngraph
 
 FLAGS = None
 _BATCH_NORM_DECAY = 0.997

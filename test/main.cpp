@@ -33,26 +33,9 @@ using namespace std;
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
-  // Load the ngraph bridge
-  //   void* handle;
-  //   auto result = tensorflow::Env::Default()->LoadLibrary(
-  //       "/home/avijitch/Projects-Mac/ngraph-tensorflow/bazel-bin/tensorflow/"
-  //       "libtensorflow_framework.so",
-  //       &handle);
-  //   if (result != tensorflow::Status::OK()) {
-  //     cout << "Cannot load Plugin library: " << result.error_message() <<
-  //     endl; return -1;
-  //   }
-
-  //   handle = dlopen(
-  //       "/home/avijitch/Projects-Mac/ngraph-tensorflow/bazel-bin/tensorflow/cc/"
-  //       "libcc_ops.so",
-  //       RTLD_LAZY | RTLD_LOCAL);
-  //   if (handle == nullptr) {
-  //     cout << "Library load failed: " << dlerror() << endl;
-  //     return -1;
-  //   }
-
+// The following macro is defined by the TensorFlow bazel script
+// //third_party/ngraph/nhraph_tf.BUILD
+#if !defined(NGRAPH_EMBEDDED_IN_TENSORFLOW)
   void* handle;
   auto result =
       tensorflow::Env::Default()->LoadLibrary("libngraph_device." EXT, &handle);
@@ -60,6 +43,7 @@ int main(int argc, char** argv) {
     cout << "Cannot load library: " << result.error_message() << endl;
     return -1;
   }
+#endif
 
   int rc = RUN_ALL_TESTS();
   return rc;
