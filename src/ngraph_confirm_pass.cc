@@ -277,8 +277,11 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
         type_constraint_map["Sign"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
-        type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
+        type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Split"]["T"] = NGraphDTypes();
+        type_constraint_map["SplitV"]["T"] = NGraphDTypes();
+        type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
         type_constraint_map["Square"]["T"] = NGraphDTypes();
         type_constraint_map["SquaredDifference"]["T"] = NGraphDTypes();
         type_constraint_map["Squeeze"]["T"] = NGraphDTypes();
@@ -289,7 +292,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Sum"]["Tidx"] = NGraphIndexDTypes();
         type_constraint_map["Tanh"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Tile"]["T"] = NGraphNumericDTypes();
-        type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes(); 
+        type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes();
         type_constraint_map["Transpose"]["T"] = NGraphDTypes();
         type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
 
@@ -332,13 +335,15 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Conv2D"] = always;
-        confirmation_functions["Conv2DBackpropInput"] = [](tf::Node* n, bool* result) {
+        confirmation_functions["Conv2DBackpropInput"] = [](tf::Node* n,
+                                                           bool* result) {
           tf::Node* tf_input_sizes;
           TF_RETURN_IF_ERROR(n->input_node(0, &tf_input_sizes));
 
           std::vector<tf::int64> tf_static_input_sizes(4);
           if (ExtractConstantData(tf_input_sizes, &tf_static_input_sizes) !=
-                  tf::Status::OK() || tf_static_input_sizes.size() != 4) {
+                  tf::Status::OK() ||
+              tf_static_input_sizes.size() != 4) {
             *result = false;
             return tf::Status::OK();
           }
@@ -352,13 +357,12 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Exp"] = always;
         confirmation_functions["ExpandDims"] = always;
         confirmation_functions["Fill"] = [](tf::Node* n, bool* result) {
- 
+
           tf::Node* tf_dims_node;
           TF_RETURN_IF_ERROR(n->input_node(0, &tf_dims_node));
 
           std::vector<tf::int64> tf_dims;
-          if (ExtractConstantData(tf_dims_node, &tf_dims) !=
-              tf::Status::OK()) {
+          if (ExtractConstantData(tf_dims_node, &tf_dims) != tf::Status::OK()) {
             *result = false;
             return tf::Status::OK();
           }
@@ -447,7 +451,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           *result = true;
           return tf::Status::OK();
         };
-        
+
         confirmation_functions["RealDiv"] = always;
         confirmation_functions["Reciprocal"] = always;
         confirmation_functions["Relu"] = always;
@@ -476,8 +480,25 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Slice"] = always;
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Softmax"] = always;
+        confirmation_functions["Split"] = [](tf::Node* n, bool* result) {
+
+          tf::Node* tf_split_dim_node;
+          TF_RETURN_IF_ERROR(n->input_node(0, &tf_split_dim_node));
+
+          std::vector<tf::int64> tf_split_dim;
+          if (ExtractConstantData(tf_split_dim_node, &tf_split_dim) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_split_static_dim", tf_split_dim[0]);
+          *result = true;
+          return tf::Status::OK();
+        };
+        confirmation_functions["SplitV"] = always;
         confirmation_functions["Square"] = always;
-        confirmation_functions["SquaredDifference"] = always; 
+        confirmation_functions["SquaredDifference"] = always;
         confirmation_functions["Squeeze"] = always;
         confirmation_functions["StridedSlice"] = always;
         confirmation_functions["Pack"] = always;
@@ -501,12 +522,13 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Tanh"] = always;
-        confirmation_functions["Tile"] = [](tf::Node* n, bool* result){
+        confirmation_functions["Tile"] = [](tf::Node* n, bool* result) {
           tf::Node* tf_multiples;
           TF_RETURN_IF_ERROR(n->input_node(1, &tf_multiples));
 
           std::vector<tf::int64> tf_static_multiples;
-          if (ExtractConstantData(tf_multiples, &tf_static_multiples) != tf::Status::OK()) {
+          if (ExtractConstantData(tf_multiples, &tf_static_multiples) !=
+              tf::Status::OK()) {
             *result = false;
             return tf::Status::OK();
           }
@@ -514,7 +536,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           n->AddAttr("_ngraph_tile_static_multiples", tf_static_multiples);
           *result = true;
           return tf::Status::OK();
-        }; 
+        };
 
         // Constraint: permutation input must be Const.
         confirmation_functions["Transpose"] = [](tf::Node* n, bool* result) {
@@ -560,8 +582,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 
         // If type constraints are satisfied, check for a confirmation
         // function.
-        bool confirmed = false;
 
+        bool confirmed = false;
         if (type_constraints_ok) {
           auto it = confirmation_functions.find(node->type_string());
 
@@ -569,9 +591,9 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
             TF_RETURN_IF_ERROR(it->second(node, &confirmed));
           }
         }
-
         // Set the _kernel attribute if type constraints are satisfied and the
         // confirmation function (if any) has returned true.
+
         if (confirmed) {
           NGRAPH_VLOG(4) << "Accepting: " << node->name() << "["
                          << node->type_string() << "]";

@@ -63,12 +63,12 @@ class NGraphDeviceContext : public tf::DeviceContext {
                              Tensor* device_tensor,
                              StatusCallback done) const override {
     if (cpu_tensor->NumElements() > 0) {
-      NGRAPH_VLOG(3)
-          << "CopyCPUTensorToDevice "
-          << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
-          << " "
-          << reinterpret_cast<const void*>(device_tensor->tensor_data().data())
-          << " " << cpu_tensor->NumElements();
+      NGRAPH_VLOG(3) << "CopyCPUTensorToDevice "
+                     << reinterpret_cast<const void*>(
+                            cpu_tensor->tensor_data().data())
+                     << " " << reinterpret_cast<const void*>(
+                                   device_tensor->tensor_data().data())
+                     << " " << cpu_tensor->NumElements();
 
       void* src_ptr = const_cast<void*>(DMAHelper::base(cpu_tensor));
       const int64 total_bytes = cpu_tensor->TotalBytes();
@@ -97,12 +97,12 @@ class NGraphDeviceContext : public tf::DeviceContext {
                              StringPiece tensor_name, Device* device,
                              Tensor* cpu_tensor, StatusCallback done) override {
     if (device_tensor->NumElements() > 0) {
-      NGRAPH_VLOG(3)
-          << "CopyDeviceTensorToCPU "
-          << reinterpret_cast<const void*>(device_tensor->tensor_data().data())
-          << " "
-          << reinterpret_cast<const void*>(cpu_tensor->tensor_data().data())
-          << device_tensor->NumElements();
+      NGRAPH_VLOG(3) << "CopyDeviceTensorToCPU "
+                     << reinterpret_cast<const void*>(
+                            device_tensor->tensor_data().data())
+                     << " " << reinterpret_cast<const void*>(
+                                   cpu_tensor->tensor_data().data())
+                     << device_tensor->NumElements();
       NGRAPH_VLOG(3) << device_tensor->DebugString();
       // done(errors::Internal("Unrecognized device type in device-to-CPU
       // Copy"));

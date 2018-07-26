@@ -35,7 +35,7 @@ class Builder {
                                    const tf::Graph* tf_graph,
                                    shared_ptr<ng::Function>& ng_function);
 
-  using OpMap = unordered_map<string, shared_ptr<ng::Node>>;
+  using OpMap = unordered_map<string, std::vector<shared_ptr<ng::Node>>>;
 
  private:
 };
