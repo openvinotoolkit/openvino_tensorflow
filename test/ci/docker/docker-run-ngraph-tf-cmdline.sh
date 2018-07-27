@@ -73,7 +73,9 @@ volume_mounts=''
 if [ ! -z "${NG_TF_MODELS_REPO}" ] ; then
   volume_mounts="${volume_mounts} -v ${NG_TF_MODELS_REPO}:/home/dockuser/ngraph-models"
 fi
-if [ ! -z "${NG_TF_TRAINED}" ] ; then
+if [ -z "${NG_TF_TRAINED}" ] ; then
+  volume_mounts="${volume_mounts} -v /aipg_trained_dataset:/aipg_trained_dataset"
+else
   volume_mounts="${volume_mounts} -v ${NG_TF_TRAINED}:/aipg_trained_dataset"
 fi
 

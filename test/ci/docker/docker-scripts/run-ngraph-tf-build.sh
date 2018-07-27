@@ -38,12 +38,16 @@ bridge_dir='/home/dockuser/ngraph-tf'
 bbuild_dir="${bridge_dir}/BUILD-BRIDGE"
 tf_dir='/home/dockuser/tensorflow'
 ci_dir="${bridge_dir}/test/ci/docker"
+dataset_dir='/dataset'
+trained_dir='/trained_dataset'
 venv_dir="/tmp/venv_python${PYTHON_VERSION_NUMBER}"
 ngraph_dist_dir="${bbuild_dir}/ngraph/ngraph_dist"
 ngraph_wheel_dir="${bbuild_dir}/python/dist"
 libngraph_so="${bbuild_dir}/src/libngraph_device.so"
 libngraph_dist_dir="${bridge_dir}/libngraph_dist"  # Directory to save plugin artifacts in
 libngraph_tarball="${bridge_dir}/libngraph_dist.tgz"  # Tarball artifact to send to Artifactory
+imagenet_dataset="${dataset_dir}/Imagenet_Validation"
+trained_resnet50_model="${trained_dir}/ngraph_tensorflow/fully_trained/resnet50"
 
 # HOME is expected to be /home/dockuser.  See script run-as-user.sh, which
 # sets this up.
@@ -58,12 +62,16 @@ echo "  bridge_dir=${bridge_dir}"
 echo "  bbuild_dir=${bbuild_dir}"
 echo "  tf_dir=${tf_dir}"
 echo "  ci_dir=${ci_dir}"
+echo "  dataset_dir=${dataset_dir}"
+echo "  trained_dir=${trained_dir}"
 echo "  venv_dir=${venv_dir}"
 echo "  ngraph_dist_dir=${ngraph_dist_dir}"
 echo "  ngraph_wheel_dir=${ngraph_wheel_dir}"
 echo "  libngraph_so=${libngraph_so}"
 echo "  libngraph_dist_dir=${libngraph_dist_dir}"
 echo "  libngraph_tarball=${libngraph_tarball}"
+echo "  imagenet_dataset=${imagenet_dataset}"
+echo "  trained_resnet50_model=${trained_resnet50_model}"
 echo ''
 echo "  HOME=${HOME}"
 echo "  PYTHON_VERSION_NUMBER=${PYTHON_VERSION_NUMBER}"
@@ -100,6 +108,24 @@ fi
 if [ -f "${libngraph_tarball}" ] ; then
     ( >&2 echo '***** Error: *****' )
     ( >&2 echo "libngraph distribution directory already exists -- please remove it before calling this script: ${libngraph_tarball}" )
+    exit 1
+fi
+
+if [ ! -d "${dataset_dir}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "Datset directory ${dataset_dir} does not seem to be mounted inside the Docker container" )
+    exit 1
+fi
+
+if [ ! -d "${imagenet_dataset}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "The validation dataset for ImageNet does not seem to be found: ${imagenet_dataset}" )
+    exit 1
+fi
+
+if [ ! -d "${trained_resnet50_model}" ] ; then
+    ( >&2 echo '***** Error: *****' )
+    ( >&2 echo "The pretrained model for resnet50 CI testing does not seem to be found: ${trained_resnet50_model}" )
     exit 1
 fi
 
@@ -254,6 +280,8 @@ echo  "===== Run Bridge CI Test Scripts at ${xtime} ====="
 echo  ' '
 
 cd "${bbuild_dir}/test"
+export NGRAPH_IMAGENET_DATASET="${imagenet_dataset}"
+export NGRAPH_TRAINED_MODEL="${trained_resnet50_model}"
 "${bridge_dir}/test/ci/run-premerge-ci-checks.sh"
 
 xtime="$(date)"
