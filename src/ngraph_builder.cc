@@ -1208,12 +1208,9 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       shared_ptr<ng::Node> ng_dim;
       TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_dim));
 
-      auto ng_dim_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_dim);
-      if (ng_dim_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument dim is null for ExpandDims");
-      }
-      auto dim_vec = ng_dim_const->get_vector<int>();
+      std::vector<tf::int64> dim_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_expanddims_static_dim", &dim_vec));
       if (dim_vec.size() != 1) {
         return tf::errors::InvalidArgument(
             "The size of argument dim is not 1 for ExpandDims");
@@ -1960,43 +1957,26 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       shared_ptr<ng::Node> ng_size;
       TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_size));
 
-      auto ng_begin_const =
-          std::dynamic_pointer_cast<ng::op::Constant>(ng_begin);
-      if (ng_begin_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument begin is null for Slice");
-      }
-      auto lower_vec = ng_begin_const->get_vector<int>();
+      std::vector<tf::int64> lower_vec;
+      std::vector<tf::int64> size_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_slice_static_begin", &lower_vec));
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_slice_static_size", &size_vec));
 
-      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size);
-      if (ng_size_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument size is null for Slice");
-      }
-      auto size_vec = ng_size_const->get_vector<int>();
-
-      auto& input_shape = ng_input->get_shape();
       NGRAPH_VLOG(3) << "Begin input for Slice: " << ng::join(lower_vec);
       NGRAPH_VLOG(3) << "Size input for Slice: " << ng::join(size_vec);
-      if (std::any_of(size_vec.begin(), size_vec.end(),
-                      [](int i) { return i <= 0; })) {
-        std::transform(size_vec.begin(), size_vec.end(), input_shape.begin(),
-                       size_vec.begin(), [](int first, int second) {
-                         if (first < 0) {
-                           return second + first + 1;
-                         } else if (first == 0) {
-                           return second;
-                         } else {
-                           return first;
-                         }
-                       });
-        NGRAPH_VLOG(3) << "Size input for Slice (if less than 0): "
-                       << ng::join(size_vec);
-      }
 
       std::vector<int> upper_vec(lower_vec.size());
-      std::transform(lower_vec.begin(), lower_vec.end(), size_vec.begin(),
-                     upper_vec.begin(), std::plus<int>());
+      const auto ng_input_shape = ng_input->get_shape();
+      for (size_t i = 0; i < size_vec.size(); i++) {
+        if (size_vec[i] != -1) {
+          upper_vec[i] = lower_vec[i] + size_vec[i];
+        } else {
+          // support -1 for size_vec, to the end of the tensor
+          upper_vec[i] = ng_input_shape[i];
+        }
+      }
 
       std::vector<size_t> l(lower_vec.begin(), lower_vec.end());
       std::vector<size_t> u(upper_vec.begin(), upper_vec.end());
@@ -2214,58 +2194,83 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       shared_ptr<ng::Node> ng_stride;
       TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, &ng_stride));
 
-      auto ng_begin_const =
-          std::dynamic_pointer_cast<ng::op::Constant>(ng_begin);
-      if (ng_begin_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument begin is null for StridedSlice");
-      }
-      auto lower_vec = ng_begin_const->get_vector<int>();
+      int tf_shrink_axis_mask;
+      TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "shrink_axis_mask", &tf_shrink_axis_mask));
 
-      auto ng_size_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_size);
-      if (ng_size_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument size is null for StridedSlice");
-      }
-      auto size_vec = ng_size_const->get_vector<int>();
+      std::vector<tf::int64> lower_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_stridedslice_static_begin", &lower_vec));
+
+      std::vector<tf::int64> end_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_stridedslice_static_end", &end_vec));
+
+      std::vector<tf::int64> stride_vec;
+      TF_RETURN_IF_ERROR(
+          tf::GetNodeAttr(op->attrs(), "_ngraph_stridedslice_static_stride", &stride_vec));
+
+      NGRAPH_VLOG(3) << "Begin input for StridedSlice: " << ng::join(lower_vec);
+      NGRAPH_VLOG(3) << "End input for StridedSlice: " << ng::join(end_vec);
 
       auto& input_shape = ng_input->get_shape();
-      NGRAPH_VLOG(3) << "Begin input for StridedSlice: " << ng::join(lower_vec);
-      NGRAPH_VLOG(3) << "Size input for StridedSlice: " << ng::join(size_vec);
-      if (std::any_of(size_vec.begin(), size_vec.end(),
-                      [](int i) { return i <= 0; })) {
-        std::transform(size_vec.begin(), size_vec.end(), input_shape.begin(),
-                       size_vec.begin(), [](int first, int second) {
+      NGRAPH_VLOG(3) << "Input shape for StridedSlice: " << ng::join(input_shape);
+
+      if (lower_vec.size() == end_vec.size() && end_vec.size() == 1) {
+        for (size_t i=end_vec.size(); i < input_shape.size(); ++i) {
+          lower_vec.push_back(0);
+          end_vec.push_back(0);
+        }
+      }
+      NGRAPH_VLOG(3) << "extended Begin input for StridedSlice: " << ng::join(lower_vec);
+      NGRAPH_VLOG(3) << "extended End input for StridedSlice: " << ng::join(end_vec);
+
+      if (std::any_of(lower_vec.begin(), lower_vec.end(), [](int i){ return i < 0;})) {
+        std::transform(lower_vec.begin(), lower_vec.end(), input_shape.begin(), 
+                       lower_vec.begin(), [](int first, int second) {
                          if (first < 0) {
-                           return second + first + 1;
+                           return second + first;
+                         } else {
+                           return first;
+                         }
+                       });
+      }
+      if (std::any_of(end_vec.begin(), end_vec.end(), [](int i){ return i <= 0; })) {
+        std::transform(end_vec.begin(), end_vec.end(), input_shape.begin(),
+                       end_vec.begin(), [](int first, int second) {
+                         if (first < 0) {
+                           return second + first;
                          } else if (first == 0) {
                            return second;
                          } else {
                            return first;
                          }
                        });
-        NGRAPH_VLOG(3) << "Transform size input for StridedSlice: "
-                       << ng::join(size_vec);
+        NGRAPH_VLOG(3) << "Transform end input for StridedSlice: " << ng::join(end_vec);
       }
 
-      std::vector<int> upper_vec(lower_vec.size());
-      std::transform(lower_vec.begin(), lower_vec.end(), size_vec.begin(),
-                     upper_vec.begin(), std::plus<int>());
-
-      auto ng_stride_const =
-          std::dynamic_pointer_cast<ng::op::Constant>(ng_stride);
-      if (ng_stride_const == nullptr) {
-        return tf::errors::InvalidArgument(
-            "The argument stride is null for StridedSlice");
+      for (size_t i=stride_vec.size(); i < end_vec.size(); ++i) {
+        stride_vec.push_back(1);
       }
-      auto stride_vec = ng_stride_const->get_vector<int>();
+      NGRAPH_VLOG(3) << "stride input for StridedSlice: " << ng::join(stride_vec);
 
       std::vector<size_t> l(lower_vec.begin(), lower_vec.end());
-      std::vector<size_t> u(upper_vec.begin(), upper_vec.end());
+      std::vector<size_t> u(end_vec.begin(), end_vec.end());
       std::vector<size_t> s(stride_vec.begin(), stride_vec.end());
-      auto ng_strided_slice = make_shared<ng::op::Slice>(ng_input, l, u, s);
-      SaveNgOp(ng_op_map, op->name(), ng_strided_slice);
 
+      std::shared_ptr<ng::Node>  ng_strided_slice =
+          make_shared<ng::op::Slice>(ng_input, l, u, s);
+      if (tf_shrink_axis_mask) {
+        ng::AxisVector ng_axis_order(input_shape.size());
+        for (size_t i = 0; i < input_shape.size(); i++) {
+          ng_axis_order[i] = i;
+        }
+
+        ng::Shape ng_shape(input_shape.begin() + 1, input_shape.end());
+        ng_strided_slice = make_shared<ng::op::Reshape>(
+          ng_strided_slice, ng_axis_order, ng_shape);
+      }
+
+      SaveNgOp(ng_op_map, op->name(), ng_strided_slice);
     }
     // ---
     // Subtract

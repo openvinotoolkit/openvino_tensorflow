@@ -355,7 +355,23 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["DepthwiseConv2dNative"] = always;
         confirmation_functions["Equal"] = always;
         confirmation_functions["Exp"] = always;
-        confirmation_functions["ExpandDims"] = always;
+        confirmation_functions["ExpandDims"] = [](tf::Node* n, bool* result) {
+          tf::Node* tf_dim_node;
+          TF_RETURN_IF_ERROR(n->input_node(1, &tf_dim_node));
+
+          std::vector<tf::int64> tf_static_dim;
+          if (ExtractConstantData(tf_dim_node, &tf_static_dim) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_expanddims_static_dim", tf_static_dim);
+
+          *result = true;
+          return tf::Status::OK();
+        };
+
         confirmation_functions["Fill"] = [](tf::Node* n, bool* result) {
 
           tf::Node* tf_dims_node;
@@ -477,7 +493,35 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 
         confirmation_functions["Sigmoid"] = always;
         confirmation_functions["Sign"] = always;
-        confirmation_functions["Slice"] = always;
+
+        // Constraint: begin and size input must be Const.
+        confirmation_functions["Slice"] = [](tf::Node* n, bool* result) {
+          tf::Node* tf_begin_node;
+          tf::Node* tf_size_node;
+
+          TF_RETURN_IF_ERROR(n->input_node(1, &tf_begin_node));
+          TF_RETURN_IF_ERROR(n->input_node(2, &tf_size_node));
+
+          std::vector<tf::int64> tf_static_begin;
+          if (ExtractConstantData(tf_begin_node, &tf_static_begin) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+          std::vector<tf::int64> tf_static_size;
+          if (ExtractConstantData(tf_size_node, &tf_static_size) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_slice_static_begin", tf_static_begin);
+          n->AddAttr("_ngraph_slice_static_size", tf_static_size);
+
+          *result = true;
+          return tf::Status::OK();
+        };
+
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Softmax"] = always;
         confirmation_functions["Split"] = [](tf::Node* n, bool* result) {
@@ -500,7 +544,52 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Square"] = always;
         confirmation_functions["SquaredDifference"] = always;
         confirmation_functions["Squeeze"] = always;
-        confirmation_functions["StridedSlice"] = always;
+
+        // Constraint: begin, end, and stride inputs must be Const
+        confirmation_functions["StridedSlice"] = [](tf::Node* n, bool* result) {
+          // reject if tf.newaxis in strided slice
+          // TODO support tf.newaxis
+          int tf_new_axis_mask;
+          TF_RETURN_IF_ERROR(tf::GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask)); 
+          if (tf_new_axis_mask != 0) {
+            *result = false;
+            return tf::Status::OK();
+          }
+          tf::Node* tf_begin_node;
+          tf::Node* tf_end_node;
+          tf::Node* tf_stride_node;
+
+          TF_RETURN_IF_ERROR(n->input_node(1, &tf_begin_node));
+          TF_RETURN_IF_ERROR(n->input_node(2, &tf_end_node));
+          TF_RETURN_IF_ERROR(n->input_node(3, &tf_stride_node));
+
+          std::vector<tf::int64> tf_static_begin;
+          if (ExtractConstantData(tf_begin_node, &tf_static_begin) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+          std::vector<tf::int64> tf_static_end;
+          if (ExtractConstantData(tf_end_node, &tf_static_end) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+          std::vector<tf::int64> tf_static_stride;
+          if (ExtractConstantData(tf_stride_node, &tf_static_stride) !=
+              tf::Status::OK()) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_stridedslice_static_begin", tf_static_begin);
+          n->AddAttr("_ngraph_stridedslice_static_end", tf_static_end);
+          n->AddAttr("_ngraph_stridedslice_static_stride", tf_static_stride);
+
+          *result = true;
+          return tf::Status::OK();
+        };
+
         confirmation_functions["Pack"] = always;
         confirmation_functions["Sub"] = always;
 
