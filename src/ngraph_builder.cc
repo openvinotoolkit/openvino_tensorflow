@@ -31,16 +31,16 @@
 
 namespace ngraph_bridge {
 
-const static std::map<tf::DataType, ngraph::element::Type> TF_NGRAPH_TYPE_MAP =
-    {{tf::DataType::DT_FLOAT, ng::element::f32},
-     {tf::DataType::DT_DOUBLE, ng::element::f64},
-     {tf::DataType::DT_INT8, ng::element::i8},
-     {tf::DataType::DT_INT16, ng::element::i16},
-     {tf::DataType::DT_INT32, ng::element::i32},
-     {tf::DataType::DT_INT64, ng::element::i64},
-     {tf::DataType::DT_UINT8, ng::element::u8},
-     {tf::DataType::DT_UINT16, ng::element::u16},
-     {tf::DataType::DT_BOOL, ng::element::boolean}};
+const static std::map<const tf::DataType, const ngraph::element::Type>
+    TF_NGRAPH_TYPE_MAP = {{tf::DataType::DT_FLOAT, ng::element::f32},
+                          {tf::DataType::DT_DOUBLE, ng::element::f64},
+                          {tf::DataType::DT_INT8, ng::element::i8},
+                          {tf::DataType::DT_INT16, ng::element::i16},
+                          {tf::DataType::DT_INT32, ng::element::i32},
+                          {tf::DataType::DT_INT64, ng::element::i64},
+                          {tf::DataType::DT_UINT8, ng::element::u8},
+                          {tf::DataType::DT_UINT16, ng::element::u16},
+                          {tf::DataType::DT_BOOL, ng::element::boolean}};
 
 static tf::Status ValidateInputCount(const tf::Node* op, size_t count) {
   if (op->num_inputs() != count) {
@@ -156,6 +156,31 @@ static tf::Status MakeConstOp(tf::Node* op, ng::element::Type et,
   *ng_node = make_shared<ng::op::Constant>(et, ng_shape, const_values);
   return tf::Status::OK();
 }
+
+const static std::map<
+    const tf::DataType,
+    const std::pair<const std::function<tf::Status(tf::Node*, ng::element::Type,
+                                                   std::shared_ptr<ng::Node>*)>,
+                    const ngraph::element::Type>>
+    TF_NGRAPH_CONST_MAP = {
+        {tf::DataType::DT_FLOAT,
+         make_pair(MakeConstOp<float>, ng::element::f32)},
+        {tf::DataType::DT_DOUBLE,
+         make_pair(MakeConstOp<double>, ng::element::f64)},
+        {tf::DataType::DT_INT8,
+         make_pair(MakeConstOp<tf::int8>, ng::element::i8)},
+        {tf::DataType::DT_INT16,
+         make_pair(MakeConstOp<tf::int16>, ng::element::i16)},
+        {tf::DataType::DT_INT32,
+         make_pair(MakeConstOp<tf::int32>, ng::element::i32)},
+        {tf::DataType::DT_INT64,
+         make_pair(MakeConstOp<tf::int64>, ng::element::i64)},
+        {tf::DataType::DT_UINT8,
+         make_pair(MakeConstOp<tf::uint8>, ng::element::u8)},
+        {tf::DataType::DT_UINT16,
+         make_pair(MakeConstOp<tf::uint16>, ng::element::u16)},
+        {tf::DataType::DT_BOOL,
+         make_pair(MakeConstOp<bool, char>, ng::element::boolean)}};
 
 // Helper function to translate a unary op.
 //
@@ -647,58 +672,23 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
 
       std::shared_ptr<ng::Node> ng_node;
 
-      switch (dtype) {
-        case tf::DataType::DT_FLOAT:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<float>(op, ng::element::f32, &ng_node));
-          break;
-        case tf::DataType::DT_DOUBLE:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<double>(op, ng::element::f64, &ng_node));
-          break;
-        case tf::DataType::DT_INT8:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::int8>(op, ng::element::i8, &ng_node));
-          break;
-        case tf::DataType::DT_INT16:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::int16>(op, ng::element::i16, &ng_node));
-          break;
-        case tf::DataType::DT_INT32:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::int32>(op, ng::element::i32, &ng_node));
-          break;
-        case tf::DataType::DT_INT64:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::int64>(op, ng::element::i64, &ng_node));
-          break;
-        case tf::DataType::DT_UINT8:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::uint8>(op, ng::element::u8, &ng_node));
-          break;
-        case tf::DataType::DT_UINT16:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<tf::uint16>(op, ng::element::u16, &ng_node));
-          break;
-        // For some reason the following do not work (no specialization of
-        // tensorflow::checkpoint::SavedTypeTraits...)
-        // case tf::DataType::DT_UINT32:
-        //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint32>(op, ng::element::u32,
-        //   &ng_node));
-        //   break;
-        // case tf::DataType::DT_UINT64:
-        //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint64>(op, ng::element::u64,
-        //   &ng_node));
-        //   break;
-        case tf::DataType::DT_BOOL:
-          TF_RETURN_IF_ERROR(
-              MakeConstOp<bool, char>(op, ng::element::boolean, &ng_node));
-          break;
-        default:
-          return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
-                                           tf::DataType_Name(dtype));
+      // For some reason the following do not work (no specialization of
+      // tensorflow::checkpoint::SavedTypeTraits...)
+      // case tf::DataType::DT_UINT32:
+      //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint32>(op, ng::element::u32,
+      //   &ng_node));
+      //   break;
+      // case tf::DataType::DT_UINT64:
+      //   TF_RETURN_IF_ERROR(MakeConstOp<tf::uint64>(op, ng::element::u64,
+      //   &ng_node));
+      //   break;
+      try {
+        const auto& func_param = TF_NGRAPH_CONST_MAP.at(dtype);
+        func_param.first(op, func_param.second, &ng_node);
+      } catch (const std::out_of_range&) {
+        return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
+                                         tf::DataType_Name(dtype));
       }
-
       SaveNgOp(ng_op_map, op->name(), ng_node);
     }
     // ------
