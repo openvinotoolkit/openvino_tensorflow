@@ -37,6 +37,7 @@ set(SRC
     main.cpp
     graph_exec.cpp
     tf_exec.cpp
+    padding.cpp
     conversions.cpp
 )
 

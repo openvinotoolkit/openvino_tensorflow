@@ -21,6 +21,8 @@
 
 #include "ngraph/ngraph.hpp"
 
+#include "ngraph_log.h"
+
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
 
@@ -36,6 +38,54 @@ class Builder {
                                    shared_ptr<ng::Function>& ng_function);
 
   using OpMap = unordered_map<string, std::vector<shared_ptr<ng::Node>>>;
+
+  template <typename T>
+  static void MakePadding(const std::string& tf_padding_type,
+                          const ng::Shape& ng_image_shape,
+                          const ng::Shape& ng_kernel_shape,
+                          const ng::Strides& ng_strides,
+                          const ng::Shape& ng_dilations, T& ng_padding_below,
+                          T& ng_padding_above) {
+    ng::Shape ng_dilation_kernel_shape{
+        (ng_kernel_shape[0] - 1) * ng_dilations[0] + 1,
+        (ng_kernel_shape[1] - 1) * ng_dilations[1] + 1};
+
+    MakePadding(tf_padding_type, ng_image_shape, ng_dilation_kernel_shape,
+                ng_strides, ng_padding_below, ng_padding_above);
+  }
+
+  template <typename T>
+  static void MakePadding(const std::string& tf_padding_type,
+                          const ng::Shape& ng_image_shape,
+                          const ng::Shape& ng_kernel_shape,
+                          const ng::Strides& ng_strides, T& ng_padding_below,
+                          T& ng_padding_above) {
+    if (tf_padding_type == "SAME") {
+      for (size_t i = 0; i < 2; i++) {
+        size_t image_size = ng_image_shape[i];
+        size_t filter_shape = ng_kernel_shape[i];
+        size_t filter_stride = ng_strides[i];
+
+        tf::int64 padding_needed;
+        if (image_size % filter_stride == 0) {
+          padding_needed = filter_shape - filter_stride;
+        } else {
+          padding_needed = filter_shape - (image_size % filter_stride);
+        }
+        if (padding_needed < 0) {
+          padding_needed = 0;
+        }
+
+        size_t padding_lhs = padding_needed / 2;
+        size_t padding_rhs = padding_needed - padding_lhs;
+        ng_padding_below[i] = padding_lhs;
+        ng_padding_above[i] = padding_rhs;
+      }
+    }
+
+    NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+    NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+  }
 
  private:
 };
