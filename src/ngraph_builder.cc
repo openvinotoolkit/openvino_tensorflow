@@ -414,10 +414,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::Shape ng_image_shape(2);
       ng::Shape ng_kernel_shape(2);
 
-      BatchToNGraph(is_nhwc, ng_input);
       BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
       BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
       BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
+      BatchToNGraph(is_nhwc, ng_input);
       NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
       NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
       NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -730,10 +730,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::Shape ng_image_shape(2);
       ng::Shape ng_kernel_shape(2);
 
-      BatchToNGraph(is_nhwc, ng_input);
       BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
       BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
       BatchedOpParamToNGraph(is_nhwc, tf_dilations, ng_dilations);
+      BatchToNGraph(is_nhwc, ng_input);
       NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
       NGRAPH_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
       NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
@@ -811,10 +811,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::Shape ng_kernel_shape(2);
       ng::Shape ng_batch_shape(4);
 
-      BatchToNGraph(is_nhwc, ng_out_backprop);
       BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
       BatchedOpParamToNGraph(is_nhwc, tf_input_sizes, ng_image_shape);
       BatchedOpParamToNGraph(is_nhwc, tf_dilations, ng_dilations);
+      BatchToNGraph(is_nhwc, ng_out_backprop);
       if (is_nhwc) {
         ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
                           static_cast<unsigned long>(tf_input_sizes[3]),
@@ -895,19 +895,19 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::Shape ng_image_shape(2);
       ng::Shape ng_kernel_shape(2);
 
-      BatchToNGraph(is_nhwc, ng_input);
       BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
       BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
       BatchedOpParamToNGraph(is_nhwc, tf_dilations, ng_dilations);
+      BatchToNGraph(is_nhwc, ng_input);
 
       NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
       NGRAPH_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
       NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
 
       auto& ng_filter_shape = ng_filter->get_shape();
-      Reshape<3, 2, 0, 1>(ng_filter);
       ng_kernel_shape[0] = ng_filter_shape[0];
       ng_kernel_shape[1] = ng_filter_shape[1];
+      Reshape<3, 2, 0, 1>(ng_filter);
 
       NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
@@ -1208,10 +1208,10 @@ tf::Status Builder::TranslateGraph(const std::vector<tf::TensorShape>& inputs,
       ng::Shape ng_image_shape(2);
       ng::Shape ng_kernel_shape(2);
 
-      BatchToNGraph(is_nhwc, ng_input);
       BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
       BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
       BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
+      BatchToNGraph(is_nhwc, ng_input);
       NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
       NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
       NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
