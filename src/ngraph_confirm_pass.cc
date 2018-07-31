@@ -246,6 +246,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
         type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
         type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["FusedBatchNormGrad"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Greater"]["T"] = NGraphDTypes();
         type_constraint_map["GreaterEqual"]["T"] = NGraphDTypes();
         type_constraint_map["Less"]["T"] = NGraphDTypes();
@@ -390,6 +391,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 
         confirmation_functions["Floor"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
+        confirmation_functions["FusedBatchNormGrad"] = always;
         confirmation_functions["Greater"] = always;
         confirmation_functions["GreaterEqual"] = always;
         confirmation_functions["Less"] = always;

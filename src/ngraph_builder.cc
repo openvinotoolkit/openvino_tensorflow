@@ -979,6 +979,86 @@ static tf::Status TranslateFusedBatchNormOp(const tf::Node* op,
   return tf::Status::OK();
 }
 
+static tf::Status TranslateFusedBatchNormGradOp(const tf::Node* op,
+                                            Builder::OpMap& ng_op_map) {                                 
+  TF_RETURN_IF_ERROR(ValidateInputCount(op, 5));
+
+  bool tf_is_training;
+  if (tf::GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
+      tf::Status::OK()) {
+    NGRAPH_VLOG(3) << "is_training attribute not present, setting to true";
+    tf_is_training = true;
+  }
+
+  NGRAPH_VLOG(3) << "is_training: " << tf_is_training;
+
+  shared_ptr<ng::Node> ng_delta;
+  shared_ptr<ng::Node> ng_input;
+  shared_ptr<ng::Node> ng_scale;
+  shared_ptr<ng::Node> ng_mean;
+  shared_ptr<ng::Node> ng_variance;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_delta));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_scale));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, &ng_mean));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, &ng_variance));
+
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(
+      tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+    return tf::errors::InvalidArgument(
+        "FusedBatchnormGrad data format is neither NHWC nor NCHW");
+  }
+
+  bool is_nhwc = (tf_data_format == "NHWC");
+      
+  NGRAPH_VLOG(3) << "data_format: " << tf_data_format;
+
+  float tf_epsilon;
+  if (tf::GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) !=
+      tf::Status::OK()) {
+    NGRAPH_VLOG(3) << "epsilon attribute not present, setting to 0.0001";
+    tf_epsilon = 0.0001; 
+  }
+
+  NGRAPH_VLOG(3) << "epsilon: " << tf_epsilon;
+
+  // TODO: We are temporarily supplying a fake value for beta here
+  // (all zero, same shape/et as scale/gamma), because Tensorflow does not give beta to us.
+  // This should work because nGraph should not actually use beta. The nGraph
+  // op may change to discard this parameter. Update this when nGraph does.
+  shared_ptr<ng::Node> ng_beta =
+      std::make_shared<ngraph::op::Constant>(ng_scale->get_element_type(),
+                       ng_scale->get_shape(),
+                       std::vector<std::string>{ng::shape_size(ng_scale->get_shape()),"0"});
+
+  BatchToNGraph(is_nhwc, ng_input);
+  BatchToNGraph(is_nhwc, ng_delta);
+
+  std::shared_ptr<ng::Node> ng_batch_norm_backprop;
+
+  ng_batch_norm_backprop = make_shared<ng::op::BatchNormBackprop>(
+      tf_epsilon, ng_scale, ng_beta, ng_input, ng_mean, ng_variance, 
+      ng_delta);
+
+  shared_ptr<ngraph::Node> ng_input_delta_op =
+           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 0);
+  shared_ptr<ngraph::Node> ng_scale_delta_op =
+           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 1);
+  shared_ptr<ngraph::Node> ng_beta_delta_op =
+           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 2);
+
+  BatchToTensorflow(is_nhwc, ng_input_delta_op);
+
+  SaveNgOp(ng_op_map, op->name(), ng_input_delta_op);
+  SaveNgOp(ng_op_map, op->name(), ng_scale_delta_op);
+  SaveNgOp(ng_op_map, op->name(), ng_beta_delta_op);
+
+  return tf::Status::OK();
+}
+
 static tf::Status TranslateIdentityOp(const tf::Node* op,
                                       Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 1));
@@ -1931,6 +2011,7 @@ const static std::map<
         {"Fill", TranslateFillOp},
         {"Floor", TranslateUnaryOp<ngraph::op::Floor>},
         {"FusedBatchNorm", TranslateFusedBatchNormOp},
+        {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
         {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
         {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},
         {"Identity", TranslateIdentityOp},
