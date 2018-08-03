@@ -69,14 +69,16 @@ IMAGE_CLASS='ngraph_tf_ci'
 # IMAGE_ID set from 1st parameter, above
 
 # Set up optional volume mounts
-volume_mounts=''
+volume_mounts='-v /dataset:/dataset'
 if [ ! -z "${NG_TF_MODELS_REPO}" ] ; then
   volume_mounts="${volume_mounts} -v ${NG_TF_MODELS_REPO}:/home/dockuser/ngraph-models"
 fi
 if [ -z "${NG_TF_TRAINED}" ] ; then
   volume_mounts="${volume_mounts} -v /aipg_trained_dataset:/aipg_trained_dataset"
+  volume_mounts="${volume_mounts} -v /aipg_trained_dataset:/trained_dataset"
 else
   volume_mounts="${volume_mounts} -v ${NG_TF_TRAINED}:/aipg_trained_dataset"
+  volume_mounts="${volume_mounts} -v ${NG_TF_TRAINED}:/trained_dataset"
 fi
 
 # Set up optional environment variables
