@@ -374,6 +374,87 @@ static tf::Status TranslateAvgPoolOp(const tf::Node* op,
   return tf::Status::OK();
 }
 
+static tf::Status TranslateAvgPoolGradOp(const tf::Node* op, 
+                                     Builder::OpMap& ng_op_map) { 
+      
+  shared_ptr<ng::Node> ng_grad;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_grad));
+
+  std::vector<tf::int32> tf_orig_input_shape_vec;
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(
+      op->attrs(), "_ngraph_avgpoolgrad_static_input_shape", &tf_orig_input_shape_vec));
+
+  std::vector<tf::int32> tf_strides;
+  std::vector<tf::int32> tf_ksize;
+  std::string tf_padding_type;
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "strides", &tf_strides));
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
+  TF_RETURN_IF_ERROR(
+      tf::GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+  TF_RETURN_IF_ERROR(
+      tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+    return tf::errors::InvalidArgument(
+        "AvgPoolGrad data format is neither NHWC nor NCHW");
+  }
+
+  bool is_nhwc = (tf_data_format == "NHWC");
+
+  NGRAPH_VLOG(3) << ng::join(tf_strides);
+  NGRAPH_VLOG(3) << ng::join(tf_ksize);
+  NGRAPH_VLOG(3) << tf_padding_type;
+  NGRAPH_VLOG(3) << tf_data_format;
+
+  ng::Shape ng_orig_input_shape;
+  for (int i = 0; i < tf_orig_input_shape_vec.size(); i++) {
+    ng_orig_input_shape.push_back(tf_orig_input_shape_vec[i]);
+  }
+
+  ng::Shape ng_forward_arg_shape(4);
+  ng::Strides ng_strides(2);
+  ng::Shape ng_image_shape(2);
+  ng::Shape ng_window_shape(2);
+
+  BatchedOpParamReshape(is_nhwc, ng_orig_input_shape, ng_forward_arg_shape);
+  BatchToNGraph(is_nhwc, ng_grad);
+  BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
+  BatchedOpParamToNGraph(is_nhwc, ng_orig_input_shape, ng_image_shape);
+  BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_window_shape);
+
+  NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+  NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+  NGRAPH_VLOG(3) << "ng_window_shape: " << ng::join(ng_window_shape);
+  NGRAPH_VLOG(3) << "ng_forward_arg_shape: " << ng::join(ng_forward_arg_shape);
+
+  // TODO: change this once nGraph supports negative padding
+  // (CoordinateDiff) for AvgPool
+  // ng::CoordinateDiff ng_padding_below{0,0};
+  // ng::CoordinateDiff ng_padding_above{0,0};
+  ng::Shape ng_padding_below{0, 0};
+  ng::Shape ng_padding_above{0, 0};
+
+  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_window_shape,
+                       ng_strides, ng_padding_below, ng_padding_above);
+
+  NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+  NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+
+  std::shared_ptr<ng::Node> ng_avgpool_backprop = make_shared<ng::op::AvgPoolBackprop>(
+      ng_forward_arg_shape, ng_grad, ng_window_shape, ng_strides, ng_padding_below,
+      ng_padding_above, false);
+
+  BatchToTensorflow(is_nhwc, ng_avgpool_backprop);
+
+  NGRAPH_VLOG(3) << "avgpoolbackprop outshape: {"
+                 << ng::join(ng_avgpool_backprop->get_shape()) << "}";
+
+  SaveNgOp(ng_op_map, op->name(), ng_avgpool_backprop);
+
+  return tf::Status::OK();
+}  
+
 static tf::Status TranslateBatchMatMulOp(const tf::Node* op,
                                          Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_lhs, ng_rhs;
@@ -1908,6 +1989,7 @@ const static std::map<
         {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
         {"Add", TranslateBinaryOp<ngraph::op::Add>},
         {"AvgPool", TranslateAvgPoolOp},
+        {"AvgPoolGrad", TranslateAvgPoolGradOp},
         {"BatchMatMul", TranslateBatchMatMulOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},

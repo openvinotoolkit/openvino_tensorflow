@@ -49,6 +49,14 @@ void NchwToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[0] = src[2];
   dst[1] = src[3];
 }
+
+template <typename T>
+void NhwcToNchw(const std::vector<T>& src, std::vector<size_t>& dst) {
+  dst[0] = src[0];
+  dst[1] = src[3];
+  dst[2] = src[1];
+  dst[3] = src[2];
+}
 }
 
 void BatchToNGraph(bool is_nhwc, std::shared_ptr<ng::Node>& ng_input) {
@@ -64,6 +72,16 @@ void BatchedOpParamToNGraph(bool is_nhwc, const std::vector<T>& src,
     detail::NhwcToNGraph(src, dst);
   } else {
     detail::NchwToNGraph(src, dst);
+  }
+}
+
+template <typename T>
+void BatchedOpParamReshape(bool is_nhwc, const std::vector<T>& src,
+                            std::vector<size_t>& dst) {
+  if (is_nhwc) {
+    detail::NhwcToNchw(src, dst);
+  } else {
+    dst = src;
   }
 }
 

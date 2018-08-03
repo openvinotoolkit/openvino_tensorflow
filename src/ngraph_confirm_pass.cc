@@ -231,6 +231,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Abs"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Add"]["T"] = NGraphNumericDTypes();
         type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["AvgPoolGrad"]["T"] = NGraphNumericDTypes();
         type_constraint_map["BatchMatMul"]["T"] = NGraphNumericDTypes();
         type_constraint_map["BiasAdd"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
@@ -313,6 +314,22 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Abs"] = always;
         confirmation_functions["Add"] = always;
         confirmation_functions["AvgPool"] = always;
+        confirmation_functions["AvgPoolGrad"] = [](tf::Node* n, bool* result) {
+          tf::Node* tf_orig_input_shape;
+          TF_RETURN_IF_ERROR(n->input_node(0, &tf_orig_input_shape));
+
+          std::vector<tf::int64> tf_orig_input_shape_vec;
+          if (ExtractConstantData(tf_orig_input_shape, &tf_orig_input_shape_vec) !=
+                  tf::Status::OK() ||
+              tf_orig_input_shape_vec.size() != 4) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_avgpoolgrad_static_input_shape", tf_orig_input_shape_vec);
+          *result = true;
+          return tf::Status::OK();
+        };
         confirmation_functions["BiasAdd"] = always;
         confirmation_functions["BatchMatMul"] = always;
         confirmation_functions["Cast"] = always;
