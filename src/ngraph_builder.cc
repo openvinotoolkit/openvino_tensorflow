@@ -155,7 +155,7 @@ static tf::Status GetInputNodes(const Builder::OpMap& ng_op_map,
   }
   return GetInputNodes(ng_op_map, op, index + 1, remaining...);
 }
-}
+}  // namespace detail
 
 template <typename... Arguments>
 static tf::Status GetInputNodes(const Builder::OpMap& ng_op_map,
@@ -307,10 +307,11 @@ static tf::Status TranslateBinaryOp(
 template <typename T>
 static tf::Status TranslateBinaryOp(const tf::Node* op,
                                     Builder::OpMap& ng_op_map) {
-  return TranslateBinaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> ng_lhs,
-                                             std::shared_ptr<ng::Node> ng_rhs) {
-    return make_shared<T>(ng_lhs, ng_rhs);
-  });
+  return TranslateBinaryOp(
+      op, ng_op_map,
+      [](std::shared_ptr<ng::Node> ng_lhs, std::shared_ptr<ng::Node> ng_rhs) {
+        return make_shared<T>(ng_lhs, ng_rhs);
+      });
 }
 
 static tf::Status TranslateAvgPoolOp(const tf::Node* op,
@@ -755,6 +756,134 @@ static tf::Status TranslateConv2DOp(const tf::Node* op,
   return tf::Status::OK();
 }
 
+static tf::Status TranslateConv2DBackpropFilterOp(const tf::Node* op,
+                                                  Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_data_batch, ng_output_delta;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, &ng_data_batch, nullptr, &ng_output_delta));
+
+  std::vector<tf::int32> tf_strides;
+  std::string tf_padding_type;
+  std::vector<tf::int32> tf_dilations;
+  std::string tf_data_format;
+
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "strides", &tf_strides));
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "dilations", &tf_dilations));
+  TF_RETURN_IF_ERROR(
+      tf::GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+    return tf::errors::InvalidArgument("Data format is neither NHWC nor NCHW: ",
+                                       op->type_string());
+  }
+
+  NGRAPH_VLOG(3) << "tf data format" << tf_data_format;
+  bool is_nhwc = (tf_data_format == "NHWC");
+
+  // Dilations in batch and depth dimensions must be 1
+  if (is_nhwc) {
+    if (tf_dilations[0] != 1 || tf_dilations[3] != 1) {
+      return tf::errors::InvalidArgument(
+          "Dilations in batch and depth dimensions must be 1: ",
+          op->type_string());
+    }
+  } else {
+    if (tf_dilations[0] != 1 || tf_dilations[1] != 1) {
+      return tf::errors::InvalidArgument(
+          "Dilations in batch and depth dimensions must be 1: ",
+          op->type_string());
+    }
+  }
+
+  std::vector<tf::int64> tf_filter_sizes;
+  TF_RETURN_IF_ERROR(tf::GetNodeAttr(op->attrs(), "_ngraph_static_filter_sizes",
+                                     &tf_filter_sizes));
+  if (std::any_of(tf_filter_sizes.begin(), tf_filter_sizes.end(),
+                  [](tf::int32 size) { return size <= 0; })) {
+    return tf::errors::InvalidArgument(
+        "Filter sizes must be positive integers :", op->type_string());
+  }
+
+  NGRAPH_VLOG(3) << "tf filter size" << ng::join(tf_filter_sizes);
+  NGRAPH_VLOG(3) << "tf filter size" << ng::join(tf_filter_sizes);
+  NGRAPH_VLOG(3) << "tf strides" << ng::join(tf_strides);
+  NGRAPH_VLOG(3) << "tf dilations" << ng::join(tf_dilations);
+  NGRAPH_VLOG(3) << "tf padding type" << tf_padding_type;
+
+  ng::Shape ng_filters_shape(4);
+  ng::Strides ng_window_movement_strides_forward(2);
+  ng::Strides ng_window_dilation_strides_forward(2);
+  ng::CoordinateDiff ng_padding_below_forward{0, 0};
+  ng::CoordinateDiff ng_padding_above_forward{0, 0};
+  // H,W data_dilation is set to 1 , TF does not have this attribute
+  ng::Strides ng_data_dilation_strides_forward(2, 1);
+
+  // Convert inputs, args to nGraph Format
+  // nGraph Data Format:
+  //    nGraph Tensor           [N, C_IN, D1, ... Df]
+  //    nGraph Filter           [C_OUT, C_IN, F1, ... Ff]
+  //    nGraph Output Delta     [N, C_OUT, F1, ... Ff]
+  //    nGraph Window Strides   [f]
+  //    nGraph Window Dilations [f]
+  //    nGraph Padding Below    [f]
+  //    nGraph Padding Above    [f]
+  //    nGraph Dilation Stride  [f]
+  BatchToNGraph(is_nhwc, ng_data_batch);
+  // tf_filter shape :
+  // [filter_height, filter_width, in_channels, out_channels]
+  // reshape for nGraph
+  ng_filters_shape = {static_cast<unsigned int>(tf_filter_sizes[3]),
+                      static_cast<unsigned int>(tf_filter_sizes[2]),
+                      static_cast<unsigned int>(tf_filter_sizes[0]),
+                      static_cast<unsigned int>(tf_filter_sizes[1])};
+  BatchToNGraph(is_nhwc, ng_output_delta);
+  BatchedOpParamToNGraph(is_nhwc, tf_strides,
+                         ng_window_movement_strides_forward);
+  BatchedOpParamToNGraph(is_nhwc, tf_dilations,
+                         ng_window_dilation_strides_forward);
+  // H, W of image/input and filter are required to figure out padding
+  // arguments
+  ng::Shape ng_filter_HW(2);
+  ng::Shape ng_input_data_HW(2);
+
+  auto& ng_data_batch_shape = ng_data_batch->get_shape();
+  ng_input_data_HW[0] = ng_data_batch_shape[2];
+  ng_input_data_HW[1] = ng_data_batch_shape[3];
+
+  ng_filter_HW[0] = ng_filters_shape[2];
+  ng_filter_HW[1] = ng_filters_shape[3];
+
+  Builder::MakePadding(tf_padding_type, ng_input_data_HW, ng_filter_HW,
+                       ng_window_movement_strides_forward,
+                       ng_window_dilation_strides_forward,
+                       ng_padding_below_forward, ng_padding_above_forward);
+
+  NGRAPH_VLOG(3) << "ng input data shape" << ng::join(ng_data_batch_shape);
+  NGRAPH_VLOG(3) << "ng filter shape" << ng::join(ng_filters_shape);
+  NGRAPH_VLOG(3) << "ng output delta shape"
+                 << ng::join(ng_output_delta->get_shape());
+  NGRAPH_VLOG(3) << "ng strides"
+                 << ng::join(ng_window_movement_strides_forward);
+  NGRAPH_VLOG(3) << "ng dilations"
+                 << ng::join(ng_window_dilation_strides_forward);
+  NGRAPH_VLOG(3) << "ng padding type" << tf_padding_type;
+
+  std::shared_ptr<ng::Node> ng_back_prop_filter =
+      make_shared<ng::op::ConvolutionBackpropFilters>(
+          ng_data_batch, ng_filters_shape, ng_output_delta,
+          ng_window_movement_strides_forward,
+          ng_window_dilation_strides_forward, ng_padding_below_forward,
+          ng_padding_above_forward, ng_data_dilation_strides_forward);
+
+  // Reshape the output to tf format : [filter_height, filter_width,
+  // in_channels, out_channels]
+  Reshape<2, 3, 1, 0>(ng_back_prop_filter);
+
+  SaveNgOp(ng_op_map, op->name(), ng_back_prop_filter);
+  return tf::Status::OK();
+}
+
 static tf::Status TranslateConv2DBackpropInputOp(const tf::Node* op,
                                                  Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_filter, ng_out_backprop;
@@ -987,8 +1116,9 @@ static tf::Status TranslateFillOp(const tf::Node* op,
     ng_output_shape[i] = dims_vec[i];
     ng_axis_set.insert(i);
   }
-  SaveNgOp(ng_op_map, op->name(), make_shared<ng::op::Broadcast>(
-                                      ng_value, ng_output_shape, ng_axis_set));
+  SaveNgOp(
+      ng_op_map, op->name(),
+      make_shared<ng::op::Broadcast>(ng_value, ng_output_shape, ng_axis_set));
   return tf::Status::OK();
 }
 
@@ -1044,7 +1174,7 @@ static tf::Status TranslateFusedBatchNormOp(const tf::Node* op,
 }
 
 static tf::Status TranslateFusedBatchNormGradOp(const tf::Node* op,
-                                            Builder::OpMap& ng_op_map) {                                 
+                                                Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 5));
 
   bool tf_is_training;
@@ -1077,26 +1207,26 @@ static tf::Status TranslateFusedBatchNormGradOp(const tf::Node* op,
   }
 
   bool is_nhwc = (tf_data_format == "NHWC");
-      
+
   NGRAPH_VLOG(3) << "data_format: " << tf_data_format;
 
   float tf_epsilon;
   if (tf::GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) !=
       tf::Status::OK()) {
     NGRAPH_VLOG(3) << "epsilon attribute not present, setting to 0.0001";
-    tf_epsilon = 0.0001; 
+    tf_epsilon = 0.0001;
   }
 
   NGRAPH_VLOG(3) << "epsilon: " << tf_epsilon;
 
   // TODO: We are temporarily supplying a fake value for beta here
-  // (all zero, same shape/et as scale/gamma), because Tensorflow does not give beta to us.
-  // This should work because nGraph should not actually use beta. The nGraph
-  // op may change to discard this parameter. Update this when nGraph does.
-  shared_ptr<ng::Node> ng_beta =
-      std::make_shared<ngraph::op::Constant>(ng_scale->get_element_type(),
-                       ng_scale->get_shape(),
-                       std::vector<std::string>{ng::shape_size(ng_scale->get_shape()),"0"});
+  // (all zero, same shape/et as scale/gamma), because Tensorflow does not give
+  // beta to us. This should work because nGraph should not actually use beta.
+  // The nGraph op may change to discard this parameter. Update this when nGraph
+  // does.
+  shared_ptr<ng::Node> ng_beta = std::make_shared<ngraph::op::Constant>(
+      ng_scale->get_element_type(), ng_scale->get_shape(),
+      std::vector<std::string>{ng::shape_size(ng_scale->get_shape()), "0"});
 
   BatchToNGraph(is_nhwc, ng_input);
   BatchToNGraph(is_nhwc, ng_delta);
@@ -1104,15 +1234,14 @@ static tf::Status TranslateFusedBatchNormGradOp(const tf::Node* op,
   std::shared_ptr<ng::Node> ng_batch_norm_backprop;
 
   ng_batch_norm_backprop = make_shared<ng::op::BatchNormBackprop>(
-      tf_epsilon, ng_scale, ng_beta, ng_input, ng_mean, ng_variance, 
-      ng_delta);
+      tf_epsilon, ng_scale, ng_beta, ng_input, ng_mean, ng_variance, ng_delta);
 
   shared_ptr<ngraph::Node> ng_input_delta_op =
-           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 0);
+      make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 0);
   shared_ptr<ngraph::Node> ng_scale_delta_op =
-           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 1);
+      make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 1);
   shared_ptr<ngraph::Node> ng_beta_delta_op =
-           make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 2);
+      make_shared<ng::op::GetOutputElement>(ng_batch_norm_backprop, 2);
 
   BatchToTensorflow(is_nhwc, ng_input_delta_op);
 
@@ -1700,11 +1829,12 @@ static tf::Status TranslateSquareOp(const tf::Node* op,
 
 static tf::Status TranslateSquaredDifferenceOp(const tf::Node* op,
                                                Builder::OpMap& ng_op_map) {
-  return TranslateBinaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> input1,
-                                             std::shared_ptr<ng::Node> input2) {
-    auto ng_diff = std::make_shared<ng::op::Subtract>(input1, input2);
-    return std::make_shared<ng::op::Multiply>(ng_diff, ng_diff);
-  });
+  return TranslateBinaryOp(
+      op, ng_op_map,
+      [](std::shared_ptr<ng::Node> input1, std::shared_ptr<ng::Node> input2) {
+        auto ng_diff = std::make_shared<ng::op::Subtract>(input1, input2);
+        return std::make_shared<ng::op::Multiply>(ng_diff, ng_diff);
+      });
 }
 
 static tf::Status TranslateSqueezeOp(const tf::Node* op,
@@ -1996,6 +2126,7 @@ const static std::map<
         {"ConcatV2", TranslateConcatV2Op},
         {"Const", TranslateConstOp},
         {"Conv2D", TranslateConv2DOp},
+        {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
         {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
         {"Equal", TranslateBinaryOp<ngraph::op::Equal>},

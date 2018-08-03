@@ -118,7 +118,7 @@ TensorFlow [prepare environment] for linux.
     cmake ..
     make -j <your_processor_cores>
     make install 
-    pip install python/dist/python/dist/<ngraph-0.0.0-py2.py3-none-linux_x86_64.whl>
+    pip install python/dist/<ngraph-0.0.0-py2.py3-none-linux_x86_64.whl>
     ```
 
 This final step automatically downloads the necessary version of `ngraph` and 

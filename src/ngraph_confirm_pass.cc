@@ -239,6 +239,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["ConcatV2"]["T"] = NGraphDTypes();
         type_constraint_map["ConcatV2"]["Tidx"] = NGraphIndexDTypes();
         type_constraint_map["Conv2D"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Conv2DBackpropFilter"]["T"] =
+            NGraphNumericDTypes();
         type_constraint_map["Conv2DBackpropInput"]["T"] = NGraphNumericDTypes();
         type_constraint_map["DepthwiseConv2dNative"]["T"] =
             NGraphNumericDTypes();
@@ -353,6 +355,23 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Conv2D"] = always;
+        confirmation_functions["Conv2DBackpropFilter"] = [](tf::Node* n,
+                                                            bool* result) {
+          tf::Node* tf_filter_sizes;
+          TF_RETURN_IF_ERROR(n->input_node(1, &tf_filter_sizes));
+
+          std::vector<tf::int64> tf_static_filter_sizes(4);
+          if (ExtractConstantData(tf_filter_sizes, &tf_static_filter_sizes) !=
+                  tf::Status::OK() ||
+              tf_static_filter_sizes.size() != 4) {
+            *result = false;
+            return tf::Status::OK();
+          }
+
+          n->AddAttr("_ngraph_static_filter_sizes", tf_static_filter_sizes);
+          *result = true;
+          return tf::Status::OK();
+        };
         confirmation_functions["Conv2DBackpropInput"] = [](tf::Node* n,
                                                            bool* result) {
           tf::Node* tf_input_sizes;
@@ -370,6 +389,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           *result = true;
           return tf::Status::OK();
         };
+
         confirmation_functions["DepthwiseConv2dNative"] = always;
         confirmation_functions["Equal"] = always;
         confirmation_functions["Exp"] = always;
@@ -391,7 +411,6 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Fill"] = [](tf::Node* n, bool* result) {
-
           tf::Node* tf_dims_node;
           TF_RETURN_IF_ERROR(n->input_node(0, &tf_dims_node));
 
@@ -544,7 +563,6 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Softmax"] = always;
         confirmation_functions["Split"] = [](tf::Node* n, bool* result) {
-
           tf::Node* tf_split_dim_node;
           TF_RETURN_IF_ERROR(n->input_node(0, &tf_split_dim_node));
 
@@ -569,7 +587,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           // reject if tf.newaxis in strided slice
           // TODO support tf.newaxis
           int tf_new_axis_mask;
-          TF_RETURN_IF_ERROR(tf::GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask)); 
+          TF_RETURN_IF_ERROR(
+              tf::GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask));
           if (tf_new_axis_mask != 0) {
             *result = false;
             return tf::Status::OK();
