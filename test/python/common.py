@@ -1,7 +1,7 @@
 import platform
 
 import tensorflow as tf
-
+import random
 
 __all__ = ['LIBNGRAPH_DEVICE', 'NgraphTest']
 
@@ -35,3 +35,8 @@ class NgraphTest(object):
         allow_soft_placement=self.soft_placement,
         log_device_placement=self.log_placement,
         inter_op_parallelism_threads=1)
+  
+  # returns a vector of length 'vector_length' with random
+  # float numbers in range [start,end]
+  def generate_random_numbers(self, vector_length, start, end):
+    return [random.uniform(start, end) for i in range(vector_length)]

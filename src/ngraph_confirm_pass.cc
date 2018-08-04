@@ -274,6 +274,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Relu"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Relu6"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["ReluGrad"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Reshape"]["T"] = NGraphDTypes();
         type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
         type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
@@ -510,6 +511,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         confirmation_functions["Reciprocal"] = always;
         confirmation_functions["Relu"] = always;
         confirmation_functions["Relu6"] = always;
+        confirmation_functions["ReluGrad"] = always;
         confirmation_functions["Rsqrt"] = always;
 
         // Constraint: shape input must be Const.

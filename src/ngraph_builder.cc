@@ -1578,6 +1578,16 @@ static tf::Status TranslateRelu6Op(const tf::Node* op,
   return tf::Status::OK();
 }
 
+static tf::Status TranslateReluGradOp(const tf::Node* op,
+                                      Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_arg, ng_delta;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_arg));
+
+  auto ng_relu_grad = std::make_shared<ng::op::ReluBackprop>(ng_arg, ng_delta);
+  SaveNgOp(ng_op_map, op->name(), ng_relu_grad);
+  return tf::Status::OK();
+}
+
 static tf::Status TranslateReshapeOp(const tf::Node* op,
                                      Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_shape_op;
@@ -2161,6 +2171,7 @@ const static std::map<
         {"Reciprocal", TranslateReciprocalOp},
         {"Relu", TranslateReluOp},
         {"Relu6", TranslateRelu6Op},
+        {"ReluGrad", TranslateReluGradOp},
         {"Reshape", TranslateReshapeOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"Sigmoid", TranslateSigmoidOp},
