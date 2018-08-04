@@ -28,6 +28,8 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "ngraph_log.h"
+
 using namespace std;
 namespace ngraph_bridge {
 const char* const DEVICE_NGRAPH = "NGRAPH";
@@ -36,6 +38,12 @@ const char* const DEVICE_NGRAPH = "NGRAPH";
 // GraphToPbTextFile
 //-----------------------------------------------------------------------------
 void GraphToPbTextFile(tf::Graph* graph, const string& filename) {
+  if (std::getenv("NGRAPH_GENERATE_GRAPHS_PBTXT") == nullptr) {
+    NGRAPH_VLOG(3) << "NGRAPH_GENERATE_GRAPHS_PBTXT not set. Not "
+                      "generating output graph";
+    return;
+  }
+
   tf::GraphDef g_def;
   graph->ToGraphDef(&g_def);
 
@@ -50,6 +58,12 @@ void GraphToPbTextFile(tf::Graph* graph, const string& filename) {
 //-----------------------------------------------------------------------------
 void GraphToDotFile(tf::Graph* graph, const std::string& filename,
                     const std::string& title, bool annotate_device) {
+  if (std::getenv("NGRAPH_GENERATE_GRAPHS_DOT") == nullptr) {
+    NGRAPH_VLOG(3) << "NGRAPH_GENERATE_GRAPHS_DOT not set. Not "
+                      "generating output graphviz graph";
+    return;
+  }
+
   std::string dot = GraphToDot(graph, title, annotate_device);
   std::ofstream ostrm_out(filename, std::ios_base::trunc);
   ostrm_out << dot;
