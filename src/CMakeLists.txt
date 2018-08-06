@@ -51,6 +51,7 @@ set(SRC
    ngraph_freshness_tracker.cc
    ngraph_graph_rewrite_passes.cc
    ngraph_liberate_pass.cc
+   ngraph_mark_for_hostmem_pass.cc
    ngraph_op_kernels.cc
    ngraph_stub_ops.cc
    ngraph_utils.cc

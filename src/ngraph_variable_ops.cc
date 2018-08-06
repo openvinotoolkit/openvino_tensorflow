@@ -79,6 +79,7 @@ class NGraphVariableOp : public OpKernel {
  public:
   explicit NGraphVariableOp(OpKernelConstruction* context);
   void Compute(OpKernelContext* ctx) override;
+  ~NGraphVariableOp();
 
  private:
   DataType dtype_;
@@ -86,6 +87,7 @@ class NGraphVariableOp : public OpKernel {
 
   tf::mutex init_mu_;
   ContainerInfo cinfo_ GUARDED_BY(init_mu_);
+  NGraphVar* var_ = nullptr;
   bool initialized_ GUARDED_BY(init_mu_){false};
 
   TF_DISALLOW_COPY_AND_ASSIGN(NGraphVariableOp);
@@ -95,6 +97,7 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
     : OpKernel(context) {
   OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
   dtype_ = RemoveRefType(context->output_type(0));
+  var_ = nullptr;
 }
 
 void NGraphVariableOp::Compute(OpKernelContext* ctx) {
@@ -117,21 +120,27 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     *var = new NGraphVar(dtype_, shape_);
     return Status::OK();
   };
-  NGraphVar* var;
-  OP_REQUIRES_OK(ctx, cinfo_.resource_manager()->LookupOrCreate<NGraphVar>(
-                          cinfo_.container(), cinfo_.name(), &var, creator));
+  //NGraphVar* var;
+  if (var_ == nullptr) {
+    OP_REQUIRES_OK(ctx, cinfo_.resource_manager()->LookupOrCreate<NGraphVar>(
+                            cinfo_.container(), cinfo_.name(), &var_, creator));
+  }
   // Output a reference to our tensor, so it may be updated.
   //
   // As long as the resource manager hasn't been cleared the ref we return
   // here is valid because it owns a ref on var.
-  ctx->set_output_ref(0, var->mu(), var->tensor());
-  if (ctx->track_allocations() && var->tensor()->IsInitialized()) {
+  ctx->set_output_ref(0, var_->mu(), var_->tensor());
+  if (ctx->track_allocations() && var_->tensor()->IsInitialized()) {
     AllocatorAttributes attr;
     attr.set_gpu_compatible(true);
     attr.set_nic_compatible(true);
-    ctx->record_persistent_memory_allocation(var->tensor()->AllocatedBytes());
+    ctx->record_persistent_memory_allocation(var_->tensor()->AllocatedBytes());
   }
-  var->Unref();
+  //var->Unref();
+}
+
+NGraphVariableOp::~NGraphVariableOp() {
+  var_->Unref();
 }
 
 REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
@@ -139,13 +148,17 @@ REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
 
 class NGraphAssignOp : public OpKernel {
  public:
-  explicit NGraphAssignOp(OpKernelConstruction* context) : OpKernel(context) {
+  explicit NGraphAssignOp(OpKernelConstruction* context) : OpKernel(context), m_tracker(nullptr) {
     OP_REQUIRES_OK(context,
                    context->GetAttr("use_locking", &m_use_exclusive_lock));
     OP_REQUIRES_OK(context,
                    context->GetAttr("validate_shape", &m_validate_shape));
     OP_REQUIRES(context, IsRefType(context->input_type(0)),
                 errors::InvalidArgument("lhs input needs to be a ref type"));
+  }
+
+  ~NGraphAssignOp() {
+    m_tracker->Unref();
   }
 
   void Compute(OpKernelContext* context) override {
@@ -156,14 +169,15 @@ class NGraphAssignOp : public OpKernel {
       *tracker = new ngb::NGraphFreshnessTracker();
       return Status::OK();
     };
-    ngb::NGraphFreshnessTracker* tracker;
-    OP_REQUIRES_OK(context,
-                   context->resource_manager()
-                       ->LookupOrCreate<ngb::NGraphFreshnessTracker>(
-                           context->resource_manager()->default_container(),
-                           "ngraph_freshness_tracker", &tracker, creator));
-    tracker->AddTensor(DMAHelper::base(&context->input(0)));
-    tracker->MarkStale(DMAHelper::base(&context->input(0)));
+    if (m_tracker == nullptr) {
+      OP_REQUIRES_OK(context,
+                     context->resource_manager()
+                         ->LookupOrCreate<ngb::NGraphFreshnessTracker>(
+                             context->resource_manager()->default_container(),
+                             "ngraph_freshness_tracker", &m_tracker, creator));
+      m_tracker->AddTensor(DMAHelper::base(&context->input(0)));
+      m_tracker->MarkStale(DMAHelper::base(&context->input(0)));
+    }
 
     // We always return the input ref.
     context->forward_ref_input_to_ref_output(0, 0);
@@ -213,6 +227,7 @@ class NGraphAssignOp : public OpKernel {
 
   bool m_use_exclusive_lock;
   bool m_validate_shape;
+  ngb::NGraphFreshnessTracker* m_tracker;
 };
 
 REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
