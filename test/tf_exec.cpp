@@ -20,6 +20,7 @@
 
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/graph/graph.h"
@@ -593,6 +594,115 @@ TEST(tf_exec, Op_Rsqrt) {
   EXPECT_FLOAT_EQ(1.f / 4.f, mat(0, 1));
   EXPECT_FLOAT_EQ(1.f / 2.f, mat(1, 0));
   EXPECT_FLOAT_EQ(1.f / 8.f, mat(1, 1));
+}
+
+TEST(tf_exec, Op_Negate) {
+  tf::Scope scope_cpu = tf::Scope::NewRootScope();
+  tf::Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
+
+  // ngraph execution
+  auto A_ng = tf::ops::Const(scope_ng, {{-256.f, 16.5f}, {0.f, 64.f}});
+  auto r_ng = tf::ops::Negate(scope_ng.WithOpName("r"), A_ng);
+
+  std::vector<tf::Tensor> outputs_ng;
+  tf::ClientSession session_ng(scope_ng);
+
+  TF_CHECK_OK(session_ng.Run({r_ng}, &outputs_ng));
+  ASSERT_EQ(outputs_ng[0].shape(), tf::TensorShape({2, 2}));
+
+  // reference CPU execution
+  auto A_cpu = tf::ops::Const(scope_cpu, {{-256.f, 16.5f}, {0.f, 64.f}});
+  auto r_cpu = tf::ops::Negate(scope_cpu.WithOpName("r"), A_cpu);
+
+  std::vector<tf::Tensor> outputs_cpu;
+  tf::ClientSession session_cpu(scope_cpu);
+
+  TF_CHECK_OK(session_cpu.Run({r_cpu}, &outputs_cpu));
+  ASSERT_EQ(outputs_cpu[0].shape(), tf::TensorShape({2, 2}));
+
+  AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
+}
+
+TEST(tf_exec, Op_FloorDiv) {
+  tf::Scope scope_cpu = tf::Scope::NewRootScope();
+  tf::Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
+
+  // ngraph execution
+  auto A_ng = tf::ops::Const(scope_ng, {{5.f, 6.f, 7.5f, -1.f, 2.f, -3.f},
+                                        {1.3f, 1.f, -5.f, -3.f, 0.f, -2.f}});
+  auto B_ng = tf::ops::Const(scope_ng, {{1.f, 4.f, 3.f, 3.3f, -3.f, -2.f},
+                                        {2.f, 2.f, 2.f, 4.f, 10.f, -3.f}});
+  // Test with broadcasting
+  auto C_ng = tf::ops::Const(scope_ng, {1.f, 4.f, 3.f, 3.3f, -3.f, -2.f});
+  auto r0_ng = tf::ops::FloorDiv(scope_ng.WithOpName("r0"), A_ng, B_ng);
+  auto r1_ng = tf::ops::FloorDiv(scope_ng.WithOpName("r1"), A_ng, C_ng);
+
+  std::vector<tf::Tensor> outputs_ng;
+  tf::ClientSession session_ng(scope_ng);
+
+  TF_CHECK_OK(session_ng.Run({r0_ng, r1_ng}, &outputs_ng));
+  ASSERT_EQ(outputs_ng[0].shape(), tf::TensorShape({2, 6}));
+  ASSERT_EQ(outputs_ng[1].shape(), tf::TensorShape({2, 6}));
+
+  // reference CPU execution
+  auto A_cpu = tf::ops::Const(scope_cpu, {{5.f, 6.f, 7.5f, -1.f, 2.f, -3.f},
+                                          {1.3f, 1.f, -5.f, -3.f, 0.f, -2.f}});
+  auto B_cpu = tf::ops::Const(scope_cpu, {{1.f, 4.f, 3.f, 3.3f, -3.f, -2.f},
+                                          {2.f, 2.f, 2.f, 4.f, 10.f, -3.f}});
+  auto C_cpu = tf::ops::Const(scope_cpu, {1.f, 4.f, 3.f, 3.3f, -3.f, -2.f});
+  auto r0_cpu = tf::ops::FloorDiv(scope_cpu.WithOpName("r0"), A_cpu, B_cpu);
+  auto r1_cpu = tf::ops::FloorDiv(scope_cpu.WithOpName("r1"), A_cpu, C_cpu);
+
+  std::vector<tf::Tensor> outputs_cpu;
+  tf::ClientSession session_cpu(scope_cpu);
+
+  TF_CHECK_OK(session_cpu.Run({r0_cpu, r1_cpu}, &outputs_cpu));
+  ASSERT_EQ(outputs_cpu[0].shape(), tf::TensorShape({2, 6}));
+  ASSERT_EQ(outputs_cpu[1].shape(), tf::TensorShape({2, 6}));
+
+  AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
+  AssertTensorEquals(outputs_cpu[1], outputs_ng[1]);
+}
+
+TEST(tf_exec, Op_FloorMod) {
+  tf::Scope scope_cpu = tf::Scope::NewRootScope();
+  tf::Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
+
+  // ngraph execution
+  auto A_ng = tf::ops::Const(scope_ng, {{5.f, 6.f, 7.5f, -1.f, 2.f, -3.f},
+                                        {1.3f, 1.f, -5.f, -3.f, 0.f, -2.f}});
+  auto B_ng = tf::ops::Const(scope_ng, {{1.f, 4.f, 3.f, 3.3f, -3.f, -2.f},
+                                        {2.f, 2.f, 2.f, 4.f, 10.f, -3.f}});
+  // Test with broadcasting
+  auto C_ng = tf::ops::Const(scope_ng, {1.f, 4.f, 3.f, 3.3f, -3.f, -2.f});
+  auto r0_ng = tf::ops::FloorMod(scope_ng.WithOpName("r0"), A_ng, B_ng);
+  auto r1_ng = tf::ops::FloorMod(scope_ng.WithOpName("r1"), A_ng, C_ng);
+
+  std::vector<tf::Tensor> outputs_ng;
+  tf::ClientSession session_ng(scope_ng);
+
+  TF_CHECK_OK(session_ng.Run({r0_ng, r1_ng}, &outputs_ng));
+  ASSERT_EQ(outputs_ng[0].shape(), tf::TensorShape({2, 6}));
+  ASSERT_EQ(outputs_ng[1].shape(), tf::TensorShape({2, 6}));
+
+  // reference CPU execution
+  auto A_cpu = tf::ops::Const(scope_cpu, {{5.f, 6.f, 7.5f, -1.f, 2.f, -3.f},
+                                          {1.3f, 1.f, -5.f, -3.f, 0.f, -2.f}});
+  auto B_cpu = tf::ops::Const(scope_cpu, {{1.f, 4.f, 3.f, 3.3f, -3.f, -2.f},
+                                          {2.f, 2.f, 2.f, 4.f, 10.f, -3.f}});
+  auto C_cpu = tf::ops::Const(scope_cpu, {1.f, 4.f, 3.f, 3.3f, -3.f, -2.f});
+  auto r0_cpu = tf::ops::FloorMod(scope_cpu.WithOpName("r0"), A_cpu, B_cpu);
+  auto r1_cpu = tf::ops::FloorMod(scope_cpu.WithOpName("r1"), A_cpu, C_cpu);
+
+  std::vector<tf::Tensor> outputs_cpu;
+  tf::ClientSession session_cpu(scope_cpu);
+
+  TF_CHECK_OK(session_cpu.Run({r0_cpu, r1_cpu}, &outputs_cpu));
+  ASSERT_EQ(outputs_cpu[0].shape(), tf::TensorShape({2, 6}));
+  ASSERT_EQ(outputs_cpu[1].shape(), tf::TensorShape({2, 6}));
+
+  AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
+  AssertTensorEquals(outputs_cpu[1], outputs_ng[1]);
 }
 
 }  // namespace ngraph_bridge

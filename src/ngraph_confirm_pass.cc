@@ -248,6 +248,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Exp"]["T"] = NGraphNumericDTypes();
         type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
         type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["FloorDiv"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["FloorMod"]["T"] = NGraphNumericDTypes();
         type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
         type_constraint_map["FusedBatchNormGrad"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Greater"]["T"] = NGraphDTypes();
@@ -264,6 +266,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Mean"]["Tidx"] = NGraphIndexDTypes();
         type_constraint_map["Minimum"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Neg"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Pack"]["T"] = NGraphDTypes();
         type_constraint_map["Pad"]["T"] = NGraphDTypes();
         type_constraint_map["Pad"]["Tpaddings"] = NGraphIndexDTypes();
@@ -427,6 +430,8 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         };
 
         confirmation_functions["Floor"] = always;
+        confirmation_functions["FloorDiv"] = always;
+        confirmation_functions["FloorMod"] = always;
         confirmation_functions["FusedBatchNorm"] = always;
         confirmation_functions["FusedBatchNormGrad"] = always;
         confirmation_functions["Greater"] = always;
@@ -459,6 +464,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 
         confirmation_functions["Minimum"] = always;
         confirmation_functions["Mul"] = always;
+        confirmation_functions["Neg"] = always;
 
         // Constraint: padding-widths input must be Const.
         confirmation_functions["Pad"] = [](tf::Node* n, bool* result) {
