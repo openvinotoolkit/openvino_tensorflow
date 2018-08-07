@@ -107,6 +107,7 @@ TensorFlow [prepare environment] for linux.
     cd ..
     git clone https://github.com/NervanaSystems/ngraph-tf.git
     cd ngraph-tf
+    git checkout r0.4
     ```
 
 7. Next, build and install nGraph bridge. 
@@ -188,6 +189,7 @@ how you would build TensorFlow for Linux mentioned above.
 
 	```
 	git clone git@github.com:NervanaSystems/ngraph-tf.git
+	git checkout r0.4
 	pushd ngraph-tf.git
 	ln -s ../tensorflow
 	mkdir build && cd build
