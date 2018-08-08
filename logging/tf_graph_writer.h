@@ -23,23 +23,25 @@
 #include "tensorflow/core/platform/tensor_coding.h"
 #include "tensorflow/core/util/saved_tensor_slice_util.h"
 
-using namespace std;
-namespace tf = tensorflow;
+namespace tensorflow {
+
 namespace ngraph_bridge {
 
 // GraphToDot
 // Transforms a TensorFlow graph to a DOT file for rendering with graphviz
-std::string GraphToDot(tf::Graph* graph, const std::string& title,
-                       bool annotate_device);
+std::string GraphToDot(Graph* graph, const std::string& title);
 
 // GraphToDotFile
 // Saves a TensorFlow graph into a DOT file for rendering with graphviz
-void GraphToDotFile(tf::Graph* graph, const std::string& filename,
-                    const std::string& title, bool annotate_device);
+void GraphToDotFile(Graph* graph, const std::string& filename,
+                    const std::string& title);
 
 // GraphToPbTextFile
 // Saves a TensorFlow graph into a protobuf text
-void GraphToPbTextFile(tf::Graph* graph, const string& filename);
+void GraphToPbTextFile(Graph* graph, const std::string& filename);
+
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflow
 
 #endif  // TF_GRAPH_WRITER_H_

@@ -17,21 +17,26 @@
 
 using namespace std;
 
+namespace tensorflow {
+
 namespace ngraph_bridge {
 // Static initializers
-std::vector<tf::GraphDef*> NGraphClusterManager::s_cluster_graphs;
+std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
 std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
 
 int NGraphClusterManager::NewCluster() {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
 
   int new_idx = s_cluster_graphs.size();
-  s_cluster_graphs.push_back(new tf::GraphDef());
+  s_cluster_graphs.push_back(new GraphDef());
   return new_idx;
 }
 
-tf::GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
+GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
   return s_cluster_graphs[idx];
 }
-}
+
+}  // namespace ngraph_bridge
+
+}  // namespace tensorflow

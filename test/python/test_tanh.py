@@ -28,6 +28,7 @@ import tensorflow as tf
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestTanhOp(NgraphTest):
   @pytest.mark.parametrize(("test_input", "expected"),
                            ((1.4, np.tanh(1.4)), (0.5, np.tanh(0.5)),

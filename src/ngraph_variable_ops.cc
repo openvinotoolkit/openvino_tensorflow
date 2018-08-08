@@ -143,8 +143,8 @@ NGraphVariableOp::~NGraphVariableOp() {
   var_->Unref();
 }
 
-REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
-                        NGraphVariableOp);
+//REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
+//                        NGraphVariableOp);
 
 class NGraphAssignOp : public OpKernel {
  public:
@@ -230,8 +230,8 @@ class NGraphAssignOp : public OpKernel {
   ngb::NGraphFreshnessTracker* m_tracker;
 };
 
-REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
-                        NGraphAssignOp);
+//REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
+//                        NGraphAssignOp);
 
 class NGraphIsVariableInitializedOp : public OpKernel {
  public:
@@ -250,9 +250,9 @@ class NGraphIsVariableInitializedOp : public OpKernel {
   }
 };
 
-REGISTER_KERNEL_BUILDER(
-    Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH),
-    NGraphIsVariableInitializedOp);
+//REGISTER_KERNEL_BUILDER(
+//    Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH),
+//    NGraphIsVariableInitializedOp);
 //
 // END VARIABLE OP STUFF COPIED, WITH MODIFICATION, FROM TF CODE BASE
 //

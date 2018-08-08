@@ -18,6 +18,9 @@
 #include "ngraph_conversions.h"
 
 using namespace std;
+namespace ng = ngraph;
+
+namespace tensorflow {
 
 namespace ngraph_bridge {
 
@@ -75,4 +78,7 @@ TEST(conversions, param_to_ngraph_nhwc) {
   ASSERT_EQ(out1[0], in1[1]);
   ASSERT_EQ(out1[1], in1[2]);
 }
-}
+
+}  // namespace ngraph_bridge
+
+}  // namespace tensorflow

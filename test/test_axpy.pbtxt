@@ -47,7 +47,6 @@ node {
 node {
   name: "mul/x"
   op: "Const"
-  device: "/device:NGRAPH:0"
   attr {
     key: "dtype"
     value {
@@ -77,7 +76,6 @@ node {
   op: "Mul"
   input: "mul/x"
   input: "x"
-  device: "/device:NGRAPH:0"
   attr {
     key: "T"
     value {
@@ -90,7 +88,6 @@ node {
   op: "Add"
   input: "mul"
   input: "y"
-  device: "/device:NGRAPH:0"
   attr {
     key: "T"
     value {

@@ -41,23 +41,18 @@ add_dependencies(ngraph_lib ext_ngraph)
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 set(SRC 
+   ngraph_assign_clusters.cc
    ngraph_builder.cc
-   ngraph_cluster.cc
+   ngraph_capture_variables.cc
    ngraph_cluster_manager.cc
-   ngraph_confirm_pass.cc
-   ngraph_device.cc
+   ngraph_deassign_clusters.cc
+   ngraph_encapsulate_clusters.cc
    ngraph_encapsulate_op.cc
-   ngraph_encapsulate_pass.cc
-   ngraph_freshness_tracker.cc
-   ngraph_graph_rewrite_passes.cc
-   ngraph_liberate_pass.cc
-   ngraph_mark_for_hostmem_pass.cc
-   ngraph_op_kernels.cc
-   ngraph_stub_ops.cc
+   ngraph_mark_for_clustering.cc
+   ngraph_rewrite_pass.cc
+   ngraph_tracked_variable.cc
    ngraph_utils.cc
    tf_graphcycles.cc
-   ngraph_send_recv_ops.cc
-   ngraph_variable_ops.cc
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})

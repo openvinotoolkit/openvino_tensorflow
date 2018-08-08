@@ -18,7 +18,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/attr_value_util.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
@@ -27,57 +26,70 @@
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
-#include "ngraph_cluster.h"
+#include "ngraph_assign_clusters.h"
 #include "ngraph_cluster_manager.h"
 #include "ngraph_log.h"
+#include "ngraph_mark_for_clustering.h"
 #include "ngraph_utils.h"
 #include "tf_graphcycles.h"
 
 using namespace std;
+
+namespace tensorflow {
+
 namespace ngraph_bridge {
 
-extern const char* const DEVICE_NGRAPH;
+//
+// The clustering pass performs a greedy search for groups of nGraph-marked ops
+// that can be coalesced into a single nGraph graph, and assigns each such
+// group a unique identifier called a "cluster ID".
+//
+// For example, consider the following graph:
+//
+//       N1
+//      /  \
+//    N2    N5
+//    / \    |
+//   N3  N4 N6
+//           |
+//          N7
+//
+// If nodes N1, N2, N3, N4, N6, and N7 are all marked, but N6 is unmarked, the
+// clustering pass will assign nodes N1, N2, N3, and N4 to one cluster, and
+// nodes N6 and N7 to another.
+//
+// After clustering, it must be the case that:
+//
+//   (1) every marked node is assigned to exactly one cluster;
+//   (2) no unmarked node is assigned to any cluster;
+//   (3) for every pair (N1,N2) of nodes where N1 and N2 are in the same
+//       cluster, there is no path from N1 to N2 traversing any node N3 that
+//       is _not_ in the same cluster as N1 and N2 (in other words,
+//       data/control flow cannot "re-enter" the cluster).
+//
+// Given the above constraints, we try to find the "biggest" clusters we can.
+//
+// The assigned cluster index is represented by the "_ngraph_cluster"
+// attribute, which has integer type.
+//
+// Assumption: the "MarkForClustering" pass (ngraph_mark_for_clustering.cc) has 
+// already been run. This attaches the "_ngraph_marked_for_clustering"
+// attribute to ops which we will cluster.
+//
+// TODO(amprocte): Say more about the algorithm.
+//
 
-#define MINIMUM_CLUSTER_NODES 2
-
-tf::Status NGraphClusterPass::Run(
-    const tf::GraphOptimizationPassOptions& options) {
-  // TODO(amprocte): Remove this when we have proper support for graphs with
-  // cycles.
-  if (std::getenv("NGRAPH_TF_SKIP_CLUSTERING") != nullptr) {
-    return tf::Status::OK();
-  }
-
-  tf::Graph* graph = options.graph->get();
-
-  return IdentifyClusters(graph);
+namespace {
+struct Cluster {
+  int index;
+  std::set<tensorflow::Node*> nodes;
+};
 }
 
-// TODO(amprocte): do we need to look at job name, replica, task?
-bool NGraphClusterPass::IsNGraphNode(const tf::Node* node) {
-  tf::DeviceNameUtils::ParsedName parsed;
+Status AssignClusters(Graph* graph) {
+  std::map<Node*, std::shared_ptr<Cluster>> cluster_map;
 
-  if (!tf::DeviceNameUtils::ParseFullName(node->assigned_device_name(),
-                                          &parsed)) {
-    return false;
-  }
-
-  return (parsed.has_type && parsed.type == DEVICE_NGRAPH);
-}
-
-bool NGraphClusterPass::IsClusterable(const tf::Node* node) {
-  return (s_unclusterable_ops.count(node->type_string()) == 0);
-}
-
-bool NGraphClusterPass::CanBeOutsideCluster(const tf::Node* node) {
-  return (!IsClusterable(node) ||
-          s_can_be_outside_cluster_ops.count(node->type_string()) > 0);
-}
-
-tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
-  std::map<tf::Node*, std::shared_ptr<Cluster>> cluster_map;
-
-  tf::GraphCycles gc;
+  GraphCycles gc;
 
   for (auto node : graph->op_nodes()) {
     int new_index = gc.NewNode();
@@ -89,8 +101,8 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
   }
 
   for (auto edge : graph->edges()) {
-    tf::Node* src = edge->src();
-    tf::Node* dst = edge->dst();
+    Node* src = edge->src();
+    Node* dst = edge->dst();
 
     // Skip source/sink
     if (!src->IsOp() || !dst->IsOp()) {
@@ -104,7 +116,7 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 
     if (!gc.InsertEdge(cluster_map[src]->index, cluster_map[dst]->index)) {
       NGRAPH_VLOG(5) << "Failing due to cycle";
-      return tf::errors::Unimplemented(
+      return errors::Unimplemented(
           "Input graph has a cycle (inserting an edge from ",
           src->DebugString(), " to ", dst->DebugString(),
           " would create a cycle)");
@@ -118,15 +130,14 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
     changed = false;
 
     for (auto edge : graph->edges()) {
-      tf::Node* src = edge->src();
-      tf::Node* dst = edge->dst();
+      Node* src = edge->src();
+      Node* dst = edge->dst();
 
       if (!src->IsOp() || !dst->IsOp()) {
         continue;
       }
 
-      if (!IsNGraphNode(src) || !IsNGraphNode(dst) || !IsClusterable(src) ||
-          !IsClusterable(dst)) {
+      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
         NGRAPH_VLOG(5) << "Skipping: " << src->name() << " -> " << dst->name();
         continue;
       }
@@ -155,91 +166,67 @@ tf::Status NGraphClusterPass::IdentifyClusters(tf::Graph* graph) {
 
   for (auto kv : cluster_map) {
     auto cluster = kv.second.get();
-    bool has_clusterable_ngraph_ops = false;
-    bool all_can_be_outside_cluster = true;
+    bool has_ngraph_ops = false;
+    bool has_non_ngraph_ops = false;
 
     for (auto node : cluster->nodes) {
-      if (IsNGraphNode(node) && IsClusterable(node)) {
-        has_clusterable_ngraph_ops = true;
-        break;
+      if (NodeIsMarkedForClustering(node)) {
+        has_ngraph_ops = true;
+      } else {
+        has_non_ngraph_ops = true;
       }
     }
 
-    for (auto node : cluster->nodes) {
-      if (IsNGraphNode(node) && !CanBeOutsideCluster(node)) {
-        all_can_be_outside_cluster = false;
-        break;
+    if (has_ngraph_ops && has_non_ngraph_ops) {
+      NGRAPH_VLOG(2) << "Cluster " << cluster->index
+                     << " has both nGraph and non-nGraph nodes";
+      for (auto node : cluster->nodes) {
+        NGRAPH_VLOG(2) << (NodeIsMarkedForClustering(node)
+                               ? "nGraph node: "
+                               : "non-nGraph node: ")
+                       << node->name() << " [" << node->type_string() << "]";
       }
+      return errors::Internal("Cluster ", cluster->index,
+                              " has both nGraph and non-nGraph nodes");
     }
 
-    if (!has_clusterable_ngraph_ops || all_can_be_outside_cluster) {
+    if (!has_ngraph_ops) {
       continue;
     }
 
     if (seen.count(cluster) == 0) {
       int cluster_idx = NGraphClusterManager::NewCluster();
 
-      bool is_trivial = cluster->nodes.size() < MINIMUM_CLUSTER_NODES;
-
-      seen.insert(cluster);
-      NGRAPH_VLOG(2) << "cluster " << cluster_idx << ": "
-                     << cluster->nodes.size() << " nodes"
-                     << (is_trivial ? " (trivial)" : "");
-
       for (auto node : cluster->nodes) {
-        if (!IsNGraphNode(node)) {
-          return tf::errors::Internal(
-              "Node ", node->DebugString(),
-              " is not an nGraph node but was placed in an nGraph cluster.");
-        }
-
-        if (!IsClusterable(node)) {
-          return tf::errors::Internal("Node ", node->DebugString(),
-                                      " is not a clusterable node but "
-                                      "was placed in an nGraph "
-                                      "cluster.");
-        }
-
         NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
                        << " :: " << node->name() << " [" << node->type_string()
                        << "]";
 
-        node->AddAttr("_ngraph_cluster", cluster_idx);
-        if (is_trivial) {
-          node->AddAttr("_ngraph_cluster_is_trivial", is_trivial);
+        if (!NodeIsMarkedForClustering(node)) {
+          return errors::Internal("Node ", node->DebugString(),
+                                  " was not marked for clustering but was "
+                                  "placed in an nGraph cluster.");
         }
+
+        // TODO(amprocte): move attr name to a constant
+        node->AddAttr("_ngraph_cluster", cluster_idx);
       }
     }
   }
   NGRAPH_VLOG(2) << "Tagging done";
 
-  return tf::Status::OK();
+  return Status::OK();
 }
 
-// clang-format off
-const std::set<std::string> NGraphClusterPass::s_unclusterable_ops{
-    "Assign",
-    "Enter",
-    "Exit",
-    "IsVariableInitialized",
-    "Merge",
-    "NextIteration",
-    "Switch",
-    "VariableV2",
-};
-// clang-format on
-
-// clang-format off
-const std::set<std::string> NGraphClusterPass::s_can_be_outside_cluster_ops{
-    "Const",
-    "Identity",
-    "NoOp",
-};
-// clang-format on
+Status GetNodeCluster(const Node* node, int* cluster) {
+  // TODO(amprocte): move attr name to a constant
+  Status s = GetNodeAttr(node->attrs(), "_ngraph_cluster", cluster);
+  if (s != Status::OK()) {
+    *cluster = -1;
+  }
+  return s;
+}
 
 }  // namespace ngraph_bridge
 
-namespace tensorflow {
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 105,
-                      ngraph_bridge::NGraphClusterPass);
 }  // namespace tensorflow

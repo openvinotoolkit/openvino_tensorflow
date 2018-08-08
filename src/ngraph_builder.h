@@ -26,27 +26,27 @@
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
 
-using namespace std;
-namespace tf = tensorflow;
-namespace ng = ngraph;
+namespace tensorflow {
 
 namespace ngraph_bridge {
+
 class Builder {
  public:
-  static tf::Status TranslateGraph(const std::vector<tf::TensorShape>& inputs,
-                                   const tf::Graph* tf_graph,
-                                   shared_ptr<ng::Function>& ng_function);
+  static Status TranslateGraph(const std::vector<TensorShape>& inputs,
+                               const Graph* tf_graph,
+                               std::shared_ptr<ngraph::Function>& ng_function);
 
-  using OpMap = unordered_map<string, std::vector<shared_ptr<ng::Node>>>;
+  using OpMap = std::unordered_map<std::string,
+                                   std::vector<std::shared_ptr<ngraph::Node>>>;
 
   template <typename T>
   static void MakePadding(const std::string& tf_padding_type,
-                          const ng::Shape& ng_image_shape,
-                          const ng::Shape& ng_kernel_shape,
-                          const ng::Strides& ng_strides,
-                          const ng::Shape& ng_dilations, T& ng_padding_below,
-                          T& ng_padding_above) {
-    ng::Shape ng_dilation_kernel_shape{
+                          const ngraph::Shape& ng_image_shape,
+                          const ngraph::Shape& ng_kernel_shape,
+                          const ngraph::Strides& ng_strides,
+                          const ngraph::Shape& ng_dilations,
+                          T& ng_padding_below, T& ng_padding_above) {
+    ngraph::Shape ng_dilation_kernel_shape{
         (ng_kernel_shape[0] - 1) * ng_dilations[0] + 1,
         (ng_kernel_shape[1] - 1) * ng_dilations[1] + 1};
 
@@ -56,17 +56,17 @@ class Builder {
 
   template <typename T>
   static void MakePadding(const std::string& tf_padding_type,
-                          const ng::Shape& ng_image_shape,
-                          const ng::Shape& ng_kernel_shape,
-                          const ng::Strides& ng_strides, T& ng_padding_below,
-                          T& ng_padding_above) {
+                          const ngraph::Shape& ng_image_shape,
+                          const ngraph::Shape& ng_kernel_shape,
+                          const ngraph::Strides& ng_strides,
+                          T& ng_padding_below, T& ng_padding_above) {
     if (tf_padding_type == "SAME") {
       for (size_t i = 0; i < 2; i++) {
         size_t image_size = ng_image_shape[i];
         size_t filter_shape = ng_kernel_shape[i];
         size_t filter_stride = ng_strides[i];
 
-        tf::int64 padding_needed;
+        int64 padding_needed;
         if (image_size % filter_stride == 0) {
           padding_needed = filter_shape - filter_stride;
         } else {
@@ -83,12 +83,15 @@ class Builder {
       }
     }
 
-    NGRAPH_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
-    NGRAPH_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+    NGRAPH_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
+    NGRAPH_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
   }
 
  private:
 };
+
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflow
 
 #endif

@@ -19,18 +19,21 @@
 #include "ngraph_builder.h"
 #include "ngraph_log.h"
 
+namespace tensorflow {
+
 namespace ngraph_bridge {
+
 template <size_t a, size_t b, size_t c, size_t d>
-void Reshape(std::shared_ptr<ng::Node>& ng_node) {
+void Reshape(std::shared_ptr<ngraph::Node>& ng_node) {
   static_assert(a < 4 && b < 4 && c < 4 && d < 4,
                 "Number of dimensions cannot exceed 4");
   static_assert(a != b && a != c && a != d && b != c && b != d && c != d,
                 "Dimensions indices cannot be equal");
   auto& s = ng_node->get_shape();
-  ng::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
-  NGRAPH_VLOG(3) << "reshaped_shape: " << ng::join(reshaped_shape);
-  ng_node = std::make_shared<ng::op::Reshape>(
-      ng_node, ng::AxisVector{a, b, c, d}, reshaped_shape);
+  ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
+  NGRAPH_VLOG(3) << "reshaped_shape: " << ngraph::join(reshaped_shape);
+  ng_node = std::make_shared<ngraph::op::Reshape>(
+      ng_node, ngraph::AxisVector{a, b, c, d}, reshaped_shape);
 }
 
 namespace detail {
@@ -40,7 +43,7 @@ void NhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[1] = src[2];
 }
 
-void NhwcToNGraph(std::shared_ptr<ng::Node>& ng_node) {
+void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
   Reshape<0, 3, 1, 2>(ng_node);
 }
 
@@ -59,7 +62,7 @@ void NhwcToNchw(const std::vector<T>& src, std::vector<size_t>& dst) {
 }
 }
 
-void BatchToNGraph(bool is_nhwc, std::shared_ptr<ng::Node>& ng_input) {
+void BatchToNGraph(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_input) {
   if (is_nhwc) {
     detail::NhwcToNGraph(ng_input);
   }
@@ -85,10 +88,13 @@ void BatchedOpParamReshape(bool is_nhwc, const std::vector<T>& src,
   }
 }
 
-void BatchToTensorflow(bool is_nhwc, std::shared_ptr<ng::Node>& ng_node) {
+void BatchToTensorflow(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_node) {
   if (!is_nhwc) {
     return;
   }
   Reshape<0, 2, 3, 1>(ng_node);
 }
-}
+
+}  // namespace ngraph_bridge
+
+}  // namespace tensorflow

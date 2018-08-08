@@ -39,11 +39,3 @@ def reset_graph():
 @pytest.fixture(scope='session', autouse=True)
 def cleanup():
   yield
-  for f in glob.glob('*.dot'):
-    os.remove(f)
-  for f in glob.glob('*.pbtxt'):
-    os.remove(f)
-  try:
-    shutil.rmtree('cpu_codegen')
-  except FileNotFoundError:
-    pass

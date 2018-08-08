@@ -1,6 +1,8 @@
 import platform
 
 import tensorflow as tf
+import os
+
 import random
 
 __all__ = ['LIBNGRAPH_DEVICE', 'NgraphTest']
@@ -12,30 +14,44 @@ LIBNGRAPH_DEVICE = 'libngraph_device.' + _ext
 
 
 class NgraphTest(object):
-  test_device = "/device:NGRAPH:0"
-  cpu_test_device = "/device:CPU:0"
-  soft_placement = False
-  log_placement = False
+  def with_ngraph(self, l, config=tf.ConfigProto()):
+    ngraph_tf_disable = os.environ.pop('NGRAPH_TF_DISABLE', None)
+    ngraph_tf_disable_deassign_clusters = os.environ.pop(
+        'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-  @property
-  def device(self):
-    return tf.device(self.test_device)
+    os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
-  @property
-  def cpu_device(self):
-    return tf.device(self.cpu_test_device)
+    with tf.Session(config=config) as sess:
+      retval = l(sess)
 
-  @property
-  def session(self):
-    return tf.Session(config=self.config)
+    os.environ.pop('NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-  @property
-  def config(self):
-    return tf.ConfigProto(
-        allow_soft_placement=self.soft_placement,
-        log_device_placement=self.log_placement,
-        inter_op_parallelism_threads=1)
-  
+    if (ngraph_tf_disable is not None):
+      os.environ['NGRAPH_TF_DISABLE'] = ngraph_tf_disable
+    if (ngraph_tf_disable_deassign_clusters is not None):
+      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = ngraph_tf_disable_deassign_clusters
+
+    return retval
+
+  def without_ngraph(self, l, config=tf.ConfigProto()):
+    ngraph_tf_disable = os.environ.pop('NGRAPH_TF_DISABLE', None)
+    ngraph_tf_disable_deassign_clusters = os.environ.pop(
+        'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
+
+    os.environ['NGRAPH_TF_DISABLE'] = '1'
+
+    with tf.Session(config=config) as sess:
+      retval = l(sess)
+
+    os.environ.pop('NGRAPH_TF_DISABLE', None)
+
+    if (ngraph_tf_disable is not None):
+      os.environ['NGRAPH_TF_DISABLE'] = ngraph_tf_disable
+    if (ngraph_tf_disable_deassign_clusters is not None):
+      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = ngraph_tf_disable_deassign_clusters
+
+    return retval
+
   # returns a vector of length 'vector_length' with random
   # float numbers in range [start,end]
   def generate_random_numbers(self, vector_length, start, end):

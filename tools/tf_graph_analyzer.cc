@@ -29,13 +29,16 @@
 #include "tensorflow/core/platform/protobuf.h"
 
 using namespace std;
+
+namespace tensorflow {
+
 namespace ngraph_bridge {
 
-class NGraphAnalyzerPass : public tensorflow::GraphOptimizationPass {
+class NGraphAnalyzerPass : public GraphOptimizationPass {
  public:
   NGraphAnalyzerPass() {}
   virtual ~NGraphAnalyzerPass() {}
-  tf::Status Run(const tf::GraphOptimizationPassOptions& options) {
+  Status Run(const GraphOptimizationPassOptions& options) {
     NGRAPH_VLOG(0) << "nGraph analyzer pass start: ";
 
     int idx = s_counter++;
@@ -45,16 +48,16 @@ class NGraphAnalyzerPass : public tensorflow::GraphOptimizationPass {
     std::string filename_prefix = ss.str();
 
     if (options.graph != nullptr) {
-      tf::Graph* g = options.graph->get();
+      Graph* g = options.graph->get();
 
       GraphToPbTextFile(g, filename_prefix + ".pbtxt");
       GraphToDotFile(g, filename_prefix + ".dot",
-                     "TensorFlow graph at POST_REWRITE_FOR_EXEC", false);
+                     "TensorFlow graph at POST_REWRITE_FOR_EXEC");
     }
 
     VLOG(0) << "nGraph dump pass done";
 
-    return tf::Status::OK();
+    return Status::OK();
   }
 
  private:
@@ -65,7 +68,7 @@ int NGraphAnalyzerPass::s_counter = 0;
 
 }  // namespace ngraph_bridge
 
-namespace tensorflow {
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 999,
                       ngraph_bridge::NGraphAnalyzerPass);
+
 }  // namespace tensorflow

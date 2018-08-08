@@ -27,6 +27,7 @@ import pytest
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSqueezeOperations(NgraphTest):
   @pytest.mark.parametrize(
       ("shape", "axis"),

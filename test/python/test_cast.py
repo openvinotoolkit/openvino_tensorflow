@@ -29,34 +29,20 @@ from common import NgraphTest
 
 class TestCastOperations(NgraphTest):
   def test_cast_1d(self):
-    val = tf.placeholder(tf.float32, shape=(1,))
+    val = tf.placeholder(tf.float32, shape=(2,))
+    out = tf.cast(val, dtype=tf.int32)
 
-    with self.device:
-      out = tf.cast(val, dtype=tf.int32)
+    def run_test(sess):
+      return sess.run(out, feed_dict={val: (5.5,2.0)})
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (5.5,)})
-        assert result[0] == 5
+    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
   def test_cast_2d(self):
     test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
-    expected = ((1, 2, 3), (4, 5, 6))
-
     val = tf.placeholder(tf.float32, shape=(2, 3))
+    out = tf.cast(val, dtype=tf.int32)
 
-    with self.device:
-      out = tf.cast(val, dtype=tf.int32)
+    def run_test(sess):
+      return sess.run(out, feed_dict={val: test_input})
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={val: test_input})
-        assert (result == expected).all()
-
-  def test_cast_fail(self):
-    val = tf.placeholder(tf.float32, shape=(1,))
-
-    with self.device:
-      out = tf.cast(val, dtype=tf.string)
-
-      with self.session as sess:
-        with pytest.raises(tf.errors.InvalidArgumentError):
-          sess.run((out,), feed_dict={val: (5.5,)})
+    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

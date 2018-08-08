@@ -28,6 +28,7 @@ import tensorflow as tf
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestWhileLoop(NgraphTest):
   def test_while_loop(self):
     with self.device:

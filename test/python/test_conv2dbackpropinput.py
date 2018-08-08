@@ -28,6 +28,8 @@ from tensorflow.python.ops import nn_ops
 
 from common import NgraphTest
 
+import numpy as np
+
 
 class TestConv2DBackpropInput(NgraphTest):
   INPUT_SIZES_NCHW = [1, 2, 7, 6]
@@ -56,58 +58,44 @@ class TestConv2DBackpropInput(NgraphTest):
     out_backprop_in_sizes = self.OUT_BACKPROP_IN_SIZES[padding]
     x1, x2 = self.make_filter_and_backprop_args(out_backprop_in_sizes)
 
-    with self.device:
-      with self.session as sess:
-        t1 = constant_op.constant(self.INPUT_SIZES_NCHW)
-        t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
-        t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
-        inp = nn_ops.conv2d_backprop_input(
-            t1, t2, t3,
-            strides=[1, 1, 2, 2], padding=padding, data_format='NCHW')
-        value = sess.run(inp)
+    def run_test_ngraph(sess):
+      t1 = constant_op.constant(self.INPUT_SIZES_NCHW)
+      t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
+      t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
+      inp = nn_ops.conv2d_backprop_input(
+          t1, t2, t3,
+          strides=[1, 1, 2, 2], padding=padding, data_format='NCHW')
+      return sess.run(inp)
 
     # To validate on the CPU side we will need to run in NHWC, because the CPU
     # implementation of conv/conv backprop does not support NCHW. We will
     # transpose on the way in and on the way out.
-    with tf.device('/cpu:0'):
-      with self.session as sess:
-        t1 = constant_op.constant(self.INPUT_SIZES_NHWC)
-        t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
-        t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
-        t3 = tf.transpose(t3, [0, 2, 3, 1])
-        inp = nn_ops.conv2d_backprop_input(
-            t1, t2, t3,
-            strides=[1, 2, 2, 1], padding=padding, data_format='NHWC')
-        inp = tf.transpose(inp, [0, 3, 1, 2])
-        expected = sess.run(inp)
+    def run_test_tf(sess):
+      t1 = constant_op.constant(self.INPUT_SIZES_NHWC)
+      t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
+      t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
+      t3 = tf.transpose(t3, [0, 2, 3, 1])
+      inp = nn_ops.conv2d_backprop_input(
+          t1, t2, t3,
+          strides=[1, 2, 2, 1], padding=padding, data_format='NHWC')
+      inp = tf.transpose(inp, [0, 3, 1, 2])
+      return sess.run(inp)
 
-    assert (value == expected).all()
+    assert np.allclose(self.with_ngraph(run_test_ngraph),self.without_ngraph(run_test_tf))
 
   @pytest.mark.parametrize("padding", ("VALID", "SAME"))
   def test_nhwc(self, padding):
     out_backprop_in_sizes = self.OUT_BACKPROP_IN_SIZES[padding]
     x1, x2 = self.make_filter_and_backprop_args(out_backprop_in_sizes)
+    t1 = constant_op.constant(self.INPUT_SIZES_NHWC)
+    t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
+    t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
+    t3 = tf.transpose(t3, [0, 2, 3, 1])
+    inp = nn_ops.conv2d_backprop_input(
+        t1, t2, t3,
+        strides=[1, 2, 2, 1], padding=padding, data_format='NHWC')
 
-    with self.device:
-      with self.session as sess:
-        t1 = constant_op.constant(self.INPUT_SIZES_NHWC)
-        t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
-        t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
-        t3 = tf.transpose(t3, [0, 2, 3, 1])
-        inp = nn_ops.conv2d_backprop_input(
-            t1, t2, t3,
-            strides=[1, 2, 2, 1], padding=padding, data_format='NHWC')
-        value = sess.run(inp)
+    def run_test(sess):
+      return sess.run(inp)
 
-    with tf.device('/cpu:0'):
-      with self.session as sess:
-        t1 = constant_op.constant(self.INPUT_SIZES_NHWC)
-        t2 = constant_op.constant(x2, shape=self.FILTER_IN_SIZES)
-        t3 = constant_op.constant(x1, shape=out_backprop_in_sizes)
-        t3 = tf.transpose(t3, [0, 2, 3, 1])
-        inp = nn_ops.conv2d_backprop_input(
-            t1, t2, t3,
-            strides=[1, 2, 2, 1], padding=padding, data_format='NHWC')
-        expected = sess.run(inp)
-
-    assert (value == expected).all()
+    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

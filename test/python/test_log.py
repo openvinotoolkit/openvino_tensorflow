@@ -28,6 +28,7 @@ import tensorflow as tf
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestLogOperations(NgraphTest):
   @pytest.mark.parametrize("test_input", (4, 0.5, 5.6))
   def test_log_1d(self, test_input):

@@ -30,11 +30,13 @@
 #include "tensorflow/core/platform/protobuf.h"
 
 using namespace std;
+namespace ng = ngraph;
+
+namespace tensorflow {
 
 namespace ngraph_bridge {
-extern const char* const DEVICE_NGRAPH;
 
-void SummarizeOp(tf::OpKernelConstruction* ctx, std::ostream& out) {
+void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
   auto node_def = ctx->def();
   out << "Node name: " << node_def.name() << " Op: " << node_def.op() << "\n";
   out << "Inputs: " << node_def.input().size() << "\n    ";
@@ -88,46 +90,46 @@ std::ostream& DumpNGTensor(
   return s;
 }
 
-tf::Status TFDataTypeToNGraphElementType(tf::DataType tf_dt,
-                                         ngraph::element::Type* ng_et) {
+Status TFDataTypeToNGraphElementType(DataType tf_dt,
+                                     ngraph::element::Type* ng_et) {
   switch (tf_dt) {
-    case tf::DataType::DT_FLOAT:
+    case DataType::DT_FLOAT:
       *ng_et = ng::element::f32;
       break;
-    case tf::DataType::DT_DOUBLE:
+    case DataType::DT_DOUBLE:
       *ng_et = ng::element::f64;
       break;
-    case tf::DataType::DT_INT32:
+    case DataType::DT_INT32:
       *ng_et = ng::element::i32;
       break;
-    case tf::DataType::DT_UINT8:
+    case DataType::DT_UINT8:
       *ng_et = ng::element::u8;
       break;
-    case tf::DataType::DT_INT64:
+    case DataType::DT_INT64:
       *ng_et = ng::element::i64;
       break;
-    case tf::DataType::DT_UINT32:
+    case DataType::DT_UINT32:
       *ng_et = ng::element::u32;
       break;
-    case tf::DataType::DT_UINT64:
+    case DataType::DT_UINT64:
       *ng_et = ng::element::u64;
       break;
-    case tf::DataType::DT_BOOL:
+    case DataType::DT_BOOL:
       *ng_et = ng::element::boolean;
       break;
     default:
-      return tf::errors::Unimplemented("Unsupported TensorFlow data type: ",
-                                       tf::DataType_Name(tf_dt));
+      return errors::Unimplemented("Unsupported TensorFlow data type: ",
+                                   DataType_Name(tf_dt));
   }
 
-  return tf::Status::OK();
+  return Status::OK();
 }
 
-tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
-                                      ngraph::Shape* ng_shape) {
+Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
+                                  ngraph::Shape* ng_shape) {
   for (int i = 0; i < tf_shape.dims(); i++) {
     if (tf_shape.dim_size(i) < 0) {
-      return tf::errors::InvalidArgument(
+      return errors::InvalidArgument(
           "TensorFlow shape has a negative dimension size");
     }
   }
@@ -137,27 +139,28 @@ tf::Status TFTensorShapeToNGraphShape(const tf::TensorShape& tf_shape,
     (*ng_shape)[i] = tf_shape.dim_size(i);
   }
 
-  return tf::Status::OK();
+  return Status::OK();
 }
 
-const tf::gtl::ArraySlice<tf::DataType>& NGraphDTypes() {
-  static tf::gtl::ArraySlice<tf::DataType> result{
-      tf::DT_FLOAT,  tf::DT_DOUBLE, tf::DT_INT8,  tf::DT_INT16,
-      tf::DT_INT32,  tf::DT_INT64,  tf::DT_UINT8, tf::DT_UINT16,
-      tf::DT_UINT32, tf::DT_UINT64, tf::DT_BOOL};
+const gtl::ArraySlice<DataType>& NGraphDTypes() {
+  static gtl::ArraySlice<DataType> result{
+      DT_FLOAT, DT_DOUBLE, DT_INT8,   DT_INT16,  DT_INT32, DT_INT64,
+      DT_UINT8, DT_UINT16, DT_UINT32, DT_UINT64, DT_BOOL};
   return result;
 }
 
-const tf::gtl::ArraySlice<tf::DataType>& NGraphNumericDTypes() {
-  static tf::gtl::ArraySlice<tf::DataType> result{
-      tf::DT_FLOAT, tf::DT_DOUBLE, tf::DT_INT8,   tf::DT_INT16,  tf::DT_INT32,
-      tf::DT_INT64, tf::DT_UINT8,  tf::DT_UINT16, tf::DT_UINT32, tf::DT_UINT64};
+const gtl::ArraySlice<DataType>& NGraphNumericDTypes() {
+  static gtl::ArraySlice<DataType> result{
+      DT_FLOAT, DT_DOUBLE, DT_INT8,   DT_INT16,  DT_INT32,
+      DT_INT64, DT_UINT8,  DT_UINT16, DT_UINT32, DT_UINT64};
   return result;
 }
 
-const tf::gtl::ArraySlice<tf::DataType>& NGraphIndexDTypes() {
-  static tf::gtl::ArraySlice<tf::DataType> result{tf::DT_INT32, tf::DT_INT64};
+const gtl::ArraySlice<DataType>& NGraphIndexDTypes() {
+  static gtl::ArraySlice<DataType> result{DT_INT32, DT_INT64};
   return result;
 }
 
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflow

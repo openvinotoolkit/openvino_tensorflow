@@ -30,6 +30,7 @@ import tensorflow as tf
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestExpOperations(NgraphTest):
   @pytest.mark.parametrize(("test_input", "expected"),
                            ((1.4, e**1.4), (-0.5, e**-0.5), (-1, e**-1)))

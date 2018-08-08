@@ -27,6 +27,7 @@ import tensorflow as tf
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestExpandDims(NgraphTest):
   @pytest.mark.parametrize("axis", ([0, 2, 3]))
   def test_expand_dims(self, axis):

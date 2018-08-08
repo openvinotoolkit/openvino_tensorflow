@@ -20,12 +20,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pytest
+
 import numpy as np
 import tensorflow as tf
 
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestRelu6(NgraphTest):
   def test_relu6(self):
     x = tf.placeholder(tf.float32, shape=(2, 3))

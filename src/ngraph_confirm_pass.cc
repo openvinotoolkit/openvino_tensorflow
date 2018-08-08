@@ -746,6 +746,6 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 }  // namespace ngraph_bridge
 
 namespace tensorflow {
-REGISTER_OPTIMIZATION(OptimizationPassRegistry::PRE_PLACEMENT, 90,
-                      ngraph_bridge::NGraphConfirmPass);
+//REGISTER_OPTIMIZATION(OptimizationPassRegistry::PRE_PLACEMENT, 90,
+//                      ngraph_bridge::NGraphConfirmPass);
 }  // namespace tensorflow

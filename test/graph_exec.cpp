@@ -26,41 +26,41 @@
 #include "tensorflow/core/platform/env.h"
 
 using namespace std;
-namespace tf = tensorflow;
+namespace ng = ngraph;
+
+namespace tensorflow {
 
 namespace ngraph_bridge {
 
 TEST(graph_exec, axpy) {
-  tf::GraphDef gdef;
-  // auto status = tf::ReadTextProto(tf::Env::Default(), "test_py.pbtxt",
+  GraphDef gdef;
+  // auto status = ReadTextProto(Env::Default(), "test_py.pbtxt",
   // &gdef);
   auto status =
-      tf::ReadTextProto(tf::Env::Default(), "test_axpy_launchop.pbtxt", &gdef);
-  // tf::ReadTextProto(tf::Env::Default(), "test_launch_op.pbtxt", &gdef);
-  ASSERT_TRUE(status == tf::Status::OK()) << "Can't read protobuf graph";
+      ReadTextProto(Env::Default(), "test_axpy_launchop.pbtxt", &gdef);
+  // ReadTextProto(Env::Default(), "test_launch_op.pbtxt", &gdef);
+  ASSERT_TRUE(status == Status::OK()) << "Can't read protobuf graph";
 
-  tf::Graph input_graph(tf::OpRegistry::Global());
+  Graph input_graph(OpRegistry::Global());
 
-  tf::GraphConstructorOptions opts;
+  GraphConstructorOptions opts;
   // Set the allow_internal_ops to true so that graphs with node names such as
   // _arg_Placeholder_1_0_1_0_arg are allowed. These op names are generated
   // during the graph rewrite passes and considered internal
   opts.allow_internal_ops = true;
 
-  ASSERT_EQ(tf::ConvertGraphDefToGraph(opts, gdef, &input_graph),
-            tf::Status::OK());
+  ASSERT_EQ(ConvertGraphDefToGraph(opts, gdef, &input_graph), Status::OK());
   // Create the inputs for this graph
-  tf::Tensor x(tf::DT_FLOAT, tf::TensorShape({2, 3}));
-  tf::Tensor y(tf::DT_FLOAT, tf::TensorShape({2, 3}));
+  Tensor x(DT_FLOAT, TensorShape({2, 3}));
+  Tensor y(DT_FLOAT, TensorShape({2, 3}));
 
-  std::vector<tf::TensorShape> inputs;
+  std::vector<TensorShape> inputs;
   inputs.push_back(x.shape());
   inputs.push_back(y.shape());
 
   shared_ptr<ng::Function> ng_function;
-  ASSERT_EQ(tf::Status::OK(),
-      ngraph_bridge::Builder::TranslateGraph(inputs, &input_graph,
-      ng_function));
+  ASSERT_EQ(Status::OK(), ngraph_bridge::Builder::TranslateGraph(
+                              inputs, &input_graph, ng_function));
 
   // Create the nGraph backend
   auto backend = ng::runtime::Backend::create("CPU");
@@ -103,4 +103,7 @@ TEST(graph_exec, axpy) {
   // Add the validation logic
   // TODO
 }
+
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflwo

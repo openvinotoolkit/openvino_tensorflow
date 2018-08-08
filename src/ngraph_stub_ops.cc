@@ -53,6 +53,7 @@ class NGraphStubOp : public OpKernel {
 // Please keep these in alphabetical order.
 //
 
+#if 0
 REGISTER_NGRAPH_STUB("Abs");
 REGISTER_NGRAPH_STUB("Add");
 REGISTER_NGRAPH_STUB("AvgPool");
@@ -116,3 +117,4 @@ REGISTER_NGRAPH_STUB("Sum");
 REGISTER_NGRAPH_STUB("Tanh");
 REGISTER_NGRAPH_STUB("Tile");
 REGISTER_NGRAPH_STUB("Transpose");
+#endif /* 0 */
