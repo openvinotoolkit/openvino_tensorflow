@@ -109,7 +109,7 @@ class NGraphEncapsulateOp : public OpKernel {
       // Serialize to nGraph if needed
       if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
         std::string file_name =
-            "tf_function_" + ctx->op_kernel().name() + ".js";
+            "tf_function_" + ctx->op_kernel().name() + ".json";
         NGRAPH_VLOG(0) << "Serializing graph to: " << file_name;
         std::string js = ngraph::serialize(ng_function, 4);
         {
