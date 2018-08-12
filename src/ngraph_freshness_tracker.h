@@ -21,7 +21,7 @@
 
 #include "tensorflow/core/framework/resource_mgr.h"
 
-namespace tf = tensorflow;
+namespace tensorflow {
 
 namespace ngraph_bridge {
 //
@@ -37,7 +37,7 @@ namespace ngraph_bridge {
 //   std::shared_ptr<ngraph::Function> ng_func1 = something;
 //   std::shared_ptr<ngraph::Function> ng_func2 = something_else;
 //   ...
-//   const void* tensor_base_ptr = (const void *)tf::DMAHelper::base(t);
+//   const void* tensor_base_ptr = (const void *)DMAHelper::base(t);
 //
 //   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return false]
 //   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
@@ -81,7 +81,7 @@ namespace ngraph_bridge {
 // the ResourceMgr's default container, with the resource name
 // "ngraph_freshness_tracker".
 //
-class NGraphFreshnessTracker : public tf::ResourceBase {
+class NGraphFreshnessTracker : public ResourceBase {
  public:
   explicit NGraphFreshnessTracker() {}
   // Not copyable or movable.
@@ -101,12 +101,14 @@ class NGraphFreshnessTracker : public tf::ResourceBase {
   void RemoveUser(std::shared_ptr<ngraph::Function> user);
 
  private:
-  tf::mutex mu_;
+  mutex mu_;
   std::map<const void*, std::set<std::shared_ptr<ngraph::Function>>>
       freshness_map_;
 
   ~NGraphFreshnessTracker() override {}
 };
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflow
 
 #endif

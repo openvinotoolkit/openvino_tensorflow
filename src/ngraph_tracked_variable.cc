@@ -22,7 +22,7 @@
 
 #include "tensorflow/core/platform/default/logging.h"
 
-//#include "ngraph_freshness_tracker.h"
+#include "ngraph_freshness_tracker.h"
 #include "ngraph_utils.h"
 
 namespace tensorflow {
@@ -64,11 +64,14 @@ class NGraphVar : public ResourceBase {
 class NGraphVariableOp : public OpKernel {
  public:
   explicit NGraphVariableOp(OpKernelConstruction* context);
+  ~NGraphVariableOp() override;
   void Compute(OpKernelContext* ctx) override;
 
  private:
   DataType dtype_;
   TensorShape shape_;
+  bool just_looking_;
+  NGraphFreshnessTracker* tracker_;
 
   mutex init_mu_;
   ContainerInfo cinfo_ GUARDED_BY(init_mu_);
@@ -78,9 +81,15 @@ class NGraphVariableOp : public OpKernel {
 };
 
 NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
-    : OpKernel(context) {
+    : OpKernel(context), tracker_(nullptr) {
   OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
+  OP_REQUIRES_OK(context, context->GetAttr("just_looking", &just_looking_));
+  NGRAPH_VLOG(5) << def().name() << ": just looking? " << just_looking_;
   dtype_ = RemoveRefType(context->output_type(0));
+}
+
+NGraphVariableOp::~NGraphVariableOp() {
+  tracker_->Unref();
 }
 
 // (Changes: Renamed from VariableOp, modified to pass TensorShape to NGraphVar
@@ -104,11 +113,48 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   //
   // As long as the resource manager hasn't been cleared the ref we return
   // here is valid because it owns a ref on var.
-  // TODO(amprocte): invalidate the tensor in the freshness tracker if any
-  // reader is taking in a reference.
-  //
-  // More conservative condition that would work for now: invalidate if any
+
+  // Mark the underlying tensor as stale. TODO(amprocte): Make this
+  // conditional on whether any reader is taking in a reference. More
+  // conservative condition that would work for now: invalidate if any
   // reader is not NGraphEncapsulateOp.
+  auto t_creator = [this](NGraphFreshnessTracker** tracker) {
+    *tracker = new NGraphFreshnessTracker();
+    return Status::OK();
+  };
+  if (tracker_ == nullptr) {
+    if(NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": getting tracker";
+    }
+    OP_REQUIRES_OK(ctx,
+                   ctx->resource_manager()
+                       ->LookupOrCreate<NGraphFreshnessTracker>(
+                           ctx->resource_manager()->default_container(),
+                           "ngraph_freshness_tracker", &tracker_, t_creator));
+    if(NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": got tracker";
+    }
+
+  }
+
+  if(NGRAPH_VLOG_IS_ON(5)) {
+    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": adding " << DMAHelper::base(var->tensor());
+  }
+  tracker_->AddTensor(DMAHelper::base(var->tensor()));
+  if(NGRAPH_VLOG_IS_ON(5)) {
+    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": added " << DMAHelper::base(var->tensor());
+  }
+
+  if (!just_looking_) {
+    if(NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marking " << DMAHelper::base(var->tensor());
+    }
+    tracker_->MarkStale(DMAHelper::base(var->tensor()));
+    if(NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marked " << DMAHelper::base(var->tensor());
+    }
+  }
+
   ctx->set_output_ref(0, var->mu(), var->tensor());
   if (ctx->track_allocations() && var->tensor()->IsInitialized()) {
     AllocatorAttributes attr;
@@ -123,28 +169,14 @@ REGISTER_OP("NGraphVariable")
     .Output("ref: Ref(dtype)")
     .Attr("shape: shape")
     .Attr("dtype: type")
+    .Attr("just_looking: bool = false")
     .Attr("container: string = ''")
     .Attr("shared_name: string = ''")
     .SetIsStateful()
     .SetShapeFn(shape_inference::ExplicitShape);
-
-/*
-REGISTER_OP("NGraphVariablePeek")
-    .Output("ref: Ref(dtype)")
-    .Attr("shape: shape")
-    .Attr("dtype: type")
-    .Attr("container: string = ''")
-    .Attr("shared_name: string = ''")
-    .SetIsStateful()
-    .SetShapeFn(shape_inference::ExplicitShape);
-*/
 
 REGISTER_KERNEL_BUILDER(Name("NGraphVariable").Device(DEVICE_CPU),
                         NGraphVariableOp);
-/*
-REGISTER_KERNEL_BUILDER(Name("NGraphVariablePeek").Device(DEVICE_CPU),
-                        NGraphVariableOp);
-*/
 
 } // namespace ngraph_bridge
 

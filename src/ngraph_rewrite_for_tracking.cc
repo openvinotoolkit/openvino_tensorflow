@@ -16,6 +16,7 @@
 
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
+#include "tensorflow/core/graph/types.h"
 
 #include "ngraph_utils.h"
 
@@ -26,31 +27,27 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 //
-// Utility function to check if placement on the NGRAPH device has been
-// requested.
+// Main entry point for rewrite-for-tracking.
 //
-// FIXME(amprocte): stubbed out for now because NGRAPH device is gone.
-//
-static bool NGraphPlacementRequested(const Node* node) { return true; }
-
-//
-// Main entry point for the variable-capture.
-//
-Status CaptureVariables(Graph* graph) {
-  //
-  // If NGRAPH_TF_DISABLE is set we will not capture anything.
-  //
-  if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
-    return Status::OK();
-  }
-
+Status RewriteForTracking(Graph* graph) {
   std::vector<Node*> replaced_nodes;
 
   for (auto node : graph->op_nodes()) {
-    if (NGraphPlacementRequested(node)) {
-      if (node->type_string() == "VariableV2") {
-        NGRAPH_VLOG(4) << "Capturing: " << node->name();
+    if (node->type_string() == "NGraphVariable") {
+      NGRAPH_VLOG(4) << "Checking: " << node->name();
 
+      bool just_looking = true;
+
+      for (auto edge : node->out_edges()) {
+        if (edge->dst()->IsOp() && !edge->IsControlEdge() && IsRefType(edge->dst()->input_type(edge->dst_input()))) {
+          just_looking = false;
+          break;
+        }
+      }
+
+      if (just_looking) {
+        NGRAPH_VLOG(4) << "Just looking: " << node->name();
+        
         TensorShape shape;
         DataType dtype;
         TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "shape", &shape));
@@ -68,11 +65,12 @@ Status CaptureVariables(Graph* graph) {
         Node* replacement;
 
         // TODO(amprocte): Do we need to copy "_" attributes?
-        TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "NGraphVariable")
+        TF_RETURN_IF_ERROR(NodeBuilder(graph->NewName(node->name() + "/peek"), "NGraphVariable")
                             .Attr("shape",shape)
                             .Attr("dtype",dtype)
                             .Attr("container",container)
-                            .Attr("shared_name",shared_name)
+                            .Attr("shared_name",(shared_name.empty() ? node->name() : shared_name))
+                            .Attr("just_looking",true)
                             .Device(node->assigned_device_name())
                             .Finalize(graph,&replacement));
 
@@ -83,11 +81,16 @@ Status CaptureVariables(Graph* graph) {
           edges.push_back(edge);
         }
         for (auto edge : edges) {
-          NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-          graph->UpdateEdge(replacement, edge->src_output(), edge->dst(), edge->dst_input());
+          if (edge->dst()->IsOp()) {
+            NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
+            graph->UpdateEdge(replacement, edge->src_output(), edge->dst(), edge->dst_input());
+          }
         }
 
         replaced_nodes.push_back(node);
+      }
+      else {
+        NGRAPH_VLOG(4) << "Not just looking: " << node->name();
       }
     }
   }

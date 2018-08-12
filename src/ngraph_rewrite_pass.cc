@@ -23,6 +23,7 @@
 #include "ngraph_encapsulate_clusters.h"
 #include "ngraph_log.h"
 #include "ngraph_mark_for_clustering.h"
+#include "ngraph_rewrite_for_tracking.h"
 
 #include "tf_graph_writer.h"
 
@@ -229,6 +230,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Clusters Encapsulated");
     }
 
+    // Rewrite for tracking then, if requested, dump the graphs.
+    TF_RETURN_IF_ERROR(RewriteForTracking(options.graph->get()));
+    if (DumpTrackedGraphs()) {
+      DumpGraphs(options, idx, "tracked",
+                 "Graph with Variables Rewritten for Tracking");
+    }
+
     return Status::OK();
   }
 
@@ -252,6 +260,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   static bool DumpEncapsulatedGraphs() {
     return DumpAllGraphs() ||
            std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
+  }
+  static bool DumpTrackedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
   }
 };
 
