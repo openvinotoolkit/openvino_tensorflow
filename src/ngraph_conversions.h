@@ -80,7 +80,7 @@ void BatchedOpParamToNGraph(bool is_nhwc, const std::vector<T>& src,
 
 template <typename T>
 void BatchedOpParamReshape(bool is_nhwc, const std::vector<T>& src,
-                            std::vector<size_t>& dst) {
+                           std::vector<size_t>& dst) {
   if (is_nhwc) {
     detail::NhwcToNchw(src, dst);
   } else {

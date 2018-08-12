@@ -63,8 +63,8 @@ RUN pip install --upgrade pytest
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 #
 # This bazel version works with current TF
-RUN wget -c https://github.com/bazelbuild/bazel/releases/download/0.11.0/bazel_0.11.0-linux-x86_64.deb
-RUN dpkg -i bazel_0.11.0-linux-x86_64.deb || true
+RUN wget -c https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel_0.16.0-linux-x86_64.deb
+RUN dpkg -i bazel_0.16.0-linux-x86_64.deb || true
 
 # Copy in the run-as-user.sh script
 # This will allow the builds, which are done in a mounted directory, to

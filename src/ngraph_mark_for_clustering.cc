@@ -169,9 +169,12 @@ Status MarkForClustering(Graph* graph) {
       //
       type_constraint_map["Abs"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Add"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["AddN"]["T"] = NGraphNumericDTypes();
       type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["AvgPoolGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["BatchMatMul"]["T"] = NGraphNumericDTypes();
       type_constraint_map["BiasAdd"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["BiasAddGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
       type_constraint_map["Cast"]["DstT"] = NGraphDTypes();
       type_constraint_map["ConcatV2"]["T"] = NGraphDTypes();
@@ -184,33 +187,40 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Exp"]["T"] = NGraphNumericDTypes();
       type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
       type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["FloorDiv"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["FloorMod"]["T"] = NGraphNumericDTypes();
       type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
       type_constraint_map["FusedBatchNormGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Greater"]["T"] = NGraphDTypes();
       type_constraint_map["GreaterEqual"]["T"] = NGraphDTypes();
       type_constraint_map["Identity"]["T"] = NGraphDTypes();
+      type_constraint_map["L2Loss"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Less"]["T"] = NGraphDTypes();
       type_constraint_map["LessEqual"]["T"] = NGraphDTypes();
       type_constraint_map["Log"]["T"] = NGraphNumericDTypes();
-      // LogicalAnd has no type attributes, ("T", if it existed, would always
-      // be bool).
+      // LogicalAnd and LogicalNot have no type attributes ("T", if it existed,
+      // would always be bool).
       type_constraint_map["MatMul"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Maximum"]["T"] = NGraphNumericDTypes();
       type_constraint_map["MaxPool"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["MaxPoolGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Mean"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Mean"]["Tidx"] = NGraphIndexDTypes();
       type_constraint_map["Minimum"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["Neg"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Pack"]["T"] = NGraphDTypes();
       type_constraint_map["Pad"]["T"] = NGraphDTypes();
       type_constraint_map["Pad"]["Tpaddings"] = NGraphIndexDTypes();
       type_constraint_map["Pow"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["PreventGradient"]["T"] = NGraphDTypes();
       type_constraint_map["Prod"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Prod"]["Tidx"] = NGraphIndexDTypes();
       type_constraint_map["RealDiv"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Relu"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Relu6"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["ReluGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Reshape"]["T"] = NGraphDTypes();
       type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
       type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
@@ -236,6 +246,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes();
       type_constraint_map["Transpose"]["T"] = NGraphDTypes();
       type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
+      type_constraint_map["Unpack"]["T"] = NGraphDTypes();
 
       //
       // Initialize confirmation function map.
@@ -252,9 +263,29 @@ Status MarkForClustering(Graph* graph) {
       //
       confirmation_functions["Abs"] = always;
       confirmation_functions["Add"] = always;
+      confirmation_functions["AddN"] = always;
       confirmation_functions["AvgPool"] = always;
-      confirmation_functions["BiasAdd"] = always;
+      confirmation_functions["AvgPoolGrad"] = [](Node* n, bool* result) {
+        Node* tf_orig_input_shape;
+        TF_RETURN_IF_ERROR(n->input_node(0, &tf_orig_input_shape));
+
+        std::vector<int64> tf_orig_input_shape_vec;
+        if (ExtractConstantData(tf_orig_input_shape,
+                                &tf_orig_input_shape_vec) !=
+                Status::OK() ||
+            tf_orig_input_shape_vec.size() != 4) {
+          *result = false;
+          return Status::OK();
+        }
+
+        n->AddAttr("_ngraph_avgpoolgrad_static_input_shape",
+                   tf_orig_input_shape_vec);
+        *result = true;
+        return Status::OK();
+      };
       confirmation_functions["BatchMatMul"] = always;
+      confirmation_functions["BiasAdd"] = always;
+      confirmation_functions["BiasAddGrad"] = always;
       confirmation_functions["Cast"] = always;
 
       // Constraint: axis selection input must be Const.
@@ -278,6 +309,23 @@ Status MarkForClustering(Graph* graph) {
       confirmation_functions["Const"] = always;
 
       confirmation_functions["Conv2D"] = always;
+      confirmation_functions["Conv2DBackpropFilter"] = [](Node* n,
+                                                          bool* result) {
+        Node* tf_filter_sizes;
+        TF_RETURN_IF_ERROR(n->input_node(1, &tf_filter_sizes));
+
+        std::vector<int64> tf_static_filter_sizes(4);
+        if (ExtractConstantData(tf_filter_sizes, &tf_static_filter_sizes) !=
+                Status::OK() ||
+            tf_static_filter_sizes.size() != 4) {
+          *result = false;
+          return Status::OK();
+        }
+
+        n->AddAttr("_ngraph_static_filter_sizes", tf_static_filter_sizes);
+        *result = true;
+        return Status::OK();
+      };
       confirmation_functions["Conv2DBackpropInput"] = [](Node* n,
                                                          bool* result) {
         Node* tf_input_sizes;
@@ -330,18 +378,23 @@ Status MarkForClustering(Graph* graph) {
       };
 
       confirmation_functions["Floor"] = always;
+      confirmation_functions["FloorDiv"] = always;
+      confirmation_functions["FloorMod"] = always;
       confirmation_functions["FusedBatchNorm"] = always;
       confirmation_functions["FusedBatchNormGrad"] = always;
       confirmation_functions["Greater"] = always;
       confirmation_functions["GreaterEqual"] = always;
       confirmation_functions["Identity"] = always;
+      confirmation_functions["L2Loss"] = always;
       confirmation_functions["Less"] = always;
       confirmation_functions["LessEqual"] = always;
       confirmation_functions["Log"] = always;
       confirmation_functions["LogicalAnd"] = always;
+      confirmation_functions["LogicalNot"] = always;
       confirmation_functions["MatMul"] = always;
       confirmation_functions["Maximum"] = always;
       confirmation_functions["MaxPool"] = always;
+      confirmation_functions["MaxPoolGrad"] = always;
 
       // Constraints: "keep_dims" is not supported, reduction-axes input
       // must be Const.
@@ -363,6 +416,7 @@ Status MarkForClustering(Graph* graph) {
 
       confirmation_functions["Minimum"] = always;
       confirmation_functions["Mul"] = always;
+      confirmation_functions["Neg"] = always;
 
       // Constraint: padding-widths input must be Const.
       confirmation_functions["Pad"] = [](Node* n, bool* result) {
@@ -382,6 +436,7 @@ Status MarkForClustering(Graph* graph) {
       };
 
       confirmation_functions["Pow"] = always;
+      confirmation_functions["PreventGradient"] = always;
 
       // Constraints: "keep_dims" is not supported, reduction-axes input
       // must be Const.
@@ -415,6 +470,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_functions["Reciprocal"] = always;
       confirmation_functions["Relu"] = always;
       confirmation_functions["Relu6"] = always;
+      confirmation_functions["ReluGrad"] = always;
       confirmation_functions["Rsqrt"] = always;
 
       // Constraint: shape input must be Const.
@@ -586,6 +642,8 @@ Status MarkForClustering(Graph* graph) {
         *result = true;
         return Status::OK();
       };
+
+      confirmation_functions["Unpack"] = always;
 
       initialized = true;
     }

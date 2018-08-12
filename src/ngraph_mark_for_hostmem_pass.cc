@@ -49,13 +49,13 @@ tf::Status NGraphMarkForHostmemPass::Run(
       for (tf::int32 i = 0; i < node->num_inputs(); i++) {
         input_indices.push_back(i);
       }
-      node->AddAttr("_input_hostmem",input_indices);
+      node->AddAttr("_input_hostmem", input_indices);
 
       std::vector<tf::int32> output_indices;
       for (tf::int32 i = 0; i < node->num_outputs(); i++) {
         output_indices.push_back(i);
       }
-      node->AddAttr("_output_hostmem",output_indices);
+      node->AddAttr("_output_hostmem", output_indices);
     }
   }
 
