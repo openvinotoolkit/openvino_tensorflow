@@ -129,6 +129,14 @@ if [ ! -d "${trained_resnet50_model}" ] ; then
     exit 1
 fi
 
+xtime="$(date)"
+echo  ' '
+echo  "===== Starting nGraph TensorFlow Bridge Source Code Format Check at ${xtime} ====="
+echo  ' '
+
+cd "${bridge_dir}"
+maint/check-code-format.sh
+
 # Make sure the Bazel cache is in /tmp, as docker images have too little space
 # in the root filesystem, where /home (and $HOME/.cache) is.  Even though we
 # may not be using the Bazel cache in the builds (in docker), we do this anyway

@@ -37,7 +37,8 @@ RUN apt-get update &&  apt-get install -y \
     build-essential cmake \
     libtinfo-dev \
     zip golang-go \
-    locate curl
+    locate curl \
+    clang-format-3.9
 
 # The "locate" command uses a prepopulated index.  If this index is not built,
 # then "locate" will find absolutely nothing.  In Tensorflow's configure,
