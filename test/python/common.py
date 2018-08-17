@@ -54,5 +54,10 @@ class NgraphTest(object):
 
   # returns a vector of length 'vector_length' with random
   # float numbers in range [start,end]
-  def generate_random_numbers(self, vector_length, start, end):
-    return [random.uniform(start, end) for i in range(vector_length)]
+  def generate_random_numbers(self, vector_length, start, end, datatype="DTYPE_FLOAT"):
+    if datatype == "DTYPE_INT":
+      return [random.randint(start, end) for i in range(vector_length)]
+    else:
+      return [random.uniform(start, end) for i in range(vector_length)]
+
+

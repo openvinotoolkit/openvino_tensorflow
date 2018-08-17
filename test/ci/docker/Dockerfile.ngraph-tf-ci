@@ -48,9 +48,11 @@ RUN updatedb
 
 # six, enum34 and mock are required for building the tensorflow wheel
 # scipy, portpicker, and sklearn are needed by some TensorFlow tests
+# keras_applications is needed for modern TensorFlow builds
 RUN pip install --upgrade pip
 RUN pip install six enum34 mock
 RUN pip install scipy portpicker sklearn
+RUN pip install keras_applications
 
 # We include pytest so the Docker image can be used for daily validation
 RUN pip install --upgrade pytest

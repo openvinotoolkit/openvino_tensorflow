@@ -286,12 +286,16 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
         type_constraint_map["Reshape"]["T"] = NGraphDTypes();
         type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
         type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
+        type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["Sign"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Slice"]["T"] = NGraphDTypes();
         type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
-        type_constraint_map["Sign"]["T"] = NGraphNumericDTypes();
-        type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
         type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
         type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+        type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
+            NGraphNumericDTypes();
+        type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =
+            NGraphNumericDTypes();
         type_constraint_map["Split"]["T"] = NGraphDTypes();
         type_constraint_map["SplitV"]["T"] = NGraphDTypes();
         type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
@@ -584,6 +588,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
 
         confirmation_functions["Snapshot"] = always;
         confirmation_functions["Softmax"] = always;
+        confirmation_functions["SparseSoftmaxCrossEntropyWithLogits"] = always;
         confirmation_functions["Split"] = [](tf::Node* n, bool* result) {
           tf::Node* tf_split_dim_node;
           TF_RETURN_IF_ERROR(n->input_node(0, &tf_split_dim_node));
@@ -599,6 +604,7 @@ class NGraphConfirmPass : public tensorflow::GraphOptimizationPass {
           *result = true;
           return tf::Status::OK();
         };
+
         confirmation_functions["SplitV"] = always;
         confirmation_functions["Square"] = always;
         confirmation_functions["SquaredDifference"] = always;

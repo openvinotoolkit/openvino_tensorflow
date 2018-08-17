@@ -1879,7 +1879,114 @@ static Status TranslateSoftmaxOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSplitOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSparseSoftmaxCrossEntropyWithLogitsOp(
+    const Node* op, Builder::OpMap& ng_op_map) {
+  // TF op Inputs:
+  //  1. Logits/Features:
+  //    Shape : [BatchSize, NumOfClasses]
+  //     Type : float
+  //  2. Label
+  //    Shape : [BatchSize]
+  //    Range : [0, NumOfClasses)
+  //     Type : int
+  shared_ptr<ng::Node> ng_features, ng_labels;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_features, &ng_labels));
+
+  ng::Shape ng_features_shape = ng_features->get_shape();
+  ng::Shape ng_labels_shape = ng_labels->get_shape();
+  NGRAPH_VLOG(3) << " number of classes " << ng_features_shape[1];
+  NGRAPH_VLOG(3) << " Batch " << ng_features_shape[0];
+
+  // Logits/Features must be 2-d shape
+  if (ng_features_shape.size() != 2) {
+    return errors::InvalidArgument(
+        " Logits/Features must be shape 2-D, but got shape ",
+        ng::join(ng_features_shape), " while building op ", op->type_string());
+  }
+
+  // Labels must be 1-d shape
+  if (ng_labels_shape.size() != 1) {
+    return errors::InvalidArgument(
+        " Labels must be shape 1-D, but got shape ", ng::join(ng_labels_shape),
+        " while building op ", op->type_string());
+  }
+
+  // Logits/Featues and Labels must have the same first dimension
+  if (ng_labels_shape[0] != ng_features_shape[0]) {
+    return errors::InvalidArgument(
+        " Logits/Features and Labels must have the same first dimension, got "
+        "Logits shape ",
+        ng::join(ng_features_shape), " and Labels shape ",
+        ng::join(ng_labels_shape), " while building op ", op->type_string());
+  }
+
+  // Logits dimension 1 must be >0, i.e. NumOfClasses>0
+  if (ng_features_shape[1] <= 0) {
+    return errors::InvalidArgument(
+        " Logits/Features must have atleast one class but got shape ",
+        ng::join(ng_features_shape), " while building op ", op->type_string());
+  }
+
+  // ** Check invalid label index **
+  // Labels should be in range [0, NumOfClasses): Cannot do this check here
+  // If the labels are out of range, we would get nGraph Exception while
+  // computing y_true using ng::op::OneHot
+
+  // To implement a numericaly stable and precise implementation,
+  // for this op, the implementation is inspired from the tf kernel
+  // of this op found in
+  // /tensorflow/core/kernels/sparse_xent_op.h
+  // /tensorflow/core/kernels/sparse_xent_op.cc
+
+  // axis for operation is 1
+  ng::AxisSet ng_axes_class;
+  ng_axes_class.insert(1);
+
+  // compute max(logits) and broadcast to shape [B, NC]
+  auto max_logits = make_shared<ng::op::Broadcast>(
+      make_shared<ng::op::Max>(ng_features, ng_axes_class), ng_features_shape,
+      ng_axes_class);
+
+  // logits_normalized : (logits - max_logits)
+  auto logits_normalized =
+      make_shared<ng::op::Subtract>(ng_features, max_logits);
+
+  // y_pred = exp(logits_normalized) / sum(exp(logits_normalized))
+  auto exp_logits = make_shared<ng::op::Exp>(logits_normalized);
+  auto sum_exp_logits = make_shared<ng::op::Broadcast>(
+      make_shared<ng::op::Sum>(exp_logits, ng_axes_class), ng_features_shape,
+      ng_axes_class);
+  auto predicted_prob = make_shared<ng::op::Divide>(exp_logits, sum_exp_logits);
+
+  // y_true : one_hot_float_labels
+  auto ng_onehot_labels =
+      make_shared<ng::op::OneHot>(ng_labels, ng_features_shape, 1);
+
+  auto ng_onehot_labels_float = make_shared<ng::op::Convert>(
+      ng_onehot_labels, ng_features->get_element_type());
+
+  // Output 1
+  // loss = sum[labels * {sum(log(exp(logits_normalized)))
+  // - logits_normalized }]
+  auto ng_loss = make_shared<ng::op::Sum>(
+      make_shared<ng::op::Multiply>(
+          make_shared<ng::op::Subtract>(
+              make_shared<ng::op::Log>(sum_exp_logits), logits_normalized),
+          ng_onehot_labels_float),
+      ng_axes_class);
+
+  // Output 2
+  // backprop = y_pred - y_true
+  auto ng_backprop =
+      make_shared<ng::op::Subtract>(predicted_prob, ng_onehot_labels_float);
+
+  SaveNgOp(ng_op_map, op->name(), ng_loss);
+  SaveNgOp(ng_op_map, op->name(), ng_backprop);
+  return Status::OK();
+}
+
+static Status TranslateSplitOp(const Node* op,
+                                   Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_input));
 
@@ -2354,6 +2461,8 @@ const static std::map<
         {"Slice", TranslateSliceOp},
         {"Snapshot", TranslateSnapshotOp},
         {"Softmax", TranslateSoftmaxOp},
+        {"SparseSoftmaxCrossEntropyWithLogits",
+         TranslateSparseSoftmaxCrossEntropyWithLogitsOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
         {"Square", TranslateSquareOp},

@@ -230,6 +230,10 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
       type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
+            NGraphNumericDTypes();
+        type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =
+            NGraphNumericDTypes();
       type_constraint_map["Split"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
@@ -523,6 +527,7 @@ Status MarkForClustering(Graph* graph) {
 
       confirmation_functions["Snapshot"] = always;
       confirmation_functions["Softmax"] = always;
+       confirmation_functions["SparseSoftmaxCrossEntropyWithLogits"] = always;
       confirmation_functions["Split"] = [](Node* n, bool* result) {
         Node* tf_split_dim_node;
         TF_RETURN_IF_ERROR(n->input_node(0, &tf_split_dim_node));

@@ -111,7 +111,7 @@ TEST(tf_exec, axpy) {
 }
 #endif
 
-void AssertTensorEquals(Tensor T1, Tensor T2) {
+void AssertTensorEquals(Tensor& T1, Tensor& T2) {
   auto T_size = T1.flat<float>().size();
   auto T1_data = T1.flat<float>().data();
   auto T2_data = T2.flat<float>().data();
@@ -122,7 +122,7 @@ void AssertTensorEquals(Tensor T1, Tensor T2) {
   }
 }
 
-void ValidateTensorData(Tensor T1, Tensor T2, float tol) {
+void ValidateTensorData(Tensor& T1, Tensor& T2, float tol) {
   auto T_size = T1.flat<float>().size();
   auto T1_data = T1.flat<float>().data();
   auto T2_data = T2.flat<float>().data();
@@ -144,6 +144,18 @@ void AssignInputValues(Tensor& A, float x) {
   auto A_flat_data = A_flat.data();
   for (int i = 0; i < A_flat.size(); i++) {
     A_flat_data[i] = x * i;
+  }
+}
+
+void AssignInputIntValues(Tensor& A, int maxval) {
+  auto A_flat = A.flat<int>();
+  auto A_flat_data = A_flat.data();
+  int counter = 0;
+  for (int i = 0; i < A_flat.size(); i++) {
+    A_flat_data[i] = counter++;
+    if (counter == maxval) {
+      counter = 0;
+    }
   }
 }
 
@@ -703,6 +715,34 @@ TEST(tf_exec, Op_Reciprocal) {
   EXPECT_FLOAT_EQ(0.2, mat(0, 1));
   EXPECT_FLOAT_EQ(0.5, mat(1, 0));
   EXPECT_FLOAT_EQ(1.0, mat(1, 1));
+}
+
+TEST(tf_exec, Op_SparseSoftmaxCrossEntropyWithLogits) {
+  Scope root = Scope::NewRootScope();
+  Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
+  root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
+
+  int batch_size = 100;
+  int num_classes = 10;
+  Tensor features(DT_FLOAT, TensorShape({batch_size, num_classes}));
+  Tensor labels(DT_INT32, TensorShape({batch_size}));
+  AssignInputValues(features, -1.1f);
+  AssignInputIntValues(labels, num_classes);
+
+  auto R_ngraph = ops::SparseSoftmaxCrossEntropyWithLogits(
+      root_ngraph.WithOpName("R_ngraph"), features, labels);
+
+  auto R_cpu = ops::SparseSoftmaxCrossEntropyWithLogits(
+      root.WithOpName("R_cpu"), features, labels);
+
+  std::vector<Tensor> outputs_ngraph, outputs_cpu;
+  ClientSession session(root);
+
+  TF_CHECK_OK(session.Run({R_ngraph.loss, R_ngraph.backprop}, &outputs_ngraph));
+  TF_CHECK_OK(session.Run({R_cpu.loss, R_cpu.backprop}, &outputs_cpu));
+
+  ValidateTensorData(outputs_ngraph[0], outputs_cpu[0], 1e-6);
+  ValidateTensorData(outputs_ngraph[1], outputs_cpu[1], 1e-6);
 }
 
 TEST(tf_exec, Op_Square) {

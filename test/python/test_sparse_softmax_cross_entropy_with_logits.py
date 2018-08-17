@@ -24,44 +24,33 @@ import pytest
 
 import tensorflow as tf
 from tensorflow.python.framework import constant_op
-from tensorflow.python.ops.gen_nn_ops import relu_grad
-
+from tensorflow.python.ops.gen_nn_ops import sparse_softmax_cross_entropy_with_logits
+import numpy as np
 from common import NgraphTest
 
 
-class TestReluGradOperations(NgraphTest):
-  def test_relugrad_2d(self):
-    gradients = constant_op.constant(self.generate_random_numbers(6, 1.0, 10.0), shape = [2,3])
-    features = constant_op.constant(self.generate_random_numbers(6, 0.0, 100.0), shape =[2,3])
-    
-    # Run on nGraph
-    with self.device:
-      out = relu_grad(gradients, features)
-      with self.session as sess:
-        result = sess.run(out)
-        
-    # Run on CPU
-    with self.cpu_device:
-      out = relu_grad(gradients, features)
-      with self.session as sess:
-        expected = sess.run(out)
-    
-    assert (result == expected).all()
+class TestSparseSoftmaxCrossEntropyWithLogitsOperations(NgraphTest):
+  def test_sparse_softmax_cross_entropy_with_logits_2d(self):
+    num_classes = 10
+    batch_size = 1000
+    total_size = num_classes * batch_size
+    labels = constant_op.constant(self.generate_random_numbers(batch_size, 0,
+    num_classes-1, "DTYPE_INT"), shape = [batch_size])
+    features = constant_op.constant(self.generate_random_numbers(total_size,
+    0.0, 1.0), shape =[batch_size, num_classes])
 
-  def test_relugrad_1d(self):
-    gradients = constant_op.constant(self.generate_random_numbers(100, 123.0, 345.0), shape = [100])
-    features = constant_op.constant(self.generate_random_numbers(100, 567.0, 789.0), shape =[100])
+    # Run on CPU
+    with self.cpu_device:
+      out_cpu = sparse_softmax_cross_entropy_with_logits(features, labels)
+      with self.session as sess:
+        expected = sess.run(out_cpu)
     
     # Run on nGraph
     with self.device:
-      out = relu_grad(gradients, features)
+      out = sparse_softmax_cross_entropy_with_logits(features, labels)
       with self.session as sess:
         result = sess.run(out)
-        
-    # Run on CPU
-    with self.cpu_device:
-      out = relu_grad(gradients, features)
-      with self.session as sess:
-        expected = sess.run(out)
-    
-    assert (result == expected).all()
+  
+    assert np.allclose(result[0], expected[0])
+    assert np.allclose(result[1], expected[1])
+

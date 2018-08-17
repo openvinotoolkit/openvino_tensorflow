@@ -240,7 +240,8 @@ class NGraphEncapsulateOp : public OpKernel {
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_ngraph_cluster;
     m_ng_backend->call(ng_function, outputs, ng_inputs);
-    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster " << m_ngraph_cluster;
+    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
+                   << m_ngraph_cluster;
 
     // Mark input tensors as fresh for the next time around.
     for (int i = 0; i < input_shapes.size(); i++) {
