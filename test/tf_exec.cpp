@@ -113,11 +113,9 @@ TEST(tf_exec, axpy) {
 
 void AssertTensorEquals(Tensor& T1, Tensor& T2) {
   auto T_size = T1.flat<float>().size();
-  auto T1_data = T1.flat<float>().data();
-  auto T2_data = T2.flat<float>().data();
   for (int k = 0; k < T_size; k++) {
-    auto a = T1_data[k];
-    auto b = T2_data[k];
+    auto a = T1.flat<float>().data()[k];
+    auto b = T2.flat<float>().data()[k];
     EXPECT_FLOAT_EQ(a, b);
   }
 }
@@ -467,11 +465,11 @@ TEST(tf_exec, Op_L2Loss) {
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
 
-  std::vector< std::vector<int64> > input_sizes;
-  input_sizes.push_back( {2, 3, 4} );
-  input_sizes.push_back( {0} );
+  std::vector<std::vector<int64> > input_sizes;
+  input_sizes.push_back({2, 3, 4});
+  input_sizes.push_back({0});
 
-  for(auto const& input_size: input_sizes ) {
+  for (auto const& input_size : input_sizes) {
     Tensor input_data(DT_FLOAT, TensorShape(input_size));
     AssignInputValues(input_data, 0.0);
 
@@ -479,19 +477,18 @@ TEST(tf_exec, Op_L2Loss) {
     std::vector<Tensor> outputs_ngraph;
     std::vector<Tensor> outputs_cpu;
 
-    auto r_ngraph = ops::L2Loss(
-        root_ngraph.WithOpName("r_NGRAPH"), input_data);
+    auto r_ngraph =
+        ops::L2Loss(root_ngraph.WithOpName("r_NGRAPH"), input_data);
 
-    auto r_cpu = ops::L2Loss(
-        root.WithOpName("r_CPU"), input_data);
+    auto r_cpu = ops::L2Loss(root.WithOpName("r_CPU"), input_data);
 
-    ASSERT_OK(session.Run({r_ngraph}, &outputs_ngraph));
-    ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
-    
+    TF_CHECK_OK(session.Run({r_ngraph}, &outputs_ngraph));
+    TF_CHECK_OK(session.Run({r_cpu}, &outputs_cpu));
+
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
     AssertTensorEquals(outputs_ngraph[0], outputs_cpu[0]);
-    }
   }
+}
 
 // Test Op :"Op_Unpack"
 TEST(tf_exec, Op_Unpack) {
@@ -500,41 +497,42 @@ TEST(tf_exec, Op_Unpack) {
   root = root.WithDevice("/device:CPU:0");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
 
-  std::vector< std::vector<int64> > input_sizes;
+  std::vector<std::vector<int64> > input_sizes;
 
-  int input_rank = 3; 
-  
-  input_sizes.push_back( {3, 2, 3} );
-  input_sizes.push_back( {4, 3, 6} );
-  input_sizes.push_back( {7, 8, 3} );
-  
-  std::vector< int64> axes({0, 1, 2});
+  int input_rank = 3;
 
-  for(auto i = 0;i < input_sizes.size(); ++i) {
+  input_sizes.push_back({3, 2, 3});
+  input_sizes.push_back({4, 3, 6});
+  input_sizes.push_back({7, 8, 3});
+
+  std::vector<int64> axes({0, 1, 2});
+
+  for (auto i = 0; i < input_sizes.size(); ++i) {
     Tensor input_data(DT_FLOAT, TensorShape(input_sizes[i]));
     AssignInputValues(input_data, 0.0);
 
     ClientSession session(root);
-    std::vector<Tensor>  outputs_ngraph;
+    std::vector<Tensor> outputs_ngraph;
     std::vector<Tensor> outputs_cpu;
     ops::Unstack::Attrs attrs;
     attrs.axis_ = axes[i];
 
-    auto r_ngraph = ops::Unstack(
-        root_ngraph.WithOpName("r_NGRAPH"), input_data, input_sizes[i][axes[i]], attrs);
+    auto r_ngraph =
+        ops::Unstack(root_ngraph.WithOpName("r_NGRAPH"), input_data,
+                         input_sizes[i][axes[i]], attrs);
 
-    auto r_cpu = ops::Unstack(
-        root, input_data, input_sizes[i][axes[i]], attrs);
+    auto r_cpu =
+        ops::Unstack(root, input_data, input_sizes[i][axes[i]], attrs);
 
-    ASSERT_OK(session.Run({r_cpu[0], r_cpu[1], r_cpu[2]}, &outputs_cpu));
-    ASSERT_OK(session.Run({r_ngraph[0], r_ngraph[1], r_ngraph[2]}, &outputs_ngraph));
-    for (auto j = 0; j < input_rank;++j) {     
-        ASSERT_EQ(outputs_ngraph[j].shape(), outputs_cpu[j].shape());
-        AssertTensorEquals(outputs_ngraph[j], outputs_cpu[j]);
-      }
+    TF_CHECK_OK(session.Run({r_cpu[0], r_cpu[1], r_cpu[2]}, &outputs_cpu));
+    TF_CHECK_OK(
+        session.Run({r_ngraph[0], r_ngraph[1], r_ngraph[2]}, &outputs_ngraph));
+    for (auto j = 0; j < input_rank; ++j) {
+      ASSERT_EQ(outputs_ngraph[j].shape(), outputs_cpu[j].shape());
+      AssertTensorEquals(outputs_ngraph[j], outputs_cpu[j]);
     }
   }
-
+}
 
 TEST(tf_exec, Tile) {
   Scope root = Scope::NewRootScope();
