@@ -101,15 +101,14 @@ class NGraphRewritePass : public GraphOptimizationPass {
   }
   static std::string GraphFilenamePrefix(std::string kind, int idx) {
     std::stringstream ss;
-    ss << kind << "_"
-       << std::setfill('0') << std::setw(4) << idx;
+    ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
     return ss.str();
   }
   static std::string GraphFilenamePrefix(std::string kind, int idx,
                                          int sub_idx) {
     std::stringstream ss;
-    ss << GraphFilenamePrefix(kind, idx) << "_"
-       << std::setfill('0') << std::setw(4) << sub_idx;
+    ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
+       << std::setw(4) << sub_idx;
     return ss.str();
   }
 

@@ -52,7 +52,7 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
         bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
     else
-        bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        bash_lib_status "About to check formatting of C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
         declare SRC_FILE
         # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking

@@ -39,7 +39,8 @@ Status RewriteForTracking(Graph* graph) {
       bool just_looking = true;
 
       for (auto edge : node->out_edges()) {
-        if (edge->dst()->IsOp() && !edge->IsControlEdge() && IsRefType(edge->dst()->input_type(edge->dst_input()))) {
+        if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
+            IsRefType(edge->dst()->input_type(edge->dst_input()))) {
           just_looking = false;
           break;
         }
@@ -47,7 +48,7 @@ Status RewriteForTracking(Graph* graph) {
 
       if (just_looking) {
         NGRAPH_VLOG(4) << "Just looking: " << node->name();
-        
+
         TensorShape shape;
         DataType dtype;
         TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "shape", &shape));
@@ -55,24 +56,29 @@ Status RewriteForTracking(Graph* graph) {
 
         std::string container;
         std::string shared_name;
-        if (GetNodeAttr(node->attrs(), "container", &container) != Status::OK()) {
+        if (GetNodeAttr(node->attrs(), "container", &container) !=
+            Status::OK()) {
           container = "";
         }
-        if (GetNodeAttr(node->attrs(), "shared_name", &shared_name) != Status::OK()) {
+        if (GetNodeAttr(node->attrs(), "shared_name", &shared_name) !=
+            Status::OK()) {
           shared_name = "";
         }
 
         Node* replacement;
 
         // TODO(amprocte): Do we need to copy "_" attributes?
-        TF_RETURN_IF_ERROR(NodeBuilder(graph->NewName(node->name() + "/peek"), "NGraphVariable")
-                            .Attr("shape",shape)
-                            .Attr("dtype",dtype)
-                            .Attr("container",container)
-                            .Attr("shared_name",(shared_name.empty() ? node->name() : shared_name))
-                            .Attr("just_looking",true)
-                            .Device(node->assigned_device_name())
-                            .Finalize(graph,&replacement));
+        TF_RETURN_IF_ERROR(
+            NodeBuilder(graph->NewName(node->name() + "/peek"),
+                        "NGraphVariable")
+                .Attr("shape", shape)
+                .Attr("dtype", dtype)
+                .Attr("container", container)
+                .Attr("shared_name",
+                      (shared_name.empty() ? node->name() : shared_name))
+                .Attr("just_looking", true)
+                .Device(node->assigned_device_name())
+                .Finalize(graph, &replacement));
 
         replacement->set_assigned_device_name(node->assigned_device_name());
 
@@ -83,13 +89,13 @@ Status RewriteForTracking(Graph* graph) {
         for (auto edge : edges) {
           if (edge->dst()->IsOp()) {
             NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-            graph->UpdateEdge(replacement, edge->src_output(), edge->dst(), edge->dst_input());
+            graph->UpdateEdge(replacement, edge->src_output(), edge->dst(),
+                              edge->dst_input());
           }
         }
 
         replaced_nodes.push_back(node);
-      }
-      else {
+      } else {
         NGRAPH_VLOG(4) << "Not just looking: " << node->name();
       }
     }

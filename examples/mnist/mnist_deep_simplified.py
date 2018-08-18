@@ -37,12 +37,7 @@ import time
 from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
-#import tfgraphviz as tfg
-
-from ctypes import *
-cdll.LoadLibrary(
-    'libngraph_device.so'
-)
+import ngraph
 
 FLAGS = None
 
@@ -182,8 +177,6 @@ def train_mnist_cnn(FLAGS):
         train_writer = tf.summary.FileWriter(graph_location)
         train_writer.add_graph(tf.get_default_graph())
 
-        #g = tfg.board(tf.get_default_graph())
-        #g.render(filename="./mnist-cnn")
         saver = tf.train.Saver()
 
         with tf.Session(config=config) as sess:

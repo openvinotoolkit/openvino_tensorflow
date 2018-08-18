@@ -141,7 +141,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
 
 NGraphVariableOp::~NGraphVariableOp() { var_->Unref(); }
 
-//REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
+// REGISTER_KERNEL_BUILDER(Name("VariableV2").Device(ngraph_bridge::DEVICE_NGRAPH),
 //                        NGraphVariableOp);
 
 class NGraphAssignOp : public OpKernel {
@@ -227,7 +227,7 @@ class NGraphAssignOp : public OpKernel {
   ngb::NGraphFreshnessTracker* m_tracker;
 };
 
-//REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
+// REGISTER_KERNEL_BUILDER(Name("Assign").Device(ngraph_bridge::DEVICE_NGRAPH),
 //                        NGraphAssignOp);
 
 class NGraphIsVariableInitializedOp : public OpKernel {
@@ -247,7 +247,7 @@ class NGraphIsVariableInitializedOp : public OpKernel {
   }
 };
 
-//REGISTER_KERNEL_BUILDER(
+// REGISTER_KERNEL_BUILDER(
 //    Name("IsVariableInitialized").Device(ngraph_bridge::DEVICE_NGRAPH),
 //    NGraphIsVariableInitializedOp);
 //

@@ -58,10 +58,12 @@ Status CaptureVariables(Graph* graph) {
 
         std::string container;
         std::string shared_name;
-        if (GetNodeAttr(node->attrs(), "container", &container) != Status::OK()) {
+        if (GetNodeAttr(node->attrs(), "container", &container) !=
+            Status::OK()) {
           container = "";
         }
-        if (GetNodeAttr(node->attrs(), "shared_name", &shared_name) != Status::OK()) {
+        if (GetNodeAttr(node->attrs(), "shared_name", &shared_name) !=
+            Status::OK()) {
           shared_name = "";
         }
 
@@ -69,12 +71,12 @@ Status CaptureVariables(Graph* graph) {
 
         // TODO(amprocte): Do we need to copy "_" attributes?
         TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "NGraphVariable")
-                            .Attr("shape",shape)
-                            .Attr("dtype",dtype)
-                            .Attr("container",container)
-                            .Attr("shared_name",shared_name)
-                            .Device(node->assigned_device_name())
-                            .Finalize(graph,&replacement));
+                               .Attr("shape", shape)
+                               .Attr("dtype", dtype)
+                               .Attr("container", container)
+                               .Attr("shared_name", shared_name)
+                               .Device(node->assigned_device_name())
+                               .Finalize(graph, &replacement));
 
         replacement->set_assigned_device_name(node->assigned_device_name());
 
@@ -84,7 +86,8 @@ Status CaptureVariables(Graph* graph) {
         }
         for (auto edge : edges) {
           NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-          graph->UpdateEdge(replacement, edge->src_output(), edge->dst(), edge->dst_input());
+          graph->UpdateEdge(replacement, edge->src_output(), edge->dst(),
+                            edge->dst_input());
         }
 
         replaced_nodes.push_back(node);

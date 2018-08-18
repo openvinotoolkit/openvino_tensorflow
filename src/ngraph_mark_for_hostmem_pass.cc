@@ -65,6 +65,6 @@ tf::Status NGraphMarkForHostmemPass::Run(
 }  // namespace ngraph_bridge
 
 namespace tensorflow {
-//REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 115,
+// REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 115,
 //                      ngraph_bridge::NGraphMarkForHostmemPass);
 }  // namespace tensorflow

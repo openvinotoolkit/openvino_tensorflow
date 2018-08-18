@@ -25,7 +25,6 @@ import ctypes
 
 import numpy as np
 import tensorflow as tf
-import tfgraphviz as tfg
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
@@ -72,5 +71,3 @@ with tf.Session(config=config) as sess:
 train_writer.add_graph(tf.get_default_graph())
 tf.train.write_graph(
     tf.get_default_graph(), '.', 'axpy.pbtxt', as_text=True)
-g = tfg.board(tf.get_default_graph())
-g.render(filename="./axpy")

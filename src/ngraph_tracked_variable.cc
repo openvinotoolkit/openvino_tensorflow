@@ -41,7 +41,8 @@ namespace ngraph_bridge {
 // constructor.)
 class NGraphVar : public ResourceBase {
  public:
-  explicit NGraphVar(DataType dtype,TensorShape shape) : tensor_(dtype,shape) {}
+  explicit NGraphVar(DataType dtype, TensorShape shape)
+      : tensor_(dtype, shape) {}
   // Not copyable or movable.
   NGraphVar(const NGraphVar&) = delete;
   NGraphVar& operator=(const NGraphVar&) = delete;
@@ -88,9 +89,7 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
   dtype_ = RemoveRefType(context->output_type(0));
 }
 
-NGraphVariableOp::~NGraphVariableOp() {
-  tracker_->Unref();
-}
+NGraphVariableOp::~NGraphVariableOp() { tracker_->Unref(); }
 
 // (Changes: Renamed from VariableOp, modified to pass TensorShape to NGraphVar
 // constructor.)
@@ -102,7 +101,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     initialized_ = true;
   }
   auto creator = [this](NGraphVar** var) {
-    *var = new NGraphVar(dtype_,shape_);
+    *var = new NGraphVar(dtype_, shape_);
     //(*var)->tensor()->set_shape(shape_);
     return Status::OK();
   };
@@ -123,35 +122,39 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     return Status::OK();
   };
   if (tracker_ == nullptr) {
-    if(NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": getting tracker";
+    if (NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name()
+                     << ": getting tracker";
     }
-    OP_REQUIRES_OK(ctx,
-                   ctx->resource_manager()
-                       ->LookupOrCreate<NGraphFreshnessTracker>(
-                           ctx->resource_manager()->default_container(),
-                           "ngraph_freshness_tracker", &tracker_, t_creator));
-    if(NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": got tracker";
+    OP_REQUIRES_OK(
+        ctx, ctx->resource_manager()->LookupOrCreate<NGraphFreshnessTracker>(
+                 ctx->resource_manager()->default_container(),
+                 "ngraph_freshness_tracker", &tracker_, t_creator));
+    if (NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name()
+                     << ": got tracker";
     }
-
   }
 
-  if(NGRAPH_VLOG_IS_ON(5)) {
-    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": adding " << DMAHelper::base(var->tensor());
+  if (NGRAPH_VLOG_IS_ON(5)) {
+    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": adding "
+                   << DMAHelper::base(var->tensor());
   }
   tracker_->AddTensor(DMAHelper::base(var->tensor()));
-  if(NGRAPH_VLOG_IS_ON(5)) {
-    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": added " << DMAHelper::base(var->tensor());
+  if (NGRAPH_VLOG_IS_ON(5)) {
+    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": added "
+                   << DMAHelper::base(var->tensor());
   }
 
   if (!just_looking_) {
-    if(NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marking " << DMAHelper::base(var->tensor());
+    if (NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marking "
+                     << DMAHelper::base(var->tensor());
     }
     tracker_->MarkStale(DMAHelper::base(var->tensor()));
-    if(NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marked " << DMAHelper::base(var->tensor());
+    if (NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marked "
+                     << DMAHelper::base(var->tensor());
     }
   }
 
@@ -178,6 +181,6 @@ REGISTER_OP("NGraphVariable")
 REGISTER_KERNEL_BUILDER(Name("NGraphVariable").Device(DEVICE_CPU),
                         NGraphVariableOp);
 
-} // namespace ngraph_bridge
+}  // namespace ngraph_bridge
 
-} // namespace tensorflow
+}  // namespace tensorflow

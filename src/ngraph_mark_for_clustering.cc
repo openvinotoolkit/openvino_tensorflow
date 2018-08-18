@@ -231,9 +231,9 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
       type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
       type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
-            NGraphNumericDTypes();
-        type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =
-            NGraphNumericDTypes();
+          NGraphNumericDTypes();
+      type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =
+          NGraphNumericDTypes();
       type_constraint_map["Split"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
@@ -275,8 +275,7 @@ Status MarkForClustering(Graph* graph) {
 
         std::vector<int64> tf_orig_input_shape_vec;
         if (ExtractConstantData(tf_orig_input_shape,
-                                &tf_orig_input_shape_vec) !=
-                Status::OK() ||
+                                &tf_orig_input_shape_vec) != Status::OK() ||
             tf_orig_input_shape_vec.size() != 4) {
           *result = false;
           return Status::OK();

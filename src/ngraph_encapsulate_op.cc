@@ -60,7 +60,9 @@ REGISTER_OP("NGraphEncapsulate")
 class NGraphEncapsulateOp : public OpKernel {
  public:
   explicit NGraphEncapsulateOp(OpKernelConstruction* ctx)
-      : OpKernel(ctx), m_graph(OpRegistry::Global()), m_freshness_tracker(nullptr) {
+      : OpKernel(ctx),
+        m_graph(OpRegistry::Global()),
+        m_freshness_tracker(nullptr) {
     GraphDef* graph_def;
 
     // TODO(amprocte): need to check status result here.
@@ -112,7 +114,8 @@ class NGraphEncapsulateOp : public OpKernel {
 
   // TODO(amprocte): this needs to be made thread-safe (compilation cache OK?).
   void Compute(OpKernelContext* ctx) override {
-    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster " << m_ngraph_cluster;
+    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
+                   << m_ngraph_cluster;
 
     // Get the inputs
     std::vector<TensorShape> input_shapes;
@@ -167,10 +170,9 @@ class NGraphEncapsulateOp : public OpKernel {
         return Status::OK();
       };
       OP_REQUIRES_OK(
-          ctx,
-          ctx->resource_manager()->LookupOrCreate<NGraphFreshnessTracker>(
-              ctx->resource_manager()->default_container(),
-              "ngraph_freshness_tracker", &m_freshness_tracker, creator));
+          ctx, ctx->resource_manager()->LookupOrCreate<NGraphFreshnessTracker>(
+                   ctx->resource_manager()->default_container(),
+                   "ngraph_freshness_tracker", &m_freshness_tracker, creator));
     }
 
     NGRAPH_VLOG(4)

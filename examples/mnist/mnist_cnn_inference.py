@@ -38,10 +38,9 @@ import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
+import ngraph
 
 FLAGS = None
-
-import ngraph
 
 def deepnn_inference(x):
     """deepnn builds the graph for a deep net for classifying digits.
@@ -139,61 +138,58 @@ def train_mnist_cnn(FLAGS):
     # Import data
     mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
-    exec_device = '/device:'+FLAGS.select_device+':0'
+    # Create the model
+    x = tf.placeholder(tf.float32, [None, 784])
 
-    with tf.device(exec_device):
-        # Create the model
-        x = tf.placeholder(tf.float32, [None, 784])
+    # Define loss and optimizer
+    y_ = tf.placeholder(tf.float32, [None, 10])
 
-        # Define loss and optimizer
-        y_ = tf.placeholder(tf.float32, [None, 10])
+    # Build the graph for the deep net
+    y_conv, keep_prob = deepnn_inference(x)
 
-        # Build the graph for the deep net
-        y_conv, keep_prob = deepnn_inference(x)
+    with tf.name_scope('accuracy'):
+        correct_prediction = tf.equal(
+            tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.cast(correct_prediction, tf.float32)
 
-        with tf.name_scope('accuracy'):
-            correct_prediction = tf.equal(
-                tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-            correct_prediction = tf.cast(correct_prediction, tf.float32)
-
-        accuracy = tf.reduce_mean(correct_prediction)
-        tf.summary.scalar('test accuracy', accuracy)
+    accuracy = tf.reduce_mean(correct_prediction)
+    tf.summary.scalar('test accuracy', accuracy)
 
 
-        graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/mnist-convnet"
-        print('Saving graph to: %s' % graph_location)
+    graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/mnist-convnet"
+    print('Saving graph to: %s' % graph_location)
 
-        merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(graph_location)
-        train_writer.add_graph(tf.get_default_graph())
-        saver = tf.train.Saver()
-        with tf.Session(config=config) as sess:
-            saver.restore(sess,FLAGS.model_dir)
-            #sess.run(tf.global_variables_initializer())
-            test_accuracy_final=0
-            num_eval_cycles = FLAGS.num_eval_cycles
+    merged = tf.summary.merge_all()
+    train_writer = tf.summary.FileWriter(graph_location)
+    train_writer.add_graph(tf.get_default_graph())
+    saver = tf.train.Saver()
+    with tf.Session(config=config) as sess:
+        saver.restore(sess,FLAGS.model_dir)
+        #sess.run(tf.global_variables_initializer())
+        test_accuracy_final=0
+        num_eval_cycles = FLAGS.num_eval_cycles
 
-            for i in range(num_eval_cycles):
-                batch = mnist.test.next_batch(FLAGS.batch_size)
-                t = time.time()
-                summary, test_accuracy = sess.run(
-                    [merged, accuracy],
-                    feed_dict={
-                        x: batch[0],
-                        y_: batch[1],
-                        keep_prob: 0.5
-                    })
-                test_accuracy_final=test_accuracy_final+test_accuracy
-                reference_accucary = 0.9612
-                print('step %d, test_accuracy %g, %g sec for infernce step' % (i, test_accuracy, time.time() - t ))
-                train_writer.add_summary(summary, i)
-            test_accuracy_final=test_accuracy_final/num_eval_cycles
-            print( "Inference  finished")
-            print (test_accuracy_final)
-            print ('Reference accuracy %g' % (reference_accucary))
-            assert (reference_accucary-test_accuracy_final)/reference_accucary < 0.05
-            print("The validation accuracy is within 5% of the trained reference data!")
-            return test_accuracy_final
+        for i in range(num_eval_cycles):
+            batch = mnist.test.next_batch(FLAGS.batch_size)
+            t = time.time()
+            summary, test_accuracy = sess.run(
+                [merged, accuracy],
+                feed_dict={
+                    x: batch[0],
+                    y_: batch[1],
+                    keep_prob: 0.5
+                })
+            test_accuracy_final=test_accuracy_final+test_accuracy
+            reference_accucary = 0.9612
+            print('step %d, test_accuracy %g, %g sec for infernce step' % (i, test_accuracy, time.time() - t ))
+            train_writer.add_summary(summary, i)
+        test_accuracy_final=test_accuracy_final/num_eval_cycles
+        print( "Inference  finished")
+        print (test_accuracy_final)
+        print ('Reference accuracy %g' % (reference_accucary))
+        assert (reference_accucary-test_accuracy_final)/reference_accucary < 0.05
+        print("The validation accuracy is within 5% of the trained reference data!")
+        return test_accuracy_final
 
 def main(_):
     train_mnist_cnn(FLAGS)
@@ -206,11 +202,6 @@ if __name__ == '__main__':
         type=str,
         default='/tmp/tensorflow/mnist/input_data',
         help='Directory where input data is stored')
-    parser.add_argument(
-        '--select_device',
-        type=str,
-        default='NGRAPH',
-        help='select device to execute on')
     parser.add_argument(
         '--num_eval_cycles',
         type=int,

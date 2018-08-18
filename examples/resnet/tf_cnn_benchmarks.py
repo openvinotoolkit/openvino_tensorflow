@@ -24,9 +24,6 @@ from absl import app
 from absl import flags as absl_flags
 import tensorflow as tf
 
-#import ctypes
-#lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
-
 import ngraph
 import benchmark_cnn
 import cnn_util

@@ -32,8 +32,6 @@ from tensorflow.python.framework import errors_impl
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops
  
-print("TensorFlow version installed: ", tf.VERSION, " (", tf.GIT_VERSION, ")" )
-print("Version needed: ", "${TensorFlow_GIT_VERSION}" ) 
 import ctypes
 
 # TODO(amprocte): need some way to detect double-load of plugin.
@@ -44,7 +42,6 @@ ext = 'dylib' if system() == 'Darwin' else 'so'
 if tf.GIT_VERSION == "${TensorFlow_GIT_VERSION}":
     libpath = os.path.dirname(__file__)
     lib = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_device.'+ext))
-    print("Module nGraph loaded.")
 else:
     raise ValueError(
         "Error: Wrong TensorFlow version " + tf.GIT_VERSION +
