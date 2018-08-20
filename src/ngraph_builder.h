@@ -32,9 +32,10 @@ namespace ngraph_bridge {
 
 class Builder {
  public:
-  static Status TranslateGraph(const std::vector<TensorShape>& inputs,
-                               const Graph* tf_graph,
-                               std::shared_ptr<ngraph::Function>& ng_function);
+  static Status TranslateGraph(
+      const std::vector<TensorShape>& inputs,
+      const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
+      std::shared_ptr<ngraph::Function>& ng_function);
 
   using OpMap = std::unordered_map<std::string,
                                    std::vector<std::shared_ptr<ngraph::Node>>>;

@@ -1,5 +1,5 @@
 /*******************************************************************************
-o * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2018 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ o * Copyright 2017-2018 Intel Corporation
 #include "ngraph_cluster_manager.h"
 #include "ngraph_freshness_tracker.h"
 #include "ngraph_log.h"
+#include "ngraph_mark_for_clustering.h"
 #include "ngraph_utils.h"
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
@@ -65,14 +66,61 @@ class NGraphEncapsulateOp : public OpKernel {
         m_freshness_tracker(nullptr) {
     GraphDef* graph_def;
 
-    // TODO(amprocte): need to check status result here.
     OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ngraph_cluster", &m_ngraph_cluster));
     graph_def = NGraphClusterManager::GetClusterGraph(m_ngraph_cluster);
 
     GraphConstructorOptions opts;
     opts.allow_internal_ops = true;
-    // TODO(amprocte): need to check status result here.
     OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
+
+    //
+    // Initialize the "m_input_is_static" vector as follows:
+    // (1) create m_input_is_static with n+1 elements, where n is the max arg
+    //     index
+    // (2) for each _Arg node n, set m_input_is_static[n.index] to true if n
+    //     is driving any static input; else set it to false.
+    //
+
+    // Create the vector.
+    int32 max_arg_index = -1;
+    std::vector<const Node*> arg_nodes;
+
+    for (auto node : m_graph.nodes()) {
+      if (node->type_string() == "_Arg") {
+        arg_nodes.push_back(node);
+
+        int32 index;
+        OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
+        if (index > max_arg_index) max_arg_index = index;
+      }
+    }
+
+    m_input_is_static = std::vector<bool>(max_arg_index + 1, false);
+
+    // Fill the vector.
+    for (auto node : arg_nodes) {
+      int32 index;
+      OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
+
+      bool is_static = false;
+      for (auto edge : node->out_edges()) {
+        if (edge->IsControlEdge() || !edge->dst()->IsOp()) {
+          continue;
+        }
+
+        NGRAPH_VLOG(5) << "For arg " << index << " checking edge "
+                       << edge->DebugString();
+
+        if (InputIsStatic(edge->dst(), edge->dst_input())) {
+          NGRAPH_VLOG(5) << "Marking edge static: " << edge->DebugString();
+          is_static = true;
+          break;
+        }
+      }
+
+      NGRAPH_VLOG(5) << "Marking arg " << index << " is_static: " << is_static;
+      m_input_is_static[index] = is_static;
+    }
 
     // Create the backend
     if (m_ng_backend == nullptr) {
@@ -112,6 +160,67 @@ class NGraphEncapsulateOp : public OpKernel {
     }
   }
 
+  template <typename T>
+  static void TensorDataToStream(std::ostream& ostream, int64 n_elements,
+                                 const char* data) {
+    const T* data_T = reinterpret_cast<const T*>(data);
+    for (size_t i = 0; i < n_elements; i++) {
+      ostream << data_T[i] << ",";
+    }
+  }
+
+  static Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
+    const char* data = tensor.tensor_data().data();
+    int64 n_elements = tensor.NumElements();
+    switch (tensor.dtype()) {
+      case DT_HALF:
+        TensorDataToStream<Eigen::half>(ostream, n_elements, data);
+        break;
+      case DT_FLOAT:
+        TensorDataToStream<float>(ostream, n_elements, data);
+        break;
+      case DT_DOUBLE:
+        TensorDataToStream<double>(ostream, n_elements, data);
+        break;
+      case DT_UINT32:
+        TensorDataToStream<uint32>(ostream, n_elements, data);
+        break;
+      case DT_INT32:
+        TensorDataToStream<int32>(ostream, n_elements, data);
+        break;
+      case DT_UINT8:
+      case DT_QUINT8:
+        TensorDataToStream<uint8>(ostream, n_elements, data);
+        break;
+      case DT_UINT16:
+      case DT_QUINT16:
+        TensorDataToStream<uint16>(ostream, n_elements, data);
+        break;
+      case DT_INT8:
+      case DT_QINT8:
+        TensorDataToStream<int8>(ostream, n_elements, data);
+        break;
+      case DT_INT16:
+      case DT_QINT16:
+        TensorDataToStream<int16>(ostream, n_elements, data);
+        break;
+      case DT_UINT64:
+        TensorDataToStream<uint64>(ostream, n_elements, data);
+        break;
+      case DT_INT64:
+        TensorDataToStream<int64>(ostream, n_elements, data);
+        break;
+      case DT_BOOL:
+        TensorDataToStream<bool>(ostream, n_elements, data);
+        break;
+      default:
+        return errors::Internal("TensorToStream got unsupported data type ",
+                                DataType_Name(tensor.dtype()));
+        break;
+    }
+    return Status::OK();
+  }
+
   // TODO(amprocte): this needs to be made thread-safe (compilation cache OK?).
   void Compute(OpKernelContext* ctx) override {
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
@@ -129,8 +238,25 @@ class NGraphEncapsulateOp : public OpKernel {
       signature_ss << ";";
     }
 
+    signature_ss << "/";
+
+    std::vector<const Tensor*> static_input_map(ctx->num_inputs());
+    for (int i = 0; i < ctx->num_inputs(); i++) {
+      const Tensor& input_tensor = ctx->input(i);
+      if (m_input_is_static[i]) {
+        static_input_map[i] = &input_tensor;
+        OP_REQUIRES_OK(ctx, TensorToStream(signature_ss, input_tensor));
+        signature_ss << ";";
+      }
+    }
+
     std::shared_ptr<ngraph::Function> ng_function;
     std::string signature = signature_ss.str();
+
+    if (NGRAPH_VLOG_IS_ON(5)) {
+      NGRAPH_VLOG(5) << "Computed signature: " << signature;
+    }
+
     auto it = m_ng_functions.find(signature);
 
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
@@ -142,7 +268,8 @@ class NGraphEncapsulateOp : public OpKernel {
     if (it == m_ng_functions.end()) {
       NGRAPH_VLOG(1) << "Compilation cache miss: " << ctx->op_kernel().name();
       OP_REQUIRES_OK(
-          ctx, Builder::TranslateGraph(input_shapes, &m_graph, ng_function));
+          ctx, Builder::TranslateGraph(input_shapes, static_input_map, &m_graph,
+                                       ng_function));
 
       // Serialize to nGraph if needed
       if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
@@ -349,6 +476,7 @@ class NGraphEncapsulateOp : public OpKernel {
   NGraphFreshnessTracker* m_freshness_tracker;
   int m_ngraph_cluster;
   static std::shared_ptr<ng::runtime::Backend> m_ng_backend;
+  std::vector<bool> m_input_is_static;
   static std::string m_ng_backend_name;
 };
 

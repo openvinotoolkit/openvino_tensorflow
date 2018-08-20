@@ -168,6 +168,111 @@ static Status GetInputNodes(const Builder::OpMap& ng_op_map, const Node* op,
   return detail::GetInputNodes(ng_op_map, op, 0, remaining...);
 }
 
+static Status GetStaticNodeTensor(
+    const Node* node, const std::vector<const Tensor*>& static_input_map,
+    Tensor* result) {
+  if (node->type_string() == "_Arg") {
+    int arg_index;
+    TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "index", &arg_index));
+    const Tensor* source_tensor = static_input_map[arg_index];
+    if (source_tensor == nullptr) {
+      return errors::Internal(
+          "GetStaticNodeTensor called on _Arg but input tensor is missing from "
+          "static input map");
+    }
+    *result = *source_tensor;
+    return Status::OK();
+  } else if (node->type_string() == "Const") {
+    if (!result->FromProto(node->def().attr().at("value").tensor())) {
+      return errors::Internal(
+          "GetStaticNodeTensor: Const tensor proto parsing failed");
+    }
+    return Status::OK();
+  } else {
+    return errors::Internal("GetStaticNodeTensor called on node with type ",
+                            node->type_string(), "; _Arg or Const expected");
+  }
+}
+
+template <typename Ttensor, typename Tvector>
+static void ConvertTensorDataToVector(const Tensor& tensor,
+                                      std::vector<Tvector>* vector) {
+  const Ttensor* data = tensor.flat<Ttensor>().data();
+  vector->resize(tensor.NumElements());
+  for (int64 i = 0; i < tensor.NumElements(); i++) {
+    (*vector)[i] = Tvector(data[i]);
+  }
+}
+
+template <typename T>
+static Status TensorDataToVector(const Tensor& tensor, std::vector<T>* vector) {
+  DataType dt = tensor.dtype();
+
+  // If dt and T match, we can just copy.
+  if (dt == DataTypeToEnum<T>::value) {
+    *vector = std::vector<T>(tensor.flat<T>().data(),
+                             tensor.flat<T>().data() + tensor.NumElements());
+  }
+  // Else we have to convert.
+  else {
+    switch (dt) {
+      case DT_FLOAT:
+        ConvertTensorDataToVector<float, T>(tensor, vector);
+        break;
+      case DT_DOUBLE:
+        ConvertTensorDataToVector<double, T>(tensor, vector);
+        break;
+      case DT_INT8:
+        ConvertTensorDataToVector<int8, T>(tensor, vector);
+        break;
+      case DT_INT16:
+        ConvertTensorDataToVector<int16, T>(tensor, vector);
+        break;
+      case DT_INT32:
+        ConvertTensorDataToVector<int32, T>(tensor, vector);
+        break;
+      case DT_INT64:
+        ConvertTensorDataToVector<int64, T>(tensor, vector);
+        break;
+      case DT_UINT8:
+        ConvertTensorDataToVector<uint8, T>(tensor, vector);
+        break;
+      case DT_UINT16:
+        ConvertTensorDataToVector<uint16, T>(tensor, vector);
+        break;
+      case DT_UINT32:
+        ConvertTensorDataToVector<uint32, T>(tensor, vector);
+        break;
+      case DT_UINT64:
+        ConvertTensorDataToVector<uint64, T>(tensor, vector);
+        break;
+      case DT_BOOL:
+        ConvertTensorDataToVector<bool, T>(tensor, vector);
+        break;
+      default:
+        return errors::Internal("TensorDataToVector: tensor has element type ",
+                                DataType_Name(dt), ", vector has type ",
+                                DataType_Name(DataTypeToEnum<T>::value),
+                                "; don't know how to convert");
+    }
+  }
+  return Status::OK();
+}
+
+template <typename T>
+static Status GetStaticInputVector(
+    const Node* op, int64 input_index,
+    const std::vector<const Tensor*>& static_input_map,
+    std::vector<T>* vector) {
+  Node* input_node;
+  TF_RETURN_IF_ERROR(op->input_node(input_index, &input_node));
+  Tensor input_tensor;
+  TF_RETURN_IF_ERROR(
+      GetStaticNodeTensor(input_node, static_input_map, &input_tensor));
+  TF_RETURN_IF_ERROR(TensorDataToVector(input_tensor, vector));
+  return Status::OK();
+}
+
 // Helper for Builder::TranslateGraph ("Const" op)
 template <typename T, typename VecT = T>
 static Status MakeConstOp(const Node* op, ng::element::Type et,
@@ -207,7 +312,9 @@ const static std::map<
 //
 // Parameters:
 //
-//    Node* op               - TF op being translated. Must have one input.
+//    Node* op                   - TF op being translated. Must have one input.
+//    const std::vector<const Tensor*>& static_input_map
+//                               - the static input map
 //    Builder::OpMap& ng_op_map  - The TF-to-nGraph op map.
 //
 //    std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>>
@@ -218,13 +325,14 @@ const static std::map<
 // Example usage:
 //
 //  if (n->type_string == "Square") {
-//    TF_RETURN_IF_ERROR(TranslateUnaryOp(n, ng_op_map,
+//    TF_RETURN_IF_ERROR(TranslateUnaryOp(n, static_input_map, ng_op_map,
 //                       [] (std::shared_ptr<ng::Node> n) {
 //                           return (std::make_shared<ng::op::Multiply>(n,n));
 //                       });
 //  }
 static Status TranslateUnaryOp(
-    const Node* op, Builder::OpMap& ng_op_map,
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map,
     std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>)>
         create_unary_op) {
   shared_ptr<ng::Node> ng_input;
@@ -240,14 +348,17 @@ static Status TranslateUnaryOp(
 // Example usage:
 //
 //  if (n->type_string == "Abs") {
-//    TF_RETURN_IF_ERROR(TranslateUnaryOp<ng::op::Abs>(n, ng_op_map));
+//    TF_RETURN_IF_ERROR(TranslateUnaryOp<ng::op::Abs>(n, static_input_map,
+//    ng_op_map));
 //  }
 //
 template <typename T>
-static Status TranslateUnaryOp(const Node* op, Builder::OpMap& ng_op_map) {
-  return TranslateUnaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> n) {
-    return make_shared<T>(n);
-  });
+static Status TranslateUnaryOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(
+      op, static_input_map, ng_op_map,
+      [](std::shared_ptr<ng::Node> n) { return make_shared<T>(n); });
 }
 
 // Helper function to translate a binary op
@@ -255,6 +366,7 @@ static Status TranslateUnaryOp(const Node* op, Builder::OpMap& ng_op_map) {
 //
 //    Node* op               - TF op being translated. Must have only two
 //    inputs.
+//    const std::vector<const Tensor*>& static_input_map - the static input map
 //    Builder::OpMap& ng_op_map  - The TF-to-nGraph op map.
 //    std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>,
 //    std::shared_ptr<ng::Node>)>
@@ -274,7 +386,8 @@ static Status TranslateUnaryOp(const Node* op, Builder::OpMap& ng_op_map) {
 //
 
 static Status TranslateBinaryOp(
-    const Node* op, Builder::OpMap& ng_op_map,
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map,
     std::function<std::shared_ptr<ng::Node>(std::shared_ptr<ng::Node>,
                                             std::shared_ptr<ng::Node>)>
         create_binary_op) {
@@ -295,18 +408,24 @@ static Status TranslateBinaryOp(
 // Example usage:
 //
 //  if (n->type_string == "Add") {
-//    TF_RETURN_IF_ERROR(TranslateBinaryOp<ng::op::Add>(op, ng_op_map));
+//    TF_RETURN_IF_ERROR(TranslateBinaryOp<ng::op::Add>(op, static_input_map,
+//    ng_op_map));
 //  }
 //
 template <typename T>
-static Status TranslateBinaryOp(const Node* op, Builder::OpMap& ng_op_map) {
-  return TranslateBinaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> ng_lhs,
-                                             std::shared_ptr<ng::Node> ng_rhs) {
-    return make_shared<T>(ng_lhs, ng_rhs);
-  });
+static Status TranslateBinaryOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateBinaryOp(
+      op, static_input_map, ng_op_map,
+      [](std::shared_ptr<ng::Node> ng_lhs, std::shared_ptr<ng::Node> ng_rhs) {
+        return make_shared<T>(ng_lhs, ng_rhs);
+      });
 }
 
-static Status TranslateAddNOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateAddNOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   std::vector<shared_ptr<ng::Node>> ng_arg_vec(op->num_inputs());
 
   for (int inp_idx = 0; inp_idx < op->num_inputs(); inp_idx++)
@@ -321,7 +440,9 @@ static Status TranslateAddNOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateAvgPoolOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateAvgPoolOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -380,15 +501,15 @@ static Status TranslateAvgPoolOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateAvgPoolGradOp(const Node* op,
-                                     Builder::OpMap& ng_op_map) {
+static Status TranslateAvgPoolGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_grad;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_grad));
 
   std::vector<int32> tf_orig_input_shape_vec;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(),
-                                 "_ngraph_avgpoolgrad_static_input_shape",
-                                 &tf_orig_input_shape_vec));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 0, static_input_map, &tf_orig_input_shape_vec));
 
   std::vector<int32> tf_strides;
   std::vector<int32> tf_ksize;
@@ -457,8 +578,9 @@ static Status TranslateAvgPoolGradOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateBatchMatMulOp(const Node* op,
-                                     Builder::OpMap& ng_op_map) {
+static Status TranslateBatchMatMulOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_lhs, ng_rhs;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_lhs, &ng_rhs));
 
@@ -566,7 +688,9 @@ static Status TranslateBatchMatMulOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateBiasAddOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateBiasAddOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_bias;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_bias));
 
@@ -612,8 +736,9 @@ static Status TranslateBiasAddOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateBiasAddGradOp(const Node* op,
-                                     Builder::OpMap& ng_op_map) {
+static Status TranslateBiasAddGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -660,7 +785,9 @@ static Status TranslateBiasAddGradOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateCastOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateCastOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -678,16 +805,16 @@ static Status TranslateCastOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateConcatV2Op(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateConcatV2Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCountMin(op, 2));
 
-  shared_ptr<ng::Node> ng_axis_op;
-  TF_RETURN_IF_ERROR(
-      GetInputNode(ng_op_map, op, op->num_inputs() - 1, &ng_axis_op));
+  std::vector<int64> tf_concat_axis_vec;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(
+      op, op->num_inputs() - 1, static_input_map, &tf_concat_axis_vec));
 
-  int64 concat_axis;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_concat_static_axis", &concat_axis));
+  int64 concat_axis = tf_concat_axis_vec[0];
 
   if (concat_axis < 0) {
     shared_ptr<ng::Node> ng_first_arg;
@@ -709,7 +836,9 @@ static Status TranslateConcatV2Op(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateConstOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateConstOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   DataType dtype;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "dtype", &dtype));
 
@@ -737,7 +866,9 @@ static Status TranslateConstOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateConv2DOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateConv2DOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_filter;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_filter));
 
@@ -799,8 +930,9 @@ static Status TranslateConv2DOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateConv2DBackpropFilterOp(const Node* op,
-                                              Builder::OpMap& ng_op_map) {
+static Status TranslateConv2DBackpropFilterOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_data_batch, ng_output_delta;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, &ng_data_batch, nullptr, &ng_output_delta));
@@ -839,8 +971,9 @@ static Status TranslateConv2DBackpropFilterOp(const Node* op,
   }
 
   std::vector<int64> tf_filter_sizes;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "_ngraph_static_filter_sizes",
-                                 &tf_filter_sizes));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 1, static_input_map, &tf_filter_sizes));
+
   if (std::any_of(tf_filter_sizes.begin(), tf_filter_sizes.end(),
                   [](int32 size) { return size <= 0; })) {
     return errors::InvalidArgument("Filter sizes must be positive integers :",
@@ -926,8 +1059,9 @@ static Status TranslateConv2DBackpropFilterOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateConv2DBackpropInputOp(const Node* op,
-                                             Builder::OpMap& ng_op_map) {
+static Status TranslateConv2DBackpropInputOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_filter, ng_out_backprop;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, nullptr, &ng_filter, &ng_out_backprop));
@@ -950,7 +1084,8 @@ static Status TranslateConv2DBackpropInputOp(const Node* op,
 
   std::vector<int64> tf_input_sizes;
   TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_static_input_sizes", &tf_input_sizes));
+      GetStaticInputVector(op, 0, static_input_map, &tf_input_sizes));
+
   if (std::any_of(tf_input_sizes.begin(), tf_input_sizes.end(),
                   [](int32 size) { return size <= 0; })) {
     return errors::InvalidArgument(
@@ -1016,8 +1151,9 @@ static Status TranslateConv2DBackpropInputOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateDepthwiseConv2dNativeOp(const Node* op,
-                                               Builder::OpMap& ng_op_map) {
+static Status TranslateDepthwiseConv2dNativeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_filter;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_filter));
 
@@ -1109,13 +1245,14 @@ static Status TranslateDepthwiseConv2dNativeOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateExpandDimsOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateExpandDimsOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_dim;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_dim));
 
   std::vector<int64> dim_vec;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_expanddims_static_dim", &dim_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &dim_vec));
 
   if (dim_vec.size() != 1) {
     return errors::InvalidArgument(
@@ -1140,13 +1277,14 @@ static Status TranslateExpandDimsOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateFillOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateFillOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_value;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_value));
 
   std::vector<int64> dims_vec;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_fill_static_dims", &dims_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 0, static_input_map, &dims_vec));
 
   ng::Shape ng_output_shape(dims_vec.size());
   ng::AxisSet ng_axis_set;
@@ -1159,16 +1297,20 @@ static Status TranslateFillOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateFloorDivOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateFloorDivOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   auto ng_floordiv = [](std::shared_ptr<ng::Node> ng_input1,
                         std::shared_ptr<ng::Node> ng_input2) {
     return std::make_shared<ng::op::Floor>(
         std::make_shared<ng::op::Divide>(ng_input1, ng_input2));
   };
-  return TranslateBinaryOp(op, ng_op_map, ng_floordiv);
+  return TranslateBinaryOp(op, static_input_map, ng_op_map, ng_floordiv);
 }
 
-static Status TranslateFloorModOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateFloorModOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   auto ng_floormod = [](std::shared_ptr<ng::Node> ng_input1,
                         std::shared_ptr<ng::Node> ng_input2) {
     auto floordiv = std::make_shared<ng::op::Floor>(
@@ -1176,11 +1318,12 @@ static Status TranslateFloorModOp(const Node* op, Builder::OpMap& ng_op_map) {
     return std::make_shared<ng::op::Subtract>(
         ng_input1, std::make_shared<ng::op::Multiply>(floordiv, ng_input2));
   };
-  return TranslateBinaryOp(op, ng_op_map, ng_floormod);
+  return TranslateBinaryOp(op, static_input_map, ng_op_map, ng_floormod);
 }
 
-static Status TranslateFusedBatchNormOp(const Node* op,
-                                        Builder::OpMap& ng_op_map) {
+static Status TranslateFusedBatchNormOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   bool tf_is_training;
   if (GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
       Status::OK()) {
@@ -1228,8 +1371,9 @@ static Status TranslateFusedBatchNormOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateFusedBatchNormGradOp(const Node* op,
-                                            Builder::OpMap& ng_op_map) {
+static Status TranslateFusedBatchNormGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 5));
 
   bool tf_is_training;
@@ -1305,14 +1449,18 @@ static Status TranslateFusedBatchNormGradOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateIdentityOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateIdentityOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_arg;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_arg));
   SaveNgOp(ng_op_map, op->name(), ng_arg);
   return Status::OK();
 }
 
-static Status TranslateL2LossOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateL2LossOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1335,7 +1483,9 @@ static Status TranslateL2LossOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateMatMulOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateMatMulOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_lhs, ng_rhs;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_lhs, &ng_rhs));
 
@@ -1358,7 +1508,9 @@ static Status TranslateMatMulOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateMaxPoolOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateMaxPoolOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1418,8 +1570,9 @@ static Status TranslateMaxPoolOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateMaxPoolGradOp(const Node* op,
-                                     Builder::OpMap& ng_op_map) {
+static Status TranslateMaxPoolGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_grad;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, &ng_input, nullptr, &ng_grad));
@@ -1474,7 +1627,9 @@ static Status TranslateMaxPoolGradOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateMeanOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateMeanOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_axes_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axes_op));
 
@@ -1484,8 +1639,7 @@ static Status TranslateMeanOp(const Node* op, Builder::OpMap& ng_op_map) {
   }
 
   std::vector<int64> mean_axes;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_mean_static_axes", &mean_axes));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &mean_axes));
 
   ng::Shape input_shape = ng_input->get_shape();
   size_t input_rank = ng_input->get_shape().size();
@@ -1530,7 +1684,9 @@ static Status TranslateMeanOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslatePackOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslatePackOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCountMin(op, 1));
 
   ng::NodeVector ng_concat_inputs;
@@ -1583,13 +1739,14 @@ static Status TranslatePackOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslatePadOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslatePadOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_paddings_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_paddings_op));
 
   std::vector<int64> paddings;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_pad_static_paddings", &paddings));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &paddings));
 
   NGRAPH_VLOG(3) << "{" << ng::join(paddings) << "}";
 
@@ -1622,58 +1779,84 @@ static Status TranslatePadOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateProdOp(const Node* op, Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_axis;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axis));
-
-  ng::AxisSet ng_axis_set;
-  auto ng_axis_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_axis);
-  if (ng_axis_const == nullptr) {
-    for (size_t i = 0; i < ng_input->get_shape().size(); i++) {
-      ng_axis_set.insert(i);
-    }
-  } else {
-    auto axis_vec = ng_axis_const->get_vector<int>();
-    for (size_t i = 0; i < axis_vec.size(); ++i) {
-      if (axis_vec[i] >= 0) {
-        ng_axis_set.insert(axis_vec[i]);
-      } else {
-        // ng_axis_set has unsigned type, converting negative axis
-        ng_axis_set.insert(ng_input->get_shape().size() + axis_vec[i]);
-      }
-    }
-  }
+static Status TranslateProdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input, ng_axes_op;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axes_op));
 
   bool tf_keep_dims;
   if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
     tf_keep_dims = false;
   }
 
-  if (tf_keep_dims) {
-    return errors::Unimplemented("keep_dims is not implemented for Prod");
+  std::vector<int64> prod_axes;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &prod_axes));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  size_t input_rank = input_shape.size();
+
+  ng::AxisSet ng_reduction_axes;
+
+  for (auto i : prod_axes) {
+    if (i < 0) {
+      ng_reduction_axes.insert(input_rank + i);
+    } else {
+      ng_reduction_axes.insert(i);
+    }
   }
 
-  SaveNgOp(ng_op_map, op->name(),
-           make_shared<ng::op::Product>(ng_input, ng_axis_set));
+  std::shared_ptr<ng::Node> ng_prod =
+      make_shared<ng::op::Product>(ng_input, ng_reduction_axes);
+
+  // If keep_dims is specified we need to reshape to put back the reduced
+  // axes, with length 1.
+  if (tf_keep_dims) {
+    ng::Shape ng_result_shape_with_keep(input_rank);
+
+    for (size_t i = 0; i < input_rank; i++) {
+      if (ng_reduction_axes.count(i) == 0) {
+        ng_result_shape_with_keep[i] = input_shape[i];
+      } else {
+        ng_result_shape_with_keep[i] = 1;
+      }
+    }
+
+    ng::AxisVector ng_axis_order(ng_prod->get_shape().size());
+
+    for (size_t i = 0; i < ng_prod->get_shape().size(); i++) {
+      ng_axis_order[i] = i;
+    }
+
+    ng_prod = make_shared<ng::op::Reshape>(ng_prod, ng_axis_order,
+                                           ng_result_shape_with_keep);
+  }
+
+  SaveNgOp(ng_op_map, op->name(), ng_prod);
   return Status::OK();
 }
 
-static Status TranslateReciprocalOp(const Node* op, Builder::OpMap& ng_op_map) {
-  return TranslateUnaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> n) {
-    // Create a constant tensor populated with the value -1.
-    // (1/x = x^(-1))
-    auto et = n->get_element_type();
-    auto shape = n->get_shape();
-    std::vector<std::string> constant_values(ng::shape_size(shape), "-1");
-    auto ng_exponent =
-        std::make_shared<ng::op::Constant>(et, shape, constant_values);
+static Status TranslateReciprocalOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(
+      op, static_input_map, ng_op_map, [](std::shared_ptr<ng::Node> n) {
+        // Create a constant tensor populated with the value -1.
+        // (1/x = x^(-1))
+        auto et = n->get_element_type();
+        auto shape = n->get_shape();
+        std::vector<std::string> constant_values(ng::shape_size(shape), "-1");
+        auto ng_exponent =
+            std::make_shared<ng::op::Constant>(et, shape, constant_values);
 
-    // Raise each element of the input to the power -1.
-    return std::make_shared<ng::op::Power>(n, ng_exponent);
-  });
+        // Raise each element of the input to the power -1.
+        return std::make_shared<ng::op::Power>(n, ng_exponent);
+      });
 }
 
-static Status TranslateReluOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateReluOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1681,7 +1864,9 @@ static Status TranslateReluOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateRelu6Op(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateRelu6Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1695,7 +1880,9 @@ static Status TranslateRelu6Op(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateReluGradOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateReluGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_arg, ng_delta;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_arg));
 
@@ -1704,15 +1891,16 @@ static Status TranslateReluGradOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateReshapeOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateReshapeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_shape_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_shape_op));
 
   NGRAPH_VLOG(3) << "Input shape: " << ng::join(ng_input->get_shape());
 
   std::vector<int64> shape;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_reshape_static_shape", &shape));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &shape));
 
   NGRAPH_VLOG(3) << "Requested result shape: " << ng::join(shape);
 
@@ -1771,22 +1959,27 @@ static Status TranslateReshapeOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateRsqrtOp(const Node* op, Builder::OpMap& ng_op_map) {
-  return TranslateUnaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> n) {
-    // Create a constant tensor populated with the value -1/2.
-    // (1/sqrt(x) = x^(-1/2))
-    auto et = n->get_element_type();
-    auto shape = n->get_shape();
-    std::vector<std::string> constant_values(ng::shape_size(shape), "-0.5");
-    auto ng_exponent =
-        std::make_shared<ng::op::Constant>(et, shape, constant_values);
+static Status TranslateRsqrtOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(
+      op, static_input_map, ng_op_map, [](std::shared_ptr<ng::Node> n) {
+        // Create a constant tensor populated with the value -1/2.
+        // (1/sqrt(x) = x^(-1/2))
+        auto et = n->get_element_type();
+        auto shape = n->get_shape();
+        std::vector<std::string> constant_values(ng::shape_size(shape), "-0.5");
+        auto ng_exponent =
+            std::make_shared<ng::op::Constant>(et, shape, constant_values);
 
-    // Raise each element of the input to the power -0.5.
-    return std::make_shared<ng::op::Power>(n, ng_exponent);
-  });
+        // Raise each element of the input to the power -0.5.
+        return std::make_shared<ng::op::Power>(n, ng_exponent);
+      });
 }
 
-static Status TranslateSigmoidOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSigmoidOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1803,17 +1996,17 @@ static Status TranslateSigmoidOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSliceOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSliceOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_begin, ng_size;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, &ng_input, &ng_begin, &ng_size));
 
   std::vector<int64> lower_vec;
   std::vector<int64> size_vec;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_slice_static_begin", &lower_vec));
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_slice_static_size", &size_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &lower_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &size_vec));
 
   NGRAPH_VLOG(3) << "Begin input for Slice: " << ng::join(lower_vec);
   NGRAPH_VLOG(3) << "Size input for Slice: " << ng::join(size_vec);
@@ -1836,7 +2029,9 @@ static Status TranslateSliceOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSnapshotOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSnapshotOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_arg;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_arg));
 
@@ -1844,7 +2039,9 @@ static Status TranslateSnapshotOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSoftmaxOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSoftmaxOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -1867,7 +2064,8 @@ static Status TranslateSoftmaxOp(const Node* op, Builder::OpMap& ng_op_map) {
 }
 
 static Status TranslateSparseSoftmaxCrossEntropyWithLogitsOp(
-    const Node* op, Builder::OpMap& ng_op_map) {
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   // TF op Inputs:
   //  1. Logits/Features:
   //    Shape : [BatchSize, NumOfClasses]
@@ -1972,7 +2170,9 @@ static Status TranslateSparseSoftmaxCrossEntropyWithLogitsOp(
   return Status::OK();
 }
 
-static Status TranslateSplitOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSplitOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_input));
 
@@ -1987,9 +2187,10 @@ static Status TranslateSplitOp(const Node* op, Builder::OpMap& ng_op_map) {
     lower.push_back(0);
     upper.push_back(shape[i]);
   }
-  int split_dim;
+  std::vector<int> split_dim_vec;
   TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_split_static_dim", &split_dim));
+      GetStaticInputVector(op, 0, static_input_map, &split_dim_vec));
+  int split_dim = split_dim_vec[0];
 
   int size = shape[split_dim] / num_split;
   int cursor = 0;
@@ -2006,18 +2207,15 @@ static Status TranslateSplitOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSplitVOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSplitVOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_length, ng_split_dim;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, &ng_input, &ng_length, &ng_split_dim));
 
-  auto ng_length_const = std::dynamic_pointer_cast<ng::op::Constant>(ng_length);
-  if (ng_length == nullptr) {
-    return errors::InvalidArgument("The argument ng length is null for SplitV");
-  }
-  std::vector<int> lengths = ng_length_const->get_vector<int>();
-  auto ng_split_dim_const =
-      std::dynamic_pointer_cast<ng::op::Constant>(ng_split_dim);
+  std::vector<int> lengths;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &lengths));
 
   ng::Shape shape = ng_input->get_shape();
   int rank = shape.size();
@@ -2029,7 +2227,10 @@ static Status TranslateSplitVOp(const Node* op, Builder::OpMap& ng_op_map) {
     upper.push_back(shape[i]);
   }
 
-  int split_dim = ng_split_dim_const->get_vector<int>()[0];
+  std::vector<int> split_dim_vec;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 2, static_input_map, &split_dim_vec));
+  int split_dim = split_dim_vec[0];
   int cursor = 0;
 
   for (int i = 0; i < lengths.size(); ++i) {
@@ -2042,22 +2243,29 @@ static Status TranslateSplitVOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateSquareOp(const Node* op, Builder::OpMap& ng_op_map) {
-  return TranslateUnaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> n) {
-    return std::make_shared<ng::op::Multiply>(n, n);
-  });
+static Status TranslateSquareOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(op, static_input_map, ng_op_map,
+                          [](std::shared_ptr<ng::Node> n) {
+                            return std::make_shared<ng::op::Multiply>(n, n);
+                          });
 }
 
-static Status TranslateSquaredDifferenceOp(const Node* op,
-                                           Builder::OpMap& ng_op_map) {
-  return TranslateBinaryOp(op, ng_op_map, [](std::shared_ptr<ng::Node> input1,
-                                             std::shared_ptr<ng::Node> input2) {
-    auto ng_diff = std::make_shared<ng::op::Subtract>(input1, input2);
-    return std::make_shared<ng::op::Multiply>(ng_diff, ng_diff);
-  });
+static Status TranslateSquaredDifferenceOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateBinaryOp(
+      op, static_input_map, ng_op_map,
+      [](std::shared_ptr<ng::Node> input1, std::shared_ptr<ng::Node> input2) {
+        auto ng_diff = std::make_shared<ng::op::Subtract>(input1, input2);
+        return std::make_shared<ng::op::Multiply>(ng_diff, ng_diff);
+      });
 }
 
-static Status TranslateSqueezeOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSqueezeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
@@ -2110,8 +2318,9 @@ static Status TranslateSqueezeOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateStridedSliceOp(const Node* op,
-                                      Builder::OpMap& ng_op_map) {
+static Status TranslateStridedSliceOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   // TODO refactor StrideSlice with Slice op
   shared_ptr<ng::Node> ng_input, ng_begin, ng_size, ng_stride;
   TF_RETURN_IF_ERROR(
@@ -2122,16 +2331,14 @@ static Status TranslateStridedSliceOp(const Node* op,
       GetNodeAttr(op->attrs(), "shrink_axis_mask", &tf_shrink_axis_mask));
 
   std::vector<int64> lower_vec;
-  TF_RETURN_IF_ERROR(GetNodeAttr(
-      op->attrs(), "_ngraph_stridedslice_static_begin", &lower_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &lower_vec));
 
   std::vector<int64> end_vec;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_stridedslice_static_end", &end_vec));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &end_vec));
 
   std::vector<int64> stride_vec;
-  TF_RETURN_IF_ERROR(GetNodeAttr(
-      op->attrs(), "_ngraph_stridedslice_static_stride", &stride_vec));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 3, static_input_map, &stride_vec));
 
   NGRAPH_VLOG(3) << "Begin input for StridedSlice: " << ng::join(lower_vec);
   NGRAPH_VLOG(3) << "End input for StridedSlice: " << ng::join(end_vec);
@@ -2203,7 +2410,9 @@ static Status TranslateStridedSliceOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateSumOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateSumOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_axes_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axes_op));
 
@@ -2213,8 +2422,7 @@ static Status TranslateSumOp(const Node* op, Builder::OpMap& ng_op_map) {
   }
 
   std::vector<int64> sum_axes;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_sum_static_axes", &sum_axes));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &sum_axes));
 
   ng::Shape input_shape = ng_input->get_shape();
   size_t input_rank = input_shape.size();
@@ -2259,13 +2467,15 @@ static Status TranslateSumOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateTileOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateTileOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_multiples;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_multiples));
 
   std::vector<int64> multiples;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(op->attrs(), "_ngraph_tile_static_multiples", &multiples));
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &multiples));
+
   auto ng_input_shape = ng_input->get_shape();
   if (ng_input_shape.size() != multiples.size()) {
     return errors::InvalidArgument(
@@ -2303,14 +2513,16 @@ static Status TranslateTileOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateTransposeOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateTransposeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_permutation_op;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, &ng_input, &ng_permutation_op));
 
   std::vector<int64> permutation;
-  TF_RETURN_IF_ERROR(GetNodeAttr(
-      op->attrs(), "_ngraph_transpose_static_permutation", &permutation));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 1, static_input_map, &permutation));
 
   ng::AxisVector ng_axis_order;
   ng_axis_order.reserve(permutation.size());
@@ -2328,7 +2540,9 @@ static Status TranslateTransposeOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-static Status TranslateUnpackOp(const Node* op, Builder::OpMap& ng_op_map) {
+static Status TranslateUnpackOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 1));
 
   shared_ptr<ng::Node> ng_input;
@@ -2379,8 +2593,10 @@ static Status TranslateUnpackOp(const Node* op, Builder::OpMap& ng_op_map) {
   return Status::OK();
 }
 
-const static std::map<const string,
-                      const function<Status(const Node*, Builder::OpMap&)>>
+const static std::map<
+    const string,
+    const function<Status(const Node*, const std::vector<const Tensor*>&,
+                          Builder::OpMap&)>>
     TRANSLATE_OP_MAP{
         {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
         {"Add", TranslateBinaryOp<ngraph::op::Add>},
@@ -2425,7 +2641,8 @@ const static std::map<const string,
         {"Neg", TranslateUnaryOp<ngraph::op::Negative>},
         // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
         // reasons, but they have no data flow inputs or outputs.
-        {"NoOp", [](const Node*, Builder::OpMap&) { return Status::OK(); }},
+        {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
+                    Builder::OpMap&) { return Status::OK(); }},
         {"Pack", TranslatePackOp},
         {"Pad", TranslatePadOp},
         {"Pow", TranslateBinaryOp<ngraph::op::Power>},
@@ -2459,9 +2676,10 @@ const static std::map<const string,
         {"Transpose", TranslateTransposeOp},
         {"Unpack", TranslateUnpackOp}};
 
-Status Builder::TranslateGraph(const std::vector<TensorShape>& inputs,
-                               const Graph* input_graph,
-                               shared_ptr<ng::Function>& ng_function) {
+Status Builder::TranslateGraph(
+    const std::vector<TensorShape>& inputs,
+    const std::vector<const Tensor*>& static_input_map,
+    const Graph* input_graph, shared_ptr<ng::Function>& ng_function) {
   //
   // We will visit ops in topological order.
   //
@@ -2535,10 +2753,9 @@ Status Builder::TranslateGraph(const std::vector<TensorShape>& inputs,
     NGRAPH_VLOG(2) << "Constructing op " << op->name() << " which is "
                    << op->type_string();
 
-    // NOTE: The following cases should be kept in alphabetical order.
-
     try {
-      TF_RETURN_IF_ERROR(TRANSLATE_OP_MAP.at(op->type_string())(op, ng_op_map));
+      TF_RETURN_IF_ERROR(TRANSLATE_OP_MAP.at(op->type_string())(
+          op, static_input_map, ng_op_map));
     } catch (const std::out_of_range&) {
       // -----------------------------
       // Catch-all for unsupported ops

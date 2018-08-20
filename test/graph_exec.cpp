@@ -58,9 +58,12 @@ TEST(graph_exec, axpy) {
   inputs.push_back(x.shape());
   inputs.push_back(y.shape());
 
+  std::vector<const Tensor*> static_input_map(2, nullptr);
+
   shared_ptr<ng::Function> ng_function;
-  ASSERT_EQ(Status::OK(), ngraph_bridge::Builder::TranslateGraph(
-                              inputs, &input_graph, ng_function));
+  ASSERT_EQ(Status::OK(),
+            ngraph_bridge::Builder::TranslateGraph(inputs, static_input_map,
+                                                   &input_graph, ng_function));
 
   // Create the nGraph backend
   auto backend = ng::runtime::Backend::create("CPU");
