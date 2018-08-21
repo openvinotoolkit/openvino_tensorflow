@@ -135,10 +135,18 @@ static Status GetInputNode(const Builder::OpMap& ng_op_map, const Node* op,
 
   Node* tf_input;
   TF_RETURN_IF_ERROR(op->input_node(input_idx, &tf_input));
+  const std::vector<shared_ptr<ng::Node>>* ng_op = nullptr;
   try {
-    *result = ng_op_map.at(tf_input->name()).at(src_output_idx);
+    ng_op = &ng_op_map.at(tf_input->name());
   } catch (const out_of_range&) {
-    return Status(tensorflow::error::NOT_FOUND, "Input node not found");
+    return Status(error::NOT_FOUND,
+                  string("Ngraph op not found for ") + tf_input->name());
+  }
+  try {
+    *result = ng_op->at(src_output_idx);
+  } catch (const out_of_range&) {
+    return Status(error::NOT_FOUND, string("Input node not found at index ") +
+                                        to_string(src_output_idx));
   }
   return Status::OK();
 }
@@ -1351,8 +1359,9 @@ static Status TranslateFusedBatchNormOp(
 
   float tf_epsilon;
   if (GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) != Status::OK()) {
-    NGRAPH_VLOG(3) << "epsilon attribute not present, setting to zero";
-    tf_epsilon = 0;  // FIXME(amprocte): is this the right default?
+    NGRAPH_VLOG(3) << "epsilon attribute not present, setting to 0.0001";
+    // TensorFlow default
+    tf_epsilon = 0.0001;
   }
 
   NGRAPH_VLOG(3) << "epsilon: " << tf_epsilon;
@@ -1361,11 +1370,27 @@ static Status TranslateFusedBatchNormOp(
 
   std::shared_ptr<ng::Node> ng_batch_norm;
 
-  ng_batch_norm =
-      make_shared<ng::op::BatchNorm>(tf_epsilon, ng_scale, ng_offset, ng_input,
-                                     ng_mean, ng_variance, tf_is_training);
+  if (tf_is_training) {
+    ng_batch_norm = make_shared<ng::op::BatchNorm>(tf_epsilon, ng_scale,
+                                                   ng_offset, ng_input);
 
-  BatchToTensorflow(is_nhwc, ng_batch_norm);
+    shared_ptr<ngraph::Node> ng_y, ng_mean, ng_variance;
+    ng_y = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 0);
+    ng_mean = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 1);
+    ng_variance = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 2);
+
+    BatchToTensorflow(is_nhwc, ng_y);
+
+    SaveNgOp(ng_op_map, op->name(), ng_y);
+    SaveNgOp(ng_op_map, op->name(), ng_mean);
+    SaveNgOp(ng_op_map, op->name(), ng_variance);
+  } else {
+    ng_batch_norm = make_shared<ng::op::BatchNorm>(tf_epsilon, ng_scale,
+                                                   ng_offset, ng_input, ng_mean,
+                                                   ng_variance, tf_is_training);
+    BatchToTensorflow(is_nhwc, ng_batch_norm);
+    SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+  }
 
   SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
   return Status::OK();

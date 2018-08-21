@@ -146,7 +146,7 @@ class TestElementwiseOperations(NgraphTest):
 
   def test_logicalnot_2d(self):
     test_input = ((True, False, True), (False, True, False))
-    expected = [map(lambda x:not x, k) for k in test_input]
+    expected = np.logical_not(test_input)
 
     val = tf.placeholder(tf.bool, shape=(2, 3))
 

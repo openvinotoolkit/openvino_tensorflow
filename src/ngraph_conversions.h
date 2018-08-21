@@ -31,7 +31,8 @@ void Reshape(std::shared_ptr<ngraph::Node>& ng_node) {
                 "Dimensions indices cannot be equal");
   auto& s = ng_node->get_shape();
   ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
-  NGRAPH_VLOG(3) << "reshaped_shape: " << ngraph::join(reshaped_shape);
+  NGRAPH_VLOG(3) << "reshaping " << ngraph::join(s) << " to "
+                 << ngraph::join(reshaped_shape);
   ng_node = std::make_shared<ngraph::op::Reshape>(
       ng_node, ngraph::AxisVector{a, b, c, d}, reshaped_shape);
 }

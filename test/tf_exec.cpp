@@ -732,8 +732,8 @@ TEST(tf_exec, DISABLED_Op_SparseSoftmaxCrossEntropyWithLogits) {
   std::vector<Tensor> outputs_ngraph, outputs_cpu;
   ClientSession session(root);
 
-  TF_CHECK_OK(session.Run({R_ngraph.loss, R_ngraph.backprop}, &outputs_ngraph));
-  TF_CHECK_OK(session.Run({R_cpu.loss, R_cpu.backprop}, &outputs_cpu));
+  ASSERT_OK(session.Run({R_ngraph.loss, R_ngraph.backprop}, &outputs_ngraph));
+  ASSERT_OK(session.Run({R_cpu.loss, R_cpu.backprop}, &outputs_cpu));
 
   ValidateTensorData(outputs_ngraph[0], outputs_cpu[0], 1e-6);
   ValidateTensorData(outputs_ngraph[1], outputs_cpu[1], 1e-6);

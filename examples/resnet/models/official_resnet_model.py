@@ -62,7 +62,8 @@ class ImagenetResnetModel(model_lib.Model):
     # TODO(huangyp): add fp16 support.
     del image_depth
     del data_type
-    del data_format
+    data_format_dict = {'NCHW':'channels_first', 'NHWC':'channels_last'}
+    #del data_format
     del use_tf_layers
     # pylint: disable=g-import-not-at-top
     try:
@@ -71,6 +72,7 @@ class ImagenetResnetModel(model_lib.Model):
       tf.logging.fatal('Please include tensorflow/models to the PYTHONPATH.')
       raise
     model_class = ImagenetModel(resnet_size=self.resnet_size,
-                                version=self.version)
+                                resnet_version=self.version,
+				data_format=data_format_dict[data_format])
     logits = model_class(images, phase_train)
     return logits, None
