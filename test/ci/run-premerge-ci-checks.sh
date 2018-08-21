@@ -37,7 +37,7 @@ fi
 echo "--------------------------------------------------------------------------"
 echo "Running TensorFlow unit tests"
 echo "--------------------------------------------------------------------------"
-./gtest_ngtf --gtest_filter="-tf_exec.Op_*:tf_exec.BiasAddGrad:tf_exec.FusedBatchNormGrad_NHWC:tf_exec.Tile:assign_clusters.cone"
+./gtest_ngtf --gtest_filter="-tf_exec.Op_*:tf_exec.BiasAddGrad:tf_exec.FusedBatchNormGrad_NHWC:tf_exec.Tile"
 
 ####### Disabled tests for now #######
 #pushd python
