@@ -99,6 +99,51 @@ Status DeassignClusters(Graph* graph) {
     }
   }
 
+  //
+  // At this point we have made our final decision about cluster assignment, so
+  // we will log the cluster assignment now.
+  //
+  if (NGRAPH_VLOG_IS_ON(2)) {
+    // Can't quite reuse cluster_map here, unfortunately.
+    std::map<int, std::set<const Node*>> final_cluster_map;
+
+    for (auto node : graph->nodes()) {
+      int cluster_idx;
+      if (!GetNodeCluster(node, &cluster_idx).ok()) {
+        cluster_idx = -1;
+      }
+      final_cluster_map[cluster_idx].insert(node);
+    }
+
+    for (auto kv : final_cluster_map) {
+      int cluster_idx = kv.first;
+      std::set<const Node*>& nodes = kv.second;
+
+      if (cluster_idx == -1) {
+        NGRAPH_VLOG(2)
+            << "NGRAPH_CLUSTERS: FINAL CLUSTER ASSIGNMENT: NO CLUSTER ("
+            << nodes.size() << " NODES)";
+        NGRAPH_VLOG(2) << "NGRAPH_CLUSTERS: "
+                          "===================================================="
+                          "===============";
+      } else {
+        NGRAPH_VLOG(2) << "NGRAPH_CLUSTERS: FINAL CLUSTER ASSIGNMENT: CLUSTER "
+                       << cluster_idx << " (" << nodes.size() << " NODES)";
+        NGRAPH_VLOG(2) << "NGRAPH_CLUSTERS: "
+                          "===================================================="
+                          "===============";
+      }
+
+      for (auto node : nodes) {
+        NGRAPH_VLOG(2) << "NGRAPH_CLUSTERS: " << node->name() << " ["
+                       << node->type_string() << "]";
+        NGRAPH_VLOG(3) << "NGRAPH_CLUSTERS: " << node->DebugString();
+      }
+
+      NGRAPH_VLOG(2) << "NGRAPH_CLUSTERS: ";
+    }
+  }
+
   return Status::OK();
 }
 

@@ -216,9 +216,11 @@ Status AssignClusters(Graph* graph) {
       int cluster_idx = NGraphClusterManager::NewCluster();
 
       for (auto node : cluster->nodes) {
-        NGRAPH_VLOG(2) << ">> cluster " << cluster_idx << ": " << node
-                       << " :: " << node->name() << " [" << node->type_string()
-                       << "]";
+        if (NGRAPH_VLOG_IS_ON(5)) {
+          NGRAPH_VLOG(5) << ">> cluster " << cluster_idx << ": " << node
+                         << " :: " << node->name() << " ["
+                         << node->type_string() << "]";
+        }
 
         if (!NodeIsMarkedForClustering(node)) {
           return errors::Internal("Node ", node->DebugString(),
@@ -229,6 +231,8 @@ Status AssignClusters(Graph* graph) {
         // TODO(amprocte): move attr name to a constant
         node->AddAttr("_ngraph_cluster", cluster_idx);
       }
+
+      seen.insert(cluster);
     }
   }
   NGRAPH_VLOG(2) << "Tagging done";
