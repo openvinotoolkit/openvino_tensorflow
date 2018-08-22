@@ -31,9 +31,6 @@ import ngraph
 
 FLAGS = None
 
-import tfgraphviz as tfg
-
-
 def main(_):
     with tf.device('/device:' + FLAGS.select_device + ':0'):
         run_mnist(_)
@@ -86,12 +83,8 @@ def run_mnist(_):
     end = time.time()
 
     # Save the TF graph as pdf
-    g = tfg.board(tf.get_default_graph())
-
     tf.train.write_graph(
         tf.get_default_graph(), '.', 'mnist_fprop_py.pbtxt', as_text=True)
-
-    g.render(filename="./mnist_fprop_only")
 
     print("Inference time: %f seconds" % (end - start))
 

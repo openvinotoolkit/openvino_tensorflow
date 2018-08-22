@@ -62,6 +62,6 @@ python tf_cnn_benchmarks.py --model=resnet50 --eval --num_inter_threads=1 \
   --batch_size=16 --num_batches=50 \
   --train_dir "${NGRAPH_TRAINED_MODEL}" \
   --data_format NCHW --select_device NGRAPH \
-  --data_name=imagenet --data_dir "${NGRAPH_IMAGENET_DATASET}" --datasets_use_prefetch=False
+  --data_name=imagenet --data_dir "${NGRAPH_IMAGENET_DATASET}" --datasets_use_prefetch=False 
 popd
 

@@ -100,10 +100,13 @@ endif()
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-    GIT_TAG v0.5.0
-    CMAKE_ARGS -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist 
-               -DNGRAPH_USE_PREBUILT_LLVM=${NGRAPH_USE_PREBUILT_LLVM} 
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    GIT_TAG v0.6.0-rc0
+    CMAKE_ARGS 
+        -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist 
+        -DNGRAPH_UNIT_TEST_ENABLE=FALSE
+        -DNGRAPH_TOOLS_ENABLE=FALSE 
+        -DNGRAPH_DEX_ONLY=TRUE         
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
     STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
     DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"
@@ -125,6 +128,20 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION 
     ${TensorFlow_DIR}/libtensorflow_framework.so
 )
+
+if(APPLE)
+    set(LIBNGRAPH_SO "libngraph.dylib")
+else()
+    set(LIBNGRAPH_SO "libngraph.so")
+endif(APPLE)
+
+add_library(ngraph_lib SHARED IMPORTED)
+set_target_properties( 
+    ngraph_lib 
+    PROPERTIES IMPORTED_LOCATION 
+    ${NGRAPH_INSTALL_DIR}/lib/${LIBNGRAPH_SO}
+)
+add_dependencies(ngraph_lib ext_ngraph)
 
 # Add the directories to be built
 add_subdirectory(logging)
