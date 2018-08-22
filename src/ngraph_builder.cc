@@ -1384,6 +1384,13 @@ static Status TranslateFusedBatchNormOp(
     SaveNgOp(ng_op_map, op->name(), ng_y);
     SaveNgOp(ng_op_map, op->name(), ng_mean);
     SaveNgOp(ng_op_map, op->name(), ng_variance);
+    // Output reserve_space_1: A 1D Tensor for the computed batch mean, to be
+    // reused in the gradient computation.
+    SaveNgOp(ng_op_map, op->name(), ng_mean);
+    // Output reserve_space_2: A 1D Tensor for the computed batch variance
+    //(inverted variance in the cuDNN case), to be reused in the gradient
+    // computation.
+    SaveNgOp(ng_op_map, op->name(), ng_variance);
   } else {
     ng_batch_norm = make_shared<ng::op::BatchNorm>(tf_epsilon, ng_scale,
                                                    ng_offset, ng_input, ng_mean,
@@ -1415,11 +1422,8 @@ static Status TranslateFusedBatchNormGradOp(
   shared_ptr<ng::Node> ng_scale;
   shared_ptr<ng::Node> ng_mean;
   shared_ptr<ng::Node> ng_variance;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_delta));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_input));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_scale));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, &ng_mean));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, &ng_variance));
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
+                                   &ng_scale, &ng_mean, &ng_variance));
 
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
