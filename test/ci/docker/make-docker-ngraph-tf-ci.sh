@@ -21,16 +21,23 @@
 # Additional parameters are passed to docker-build command
 #
 # Within .intel.com, appropriate proxies are applied
+#
+# Script environment variable parameters:
+#
+# NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
 
 set -e  # Fail on any command with non-zero exit
 
-DOCKER_FILE='Dockerfile.ngraph-tf-ci'
-
-IMAGE_NAME='ngraph_tf_ci'
 IMAGE_ID="${1}"
 if [ -z "${IMAGE_ID}" ] ; then
     echo 'Please provide an image version as the only argument'
     exit 1
+fi
+
+# Set defaults
+
+if [ -z "${NG_TF_PY_VERSION}" ] ; then
+    NG_TF_PY_VERSION='2'  # Default is Python 2
 fi
 
 # If there are more parameters, which are intended to be directly passed to
@@ -38,6 +45,21 @@ fi
 if [ "x${2}" = 'x' ] ; then
     shift
 fi
+
+case "${NG_TF_PY_VERSION}" in
+    2)
+        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
+        IMAGE_NAME='ngraph_tf_ci_py2'
+        ;;
+    3)
+        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py3'
+        IMAGE_NAME='ngraph_tf_ci_py3'
+        ;;
+    *)
+        echo 'NG_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
+        exit 1
+        ;;
+esac
 
 set -u  # No unset variables after this point
 

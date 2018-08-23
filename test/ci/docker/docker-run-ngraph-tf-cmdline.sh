@@ -24,13 +24,32 @@
 #
 # Script environment variable parameters:
 #
+# NG_TF_CONFIG       Optional: If defined, the value will be sourced at the
+#                              beginning of the script.  This allows other
+#                              environment variables (below) to be easily
+#                              encapsulated in a config script.
+#
+# NG_TF_RUN_TYPE     Optional: "ngraph" or "reference", default=ngraph
 # NG_TF_MODELS_REPO  Optional: Directory that models repo is clone into
 # NG_TF_TRAINED      Optional: Directory that pretrained models are in
 # NG_TF_DATASET      Optional: Dataset to prepare for run
 # NG_TF_LOG_ID       Optional: String to included in name of log
+# NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
+# NG_TF_WHEEL_NGRAPH Optional: Name of ngraph wheel to install
+# NG_TF_WHEEL_TF     Optional: Name of TensorFlow wheel (for ngraph) to install
+# NG_TF_WHEEL_TF_REF Optional: Name of reference TF wheel to install (no ngraph)
 
 
 set -e  # Fail on any command with non-zero exit
+
+if [ ! -z "${NG_TF_CONFIG}" ] ; then
+    if [ ! -f "${NG_TF_CONFIG}" ] ; then
+        ( >&2 echo "Could not find config file ${NG_TF_CONFIG}" )
+    fi
+    echo "Loading config from file ${NG_TF_CONFIG}:"
+    cat "${NG_TF_CONFIG}"
+    source "${NG_TF_CONFIG}"
+fi
 
 IMAGE_ID="${1}"
 if [ -z "${IMAGE_ID}" ] ; then  # Required ImageID command-line parameter
@@ -44,28 +63,31 @@ if [ -z "${CMDLINE}" ] ; then  # Required Command command-line parameter
     exit 1
 fi
 
-if [ -z "${NG_TF_MODELS_REPO}" ] ; then
-    NG_TF_MODELS_REPO=''  # Make sure this is set, for use below
+# Set defaults
+
+if [ -z "${NG_TF_RUN_TYPE}" ] ; then
+    NG_TF_RUN_TYPE='ngraph'  # Default is to run with ngraph
 fi
 
-if [ -z "${NG_TF_TRAINED}" ] ; then
-    NG_TF_TRAINED=''  # Make sure this is set, for use below
+if [ -z "${NG_TF_PY_VERSION}" ] ; then
+    NG_TF_PY_VERSION='2'  # Default is Python 2
 fi
-
-if [ -z "${NG_TF_DATASET}" ] ; then
-    NG_TF_DATASET=''  # Make sure this is set, for use below
-fi
-
-if [ -z "${NG_TF_LOG_ID}" ] ; then
-    NG_TF_LOG_ID=''  # Make sure this is set, for use below
-fi
-
-export PYTHON_VERSION_NUMBER='2'  # Build for Python 2 by default
 
 # Note that the docker image must have been previously built using the
 # make-docker-ngraph-tf-ci.sh script (in the same directory as this script).
 #
-IMAGE_CLASS='ngraph_tf_ci'
+case "${NG_TF_PY_VERSION}" in
+    2)
+        IMAGE_CLASS='ngraph_tf_ci_py2'
+        ;;
+    3)
+        IMAGE_CLASS='ngraph_tf_ci_py3'
+        ;;
+    *)
+        echo 'NG_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
+        exit 1
+        ;;
+esac
 # IMAGE_ID set from 1st parameter, above
 
 # Set up optional volume mounts
@@ -83,11 +105,26 @@ fi
 
 # Set up optional environment variables
 optional_env=''
+if [ ! -z "${NG_TF_RUN_TYPE}" ] ; then
+  optional_env="${optional_env} --env NG_TF_RUN_TYPE=${NG_TF_RUN_TYPE}"
+fi
 if [ ! -z "${NG_TF_DATASET}" ] ; then
   optional_env="${optional_env} --env NG_TF_DATASET=${NG_TF_DATASET}"
 fi
 if [ ! -z "${NG_TF_LOG_ID}" ] ; then
   optional_env="${optional_env} --env NG_TF_LOG_ID=${NG_TF_LOG_ID}"
+fi
+if [ ! -z "${NG_TF_PY_VERSION}" ] ; then
+  optional_env="${optional_env} --env NG_TF_PY_VERSION=${NG_TF_PY_VERSION}"
+fi
+if [ ! -z "${NG_TF_WHEEL_NGRAPH}" ] ; then
+  optional_env="${optional_env} --env NG_TF_WHEEL_NGRAPH=${NG_TF_WHEEL_NGRAPH}"
+fi
+if [ ! -z "${NG_TF_WHEEL_TF}" ] ; then
+  optional_env="${optional_env} --env NG_TF_WHEEL_TF=${NG_TF_WHEEL_TF}"
+fi
+if [ ! -z "${NG_TF_WHEEL_TF_REF}" ] ; then
+  optional_env="${optional_env} --env NG_TF_WHEEL_TF_REF=${NG_TF_WHEEL_TF_REF}"
 fi
 
 

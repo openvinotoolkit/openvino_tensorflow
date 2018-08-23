@@ -24,12 +24,11 @@ set -u  # No unset variables
 set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 
 
-# FUTURE: enable python 3, with selection via PYTHON_VERSION_NUMBER
-#if [ -z "${PYTHON_VERSION_NUMBER:-}" ] ; then
-#    ( >&2 echo "Env. variable PYTHON_VERSION_NUMBER has not been set" )
-#    exit 1
-#fi
-PYTHON_VERSION_NUMBER=2
+# Default is Python 2, but can override with NG_TF_PY_VERSION env. variable
+export PYTHON_VERSION_NUMBER="${NG_TF_PY_VERSION}"
+if [ -z "${PYTHON_VERSION_NUMBER}" ] ; then
+    PYTHON_VERSION_NUMBER=2
+fi
 export PYTHON_BIN_PATH="/usr/bin/python$PYTHON_VERSION_NUMBER"
 
 
@@ -88,12 +87,26 @@ ln -s /tmp/bazel-cache "$HOME/.cache"
 
 xtime="$(date)"
 echo  ' '
+echo  "===== Setting Up Virtual Environment for Tensorflow-MKLDNN Wheel at ${xtime} ====="
+echo  ' '
+
+cd "${tf_dir}"
+
+# Make sure the bash shell prompt variables are set, as virtualenv crashes
+# if PS2 is not set.
+PS1='prompt> '
+PS2='prompt-more> '
+virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" "${venv_dir}"
+source "${venv_dir}/bin/activate"
+
+xtime="$(date)"
+echo  ' '
 echo  "===== Configuring Tensorflow-MKLDNN Build at ${xtime} ====="
 echo  ' '
 
 export CC_OPT_FLAGS="-march=native"
 export USE_DEFAULT_PYTHON_LIB_PATH=1
-export TF_ENABLE_XLA=1
+export TF_ENABLE_XLA=0
 
 export TF_NEED_MKL=1
 export TF_DOWNLOAD_MKL=1
@@ -155,20 +168,6 @@ else
     ( >&2 ls -l "${WHEEL_BUILD_DIR}")
     exit 1
 fi
-
-xtime="$(date)"
-echo  ' '
-echo  "===== Setting Up Virtual Environment for Tensorflow-MKLDNN Wheel at ${xtime} ====="
-echo  ' '
-
-cd "${tf_dir}"
-
-# Make sure the bash shell prompt variables are set, as virtualenv crashes
-# if PS2 is not set.
-PS1='prompt> '
-PS2='prompt-more> '
-virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" "${venv_dir}"
-source "${venv_dir}/bin/activate"
 
 xtime="$(date)"
 echo  ' '

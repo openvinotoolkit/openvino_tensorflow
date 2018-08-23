@@ -27,6 +27,7 @@ FROM ubuntu:16.04
 # zip and golang-go are needed to run TensorFlow tests
 # curl and locate are needed by Tensorflow's configure command
 # enum appears to be used in the TensorFlow build
+# python-tk is used by matplotlib (pip installed below)
 RUN apt-get update &&  apt-get install -y \
     python-pip virtualenv \
     python-numpy python-dev python-wheel \
@@ -38,7 +39,8 @@ RUN apt-get update &&  apt-get install -y \
     libtinfo-dev \
     zip golang-go \
     locate curl \
-    clang-format-3.9
+    clang-format-3.9 \
+    python-tk
 
 # The "locate" command uses a prepopulated index.  If this index is not built,
 # then "locate" will find absolutely nothing.  In Tensorflow's configure,
@@ -49,10 +51,13 @@ RUN updatedb
 # six, enum34 and mock are required for building the tensorflow wheel
 # scipy, portpicker, and sklearn are needed by some TensorFlow tests
 # keras_applications is needed for modern TensorFlow builds
+# matplotlib are needed to run inference models
+# opencv-python is used by some inference models (for import cv2)
 RUN pip install --upgrade pip
 RUN pip install six enum34 mock
 RUN pip install scipy portpicker sklearn
 RUN pip install keras_applications
+RUN pip install matplotlib opencv-python
 
 # We include pytest so the Docker image can be used for daily validation
 RUN pip install --upgrade pytest

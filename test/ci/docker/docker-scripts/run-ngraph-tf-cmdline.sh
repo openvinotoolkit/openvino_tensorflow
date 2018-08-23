@@ -30,6 +30,21 @@ if [ -z "${NG_TF_DATASET}" ] ; then  NG_TF_DATASET='' ; fi
 # NG_TF_LOG_ID can be an empty string, or not set, but make sure it has a value
 if [ -z "${NG_TF_LOG_ID}" ] ; then  NG_TF_LOG_ID='' ; fi
 
+# NG_TF_PY_VERSION can be an empty string or not, but make sure it has a value
+if [ -z "${NG_TF_PY_VERSION}" ] ; then  NG_TF_PY_VERSION='' ; fi
+
+# NG_TF_WHEEL_NGRAPH can be an empty string or not, but make sure it has a value
+
+if [ -z "${NG_TF_WHEEL_NGRAPH}" ] ; then  NG_TF_WHEEL_NGRAPH='' ; fi
+
+# NG_TF_WHEEL_TF can be an empty string or not, but make sure it has a value
+if [ -z "${NG_TF_WHEEL_TF}" ] ; then  NG_TF_WHEEL_TF='' ; fi
+
+# NG_TF_WHEEL_TF_REF can be an empty string or not, but make sure it has a value
+if [ -z "${NG_TF_WHEEL_TF_REF}" ] ; then  NG_TF_WHEEL_TF_REF='' ; fi
+
+# NG_TF_RUN_TYPE cannot be an empty string, so make "ngraph" the default
+if [ -z "${NG_TF_RUN_TYPE}" ] ; then  NG_TF_RUN_TYPE='ngraph' ; fi
 
 set -e  # Make sure we exit on any command that returns non-zero
 set -u  # No unset variables
@@ -67,7 +82,7 @@ setup_tf_and_ngraph_wheels() {
     PS1='prompt> '
     PS2='prompt-more> '
 
-    virtualenv --system-site-packages -p /usr/bin/python2 venv-vtest
+    virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" venv-vtest
     source venv-vtest/bin/activate
     echo "Using virtual-environment at /home/dockuser/venv-vtest"
 
@@ -77,26 +92,6 @@ setup_tf_and_ngraph_wheels() {
     pip install "${TF_WHEEL}"
 
     pip install "${NGTF_WHEEL}"
-
-    # TODO: Remove when appropriate
-    # # ------ Define LD_LIBRARY_PATH, based on NGTF_DIST  -----------------------
-    #
-    # xtime="$(date)"
-    # echo  ' '
-    # echo  "===== Installing nGraph-Plugin into TF Installation at ${xtime} ====="
-    # echo  ' '
-    # echo  "PWD is: ${PWD}"
-    # 
-    # echo  ' '
-    # echo  "Contents of NGTF_DIST library ($NGTF_DIST):"
-    # ls -l "${NGTF_DIST}"
-    # 
-    # echo  ' '
-    # echo  "Contents of NGTF_DIST/ngraph_dist/lib library ($NGTF_DIST/ngraph_dist/lib):"
-    # ls -l "${NGTF_DIST}/ngraph_dist/lib"
-    #
-    # export LD_LIBRARY_PATH="${NGTF_DIST}:${NGTF_DIST}/ngraph_dist/lib"
-    # echo "LD_LIBRARY_PATH is ${LD_LIBRARY_PATH}"
 
     # ----- Pre-Wheel-Install Sanity Checks ------------------------------------
 
@@ -150,7 +145,7 @@ setup_tf_mkldnn() {
     PS1='prompt> '
     PS2='prompt-more> '
 
-    virtualenv --system-site-packages -p /usr/bin/python2 venv-vtest
+    virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" venv-vtest
     source venv-vtest/bin/activate
     echo "Using virtual-environment at /home/dockuser/venv-vtest"
 
@@ -173,6 +168,32 @@ setup_tf_mkldnn() {
     python -c 'import tensorflow as tf;  hello = tf.constant("Hello world!"); sess = tf.Session(); print(sess.run(hello))'
 
 }  # setup_tf_mkldnn()
+
+
+setup_no_wheel() {
+
+    # ------ Activate Virtual Environment -----------------
+
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Activating Virtual Environment at ${xtime} ====="
+    echo  ' '
+
+    cd "${HOME}"
+
+    # Make sure the bash shell prompt variables are set, as virtualenv crashes
+    # if PS2 is not set.
+    PS1='prompt> '
+    PS2='prompt-more> '
+
+    virtualenv --system-site-packages -p "${PYTHON_BIN_PATH}" venv-vtest
+    source venv-vtest/bin/activate
+    echo "Using virtual-environment at /home/dockuser/venv-vtest"
+
+    echo "Python being used is:"
+    which python
+
+}  # setup_no_wheel()
 
 
 setup_MNIST_dataset() {
@@ -238,10 +259,12 @@ setup_CIFAR10_dataset() {
 
 # ===== Main ==================================================================
 
-# For now we simply test ng-tf for python 2.  Later, python 3 builds will
-# be added.
-export PYTHON_VERSION_NUMBER=2
-export PYTHON_BIN_PATH="/usr/bin/python$PYTHON_VERSION_NUMBER"
+# Default is Python 2, but can override with NG_TF_PY_VERSION env. variable
+export PYTHON_VERSION_NUMBER="${NG_TF_PY_VERSION}"
+if [ -z "${PYTHON_VERSION_NUMBER}" ] ; then
+    PYTHON_VERSION_NUMBER=2
+fi
+export PYTHON_BIN_PATH="/usr/bin/python${PYTHON_VERSION_NUMBER}"
 
 # This path is dependent on where host dir-tree is mounted into docker run
 # See script docker-run-ngtf-bridge-validation-test.sh
@@ -249,12 +272,23 @@ export PYTHON_BIN_PATH="/usr/bin/python$PYTHON_VERSION_NUMBER"
 # sets this up.
 cd "$HOME/bridge"
 
-# FUTURE: figure out how to prevent this from needing to be hardcoded
-# TODO: Remove this when appropriate
-# export NGTF_DIST="$HOME/bridge/libngraph_dist"
-export NGTF_WHEEL="$HOME/bridge/ngraph-0.0.0-py2.py3-none-linux_x86_64.whl"
-export TF_WHEEL="$HOME/bridge/tensorflow-1.9.0-cp27-cp27mu-linux_x86_64.whl"
-export TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+if [ -z "${NG_TF_WHEEL_NGRAPH}" ] ; then
+    NGTF_WHEEL="$HOME/bridge/ngraph-0.0.0-py2.py3-none-linux_x86_64.whl"
+else
+    NGTF_WHEEL="$HOME/bridge/${NG_TF_WHEEL_NGRAPH}"
+fi
+
+if [ -z "${NG_TF_WHEEL_TF}" ] ; then
+    TF_WHEEL="$HOME/bridge/tensorflow-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+else
+    TF_WHEEL="$HOME/bridge/${NG_TF_WHEEL_TF}"
+fi
+
+if [ -z "${NG_TF_WHEEL_TF_REF}" ] ; then
+    TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+else
+    TF_WHEEL_MKLDNN="$HOME/bridge/${NG_TF_WHEEL_TF_REF}"
+fi
 
 echo "In $(basename ${0}):"
 echo "  CMDLINE=[${CMDLINE}]"
@@ -268,6 +302,12 @@ echo "  PYTHON_BIN_PATH=${PYTHON_BIN_PATH}"
 echo "  NGTF_WHEEL=${NGTF_WHEEL}"
 echo "  TF_WHEEL=${TF_WHEEL}"
 echo "  TF_WHEEL_MKLDNN=${TF_WHEEL_MKLDNN}"
+
+# ----- Set defaults -----------------------------------------------------------
+
+if [ -z "${NG_TF_RUN_TYPE}" ] ; then
+    export NG_TF_RUN_TYPE='ngraph'  # Default to using ngraph for run
+fi
 
 # ----- Report on Optional Mounted Directories ---------------------------------
 
@@ -288,7 +328,30 @@ fi
 # test/ci is located in the mounted ngraph-tensorflow-bridge cloned repo
 cd "${HOME}/bridge/test/ci"
 
-setup_tf_and_ngraph_wheels
+# Install either the tf+ngraph or reference wheels
+case "${NG_TF_RUN_TYPE}" in
+    # Run with a tensorflow wheel and ngraph wheel
+    ngraph-tf)
+        setup_tf_and_ngraph_wheels
+        ;;
+    # Run with a generic tensorflow with wheel "tensorflow-mkldnn*.whl"
+    reference)
+        setup_tf_mkldnn
+        ;;
+    # Run with ngraph built into the tensorflow wheel
+    tf-with-ngraph)
+        # FUTURE: support this mode!
+        ( >&2 echo "ERROR: run-type 'tf-with-ngraph' is not yet supported")
+        ;;
+    # Special run-type where no wheels are installed
+    no-wheel)
+        setup_no_wheel
+        ;;
+    *)
+        ( >&2 echo "FATAL ERROR: run-type ${NG_TF_RUN_TYPE} is not supported in this script")
+        exit 1
+        ;;
+esac
 
 # If a dataset is requested, then set it up
 case "${NG_TF_DATASET}" in

@@ -174,7 +174,6 @@ TEST(tf_exec, DISABLED_BatchMatMul_0D) {
   std::vector<Tensor> outputs_z1;
   std::vector<Tensor> outputs_z2;
   std::vector<Tensor> outputs_z;
-  // Run and fetch v
   ClientSession session(dev_scope);
   ASSERT_OK(session.Run({Z1}, &outputs_z1));
   ASSERT_OK(session.Run({Z2}, &outputs_z2));
@@ -976,6 +975,27 @@ TEST(tf_exec, Op_PreventGradient) {
   ASSERT_EQ(outputs_cpu[0].shape(), TensorShape({2, 2}));
 
   AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
+}
+
+TEST(tf_exec, Op_Sqrt) {
+  Scope root = Scope::NewRootScope();
+  root = root.WithDevice("/device:NGRAPH:0");
+
+  auto A = ops::Const(root, {{256.f, 16.f}, {4.f, 64.f}});
+  auto r = ops::Sqrt(root.WithOpName("r"), A);
+
+  std::vector<Tensor> outputs;
+  ClientSession session(root);
+
+  ASSERT_OK(session.Run({r}, &outputs));
+
+  ASSERT_EQ(outputs[0].shape(), TensorShape({2, 2}));
+
+  auto mat = outputs[0].matrix<float>();
+  EXPECT_FLOAT_EQ(16.f, mat(0, 0));
+  EXPECT_FLOAT_EQ(4.f, mat(0, 1));
+  EXPECT_FLOAT_EQ(2.f, mat(1, 0));
+  EXPECT_FLOAT_EQ(8.f, mat(1, 1));
 }
 
 #undef ASSERT_OK

@@ -24,14 +24,12 @@ set -u  # No unset variables
 set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 
 
-# FUTURE: enable python 3, with selection via PYTHON_VERSION_NUMBER
-#if [ -z "${PYTHON_VERSION_NUMBER:-}" ] ; then
-#    ( >&2 echo "Env. variable PYTHON_VERSION_NUMBER has not been set" )
-#    exit 1
-#fi
-PYTHON_VERSION_NUMBER=2
+# Default is Python 2, but can override with NG_TF_PY_VERSION env. variable
+export PYTHON_VERSION_NUMBER="${NG_TF_PY_VERSION}"
+if [ -z "${PYTHON_VERSION_NUMBER}" ] ; then
+    PYTHON_VERSION_NUMBER=2
+fi
 export PYTHON_BIN_PATH="/usr/bin/python$PYTHON_VERSION_NUMBER"
-
 
 # Set up some important known directories
 bridge_dir='/home/dockuser/ngraph-tf'
