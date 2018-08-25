@@ -123,25 +123,29 @@ class NGraphEncapsulateOp : public OpKernel {
     }
 
     // Create the backend
-    if (m_ng_backend == nullptr) {
+    if (s_ng_backend == nullptr) {
+      mutex_lock l(s_ng_backend_mutex);
+
+      if (s_ng_backend == nullptr) {
 #if defined(NGRAPH_EMBEDDED_IN_TENSORFLOW)
-      NGRAPH_VLOG(2) << "Using INTERPRETER backend since "
-                        "NGRAPH_EMBEDDED_IN_TENSORFLOW is enabled";
-      m_ng_backend_name = "INTERPRETER";
+        NGRAPH_VLOG(2) << "Using INTERPRETER backend since "
+                          "NGRAPH_EMBEDDED_IN_TENSORFLOW is enabled";
+        s_ng_backend_name = "INTERPRETER";
 #else
-      const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
-      if (ng_backend_env_value != nullptr) {
-        m_ng_backend_name = std::string(ng_backend_env_value);
-        if (m_ng_backend_name.empty()) {
-          m_ng_backend_name = "CPU";
+        const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
+        if (ng_backend_env_value != nullptr) {
+          s_ng_backend_name = std::string(ng_backend_env_value);
+          if (s_ng_backend_name.empty()) {
+            s_ng_backend_name = "CPU";
+          }
+        } else {
+          s_ng_backend_name = "CPU";
         }
-      } else {
-        m_ng_backend_name = "CPU";
-      }
 #endif
-      m_ng_backend = ng::runtime::Backend::create(m_ng_backend_name);
-      OP_REQUIRES(ctx, m_ng_backend != nullptr,
-                  errors::InvalidArgument("Cannot create nGraph backend"));
+        s_ng_backend = ng::runtime::Backend::create(s_ng_backend_name);
+        OP_REQUIRES(ctx, s_ng_backend != nullptr,
+                    errors::InvalidArgument("Cannot create nGraph backend"));
+      }
     }
   }
 
@@ -331,7 +335,7 @@ class NGraphEncapsulateOp : public OpKernel {
       void* current_src_ptr = (void*)DMAHelper::base(&ctx->input(i));
       std::shared_ptr<ng::runtime::TensorView> current_tv;
 
-      if (m_ng_backend_name == "CPU") {
+      if (s_ng_backend_name == "CPU") {
         // We need to check last_tv != nullptr, since there are cases where at
         // the first call to the ng_function, both the current_src_ptr (when the
         // input is a 0-sized tensor) and last_src_ptr (uninitialized at the
@@ -349,7 +353,7 @@ class NGraphEncapsulateOp : public OpKernel {
           }
           current_tv = last_tv;
         } else {
-          current_tv = m_ng_backend->create_tensor(ng_element_type, ng_shape,
+          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape,
                                                    current_src_ptr);
           current_tv->set_stale(true);
         }
@@ -357,11 +361,11 @@ class NGraphEncapsulateOp : public OpKernel {
         if (last_tv != nullptr) {
           current_tv = last_tv;
         } else {
-          current_tv = m_ng_backend->create_tensor(ng_element_type, ng_shape);
+          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape);
         }
         current_tv->write(current_src_ptr, 0, current_tv->get_element_count() *
                                                   ng_element_type.size());
-      }  // if (m_ng_backend_name == "CPU")
+      }  // if (s_ng_backend_name == "CPU")
 
       input_caches[i] = std::make_pair(current_src_ptr, current_tv);
       ng_inputs.push_back(current_tv);
@@ -409,7 +413,7 @@ class NGraphEncapsulateOp : public OpKernel {
       void* current_dst_ptr = DMAHelper::base(output_tensor);
       std::shared_ptr<ng::runtime::TensorView> current_tv;
 
-      if (m_ng_backend_name == "CPU") {
+      if (s_ng_backend_name == "CPU") {
         // We need to check last_tv != nullptr, since there are cases where at
         // the first call to the ng_function, both the current_dst_ptr (when the
         // output is a 0-sized tensor) and last_dst_ptr (uninitialized at the
@@ -417,16 +421,16 @@ class NGraphEncapsulateOp : public OpKernel {
         if (current_dst_ptr == last_dst_ptr && last_tv != nullptr) {
           current_tv = last_tv;
         } else {
-          current_tv = m_ng_backend->create_tensor(ng_element_type, ng_shape,
+          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape,
                                                    current_dst_ptr);
         }
       } else {
         if (last_tv != nullptr) {
           current_tv = last_tv;
         } else {
-          current_tv = m_ng_backend->create_tensor(ng_element_type, ng_shape);
+          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape);
         }
-      }  // if (m_ng_backend_name == "CPU")
+      }  // if (s_ng_backend_name == "CPU")
 
       current_tv->set_stale(true);
       output_caches[i] = std::make_pair(current_dst_ptr, current_tv);
@@ -438,14 +442,18 @@ class NGraphEncapsulateOp : public OpKernel {
         << m_ngraph_cluster;
 
     // Execute the nGraph function.
-    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
-                   << m_ngraph_cluster;
-    m_ng_backend->call(ng_function, ng_outputs, ng_inputs);
+    {
+      mutex_lock l(s_ng_backend_mutex);
+      NGRAPH_VLOG(4)
+          << "NGraphEncapsulateOp::Compute call starting for cluster "
+          << m_ngraph_cluster;
+      s_ng_backend->call(ng_function, ng_outputs, ng_inputs);
+    }
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
                    << m_ngraph_cluster;
 
     // Copy value to host if backend is not CPU
-    if (m_ng_backend_name != "CPU") {
+    if (s_ng_backend_name != "CPU") {
       for (size_t i = 0; i < output_caches.size(); ++i) {
         void* dst_ptr;
         std::shared_ptr<ng::runtime::TensorView> dst_tv;
@@ -475,13 +483,17 @@ class NGraphEncapsulateOp : public OpKernel {
   NgFunctionIOCache m_ng_function_output_cache_map;
   NGraphFreshnessTracker* m_freshness_tracker;
   int m_ngraph_cluster;
-  static std::shared_ptr<ng::runtime::Backend> m_ng_backend;
   std::vector<bool> m_input_is_static;
-  static std::string m_ng_backend_name;
+
+  static std::shared_ptr<ng::runtime::Backend> s_ng_backend
+      GUARDED_BY(s_ng_backend_mutex);
+  static std::string s_ng_backend_name;
+  static mutex s_ng_backend_mutex;
 };
 
-std::shared_ptr<ng::runtime::Backend> NGraphEncapsulateOp::m_ng_backend;
-std::string NGraphEncapsulateOp::m_ng_backend_name;
+std::shared_ptr<ng::runtime::Backend> NGraphEncapsulateOp::s_ng_backend;
+std::string NGraphEncapsulateOp::s_ng_backend_name;
+mutex NGraphEncapsulateOp::s_ng_backend_mutex;
 
 }  // namespace ngraph_bridge
 
