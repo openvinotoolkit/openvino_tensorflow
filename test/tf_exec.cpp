@@ -17,6 +17,7 @@
 
 #include "ngraph_builder.h"
 #include "ngraph_utils.h"
+#include "test_utilities.h"
 
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/op.h"
@@ -109,52 +110,6 @@ TEST(tf_exec, DISABLED_axpy) {
   }
 }
 
-void AssertTensorEquals(Tensor& T1, Tensor& T2) {
-  auto T_size = T1.flat<float>().size();
-  for (int k = 0; k < T_size; k++) {
-    auto a = T1.flat<float>().data()[k];
-    auto b = T2.flat<float>().data()[k];
-    EXPECT_FLOAT_EQ(a, b);
-  }
-}
-
-void ValidateTensorData(Tensor& T1, Tensor& T2, float tol) {
-  auto T_size = T1.flat<float>().size();
-  auto T1_data = T1.flat<float>().data();
-  auto T2_data = T2.flat<float>().data();
-  for (int k = 0; k < T_size; k++) {
-    auto a = T1_data[k];
-    auto b = T2_data[k];
-    if (a == 0) {
-      EXPECT_NEAR(a, b, tol);
-    } else {
-      auto rel = a - b;
-      auto rel_div = std::abs(rel / a);
-      EXPECT_TRUE(rel_div < tol);
-    }
-  }
-}
-
-void AssignInputValues(Tensor& A, float x) {
-  auto A_flat = A.flat<float>();
-  auto A_flat_data = A_flat.data();
-  for (int i = 0; i < A_flat.size(); i++) {
-    A_flat_data[i] = x * i;
-  }
-}
-
-void AssignInputIntValues(Tensor& A, int maxval) {
-  auto A_flat = A.flat<int>();
-  auto A_flat_data = A_flat.data();
-  int counter = 0;
-  for (int i = 0; i < A_flat.size(); i++) {
-    A_flat_data[i] = counter++;
-    if (counter == maxval) {
-      counter = 0;
-    }
-  }
-}
-
 TEST(tf_exec, DISABLED_BatchMatMul_0D) {
   Scope root = Scope::NewRootScope();
   auto dev_scope = root.WithDevice("/device:NGRAPH:0");
@@ -193,16 +148,6 @@ TEST(tf_exec, DISABLED_BatchMatMul_0D) {
   AssertTensorEquals(outputs_z1[0], outputs_z1_cpu[0]);
   AssertTensorEquals(outputs_z2[0], outputs_z2_cpu[0]);
   AssertTensorEquals(outputs_z[0], outputs_z_cpu[0]);
-}
-
-void ActivateNGraph() {
-  setenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
-  unsetenv("NGRAPH_TF_DISABLE");
-}
-
-void DeactivateNGraph() {
-  unsetenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS");
-  setenv("NGRAPH_TF_DISABLE", "1", 1);
 }
 
 TEST(tf_exec, BatchMatMul) {
