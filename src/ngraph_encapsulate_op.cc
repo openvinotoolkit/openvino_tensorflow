@@ -127,11 +127,6 @@ class NGraphEncapsulateOp : public OpKernel {
       mutex_lock l(s_ng_backend_mutex);
 
       if (s_ng_backend == nullptr) {
-#if defined(NGRAPH_EMBEDDED_IN_TENSORFLOW)
-        NGRAPH_VLOG(2) << "Using INTERPRETER backend since "
-                          "NGRAPH_EMBEDDED_IN_TENSORFLOW is enabled";
-        s_ng_backend_name = "INTERPRETER";
-#else
         const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
         if (ng_backend_env_value != nullptr) {
           s_ng_backend_name = std::string(ng_backend_env_value);
@@ -141,7 +136,6 @@ class NGraphEncapsulateOp : public OpKernel {
         } else {
           s_ng_backend_name = "CPU";
         }
-#endif
         s_ng_backend = ng::runtime::Backend::create(s_ng_backend_name);
         OP_REQUIRES(ctx, s_ng_backend != nullptr,
                     errors::InvalidArgument("Cannot create nGraph backend"));

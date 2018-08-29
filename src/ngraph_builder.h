@@ -88,6 +88,16 @@ class Builder {
     NGRAPH_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
   }
 
+  static const std::map<
+      DataType,
+      std::pair<std::function<Status(const Node*, ngraph::element::Type,
+                                     std::shared_ptr<ngraph::Node>*)>,
+                const ngraph::element::Type>>&
+  TF_NGRAPH_CONST_MAP();
+
+  static const std::map<const DataType, const ngraph::element::Type>&
+  TF_NGRAPH_TYPE_MAP();
+
  private:
 };
 

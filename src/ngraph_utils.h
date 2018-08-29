@@ -114,6 +114,11 @@ Status ValuesFromConstNode(const NodeDef& node,
           (*values)[i] = (tensor.bool_val_size() == 1 ? tensor.bool_val()[0]
                                                       : tensor.bool_val()[i]);
           break;
+        case DT_DOUBLE:
+          (*values)[i] =
+              (tensor.double_val_size() == 1 ? tensor.double_val()[0]
+                                             : tensor.double_val()[i]);
+          break;
         default:
           NGRAPH_VLOG(0)
               << "Const node has empty tensor and we don't know how to "

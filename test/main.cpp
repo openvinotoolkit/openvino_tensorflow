@@ -33,18 +33,6 @@ using namespace std;
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
-// The following macro is defined by the TensorFlow bazel script
-// //third_party/ngraph/nhraph_tf.BUILD
-#if !defined(NGRAPH_EMBEDDED_IN_TENSORFLOW)
-  void* handle;
-  auto result =
-      tensorflow::Env::Default()->LoadLibrary("libngraph_device." EXT, &handle);
-  if (result != tensorflow::Status::OK()) {
-    cout << "Cannot load library: " << result.error_message() << endl;
-    return -1;
-  }
-#endif
-
   int rc = RUN_ALL_TESTS();
   return rc;
 }

@@ -203,26 +203,26 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       DumpGraphs(options, idx, "unmarked", "Unmarked Graph");
     }
 
-    // Mark for clustering then, if requested, dump the graphs.
+    // 1. Mark for clustering then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(MarkForClustering(options.graph->get()));
     if (DumpMarkedGraphs()) {
       DumpGraphs(options, idx, "marked", "Graph Marked for Clustering");
     }
 
-    // Assign clusters then, if requested, dump the graphs.
+    // 2. Assign clusters then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(AssignClusters(options.graph->get()));
     if (DumpClusteredGraphs()) {
       DumpGraphs(options, idx, "clustered", "Graph with Clusters Assigned");
     }
 
-    // Deassign trivial clusters then, if requested, dump the graphs.
+    // 3. Deassign trivial clusters then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(DeassignClusters(options.graph->get()));
     if (DumpDeclusteredGraphs()) {
       DumpGraphs(options, idx, "declustered",
                  "Graph with Trivial Clusters De-Assigned");
     }
 
-    // Encapsulate clusters then, if requested, dump the graphs.
+    // 4. Encapsulate clusters then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(EncapsulateClusters(options.graph->get()));
     if (DumpEncapsulatedGraphs()) {
       DumpGraphs(options, idx, "encapsulated",

@@ -383,8 +383,9 @@ Status EncapsulateClusters(Graph* graph) {
     for (auto& input : *(node_def->mutable_input())) {
       TensorId tensor_id = ParseTensorName(input);
 
-      auto it = input_rename_map.find(std::make_tuple(
-          cluster_idx, tensor_id.first.ToString(), tensor_id.second));
+      string tensor_name(tensor_id.first);
+      auto it = input_rename_map.find(
+          std::make_tuple(cluster_idx, tensor_name, tensor_id.second));
 
       if (it != input_rename_map.end()) {
         input = it->second;

@@ -33,7 +33,7 @@ ext = 'dylib' if system() == 'Darwin' else 'so'
 
 setup( 
     name='ngraph',
-    version='0.0.0',
+    version='0.5.0',
     description='Intel nGraph device',
     packages=['ngraph'], 
     author='Intel-Nervana AIPG', 

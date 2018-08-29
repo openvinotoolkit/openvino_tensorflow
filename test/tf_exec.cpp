@@ -58,8 +58,7 @@ TEST(tf_exec, hello_world) {
   LOG(INFO) << outputs[0].matrix<float>();
 }
 
-#if !defined(NGRAPH_EMBEDDED_IN_TENSORFLOW)
-TEST(tf_exec, axpy) {
+TEST(tf_exec, DISABLED_axpy) {
   GraphDef gdef;
   // auto status = ReadTextProto(Env::Default(), "test_py.pbtxt",
   // &gdef);
@@ -109,7 +108,6 @@ TEST(tf_exec, axpy) {
     cout << endl;
   }
 }
-#endif
 
 void AssertTensorEquals(Tensor& T1, Tensor& T2) {
   auto T_size = T1.flat<float>().size();
@@ -332,7 +330,7 @@ TEST(tf_exec, DISABLED_BatchMatMul_2D) {
   AssertTensorEquals(outputs[0], outputs_cpu[0]);
 }
 
-TEST(tf_exec, BiasAddGrad) {
+TEST(tf_exec, DISABLED_BiasAddGrad) {
   Scope root = Scope::NewRootScope();
   auto dev_scope = root.WithDevice("/device:NGRAPH:0");
   Tensor X(DT_FLOAT, TensorShape({2, 3, 4, 5}));
@@ -405,7 +403,7 @@ TEST(tf_exec, BiasAddGrad) {
   ValidateTensorData(outputs_ngraph_nchw[0], outputs_CPU_nchw[0], 1e-6);
 }
 
-TEST(tf_exec, FusedBatchNormGrad_NHWC) {
+TEST(tf_exec, DISABLED_FusedBatchNormGrad_NHWC) {
   Scope root = Scope::NewRootScope();
   auto dev_scope = root.WithDevice("/device:NGRAPH:0");
   Tensor tf_input(DT_FLOAT, TensorShape({5, 3, 4, 2}));
@@ -463,7 +461,7 @@ TEST(tf_exec, FusedBatchNormGrad_NHWC) {
 }
 
 // Test Op :"Op_L2Loss"
-TEST(tf_exec, Op_L2Loss) {
+TEST(tf_exec, DISABLED_Op_L2Loss) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
@@ -493,7 +491,7 @@ TEST(tf_exec, Op_L2Loss) {
 }
 
 // Test Op :"Op_Unpack"
-TEST(tf_exec, Op_Unpack) {
+TEST(tf_exec, DISABLED_Op_Unpack) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root = root.WithDevice("/device:CPU:0");
@@ -534,7 +532,7 @@ TEST(tf_exec, Op_Unpack) {
   }
 }
 
-TEST(tf_exec, Tile) {
+TEST(tf_exec, DISABLED_Tile) {
   Scope root = Scope::NewRootScope();
   auto dev_scope = root.WithDevice("/device:NGRAPH:0");
   Tensor A(DT_FLOAT, TensorShape({2, 3, 4}));
@@ -566,7 +564,7 @@ TEST(tf_exec, Tile) {
   AssertTensorEquals(outputs_D[0], outputs_D_cpu[0]);
 }
 
-TEST(tf_exec, Op_Conv2DBackpropFilter) {
+TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
@@ -661,7 +659,7 @@ TEST(tf_exec, Op_Conv2DBackpropFilter) {
 // With Const inputs tensorflow's constant folding optimisation converts the op
 // to "Mul". To test "RealDiv" operator, explicitly placed the op on NGRAPH and
 // the inputs as placeholders
-TEST(tf_exec, Op_RealDiv) {
+TEST(tf_exec, DISABLED_Op_RealDiv) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
@@ -686,7 +684,7 @@ TEST(tf_exec, Op_RealDiv) {
   EXPECT_FLOAT_EQ(0.0, mat(1, 1));
 }
 
-TEST(tf_exec, Op_Reciprocal) {
+TEST(tf_exec, DISABLED_Op_Reciprocal) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
@@ -738,7 +736,7 @@ TEST(tf_exec, DISABLED_Op_SparseSoftmaxCrossEntropyWithLogits) {
   ValidateTensorData(outputs_ngraph[1], outputs_cpu[1], 1e-6);
 }
 
-TEST(tf_exec, Op_Square) {
+TEST(tf_exec, DISABLED_Op_Square) {
   Scope root = Scope::NewRootScope();
   root = root.WithDevice("/device:NGRAPH:0");
 
@@ -759,7 +757,7 @@ TEST(tf_exec, Op_Square) {
   EXPECT_FLOAT_EQ(0.0, mat(1, 1));
 }
 
-TEST(tf_exec, Op_SquaredDifference) {
+TEST(tf_exec, DISABLED_Op_SquaredDifference) {
   Scope root = Scope::NewRootScope();
   Scope root_ngraph = root.NewSubScope("sub_scope_ngraph");
   root_ngraph = root_ngraph.WithDevice("/device:NGRAPH:0");
@@ -783,7 +781,7 @@ TEST(tf_exec, Op_SquaredDifference) {
   EXPECT_FLOAT_EQ(1.0, mat(1, 1));
 }
 
-TEST(tf_exec, Op_Rsqrt) {
+TEST(tf_exec, DISABLED_Op_Rsqrt) {
   Scope root = Scope::NewRootScope();
   root = root.WithDevice("/device:NGRAPH:0");
 
@@ -804,7 +802,7 @@ TEST(tf_exec, Op_Rsqrt) {
   EXPECT_FLOAT_EQ(1.f / 8.f, mat(1, 1));
 }
 
-TEST(tf_exec, Op_Negate) {
+TEST(tf_exec, DISABLED_Op_Negate) {
   Scope scope_cpu = Scope::NewRootScope();
   Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
 
@@ -831,7 +829,7 @@ TEST(tf_exec, Op_Negate) {
   AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
 }
 
-TEST(tf_exec, Op_FloorDiv) {
+TEST(tf_exec, DISABLED_Op_FloorDiv) {
   Scope scope_cpu = Scope::NewRootScope();
   Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
 
@@ -872,7 +870,7 @@ TEST(tf_exec, Op_FloorDiv) {
   AssertTensorEquals(outputs_cpu[1], outputs_ng[1]);
 }
 
-TEST(tf_exec, Op_FloorMod) {
+TEST(tf_exec, DISABLED_Op_FloorMod) {
   Scope scope_cpu = Scope::NewRootScope();
   Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
 
@@ -913,7 +911,7 @@ TEST(tf_exec, Op_FloorMod) {
   AssertTensorEquals(outputs_cpu[1], outputs_ng[1]);
 }
 
-TEST(tf_exec, Op_AddN) {
+TEST(tf_exec, DISABLED_Op_AddN) {
   Scope scope_cpu = Scope::NewRootScope();
   Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
 
@@ -948,7 +946,7 @@ TEST(tf_exec, Op_AddN) {
   AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
 }
 
-TEST(tf_exec, Op_PreventGradient) {
+TEST(tf_exec, DISABLED_Op_PreventGradient) {
   Scope scope_cpu = Scope::NewRootScope();
   Scope scope_ng = scope_cpu.WithDevice("/device:NGRAPH:0");
 
@@ -977,7 +975,7 @@ TEST(tf_exec, Op_PreventGradient) {
   AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
 }
 
-TEST(tf_exec, Op_Sqrt) {
+TEST(tf_exec, DISABLED_Op_Sqrt) {
   Scope root = Scope::NewRootScope();
   root = root.WithDevice("/device:NGRAPH:0");
 
