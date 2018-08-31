@@ -40,6 +40,12 @@ void GraphToDotFile(Graph* graph, const std::string& filename,
 // Saves a TensorFlow graph into a protobuf text
 void GraphToPbTextFile(Graph* graph, const std::string& filename);
 
+// PbTextFileToDotFile
+// Saves a protobuf text into a DOT file
+void PbTextFileToDotFile(const std::string& pbtxt_filename,
+                         const std::string& dot_filename,
+                         const std::string& title);
+
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow

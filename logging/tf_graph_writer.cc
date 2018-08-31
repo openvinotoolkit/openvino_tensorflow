@@ -24,8 +24,10 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/graph_constructor.h"
 #include "tensorflow/core/lib/strings/str_util.h"
 #include "tensorflow/core/platform/default/logging.h"
+#include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/protobuf.h"
 
 #include "ngraph_log.h"
@@ -210,6 +212,31 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
   dot_string << "}\n";
 
   return dot_string.str();
+}
+
+//-----------------------------------------------------------------------------
+// PbTextFileToDotFile
+//-----------------------------------------------------------------------------
+void PbTextFileToDotFile(const std::string& pbtxt_filename,
+                         const std::string& dot_filename,
+                         const std::string& title) {
+  GraphDef gdef;
+  auto status = ReadTextProto(Env::Default(), pbtxt_filename, &gdef);
+  if (status != Status::OK()) {
+    NGRAPH_VLOG(5) << "Can't read protobuf graph";
+    return;
+  }
+
+  Graph input_graph(OpRegistry::Global());
+  GraphConstructorOptions opts;
+  opts.allow_internal_ops = true;
+  status = ConvertGraphDefToGraph(opts, gdef, &input_graph);
+  if (status != Status::OK()) {
+    NGRAPH_VLOG(5) << "Can't convert graphdef to graph";
+    return;
+  }
+
+  GraphToDotFile(&input_graph, dot_filename, title);
 }
 
 }  // namespace ngraph_bridge
