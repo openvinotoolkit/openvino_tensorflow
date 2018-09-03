@@ -1,9 +1,9 @@
+import os
 import platform
+import random
 
 import tensorflow as tf
-import os
 
-import random
 
 __all__ = ['LIBNGRAPH_DEVICE', 'NgraphTest']
 
@@ -26,10 +26,11 @@ class NgraphTest(object):
 
     os.environ.pop('NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-    if (ngraph_tf_disable is not None):
+    if ngraph_tf_disable is not None:
       os.environ['NGRAPH_TF_DISABLE'] = ngraph_tf_disable
-    if (ngraph_tf_disable_deassign_clusters is not None):
-      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = ngraph_tf_disable_deassign_clusters
+    if ngraph_tf_disable_deassign_clusters is not None:
+      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
+          ngraph_tf_disable_deassign_clusters
 
     return retval
 
@@ -45,19 +46,18 @@ class NgraphTest(object):
 
     os.environ.pop('NGRAPH_TF_DISABLE', None)
 
-    if (ngraph_tf_disable is not None):
+    if ngraph_tf_disable is not None:
       os.environ['NGRAPH_TF_DISABLE'] = ngraph_tf_disable
-    if (ngraph_tf_disable_deassign_clusters is not None):
-      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = ngraph_tf_disable_deassign_clusters
+    if ngraph_tf_disable_deassign_clusters is not None:
+      os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
+          ngraph_tf_disable_deassign_clusters
 
     return retval
 
   # returns a vector of length 'vector_length' with random
   # float numbers in range [start,end]
-  def generate_random_numbers(self, vector_length, start, end, datatype="DTYPE_FLOAT"):
+  def generate_random_numbers(self, vector_length, start, end,
+                              datatype="DTYPE_FLOAT"):
     if datatype == "DTYPE_INT":
       return [random.randint(start, end) for i in range(vector_length)]
-    else:
-      return [random.uniform(start, end) for i in range(vector_length)]
-
-
+    return [random.uniform(start, end) for i in range(vector_length)]

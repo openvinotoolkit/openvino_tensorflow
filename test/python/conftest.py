@@ -14,9 +14,7 @@
 #  limitations under the License.
 # ==============================================================================
 from ctypes import cdll
-import glob
 import os
-import shutil
 
 import pytest
 
@@ -26,8 +24,8 @@ from common import LIBNGRAPH_DEVICE
 
 
 @pytest.fixture(scope='session', autouse=True)
-def load_ngraph_device():
-  cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
+def ngraph_device():
+  return cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_DEVICE))
 
 
 @pytest.fixture(autouse=True)

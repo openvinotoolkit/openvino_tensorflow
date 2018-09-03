@@ -16,6 +16,7 @@
 
 #include "tensorflow/core/graph/graph.h"
 
+#include "ngraph_api.h"
 #include "ngraph_utils.h"
 
 using namespace std;
@@ -86,6 +87,10 @@ static ConfirmationFunction SimpleConfirmationFunction(
 // Main entry point for the marking pass.
 //
 Status MarkForClustering(Graph* graph) {
+  if (config::IsEnabled() == false) {
+    return Status::OK();
+  }
+
   //
   // If NGRAPH_TF_DISABLE is set we will not mark anything; all subsequent
   // passes become a no-op.

@@ -17,6 +17,7 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
 
+#include "ngraph_api.h"
 #include "ngraph_utils.h"
 
 using namespace std;
@@ -37,6 +38,10 @@ static bool NGraphPlacementRequested(const Node* node) { return true; }
 // Main entry point for the variable-capture.
 //
 Status CaptureVariables(Graph* graph) {
+  if (config::IsEnabled() == false) {
+    return Status::OK();
+  }
+
   //
   // If NGRAPH_TF_DISABLE is set we will not capture anything.
   //
