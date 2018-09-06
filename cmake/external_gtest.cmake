@@ -24,6 +24,8 @@ include(ExternalProject)
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.0)
 
+set(CXX_FLAGS "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -fPIC")
+
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
@@ -33,8 +35,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        #CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_FLAGS="-fPIC"
-        CMAKE_ARGS -DCMAKE_CXX_FLAGS="-fPIC"
+        CMAKE_ARGS ${CXX_FLAGS}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
@@ -50,8 +51,7 @@ else()
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        #CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_FLAGS="-fPIC"
-        CMAKE_ARGS -DCMAKE_CXX_FLAGS="-fPIC"
+        CMAKE_ARGS ${CXX_FLAGS}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"

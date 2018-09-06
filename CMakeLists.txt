@@ -96,13 +96,37 @@ else()
     set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
 endif()
 
+# Find TensorFlow
+find_package(TensorFlow REQUIRED)
+
+add_library(tensorflow_framework_lib SHARED IMPORTED)
+set_target_properties( 
+    tensorflow_framework_lib 
+    PROPERTIES IMPORTED_LOCATION 
+    ${TensorFlow_DIR}/libtensorflow_framework.so
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(NGRAPH_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
+    message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${NGRAPH_TF_CXX11_ABI}" )
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_TF_CXX11_ABI}")
+
+if(APPLE)
+    set(LIBNGRAPH_SO "libngraph.dylib")
+else()
+    set(LIBNGRAPH_SO "libngraph.so")
+endif(APPLE)
+
 # Find and build ngraph
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-    GIT_TAG v0.6.0
+    GIT_TAG v0.7.0
     CMAKE_ARGS 
         -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist 
+        -DNGRAPH_USE_CXX_ABI=${TensorFlow_CXX_ABI}
         -DNGRAPH_UNIT_TEST_ENABLE=FALSE
         -DNGRAPH_TOOLS_ENABLE=FALSE 
         -DNGRAPH_DEX_ONLY=TRUE         
@@ -119,21 +143,6 @@ ExternalProject_Add(
 
 set( NGRAPH_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 
-# Find TensorFlow
-find_package(TensorFlow REQUIRED)
-
-add_library(tensorflow_framework_lib SHARED IMPORTED)
-set_target_properties( 
-    tensorflow_framework_lib 
-    PROPERTIES IMPORTED_LOCATION 
-    ${TensorFlow_DIR}/libtensorflow_framework.so
-)
-
-if(APPLE)
-    set(LIBNGRAPH_SO "libngraph.dylib")
-else()
-    set(LIBNGRAPH_SO "libngraph.so")
-endif(APPLE)
 
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties( 
@@ -143,9 +152,16 @@ set_target_properties(
 )
 add_dependencies(ngraph_lib ext_ngraph)
 
+option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
+
 # Add the directories to be built
 add_subdirectory(logging)
 add_subdirectory(src)
 add_subdirectory(third-party)
-add_subdirectory(test)
-add_subdirectory(tools)
+if (UNIT_TEST_ENABLE)
+    if (NOT DEFINED TF_SRC_DIR)
+        message(FATAL_ERROR "Provide TensorFlow source directory: -DTF_SRC_DIR=<directory>")
+    endif()
+    add_subdirectory(test)
+    message(STATUS "unit tests enabled")
+endif()

@@ -226,9 +226,10 @@ cd "${bridge_dir}"
 
 mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
-cmake -DNGRAPH_USE_PREBUILT_LLVM=TRUE ..
+cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR="${tf_dir}" ..
 make -j16
 make install
+make -j16 gtest_ngtf
 
 xtime="$(date)"
 echo  ' '
