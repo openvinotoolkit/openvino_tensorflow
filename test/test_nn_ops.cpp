@@ -207,15 +207,15 @@ TEST(NNOps, FusedBatchNormGradNHWC) {
   Tensor scale(DT_FLOAT, TensorShape({2}));
   // 1D tensor for population mean
   Tensor reserve_space_1_mean(DT_FLOAT, TensorShape({2}));
-  // 1D tensor for population varience
-  Tensor reserve_space_2_varience(DT_FLOAT, TensorShape({2}));
+  // 1D tensor for population variance
+  Tensor reserve_space_2_variance(DT_FLOAT, TensorShape({2}));
 
   // can't use random because value restriction
   AssignInputValuesAnchor(y_backprop, -2.1f);
   AssignInputValuesAnchor(x, -1.1f);
   AssignInputValuesAnchor(scale, -1.6f);
   AssignInputValuesAnchor(reserve_space_1_mean, 1.1f);
-  AssignInputValuesAnchor(reserve_space_2_varience, 0.5f);
+  AssignInputValuesAnchor(reserve_space_2_variance, 0.5f);
 
   auto attrs = ops::FusedBatchNormGrad::Attrs();
   attrs.is_training_ =
@@ -228,7 +228,7 @@ TEST(NNOps, FusedBatchNormGradNHWC) {
   vector<DataType> output_datatypes = {DT_FLOAT, DT_FLOAT, DT_FLOAT};
   auto R =
       ops::FusedBatchNormGrad(root, y_backprop, x, scale, reserve_space_1_mean,
-                              reserve_space_2_varience, attrs);
+                              reserve_space_2_variance, attrs);
   std::vector<Output> sess_run_fetchoutputs = {R.x_backprop, R.scale_backprop,
                                                R.offset_backprop};
   OpExecuter opexecuter(root, "FusedBatchNormGrad", static_input_indexes,
@@ -240,7 +240,7 @@ TEST(NNOps, FusedBatchNormGradNHWC) {
   vector<DataType> output_datatypes_all = {DT_FLOAT, DT_FLOAT, DT_FLOAT,
                                            DT_FLOAT, DT_FLOAT};
   R = ops::FusedBatchNormGrad(all_output_test, y_backprop, x, scale,
-                              reserve_space_1_mean, reserve_space_2_varience,
+                              reserve_space_1_mean, reserve_space_2_variance,
                               attrs);
   std::vector<Output> sess_run_fetchoutputs_all = {
       R.x_backprop, R.scale_backprop, R.offset_backprop, R.reserve_space_3,
