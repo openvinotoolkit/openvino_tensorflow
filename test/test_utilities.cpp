@@ -66,6 +66,16 @@ void AssignInputValues(Tensor& A, float x) {
   }
 }
 
+// Input x will be used as an anchor
+// Actual value assigned equals to x * i
+void AssignInputValuesAnchor(Tensor& A, float x) {
+  auto A_flat = A.flat<float>();
+  auto A_flat_data = A_flat.data();
+  for (int i = 0; i < A_flat.size(); i++) {
+    A_flat_data[i] = x * i;
+  }
+}
+
 void PrintTensor(const Tensor& T1) {
   LOG(INFO) << "print tensor values" << T1.DebugString();
 }

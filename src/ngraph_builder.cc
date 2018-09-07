@@ -1487,6 +1487,17 @@ static Status TranslateFusedBatchNormGradOp(
   SaveNgOp(ng_op_map, op->name(), ng_input_delta_op);
   SaveNgOp(ng_op_map, op->name(), ng_scale_delta_op);
   SaveNgOp(ng_op_map, op->name(), ng_beta_delta_op);
+  // Output reserve_space_3: Unused placeholder to match the mean input
+  // in FusedBatchNorm.
+  std::shared_ptr<ng::Node> output_mean = make_shared<ngraph::op::Constant>(
+      ng_mean->get_element_type(), ng::Shape{}, std::vector<std::string>{""});
+  SaveNgOp(ng_op_map, op->name(), output_mean);
+  // Output reserve_space_4: Unused placeholder to match the variance input
+  // in FusedBatchNorm.
+  std::shared_ptr<ng::Node> output_variance = make_shared<ngraph::op::Constant>(
+      ng_variance->get_element_type(), ng::Shape{},
+      std::vector<std::string>{""});
+  SaveNgOp(ng_op_map, op->name(), output_variance);
 
   return Status::OK();
 }
