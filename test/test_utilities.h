@@ -36,6 +36,7 @@ void AssertTensorEquals(Tensor& T1, Tensor& T2);
 void AssignInputIntValues(Tensor& A, int maxval);
 void AssignInputValues(Tensor& A, float x);
 void AssignInputValuesAnchor(Tensor& A, float x);  // value assigned = x * index
+void AssignInputValuesRandom(Tensor& A);
 void PrintTensor(const Tensor& T1);
 void ValidateTensorData(Tensor& T1, Tensor& T2, float tol);
 
