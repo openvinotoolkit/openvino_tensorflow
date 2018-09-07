@@ -406,9 +406,9 @@ Status EncapsulateClusters(Graph* graph) {
   }
 
   // Pass 7 (optional, only run if environment variable
-  // NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS is set): validate the graph def, and
+  // NGRAPH_TF_DUMP_CLUSTERS is set): validate the graph def, and
   // make sure we can construct a graph from it.
-  if (std::getenv("NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS")) {
+  if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
     for (auto& kv : device_name_map) {
       int cluster_idx = kv.first;
       TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
