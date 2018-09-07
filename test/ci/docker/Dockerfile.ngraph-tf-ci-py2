@@ -27,6 +27,7 @@ FROM ubuntu:16.04
 # zip and golang-go are needed to run TensorFlow tests
 # curl and locate are needed by Tensorflow's configure command
 # enum appears to be used in the TensorFlow build
+# clang-format-3.9 is needed for code-style checks
 # python-tk is used by matplotlib (pip installed below)
 RUN apt-get update &&  apt-get install -y \
     python-pip virtualenv \
