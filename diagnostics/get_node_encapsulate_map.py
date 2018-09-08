@@ -21,7 +21,7 @@ import os
 import sys
 import re
 import pdb
-from protobuf_visualize import load_file
+from ngtf_graph_viewer import load_file
 
 
 def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):

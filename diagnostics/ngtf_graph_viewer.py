@@ -159,11 +159,11 @@ if __name__ == "__main__":
     Convert protobuf to different visualizations (dot, tensorboard).
 
     Sample usage from command line:
-    python protobuf_visualize.py pbtxtfile.pbtxt ./vis  # read pbtxt and generate TB
-    python protobuf_visualize.py -v 1 pbtxtfile.pbtxt ./vis  # read pbtxt and generate dot
-    python protobuf_visualize.py -b pbtxtfile.pb ./vis  # read pb and generate TB
-    python protobuf_visualize.py -b -v 1 pbtxtfile.pb ./vis  # read pb and generate dot
-    python protobuf_visualize.py -c nodemap.pkl pbtxtfile.pbtxt ./vis  # read pbtxt, remap node names and generate TB
+    python ngtf_graph_viewer.py pbtxtfile.pbtxt ./vis  # read pbtxt and generate TB
+    python ngtf_graph_viewer.py -v 1 pbtxtfile.pbtxt ./vis  # read pbtxt and generate dot
+    python ngtf_graph_viewer.py -b pbtxtfile.pb ./vis  # read pb and generate TB
+    python ngtf_graph_viewer.py -b -v 1 pbtxtfile.pb ./vis  # read pb and generate dot
+    python ngtf_graph_viewer.py -c nodemap.pkl pbtxtfile.pbtxt ./vis  # read pbtxt, remap node names and generate TB
     One can also import the file and use its functions
     '''
     parser = argparse.ArgumentParser(
