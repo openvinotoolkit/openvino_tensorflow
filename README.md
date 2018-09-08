@@ -10,7 +10,7 @@ silicon.
 There are a few ways you can run nGraph with TensorFlow. They are described in the 
 following section.
 
-## Build nGraph bridge from source using existing TensorFlow installation
+## Option 1: Build nGraph bridge from source using existing TensorFlow installation
 
 1. Install TensorFlow using the instructions from the TensorFlow web site
    https://www.tensorflow.org/install/install_linux
@@ -20,25 +20,25 @@ following section.
     ```
     git clone https://github.com/NervanaSystems/ngraph-tf.git
     cd ngraph-tf
+    git checkout v0.5.0
     ```
 
 3. Next, build and install nGraph bridge. 
-   :warning: You must be inside the `virtualenv` wher TensorFlow installed 
+   :warning: You must be inside the `virtualenv` where TensorFlow installed 
    during the ngraph-tf build.
 
     ```
     mkdir build
     cd build
     cmake ..
-    make -j <your_processor_cores>
+    make -j <number_of_processor_cores_on_system>
     make install 
-    pip install -U python/dist/<ngraph-0.5.0-py2.py3-none-linux_x86_64.whl>
+    pip install -U python/dist/ngraph-0.5.0-py2.py3-none-linux_x86_64.whl
     ```
 
+## Option 2: Build nGraph bridge from source using TensorFlow source
 
-## Build nGraph bridge from source using TensorFlow source
-
-If you want to run unit tests or planning to contribute, then you need to install 
+If you want to run unit tests or are planning to contribute, then you need to install 
 the nGraph bridge using the TensorFlow source tree. 
 
 ### Prepare the build environment
