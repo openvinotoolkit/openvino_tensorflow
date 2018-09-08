@@ -58,7 +58,7 @@ if (PYTHON)
             install_name_tool -change 
             libngraph.${NGRAPH_VERSION}.dylib 
             @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
-            ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libngraph_device.dylib
+            ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libngraph_bridge.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
             ERROR_STRIP_TRAILING_WHITESPACE

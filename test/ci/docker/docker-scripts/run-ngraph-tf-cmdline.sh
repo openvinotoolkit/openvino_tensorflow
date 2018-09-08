@@ -101,8 +101,8 @@ setup_tf_and_ngraph_wheels() {
     echo  ' '
 
     # TODO: Remove when appropriate
-    # if [ ! -f "${NGTF_DIST}/libngraph_device.so" ] ; then
-    #     ( >&2 echo "FATAL ERROR: libngraph_device.so not found in ${NGTF_DIST}" )
+    # if [ ! -f "${NGTF_DIST}/libngraph_bridge.so" ] ; then
+    #     ( >&2 echo "FATAL ERROR: libngraph_bridge.so not found in ${NGTF_DIST}" )
     #     exit 1
     # fi
     # 
@@ -273,19 +273,19 @@ export PYTHON_BIN_PATH="/usr/bin/python${PYTHON_VERSION_NUMBER}"
 cd "$HOME/bridge"
 
 if [ -z "${NG_TF_WHEEL_NGRAPH}" ] ; then
-    NGTF_WHEEL="$HOME/bridge/ngraph-0.0.0-py2.py3-none-linux_x86_64.whl"
+    NGTF_WHEEL="$HOME/bridge/ngraph-0.5.0-py2.py3-none-linux_x86_64.whl"
 else
     NGTF_WHEEL="$HOME/bridge/${NG_TF_WHEEL_NGRAPH}"
 fi
 
 if [ -z "${NG_TF_WHEEL_TF}" ] ; then
-    TF_WHEEL="$HOME/bridge/tensorflow-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+    TF_WHEEL="$HOME/bridge/tensorflow-1.10.0-cp27-cp27mu-linux_x86_64.whl"
 else
     TF_WHEEL="$HOME/bridge/${NG_TF_WHEEL_TF}"
 fi
 
 if [ -z "${NG_TF_WHEEL_TF_REF}" ] ; then
-    TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.9.0-cp27-cp27mu-linux_x86_64.whl"
+    TF_WHEEL_MKLDNN="$HOME/bridge/tensorflow-mkldnn-1.10.0-cp27-cp27mu-linux_x86_64.whl"
 else
     TF_WHEEL_MKLDNN="$HOME/bridge/${NG_TF_WHEEL_TF_REF}"
 fi

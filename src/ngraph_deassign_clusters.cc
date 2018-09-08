@@ -78,9 +78,7 @@ static void MaybeLogPlacement(const Graph* graph) {
       } else {
         placement_dev << "nGraph[" << cluster_idx << "]\t";
       }
-      placement_dev << node->name() << "(" << node->type_string() << ")";
-      // string placement_str = placement_dev.str() +
-      //               node->type_string() + "\t" + node->name();
+      placement_dev << node->name() << " (" << node->type_string() << ")";
       std::cout << placement_dev.str() << std::endl;
     }
   }

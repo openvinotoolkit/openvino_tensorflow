@@ -48,8 +48,7 @@ ngraph = None
 # command.
 if tf.GIT_VERSION == "${TensorFlow_GIT_VERSION}":
     libpath = os.path.dirname(__file__)
-    ngraph = ctypes.cdll.LoadLibrary(os.path.join(libpath,
-                                                  'libngraph_device.' + ext))
+    ngraph = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_bridge.'+ext))
 else:
     raise ValueError(
         "Error: Wrong TensorFlow version " + tf.GIT_VERSION +

@@ -87,7 +87,7 @@ add_dependencies(gtest_ngtf build_tf_cc)
 
 target_link_libraries(
     gtest_ngtf 
-    ngraph_device 
+    ngraph_bridge 
     ngraph_lib
     libgtest 
     pthread 

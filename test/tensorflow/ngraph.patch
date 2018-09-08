@@ -15,7 +15,7 @@ index bf00fa6..23e0265 100644
      self._tempdir = None
      self._cached_session = None
 +    cdll.LoadLibrary(
-+    'libngraph_device.so'
++    'libngraph_bridge.so'
 +    )
  
    def setUp(self):

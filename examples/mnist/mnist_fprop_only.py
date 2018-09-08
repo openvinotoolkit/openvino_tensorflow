@@ -32,8 +32,7 @@ import ngraph
 FLAGS = None
 
 def main(_):
-    with tf.device('/device:' + FLAGS.select_device + ':0'):
-        run_mnist(_)
+    run_mnist(_)
 
 
 def run_mnist(_):
@@ -101,12 +100,6 @@ if __name__ == '__main__':
         type=int,
         default=10,
         help='Number of training iterations')
-
-    parser.add_argument(
-        '--select_device',
-        type=str,
-        default='CPU',
-        help='Enter the device')
 
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

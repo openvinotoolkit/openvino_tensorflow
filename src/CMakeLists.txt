@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(LIB_NAME ngraph_device)
+set(LIB_NAME ngraph_bridge)
 
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
@@ -67,8 +67,8 @@ else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()
 
-# First install the libngraph_device.so
-install(TARGETS ngraph_device DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")  
+# First install the libngraph_bridge.so
+install(TARGETS ${LIB_NAME} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")  
 
 # Next install all the other prerequisites
 install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" )

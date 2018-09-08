@@ -41,7 +41,7 @@ trained_dir='/trained_dataset'
 venv_dir="/tmp/venv_python${PYTHON_VERSION_NUMBER}"
 ngraph_dist_dir="${bbuild_dir}/ngraph/ngraph_dist"
 ngraph_wheel_dir="${bbuild_dir}/python/dist"
-libngraph_so="${bbuild_dir}/src/libngraph_device.so"
+libngraph_so="${bbuild_dir}/src/libngraph_bridge.so"
 libngraph_dist_dir="${bridge_dir}/libngraph_dist"  # Directory to save plugin artifacts in
 libngraph_tarball="${bridge_dir}/libngraph_dist.tgz"  # Tarball artifact to send to Artifactory
 imagenet_dataset="${dataset_dir}/Imagenet_Validation"
@@ -246,7 +246,7 @@ fi
 
 if [ ! -f "${libngraph_so}" ] ; then
     ( >&2 echo '***** Error: *****' )
-    ( >&2 echo "libngraph_device.so file does not exist -- this likely indicatesa build failure: ${libngraph_so}" )
+    ( >&2 echo "libngraph_bridge.so file does not exist -- this likely indicatesa build failure: ${libngraph_so}" )
     exit 1
 fi
 
@@ -261,7 +261,7 @@ cp "${ngraph_wheel_dir}"/*.whl "${bridge_dir}"
 # Copy the ngraph_dist directory into the libngraph distribution directory
 cp -r "${ngraph_dist_dir}" "${libngraph_dist_dir}/ngraph_dist"
 
-# Copy the libngraph_device.so file into the libngraph distribution directory
+# Copy the libngraph_bridge.so file into the libngraph distribution directory
 cp "${libngraph_so}" "${libngraph_dist_dir}"
 
 pwd

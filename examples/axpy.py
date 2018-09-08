@@ -25,6 +25,7 @@ import ctypes
 
 import numpy as np
 import tensorflow as tf
+import ngraph
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 
@@ -33,20 +34,12 @@ graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"
 print('Saving graph to: %s' % graph_location)
 train_writer = tf.summary.FileWriter(graph_location)
 
-# Define LD_LIBRARY_PATH indicating where nGraph library is located for now.
-# Eventually this won't be needed as the library will be available in either
-# the Python site-packages or some other means
-lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
-
 # Define the data
 a = tf.constant(np.full((2, 3), 5.0, dtype=np.float32), name='alpha')
 x = tf.placeholder(tf.float32, [None, 3], name='x')
 y = tf.placeholder(tf.float32, shape=(2, 3), name='y')
 
-# PLace this computation to NGRAPH
-with tf.device("/device:NGRAPH:0"):
-    c = a * x
-
+c = a * x
 axpy = c + y
 
 # Configure the session

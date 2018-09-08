@@ -139,90 +139,85 @@ def train_mnist_cnn(FLAGS):
     # Import data
     mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
-    device = '/device:CPU:0'
-    if FLAGS.use_xla_cpu:
-        device = '/device:XLA_CPU:0'
+    # Create the model
+    x = tf.placeholder(tf.float32, [None, 784])
 
-    with tf.device(device):
-        # Create the model
-        x = tf.placeholder(tf.float32, [None, 784])
+    # Define loss and optimizer
+    y_ = tf.placeholder(tf.float32, [None, 10])
 
-        # Define loss and optimizer
-        y_ = tf.placeholder(tf.float32, [None, 10])
+    # Build the graph for the deep net
+    y_conv, keep_prob = deepnn(x)
 
-        # Build the graph for the deep net
-        y_conv, keep_prob = deepnn(x)
+    with tf.name_scope('loss'):
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
+            labels=y_, logits=y_conv)
+    cross_entropy = tf.reduce_mean(cross_entropy)
 
-        with tf.name_scope('loss'):
-            cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-                labels=y_, logits=y_conv)
-        cross_entropy = tf.reduce_mean(cross_entropy)
+    with tf.name_scope('adam_optimizer'):
+        train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
-        with tf.name_scope('adam_optimizer'):
-            train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+    with tf.name_scope('accuracy'):
+        correct_prediction = tf.equal(
+            tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.cast(correct_prediction, tf.float32)
+    accuracy = tf.reduce_mean(correct_prediction)
+    tf.summary.scalar('Training accuracy', accuracy)
+    tf.summary.scalar('Loss function', cross_entropy)
 
-        with tf.name_scope('accuracy'):
-            correct_prediction = tf.equal(
-                tf.argmax(y_conv, 1), tf.argmax(y_, 1))
-            correct_prediction = tf.cast(correct_prediction, tf.float32)
-        accuracy = tf.reduce_mean(correct_prediction)
-        tf.summary.scalar('Training accuracy', accuracy)
-        tf.summary.scalar('Loss function', cross_entropy)
+    graph_location = "/tmp/" + getpass.getuser(
+    ) + "/tensorboard-logs/mnist-convnet"
+    print('Saving graph to: %s' % graph_location)
 
-        graph_location = "/tmp/" + getpass.getuser(
-        ) + "/tensorboard-logs/mnist-convnet"
-        print('Saving graph to: %s' % graph_location)
+    merged = tf.summary.merge_all()
+    train_writer = tf.summary.FileWriter(graph_location)
+    train_writer.add_graph(tf.get_default_graph())
 
-        merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(graph_location)
-        train_writer.add_graph(tf.get_default_graph())
+    saver = tf.train.Saver()
 
-        saver = tf.train.Saver()
+    with tf.Session(config=config) as sess:
 
-        with tf.Session(config=config) as sess:
-
-            sess.run(tf.global_variables_initializer())
-            train_loops = FLAGS.train_loop_count
-            loss_values = []
-            for i in range(train_loops):
-                batch = mnist.train.next_batch(FLAGS.batch_size)
-                if i % 10 == 0:
-                    t = time.time()
-                    train_accuracy = accuracy.eval(feed_dict={
-                        x: batch[0],
-                        y_: batch[1],
-                        keep_prob: 1.0
-                    })
-                    #tf.summary.scalar('Training accuracy', train_accuracy)
-                    print('step %d, training accuracy %g, %g sec to evaluate' %
-                          (i, train_accuracy, time.time() - t))
+        sess.run(tf.global_variables_initializer())
+        train_loops = FLAGS.train_loop_count
+        loss_values = []
+        for i in range(train_loops):
+            batch = mnist.train.next_batch(FLAGS.batch_size)
+            if i % 10 == 0:
                 t = time.time()
-                _, summary, loss = sess.run(
-                    [train_step, merged, cross_entropy],
-                    feed_dict={
-                        x: batch[0],
-                        y_: batch[1],
-                        keep_prob: 0.5
-                    })
-                loss_values.append(loss)
-                print('step %d, loss %g, %g sec for training step' %
-                      (i, loss, time.time() - t))
-                train_writer.add_summary(summary, i)
+                train_accuracy = accuracy.eval(feed_dict={
+                    x: batch[0],
+                    y_: batch[1],
+                    keep_prob: 1.0
+                })
+                #tf.summary.scalar('Training accuracy', train_accuracy)
+                print('step %d, training accuracy %g, %g sec to evaluate' %
+                        (i, train_accuracy, time.time() - t))
+            t = time.time()
+            _, summary, loss = sess.run(
+                [train_step, merged, cross_entropy],
+                feed_dict={
+                    x: batch[0],
+                    y_: batch[1],
+                    keep_prob: 0.5
+                })
+            loss_values.append(loss)
+            print('step %d, loss %g, %g sec for training step' %
+                    (i, loss, time.time() - t))
+            train_writer.add_summary(summary, i)
 
-            print("Training finished. Running test")
+        print("Training finished. Running test")
 
-            num_test_images = FLAGS.test_image_count
-            x_test = mnist.test.images[:num_test_images]
-            y_test = mnist.test.labels[:num_test_images]
+        num_test_images = FLAGS.test_image_count
+        x_test = mnist.test.images[:num_test_images]
+        y_test = mnist.test.labels[:num_test_images]
 
-            test_accuracy = accuracy.eval(feed_dict={
-                x: x_test,
-                y_: y_test,
-                keep_prob: 1.0
-            })
-            print('test accuracy %g' % test_accuracy)
-            saver.save(sess, FLAGS.model_dir)
-            return loss_values, test_accuracy
+        test_accuracy = accuracy.eval(feed_dict={
+            x: x_test,
+            y_: y_test,
+            keep_prob: 1.0
+        })
+        print('test accuracy %g' % test_accuracy)
+        saver.save(sess, FLAGS.model_dir)
+        return loss_values, test_accuracy
 
 
 def main(_):
@@ -236,11 +231,7 @@ if __name__ == '__main__':
         type=str,
         default='/tmp/tensorflow/mnist/input_data',
         help='Directory where input data is stored')
-    parser.add_argument(
-        '--use_xla_cpu',
-        type=bool,
-        default=False,
-        help='Use XLA_CPU device instead of nGraph device')
+
     parser.add_argument(
         '--train_loop_count',
         type=int,

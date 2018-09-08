@@ -79,7 +79,7 @@ endif()
 # installed is located in the same level as the tensorflow directory
 # site-packages/
 #     /ngraph
-#       libngraph_device.so
+#       libngraph_bridge.so
 #       ...
 #     /tensorflow
 #       libtensorflow_framework.so

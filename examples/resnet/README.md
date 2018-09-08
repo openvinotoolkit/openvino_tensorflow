@@ -43,8 +43,5 @@ The models supported from the POR list is as follows:
 4. ` --model=mobilenet`
 
 
-`--select_device` argument can also be used to compare with a reference run.
-Supported options are `NGRAPH`, `CPU` and `XLA_CPU`
-
 run command example:
-KMP_BLOCKTIME=0 OMP_NUM_THREADS=28  KMP_AFFINITY=granularity=fine,proclist=[0-27] python tf_cnn_benchmarks.py --model=resnet50  --eval --num_inter_threads=1 --batch_size=128  --train_dir /nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/partially_trained/resnet50 --data_format NCHW --select_device NGRAPH  --num_epochs=1 --data_name=imagenet --data_dir /mnt/data/TF_ImageNet_latest/ --datasets_use_prefetch=False --select_device NGRAPH
+KMP_BLOCKTIME=0 OMP_NUM_THREADS=28  KMP_AFFINITY=granularity=fine,proclist=[0-27] python tf_cnn_benchmarks.py --model=resnet50  --eval --num_inter_threads=1 --batch_size=128  --train_dir /nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/partially_trained/resnet50 --data_format NCHW --num_epochs=1 --data_name=imagenet --data_dir /mnt/data/TF_ImageNet_latest/ --datasets_use_prefetch=False 
