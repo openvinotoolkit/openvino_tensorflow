@@ -249,7 +249,7 @@ See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
 [prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
 [installing with Virtualenv]: https://www.tensorflow.org/install/install_linux#installing_with_virtualenv
 [0.11.1 also works]:https://github.com/bazelbuild/bazel/releases/tag/0.11.1
-[diagnostics](diagnostics/README.md)
+[diagnostics]:diagnostics/README.md
 
  
  
