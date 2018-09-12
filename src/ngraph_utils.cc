@@ -105,6 +105,9 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
     case DataType::DT_UINT8:
       *ng_et = ng::element::u8;
       break;
+    case DataType::DT_UINT16:
+      *ng_et = ng::element::u16;
+      break;
     case DataType::DT_INT64:
       *ng_et = ng::element::i64;
       break;
