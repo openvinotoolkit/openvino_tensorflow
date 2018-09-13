@@ -66,7 +66,7 @@ fi
 # Set defaults
 
 if [ -z "${NG_TF_RUN_TYPE}" ] ; then
-    NG_TF_RUN_TYPE='ngraph'  # Default is to run with ngraph
+    NG_TF_RUN_TYPE='ngraph-tf'  # Default is to run with ngraph
 fi
 
 if [ -z "${NG_TF_PY_VERSION}" ] ; then
