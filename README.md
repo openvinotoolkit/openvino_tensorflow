@@ -105,7 +105,7 @@ TensorFlow [prepare environment] for linux.
 
 3. Now run `./configure` and choose `no` for all the questions when prompted to build TensorFlow.
 
-    Note that if you are running TensorFlow on a Skylake falily processor then select
+    Note that if you are running TensorFlow on a Skylake family processor then select
     `-march=broadwell` when prompted to specify the optimization flags:
     ```
     Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -march=native]: -march=broadwell
@@ -235,20 +235,12 @@ See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
 ## Future plans
 
 [tensorflow]:https://github.com/tensorflow/tensorflow.git
-[building a modified version of TensorFlow]:http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow 
-[official distribution of TensorFlow]:https://github.com/tensorflow/tensorflow.git
-[upstreaming discussions here]: https://groups.google.com/d/topic/xla-dev/LZdKcq7goko/discussion
 [open-source C++ library, compiler and runtime]: http://ngraph.nervanasys.com/docs/latest/
 [DSO]:http://csweb.cs.wfu.edu/~torgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
-[Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
-[ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
-[bazel version 0.11.0]: https://github.com/bazelbuild/bazel/releases/tag/0.11.0
-[installation guide]: https://www.tensorflow.org/install/install_linux
+[Github issues]: https://github.com/NervanaSystems/ngraph-tf/issues
+[pull request]: https://github.com/NervanaSystems/ngraph-tf/pulls
+[bazel version 0.16.0]: https://github.com/bazelbuild/bazel/releases/tag/0.16.0
 [prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
-[installing with Virtualenv]: https://www.tensorflow.org/install/install_linux#installing_with_virtualenv
-[0.11.1 also works]:https://github.com/bazelbuild/bazel/releases/tag/0.11.1
 [diagnostics]:diagnostics/README.md
 
  

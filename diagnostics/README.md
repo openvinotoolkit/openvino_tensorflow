@@ -25,7 +25,8 @@ To get a **full** dump use the following set of flags
 * Run your script with this flag: ```NGRAPH_TF_DUMP_DECLSUTERED_GRAPHS=1 python run_TF_network.py```
 * Change directory to this diagnostics folder
 * Run this script to parse the dumped graphs to know which encapsulate a node belongs to. At this step nodemap.pkl is created: ```python get_node_encapsulate_map.py ./path/to/folder/where/run_TF_network.py/exists/where/the/dumps/were/created/in/the/last/step/ nodemap.pkl```
-* View the original network with encapsulate information in nodemap.pkl: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)
+* Modify the graphdef and dump TB file in ```./vis``` using encapsulate information in ```nodemap.pkl```: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt ./vis```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)
+*  View the original network with encapsulate information by running tensorboard, using the files created in ```./vis```.
 
 
 ## Debug flags
