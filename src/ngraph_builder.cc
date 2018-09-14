@@ -36,21 +36,6 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-const std::map<const DataType, const ngraph::element::Type>&
-Builder::TF_NGRAPH_TYPE_MAP() {
-  static const std::map<const DataType, const ngraph::element::Type> the_map = {
-      {DataType::DT_FLOAT, ng::element::f32},
-      {DataType::DT_DOUBLE, ng::element::f64},
-      {DataType::DT_INT8, ng::element::i8},
-      {DataType::DT_INT16, ng::element::i16},
-      {DataType::DT_INT32, ng::element::i32},
-      {DataType::DT_INT64, ng::element::i64},
-      {DataType::DT_UINT8, ng::element::u8},
-      {DataType::DT_UINT16, ng::element::u16},
-      {DataType::DT_BOOL, ng::element::boolean}};
-  return the_map;
-}
-
 static Status ValidateInputCount(const Node* op, size_t count) {
   if (op->num_inputs() != count) {
     return errors::InvalidArgument("\"", op->name(), "\" requires ", count,
@@ -815,10 +800,12 @@ static Status TranslateCastOp(
   DataType dtype;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "DstT", &dtype));
 
+  ng::element::Type ng_et;
+  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
+
   try {
     SaveNgOp(ng_op_map, op->name(),
-             make_shared<ng::op::Convert>(
-                 ng_input, Builder::TF_NGRAPH_TYPE_MAP().at(dtype)));
+             make_shared<ng::op::Convert>(ng_input, ng_et));
   } catch (const std::out_of_range&) {
     return errors::Unimplemented("Unsupported TensorFlow data type: ",
                                  DataType_Name(dtype));

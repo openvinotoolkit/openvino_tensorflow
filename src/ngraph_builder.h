@@ -95,9 +95,6 @@ class Builder {
                 const ngraph::element::Type>>&
   TF_NGRAPH_CONST_MAP();
 
-  static const std::map<const DataType, const ngraph::element::Type>&
-  TF_NGRAPH_TYPE_MAP();
-
  private:
 };
 
