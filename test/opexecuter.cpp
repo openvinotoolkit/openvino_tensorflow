@@ -135,13 +135,31 @@ void OpExecuter::ExecuteOnTF() {
   DeactivateNGraph();
   ClientSession session(tf_scope_);
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs_));
+  for (int i = 0; i < tf_outputs_.size(); i++) {
+    NGRAPH_VLOG(5) << " TF op " << i << tf_outputs_[i].DebugString();
+  }
 }
 
 // Compares tf_outputs_ with ngraph_outputs_
 void OpExecuter::CompareNGraphAndTF() {
   ASSERT_EQ(tf_outputs_.size(), ngraph_outputs_.size());
   for (int i = 0; i < tf_outputs_.size(); i++) {
-    AssertTensorEquals(tf_outputs_[i], ngraph_outputs_[i]);
+    switch (expected_output_datatypes_[i]) {
+      case DT_FLOAT:
+      case DT_DOUBLE:
+        AssertTensorEquals<float>(tf_outputs_[i], ngraph_outputs_[i]);
+        break;
+      case DT_INT8:
+      case DT_INT16:
+      case DT_INT32:
+      case DT_INT64:
+        AssertTensorEquals<int>(tf_outputs_[i], ngraph_outputs_[i]);
+        break;
+      default:
+        EXPECT_TRUE(false)
+            << "Could not find the corresponding function for the "
+               "expected output datatype.";
+    }
   }
 }
 
@@ -349,6 +367,7 @@ void OpExecuter::ExecuteOnNGraph() {
     void* dst_ptr = DMAHelper::base(&output_tensor);
     ng_op_tensors[i]->read(dst_ptr, 0, output_tensor.TotalBytes());
     ngraph_outputs_.push_back(output_tensor);
+    NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs_[i].DebugString();
   }
 
 }  // ExecuteOnNGraph

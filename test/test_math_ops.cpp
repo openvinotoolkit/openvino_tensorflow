@@ -389,6 +389,88 @@ TEST(MathOps, SquaredDifferenceBroadcasting) {
   opexecuter.RunTest();
 }
 
+// Cast float to int
+TEST(MathOps, Cast1D) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Cast(root, A, DT_INT32);
+
+  vector<DataType> output_datatypes = {DT_INT32};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Cast", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// Cast float to int
+TEST(MathOps, Cast2D) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Cast(root, A, DT_INT32);
+
+  vector<DataType> output_datatypes = {DT_INT32};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Cast", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, Exp1D) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+
+  AssignInputValues(A, 2.5);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Exp(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Exp", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, Exp2D) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 3.6);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Exp(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Exp", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
 }  // namespace testing
 
 }  // namespace ngraph_bridge

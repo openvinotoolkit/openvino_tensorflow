@@ -145,9 +145,9 @@ TEST(tf_exec, DISABLED_BatchMatMul_0D) {
   ASSERT_EQ(outputs_z1[0].shape(), outputs_z1_cpu[0].shape());
   ASSERT_EQ(outputs_z2[0].shape(), outputs_z2_cpu[0].shape());
   ASSERT_EQ(outputs_z[0].shape(), outputs_z_cpu[0].shape());
-  AssertTensorEquals(outputs_z1[0], outputs_z1_cpu[0]);
-  AssertTensorEquals(outputs_z2[0], outputs_z2_cpu[0]);
-  AssertTensorEquals(outputs_z[0], outputs_z_cpu[0]);
+  AssertTensorEquals<float>(outputs_z1[0], outputs_z1_cpu[0]);
+  AssertTensorEquals<float>(outputs_z2[0], outputs_z2_cpu[0]);
+  AssertTensorEquals<float>(outputs_z[0], outputs_z_cpu[0]);
 }
 
 TEST(tf_exec, BatchMatMul) {
@@ -200,8 +200,8 @@ TEST(tf_exec, BatchMatMul) {
   ASSERT_EQ(outputs_ng[0].shape(), outputs_tf[0].shape());
   ASSERT_EQ(outputs_z1_ng[0].shape(), outputs_z1_tf[0].shape());
   ASSERT_EQ(outputs_z2_ng[0].shape(), outputs_z2_tf[0].shape());
-  AssertTensorEquals(outputs_z1_ng[0], outputs_z1_tf[0]);
-  AssertTensorEquals(outputs_z2_ng[0], outputs_z2_tf[0]);
+  AssertTensorEquals<float>(outputs_z1_ng[0], outputs_z1_tf[0]);
+  AssertTensorEquals<float>(outputs_z2_ng[0], outputs_z2_tf[0]);
 }
 
 TEST(tf_exec, DISABLED_BatchMatMul_3D) {
@@ -248,8 +248,8 @@ TEST(tf_exec, DISABLED_BatchMatMul_3D) {
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
   ASSERT_EQ(outputs_z1[0].shape(), outputs_z1_cpu[0].shape());
   ASSERT_EQ(outputs_z2[0].shape(), outputs_z2_cpu[0].shape());
-  AssertTensorEquals(outputs_z1[0], outputs_z1_cpu[0]);
-  AssertTensorEquals(outputs_z2[0], outputs_z2_cpu[0]);
+  AssertTensorEquals<float>(outputs_z1[0], outputs_z1_cpu[0]);
+  AssertTensorEquals<float>(outputs_z2[0], outputs_z2_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_BatchMatMul_2D) {
@@ -272,7 +272,7 @@ TEST(tf_exec, DISABLED_BatchMatMul_2D) {
   auto C = ops::BatchMatMul(root.WithOpName("C"), A, B);
   ASSERT_OK(sess.Run({C}, &outputs_cpu));
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
-  AssertTensorEquals(outputs[0], outputs_cpu[0]);
+  AssertTensorEquals<float>(outputs[0], outputs_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_BiasAddGrad) {
@@ -400,9 +400,9 @@ TEST(tf_exec, DISABLED_FusedBatchNormGrad_NHWC) {
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
   ASSERT_EQ(outputs[1].shape(), outputs_cpu[1].shape());
   ASSERT_EQ(outputs[2].shape(), outputs_cpu[2].shape());
-  AssertTensorEquals(outputs[0], outputs_cpu[0]);
-  AssertTensorEquals(outputs[1], outputs_cpu[1]);
-  AssertTensorEquals(outputs[2], outputs_cpu[2]);
+  AssertTensorEquals<float>(outputs[0], outputs_cpu[0]);
+  AssertTensorEquals<float>(outputs[1], outputs_cpu[1]);
+  AssertTensorEquals<float>(outputs[2], outputs_cpu[2]);
 }
 
 // Test Op :"Op_L2Loss"
@@ -431,7 +431,7 @@ TEST(tf_exec, DISABLED_Op_L2Loss) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals(outputs_ngraph[0], outputs_cpu[0]);
+    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 }
 
@@ -472,7 +472,7 @@ TEST(tf_exec, DISABLED_Op_Unpack) {
         session.Run({r_ngraph[0], r_ngraph[1], r_ngraph[2]}, &outputs_ngraph));
     for (auto j = 0; j < input_rank; ++j) {
       ASSERT_EQ(outputs_ngraph[j].shape(), outputs_cpu[j].shape());
-      AssertTensorEquals(outputs_ngraph[j], outputs_cpu[j]);
+      AssertTensorEquals<float>(outputs_ngraph[j], outputs_cpu[j]);
     }
   }
 }
@@ -505,8 +505,8 @@ TEST(tf_exec, DISABLED_Tile) {
   ASSERT_OK(sess.Run({D_cpu}, &outputs_D_cpu));
   ASSERT_EQ(outputs_C[0].shape(), outputs_C_cpu[0].shape());
   ASSERT_EQ(outputs_D[0].shape(), outputs_D_cpu[0].shape());
-  AssertTensorEquals(outputs_C[0], outputs_C_cpu[0]);
-  AssertTensorEquals(outputs_D[0], outputs_D_cpu[0]);
+  AssertTensorEquals<float>(outputs_C[0], outputs_C_cpu[0]);
+  AssertTensorEquals<float>(outputs_D[0], outputs_D_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
@@ -557,7 +557,7 @@ TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals(outputs_ngraph[0], outputs_cpu[0]);
+    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 
   // TEST NCHW
@@ -595,7 +595,7 @@ TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals(outputs_ngraph[0], outputs_cpu[0]);
+    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 
 }  // namespace ngraph_bridge
@@ -654,7 +654,7 @@ TEST(tf_exec, DISABLED_Op_PreventGradient) {
                             &outputs_cpu));
   ASSERT_EQ(outputs_cpu[0].shape(), TensorShape({2, 2}));
 
-  AssertTensorEquals(outputs_cpu[0], outputs_ng[0]);
+  AssertTensorEquals<float>(outputs_cpu[0], outputs_ng[0]);
 }
 
 #undef ASSERT_OK
