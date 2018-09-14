@@ -85,6 +85,21 @@ if(${result})
 endif()
 message(STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION})
 
+execute_process(
+    COMMAND
+    python -c "import tensorflow as tf; print(tf.__version__)"
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE TensorFlow_VERSION
+    ERROR_VARIABLE ERR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
+)
+
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow __version__\n" ${ERR})
+endif()
+message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
+
 # Make sure that the TF library exists
 find_library(
   TensorFlow_FRAMEWORK_LIBRARY
@@ -100,5 +115,6 @@ find_package_handle_standard_args(
     TensorFlow_DIR
     TensorFlow_INCLUDE_DIR
     TensorFlow_GIT_VERSION
+    TensorFlow_VERSION
     TensorFlow_FRAMEWORK_LIBRARY
 )

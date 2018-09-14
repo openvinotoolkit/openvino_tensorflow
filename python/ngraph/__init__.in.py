@@ -31,7 +31,7 @@ from tensorflow.python.framework import errors_impl
 
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops
- 
+
 import ctypes
 
 
@@ -42,17 +42,53 @@ __all__ = ['enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 ngraph = None
+
+TF_VERSION = tf.VERSION
+TF_GIT_VERSION = tf.GIT_VERSION
+TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
+TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
+
+# converting version representations to strings if not already
+try:
+  TF_VERSION = str(TF_VERSION, 'ascii')
+except TypeError:  # will happen for python 2 or if already string
+  pass
+
+try:
+  TF_VERSION_NEEDED = str(TF_VERSION_NEEDED, 'ascii')
+except TypeError:
+  pass
+
+try:
+  if TF_GIT_VERSION.startswith("b'"):  # TF version can be a bytes __repr__()
+    TF_GIT_VERSION = eval(TF_GIT_VERSION)
+  TF_GIT_VERSION = str(TF_GIT_VERSION, 'ascii')
+except TypeError:
+  pass
  
+try:
+  if TF_GIT_VERSION_BUILT_WITH.startswith("b'"):
+    TF_GIT_VERSION_BUILT_WITH = eval(TF_GIT_VERSION_BUILT_WITH)
+  TF_GIT_VERSION_BUILT_WITH = str(TF_GIT_VERSION_BUILT_WITH, 'ascii')
+except TypeError:
+  pass
+
+print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
+  TF_GIT_VERSION))
+print("Version built with: {0} ({1})".format(TF_VERSION_NEEDED,
+  TF_GIT_VERSION_BUILT_WITH))
+
 
 # We need to revisit this later. We can automate that using cmake configure
 # command.
-if tf.GIT_VERSION == "${TensorFlow_GIT_VERSION}":
+if TF_VERSION == TF_VERSION_NEEDED:
     libpath = os.path.dirname(__file__)
-    ngraph = ctypes.cdll.LoadLibrary(os.path.join(libpath,'libngraph_bridge.'+ext))
+    ngraph = ctypes.cdll.LoadLibrary(os.path.join(
+      libpath, 'libngraph_bridge.' + ext))
 else:
-    raise ValueError(
-        "Error: Wrong TensorFlow version " + tf.GIT_VERSION +
-        "\nNeeded: ${TensorFlow_GIT_VERSION}")
+    raise ValueError("Error: Wrong TensorFlow version {0}\nNeeded: {1}".format(
+      TF_VERSION, TF_VERSION_NEEDED))
+
 
 def requested():
     return ops.get_default_graph()._attr_scope(
