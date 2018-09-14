@@ -29,130 +29,127 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestElementwiseOperations(NgraphTest):
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((1.0, -1.0, [1.0]), (100, 200, ([200],)),
-                            ([0.0, 5.0, 10.0], [6.0],
-                             (np.array([[6.0, 6.0, 10.0]]),))))
-  def test_maximum(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.float32, shape=(None))
-    val2 = tf.placeholder(tf.float32, shape=(None))
 
-    with self.device:
-      out = tf.maximum(val1, val2)
+    @pytest.mark.parametrize(("v1", "v2", "expected"),
+                             ((1.0, -1.0, [1.0]), (100, 200, ([200],)),
+                              ([0.0, 5.0, 10.0], [6.0],
+                               (np.array([[6.0, 6.0, 10.0]]),))))
+    def test_maximum(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.float32, shape=(None))
+        val2 = tf.placeholder(tf.float32, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.maximum(val1, val2)
 
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((1.4, 1.0, [False]), (-1.0, -1.0, ([True],)),
-                            (-1.0, 1000, [True]), (200, 200, ([True],)),
-                            ([-1.0, 1.0, -4], [0.1, 0.1, -4],
-                             (np.array([[True, False, True]]),)),
-                            ([-1.0, 1.0, -4], [-1.0],
-                             (np.array([[True, False, True]]),))))
-  def test_less_equal(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.float32, shape=(None))
-    val2 = tf.placeholder(tf.float32, shape=(None))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.less_equal(val1, val2)
+    @pytest.mark.parametrize(
+        ("v1", "v2", "expected"),
+        ((1.4, 1.0, [False]), (-1.0, -1.0, ([True],)), (-1.0, 1000, [True]),
+         (200, 200, ([True],)), ([-1.0, 1.0, -4], [0.1, 0.1, -4],
+                                 (np.array([[True, False, True]]),)),
+         ([-1.0, 1.0, -4], [-1.0], (np.array([[True, False, True]]),))))
+    def test_less_equal(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.float32, shape=(None))
+        val2 = tf.placeholder(tf.float32, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.less_equal(val1, val2)
 
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((1.4, 1.0, [False]), (-1.0, -1.0, ([False],)),
-                            (-1.0, 1000, [True]), (200, 200, ([False],)),
-                            ([-1.0, 1.0, -4], [0.1, 0.1, -4],
-                             (np.array([[True, False, False]]),)),
-                            ([-1.0, 1.0, -4], [-1.0],
-                             (np.array([[False, False, True]]),))))
-  def test_less(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.float32, shape=(None))
-    val2 = tf.placeholder(tf.float32, shape=(None))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.less(val1, val2)
+    @pytest.mark.parametrize(
+        ("v1", "v2", "expected"),
+        ((1.4, 1.0, [False]), (-1.0, -1.0, ([False],)), (-1.0, 1000, [True]),
+         (200, 200, ([False],)), ([-1.0, 1.0, -4], [0.1, 0.1, -4],
+                                  (np.array([[True, False, False]]),)),
+         ([-1.0, 1.0, -4], [-1.0], (np.array([[False, False, True]]),))))
+    def test_less(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.float32, shape=(None))
+        val2 = tf.placeholder(tf.float32, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.less(val1, val2)
 
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((1.4, 1.0, [True]), (-1.0, -1.0, ([True],)),
-                            (-1.0, 1000, [False]), (200, 200, ([True],)),
-                            ([-1.0, 1.0, -4], [0.1, 0.1, -4],
-                             (np.array([[False, True, True]]),)),
-                            ([-1.0, 1.0, -4], [-1.0],
-                             (np.array([[True, True, False]]),))))
-  def test_greater_equal(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.float32, shape=(None))
-    val2 = tf.placeholder(tf.float32, shape=(None))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.greater_equal(val1, val2)
+    @pytest.mark.parametrize(
+        ("v1", "v2", "expected"),
+        ((1.4, 1.0, [True]), (-1.0, -1.0, ([True],)), (-1.0, 1000, [False]),
+         (200, 200, ([True],)), ([-1.0, 1.0, -4], [0.1, 0.1, -4],
+                                 (np.array([[False, True, True]]),)),
+         ([-1.0, 1.0, -4], [-1.0], (np.array([[True, True, False]]),))))
+    def test_greater_equal(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.float32, shape=(None))
+        val2 = tf.placeholder(tf.float32, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.greater_equal(val1, val2)
 
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((1.4, 1.0, [True]), (-1.0, -1.0, ([False],)),
-                            (-1.0, 1000, [False]), (200, 200, ([False],)),
-                            ([-1.0, 1.0, -4], [0.1, 0.1, -4],
-                             (np.array([[False, True, False]]),)),
-                            ([-1.0, 1.0, -4], [-1.0],
-                             (np.array([[False, True, False]]),))))
-  def test_greater(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.float32, shape=(None))
-    val2 = tf.placeholder(tf.float32, shape=(None))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.greater(val1, val2)
+    @pytest.mark.parametrize(
+        ("v1", "v2", "expected"),
+        ((1.4, 1.0, [True]), (-1.0, -1.0, ([False],)), (-1.0, 1000, [False]),
+         (200, 200, ([False],)), ([-1.0, 1.0, -4], [0.1, 0.1, -4],
+                                  (np.array([[False, True, False]]),)),
+         ([-1.0, 1.0, -4], [-1.0], (np.array([[False, True, False]]),))))
+    def test_greater(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.float32, shape=(None))
+        val2 = tf.placeholder(tf.float32, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.greater(val1, val2)
 
-  @pytest.mark.parametrize(("v1", "v2", "expected"),
-                           ((True, True, [True]), (True, False, ([False],)),
-                            (1.0, -2.0, ([True],)), (False, 100, ([False],)),
-                            ([False, True, False], [True],
-                             (np.array([[False, True, False]]),))))
-  def test_logical_and(self, v1, v2, expected):
-    val1 = tf.placeholder(tf.bool, shape=(None))
-    val2 = tf.placeholder(tf.bool, shape=(None))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.logical_and(val1, val2)
+    @pytest.mark.parametrize(("v1", "v2", "expected"),
+                             ((True, True, [True]), (True, False, ([False],)),
+                              (1.0, -2.0, ([True],)), (False, 100, ([False],)),
+                              ([False, True, False], [True],
+                               (np.array([[False, True, False]]),))))
+    def test_logical_and(self, v1, v2, expected):
+        val1 = tf.placeholder(tf.bool, shape=(None))
+        val2 = tf.placeholder(tf.bool, shape=(None))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.logical_and(val1, val2)
 
-  @pytest.mark.parametrize(("test_input", "expected"),
-                           ((False, True), (True, False)))
-  def test_logicalnot_1d(self, test_input, expected):
-    val = tf.placeholder(tf.bool, shape=(1,))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
+                assert np.allclose(result, expected)
 
-    with self.device:
-      out = tf.logical_not(val)
+    @pytest.mark.parametrize(("test_input", "expected"), ((False, True),
+                                                          (True, False)))
+    def test_logicalnot_1d(self, test_input, expected):
+        val = tf.placeholder(tf.bool, shape=(1,))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert result[0] == expected
+        with self.device:
+            out = tf.logical_not(val)
 
-  def test_logicalnot_2d(self):
-    test_input = ((True, False, True), (False, True, False))
-    expected = np.logical_not(test_input)
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert result[0] == expected
 
-    val = tf.placeholder(tf.bool, shape=(2, 3))
+    def test_logicalnot_2d(self):
+        test_input = ((True, False, True), (False, True, False))
+        expected = np.logical_not(test_input)
 
-    with self.device:
-      out = tf.logical_not(val)
+        val = tf.placeholder(tf.bool, shape=(2, 3))
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={val: test_input})
-        assert (result == expected).all()
+        with self.device:
+            out = tf.logical_not(val)
+
+            with self.session as sess:
+                (result,) = sess.run((out,), feed_dict={val: test_input})
+                assert (result == expected).all()

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Utility code for a certain platform.
 
 This file simply imports everything from the default platform. To switch to a

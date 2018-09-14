@@ -26,26 +26,28 @@ import test_util
 
 
 class AllReduceBenchmarkTest(tf.test.TestCase):
-  """Tests the all-reduce benchmark."""
+    """Tests the all-reduce benchmark."""
 
-  def _test_run_benchmark(self, params):
-    """Tests that run_benchmark() runs successfully with the params."""
-    logs = []
-    with test_util.monkey_patch(all_reduce_benchmark,
-                                log_fn=test_util.print_and_add_to_list(logs)):
-      bench_cnn = benchmark_cnn.BenchmarkCNN(params)
-      all_reduce_benchmark.run_benchmark(bench_cnn, num_iters=5)
-      self.assertRegexpMatches(logs[-1], '^Average time per step: [0-9.]+$')
+    def _test_run_benchmark(self, params):
+        """Tests that run_benchmark() runs successfully with the params."""
+        logs = []
+        with test_util.monkey_patch(
+                all_reduce_benchmark,
+                log_fn=test_util.print_and_add_to_list(logs)):
+            bench_cnn = benchmark_cnn.BenchmarkCNN(params)
+            all_reduce_benchmark.run_benchmark(bench_cnn, num_iters=5)
+            self.assertRegexpMatches(logs[-1],
+                                     '^Average time per step: [0-9.]+$')
 
-  def test_run_benchmark(self):
-    """Tests that run_benchmark() runs successfully."""
-    params = benchmark_cnn.make_params(num_batches=10,
-                                       variable_update='replicated',
-                                       num_gpus=2)
-    self._test_run_benchmark(params)
-    params = params._replace(hierarchical_copy=True, gradient_repacking=8,
-                             num_gpus=8)
-    self._test_run_benchmark(params)
+    def test_run_benchmark(self):
+        """Tests that run_benchmark() runs successfully."""
+        params = benchmark_cnn.make_params(
+            num_batches=10, variable_update='replicated', num_gpus=2)
+        self._test_run_benchmark(params)
+        params = params._replace(
+            hierarchical_copy=True, gradient_repacking=8, num_gpus=8)
+        self._test_run_benchmark(params)
+
 
 if __name__ == '__main__':
-  tf.test.main()
+    tf.test.main()

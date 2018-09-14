@@ -27,12 +27,11 @@ import six
 
 from google.cloud import datastore
 
-
 _TEST_NAME_ENV_VAR = 'TF_DIST_BENCHMARK_NAME'
 
 
 def upload_to_benchmark_datastore(data, test_name=None, start_time=None):
-  """Use a new datastore.Client to upload data to datastore.
+    """Use a new datastore.Client to upload data to datastore.
 
   Create the datastore Entities from that data and upload them to the
   datastore in a batch using the client connection.
@@ -48,55 +47,61 @@ def upload_to_benchmark_datastore(data, test_name=None, start_time=None):
     ValueError: if test_name is not passed in and TF_DIST_BENCHMARK_NAME
       is not set.
   """
-  client = datastore.Client()
+    client = datastore.Client()
 
-  if not test_name:
-    if _TEST_NAME_ENV_VAR in os.environ:
-      test_name = os.environ[_TEST_NAME_ENV_VAR]
-    else:
-      raise ValueError(
-          'No test name passed in for benchmarks. '
-          'Either pass a test_name to upload_to_benchmark_datastore or '
-          'set %s environment variable.' % _TEST_NAME_ENV_VAR)
-  test_name = six.text_type(test_name)
+    if not test_name:
+        if _TEST_NAME_ENV_VAR in os.environ:
+            test_name = os.environ[_TEST_NAME_ENV_VAR]
+        else:
+            raise ValueError(
+                'No test name passed in for benchmarks. '
+                'Either pass a test_name to upload_to_benchmark_datastore or '
+                'set %s environment variable.' % _TEST_NAME_ENV_VAR)
+    test_name = six.text_type(test_name)
 
-  if not start_time:
-    start_time = datetime.now()
+    if not start_time:
+        start_time = datetime.now()
 
-  # Create one Entry Entity for each benchmark entry.  The wall-clock timing is
-  # the attribute to be fetched and displayed.  The full entry information is
-  # also stored as a non-indexed JSON blob.
-  entries = []
-  batch = []
-  for name, value in data.items():
-    e_key = client.key('Entry')
-    e_val = datastore.Entity(e_key, exclude_from_indexes=['info'])
-    entry_map = {'name': name, 'wallTime': value, 'iters': '1'}
-    entries.append(entry_map)
-    e_val.update({
+    # Create one Entry Entity for each benchmark entry.  The wall-clock timing is
+    # the attribute to be fetched and displayed.  The full entry information is
+    # also stored as a non-indexed JSON blob.
+    entries = []
+    batch = []
+    for name, value in data.items():
+        e_key = client.key('Entry')
+        e_val = datastore.Entity(e_key, exclude_from_indexes=['info'])
+        entry_map = {'name': name, 'wallTime': value, 'iters': '1'}
+        entries.append(entry_map)
+        e_val.update({
+            'test': test_name,
+            'start': start_time,
+            'entry': six.text_type(name),
+            'timing': value,
+            'info': six.text_type(json.dumps(entry_map))
+        })
+        batch.append(e_val)
+
+    # Create the Test Entity containing all the test information as a
+    # non-indexed JSON blob.
+    test_result = json.dumps({
+        'name':
+        test_name,
+        'startTime': (start_time - datetime(1970, 1, 1)).total_seconds(),
+        'entries': {
+            'entry': entries
+        },
+        'runConfiguration': {
+            'argument': sys.argv[1:]
+        }
+    })
+    t_key = client.key('Test')
+    t_val = datastore.Entity(t_key, exclude_from_indexes=['info'])
+    t_val.update({
         'test': test_name,
         'start': start_time,
-        'entry': six.text_type(name),
-        'timing': value,
-        'info': six.text_type(json.dumps(entry_map))
+        'info': six.text_type(test_result)
     })
-    batch.append(e_val)
+    batch.append(t_val)
 
-  # Create the Test Entity containing all the test information as a
-  # non-indexed JSON blob.
-  test_result = json.dumps(
-      {'name': test_name,
-       'startTime': (start_time - datetime(1970, 1, 1)).total_seconds(),
-       'entries': {'entry': entries},
-       'runConfiguration': {'argument': sys.argv[1:]}})
-  t_key = client.key('Test')
-  t_val = datastore.Entity(t_key, exclude_from_indexes=['info'])
-  t_val.update({
-      'test': test_name,
-      'start': start_time,
-      'info': six.text_type(test_result)
-  })
-  batch.append(t_val)
-
-  # Put the whole batch of Entities in the datastore.
-  client.put_multi(batch)
+    # Put the whole batch of Entities in the datastore.
+    client.put_multi(batch)

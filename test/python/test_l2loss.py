@@ -26,34 +26,31 @@ import pytest
 
 from common import NgraphTest
 
+
 class TestL2Loss(NgraphTest):
-  @pytest.mark.parametrize( ("xshape"),
-     (
-       (3,4,5),
-       (1,)
-     )  
-   )
-  def test_l2loss(self, xshape):
-    x = tf.placeholder(tf.float32, shape=xshape)
 
-    with self.device:
-      values = np.random.rand(*xshape)
+    @pytest.mark.parametrize(("xshape"), ((3, 4, 5), (1,)))
+    def test_l2loss(self, xshape):
+        x = tf.placeholder(tf.float32, shape=xshape)
 
-      calculated_loss = np.sum( values ** 2 ) / 2
-      out = tf.nn.l2_loss(x)
+        with self.device:
+            values = np.random.rand(*xshape)
 
-      with self.session as sess:
-        result = sess.run((out), feed_dict={x: values})
-        assert np.allclose(result, calculated_loss)
+            calculated_loss = np.sum(values**2) / 2
+            out = tf.nn.l2_loss(x)
 
-  def test_l2loss_empty(self):
-    x = tf.placeholder(tf.float32, shape=())
+            with self.session as sess:
+                result = sess.run((out), feed_dict={x: values})
+                assert np.allclose(result, calculated_loss)
 
-    with self.device:
-      values = None
-      out = tf.nn.l2_loss(x)
+    def test_l2loss_empty(self):
+        x = tf.placeholder(tf.float32, shape=())
 
-      with self.session as sess:
-        result = sess.run((out), feed_dict={x: values})
-        # expect to be nan
-        assert result != result
+        with self.device:
+            values = None
+            out = tf.nn.l2_loss(x)
+
+            with self.session as sess:
+                result = sess.run((out), feed_dict={x: values})
+                # expect to be nan
+                assert result != result

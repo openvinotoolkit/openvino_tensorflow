@@ -30,37 +30,38 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestLogOperations(NgraphTest):
-  @pytest.mark.parametrize("test_input", (4, 0.5, 5.6))
-  def test_log_1d(self, test_input):
-    val = tf.placeholder(tf.float32, shape=(1,))
 
-    with self.device:
-      out = tf.log(val)
+    @pytest.mark.parametrize("test_input", (4, 0.5, 5.6))
+    def test_log_1d(self, test_input):
+        val = tf.placeholder(tf.float32, shape=(1,))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert result[0] == np.log(test_input)
+        with self.device:
+            out = tf.log(val)
 
-  def test_log_2d(self):
-    test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert result[0] == np.log(test_input)
 
-    val = tf.placeholder(tf.float32, shape=(2, 3))
+    def test_log_2d(self):
+        test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
 
-    with self.device:
-      out = tf.log(val)
+        val = tf.placeholder(tf.float32, shape=(2, 3))
 
-      with self.session as sess:
-        result = sess.run(out, feed_dict={val: test_input})
-        assert np.allclose(result, np.log(test_input))
+        with self.device:
+            out = tf.log(val)
 
-  def test_log_nan(self):
-    test_input = -4
+            with self.session as sess:
+                result = sess.run(out, feed_dict={val: test_input})
+                assert np.allclose(result, np.log(test_input))
 
-    val = tf.placeholder(tf.float32, shape=(1,))
+    def test_log_nan(self):
+        test_input = -4
 
-    with self.device:
-      out = tf.log(val)
+        val = tf.placeholder(tf.float32, shape=(1,))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert np.isnan(result[0])
+        with self.device:
+            out = tf.log(val)
+
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert np.isnan(result[0])

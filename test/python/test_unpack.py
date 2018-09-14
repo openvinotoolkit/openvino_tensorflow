@@ -17,7 +17,6 @@
 
 """
 
-
 import tensorflow as tf
 import numpy as np
 import pytest
@@ -27,49 +26,40 @@ from common import NgraphTest
 
 class TestUnpackOperations(NgraphTest):
 
-  @pytest.mark.parametrize(
-      ("shape", "axis"),
-      (
-       ((1, 2), -1),
-       ((2, 3), 0),
-       ((4, 5, 6), 2)
-      ))
-  def test_unpack_all(self, shape, axis):
-    a = tf.placeholder(tf.float64, shape)
-    input_val = np.random.random_sample(shape)
-    with self.session as sess:
-      with self.cpu_device:
-        b = tf.placeholder(tf.float64, shape)
-        unstacked = tf.unstack(b, axis=axis)
-        expected = sess.run([unstacked], feed_dict= { b: input_val } )
-      with self.device:
-         tensors = tf.unstack(a, axis=axis)
-         results = sess.run([tensors], feed_dict= { a: input_val } )
-         assert len(results[0]) == len(expected[0])
-         for i in range(len(expected[0])):
-           assert expected[0][i].shape == results[0][i].shape
-           assert np.allclose(expected[0][i], results[0][i])      
+    @pytest.mark.parametrize(("shape", "axis"), (((1, 2), -1), ((2, 3), 0),
+                                                 ((4, 5, 6), 2)))
+    def test_unpack_all(self, shape, axis):
+        a = tf.placeholder(tf.float64, shape)
+        input_val = np.random.random_sample(shape)
+        with self.session as sess:
+            with self.cpu_device:
+                b = tf.placeholder(tf.float64, shape)
+                unstacked = tf.unstack(b, axis=axis)
+                expected = sess.run([unstacked], feed_dict={b: input_val})
+            with self.device:
+                tensors = tf.unstack(a, axis=axis)
+                results = sess.run([tensors], feed_dict={a: input_val})
+                assert len(results[0]) == len(expected[0])
+                for i in range(len(expected[0])):
+                    assert expected[0][i].shape == results[0][i].shape
+                    assert np.allclose(expected[0][i], results[0][i])
 
-  @pytest.mark.parametrize(
-      ("shape", "axis", "num"),
-      (
-       ((1, 2), -1, 2),
-       ((4, 5, 6), 2, 6)
-      ))
-  def test_unpack_num(self, shape, axis, num):
-    print ("Axis : ", axis)
-    print (" Num : ", num )
-    a = tf.placeholder(tf.float64, shape)
-    input_val = np.random.random_sample(shape)
-    with self.session as sess:
-      with self.cpu_device:
-        b = tf.placeholder(tf.float64, shape)
-        unstacked = tf.unstack(b, num=num, axis=axis)
-        expected = sess.run([unstacked], feed_dict= { b: input_val } )
-      with self.device:
-         tensors = tf.unstack(a, num=num, axis=axis)
-         results = sess.run([tensors], feed_dict= { a: input_val } )
-         assert len(results[0]) == len(expected[0])
-         for i in range(len(expected[0])):
-           assert expected[0][i].shape == results[0][i].shape
-           assert np.allclose(expected[0][i], results[0][i])      
+    @pytest.mark.parametrize(("shape", "axis", "num"), (((1, 2), -1, 2),
+                                                        ((4, 5, 6), 2, 6)))
+    def test_unpack_num(self, shape, axis, num):
+        print("Axis : ", axis)
+        print(" Num : ", num)
+        a = tf.placeholder(tf.float64, shape)
+        input_val = np.random.random_sample(shape)
+        with self.session as sess:
+            with self.cpu_device:
+                b = tf.placeholder(tf.float64, shape)
+                unstacked = tf.unstack(b, num=num, axis=axis)
+                expected = sess.run([unstacked], feed_dict={b: input_val})
+            with self.device:
+                tensors = tf.unstack(a, num=num, axis=axis)
+                results = sess.run([tensors], feed_dict={a: input_val})
+                assert len(results[0]) == len(expected[0])
+                for i in range(len(expected[0])):
+                    assert expected[0][i].shape == results[0][i].shape
+                    assert np.allclose(expected[0][i], results[0][i])

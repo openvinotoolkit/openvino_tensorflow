@@ -30,27 +30,30 @@ from common import NgraphTest
 
 
 class TestSparseSoftmaxCrossEntropyWithLogitsOperations(NgraphTest):
-  def test_sparse_softmax_cross_entropy_with_logits_2d(self):
-    num_classes = 10
-    batch_size = 1000
-    total_size = num_classes * batch_size
-    labels = constant_op.constant(self.generate_random_numbers(batch_size, 0,
-    num_classes-1, "DTYPE_INT"), shape = [batch_size])
-    features = constant_op.constant(self.generate_random_numbers(total_size,
-    0.0, 1.0), shape =[batch_size, num_classes])
 
-    # Run on CPU
-    with self.cpu_device:
-      out_cpu = sparse_softmax_cross_entropy_with_logits(features, labels)
-      with self.session as sess:
-        expected = sess.run(out_cpu)
-    
-    # Run on nGraph
-    with self.device:
-      out = sparse_softmax_cross_entropy_with_logits(features, labels)
-      with self.session as sess:
-        result = sess.run(out)
-  
-    assert np.allclose(result[0], expected[0])
-    assert np.allclose(result[1], expected[1])
+    def test_sparse_softmax_cross_entropy_with_logits_2d(self):
+        num_classes = 10
+        batch_size = 1000
+        total_size = num_classes * batch_size
+        labels = constant_op.constant(
+            self.generate_random_numbers(batch_size, 0, num_classes - 1,
+                                         "DTYPE_INT"),
+            shape=[batch_size])
+        features = constant_op.constant(
+            self.generate_random_numbers(total_size, 0.0, 1.0),
+            shape=[batch_size, num_classes])
 
+        # Run on CPU
+        with self.cpu_device:
+            out_cpu = sparse_softmax_cross_entropy_with_logits(features, labels)
+            with self.session as sess:
+                expected = sess.run(out_cpu)
+
+        # Run on nGraph
+        with self.device:
+            out = sparse_softmax_cross_entropy_with_logits(features, labels)
+            with self.session as sess:
+                result = sess.run(out)
+
+        assert np.allclose(result[0], expected[0])
+        assert np.allclose(result[1], expected[1])

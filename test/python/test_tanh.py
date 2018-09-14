@@ -30,28 +30,29 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestTanhOp(NgraphTest):
-  @pytest.mark.parametrize(("test_input", "expected"),
-                           ((1.4, np.tanh(1.4)), (0.5, np.tanh(0.5)),
-                            (-0.3, np.tanh(-0.3))))
-  def test_tanh_1d(self, test_input, expected):
-    val = tf.placeholder(tf.float32, shape=(1,))
-    atol = 1e-5
-    with self.device:
-      out = tf.tanh(val)
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert np.amax(np.absolute(result[0] - expected)) < atol
+    @pytest.mark.parametrize(("test_input", "expected"),
+                             ((1.4, np.tanh(1.4)), (0.5, np.tanh(0.5)),
+                              (-0.3, np.tanh(-0.3))))
+    def test_tanh_1d(self, test_input, expected):
+        val = tf.placeholder(tf.float32, shape=(1,))
+        atol = 1e-5
+        with self.device:
+            out = tf.tanh(val)
 
-  def test_tanh_2d(self):
-    test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
-    expected = np.tanh(test_input)
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert np.amax(np.absolute(result[0] - expected)) < atol
 
-    val = tf.placeholder(tf.float32, shape=(2, 3))
-    atol = 1e-5
-    with self.device:
-      out = tf.tanh(val)
+    def test_tanh_2d(self):
+        test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
+        expected = np.tanh(test_input)
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={val: test_input})
-        assert np.amax(np.absolute(result == expected)) < atol
+        val = tf.placeholder(tf.float32, shape=(2, 3))
+        atol = 1e-5
+        with self.device:
+            out = tf.tanh(val)
+
+            with self.session as sess:
+                (result,) = sess.run((out,), feed_dict={val: test_input})
+                assert np.amax(np.absolute(result == expected)) < atol

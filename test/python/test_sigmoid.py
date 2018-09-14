@@ -30,25 +30,31 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSigmoid(NgraphTest):
-  def test_sigmoid(self):
-    x = tf.placeholder(tf.float32, shape=(2, 3))
-    y = tf.placeholder(tf.float32, shape=(2, 3))
-    z = tf.placeholder(tf.float32, shape=(2, 3))
 
-    with self.device:
-      a = x + y + z
-      b = tf.nn.sigmoid(a)
+    def test_sigmoid(self):
+        x = tf.placeholder(tf.float32, shape=(2, 3))
+        y = tf.placeholder(tf.float32, shape=(2, 3))
+        z = tf.placeholder(tf.float32, shape=(2, 3))
 
-      # input value and expected value
-      x_np = np.full((2, 3), 1.0)
-      y_np = np.full((2, 3), 1.0)
-      z_np = np.full((2, 3), 1.0)
-      a_np = x_np + y_np + z_np
-      b_np = 1. / (1. + np.exp(-a_np))
-      expected = b_np
+        with self.device:
+            a = x + y + z
+            b = tf.nn.sigmoid(a)
 
-      with self.session as sess:
-        (_, result_b) = sess.run((a, b), feed_dict={x: x_np, y: y_np, z: z_np})
-        atol = 1e-5
-        error = np.absolute(result_b - expected)
-        assert np.amax(error) <= atol
+            # input value and expected value
+            x_np = np.full((2, 3), 1.0)
+            y_np = np.full((2, 3), 1.0)
+            z_np = np.full((2, 3), 1.0)
+            a_np = x_np + y_np + z_np
+            b_np = 1. / (1. + np.exp(-a_np))
+            expected = b_np
+
+            with self.session as sess:
+                (_, result_b) = sess.run((a, b),
+                                         feed_dict={
+                                             x: x_np,
+                                             y: y_np,
+                                             z: z_np
+                                         })
+                atol = 1e-5
+                error = np.absolute(result_b - expected)
+                assert np.amax(error) <= atol

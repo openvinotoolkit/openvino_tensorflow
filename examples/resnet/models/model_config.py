@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Model configurations for CNN benchmarks.
 """
 
@@ -29,18 +28,27 @@ from models import resnet_model
 from models import trivial_model
 from models import vgg_model
 
-
 _model_name_to_imagenet_model = {
-    'vgg11': vgg_model.Vgg11Model,
-    'vgg16': vgg_model.Vgg16Model,
-    'vgg19': vgg_model.Vgg19Model,
-    'lenet': lenet_model.Lenet5Model,
-    'googlenet': googlenet_model.GooglenetModel,
-    'overfeat': overfeat_model.OverfeatModel,
-    'alexnet': alexnet_model.AlexnetModel,
-    'trivial': trivial_model.TrivialModel,
-    'inception3': inception_model.Inceptionv3Model,
-    'inception4': inception_model.Inceptionv4Model,
+    'vgg11':
+    vgg_model.Vgg11Model,
+    'vgg16':
+    vgg_model.Vgg16Model,
+    'vgg19':
+    vgg_model.Vgg19Model,
+    'lenet':
+    lenet_model.Lenet5Model,
+    'googlenet':
+    googlenet_model.GooglenetModel,
+    'overfeat':
+    overfeat_model.OverfeatModel,
+    'alexnet':
+    alexnet_model.AlexnetModel,
+    'trivial':
+    trivial_model.TrivialModel,
+    'inception3':
+    inception_model.Inceptionv3Model,
+    'inception4':
+    inception_model.Inceptionv4Model,
     'official_resnet18_v2':
     lambda: official_resnet_model.ImagenetResnetModel(18),
     'official_resnet34_v2':
@@ -65,18 +73,25 @@ _model_name_to_imagenet_model = {
     lambda: official_resnet_model.ImagenetResnetModel(152, version=1),
     'official_resnet200':
     lambda: official_resnet_model.ImagenetResnetModel(200, version=1),
-    'resnet50': resnet_model.create_resnet50_model,
-    'resnet50_v2': resnet_model.create_resnet50_v2_model,
-    'resnet101': resnet_model.create_resnet101_model,
-    'resnet101_v2': resnet_model.create_resnet101_v2_model,
-    'resnet152': resnet_model.create_resnet152_model,
-    'resnet152_v2': resnet_model.create_resnet152_v2_model,
-    'nasnet': nasnet_model.NasnetModel,
-    'nasnetlarge': nasnet_model.NasnetLargeModel,
-    'mobilenet': mobilenet_v2.MobilenetModel,
-
+    'resnet50':
+    resnet_model.create_resnet50_model,
+    'resnet50_v2':
+    resnet_model.create_resnet50_v2_model,
+    'resnet101':
+    resnet_model.create_resnet101_model,
+    'resnet101_v2':
+    resnet_model.create_resnet101_v2_model,
+    'resnet152':
+    resnet_model.create_resnet152_model,
+    'resnet152_v2':
+    resnet_model.create_resnet152_v2_model,
+    'nasnet':
+    nasnet_model.NasnetModel,
+    'nasnetlarge':
+    nasnet_model.NasnetLargeModel,
+    'mobilenet':
+    mobilenet_v2.MobilenetModel,
 }
-
 
 _model_name_to_cifar_model = {
     'alexnet': alexnet_model.AlexnetCifar10Model,
@@ -99,28 +114,28 @@ _model_name_to_cifar_model = {
 
 
 def _get_model_map(dataset_name):
-  if 'cifar10' == dataset_name:
-    return _model_name_to_cifar_model
-  elif dataset_name in ('imagenet', 'synthetic'):
-    return _model_name_to_imagenet_model
-  else:
-    raise ValueError('Invalid dataset name: %s' % dataset_name)
+    if 'cifar10' == dataset_name:
+        return _model_name_to_cifar_model
+    elif dataset_name in ('imagenet', 'synthetic'):
+        return _model_name_to_imagenet_model
+    else:
+        raise ValueError('Invalid dataset name: %s' % dataset_name)
 
 
 def get_model_config(model_name, dataset):
-  """Map model name to model network configuration."""
-  model_map = _get_model_map(dataset.name)
-  if model_name not in model_map:
-    raise ValueError('Invalid model name \'%s\' for dataset \'%s\'' %
-                     (model_name, dataset.name))
-  else:
-    return model_map[model_name]()
+    """Map model name to model network configuration."""
+    model_map = _get_model_map(dataset.name)
+    if model_name not in model_map:
+        raise ValueError('Invalid model name \'%s\' for dataset \'%s\'' %
+                         (model_name, dataset.name))
+    else:
+        return model_map[model_name]()
 
 
 def register_model(model_name, dataset_name, model_func):
-  """Register a new model that can be obtained with `get_model_config`."""
-  model_map = _get_model_map(dataset_name)
-  if model_name in model_map:
-    raise ValueError('Model "%s" is already registered for dataset "%s"' %
-                     (model_name, dataset_name))
-  model_map[model_name] = model_func
+    """Register a new model that can be obtained with `get_model_config`."""
+    model_map = _get_model_map(dataset_name)
+    if model_name in model_map:
+        raise ValueError('Model "%s" is already registered for dataset "%s"' %
+                         (model_name, dataset_name))
+    model_map[model_name] = model_func

@@ -59,6 +59,7 @@ RUN pip3 install six enum34 mock
 RUN pip3 install scipy portpicker sklearn
 RUN pip3 install keras_applications
 RUN pip3 install matplotlib opencv-python
+RUN pip3 install yapf
 
 # We include pytest so the Docker image can be used for daily validation
 RUN pip3 install --upgrade pytest

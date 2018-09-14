@@ -25,19 +25,21 @@ declare _maint_SCRIPT_DIR="$( cd $(dirname "${_intelnervana_clang_format_lib_SCR
 
 source "${_maint_SCRIPT_DIR}/bash_lib.sh"
 
-clang_format_lib_verify_version() {
-    if (( $# != 2 )); then
-        bash_lib_print_error "Usage: ${FUNCNAME[0]} <clang-format-prog-pathname> <required-version-number>"
+format_lib_verify_version() {
+    if (( $# != 3 )); then
+        bash_lib_print_error "Usage: ${FUNCNAME[0]} <clang-format-prog-pathname> <required-version-number> <CLANG or YAPF>"
         return 1
     fi
 
     local PROGNAME="${1}"
     local REQUIRED_VERSION_X_Y="${2}"
+    local CLANG_OR_YAPF="${3}"
 
     if ! [[ "${REQUIRED_VERSION_X_Y}" =~ ^[0-9]+.[0-9]+$ ]]; then
         bash_lib_print_error "${FUNCNAME[0]}: required-version-number must have the form (number).(number)."
         return 1
     fi
+    
 
     if ! [[ -f "${PROGNAME}" ]]; then
         bash_lib_print_error "Unable to find clang-format program named '${PROGNAME}'"
@@ -58,10 +60,18 @@ clang_format_lib_verify_version() {
     fi
 
     local VERSION_X_Y
-    if ! VERSION_X_Y=$(echo "${VERSION_LINE}" | sed ${SED_FLAGS} 's/^clang-format version ([0-9]+.[0-9]+).*$/\1/p')
-    then
-        bash_lib_print_error "Failed invocation of sed."
-        return 1
+    if [[ "${CLANG_OR_YAPF}" =~ "CLANG" ]]; then
+        if ! VERSION_X_Y=$(echo "${VERSION_LINE}" | sed ${SED_FLAGS} 's/^clang-format version ([0-9]+.[0-9]+).*$/\1/p')
+        then
+            bash_lib_print_error "Failed invocation of sed to find clang verion."
+            return 1
+        fi
+    else
+        if ! VERSION_X_Y=$(echo "${VERSION_LINE}" | sed ${SED_FLAGS} 's/^yapf ([0-9]+.[0-9]+).*$/\1/p')
+        then
+            bash_lib_print_error "Failed invocation of sed to find yapf version."
+            return 1
+        fi
     fi
 
     if [[ "${REQUIRED_VERSION_X_Y}" != "${VERSION_X_Y}" ]]; then

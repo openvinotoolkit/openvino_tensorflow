@@ -30,46 +30,44 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestTileOp(NgraphTest):
-  def test_tile_nonzero(self):
-    print("begining")
-    x = tf.placeholder(tf.float32, shape=(2, 3, 4)) 
-    y = tf.constant([1, 2, 1])
-    z = tf.constant([1, 0, 3])
-    
-    # input value and expected value
-    x_np = np.random.rand(2, 3, 4)
-    y_np = np.array([1, 2, 1])
-    z_np = np.array([1, 0, 3])
 
-    with tf.device("/device:NGRAPH:0"):
-      a = tf.tile(x,y)
-      b = tf.tile(x,z)
-      with self.session as sess:
-        (result_a, result_b) = sess.run((a, b),
-             feed_dict={
-                 x: x_np,
-                 y: y_np,
-                 z: z_np
-             })
+    def test_tile_nonzero(self):
+        print("begining")
+        x = tf.placeholder(tf.float32, shape=(2, 3, 4))
+        y = tf.constant([1, 2, 1])
+        z = tf.constant([1, 0, 3])
 
-    with tf.device("/device:CPU:0"):
-      a = tf.tile(x,y)
-      b = tf.tile(x,z)
-      with self.session as sess:
-        (expected_a, expected_b) = sess.run((a, b),
-             feed_dict={
-                 x: x_np,
-                 y: y_np,
-                 z: z_np
-             })
+        # input value and expected value
+        x_np = np.random.rand(2, 3, 4)
+        y_np = np.array([1, 2, 1])
+        z_np = np.array([1, 0, 3])
 
-    print("result_a:", result_a)
-    print("expected_a:", expected_a)
-    print("result_a:", result_b)
-    print("expected_a:", expected_b)
-    atol = 1e-5 
-    error_a = np.absolute(result_a-expected_a)
-    assert np.amax(error_a) <= atol
+        with tf.device("/device:NGRAPH:0"):
+            a = tf.tile(x, y)
+            b = tf.tile(x, z)
+            with self.session as sess:
+                (result_a, result_b) = sess.run((a, b),
+                                                feed_dict={
+                                                    x: x_np,
+                                                    y: y_np,
+                                                    z: z_np
+                                                })
 
+        with tf.device("/device:CPU:0"):
+            a = tf.tile(x, y)
+            b = tf.tile(x, z)
+            with self.session as sess:
+                (expected_a, expected_b) = sess.run((a, b),
+                                                    feed_dict={
+                                                        x: x_np,
+                                                        y: y_np,
+                                                        z: z_np
+                                                    })
 
-
+        print("result_a:", result_a)
+        print("expected_a:", expected_a)
+        print("result_a:", result_b)
+        print("expected_a:", expected_b)
+        atol = 1e-5
+        error_a = np.absolute(result_a - expected_a)
+        assert np.amax(error_a) <= atol

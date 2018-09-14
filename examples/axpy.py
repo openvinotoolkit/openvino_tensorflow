@@ -52,15 +52,13 @@ config = tf.ConfigProto(
 with tf.Session(config=config) as sess:
     print("Python: Running with Session")
     for i in range(10):
-        (result_axpy, result_c) = sess.run(
-            (axpy, c),
-            feed_dict={
-                x: np.ones((2, 3)),
-                y: np.ones((2, 3)),
-            })
+        (result_axpy, result_c) = sess.run((axpy, c),
+                                           feed_dict={
+                                               x: np.ones((2, 3)),
+                                               y: np.ones((2, 3)),
+                                           })
         print("[", i, "] ", i)
         print("Result: \n", result_axpy, " C: \n", result_c)
 
 train_writer.add_graph(tf.get_default_graph())
-tf.train.write_graph(
-    tf.get_default_graph(), '.', 'axpy.pbtxt', as_text=True)
+tf.train.write_graph(tf.get_default_graph(), '.', 'axpy.pbtxt', as_text=True)

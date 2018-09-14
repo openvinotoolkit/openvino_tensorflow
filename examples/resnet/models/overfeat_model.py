@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Overfeat model configuration.
 
 References:
@@ -28,21 +27,21 @@ from models import model
 
 class OverfeatModel(model.Model):
 
-  def __init__(self):
-    super(OverfeatModel, self).__init__('overfeat', 231, 32, 0.005)
+    def __init__(self):
+        super(OverfeatModel, self).__init__('overfeat', 231, 32, 0.005)
 
-  def add_inference(self, cnn):
-    # Note: VALID requires padding the images by 3 in width and height
-    cnn.conv(96, 11, 11, 4, 4, mode='VALID')
-    cnn.mpool(2, 2)
-    cnn.conv(256, 5, 5, 1, 1, mode='VALID')
-    cnn.mpool(2, 2)
-    cnn.conv(512, 3, 3)
-    cnn.conv(1024, 3, 3)
-    cnn.conv(1024, 3, 3)
-    cnn.mpool(2, 2)
-    cnn.reshape([-1, 1024 * 6 * 6])
-    cnn.affine(3072)
-    cnn.dropout()
-    cnn.affine(4096)
-    cnn.dropout()
+    def add_inference(self, cnn):
+        # Note: VALID requires padding the images by 3 in width and height
+        cnn.conv(96, 11, 11, 4, 4, mode='VALID')
+        cnn.mpool(2, 2)
+        cnn.conv(256, 5, 5, 1, 1, mode='VALID')
+        cnn.mpool(2, 2)
+        cnn.conv(512, 3, 3)
+        cnn.conv(1024, 3, 3)
+        cnn.conv(1024, 3, 3)
+        cnn.mpool(2, 2)
+        cnn.reshape([-1, 1024 * 6 * 6])
+        cnn.affine(3072)
+        cnn.dropout()
+        cnn.affine(4096)
+        cnn.dropout()

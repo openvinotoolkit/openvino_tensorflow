@@ -157,8 +157,7 @@ def train_mnist_cnn(FLAGS):
         train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
     with tf.name_scope('accuracy'):
-        correct_prediction = tf.equal(
-            tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         correct_prediction = tf.cast(correct_prediction, tf.float32)
     accuracy = tf.reduce_mean(correct_prediction)
     tf.summary.scalar('Training accuracy', accuracy)
@@ -190,18 +189,17 @@ def train_mnist_cnn(FLAGS):
                 })
                 #tf.summary.scalar('Training accuracy', train_accuracy)
                 print('step %d, training accuracy %g, %g sec to evaluate' %
-                        (i, train_accuracy, time.time() - t))
+                      (i, train_accuracy, time.time() - t))
             t = time.time()
-            _, summary, loss = sess.run(
-                [train_step, merged, cross_entropy],
-                feed_dict={
-                    x: batch[0],
-                    y_: batch[1],
-                    keep_prob: 0.5
-                })
+            _, summary, loss = sess.run([train_step, merged, cross_entropy],
+                                        feed_dict={
+                                            x: batch[0],
+                                            y_: batch[1],
+                                            keep_prob: 0.5
+                                        })
             loss_values.append(loss)
             print('step %d, loss %g, %g sec for training step' %
-                    (i, loss, time.time() - t))
+                  (i, loss, time.time() - t))
             train_writer.add_summary(summary, i)
 
         print("Training finished. Running test")
@@ -238,8 +236,7 @@ if __name__ == '__main__':
         default=1000,
         help='Number of training iterations')
 
-    parser.add_argument(
-        '--batch_size', type=int, default=50, help='Batch Size')
+    parser.add_argument('--batch_size', type=int, default=50, help='Batch Size')
 
     parser.add_argument(
         '--test_image_count',
@@ -247,13 +244,11 @@ if __name__ == '__main__':
         default=None,
         help="Number of test images to evaluate on")
 
-
     parser.add_argument(
-                '--model_dir',
-                type=str,
-                default='./mnist_trained/',
-                help='enter model dir')
-
+        '--model_dir',
+        type=str,
+        default='./mnist_trained/',
+        help='enter model dir')
 
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

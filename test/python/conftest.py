@@ -25,15 +25,15 @@ from common import LIBNGRAPH_BRIDGE
 
 @pytest.fixture(scope='session', autouse=True)
 def load_ngraph_bridge():
-  cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_BRIDGE))
+    cdll.LoadLibrary(os.path.join('../../src', LIBNGRAPH_BRIDGE))
 
 
 @pytest.fixture(autouse=True)
 def reset_graph():
-  yield
-  ops.reset_default_graph()
+    yield
+    ops.reset_default_graph()
 
 
 @pytest.fixture(scope='session', autouse=True)
 def cleanup():
-  yield
+    yield

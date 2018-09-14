@@ -28,21 +28,24 @@ from common import NgraphTest
 
 
 class TestCastOperations(NgraphTest):
-  def test_cast_1d(self):
-    val = tf.placeholder(tf.float32, shape=(2,))
-    out = tf.cast(val, dtype=tf.int32)
 
-    def run_test(sess):
-      return sess.run(out, feed_dict={val: (5.5,2.0)})
+    def test_cast_1d(self):
+        val = tf.placeholder(tf.float32, shape=(2,))
+        out = tf.cast(val, dtype=tf.int32)
 
-    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        def run_test(sess):
+            return sess.run(out, feed_dict={val: (5.5, 2.0)})
 
-  def test_cast_2d(self):
-    test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
-    val = tf.placeholder(tf.float32, shape=(2, 3))
-    out = tf.cast(val, dtype=tf.int32)
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
-    def run_test(sess):
-      return sess.run(out, feed_dict={val: test_input})
+    def test_cast_2d(self):
+        test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
+        val = tf.placeholder(tf.float32, shape=(2, 3))
+        out = tf.cast(val, dtype=tf.int32)
 
-    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        def run_test(sess):
+            return sess.run(out, feed_dict={val: test_input})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

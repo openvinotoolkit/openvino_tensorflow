@@ -43,9 +43,14 @@ V2_DEF = dict(
     defaults={
         # Note: these parameters of batch norm affect the architecture
         # that's why they are here and not in training_scope.
-        (slim.batch_norm,): {'center': True, 'scale': True},
+        (
+            slim.batch_norm,): {
+            'center': True,
+            'scale': True
+        },
         (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
-            'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+            'normalizer_fn': slim.batch_norm,
+            'activation_fn': tf.nn.relu6
         },
         (ops.expanded_conv,): {
             'expansion_size': expand_input(6),
@@ -53,7 +58,9 @@ V2_DEF = dict(
             'normalizer_fn': slim.batch_norm,
             'residual': True
         },
-        (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}
+        (slim.conv2d, slim.separable_conv2d): {
+            'padding': 'SAME'
+        }
     },
     spec=[
         op(slim.conv2d, stride=2, num_outputs=32, kernel_size=[3, 3]),
@@ -92,7 +99,7 @@ def mobilenet(input_tensor,
               min_depth=None,
               divisible_by=None,
               **kwargs):
-  """Creates mobilenet V2 network.
+    """Creates mobilenet V2 network.
 
   Inference mode is created by default. To create training use training_scope
   below.
@@ -127,44 +134,46 @@ def mobilenet(input_tensor,
   Raises:
     ValueError: On invalid arguments
   """
-  if conv_defs is None:
-    conv_defs = V2_DEF
-  if 'multiplier' in kwargs:
-    raise ValueError('mobilenetv2 doesn\'t support generic '
-                     'multiplier parameter use "depth_multiplier" instead.')
-  if finegrain_classification_mode:
-    conv_defs = copy.deepcopy(conv_defs)
-    if depth_multiplier < 1:
-      conv_defs['spec'][-1].params['num_outputs'] /= depth_multiplier
+    if conv_defs is None:
+        conv_defs = V2_DEF
+    if 'multiplier' in kwargs:
+        raise ValueError('mobilenetv2 doesn\'t support generic '
+                         'multiplier parameter use "depth_multiplier" instead.')
+    if finegrain_classification_mode:
+        conv_defs = copy.deepcopy(conv_defs)
+        if depth_multiplier < 1:
+            conv_defs['spec'][-1].params['num_outputs'] /= depth_multiplier
 
-  depth_args = {}
-  # NB: do not set depth_args unless they are provided to avoid overriding
-  # whatever default depth_multiplier might have thanks to arg_scope.
-  if min_depth is not None:
-    depth_args['min_depth'] = min_depth
-  if divisible_by is not None:
-    depth_args['divisible_by'] = divisible_by
+    depth_args = {}
+    # NB: do not set depth_args unless they are provided to avoid overriding
+    # whatever default depth_multiplier might have thanks to arg_scope.
+    if min_depth is not None:
+        depth_args['min_depth'] = min_depth
+    if divisible_by is not None:
+        depth_args['divisible_by'] = divisible_by
 
-  with slim.arg_scope((lib.depth_multiplier,), **depth_args):
-    return lib.mobilenet(
-        input_tensor,
-        num_classes=num_classes,
-        conv_defs=conv_defs,
-        scope=scope,
-        multiplier=depth_multiplier,
-        **kwargs)
+    with slim.arg_scope((lib.depth_multiplier,), **depth_args):
+        return lib.mobilenet(
+            input_tensor,
+            num_classes=num_classes,
+            conv_defs=conv_defs,
+            scope=scope,
+            multiplier=depth_multiplier,
+            **kwargs)
 
 
 @slim.add_arg_scope
 def mobilenet_base(input_tensor, depth_multiplier=1.0, **kwargs):
-  """Creates base of the mobilenet (no pooling and no logits) ."""
-  return mobilenet(input_tensor,
-                   depth_multiplier=depth_multiplier,
-                   base_only=True, **kwargs)
+    """Creates base of the mobilenet (no pooling and no logits) ."""
+    return mobilenet(
+        input_tensor,
+        depth_multiplier=depth_multiplier,
+        base_only=True,
+        **kwargs)
 
 
 def training_scope(**kwargs):
-  """Defines MobilenetV2 training scope.
+    """Defines MobilenetV2 training scope.
 
   Usage:
      with tf.contrib.slim.arg_scope(mobilenet_v2.training_scope()):
@@ -183,17 +192,18 @@ def training_scope(**kwargs):
   Returns:
     An `arg_scope` to use for the mobilenet v2 model.
   """
-  return lib.training_scope(**kwargs)
+    return lib.training_scope(**kwargs)
 
 
 class MobilenetModel(model.Model):
-  """Mobilenet model configuration."""
+    """Mobilenet model configuration."""
 
-  def __init__(self):
-    super(MobilenetModel, self).__init__('mobilenet', 224, 32, 0.005)
+    def __init__(self):
+        super(MobilenetModel, self).__init__('mobilenet', 224, 32, 0.005)
 
-  def add_inference(self, cnn):
-    with tf.contrib.slim.arg_scope(training_scope(is_training=cnn.phase_train)):
-      cnn.top_layer, _ = mobilenet(cnn.top_layer, is_training=cnn.phase_train)
-      cnn.top_size = cnn.top_layer.shape[-1].value
-
+    def add_inference(self, cnn):
+        with tf.contrib.slim.arg_scope(
+                training_scope(is_training=cnn.phase_train)):
+            cnn.top_layer, _ = mobilenet(
+                cnn.top_layer, is_training=cnn.phase_train)
+            cnn.top_size = cnn.top_layer.shape[-1].value

@@ -30,30 +30,34 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestPowOperations(NgraphTest):
-  @pytest.mark.parametrize(("lhs", "rhs"),
-                           ((1.4, 1.0), (-0.5, 2), (5, -1.1)))
-  def test_pow_1d(self, lhs, rhs):
-    val1 = tf.placeholder(tf.float32, shape=(1,))
-    val2 = tf.placeholder(tf.float32, shape=(1,))
-    expected = lhs**rhs
 
-    with self.device:
-      out = tf.pow(val1, val2)
+    @pytest.mark.parametrize(("lhs", "rhs"), ((1.4, 1.0), (-0.5, 2), (5, -1.1)))
+    def test_pow_1d(self, lhs, rhs):
+        val1 = tf.placeholder(tf.float32, shape=(1,))
+        val2 = tf.placeholder(tf.float32, shape=(1,))
+        expected = lhs**rhs
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val1: (lhs,), val2: (rhs,)})
-        assert result[0] == expected
+        with self.device:
+            out = tf.pow(val1, val2)
 
-  def test_pow_2d(self):
-    lhs = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
-    rhs = ((5.0, 4.0, 3.0), (2.0, 1.0, 0.0))
+            with self.session as sess:
+                result = sess.run((out,),
+                                  feed_dict={
+                                      val1: (lhs,),
+                                      val2: (rhs,)
+                                  })
+                assert result[0] == expected
 
-    val1 = tf.placeholder(tf.float32, shape=(2, 3))
-    val2 = tf.placeholder(tf.float32, shape=(2, 3))
+    def test_pow_2d(self):
+        lhs = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
+        rhs = ((5.0, 4.0, 3.0), (2.0, 1.0, 0.0))
 
-    with self.device:
-      out = tf.pow(val1, val2)
+        val1 = tf.placeholder(tf.float32, shape=(2, 3))
+        val2 = tf.placeholder(tf.float32, shape=(2, 3))
 
-      with self.session as sess:
-        result = sess.run(out, feed_dict={val1: lhs, val2: rhs})
-        assert (result == np.power(lhs, rhs)).all()
+        with self.device:
+            out = tf.pow(val1, val2)
+
+            with self.session as sess:
+                result = sess.run(out, feed_dict={val1: lhs, val2: rhs})
+                assert (result == np.power(lhs, rhs)).all()

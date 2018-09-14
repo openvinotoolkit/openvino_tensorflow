@@ -29,27 +29,28 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSignOperations(NgraphTest):
-  @pytest.mark.parametrize(("test_input", "expected"),
-                           ((1.4, 1), (-0.5, -1), (0.0, 0)))
-  def test_sign_1d(self, test_input, expected):
-    val = tf.placeholder(tf.float32, shape=(1,))
 
-    with self.device:
-      out = tf.sign(val)
+    @pytest.mark.parametrize(("test_input", "expected"), ((1.4, 1), (-0.5, -1),
+                                                          (0.0, 0)))
+    def test_sign_1d(self, test_input, expected):
+        val = tf.placeholder(tf.float32, shape=(1,))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert result[0] == expected
+        with self.device:
+            out = tf.sign(val)
 
-  def test_sign_2d(self):
-    test_input = ((1.5, -2.5, -3.5), (-4.5, 5.5, 0))
-    expected = ((1, -1, -1), (-1, 1, 0))
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert result[0] == expected
 
-    val = tf.placeholder(tf.float32, shape=(2, 3))
+    def test_sign_2d(self):
+        test_input = ((1.5, -2.5, -3.5), (-4.5, 5.5, 0))
+        expected = ((1, -1, -1), (-1, 1, 0))
 
-    with self.device:
-      out = tf.sign(val)
+        val = tf.placeholder(tf.float32, shape=(2, 3))
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={val: test_input})
-        assert (result == expected).all()
+        with self.device:
+            out = tf.sign(val)
+
+            with self.session as sess:
+                (result,) = sess.run((out,), feed_dict={val: test_input})
+                assert (result == expected).all()

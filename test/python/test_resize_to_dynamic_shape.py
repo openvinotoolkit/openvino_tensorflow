@@ -29,30 +29,33 @@ import random
 
 from common import NgraphTest
 
+
 class TestResizeToDynamicShape(NgraphTest):
-  def test_resize_to_dynamic_shape(self):
-    # Test input with some arbitrary shape.
-    test_input = np.random.rand(128,10,10,20,5)
-    val = tf.placeholder(tf.float32, shape=(128,10,10,20,5))
 
-    # Reshape to a random permutation of the input shape. We use a fixed seed
-    # so that we get same results on CPU and nGraph, and we have to do some
-    # hackery to make sure the actual op survives constant folding.
-    seed = random.randint(0,999999)
-    shuffled_shape = tf.random_shuffle(tf.shape(val),seed=seed)
-    out = tf.reshape(val,shuffled_shape)
+    def test_resize_to_dynamic_shape(self):
+        # Test input with some arbitrary shape.
+        test_input = np.random.rand(128, 10, 10, 20, 5)
+        val = tf.placeholder(tf.float32, shape=(128, 10, 10, 20, 5))
 
-    def run_test(sess):
-      return sess.run(out, feed_dict={val: test_input})
+        # Reshape to a random permutation of the input shape. We use a fixed seed
+        # so that we get same results on CPU and nGraph, and we have to do some
+        # hackery to make sure the actual op survives constant folding.
+        seed = random.randint(0, 999999)
+        shuffled_shape = tf.random_shuffle(tf.shape(val), seed=seed)
+        out = tf.reshape(val, shuffled_shape)
 
-    # Disable as much optimization as we can.
-    config = tf.ConfigProto(
-                graph_options = tf.GraphOptions(
-                   optimizer_options = tf.OptimizerOptions(
-                      opt_level = tf.OptimizerOptions.L0,
-                      do_common_subexpression_elimination = False,
-                      do_constant_folding = False,
-                      do_function_inlining = False,
-                   )))
+        def run_test(sess):
+            return sess.run(out, feed_dict={val: test_input})
 
-    assert (self.without_ngraph(run_test,config) == self.with_ngraph(run_test,config)).all()
+        # Disable as much optimization as we can.
+        config = tf.ConfigProto(
+            graph_options=tf.GraphOptions(
+                optimizer_options=tf.OptimizerOptions(
+                    opt_level=tf.OptimizerOptions.L0,
+                    do_common_subexpression_elimination=False,
+                    do_constant_folding=False,
+                    do_function_inlining=False,
+                )))
+
+        assert (self.without_ngraph(run_test, config) == self.with_ngraph(
+            run_test, config)).all()

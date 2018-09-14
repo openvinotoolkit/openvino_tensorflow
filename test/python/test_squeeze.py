@@ -29,26 +29,27 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSqueezeOperations(NgraphTest):
-  @pytest.mark.parametrize(
-      ("shape", "axis"),
-      (((1, 2, 3, 1), None), ((2, 1, 3), None),
-       ((2, 1, 3, 1, 1), (1, 4)), ((1, 1), None), ((1,), None)))
-  def test_squeeze(self, shape, axis):
-    a = tf.placeholder(tf.float32, shape=shape)
 
-    with self.device:
-      a1 = tf.squeeze(a, axis)
-      a_val = np.random.random_sample(shape)
-      a_sq = np.squeeze(a_val, axis=axis)
+    @pytest.mark.parametrize(("shape", "axis"),
+                             (((1, 2, 3, 1), None), ((2, 1, 3), None),
+                              ((2, 1, 3, 1, 1),
+                               (1, 4)), ((1, 1), None), ((1,), None)))
+    def test_squeeze(self, shape, axis):
+        a = tf.placeholder(tf.float32, shape=shape)
 
-      with self.session as sess:
-        (result_a,) = sess.run((a1,), feed_dict={a: a_val})
-        assert result_a.shape == a_sq.shape
-        assert np.allclose(result_a, a_sq)
+        with self.device:
+            a1 = tf.squeeze(a, axis)
+            a_val = np.random.random_sample(shape)
+            a_sq = np.squeeze(a_val, axis=axis)
 
-  def test_incorrect_squeeze(self):
-    shape1 = (1, 2, 3, 1)
-    a = tf.placeholder(tf.float32, shape=shape1)
-    with self.device:
-      with pytest.raises(ValueError):
-        tf.squeeze(a, [0, 1])
+            with self.session as sess:
+                (result_a,) = sess.run((a1,), feed_dict={a: a_val})
+                assert result_a.shape == a_sq.shape
+                assert np.allclose(result_a, a_sq)
+
+    def test_incorrect_squeeze(self):
+        shape1 = (1, 2, 3, 1)
+        a = tf.placeholder(tf.float32, shape=shape1)
+        with self.device:
+            with pytest.raises(ValueError):
+                tf.squeeze(a, [0, 1])

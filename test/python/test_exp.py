@@ -32,27 +32,28 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestExpOperations(NgraphTest):
-  @pytest.mark.parametrize(("test_input", "expected"),
-                           ((1.4, e**1.4), (-0.5, e**-0.5), (-1, e**-1)))
-  def test_exp_1d(self, test_input, expected):
-    val = tf.placeholder(tf.float32, shape=(1,))
 
-    with self.device:
-      out = tf.exp(val)
+    @pytest.mark.parametrize(("test_input", "expected"),
+                             ((1.4, e**1.4), (-0.5, e**-0.5), (-1, e**-1)))
+    def test_exp_1d(self, test_input, expected):
+        val = tf.placeholder(tf.float32, shape=(1,))
 
-      with self.session as sess:
-        result = sess.run((out,), feed_dict={val: (test_input,)})
-        assert result[0] == expected
+        with self.device:
+            out = tf.exp(val)
 
-  def test_exp_2d(self):
-    test_input = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
-    expected = tuple([tuple([e**i for i in j]) for j in test_input])
+            with self.session as sess:
+                result = sess.run((out,), feed_dict={val: (test_input,)})
+                assert result[0] == expected
 
-    val = tf.placeholder(tf.float32, shape=(2, 3))
+    def test_exp_2d(self):
+        test_input = ((1.5, -2.5, -3.5), (-4.5, -5.5, 6.5))
+        expected = tuple([tuple([e**i for i in j]) for j in test_input])
 
-    with self.device:
-      out = tf.exp(val)
+        val = tf.placeholder(tf.float32, shape=(2, 3))
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={val: test_input})
-        assert np.allclose(result, expected)
+        with self.device:
+            out = tf.exp(val)
+
+            with self.session as sess:
+                (result,) = sess.run((out,), feed_dict={val: test_input})
+                assert np.allclose(result, expected)

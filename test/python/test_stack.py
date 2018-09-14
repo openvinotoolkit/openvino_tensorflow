@@ -26,30 +26,32 @@ import pytest
 
 from common import NgraphTest
 
+
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestStackOperations(NgraphTest):
-  @pytest.mark.parametrize(
-      ("shapes", "axis"),
-      (
-       ([(1, 2), (1, 2)], 2),
-       ([(3, 2), (3, 2)], 0), 
-       ([(2, 3), (2, 3)], 1),
-       ([(1, 2, 4, 5), (1, 2, 4, 5), (1, 2, 4, 5)], 3),
-       ([(1, 2, 3, 5), (1, 2, 3, 5), (1, 2, 3, 5)], 4),
-       ([(3, 3, 7, 3), (3, 3, 7, 3)], -1),
-       # Disabling the following test cases for now as there are some 
-       # changes need to be done in the framework 
-       #([(0)], 0),
-       #([(1)], 1)
-      )
-      )
-  def test_stack(self, shapes, axis):
-    values = [ np.random.random_sample(s) for s in shapes ]
-    expected = np.stack(values, axis)
-    placeholders = [ tf.placeholder(tf.float64, s) for s in shapes ]
-    with self.device:
-      a = tf.stack(placeholders, axis)
-      with self.session as sess:
-        (result,) = sess.run([a], feed_dict={p: v for p, v in zip(placeholders, values)})
-        assert result.shape == expected.shape
-        assert np.allclose(result, expected)
+
+    @pytest.mark.parametrize(
+        ("shapes", "axis"),
+        (
+            ([(1, 2), (1, 2)], 2),
+            ([(3, 2), (3, 2)], 0),
+            ([(2, 3), (2, 3)], 1),
+            ([(1, 2, 4, 5), (1, 2, 4, 5), (1, 2, 4, 5)], 3),
+            ([(1, 2, 3, 5), (1, 2, 3, 5), (1, 2, 3, 5)], 4),
+            ([(3, 3, 7, 3), (3, 3, 7, 3)], -1),
+            # Disabling the following test cases for now as there are some
+            # changes need to be done in the framework
+            #([(0)], 0),
+            #([(1)], 1)
+        ))
+    def test_stack(self, shapes, axis):
+        values = [np.random.random_sample(s) for s in shapes]
+        expected = np.stack(values, axis)
+        placeholders = [tf.placeholder(tf.float64, s) for s in shapes]
+        with self.device:
+            a = tf.stack(placeholders, axis)
+            with self.session as sess:
+                (result,) = sess.run(
+                    [a], feed_dict={p: v for p, v in zip(placeholders, values)})
+                assert result.shape == expected.shape
+                assert np.allclose(result, expected)

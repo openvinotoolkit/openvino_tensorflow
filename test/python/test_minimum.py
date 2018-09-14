@@ -29,16 +29,17 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestMinimumOperations(NgraphTest):
-  @pytest.mark.parametrize(("x", "y", "expected"),
-                           ((1.5, -3.5, -3.5), (-4.5, -5.5, -5.5)))
-  def test_minimum(self, x, y, expected):
 
-    tf_x = tf.placeholder(tf.float32, shape=None)
-    tf_y = tf.placeholder(tf.float32, shape=None)
+    @pytest.mark.parametrize(("x", "y", "expected"), ((1.5, -3.5, -3.5),
+                                                      (-4.5, -5.5, -5.5)))
+    def test_minimum(self, x, y, expected):
 
-    with self.device:
-      out = tf.minimum(tf_x, tf_y)
+        tf_x = tf.placeholder(tf.float32, shape=None)
+        tf_y = tf.placeholder(tf.float32, shape=None)
 
-      with self.session as sess:
-        (result,) = sess.run((out,), feed_dict={tf_x: x, tf_y: y})
-        assert result == expected
+        with self.device:
+            out = tf.minimum(tf_x, tf_y)
+
+            with self.session as sess:
+                (result,) = sess.run((out,), feed_dict={tf_x: x, tf_y: y})
+                assert result == expected

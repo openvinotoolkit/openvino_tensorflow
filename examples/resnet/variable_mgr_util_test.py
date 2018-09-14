@@ -24,129 +24,133 @@ import variable_mgr_util
 
 class VariableMgrUtilTest(tf.test.TestCase):
 
-  def testGetLossScaleUpdateOpTruePath(self):
-    loss_scale = tf.Variable(4)
-    # loss_scale_normal_steps >= inc_loss_scale_every_n
-    loss_scale_normal_steps = tf.Variable(10)
-    inc_loss_scale_every_n = 10
-    update_op = variable_mgr_util.get_loss_scale_update_op(
-        loss_scale, loss_scale_normal_steps, inc_loss_scale_every_n)
+    def testGetLossScaleUpdateOpTruePath(self):
+        loss_scale = tf.Variable(4)
+        # loss_scale_normal_steps >= inc_loss_scale_every_n
+        loss_scale_normal_steps = tf.Variable(10)
+        inc_loss_scale_every_n = 10
+        update_op = variable_mgr_util.get_loss_scale_update_op(
+            loss_scale, loss_scale_normal_steps, inc_loss_scale_every_n)
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(update_op)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(update_op)
 
-      self.assertEqual(sess.run(loss_scale), 8)
-      self.assertEqual(sess.run(loss_scale_normal_steps), 0)
+            self.assertEqual(sess.run(loss_scale), 8)
+            self.assertEqual(sess.run(loss_scale_normal_steps), 0)
 
-  def testGetLossScaleUpdateOpFalsePath(self):
-    loss_scale = tf.Variable(4)
-    # loss_scale_normal_steps < inc_loss_scale_every_n
-    loss_scale_normal_steps = tf.Variable(9)
-    inc_loss_scale_every_n = 10
-    update_op = variable_mgr_util.get_loss_scale_update_op(
-        loss_scale, loss_scale_normal_steps, inc_loss_scale_every_n)
+    def testGetLossScaleUpdateOpFalsePath(self):
+        loss_scale = tf.Variable(4)
+        # loss_scale_normal_steps < inc_loss_scale_every_n
+        loss_scale_normal_steps = tf.Variable(9)
+        inc_loss_scale_every_n = 10
+        update_op = variable_mgr_util.get_loss_scale_update_op(
+            loss_scale, loss_scale_normal_steps, inc_loss_scale_every_n)
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(update_op)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(update_op)
 
-      self.assertEqual(sess.run(loss_scale), 4)
-      self.assertEqual(sess.run(loss_scale_normal_steps), 10)
+            self.assertEqual(sess.run(loss_scale), 4)
+            self.assertEqual(sess.run(loss_scale_normal_steps), 10)
 
-  def testAppendGradientsWithLossScaleWithAutoScaleDisabled(self):
-    v = tf.Variable(0)
-    training_ops = []
-    get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
-    loss_scale_params = variable_mgr_util.AutoLossScaleParams(
-        enable_auto_loss_scale=False,  # no auto loss scale.
-        loss_scale=tf.Variable(4),
-        loss_scale_normal_steps=tf.Variable(10),
-        inc_loss_scale_every_n=10,
-        is_chief=True)
-    variable_mgr_util.append_gradients_with_loss_scale(
-        training_ops,
-        get_apply_gradients_ops_func,
-        loss_scale_params,
-        grad_has_inf_nan=True)
+    def testAppendGradientsWithLossScaleWithAutoScaleDisabled(self):
+        v = tf.Variable(0)
+        training_ops = []
+        get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
+        loss_scale_params = variable_mgr_util.AutoLossScaleParams(
+            enable_auto_loss_scale=False,  # no auto loss scale.
+            loss_scale=tf.Variable(4),
+            loss_scale_normal_steps=tf.Variable(10),
+            inc_loss_scale_every_n=10,
+            is_chief=True)
+        variable_mgr_util.append_gradients_with_loss_scale(
+            training_ops,
+            get_apply_gradients_ops_func,
+            loss_scale_params,
+            grad_has_inf_nan=True)
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(training_ops)
-      self.assertEqual(sess.run(v), 1)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale), 4)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale_normal_steps), 10)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(training_ops)
+            self.assertEqual(sess.run(v), 1)
+            self.assertEqual(sess.run(loss_scale_params.loss_scale), 4)
+            self.assertEqual(
+                sess.run(loss_scale_params.loss_scale_normal_steps), 10)
 
-  def testAppendGradientsWithLossScaleForNonChiefWorker(self):
-    v = tf.Variable(0)
-    training_ops = []
-    get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
-    loss_scale_params = variable_mgr_util.AutoLossScaleParams(
-        enable_auto_loss_scale=True,
-        loss_scale=tf.Variable(4),
-        loss_scale_normal_steps=tf.Variable(10),
-        inc_loss_scale_every_n=10,
-        is_chief=False)  # Non-chief
-    variable_mgr_util.append_gradients_with_loss_scale(
-        training_ops,
-        get_apply_gradients_ops_func,
-        loss_scale_params,
-        grad_has_inf_nan=False)
+    def testAppendGradientsWithLossScaleForNonChiefWorker(self):
+        v = tf.Variable(0)
+        training_ops = []
+        get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
+        loss_scale_params = variable_mgr_util.AutoLossScaleParams(
+            enable_auto_loss_scale=True,
+            loss_scale=tf.Variable(4),
+            loss_scale_normal_steps=tf.Variable(10),
+            inc_loss_scale_every_n=10,
+            is_chief=False)  # Non-chief
+        variable_mgr_util.append_gradients_with_loss_scale(
+            training_ops,
+            get_apply_gradients_ops_func,
+            loss_scale_params,
+            grad_has_inf_nan=False)
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(training_ops)
-      self.assertEqual(sess.run(v), 1)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale), 4)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale_normal_steps), 10)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(training_ops)
+            self.assertEqual(sess.run(v), 1)
+            self.assertEqual(sess.run(loss_scale_params.loss_scale), 4)
+            self.assertEqual(
+                sess.run(loss_scale_params.loss_scale_normal_steps), 10)
 
-  def testAppendGradientsWithLossScaleWithoutNan(self):
-    v = tf.Variable(0)
-    training_ops = []
-    get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
-    loss_scale_params = variable_mgr_util.AutoLossScaleParams(
-        enable_auto_loss_scale=True,
-        loss_scale=tf.Variable(4, dtype=tf.float32),
-        loss_scale_normal_steps=tf.Variable(10),
-        inc_loss_scale_every_n=10,
-        is_chief=True)
-    variable_mgr_util.append_gradients_with_loss_scale(
-        training_ops,
-        get_apply_gradients_ops_func,
-        loss_scale_params,
-        grad_has_inf_nan=tf.constant(False))
+    def testAppendGradientsWithLossScaleWithoutNan(self):
+        v = tf.Variable(0)
+        training_ops = []
+        get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
+        loss_scale_params = variable_mgr_util.AutoLossScaleParams(
+            enable_auto_loss_scale=True,
+            loss_scale=tf.Variable(4, dtype=tf.float32),
+            loss_scale_normal_steps=tf.Variable(10),
+            inc_loss_scale_every_n=10,
+            is_chief=True)
+        variable_mgr_util.append_gradients_with_loss_scale(
+            training_ops,
+            get_apply_gradients_ops_func,
+            loss_scale_params,
+            grad_has_inf_nan=tf.constant(False))
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(training_ops)
-      self.assertEqual(sess.run(v), 1)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale), 8)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale_normal_steps), 0)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(training_ops)
+            self.assertEqual(sess.run(v), 1)
+            self.assertEqual(sess.run(loss_scale_params.loss_scale), 8)
+            self.assertEqual(
+                sess.run(loss_scale_params.loss_scale_normal_steps), 0)
 
-  def testAppendGradientsWithLossScaleWithtNan(self):
-    v = tf.Variable(0)
-    training_ops = []
-    get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
-    loss_scale_params = variable_mgr_util.AutoLossScaleParams(
-        enable_auto_loss_scale=True,
-        loss_scale=tf.Variable(4, dtype=tf.float32),
-        loss_scale_normal_steps=tf.Variable(10),
-        inc_loss_scale_every_n=10,
-        is_chief=True)
-    variable_mgr_util.append_gradients_with_loss_scale(
-        training_ops,
-        get_apply_gradients_ops_func,
-        loss_scale_params,
-        grad_has_inf_nan=tf.constant(True))
+    def testAppendGradientsWithLossScaleWithtNan(self):
+        v = tf.Variable(0)
+        training_ops = []
+        get_apply_gradients_ops_func = lambda: [tf.assign(v, v + 1)]
+        loss_scale_params = variable_mgr_util.AutoLossScaleParams(
+            enable_auto_loss_scale=True,
+            loss_scale=tf.Variable(4, dtype=tf.float32),
+            loss_scale_normal_steps=tf.Variable(10),
+            inc_loss_scale_every_n=10,
+            is_chief=True)
+        variable_mgr_util.append_gradients_with_loss_scale(
+            training_ops,
+            get_apply_gradients_ops_func,
+            loss_scale_params,
+            grad_has_inf_nan=tf.constant(True))
 
-    with self.test_session() as sess:
-      sess.run(tf.global_variables_initializer())
-      sess.run(training_ops)
-      self.assertEqual(sess.run(v), 0)  # Skip updating for v.
-      # halve loss_scale and reset local_scale_normal_steps.
-      self.assertEqual(sess.run(loss_scale_params.loss_scale), 2)
-      self.assertEqual(sess.run(loss_scale_params.loss_scale_normal_steps), 0)
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(training_ops)
+            self.assertEqual(sess.run(v), 0)  # Skip updating for v.
+            # halve loss_scale and reset local_scale_normal_steps.
+            self.assertEqual(sess.run(loss_scale_params.loss_scale), 2)
+            self.assertEqual(
+                sess.run(loss_scale_params.loss_scale_normal_steps), 0)
 
 
 if __name__ == '__main__':
-  tf.test.main()
+    tf.test.main()

@@ -32,7 +32,6 @@ import cnn_util_test
 import variable_mgr_util_test
 from models import nasnet_test
 
-
 # Ideally, we wouldn't need this option, and run both distributed tests and non-
 # distributed tests. But, TensorFlow allocates all the GPU memory by default, so
 # the non-distributed tests allocate all the GPU memory. The distributed tests
@@ -40,65 +39,66 @@ from models import nasnet_test
 # already allocated. If a non-distributed test is run, then a distributed test
 # is run in the same process, the distributed test will fail because there is no
 # more GPU memory for the spawned processes to allocate.
-absl_flags.DEFINE_boolean('run_distributed_tests', False,
-                          'If True, run the distributed tests. If False, the'
-                          'non-distributed tests.')
+absl_flags.DEFINE_boolean(
+    'run_distributed_tests', False,
+    'If True, run the distributed tests. If False, the'
+    'non-distributed tests.')
 
-absl_flags.DEFINE_boolean('full_tests', False,
-                          'If True, all distributed or non-distributed tests '
-                          'are run, which can take hours. If False, only a '
-                          'subset of tests will be run. This subset runs much '
-                          'faster and tests almost all the functionality as '
-                          'the full set of tests, so it is recommended to keep '
-                          'this option set to False.')
+absl_flags.DEFINE_boolean(
+    'full_tests', False, 'If True, all distributed or non-distributed tests '
+    'are run, which can take hours. If False, only a '
+    'subset of tests will be run. This subset runs much '
+    'faster and tests almost all the functionality as '
+    'the full set of tests, so it is recommended to keep '
+    'this option set to False.')
 
 FLAGS = absl_flags.FLAGS
 
 
 def main(_):
-  loader = unittest.defaultTestLoader
-  if FLAGS.full_tests:
-    suite = unittest.TestSuite([
-        loader.loadTestsFromModule(allreduce_test),
-        loader.loadTestsFromModule(cnn_util_test),
-        loader.loadTestsFromModule(variable_mgr_util_test),
-        loader.loadTestsFromModule(benchmark_cnn_test),
-        loader.loadTestsFromModule(all_reduce_benchmark_test),
-        loader.loadTestsFromModule(nasnet_test),
-    ])
-    dist_suite = unittest.TestSuite([
-        loader.loadTestsFromModule(benchmark_cnn_distributed_test),
-    ])
-  else:
-    suite = unittest.TestSuite([
-        loader.loadTestsFromModule(allreduce_test),
-        loader.loadTestsFromModule(cnn_util_test),
-        loader.loadTestsFromModule(all_reduce_benchmark_test),
-        loader.loadTestsFromModule(variable_mgr_util_test),
-        loader.loadTestsFromTestCase(benchmark_cnn_test.TestAlexnetModel),
-        loader.loadTestsFromTestCase(benchmark_cnn_test.TfCnnBenchmarksTest),
-        loader.loadTestsFromTestCase(benchmark_cnn_test.VariableUpdateTest),
-        loader.loadTestsFromTestCase(
-            benchmark_cnn_test.VariableMgrLocalReplicatedTest),
-    ])
-    dist_suite = unittest.TestSuite([
-        loader.loadTestsFromNames([
-            'benchmark_cnn_distributed_test.DistributedVariableUpdateTest'
-            '.testVarUpdateDefault',
+    loader = unittest.defaultTestLoader
+    if FLAGS.full_tests:
+        suite = unittest.TestSuite([
+            loader.loadTestsFromModule(allreduce_test),
+            loader.loadTestsFromModule(cnn_util_test),
+            loader.loadTestsFromModule(variable_mgr_util_test),
+            loader.loadTestsFromModule(benchmark_cnn_test),
+            loader.loadTestsFromModule(all_reduce_benchmark_test),
+            loader.loadTestsFromModule(nasnet_test),
+        ])
+        dist_suite = unittest.TestSuite([
+            loader.loadTestsFromModule(benchmark_cnn_distributed_test),
+        ])
+    else:
+        suite = unittest.TestSuite([
+            loader.loadTestsFromModule(allreduce_test),
+            loader.loadTestsFromModule(cnn_util_test),
+            loader.loadTestsFromModule(all_reduce_benchmark_test),
+            loader.loadTestsFromModule(variable_mgr_util_test),
+            loader.loadTestsFromTestCase(benchmark_cnn_test.TestAlexnetModel),
+            loader.loadTestsFromTestCase(
+                benchmark_cnn_test.TfCnnBenchmarksTest),
+            loader.loadTestsFromTestCase(benchmark_cnn_test.VariableUpdateTest),
+            loader.loadTestsFromTestCase(
+                benchmark_cnn_test.VariableMgrLocalReplicatedTest),
+        ])
+        dist_suite = unittest.TestSuite([
+            loader.loadTestsFromNames([
+                'benchmark_cnn_distributed_test.DistributedVariableUpdateTest'
+                '.testVarUpdateDefault',
+                'benchmark_cnn_distributed_test.TfCnnBenchmarksDistributedTest'
+                '.testParameterServer',
+            ]),
+        ])
 
-            'benchmark_cnn_distributed_test.TfCnnBenchmarksDistributedTest'
-            '.testParameterServer',
-        ]),
-    ])
-
-  if FLAGS.run_distributed_tests:
-    print('Running distributed tests')
-    result = unittest.TextTestRunner(verbosity=2).run(dist_suite)
-  else:
-    print('Running non-distributed tests')
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
-  sys.exit(not result.wasSuccessful())
+    if FLAGS.run_distributed_tests:
+        print('Running distributed tests')
+        result = unittest.TextTestRunner(verbosity=2).run(dist_suite)
+    else:
+        print('Running non-distributed tests')
+        result = unittest.TextTestRunner(verbosity=2).run(suite)
+    sys.exit(not result.wasSuccessful())
 
 
 if __name__ == '__main__':
-  app.run(main)
+    app.run(main)

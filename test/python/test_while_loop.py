@@ -30,18 +30,19 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestWhileLoop(NgraphTest):
-  def test_while_loop(self):
-    with self.device:
-      # Simple example taken from TF docs for tf.while
-      i = tf.constant(0)
-      c = lambda i: tf.less(i, 10)
-      b = lambda i: tf.add(i, 1)
-      r = tf.while_loop(c, b, [i])
 
-      # We'll need soft placement here
-      cfg = self.config
-      cfg.allow_soft_placement = True
+    def test_while_loop(self):
+        with self.device:
+            # Simple example taken from TF docs for tf.while
+            i = tf.constant(0)
+            c = lambda i: tf.less(i, 10)
+            b = lambda i: tf.add(i, 1)
+            r = tf.while_loop(c, b, [i])
 
-      with tf.Session(config=cfg) as sess:
-        result = sess.run((r,))
-        assert result[0] == 10
+            # We'll need soft placement here
+            cfg = self.config
+            cfg.allow_soft_placement = True
+
+            with tf.Session(config=cfg) as sess:
+                result = sess.run((r,))
+                assert result[0] == 10

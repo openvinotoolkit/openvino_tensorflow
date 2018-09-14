@@ -29,16 +29,17 @@ from common import NgraphTest
 
 @pytest.mark.skip(reason="new deviceless mode WIP")
 class TestExpandDims(NgraphTest):
-  @pytest.mark.parametrize("axis", ([0, 2, 3]))
-  def test_expand_dims(self, axis):
-    shape = [2, 3, 5]
-    val = tf.ones(shape, tf.float32)
 
-    with self.device:
-      out = tf.expand_dims(val, axis)
-      with self.session as sess:
-        result = sess.run(out)
+    @pytest.mark.parametrize("axis", ([0, 2, 3]))
+    def test_expand_dims(self, axis):
+        shape = [2, 3, 5]
+        val = tf.ones(shape, tf.float32)
 
-    shape.insert(axis, 1)
-    expected = tuple(shape)
-    assert result.shape == expected
+        with self.device:
+            out = tf.expand_dims(val, axis)
+            with self.session as sess:
+                result = sess.run(out)
+
+        shape.insert(axis, 1)
+        expected = tuple(shape)
+        assert result.shape == expected

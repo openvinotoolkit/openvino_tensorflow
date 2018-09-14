@@ -31,6 +31,7 @@ import ngraph
 
 FLAGS = None
 
+
 def main(_):
     run_mnist(_)
 

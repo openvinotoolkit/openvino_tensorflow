@@ -29,22 +29,24 @@ from common import NgraphTest
 
 
 class TestAbsOperations(NgraphTest):
-  @pytest.mark.parametrize("test_input", (1.4, -0.5, -1))
-  def test_abs_1d(self, test_input):
-    val = tf.placeholder(tf.float32, shape=(1,))
-    out = tf.abs(val)
 
-    def run_test(sess):
-      return sess.run((out,), feed_dict={val: (test_input,)})
+    @pytest.mark.parametrize("test_input", (1.4, -0.5, -1))
+    def test_abs_1d(self, test_input):
+        val = tf.placeholder(tf.float32, shape=(1,))
+        out = tf.abs(val)
 
-    assert self.with_ngraph(run_test) == self.without_ngraph(run_test)
+        def run_test(sess):
+            return sess.run((out,), feed_dict={val: (test_input,)})
 
-  def test_abs_2d(self):
-    test_input = ((1.5, -2.5, 0.0, -3.5), (-4.5, -5.5, 6.5, 1.0))
-    val = tf.placeholder(tf.float32, shape=(2, 4))
-    out = tf.abs(val)
+        assert self.with_ngraph(run_test) == self.without_ngraph(run_test)
 
-    def run_test(sess):
-      return sess.run(out, feed_dict={val: test_input})
+    def test_abs_2d(self):
+        test_input = ((1.5, -2.5, 0.0, -3.5), (-4.5, -5.5, 6.5, 1.0))
+        val = tf.placeholder(tf.float32, shape=(2, 4))
+        out = tf.abs(val)
 
-    assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        def run_test(sess):
+            return sess.run(out, feed_dict={val: test_input})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

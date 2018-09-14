@@ -42,6 +42,7 @@ import ngraph
 
 FLAGS = None
 
+
 def deepnn_inference(x):
     """deepnn builds the graph for a deep net for classifying digits.
 
@@ -92,7 +93,7 @@ def deepnn_inference(x):
 
     # Map the 1024 features to 10 classes, one for each digit
     with tf.name_scope('fc2'):
-        W_fc2 = weight_variable([1024, 10],"W_fc2")
+        W_fc2 = weight_variable([1024, 10], "W_fc2")
         b_fc2 = bias_variable([10])
 
         # y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
@@ -122,6 +123,7 @@ def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
+
 def train_mnist_cnn(FLAGS):
     # Config
     config = tf.ConfigProto(
@@ -148,15 +150,14 @@ def train_mnist_cnn(FLAGS):
     y_conv, keep_prob = deepnn_inference(x)
 
     with tf.name_scope('accuracy'):
-        correct_prediction = tf.equal(
-            tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         correct_prediction = tf.cast(correct_prediction, tf.float32)
 
     accuracy = tf.reduce_mean(correct_prediction)
     tf.summary.scalar('test accuracy', accuracy)
 
-
-    graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/mnist-convnet"
+    graph_location = "/tmp/" + getpass.getuser(
+    ) + "/tensorboard-logs/mnist-convnet"
     print('Saving graph to: %s' % graph_location)
 
     merged = tf.summary.merge_all()
@@ -164,32 +165,36 @@ def train_mnist_cnn(FLAGS):
     train_writer.add_graph(tf.get_default_graph())
     saver = tf.train.Saver()
     with tf.Session(config=config) as sess:
-        saver.restore(sess,FLAGS.model_dir)
+        saver.restore(sess, FLAGS.model_dir)
         #sess.run(tf.global_variables_initializer())
-        test_accuracy_final=0
+        test_accuracy_final = 0
         num_eval_cycles = FLAGS.num_eval_cycles
 
         for i in range(num_eval_cycles):
             batch = mnist.test.next_batch(FLAGS.batch_size)
             t = time.time()
-            summary, test_accuracy = sess.run(
-                [merged, accuracy],
-                feed_dict={
-                    x: batch[0],
-                    y_: batch[1],
-                    keep_prob: 0.5
-                })
-            test_accuracy_final=test_accuracy_final+test_accuracy
+            summary, test_accuracy = sess.run([merged, accuracy],
+                                              feed_dict={
+                                                  x: batch[0],
+                                                  y_: batch[1],
+                                                  keep_prob: 0.5
+                                              })
+            test_accuracy_final = test_accuracy_final + test_accuracy
             reference_accucary = 0.9612
-            print('step %d, test_accuracy %g, %g sec for infernce step' % (i, test_accuracy, time.time() - t ))
+            print('step %d, test_accuracy %g, %g sec for infernce step' %
+                  (i, test_accuracy, time.time() - t))
             train_writer.add_summary(summary, i)
-        test_accuracy_final=test_accuracy_final/num_eval_cycles
-        print( "Inference  finished")
-        print (test_accuracy_final)
-        print ('Reference accuracy %g' % (reference_accucary))
-        assert (reference_accucary-test_accuracy_final)/reference_accucary < 0.05
-        print("The validation accuracy is within 5% of the trained reference data!")
+        test_accuracy_final = test_accuracy_final / num_eval_cycles
+        print("Inference  finished")
+        print(test_accuracy_final)
+        print('Reference accuracy %g' % (reference_accucary))
+        assert (reference_accucary -
+                test_accuracy_final) / reference_accucary < 0.05
+        print(
+            "The validation accuracy is within 5% of the trained reference data!"
+        )
         return test_accuracy_final
+
 
 def main(_):
     train_mnist_cnn(FLAGS)
@@ -209,17 +214,13 @@ if __name__ == '__main__':
         help='Number of training iterations')
 
     parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=128,
-        help='Batch Size')
+        '--batch_size', type=int, default=128, help='Batch Size')
 
     parser.add_argument(
-            '--model_dir',
-            type=str,
-            default='./mnist_trained/',
-            help='enter model dir')
-
+        '--model_dir',
+        type=str,
+        default='./mnist_trained/',
+        help='enter model dir')
 
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

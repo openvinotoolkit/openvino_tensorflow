@@ -27,10 +27,10 @@ from ngtf_graph_viewer import load_file
 def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):
     start_with = "declustered_"
     ends_with = ".pbtxt"
-    pattern = re.compile("^"+start_with+"(.*?)"+ends_with+"$")
+    pattern = re.compile("^" + start_with + "(.*?)" + ends_with + "$")
     # Note: relying on this particular pattern. Could be brittle if the filenames change
-    declustered_pbtxts = filter(
-        lambda file_name: pattern.search(file_name), os.listdir(input_dir))
+    declustered_pbtxts = filter(lambda file_name: pattern.search(file_name),
+                                os.listdir(input_dir))
     node_cluster_map = {}
     for filename in declustered_pbtxts:
         full_name = os.path.join(input_dir, filename)

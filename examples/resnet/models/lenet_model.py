@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Lenet model configuration.
 
 References:
@@ -26,14 +25,14 @@ from models import model
 
 class Lenet5Model(model.Model):
 
-  def __init__(self):
-    super(Lenet5Model, self).__init__('lenet5', 28, 32, 0.005)
+    def __init__(self):
+        super(Lenet5Model, self).__init__('lenet5', 28, 32, 0.005)
 
-  def add_inference(self, cnn):
-    # Note: This matches TF's MNIST tutorial model
-    cnn.conv(32, 5, 5)
-    cnn.mpool(2, 2)
-    cnn.conv(64, 5, 5)
-    cnn.mpool(2, 2)
-    cnn.reshape([-1, 64 * 7 * 7])
-    cnn.affine(512)
+    def add_inference(self, cnn):
+        # Note: This matches TF's MNIST tutorial model
+        cnn.conv(32, 5, 5)
+        cnn.mpool(2, 2)
+        cnn.conv(64, 5, 5)
+        cnn.mpool(2, 2)
+        cnn.reshape([-1, 64 * 7 * 7])
+        cnn.affine(512)
