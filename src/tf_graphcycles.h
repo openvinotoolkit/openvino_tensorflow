@@ -12,9 +12,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
+/*******************************************************************************
 
-#ifndef NGRAPH_TF_GRAPHCYCLES_H_
-#define NGRAPH_TF_GRAPHCYCLES_H_
+This file is a copy of
+Github repository: https://github.com/tensorflow/tensorflow
+Revision: a768f270c15ded657c30fe9ef873251de3556e58
+File: tensorflow/tensorflow/compiler/jit/graphcycles/graphcycles.h
+
+*******************************************************************************/
+
+#ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
+#define NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
 
 // GraphCycles detects the introduction of a cycle into a directed
 // graph that is being built up incrementally.
@@ -44,6 +52,8 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 
 namespace tensorflow {
+
+namespace ngraph_bridge {
 
 // NOTE!!!
 // For now a copy of this is forked to net/plaque. If you
@@ -85,6 +95,9 @@ class GraphCycles {
   // and returns false.
   bool ContractEdge(int32 a, int32 b);
 
+  // Return true if can contract edge, otherwise return false.
+  bool CanContractEdge(int32 a, int32 b);
+
   // Return whether dest_node is reachable from source_node
   // by following edges.
   bool IsReachable(int32 source_node, int32 dest_node) const;
@@ -115,6 +128,7 @@ class GraphCycles {
   bool CheckInvariants() const;
 
   std::unordered_set<int32> Successors(int32 node);
+  std::unordered_set<int32> Predecessors(int32 node);
 
   // ----------------------------------------------------
   struct Rep;
@@ -124,5 +138,6 @@ class GraphCycles {
   TF_DISALLOW_COPY_AND_ASSIGN(GraphCycles);
 };
 
+}  // namespace ngraph_bridge
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_GRAPHCYCLES_GRAPHCYCLES_H_
+#endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
