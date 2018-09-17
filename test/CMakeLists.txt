@@ -50,6 +50,7 @@ set(SRC
     padding.cpp
     conversions.cpp
     graph_rewrites/assign_clusters.cc
+    graph_rewrites/deadness_test.cc
     test_utilities.cpp
     test_math_ops.cpp
     test_nn_ops.cpp
