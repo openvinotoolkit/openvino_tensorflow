@@ -329,38 +329,50 @@ class NGraphEncapsulateOp : public OpKernel {
       void* current_src_ptr = (void*)DMAHelper::base(&ctx->input(i));
       std::shared_ptr<ng::runtime::TensorView> current_tv;
 
-      if (s_ng_backend_name == "CPU") {
-        // We need to check last_tv != nullptr, since there are cases where at
-        // the first call to the ng_function, both the current_src_ptr (when the
-        // input is a 0-sized tensor) and last_src_ptr (uninitialized at the
-        // first call) are nullptr
-        if (current_src_ptr == last_src_ptr && last_tv != nullptr) {
-          // Mark each tensor as non-stale if:
-          //   1. the freshness tracker says the tensor has not changed since
-          //      the last time ng_function was called, and
-          //   2. we are using the same tensor in this argument position as
-          //      the one we used last time ng_function was called.
-          if (m_freshness_tracker->IsFresh(current_src_ptr, ng_function)) {
-            last_tv->set_stale(false);
+      try {
+        if (s_ng_backend_name == "CPU") {
+          // We need to check last_tv != nullptr, since there are cases where at
+          // the first call to the ng_function, both the current_src_ptr (when
+          // the input is a 0-sized tensor) and last_src_ptr (uninitialized at
+          // the first call) are nullptr
+          if (current_src_ptr == last_src_ptr && last_tv != nullptr) {
+            // Mark each tensor as non-stale if:
+            //   1. the freshness tracker says the tensor has not changed since
+            //      the last time ng_function was called, and
+            //   2. we are using the same tensor in this argument position as
+            //      the one we used last time ng_function was called.
+            if (m_freshness_tracker->IsFresh(current_src_ptr, ng_function)) {
+              last_tv->set_stale(false);
+            } else {
+              last_tv->set_stale(true);
+            }
+            current_tv = last_tv;
           } else {
-            last_tv->set_stale(true);
+            current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape,
+                                                     current_src_ptr);
+            current_tv->set_stale(true);
           }
-          current_tv = last_tv;
         } else {
-          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape,
-                                                   current_src_ptr);
-          current_tv->set_stale(true);
-        }
-      } else {
-        if (last_tv != nullptr) {
-          current_tv = last_tv;
-        } else {
-          current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape);
-        }
-        current_tv->write(current_src_ptr, 0, current_tv->get_element_count() *
-                                                  ng_element_type.size());
-      }  // if (s_ng_backend_name == "CPU")
-
+          if (last_tv != nullptr) {
+            current_tv = last_tv;
+          } else {
+            current_tv = s_ng_backend->create_tensor(ng_element_type, ng_shape);
+          }
+          current_tv->write(
+              current_src_ptr, 0,
+              current_tv->get_element_count() * ng_element_type.size());
+        }  // if (s_ng_backend_name == "CPU")
+      } catch (const std::exception& exp) {
+        OP_REQUIRES(
+            ctx, false,
+            errors::Internal(
+                "Caught exception while transferring tensor data to nGraph: ",
+                exp.what(), "\n"));
+      } catch (...) {
+        OP_REQUIRES(
+            ctx, false,
+            errors::Internal("Error in transferring tensor data to nGraph\n"));
+      }
       input_caches[i] = std::make_pair(current_src_ptr, current_tv);
       ng_inputs.push_back(current_tv);
     }  // for (int i = 0; i < input_shapes.size(); i++)
@@ -429,7 +441,7 @@ class NGraphEncapsulateOp : public OpKernel {
       current_tv->set_stale(true);
       output_caches[i] = std::make_pair(current_dst_ptr, current_tv);
       ng_outputs.push_back(current_tv);
-    }  // for (auto i = 0; i < ng_function->get_output_size(); i++)
+    }
 
     NGRAPH_VLOG(4)
         << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
@@ -444,25 +456,41 @@ class NGraphEncapsulateOp : public OpKernel {
       try {
         s_ng_backend->call(ng_function, ng_outputs, ng_inputs);
       } catch (const std::exception& exp) {
+        OP_REQUIRES(ctx, false,
+                    errors::Internal(
+                        "Caught exception while executing nGraph computation: ",
+                        exp.what(), "\n"));
+      } catch (...) {
         OP_REQUIRES(
-            ctx, true,
-            errors::Internal("Error in executing the nGraph computation: ",
-                             exp.what(), "\n"));
+            ctx, false,
+            errors::Internal("Error in executing the nGraph computation\n"));
       }
     }
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
                    << m_ngraph_cluster;
 
     // Copy value to host if backend is not CPU
-    if (s_ng_backend_name != "CPU") {
-      for (size_t i = 0; i < output_caches.size(); ++i) {
-        void* dst_ptr;
-        std::shared_ptr<ng::runtime::TensorView> dst_tv;
-        std::tie(dst_ptr, dst_tv) = output_caches[i];
-        auto ng_element_type = dst_tv->get_tensor().get_element_type();
-        dst_tv->read(dst_ptr, 0,
-                     dst_tv->get_element_count() * ng_element_type.size());
+    try {
+      if (s_ng_backend_name != "CPU") {
+        for (size_t i = 0; i < output_caches.size(); ++i) {
+          void* dst_ptr;
+          std::shared_ptr<ng::runtime::TensorView> dst_tv;
+          std::tie(dst_ptr, dst_tv) = output_caches[i];
+          auto ng_element_type = dst_tv->get_tensor().get_element_type();
+          dst_tv->read(dst_ptr, 0,
+                       dst_tv->get_element_count() * ng_element_type.size());
+        }
       }
+    } catch (const std::exception& exp) {
+      OP_REQUIRES(
+          ctx, false,
+          errors::Internal(
+              "Caught exception while transferring tensor data to host: ",
+              exp.what(), "\n"));
+    } catch (...) {
+      OP_REQUIRES(
+          ctx, false,
+          errors::Internal("Error in transferring tensor data to host\n"));
     }
 
     // Mark input tensors as fresh for the next time around.
@@ -474,7 +502,7 @@ class NGraphEncapsulateOp : public OpKernel {
     NGRAPH_VLOG(4)
         << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
         << m_ngraph_cluster;
-  }  // void Compute(OpKernelContext* ctx) override
+  }
 
  private:
   Graph m_graph;
