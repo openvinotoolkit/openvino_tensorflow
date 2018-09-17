@@ -41,6 +41,16 @@ void AssignInputValuesRandom(Tensor& A);
 void PrintTensor(const Tensor& T1);
 void ValidateTensorData(Tensor& T1, Tensor& T2, float tol);
 
+template <typename T>
+void AssignInputValuesFromVector(Tensor& A, vector<T> x) {
+  auto A_flat = A.flat<T>();
+  auto A_flat_data = A_flat.data();
+  assert(A_flat.size() == x.size());
+  for (int i = 0; i < A_flat.size(); i++) {
+    A_flat_data[i] = x[i];
+  }
+}
+
 template <class T>
 bool eq(T arg0, T arg1) {
   return arg0 == arg1;

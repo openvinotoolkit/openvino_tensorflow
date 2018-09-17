@@ -15,6 +15,8 @@
  *******************************************************************************/
 
 #include "test_utilities.h"
+#include <assert.h>
+#include <cassert>
 #include <cstdlib>
 #include <ctime>
 
