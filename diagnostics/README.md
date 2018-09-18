@@ -38,7 +38,7 @@ To get a **full** dump use the following set of flags
 * ```NGRAPH_TF_DUMP_CLUSTERS=1```: Dumps Encapsulated TF Graphs: ngraph_cluster_<cluster_num>
 * ```NGRAPH_TF_DUMP_GRAPHS=1```: dumps TF graphs for different passes : precapture, capture, unmarked, marked, clustered, declustered, encapsulated
 * ```TF_CPP_MIN_VLOG_LEVEL=1```: Enables TF CPP Logs 
-* ```NGRAPH_TF_DUMP_DECLSUTERED_GRAPHS=1```: To view TF computation graph with colored nodes indicating clusters
+* ```NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1```: To view TF computation graph with colored nodes indicating clusters
 
 ## Protobuf Visualization
 The python script ngtf_graph_viewer.py can convert a protobuf (pb or pbtxt) into a dot file or a TB log, which can be viewed using TB. If the input is a pbtxt then ngtf_graph_viewer can also sanitize node names to remove underscores from the front of node names (which indicate they are internal nodes and might cause TB to complain). It can also prepend strings in front of certain node names, a feature which can be used  to append encapsulate information for clustering nodes together
