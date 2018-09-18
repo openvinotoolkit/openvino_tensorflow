@@ -54,11 +54,14 @@ RUN updatedb
 # keras_applications is needed for modern TensorFlow builds
 # matplotlib are needed to run inference models
 # opencv-python is used by some inference models (for import cv2)
+# yapf and futures are needed for code-format checks (ngraph-tf PR#211)
 RUN pip3 install --upgrade pip
 RUN pip3 install six enum34 mock
 RUN pip3 install scipy portpicker sklearn
 RUN pip3 install keras_applications
 RUN pip3 install matplotlib opencv-python
+RUN pip3 install yapf
+RUN pip3 install futures
 
 # We include pytest so the Docker image can be used for daily validation
 RUN pip3 install --upgrade pytest

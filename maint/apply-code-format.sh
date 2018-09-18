@@ -65,7 +65,7 @@ if ! CLANG_FORMAT_PROG="$(which "${CLANG_FORMAT_BASENAME}")"; then
     bash_lib_die "Unable to find program ${CLANG_FORMAT_BASENAME}" >&2
 fi
 
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
+if [[ "2" == "${PYTHON_VERSION}" ]]; then
     declare YAPF_FORMAT_PROG
     if ! YAPF_FORMAT_PROG="$(which "${YAPF_FORMAT_BASENAME}")"; then
         bash_lib_die "Unable to find program ${YAPF_FORMAT_BASENAME}" >&2
