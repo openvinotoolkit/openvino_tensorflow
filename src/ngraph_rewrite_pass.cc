@@ -254,7 +254,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   }
   static bool DumpDeclusteredGraphs() {
     return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_DECLSUTERED_GRAPHS") != nullptr;
+           std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
   }
   static bool DumpEncapsulatedGraphs() {
     return DumpAllGraphs() ||

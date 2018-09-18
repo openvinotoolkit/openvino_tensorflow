@@ -42,6 +42,6 @@ tensorflow::int64 LogLevelStrToInt(const char* tf_env_var_val) {
 }  // namespace
 
 tensorflow::int64 NGraphLogMessage::MinNGraphVLogLevel() {
-  const char* tf_env_var_val = std::getenv("NGRAPH_VLOG_LEVEL");
+  const char* tf_env_var_val = std::getenv("NGRAPH_TF_VLOG_LEVEL");
   return LogLevelStrToInt(tf_env_var_val);
 }

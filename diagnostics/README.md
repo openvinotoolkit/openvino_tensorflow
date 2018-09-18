@@ -19,10 +19,10 @@ NGTF uses the std error to output its logs, so it is necessary to pipe it correc
 
 ### A full dump
 To get a **full** dump use the following set of flags
-```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 NGRAPH_VLOG_LEVEL=5 NGRAPH_GENERATE_GRAPHS_PBTXT=1 NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS=1 NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
+```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 NGRAPH_TF_VLOG_LEVEL=5 NGRAPH_GENERATE_GRAPHS_PBTXT=1 NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS=1 NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
 
 ### Visualizing encapsulates using TB
-* Run your script with this flag: ```NGRAPH_TF_DUMP_DECLSUTERED_GRAPHS=1 python run_TF_network.py```
+* Run your script with this flag: ```NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1 python run_TF_network.py```
 * Change directory to this diagnostics folder
 * Run this script to parse the dumped graphs to know which encapsulate a node belongs to. At this step nodemap.pkl is created: ```python get_node_encapsulate_map.py ./path/to/folder/where/run_TF_network.py/exists/where/the/dumps/were/created/in/the/last/step/ nodemap.pkl```
 * Modify the graphdef and dump TB file in ```./vis``` using encapsulate information in ```nodemap.pkl```: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt ./vis```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)
@@ -32,7 +32,7 @@ To get a **full** dump use the following set of flags
 ## Debug flags
 * ```NGRAPH_ENABLE_SERIALIZE=1```: Generate nGraph level serialized graphs .json
 * ```NGRAPH_CPU_TRACING=1```: Generate nGraph level function timelines
-* ```NGRAPH_VLOG_LEVEL=5```: Generate ngraph-tf logging info for different passes
+* ```NGRAPH_TF_VLOG_LEVEL=5```: Generate ngraph-tf logging info for different passes
 * ```NGRAPH_GENERATE_GRAPHS_PBTXT=1```: Generate .pbtxt files for different phases in ngraph-tf bridge
 * ```NGRAPH_TF_LOG_PLACEMENT=1```: will generate op placement log to stdout
 * ```NGRAPH_TF_DUMP_CLUSTERS=1```: Dumps Encapsulated TF Graphs: ngraph_cluster_<cluster_num>
