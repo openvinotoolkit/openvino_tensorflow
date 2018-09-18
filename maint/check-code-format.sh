@@ -25,7 +25,7 @@ declare SRC_DIRS="src examples test logging tools diagnostics python"
 # - The particular version of the `clang-format` program being used.
 #
 # For this reason, this script specifies the exact version of clang-format to be used.
-# Similarly for python/yapf, we shall use Pyhton 3 and yapf 0.24
+# Similarly for python/yapf, we shall use Python 2 and yapf 0.24
 
 declare _intelnervana_clang_format_lib_SCRIPT_NAME="${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
 declare _maint_SCRIPT_DIR="$( cd $(dirname "${_intelnervana_clang_format_lib_SCRIPT_NAME}") && pwd )"
@@ -37,26 +37,20 @@ else
     SED_FLAGS='-rn'
 fi
 
-# Find out python version. Use yapf only when in Python 3
-declare PYTHON_VERSION_LINE
-if ! PYTHON_VERSION_LINE=$(python --version); then
-    bash_lib_print_error "Failed invocation of command 'python --version'"
-    exit 1
-fi
-echo $PYTHON_VERSION_LINE
-if PYTHON_VERSION=$(echo "${PYTHON_VERSION_LINE}" | sed ${SED_FLAGS} 's/^Python ([0-9]+).*$/\1/p')
+# Find out python version. Use yapf only when in Python 2
+if PYTHON_VERSION=$(python -c 'import sys; print(sys.version_info[:][0])')
 then
-    if [[ "3" != "${PYTHON_VERSION}" ]]; then
-        echo "Python reports version number '${PYTHON_VERSION}' so will skip yapf formatting. Please use Python3"
+    if [[ "2" != "${PYTHON_VERSION}" ]]; then
+        echo "Python reports version number '${PYTHON_VERSION}' so will skip yapf formatting. Please use Python2"
     fi
 else
-    bash_lib_print_error "Failed invocation of sed to find Python version."
+    bash_lib_print_error "Failed invocation of Python."
     exit 1
 fi
 
 declare CLANG_FORMAT_BASENAME="clang-format-3.9"
 declare REQUIRED_CLANG_FORMAT_VERSION=3.9
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
+if [[ "2" == "${PYTHON_VERSION}" ]]; then
     declare YAPF_FORMAT_BASENAME="yapf"
     declare REQUIRED_YAPF_FORMAT_VERSION=0.24
 fi
@@ -71,7 +65,7 @@ if ! CLANG_FORMAT_PROG="$(which "${CLANG_FORMAT_BASENAME}")"; then
     bash_lib_die "Unable to find program ${CLANG_FORMAT_BASENAME}" >&2
 fi
 
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
+if [[ "2" == "${PYTHON_VERSION}" ]]; then
     declare YAPF_FORMAT_PROG
     if ! YAPF_FORMAT_PROG="$(which "${YAPF_FORMAT_BASENAME}")"; then
         bash_lib_die "Unable to find program ${YAPF_FORMAT_BASENAME}" >&2
@@ -82,7 +76,7 @@ format_lib_verify_version "${CLANG_FORMAT_PROG}" "${REQUIRED_CLANG_FORMAT_VERSIO
 bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_VERSION}'"
 declare -a FAILED_FILES_CLANG=()
 declare NUM_FILES_CHECKED_CLANG=0
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
+if [[ "2" == "${PYTHON_VERSION}" ]]; then
     format_lib_verify_version "${YAPF_FORMAT_PROG}" "${REQUIRED_YAPF_FORMAT_VERSION}" "YAPF"
     bash_lib_status "Verified that '${YAPF_FORMAT_PROG}' has version '${REQUIRED_YAPF_FORMAT_VERSION}'"
     declare -a FAILED_FILES_YAPF=()
@@ -115,7 +109,7 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
             NUM_FILES_CHECKED_CLANG=$((NUM_FILES_CHECKED_CLANG+1))
         done
 
-        if [[ "3" == "${PYTHON_VERSION}" ]]; then
+        if [[ "2" == "${PYTHON_VERSION}" ]]; then
             bash_lib_status "About to check formatting of Python code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
             declare SRC_FILE
             # ignore the .in.py file (python/setup.in.py) which has format that crashes yapf
@@ -145,7 +139,7 @@ else
     exit 1
 fi
 
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
+if [[ "2" == "${PYTHON_VERSION}" ]]; then
     if [[ ${#FAILED_FILES_YAPF[@]} -eq 0 ]]; then
         bash_lib_status "All ${NUM_FILES_CHECKED_YAPF}  Python files pass the code-format check."
     else
