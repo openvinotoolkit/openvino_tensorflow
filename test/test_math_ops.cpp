@@ -485,6 +485,81 @@ TEST(MathOps, Abs2d) {
                         sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
+
+TEST(MathOps, Pow1d) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 4;
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+  Tensor B(DT_FLOAT, TensorShape({dim1}));
+  AssignInputValues(A, 1.4f);
+  AssignInputValues(B, 0.5f);
+  vector<int> static_input_indexes = {};
+  auto R = ops::Pow(root, A, B);
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Pow", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
 }
+
+TEST(MathOps, Pow2d) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues(A, -2.5f);
+  AssignInputValues(B, 4.0f);
+  vector<int> static_input_indexes = {};
+  auto R = ops::Pow(root, A, B);
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Pow", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, Log1d) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 4;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+
+  AssignInputValues(A, 1.4f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Log(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Log", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, Log2d) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 3.5f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Log(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Log", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+}  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
