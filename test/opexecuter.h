@@ -16,6 +16,8 @@
 #ifndef NGRAPH_TF_BRIDGE_OPEXECUTER_H_
 #define NGRAPH_TF_BRIDGE_OPEXECUTER_H_
 
+#include <fstream>
+
 #include "ngraph/ngraph.hpp"
 #include "ngraph_builder.h"
 #include "ngraph_utils.h"
@@ -35,6 +37,8 @@
 #include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/public/session.h"
+
+#include "ngraph/serializer.hpp"
 
 using namespace std;
 namespace ng = ngraph;
