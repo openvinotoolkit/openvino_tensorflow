@@ -81,7 +81,7 @@ TEST(NNOps, BiasAddGrad) {
     auto tensor_shape = shape_vector[i];
 
     Tensor out_backprop(DT_FLOAT, TensorShape(tensor_shape));
-    AssignInputValuesRandom(out_backprop);
+    AssignInputValuesRandom<float>(out_backprop, -5, 10);
 
     auto R = ops::BiasAddGrad(root, out_backprop, attrs);
     std::vector<Output> sess_run_fetchoutputs = {
@@ -95,7 +95,7 @@ TEST(NNOps, BiasAddGrad) {
   Scope s_nchw = Scope::NewRootScope();
 
   Tensor out_backprop_4D(DT_FLOAT, TensorShape(out_backprop_shape_4D));
-  AssignInputValues(out_backprop_4D, 0.99f);
+  AssignInputValuesRandom<float>(out_backprop_4D, -10, 20);
 
   auto R_4D = ops::BiasAddGrad(s_nchw, out_backprop_4D, attrs);
   std::vector<Output> sess_run_fetchoutputs_4D = {
@@ -129,12 +129,12 @@ TEST(NNOps, Conv2DBackpropFilterNHWC) {
     auto output_delta_size = out_delta_size_map[padding_type];
 
     Tensor output_delta(DT_FLOAT, TensorShape(output_delta_size));
-    AssignInputValues(output_delta, -1.1f);
+    AssignInputValuesRandom<float>(output_delta, -1.1f, 15.0f);
 
     auto filter_sizes = ops::Const(root, {3, 3, 2, 2});
 
     Tensor input_data(DT_FLOAT, TensorShape(input_size_NHWC));
-    AssignInputValues(input_data, -1.1f);
+    AssignInputValuesRandom<float>(input_data, -1.1f, 10.0f);
 
     auto R = ops::Conv2DBackpropFilter(root, input_data, filter_sizes,
                                        output_delta, stride, padding_type);
@@ -210,12 +210,11 @@ TEST(NNOps, FusedBatchNormGradNHWC) {
   // 1D tensor for population variance
   Tensor reserve_space_2_variance(DT_FLOAT, TensorShape({2}));
 
-  // can't use random because value restriction
-  AssignInputValuesAnchor(y_backprop, -2.1f);
-  AssignInputValuesAnchor(x, -1.1f);
-  AssignInputValuesAnchor(scale, -1.6f);
-  AssignInputValuesAnchor(reserve_space_1_mean, 1.1f);
-  AssignInputValuesAnchor(reserve_space_2_variance, 0.5f);
+  AssignInputValuesRandom<float>(y_backprop, -5.0f, 10.0f);
+  AssignInputValuesRandom<float>(x, -10.0f, 10.0f);
+  AssignInputValuesRandom<float>(scale, -1.6f, 1.6f);
+  AssignInputValuesRandom<float>(reserve_space_1_mean, 1.1f, 1.5f);
+  AssignInputValuesRandom<float>(reserve_space_2_variance, 0.5f, 1.5f);
 
   auto attrs = ops::FusedBatchNormGrad::Attrs();
   attrs.is_training_ =
@@ -263,7 +262,7 @@ TEST(NNOps, Op_L2Loss) {
     Scope root = Scope::NewRootScope();
 
     Tensor input_data(DT_FLOAT, TensorShape(input_size));
-    AssignInputValuesRandom(input_data);
+    AssignInputValuesRandom<float>(input_data, -10, 10);
 
     auto R = ops::L2Loss(root, input_data);
     vector<DataType> output_datatypes = {DT_FLOAT};
@@ -285,8 +284,8 @@ TEST(NNOps, SparseSoftmaxCrossEntropyWithLogits) {
   Tensor A(DT_FLOAT, TensorShape({batch, num_of_classes}));
   Tensor B(DT_INT32, TensorShape({batch}));
 
-  AssignInputValues(A, 2.0f);
-  AssignInputIntValues(B, num_of_classes);
+  AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
+  AssignInputValuesRandom<int>(B, 0, num_of_classes - 1);
 
   vector<int> static_input_indexes = {};
   auto R = ops::SparseSoftmaxCrossEntropyWithLogits(root, A, B);
