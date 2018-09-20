@@ -28,6 +28,15 @@ To get a **full** dump use the following set of flags
 * Modify the graphdef and dump TB file in ```./vis``` using encapsulate information in ```nodemap.pkl```: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt ./vis```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)
 *  View the original network with encapsulate information by running tensorboard, using the files created in ```./vis```.
 
+### Disable NGRAPH in python
+* In your script, import ngraph by having: ```import ngraph```
+* Disable ngraph by calling: ```ngraph.disable()```
+* Enable ngraph by calling: ```ngraph.enable()```
+* Checking whether ngraph is enabled by calling: ```ngraph.is_enabled()```
+* You need to enable ngraph every time you called ```ngraph.disable()```, so it is good to check 
+if ngraph is enabled by calling ```ngraph.is_enabled()```
+* _Caution_: The above functions are only effective at the beginning of the execution. Once the session is created and ```run``` is called, the above functions will not be able to disable ngraph. 
+* For example usage, take a look at the ```model_test/verify_model.py``` in the diagnostics folder
 
 ## Debug flags
 * ```NGRAPH_ENABLE_SERIALIZE=1```: Generate nGraph level serialized graphs .json

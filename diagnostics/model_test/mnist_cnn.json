@@ -1,0 +1,11 @@
+{
+    "model_name": "mnist_cnn",
+    "frozen_graph_location": "/nfs/site/home/mingshan/frozen_graphs/frozen_mnist.pb",
+    "input_tensor_name": ["import/Placeholder:0"],
+    "output_tensor_name":"import/fc2/yconv:0",
+    "l1_norm_threshold": 0.01,
+    "l2_norm_threshold": 0.01,
+    "inf_norm_threshold": 0.01,
+    "input_dimension" : [[784]],
+    "batch_size": 10
+}
