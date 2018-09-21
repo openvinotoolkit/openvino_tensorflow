@@ -29,12 +29,13 @@ Models](https://github.com/tensorflow/models/tree/master/official).
 * Move into the TF scripts folder: ```cd benchmarks/scripts/tf_cnn_benchmarks/```
 * Edit ```convnet_builder.py``` by adding ```import ngraph```
 * Train for a few iterations:
-```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --batch_size=128 --model=resnet50 --num_inter_threads 2 --train_dir=./modelsavepath/ --num_batches 10```
+```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --data_format NCHW --num_inter_threads 2 --train_dir=./modelsavepath/ --model=resnet50 --num_batches 10 --batch_size=128```
 * Evaluate the model (Inference pass):
-```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --batch_size=32 --model=resnet50 --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath --eval```
+```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --data_format NCHW --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath --eval --model=resnet50 --batch_size=128```
 
 
 ### Tips
+* Use ```--data_format NCHW``` to get better performance. Avoid ```NHWC``` if possible.
 * Change the batch_size to 128 for batch inference performance and batch_size=1 for real time inference
 * Change the `--model` flag to test for different topologies. The (by no means non-exhaustive) list of models known to run as of now are:
 1. `vgg11`

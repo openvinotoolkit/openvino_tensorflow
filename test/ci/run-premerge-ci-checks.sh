@@ -84,8 +84,8 @@ export JUNIT_WRAP_TEST='tf_cnn_benchmarks_resnet50'
 #  --data_name=imagenet --data_dir "${NGRAPH_IMAGENET_DATASET}" --datasets_use_prefetch=False 
 
 # Training test
-${JUNIT} python tf_cnn_benchmarks.py --batch_size=128 --model=resnet50 --num_inter_threads=1 --train_dir=./modelsavepath/ --num_batches 10
+${JUNIT} python tf_cnn_benchmarks.py --data_format NCHW  --num_inter_threads=1 --train_dir=./modelsavepath/ --num_batches 5 --model=resnet50 --batch_size=128
 # Inference test
-${JUNIT} python tf_cnn_benchmarks.py --batch_size=32 --model=resnet50 --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath --eval
+${JUNIT} python tf_cnn_benchmarks.py --data_format NCHW --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath --eval --model=resnet50 --batch_size=128
 popd
 
