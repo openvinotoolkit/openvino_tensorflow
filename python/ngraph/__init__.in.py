@@ -37,7 +37,7 @@ import ctypes
 
 __all__ = ['enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
     'set_backend', 'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement']
+    'is_logging_placement', '__version__']
 
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -119,10 +119,10 @@ def backends_len():
 
 def list_backends():
   len_backends = backends_len()
-  result = (ctypes.c_string * len_backends)(*(None * len_backends))
-  if not ngraph.ngraph_build_backends(result, len_backends):
-    raise Exception("Backends fluctuated while listing")
-  return result
+  result = (ctypes.c_char_p * len_backends)()
+  if not ngraph.ngraph_list_backends(result, len_backends):
+    raise Exception("Expected " + str(len_backends) + " backends, but got some  other number of backends")
+  return list(result)
 
 
 def set_backend(backend):
@@ -140,3 +140,5 @@ def stop_logging_placement():
 
 def is_logging_placement():
   return ngraph.ngraph_is_logging_placement()
+
+__version__ = '0.5.0'
