@@ -38,16 +38,15 @@ if (PYTHON)
         get_filename_component(lib_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lib_file_name ${DEP_FILE} NAME)
         set(ngraph_libraries "${ngraph_libraries}\"${lib_file_name}\",\n")
-        file(
-            COPY ${lib_file_real_path} 
-            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph")
+        file(COPY ${lib_file_real_path} 
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph")        
     endforeach()            
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})
     if (APPLE)
-        set(NGRAPH_VERSION 0.7)
-        # Note: Currently the ngraph version number (i.e., libngraph.0.5.dylib)
+        set(NGRAPH_VERSION 0.8)
+        # Note: Currently the ngraph version number (i.e., libngraph.0.8.dylib)
         # is hardcoded as there is no way to get this from the nGraph library.
         # Once we figure that out, we will replace this.
         # Possible solutions:
@@ -66,6 +65,39 @@ if (PYTHON)
         if(${result})
             message(FATAL_ERROR "Cannot update @loader_path")
         endif()
+
+        execute_process(COMMAND 
+            install_name_tool -change 
+            libngraph.${NGRAPH_VERSION}.dylib 
+            @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
+            ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
+            RESULT_VARIABLE result
+            ERROR_VARIABLE ERR
+            ERROR_STRIP_TRAILING_WHITESPACE
+        )
+        if(${result})
+            message(FATAL_ERROR "Cannot update @loader_path")
+        endif()
+
+        set(lib_list 
+            libmkldnn.0.dylib
+            libmklml.dylib
+            libiomp5.dylib
+            libtbb.dylib
+        )
+
+        FOREACH(lib_file ${lib_list})
+            message("Library: " ${lib_file})
+            execute_process(COMMAND 
+                install_name_tool -change 
+                @rpath/${lib_file} 
+                @loader_path/${lib_file} 
+                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libcpu_backend.dylib
+                RESULT_VARIABLE result
+                ERROR_VARIABLE ERR
+                ERROR_STRIP_TRAILING_WHITESPACE
+            )
+        ENDFOREACH()
     endif()
 
     execute_process(

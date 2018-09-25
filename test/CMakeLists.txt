@@ -75,6 +75,11 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt 
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
 )
+
+if (APPLE)
+    set(NGRAPH_TF_CXX11_ABI 0)
+endif()
+
 add_custom_target( 
     build_tf_cc
     COMMENT "Building TensorFlow C++ library"

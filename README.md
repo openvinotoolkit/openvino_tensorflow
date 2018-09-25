@@ -18,14 +18,10 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 ## Linux instructions
 
-For TensorFlow projects built before v1.11.0, we recommend starting with a clean 
-environment and re-building with the instructions in Option 2.
 
-### Option 1: Use an existing TensorFlow v1.11.0 (or greater) installation
+### Option 1: Use an existing TensorFlow v1.11.0-rc2 (or greater) installation
 
-1. If you already have TensorFlow v1.11.0 resultant from following 
-   the [linux-based install instructions on the TensorFlow website], 
-   you must also instantiate a specific kind of `virtualenv`  to 
+1. You need to instantiate a specific kind of `virtualenv`  to 
    be able to proceed with the `ngraph-tf` bridge installation. For 
    systems with Python 3.n or Python 2.7, these commands are
 
@@ -33,18 +29,27 @@ environment and re-building with the instructions in Option 2.
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
         source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
     
-2. Checkout `v0.5.0` from the `ngraph-tf` repo and build the bridge
+2. Install TensorFlow v1.11.0-rc2. Note that this is a pre-release so you need 
+   to use the following steps to install this:
+
+        pip install tensorflow==1.11.0rc2
+   Note: When TensorFlow release version `v1.11.0` is available, the installation
+   update your version of TensorFlow using the following command:
+
+        pip install -U tensorflow
+
+3. Checkout `v0.6.0` from the `ngraph-tf` repo and build the bridge
    as follows: 
    
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.5.0
+        git checkout v0.6.0
         mkdir build
         cd build
         cmake ..
         make -j <number_of_processor_cores_on_system>
         make install 
-        pip install -U python/dist/ngraph-0.5.0-py2.py3-none-linux_x86_64.whl
+        pip install -U python/dist/ngraph-0.6.0-py2.py3-none-linux_x86_64.whl
 
 
 ### Option 2: Build nGraph bridge from source using TensorFlow source
@@ -73,13 +78,9 @@ The installation prerequisites are the same as described in the TensorFlow
 3. Ensure that all the TensorFlow dependencies are installed, and when building 
    TensorFlow* *do not* select `Yes` when asked: 
 
+
         Do you wish to build TensorFlow with CUDA support? [y/N]: N
         No CUDA support will be enabled for TensorFlow.
-
-
-4. Additional dependencies.
-   - Install ```apt-get install libicu-dev``` to avoid the following (potential) error:
-     ```unicode/ucnv.h: No such file or directory```.
 
 
 #### Installation
@@ -87,13 +88,13 @@ The installation prerequisites are the same as described in the TensorFlow
 1. Once TensorFlow's dependencies are installed, clone the source of the 
    [tensorflow] repo to your machine. 
 
-     :warning: You need the following version of TensorFlow: `v1.10.0`
+     :warning: You need the following version of TensorFlow: `v1.11.0-rc2`
 
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v1.10.0
+        git checkout v1.11.0-rc2
         git status
-        HEAD detached at v1.10.0
+        HEAD detached atv1.11.0-rc2
    
 2. You must instantiate a specific kind of `virtualenv`  to be able to proceed 
    with the `ngraph-tf` bridge installation. For systems with Python 3.n or 
@@ -105,11 +106,20 @@ The installation prerequisites are the same as described in the TensorFlow
    
 3. Now run `./configure` and choose `no` for all the questions when prompted to build TensorFlow.
 
+    Note: Select `no` when prompted to choose nGraph support:
+
+        Do you wish to build TensorFlow with nGraph support? [y/N]: n
+        No nGraph support will be enabled for TensorFlow.
+
+    The reason is,you are building nGraph using an existing TensorFlow build. See the 
+    following section of how to use the upstream version below where nGraph is built as part of 
+    TensorFlow build process.
+
     Note that if you are running TensorFlow on a Skylake family processor then select
     `-march=broadwell` when prompted to specify the optimization flags:
-    ```
-    Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -march=native]: -march=broadwell
-    ```
+    
+        Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -march=native]: -march=broadwell
+    
     This is due to an issue in TensorFlow which is being actively worked on: 
     https://github.com/tensorflow/tensorflow/issues/17273
 
@@ -117,20 +127,6 @@ The installation prerequisites are the same as described in the TensorFlow
 
         bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
         bazel-bin/tensorflow/tools/pip_package/build_pip_package ./
-
-     :exclamation: You may run into the following error:
-    ```
-    AttributeError: 'int' object attribute '__doc__' is read-only
-    Target //tensorflow/tools/pip_package:build_pip_package failed to build
-    Use --verbose_failures to see the command lines of failed build steps.
-    ```
-    in which case you need to install enum34:
-    ```
-    pip install enum34
-    ```
-
-    You may also need to install a Python package named ```mock``` to prevent an import 
-    error during the build process.
 
 5. Install the pip package, replacing the `tensorflow-1.*` with your 
    version of TensorFlow:
@@ -143,6 +139,8 @@ The installation prerequisites are the same as described in the TensorFlow
         cd ..
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
+        git checkout v0.6.0
+
 
 7. Next, build and install nGraph bridge. 
    :warning: Run the ngraph-tf build from within the `virtualenv`.
@@ -165,22 +163,13 @@ dependent. Please check the `build/python/dist` directory for the actual pip whe
 
 ## Using the stable upstreamed version
 
-There is an alternative to building from source; it is to use the "upstreamed" 
-version of the bridge. This option integrates a slightly older (but stable) version 
-of nGraph with TensorFlow. The primary downside here is that due to the waiting 
-queue for merging PRs in TensorFlow, some of the latest [ops], direct optimizations, 
-or feature improvements might not be available if you select this option.   
-
-The good news is that both our [nGraph] and [ngraph-tf bridge] repos are open 
-source, so you can decide which option or source tree is best for your project,
-To use this option, simply select `y` when the TensorFlow installer asks whether 
-you want to build with nGraph. 
+nGraph is being added to the TensorFlow source tree using the pull requests. 
+In order to build that version of nGraph, download the source tree as mentioned
+above and select `Y` when prompted to build with nGraph.   
 
 For this final option, there is **no need to separately build `ngraph-tf` or to 
 use `pip` to install the ngraph module**. With this configuration, your TensorFlow 
 model scripts will work without any changes. 
-
-
 
 ### Running tests
 
