@@ -33,7 +33,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
    to use the following steps to install this:
 
         pip install tensorflow==1.11.0rc2
-   Note: When TensorFlow release version `v1.11.0` is available, the installation
+   Note: When TensorFlow release version `v1.11.0` is available, 
    update your version of TensorFlow using the following command:
 
         pip install -U tensorflow
@@ -75,14 +75,6 @@ The installation prerequisites are the same as described in the TensorFlow
         export PATH=$PATH:~/bin
         source ~/.bashrc   
 
-3. Ensure that all the TensorFlow dependencies are installed, and when building 
-   TensorFlow* *do not* select `Yes` when asked: 
-
-
-        Do you wish to build TensorFlow with CUDA support? [y/N]: N
-        No CUDA support will be enabled for TensorFlow.
-
-
 #### Installation
 
 1. Once TensorFlow's dependencies are installed, clone the source of the 
@@ -94,7 +86,7 @@ The installation prerequisites are the same as described in the TensorFlow
         cd tensorflow
         git checkout v1.11.0-rc2
         git status
-        HEAD detached atv1.11.0-rc2
+        HEAD detached at v1.11.0-rc2
    
 2. You must instantiate a specific kind of `virtualenv`  to be able to proceed 
    with the `ngraph-tf` bridge installation. For systems with Python 3.n or 
@@ -103,22 +95,37 @@ The installation prerequisites are the same as described in the TensorFlow
         virtualenv --system-site-packages -p python3 your_virtualenv 
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
         source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
+        
+   Note: Depending of specific version of the Python and components already
+   installed on your system - the list of dependent Python components vary. 
+   Typically the following components are needed: `numpy mock keras keras_application`.
+   Install them if your Pythn environment doesn't have them already. 
    
-3. Now run `./configure` and choose `no` for all the questions when prompted to build TensorFlow.
+3. Now run `./configure` and choose `no` for the following when prompted to build TensorFlow.
 
-    Note: Select `no` when prompted to choose nGraph support:
+    CUDA support:
+    
+        Do you wish to build TensorFlow with CUDA support? [y/N]: N
+        No CUDA support will be enabled for TensorFlow.
+    
+    nGraph support:
 
         Do you wish to build TensorFlow with nGraph support? [y/N]: n
         No nGraph support will be enabled for TensorFlow.
 
-    The reason is,you are building nGraph using an existing TensorFlow build. See the 
-    following section of how to use the upstream version below where nGraph is built as part of 
-    TensorFlow build process.
+    Since you are building nGraph using an existing TensorFlow build, you cannot respond with `y`
+    for the above step. This will result in conflicts as there will be two versions of
+    nGraph - one embedded within TensorFlow and the other you build and loaded. 
+    
+    If you want to use the nGraph embedded within TensorFlow, see the 
+    following section on how to use the upstream version.
 
     Note that if you are running TensorFlow on a Skylake family processor then select
     `-march=broadwell` when prompted to specify the optimization flags:
     
-        Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -march=native]: -march=broadwell
+        Please specify optimization flags to use during compilation 
+        when bazel option "--config=opt" is specified 
+        [Default is -march=native]: -march=broadwell
     
     This is due to an issue in TensorFlow which is being actively worked on: 
     https://github.com/tensorflow/tensorflow/issues/17273
@@ -147,29 +154,36 @@ The installation prerequisites are the same as described in the TensorFlow
 
         mkdir build
         cd build
-        cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR=<location of the TensorFlow source directory> ..
+        cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR=<path to TensorFlow source directory> ..
         make -j <your_processor_cores>
         make install 
-        pip install -U python/dist/<ngraph-0.5.0-py2.py3-none-linux_x86_64.whl>
+        pip install -U python/dist/<ngraph-0.6.0-py2.py3-none-linux_x86_64.whl>
 
 This final step automatically downloads the necessary version of `ngraph` and 
-the dependencies. The resulting plugin [DSO] is named `libngraph_bridge.so`.
+the dependencies.
 
 Once the build and installation steps are complete, you can start using TensorFlow 
 with nGraph backends. 
+
+Please add the following line to enable nGraph: `import ngraph`
 
 Note: The actual filename for the pip package may be different as it's version 
 dependent. Please check the `build/python/dist` directory for the actual pip wheel.
 
 ## Using the stable upstreamed version
 
-nGraph is being added to the TensorFlow source tree using the pull requests. 
+nGraph is being added to the TensorFlow source tree the using pull requests from 
+time to time. 
+
 In order to build that version of nGraph, download the source tree as mentioned
 above and select `Y` when prompted to build with nGraph.   
 
 For this final option, there is **no need to separately build `ngraph-tf` or to 
 use `pip` to install the ngraph module**. With this configuration, your TensorFlow 
 model scripts will work without any changes. 
+
+Note: The version that is available in the upstreamed version of TensorFlow usually
+lags the features and bug fixes available in the `master` branch of this repository.
 
 ### Running tests
 
@@ -180,7 +194,7 @@ To run the C++ unit tests,
     cd test
     ./gtest_ngtf
 
-You can also try to run a few of your own DL models to validate the end-to-end 
+You can run a few of your own DL models to validate the end-to-end 
 functionality. Also, you can use the `ngraph-tf/examples` directory and try to 
 run the following model with some MNIST data on your local machine: 
 
@@ -189,7 +203,7 @@ run the following model with some MNIST data on your local machine:
 
 ## Using OS X 
 
-The build and installation instructions are idential for Ubuntu 16.04 and OS X.
+The build and installation instructions are idential for Ubuntu 16.04 and OS X. 
 
 ### Running tests
 
