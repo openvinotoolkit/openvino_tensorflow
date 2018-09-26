@@ -260,7 +260,7 @@ void OpExecuter::ExecuteOnNGraph() {
     auto src_nodes_metadata = node_inedge_metadata[ip_node];
     for (int j = 0; j < src_nodes_metadata.size(); j++) {
       graph.AddEdge(src_nodes_metadata[j].first, src_nodes_metadata[j].second,
-                    arg_node, 0);
+                    arg_node, Graph::kControlSlot);
     }
     // Adds an edge from arg_node to test_op
     graph.AddEdge(arg_node, 0, test_op, i);
@@ -292,7 +292,7 @@ void OpExecuter::ExecuteOnNGraph() {
 
     // Add edges from _Retval to sink
     for (int j = 0; j < dest_nodes_metadata.size(); j++) {
-      graph.AddEdge(ret_node, 0, dest_nodes_metadata[j].first,
+      graph.AddEdge(ret_node, Graph::kControlSlot, dest_nodes_metadata[j].first,
                     dest_nodes_metadata[j].second);
     }
     // Add edges from test_op to _Retval
