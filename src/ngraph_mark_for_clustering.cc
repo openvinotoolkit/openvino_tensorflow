@@ -287,6 +287,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Sum"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Sum"]["Tidx"] = NGraphIndexDTypes();
       type_constraint_map["Tanh"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["TanhGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Tile"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes();
       type_constraint_map["Transpose"]["T"] = NGraphDTypes();
@@ -386,6 +387,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_functions["Sub"] = SimpleConfirmationFunction();
       confirmation_functions["Sum"] = SimpleConfirmationFunction({1});
       confirmation_functions["Tanh"] = SimpleConfirmationFunction();
+      confirmation_functions["TanhGrad"] = SimpleConfirmationFunction();
       confirmation_functions["Tile"] = SimpleConfirmationFunction({1});
       confirmation_functions["Transpose"] = SimpleConfirmationFunction({1});
       confirmation_functions["Unpack"] = SimpleConfirmationFunction();

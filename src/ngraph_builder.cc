@@ -2583,6 +2583,27 @@ static Status TranslateSumOp(const Node* op,
   return Status::OK();
 }
 
+// Computes the gradient for tanh of 'x' w.r.t its input
+// grad = dy * (1 - y * y)
+// where y = tanh(x) and dy is the corresponding input gradient
+static Status TranslateTanhGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input, ng_delta;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_delta));
+
+  auto ng_sq = std::make_shared<ng::op::Multiply>(ng_input, ng_input);
+  ng::Shape input_shape = ng_input->get_shape();
+  std::vector<std::string> const_values(ng::shape_size(input_shape), "1");
+  auto ng_const = make_shared<ng::op::Constant>(ng_input->get_element_type(),
+                                                input_shape, const_values);
+  auto ng_sub = make_shared<ng::op::Subtract>(ng_const, ng_sq);
+  auto ng_result = make_shared<ng::op::Multiply>(ng_delta, ng_sub);
+
+  SaveNgOp(ng_op_map, op->name(), ng_result);
+  return Status::OK();
+}
+
 static Status TranslateTileOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2790,6 +2811,7 @@ const static std::map<
         {"Sub", TranslateBinaryOp<ngraph::op::Subtract>},
         {"Sum", TranslateSumOp},
         {"Tanh", TranslateUnaryOp<ngraph::op::Tanh>},
+        {"TanhGrad", TranslateTanhGradOp},
         {"Tile", TranslateTileOp},
         {"Transpose", TranslateTransposeOp},
         {"Unpack", TranslateUnpackOp}};
