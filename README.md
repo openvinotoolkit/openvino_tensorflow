@@ -38,18 +38,18 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
         pip install -U tensorflow
 
-3. Checkout `v0.6.0` from the `ngraph-tf` repo and build the bridge
+3. Checkout `v0.6.1` from the `ngraph-tf` repo and build the bridge
    as follows: 
    
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.6.0
+        git checkout v0.6.1
         mkdir build
         cd build
         cmake ..
         make -j <number_of_processor_cores_on_system>
         make install 
-        pip install -U python/dist/ngraph-0.6.0-py2.py3-none-linux_x86_64.whl
+        pip install -U python/dist/ngraph-0.6.1-py2.py3-none-linux_x86_64.whl
 
 
 ### Option 2: Build nGraph bridge from source using TensorFlow source
@@ -96,10 +96,10 @@ The installation prerequisites are the same as described in the TensorFlow
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
         source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
         
-   Note: Depending of specific version of the Python and components already
+   Note: Depending on specific version of the Python and components already
    installed on your system - the list of dependent Python components vary. 
    Typically the following components are needed: `numpy mock keras keras_application`.
-   Install them if your Pythn environment doesn't have them already. 
+   Install them if your Python environment doesn't have them already. 
    
 3. Now run `./configure` and choose `no` for the following when prompted to build TensorFlow.
 
@@ -146,7 +146,7 @@ The installation prerequisites are the same as described in the TensorFlow
         cd ..
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.6.0
+        git checkout v0.6.1
 
 
 7. Next, build and install nGraph bridge. 
@@ -157,7 +157,7 @@ The installation prerequisites are the same as described in the TensorFlow
         cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR=<path to TensorFlow source directory> ..
         make -j <your_processor_cores>
         make install 
-        pip install -U python/dist/<ngraph-0.6.0-py2.py3-none-linux_x86_64.whl>
+        pip install -U python/dist/<ngraph-0.6.1-py2.py3-none-linux_x86_64.whl>
 
 This final step automatically downloads the necessary version of `ngraph` and 
 the dependencies.
