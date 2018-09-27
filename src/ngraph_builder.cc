@@ -1550,6 +1550,55 @@ static Status TranslateMatMulOp(
   return Status::OK();
 }
 
+static Status TranslateMaxOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input, ng_max_op;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_max_op));
+
+  bool tf_keep_dims;
+  if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
+    tf_keep_dims = false;
+  }
+
+  std::vector<int64> max_axes;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &max_axes));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  size_t input_rank = input_shape.size();
+
+  TF_RETURN_IF_ERROR(CheckAxisDimInRange(max_axes, input_rank));
+
+  std::vector<size_t> ng_reduction_axes_vect(max_axes.size());
+  std::transform(
+      max_axes.begin(), max_axes.end(), ng_reduction_axes_vect.begin(),
+      [input_rank](int idx) { return idx + (idx < 0 ? input_rank : 0); });
+  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
+
+  std::shared_ptr<ng::Node> ng_max =
+      make_shared<ng::op::Max>(ng_input, ng_reduction_axes);
+
+  // If keep_dims is specified we need to reshape to put back the reduced
+  // axes, with length 1.
+  if (tf_keep_dims) {
+    ng::Shape ng_result_shape_with_keep(input_rank);
+
+    for (size_t i = 0; i < input_rank; i++) {
+      ng_result_shape_with_keep[i] =
+          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
+    }
+
+    ng::AxisVector ng_axis_order(ng_max->get_shape().size());
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
+
+    ng_max = make_shared<ng::op::Reshape>(ng_max, ng_axis_order,
+                                          ng_result_shape_with_keep);
+  }
+
+  SaveNgOp(ng_op_map, op->name(), ng_max);
+  return Status::OK();
+}
+
 static Status TranslateMaxPoolOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -1686,15 +1735,13 @@ static Status TranslateMeanOp(
   ng::Shape input_shape = ng_input->get_shape();
   size_t input_rank = ng_input->get_shape().size();
 
-  ng::AxisSet ng_reduction_axes;
+  TF_RETURN_IF_ERROR(CheckAxisDimInRange(mean_axes, input_rank));
 
-  for (auto i : mean_axes) {
-    if (i < 0) {
-      ng_reduction_axes.insert(input_rank + i);
-    } else {
-      ng_reduction_axes.insert(i);
-    }
-  }
+  std::vector<size_t> ng_reduction_axes_vect(mean_axes.size());
+  std::transform(
+      mean_axes.begin(), mean_axes.end(), ng_reduction_axes_vect.begin(),
+      [input_rank](int idx) { return idx + (idx < 0 ? input_rank : 0); });
+  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
 
   std::shared_ptr<ng::Node> ng_mean =
       ng::builder::mean(ng_input, ng_reduction_axes);
@@ -1705,24 +1752,67 @@ static Status TranslateMeanOp(
     ng::Shape ng_result_shape_with_keep(input_rank);
 
     for (size_t i = 0; i < input_rank; i++) {
-      if (ng_reduction_axes.count(i) == 0) {
-        ng_result_shape_with_keep[i] = input_shape[i];
-      } else {
-        ng_result_shape_with_keep[i] = 1;
-      }
+      ng_result_shape_with_keep[i] =
+          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
     }
 
     ng::AxisVector ng_axis_order(ng_mean->get_shape().size());
-
-    for (size_t i = 0; i < ng_mean->get_shape().size(); i++) {
-      ng_axis_order[i] = i;
-    }
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
     ng_mean = make_shared<ng::op::Reshape>(ng_mean, ng_axis_order,
                                            ng_result_shape_with_keep);
   }
 
   SaveNgOp(ng_op_map, op->name(), ng_mean);
+  return Status::OK();
+}
+
+static Status TranslateMinOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input, ng_min_op;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_min_op));
+
+  bool tf_keep_dims;
+  if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
+    tf_keep_dims = false;
+  }
+
+  std::vector<int64> min_axes;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &min_axes));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  size_t input_rank = input_shape.size();
+
+  TF_RETURN_IF_ERROR(CheckAxisDimInRange(min_axes, input_rank));
+
+  std::vector<size_t> ng_reduction_axes_vect(min_axes.size());
+  std::transform(
+      min_axes.begin(), min_axes.end(), ng_reduction_axes_vect.begin(),
+      [input_rank](int idx) { return idx + (idx < 0 ? input_rank : 0); });
+  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
+
+  std::shared_ptr<ng::Node> ng_min =
+      make_shared<ng::op::Min>(ng_input, ng_reduction_axes);
+
+  // If keep_dims is specified we need to reshape to put back the reduced
+  // axes, with length 1.
+  if (tf_keep_dims) {
+    ng::Shape ng_result_shape_with_keep(input_rank);
+
+    for (size_t i = 0; i < input_rank; i++) {
+      ng_result_shape_with_keep[i] =
+          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
+    }
+
+    ng::AxisVector ng_axis_order(ng_min->get_shape().size());
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
+
+    ng_min = make_shared<ng::op::Reshape>(ng_min, ng_axis_order,
+                                          ng_result_shape_with_keep);
+  }
+
+  SaveNgOp(ng_op_map, op->name(), ng_min);
   return Status::OK();
 }
 
@@ -1759,9 +1849,7 @@ static Status TranslatePackOp(
   output_shape[concat_axis] = op->num_inputs();
 
   ng::AxisVector ng_axis_order(input_rank);
-  for (size_t i = 0; i < input_rank; i++) {
-    ng_axis_order[i] = i;
-  }
+  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
   if (concat_axis == input_rank) {
     // need to add extra dimension before we concatenate
@@ -1838,15 +1926,13 @@ static Status TranslateProdOp(
   ng::Shape input_shape = ng_input->get_shape();
   size_t input_rank = input_shape.size();
 
-  ng::AxisSet ng_reduction_axes;
+  TF_RETURN_IF_ERROR(CheckAxisDimInRange(prod_axes, input_rank));
 
-  for (auto i : prod_axes) {
-    if (i < 0) {
-      ng_reduction_axes.insert(input_rank + i);
-    } else {
-      ng_reduction_axes.insert(i);
-    }
-  }
+  std::vector<size_t> ng_reduction_axes_vect(prod_axes.size());
+  std::transform(
+      prod_axes.begin(), prod_axes.end(), ng_reduction_axes_vect.begin(),
+      [input_rank](int idx) { return idx + (idx < 0 ? input_rank : 0); });
+  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
 
   std::shared_ptr<ng::Node> ng_prod =
       make_shared<ng::op::Product>(ng_input, ng_reduction_axes);
@@ -1857,18 +1943,12 @@ static Status TranslateProdOp(
     ng::Shape ng_result_shape_with_keep(input_rank);
 
     for (size_t i = 0; i < input_rank; i++) {
-      if (ng_reduction_axes.count(i) == 0) {
-        ng_result_shape_with_keep[i] = input_shape[i];
-      } else {
-        ng_result_shape_with_keep[i] = 1;
-      }
+      ng_result_shape_with_keep[i] =
+          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
     }
 
     ng::AxisVector ng_axis_order(ng_prod->get_shape().size());
-
-    for (size_t i = 0; i < ng_prod->get_shape().size(); i++) {
-      ng_axis_order[i] = i;
-    }
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
     ng_prod = make_shared<ng::op::Reshape>(ng_prod, ng_axis_order,
                                            ng_result_shape_with_keep);
@@ -1992,9 +2072,7 @@ static Status TranslateReshapeOp(
   }
 
   ng::AxisVector ng_axis_order(ng_input->get_shape().size());
-  for (size_t i = 0; i < ng_input->get_shape().size(); i++) {
-    ng_axis_order[i] = i;
-  }
+  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
   SaveNgOp(ng_op_map, op->name(),
            make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_shape));
@@ -2405,9 +2483,7 @@ static Status TranslateSqueezeOp(
   }
 
   ng::AxisVector ng_axis_order(ng_input->get_shape().size());
-  for (size_t i = 0; i < ng_input->get_shape().size(); i++) {
-    ng_axis_order[i] = i;
-  }
+  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
   SaveNgOp(ng_op_map, op->name(),
            make_shared<ng::op::Reshape>(ng_input, ng_axis_order, output_shape));
@@ -2512,9 +2588,8 @@ static Status TranslateStridedSliceOp(
 
     ng::Shape ng_final_shape(output_shape);
     ng::AxisVector ng_axis_order(input_shape.size());
-    for (size_t i = 0; i < input_shape.size(); i++) {
-      ng_axis_order[i] = i;
-    }
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
+
     NGRAPH_VLOG(3) << " Output  shape " << ng::join(output_shape);
     NGRAPH_VLOG(3) << " NG  axis order " << ng::join(ng_axis_order);
 
@@ -2543,15 +2618,13 @@ static Status TranslateSumOp(const Node* op,
   ng::Shape input_shape = ng_input->get_shape();
   size_t input_rank = input_shape.size();
 
-  ng::AxisSet ng_reduction_axes;
+  TF_RETURN_IF_ERROR(CheckAxisDimInRange(sum_axes, input_rank));
 
-  for (auto i : sum_axes) {
-    if (i < 0) {
-      ng_reduction_axes.insert(input_rank + i);
-    } else {
-      ng_reduction_axes.insert(i);
-    }
-  }
+  std::vector<size_t> ng_reduction_axes_vect(sum_axes.size());
+  std::transform(
+      sum_axes.begin(), sum_axes.end(), ng_reduction_axes_vect.begin(),
+      [input_rank](int idx) { return idx + (idx < 0 ? input_rank : 0); });
+  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
 
   std::shared_ptr<ng::Node> ng_sum =
       make_shared<ng::op::Sum>(ng_input, ng_reduction_axes);
@@ -2562,18 +2635,12 @@ static Status TranslateSumOp(const Node* op,
     ng::Shape ng_result_shape_with_keep(input_rank);
 
     for (size_t i = 0; i < input_rank; i++) {
-      if (ng_reduction_axes.count(i) == 0) {
-        ng_result_shape_with_keep[i] = input_shape[i];
-      } else {
-        ng_result_shape_with_keep[i] = 1;
-      }
+      ng_result_shape_with_keep[i] =
+          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
     }
 
     ng::AxisVector ng_axis_order(ng_sum->get_shape().size());
-
-    for (size_t i = 0; i < ng_sum->get_shape().size(); i++) {
-      ng_axis_order[i] = i;
-    }
+    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
 
     ng_sum = make_shared<ng::op::Reshape>(ng_sum, ng_axis_order,
                                           ng_result_shape_with_keep);
@@ -2769,10 +2836,12 @@ const static std::map<
         {"LogicalAnd", TranslateBinaryOp<ngraph::op::And>},
         {"LogicalNot", TranslateUnaryOp<ngraph::op::Not>},
         {"MatMul", TranslateMatMulOp},
+        {"Max", TranslateMaxOp},
         {"Maximum", TranslateBinaryOp<ngraph::op::Maximum>},
         {"MaxPool", TranslateMaxPoolOp},
         {"MaxPoolGrad", TranslateMaxPoolGradOp},
         {"Mean", TranslateMeanOp},
+        {"Min", TranslateMinOp},
         {"Minimum", TranslateBinaryOp<ngraph::op::Minimum>},
         {"Mul", TranslateBinaryOp<ngraph::op::Multiply>},
         {"Neg", TranslateUnaryOp<ngraph::op::Negative>},
