@@ -62,9 +62,9 @@ python ngtf_graph_viewer.py -h
 ### Some commandline samples/usecases
 
 * pbtxt to TB: ```python ngtf_graph_viewer.py pbtxtfile.pbtxt ./vis```
-* pbtxt to dot: ```python ngtf_graph_viewer.py -v 1 pbtxtfile.pbtxt ./vis```
+* pbtxt to dot: ```python ngtf_graph_viewer.py -v 0 pbtxtfile.pbtxt ./vis```
 * pb to TB: ```python ngtf_graph_viewer.py -b pbtxtfile.pb ./vis```
-* pb to dot: ```python ngtf_graph_viewer.py -b -v 1 pbtxtfile.pb ./vis```
+* pb to dot: ```python ngtf_graph_viewer.py -b -v 0 pbtxtfile.pb ./vis```
 * pbtxt to TB after prepending cluster information. See **Visualizing encapsulates using TB**: ```python ngtf_graph_viewer.py -c nodemap.pkl pbtxtfile.pbtxt ./vis```
 
 
