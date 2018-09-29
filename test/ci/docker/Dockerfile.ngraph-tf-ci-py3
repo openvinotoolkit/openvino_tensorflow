@@ -28,6 +28,7 @@ FROM ubuntu:16.04
 # curl and locate are needed by Tensorflow's configure command
 # enum appears to be used in the TensorFlow build
 # clang-format-3.9 is needed for code-style checks
+# python3-pil is needed to run the inception-resnet-v2 model
 # python3-tk is used by matplotlib (pip installed below)
 RUN apt-get update &&  apt-get install -y \
     python3-pip virtualenv \
@@ -41,6 +42,7 @@ RUN apt-get update &&  apt-get install -y \
     zip golang-go \
     locate curl \
     clang-format-3.9 \
+    python3-pil \
     python3-tk
 
 # The "locate" command uses a prepopulated index.  If this index is not built,
