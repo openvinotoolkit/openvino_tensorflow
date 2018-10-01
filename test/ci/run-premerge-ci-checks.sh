@@ -54,7 +54,6 @@ pushd python
 python -m pytest \
     test_abs.py \
     test_cast.py \
-    test_conv2dbackpropinput.py \
     test_resize_to_dynamic_shape.py \
     test_slice.py \
     test_sigmoidgrad.py \
