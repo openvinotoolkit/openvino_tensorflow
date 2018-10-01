@@ -86,9 +86,19 @@ Status CaptureVariables(Graph* graph) {
         replacement->set_assigned_device_name(node->assigned_device_name());
 
         std::vector<const Edge*> edges;
+
+        // Add edge from the input nodes (to the variable node (VariableV2))
+        // to the replacement node (NGraphVariable)
+        for (auto edge : node->in_edges()) {
+          NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
+          graph->AddEdge(edge->src(), edge->src_output(), replacement,
+                         edge->dst_input());
+        }
+
         for (auto edge : node->out_edges()) {
           edges.push_back(edge);
         }
+
         for (auto edge : edges) {
           NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
           graph->UpdateEdge(replacement, edge->src_output(), edge->dst(),
