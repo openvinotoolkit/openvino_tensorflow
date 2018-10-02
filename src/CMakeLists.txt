@@ -74,6 +74,11 @@ install(TARGETS ${LIB_NAME} DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
 # Next install all the other prerequisites
 install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" )
 
+#Install nbench if we built
+if(DEFINED NGRAPH_TOOLS_ENABLE)
+	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/bin/ DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
+endif()
+
 # Now create the Python pip package
 install(CODE "set(NGTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}/lib\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
