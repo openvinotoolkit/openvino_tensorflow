@@ -352,6 +352,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_functions["Log"] = SimpleConfirmationFunction();
       confirmation_functions["LogicalAnd"] = SimpleConfirmationFunction();
       confirmation_functions["LogicalNot"] = SimpleConfirmationFunction();
+      confirmation_functions["LogicalOr"] = SimpleConfirmationFunction();
       confirmation_functions["MatMul"] = SimpleConfirmationFunction();
       confirmation_functions["Max"] = SimpleConfirmationFunction({1});
       confirmation_functions["Maximum"] = SimpleConfirmationFunction();

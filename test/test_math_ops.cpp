@@ -664,6 +664,32 @@ TEST(MathOps, Log2D) {
   opexecuter.RunTest();
 }  // end of test op Log
 
+// Test Op:LogicalOr
+TEST(MathOps, LogicalOr) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+  std::vector<bool> v1 = {true, true, true, true, false, false};
+  std::vector<bool> v2 = {false, true, false, true, false, false};
+
+  Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
+  AssignInputValuesFromVector(A, v1);
+
+  Tensor B(DT_BOOL, TensorShape({dim1, dim2}));
+  AssignInputValuesFromVector(B, v2);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::LogicalOr(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_BOOL};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "LogicalOr", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of LogicalOr
+
 // Test op: Max
 TEST(MathOps, MaxNegativeAxis) {
   int dim1 = 2;
