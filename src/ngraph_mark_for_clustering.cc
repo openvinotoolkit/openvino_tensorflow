@@ -410,6 +410,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_functions["Tile"] = SimpleConfirmationFunction({1});
       confirmation_functions["Transpose"] = SimpleConfirmationFunction({1});
       confirmation_functions["Unpack"] = SimpleConfirmationFunction();
+      confirmation_functions["ZerosLike"] = SimpleConfirmationFunction();
 
       initialized = true;
     }

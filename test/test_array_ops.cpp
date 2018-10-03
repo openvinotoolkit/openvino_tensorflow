@@ -328,6 +328,29 @@ TEST(ArrayOps, Unpack) {
   }  // end of for loop
 }  // end of testing Unpack
 
+// Test op: ZerosLike
+// Returns a tensor of zeros of the same shape and type as the input tensor
+TEST(ArrayOps, ZerosLike) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 7.5f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::ZerosLike(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "ZerosLike", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op ZerosLike
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
