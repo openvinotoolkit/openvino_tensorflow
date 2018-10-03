@@ -430,6 +430,16 @@ static Status TranslateBinaryOp(
       });
 }
 
+static Status TranslateAllreduceOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  SaveNgOp(ng_op_map, op->name(), make_shared<ng::op::AllReduce>(ng_input));
+  return Status::OK();
+}
+
 static Status TranslateAddNOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3037,6 +3047,7 @@ const static std::map<
         {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
         {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
         {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},
+        {"HorovodAllreduce", TranslateAllreduceOp},
         {"Identity", TranslateIdentityOp},
         {"L2Loss", TranslateL2LossOp},
         {"Less", TranslateBinaryOp<ngraph::op::Less>},
