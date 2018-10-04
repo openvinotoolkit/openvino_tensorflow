@@ -22,6 +22,7 @@
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 
 #include "tensorflow/core/framework/tensor.pb.h"
 #include "tensorflow/core/framework/tensor_shape.pb.h"
@@ -599,6 +600,42 @@ static Status TranslateArgMaxOp(
   auto ng_argmax = make_shared<ng::op::ArgMax>(ng_input, input_dims, ng_et);
 
   SaveNgOp(ng_op_map, op->name(), ng_argmax);
+  return Status::OK();
+}
+
+static Status TranslateArgMinOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input, ng_dim;
+
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_dim));
+
+  std::vector<int64> tf_dim;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &tf_dim));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  size_t input_rank = input_shape.size();
+
+  if (tf_dim.size() != 1) {
+    return errors::InvalidArgument(
+        "ArgMin Op:dimension must be scalar, operates on a single axis");
+  }
+
+  // If input dimension is negative, make it positive
+  if (tf_dim[0] < 0) {
+    tf_dim[0] = (int64)input_rank + tf_dim[0];
+  }
+  size_t input_dims = tf_dim[0];
+
+  DataType dtype;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "output_type", &dtype));
+
+  ng::element::Type ng_et;
+  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
+
+  auto ng_argmin = make_shared<ng::op::ArgMin>(ng_input, input_dims, ng_et);
+
+  SaveNgOp(ng_op_map, op->name(), ng_argmin);
   return Status::OK();
 }
 
@@ -3024,6 +3061,7 @@ const static std::map<
         {"Any", TranslateAnyOp},
         {"All", TranslateAllOp},
         {"ArgMax", TranslateArgMaxOp},
+        {"ArgMin", TranslateArgMinOp},
         {"AvgPool", TranslateAvgPoolOp},
         {"AvgPoolGrad", TranslateAvgPoolGradOp},
         {"BatchMatMul", TranslateBatchMatMulOp},
