@@ -52,7 +52,8 @@ tensorflow::Status SetBackend(const string& type) {
   try {
     ngraph::runtime::Backend::create(type);
   } catch (const runtime_error& e) {
-    return tensorflow::errors::Unavailable("Backend unavailable: ", type);
+    return tensorflow::errors::Unavailable("Backend unavailable: ", type,
+                                           " Reason: ", e.what());
   }
   return tensorflow::Status::OK();
 }

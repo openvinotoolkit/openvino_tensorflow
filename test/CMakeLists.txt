@@ -26,10 +26,15 @@ if (NOT DEFINED TF_SRC_DIR)
     )
 endif()
 
-set(TensorFlow_SRC_DIR "${TF_SRC_DIR}")
-# else()
-#     set(TensorFlow_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tensorflow")
-# endif()
+# Get the absolute file name for the source
+get_filename_component(
+    TensorFlow_SRC_DIR
+    "${TF_SRC_DIR}"
+    ABSOLUTE
+)
+if (NOT EXISTS ${TensorFlow_SRC_DIR})
+message(FATAL_ERROR "TensorFlow source directory doesn't exist: " ${TensorFlow_SRC_DIR} )
+endif()
 
 include_directories(${TensorFlow_SRC_DIR})
 

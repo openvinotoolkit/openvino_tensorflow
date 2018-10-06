@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
+#include "ngraph_mark_for_clustering.h"
 #include "ngraph_api.h"
 #include "ngraph_utils.h"
 #include "ngraph_version_utils.h"

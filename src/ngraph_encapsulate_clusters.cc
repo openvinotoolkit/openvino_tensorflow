@@ -36,6 +36,7 @@
 
 #include "ngraph_assign_clusters.h"
 #include "ngraph_cluster_manager.h"
+#include "ngraph_encapsulate_clusters.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
 #include "tf_graph_writer.h"

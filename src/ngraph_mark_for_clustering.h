@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 #pragma once
+
+#ifndef NGRAPH_TF_MARK_FOR_CLUSTERING_H_
+#define NGRAPH_TF_MARK_FOR_CLUSTERING_H_
 
 #include "tensorflow/core/graph/graph.h"
 
@@ -27,6 +29,7 @@ bool NodeIsMarkedForClustering(const Node* node);
 void GetStaticInputs(const Node* node, std::vector<int32>* inputs);
 bool InputIsStatic(const Node* node, int index);
 
-}  // namespace tensorflow
-
 }  // namespace ngraph_bridge
+
+}  // namespace tensorflow
+#endif  // NGRAPH_TF_MARK_FOR_CLUSTERING_H_

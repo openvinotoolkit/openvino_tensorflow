@@ -19,7 +19,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 ## Linux instructions
 
 
-### Option 1: Use an existing TensorFlow v1.11.0-rc2 (or greater) installation
+### Option 1: Use an existing TensorFlow v1.11.0 (or greater) installation
 
 1. You need to instantiate a specific kind of `virtualenv`  to 
    be able to proceed with the `ngraph-tf` bridge installation. For 
@@ -29,7 +29,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
         source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
     
-2. Install TensorFlow v1.11.0-rc2. Note that this is a pre-release so you need 
+2. Install TensorFlow v1.11.0. Note that this is a pre-release so you need 
    to use the following steps to install this:
 
         pip install tensorflow==1.11.0rc2
@@ -80,13 +80,13 @@ The installation prerequisites are the same as described in the TensorFlow
 1. Once TensorFlow's dependencies are installed, clone the source of the 
    [tensorflow] repo to your machine. 
 
-     :warning: You need the following version of TensorFlow: `v1.11.0-rc2`
+     :warning: You need the following version of TensorFlow: `v1.11.0`
 
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v1.11.0-rc2
+        git checkout v1.11.0
         git status
-        HEAD detached at v1.11.0-rc2
+        HEAD detached at v1.11.0
    
 2. You must instantiate a specific kind of `virtualenv`  to be able to proceed 
    with the `ngraph-tf` bridge installation. For systems with Python 3.n or 
