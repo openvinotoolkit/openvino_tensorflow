@@ -42,10 +42,10 @@ namespace ng = ngraph;
 
 namespace tensorflow {
 
-// For each I/O tensor, cache TF's data ptr and nGraph's TensorView
+// For each I/O tensor, cache TF's data ptr and nGraph's Tensor
 using NgFunctionIOCache = std::unordered_map<
     std::shared_ptr<ngraph::Function>,
-    std::vector<std::pair<void*, shared_ptr<ng::runtime::TensorView>>>>;
+    std::vector<std::pair<void*, shared_ptr<ng::runtime::Tensor>>>>;
 
 namespace ngraph_bridge {
 
@@ -311,9 +311,9 @@ class NGraphEncapsulateOp : public OpKernel {
         << m_ngraph_cluster;
 
     // Allocate tensors for arguments.
-    vector<shared_ptr<ng::runtime::TensorView>> ng_inputs;
+    vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
 
-    std::vector<std::pair<void*, std::shared_ptr<ng::runtime::TensorView>>>&
+    std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
         input_caches = m_ng_function_input_cache_map[ng_function];
     input_caches.resize(input_shapes.size());
 
@@ -330,10 +330,10 @@ class NGraphEncapsulateOp : public OpKernel {
       // last_tv shall point to null. Otherwise, they are retrived
       // from cache.
       void* last_src_ptr = input_caches[i].first;
-      std::shared_ptr<ng::runtime::TensorView> last_tv = input_caches[i].second;
+      std::shared_ptr<ng::runtime::Tensor> last_tv = input_caches[i].second;
 
       void* current_src_ptr = (void*)DMAHelper::base(&ctx->input(i));
-      std::shared_ptr<ng::runtime::TensorView> current_tv;
+      std::shared_ptr<ng::runtime::Tensor> current_tv;
 
       try {
         if (s_ng_backend_name == "CPU") {
@@ -394,9 +394,9 @@ class NGraphEncapsulateOp : public OpKernel {
                    << m_ngraph_cluster;
 
     // Allocate tensors for the results.
-    vector<shared_ptr<ng::runtime::TensorView>> ng_outputs;
+    vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
 
-    std::vector<std::pair<void*, std::shared_ptr<ng::runtime::TensorView>>>&
+    std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
         output_caches = m_ng_function_output_cache_map[ng_function];
     output_caches.resize(ng_function->get_output_size());
 
@@ -425,11 +425,10 @@ class NGraphEncapsulateOp : public OpKernel {
                            "the element type expected by TensorFlow"));
 
       void* last_dst_ptr = output_caches[i].first;
-      std::shared_ptr<ng::runtime::TensorView> last_tv =
-          output_caches[i].second;
+      std::shared_ptr<ng::runtime::Tensor> last_tv = output_caches[i].second;
 
       void* current_dst_ptr = DMAHelper::base(output_tensor);
-      std::shared_ptr<ng::runtime::TensorView> current_tv;
+      std::shared_ptr<ng::runtime::Tensor> current_tv;
 
       if (s_ng_backend_name == "CPU") {
         // We need to check last_tv != nullptr, since there are cases where at
@@ -486,9 +485,9 @@ class NGraphEncapsulateOp : public OpKernel {
       if (s_ng_backend_name != "CPU") {
         for (size_t i = 0; i < output_caches.size(); ++i) {
           void* dst_ptr;
-          std::shared_ptr<ng::runtime::TensorView> dst_tv;
+          std::shared_ptr<ng::runtime::Tensor> dst_tv;
           std::tie(dst_ptr, dst_tv) = output_caches[i];
-          auto ng_element_type = dst_tv->get_tensor().get_element_type();
+          auto ng_element_type = dst_tv->get_element_type();
           dst_tv->read(dst_ptr, 0,
                        dst_tv->get_element_count() * ng_element_type.size());
         }

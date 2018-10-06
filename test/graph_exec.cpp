@@ -87,7 +87,7 @@ TEST(graph_exec, axpy) {
   t_y->write(&v_x, 0, sizeof(v_x));
 
   // Allocate tensor for the result(s)
-  vector<shared_ptr<ng::runtime::TensorView>> outputs;
+  vector<shared_ptr<ng::runtime::Tensor>> outputs;
   for (auto i = 0; i < ng_function->get_output_size(); i++) {
     auto shape = ng_function->get_output_shape(i);
     auto elem_type = ng_function->get_output_element_type(i);

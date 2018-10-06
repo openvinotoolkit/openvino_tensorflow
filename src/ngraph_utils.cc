@@ -46,10 +46,9 @@ void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
   out << "\n";
 }
 
-std::ostream& DumpNGTensor(
-    std::ostream& s, const string& name,
-    const std::shared_ptr<ngraph::runtime::TensorView>& t) {
-  // std::shared_ptr<ngraph::runtime::TensorView> t{get_tensor()};
+std::ostream& DumpNGTensor(std::ostream& s, const string& name,
+                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
+  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
   const ngraph::Shape& shape = t->get_shape();
   s << "Tensor<" << name << ": ";
 
@@ -63,16 +62,16 @@ std::ostream& DumpNGTensor(
   s << ">{";
   size_t rank = shape.size();
   if (rank == 0) {
-    s << GetScalarFromTensorView<float>(t, pos++);
+    s << GetScalarFromTensor<float>(t, pos++);
   } else if (rank <= 2) {
     s << "[";
     for (size_t i = 0; i < shape.at(0); ++i) {
       if (rank == 1) {
-        s << GetScalarFromTensorView<float>(t, pos++);
+        s << GetScalarFromTensor<float>(t, pos++);
       } else if (rank == 2) {
         s << "[";
         for (size_t j = 0; j < shape.at(1); ++j) {
-          s << GetScalarFromTensorView<float>(t, pos++);
+          s << GetScalarFromTensor<float>(t, pos++);
 
           if (j + 1 < shape.at(1)) {
             s << ", ";
