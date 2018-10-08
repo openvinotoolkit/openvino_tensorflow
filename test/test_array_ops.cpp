@@ -70,7 +70,7 @@ TEST(ArrayOps, Fill) {
 
     int input_dim = input_size.size();
     Tensor shape(DT_INT32, TensorShape({input_dim}));
-    AssignInputValuesFromVector<int>(shape, input_size);
+    AssignInputValues<int>(shape, input_size);
 
     // 0-D(scalar) value to fill the returned tensor
     Tensor input_data(DT_FLOAT, TensorShape({}));

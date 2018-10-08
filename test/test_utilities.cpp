@@ -28,6 +28,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 void ActivateNGraph() {
   setenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
   unsetenv("NGRAPH_TF_DISABLE");
@@ -36,26 +38,6 @@ void ActivateNGraph() {
 void DeactivateNGraph() {
   unsetenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS");
   setenv("NGRAPH_TF_DISABLE", "1", 1);
-}
-
-void AssignInputIntValues(Tensor& A, int maxval) {
-  auto A_flat = A.flat<int>();
-  auto A_flat_data = A_flat.data();
-  int counter = 0;
-  for (int i = 0; i < A_flat.size(); i++) {
-    A_flat_data[i] = counter++;
-    if (counter == maxval) {
-      counter = 0;
-    }
-  }
-}
-
-void AssignInputValues(Tensor& A, float x) {
-  auto A_flat = A.flat<float>();
-  auto A_flat_data = A_flat.data();
-  for (int i = 0; i < A_flat.size(); i++) {
-    A_flat_data[i] = x;
-  }
 }
 
 // Input x will be used as an anchor
@@ -77,10 +59,9 @@ void AssignInputValuesRandom(Tensor& A) {
     // give a number between 0 and 20
     float value =
         static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 20.0f);
-    value = (value - 10.0f);  // range from -10 to 10
-    value =
-        roundf(value * 100) / 100.0;  // change the precision of the float to
-                                      // 2 number after the decimal
+    value = (value - 10.0f);              // range from -10 to 10
+    value = roundf(value * 100) / 100.0;  // change the precision of the float
+                                          // to 2 number after the decimal
     A_flat_data[i] = value;
   }
 }
@@ -89,7 +70,9 @@ void PrintTensor(const Tensor& T1) {
   LOG(INFO) << "print tensor values" << T1.DebugString();
 }
 
-void ValidateTensorData(Tensor& T1, Tensor& T2, float tol) {
+// Compares Tensors considering tolerance
+void Compare(Tensor& T1, Tensor& T2, float tol) {
+  ASSERT_EQ(T1.dtype(), T2.dtype());
   ASSERT_EQ(T1.shape(), T2.shape());
   auto T_size = T1.flat<float>().size();
   auto T1_data = T1.flat<float>().data();
@@ -107,8 +90,42 @@ void ValidateTensorData(Tensor& T1, Tensor& T2, float tol) {
   }
 }
 
+// Compares Tensor vectors
+void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2) {
+  ASSERT_EQ(v1.size(), v2.size());
+  for (int i = 0; i < v1.size(); i++) {
+    auto expected_dtype = v1[i].dtype();
+    switch (expected_dtype) {
+      case DT_FLOAT:
+        Compare<float>(v1[i], v2[i]);
+        break;
+      case DT_INT8:
+        Compare<int8>(v1[i], v2[i]);
+        break;
+      case DT_INT16:
+        Compare<int16>(v1[i], v2[i]);
+        break;
+      case DT_INT32:
+        Compare<int>(v1[i], v2[i]);
+        break;
+      case DT_INT64:
+        Compare<int64>(v1[i], v2[i]);
+        break;
+      case DT_BOOL:
+        Compare<bool>(v1[i], v2[i]);
+        break;
+      default:
+        ASSERT_TRUE(false)
+            << "Could not find the corresponding function for the "
+               "expected output datatype."
+            << expected_dtype;
+    }
+  }
+}
+
+// Specialized template for Comparing float
 template <>
-bool eq(float arg0, float arg1) {
+bool Compare(float arg0, float arg1) {
   if (arg0 == 0 && arg1 == 0) {
     return true;
   } else {
@@ -116,5 +133,6 @@ bool eq(float arg0, float arg1) {
   }
 }
 
+}  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

@@ -32,6 +32,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 TEST(graph_exec, axpy) {
   GraphDef gdef;
   // auto status = ReadTextProto(Env::Default(), "test_py.pbtxt",
@@ -107,6 +109,8 @@ TEST(graph_exec, axpy) {
   // TODO
 }
 
+}  // namespace testing
+
 }  // namespace ngraph_bridge
 
-}  // namespace tensorflwo
+}  // namespace tensorflow

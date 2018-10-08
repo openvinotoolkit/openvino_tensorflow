@@ -25,6 +25,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 // valid padding is a noop
 TEST(padding, valid) {
   ng::Shape ng_padding_below{0, 0};
@@ -58,6 +60,8 @@ TEST(padding, indivisible) {
   ASSERT_EQ(ng_padding_above[0], 2);
   ASSERT_EQ(ng_padding_above[1], 2);
 }
+
+}  // namespace testing
 
 }  // namespace ngraph_bridge
 

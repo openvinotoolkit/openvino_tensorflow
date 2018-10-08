@@ -89,20 +89,25 @@ void OpExecuter::ValidateGraph(const Graph& graph,
                                const vector<string> allowed_nodes) {
   NGRAPH_VLOG(5) << "Validate graph";
   bool found_test_op = false;
+  Node* test_op;
   for (Node* node : graph.nodes()) {
     if (node->IsSource() || node->IsSink()) {
       continue;
     } else if (node->type_string() == test_op_type_) {
       // only one node of type test_op
-      ASSERT_FALSE(found_test_op);
+      ASSERT_FALSE(found_test_op) << "Only one op of type " << test_op_type_
+                                  << " should exist in the graph. Found nodes "
+                                  << node->name() << " and " << test_op->name();
       found_test_op = true;
+      test_op = node;
     } else {
       ASSERT_TRUE(node->type_string() == allowed_nodes[0])
-          << "Found Not allowed Op: " << node->type_string();
+          << "Op of type " << node->type_string()
+          << " not allowed in the graph. Found " << node->name();
     }
   }
 
-  ASSERT_TRUE(found_test_op) << " Not found test_op : " << test_op_type_;
+  ASSERT_TRUE(found_test_op) << "Not found test_op : " << test_op_type_;
 
   NGRAPH_VLOG(5) << "Validate graph done";
 }  // namespace testing
@@ -125,49 +130,20 @@ OpExecuter::OpExecuter(const Scope sc, const string test_op,
 OpExecuter::~OpExecuter() {}
 
 void OpExecuter::RunTest() {
-  ExecuteOnNGraph();
-  ExecuteOnTF();
-  CompareNGraphAndTF();
+  vector<Tensor> ngraph_outputs;
+  ExecuteOnNGraph(ngraph_outputs);
+  vector<Tensor> tf_outputs;
+  ExecuteOnTF(tf_outputs);
+  Compare(tf_outputs, ngraph_outputs);
 }
 
 // Uses tf_scope to execute on TF
-void OpExecuter::ExecuteOnTF() {
+void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   DeactivateNGraph();
   ClientSession session(tf_scope_);
-  ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs_));
-  for (int i = 0; i < tf_outputs_.size(); i++) {
-    NGRAPH_VLOG(5) << " TF op " << i << tf_outputs_[i].DebugString();
-  }
-}
-
-// Compares tf_outputs_ with ngraph_outputs_
-void OpExecuter::CompareNGraphAndTF() {
-  ASSERT_EQ(tf_outputs_.size(), ngraph_outputs_.size());
-  for (int i = 0; i < tf_outputs_.size(); i++) {
-    switch (expected_output_datatypes_[i]) {
-      case DT_FLOAT:
-        AssertTensorEquals<float>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      case DT_INT8:
-        AssertTensorEquals<int8>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      case DT_INT16:
-        AssertTensorEquals<int16>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      case DT_INT32:
-        AssertTensorEquals<int>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      case DT_INT64:
-        AssertTensorEquals<int64>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      case DT_BOOL:
-        AssertTensorEquals<bool>(tf_outputs_[i], ngraph_outputs_[i]);
-        break;
-      default:
-        EXPECT_TRUE(false)
-            << "Could not find the corresponding function for the "
-               "expected output datatype.";
-    }
+  ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs));
+  for (int i = 0; i < tf_outputs.size(); i++) {
+    NGRAPH_VLOG(5) << " TF op " << i << tf_outputs[i].DebugString();
   }
 }
 
@@ -188,7 +164,7 @@ void OpExecuter::CompareNGraphAndTF() {
 // 5. Executes ng::Function on CPU backend
 // 6. Updates output of ng::Function into ngraph_output
 // TODO : Refactor
-void OpExecuter::ExecuteOnNGraph() {
+void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
 
@@ -213,7 +189,7 @@ void OpExecuter::ExecuteOnNGraph() {
   // TODO : Validate static_input_indexes < number_of_inputs
   vector<TensorShape> input_shapes;
   vector<DataType> input_dt;
-  // vector<Tensor> static_inputs;
+  vector<Tensor> tf_inputs;
   vector<const Tensor*> static_input_map;
   vector<Node*> input_node;
 
@@ -226,7 +202,7 @@ void OpExecuter::ExecuteOnNGraph() {
     ASSERT_EQ(Status::OK(), GetNodeAttr(ip->attrs(), "value", &ip_tensor));
     input_shapes.push_back(ip_tensor.shape());
     input_dt.push_back(ip_tensor.dtype());
-    tf_inputs_.push_back(ip_tensor);
+    tf_inputs.push_back(ip_tensor);
 
     NGRAPH_VLOG(5) << " Extracted tensor  " << i << " "
                    << ip_tensor.DebugString();
@@ -235,7 +211,7 @@ void OpExecuter::ExecuteOnNGraph() {
   // Update static_input_map
   for (int i = 0; i < number_of_inputs; i++) {
     if (static_input_indexes_.find(i) != static_input_indexes_.end()) {
-      static_input_map.push_back(&tf_inputs_[i]);
+      static_input_map.push_back(&tf_inputs[i]);
       NGRAPH_VLOG(5) << "reading static tensor ptr " << i << " "
                      << (static_input_map[i])->DebugString();
     } else {
@@ -352,15 +328,15 @@ void OpExecuter::ExecuteOnNGraph() {
   vector<std::shared_ptr<ngraph::runtime::Tensor>> ng_op_tensors;
 
   NGRAPH_VLOG(5) << " Creating ng inputs ";
-  NGRAPH_VLOG(5) << "No of inputs " << tf_inputs_.size();
-  for (int i = 0; i < tf_inputs_.size(); i++) {
+  NGRAPH_VLOG(5) << "No of inputs " << tf_inputs.size();
+  for (int i = 0; i < tf_inputs.size(); i++) {
     ng::Shape ng_shape;
     ASSERT_EQ(Status::OK(),
-              TFTensorShapeToNGraphShape(tf_inputs_[i].shape(), &ng_shape));
+              TFTensorShapeToNGraphShape(tf_inputs[i].shape(), &ng_shape));
     ng::element::Type ng_et;
     ASSERT_EQ(Status::OK(),
-              TFDataTypeToNGraphElementType(tf_inputs_[i].dtype(), &ng_et));
-    void* src_ptr = (void*)DMAHelper::base(&tf_inputs_[i]);
+              TFDataTypeToNGraphElementType(tf_inputs[i].dtype(), &ng_et));
+    void* src_ptr = (void*)DMAHelper::base(&tf_inputs[i]);
     auto result = backend->create_tensor(ng_et, ng_shape, src_ptr);
     ng_ip_tensors.push_back(result);
   }
@@ -397,8 +373,8 @@ void OpExecuter::ExecuteOnNGraph() {
     Tensor output_tensor(expected_output_datatypes_[i], tf_op_shapes[i]);
     void* dst_ptr = DMAHelper::base(&output_tensor);
     ng_op_tensors[i]->read(dst_ptr, 0, output_tensor.TotalBytes());
-    ngraph_outputs_.push_back(output_tensor);
-    NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs_[i].DebugString();
+    ngraph_outputs.push_back(output_tensor);
+    NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs[i].DebugString();
   }
 
 }  // ExecuteOnNGraph

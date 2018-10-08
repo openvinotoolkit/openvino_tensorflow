@@ -28,6 +28,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 #define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
 
 // Test that a "Const" fed to a static input is still coalesced with the
@@ -131,6 +133,8 @@ TEST(assign_clusters, cone) {
 
   ASSERT_NE(node2_cluster, node3_cluster);
 }
+
+}  // namespace testing
 
 }  // namespace ngraph_bridge
 

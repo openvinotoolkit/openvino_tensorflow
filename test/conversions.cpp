@@ -24,6 +24,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 TEST(conversions, reshape) {
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, ng::Shape{2, 3, 4, 5});
@@ -78,6 +80,8 @@ TEST(conversions, param_to_ngraph_nhwc) {
   ASSERT_EQ(out1[0], in1[1]);
   ASSERT_EQ(out1[1], in1[2]);
 }
+
+}  // namespace testing
 
 }  // namespace ngraph_bridge
 

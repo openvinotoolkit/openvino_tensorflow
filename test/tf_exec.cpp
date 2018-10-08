@@ -38,6 +38,8 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+namespace testing {
+
 #define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
 
 TEST(tf_exec, hello_world) {
@@ -145,9 +147,9 @@ TEST(tf_exec, DISABLED_BatchMatMul_0D) {
   ASSERT_EQ(outputs_z1[0].shape(), outputs_z1_cpu[0].shape());
   ASSERT_EQ(outputs_z2[0].shape(), outputs_z2_cpu[0].shape());
   ASSERT_EQ(outputs_z[0].shape(), outputs_z_cpu[0].shape());
-  AssertTensorEquals<float>(outputs_z1[0], outputs_z1_cpu[0]);
-  AssertTensorEquals<float>(outputs_z2[0], outputs_z2_cpu[0]);
-  AssertTensorEquals<float>(outputs_z[0], outputs_z_cpu[0]);
+  Compare<float>(outputs_z1[0], outputs_z1_cpu[0]);
+  Compare<float>(outputs_z2[0], outputs_z2_cpu[0]);
+  Compare<float>(outputs_z[0], outputs_z_cpu[0]);
 }
 
 TEST(tf_exec, BatchMatMul) {
@@ -200,8 +202,8 @@ TEST(tf_exec, BatchMatMul) {
   ASSERT_EQ(outputs_ng[0].shape(), outputs_tf[0].shape());
   ASSERT_EQ(outputs_z1_ng[0].shape(), outputs_z1_tf[0].shape());
   ASSERT_EQ(outputs_z2_ng[0].shape(), outputs_z2_tf[0].shape());
-  AssertTensorEquals<float>(outputs_z1_ng[0], outputs_z1_tf[0]);
-  AssertTensorEquals<float>(outputs_z2_ng[0], outputs_z2_tf[0]);
+  Compare<float>(outputs_z1_ng[0], outputs_z1_tf[0]);
+  Compare<float>(outputs_z2_ng[0], outputs_z2_tf[0]);
 }
 
 TEST(tf_exec, DISABLED_BatchMatMul_3D) {
@@ -248,8 +250,8 @@ TEST(tf_exec, DISABLED_BatchMatMul_3D) {
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
   ASSERT_EQ(outputs_z1[0].shape(), outputs_z1_cpu[0].shape());
   ASSERT_EQ(outputs_z2[0].shape(), outputs_z2_cpu[0].shape());
-  AssertTensorEquals<float>(outputs_z1[0], outputs_z1_cpu[0]);
-  AssertTensorEquals<float>(outputs_z2[0], outputs_z2_cpu[0]);
+  Compare<float>(outputs_z1[0], outputs_z1_cpu[0]);
+  Compare<float>(outputs_z2[0], outputs_z2_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_BatchMatMul_2D) {
@@ -272,7 +274,7 @@ TEST(tf_exec, DISABLED_BatchMatMul_2D) {
   auto C = ops::BatchMatMul(root.WithOpName("C"), A, B);
   ASSERT_OK(sess.Run({C}, &outputs_cpu));
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
-  AssertTensorEquals<float>(outputs[0], outputs_cpu[0]);
+  Compare<float>(outputs[0], outputs_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_BiasAddGrad) {
@@ -302,7 +304,7 @@ TEST(tf_exec, DISABLED_BiasAddGrad) {
   ASSERT_OK(sess.Run({R_CPU_nhwc}, &outputs_CPU_nhwc));
 
   ASSERT_EQ(outputs_ngraph_nhwc[0].shape(), outputs_CPU_nhwc[0].shape());
-  ValidateTensorData(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
+  Compare(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
   // Check 2D Tensor
   R_ngraph_nhwc =
       ops::BiasAddGrad(dev_scope.WithOpName("R_ngraph_nhwc"), X2D, attrs);
@@ -312,7 +314,7 @@ TEST(tf_exec, DISABLED_BiasAddGrad) {
   ASSERT_OK(sess.Run({R_CPU_nhwc}, &outputs_CPU_nhwc));
 
   ASSERT_EQ(outputs_ngraph_nhwc[0].shape(), outputs_CPU_nhwc[0].shape());
-  ValidateTensorData(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
+  Compare(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
   // check 3D tensor
   R_ngraph_nhwc =
       ops::BiasAddGrad(dev_scope.WithOpName("R_ngraph_nhwc"), X3D, attrs);
@@ -322,7 +324,7 @@ TEST(tf_exec, DISABLED_BiasAddGrad) {
   ASSERT_OK(sess.Run({R_CPU_nhwc}, &outputs_CPU_nhwc));
 
   ASSERT_EQ(outputs_ngraph_nhwc[0].shape(), outputs_CPU_nhwc[0].shape());
-  ValidateTensorData(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
+  Compare(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
   // check 5D tensor
   R_ngraph_nhwc =
       ops::BiasAddGrad(dev_scope.WithOpName("R_ngraph_nhwc"), X5D, attrs);
@@ -332,7 +334,7 @@ TEST(tf_exec, DISABLED_BiasAddGrad) {
   ASSERT_OK(sess.Run({R_CPU_nhwc}, &outputs_CPU_nhwc));
 
   ASSERT_EQ(outputs_ngraph_nhwc[0].shape(), outputs_CPU_nhwc[0].shape());
-  ValidateTensorData(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
+  Compare(outputs_ngraph_nhwc[0], outputs_CPU_nhwc[0], 1e-6);
 
   attrs.data_format_ = "NCHW";
   std::vector<Tensor> outputs_ngraph_nchw;
@@ -345,7 +347,7 @@ TEST(tf_exec, DISABLED_BiasAddGrad) {
   ASSERT_OK(sess.Run({R_CPU_nchw}, &outputs_CPU_nchw));
 
   ASSERT_EQ(outputs_ngraph_nchw[0].shape(), outputs_CPU_nchw[0].shape());
-  ValidateTensorData(outputs_ngraph_nchw[0], outputs_CPU_nchw[0], 1e-6);
+  Compare(outputs_ngraph_nchw[0], outputs_CPU_nchw[0], 1e-6);
 }
 
 TEST(tf_exec, DISABLED_FusedBatchNormGrad_NHWC) {
@@ -400,9 +402,9 @@ TEST(tf_exec, DISABLED_FusedBatchNormGrad_NHWC) {
   ASSERT_EQ(outputs[0].shape(), outputs_cpu[0].shape());
   ASSERT_EQ(outputs[1].shape(), outputs_cpu[1].shape());
   ASSERT_EQ(outputs[2].shape(), outputs_cpu[2].shape());
-  AssertTensorEquals<float>(outputs[0], outputs_cpu[0]);
-  AssertTensorEquals<float>(outputs[1], outputs_cpu[1]);
-  AssertTensorEquals<float>(outputs[2], outputs_cpu[2]);
+  Compare<float>(outputs[0], outputs_cpu[0]);
+  Compare<float>(outputs[1], outputs_cpu[1]);
+  Compare<float>(outputs[2], outputs_cpu[2]);
 }
 
 // Test Op :"Op_L2Loss"
@@ -431,7 +433,7 @@ TEST(tf_exec, DISABLED_Op_L2Loss) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
+    Compare<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 }
 
@@ -472,7 +474,7 @@ TEST(tf_exec, DISABLED_Op_Unpack) {
         session.Run({r_ngraph[0], r_ngraph[1], r_ngraph[2]}, &outputs_ngraph));
     for (auto j = 0; j < input_rank; ++j) {
       ASSERT_EQ(outputs_ngraph[j].shape(), outputs_cpu[j].shape());
-      AssertTensorEquals<float>(outputs_ngraph[j], outputs_cpu[j]);
+      Compare<float>(outputs_ngraph[j], outputs_cpu[j]);
     }
   }
 }
@@ -505,8 +507,8 @@ TEST(tf_exec, DISABLED_Tile) {
   ASSERT_OK(sess.Run({D_cpu}, &outputs_D_cpu));
   ASSERT_EQ(outputs_C[0].shape(), outputs_C_cpu[0].shape());
   ASSERT_EQ(outputs_D[0].shape(), outputs_D_cpu[0].shape());
-  AssertTensorEquals<float>(outputs_C[0], outputs_C_cpu[0]);
-  AssertTensorEquals<float>(outputs_D[0], outputs_D_cpu[0]);
+  Compare<float>(outputs_C[0], outputs_C_cpu[0]);
+  Compare<float>(outputs_D[0], outputs_D_cpu[0]);
 }
 
 TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
@@ -557,7 +559,7 @@ TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
+    Compare<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 
   // TEST NCHW
@@ -595,7 +597,7 @@ TEST(tf_exec, DISABLED_Op_Conv2DBackpropFilter) {
     ASSERT_OK(session.Run({r_cpu}, &outputs_cpu));
 
     ASSERT_EQ(outputs_ngraph[0].shape(), outputs_cpu[0].shape());
-    AssertTensorEquals<float>(outputs_ngraph[0], outputs_cpu[0]);
+    Compare<float>(outputs_ngraph[0], outputs_cpu[0]);
   }
 
 }  // namespace ngraph_bridge
@@ -610,7 +612,7 @@ TEST(tf_exec, DISABLED_Op_SparseSoftmaxCrossEntropyWithLogits) {
   Tensor features(DT_FLOAT, TensorShape({batch_size, num_classes}));
   Tensor labels(DT_INT32, TensorShape({batch_size}));
   AssignInputValues(features, -1.1f);
-  AssignInputIntValues(labels, num_classes);
+  AssignInputValuesRandom<int>(labels, 0, num_classes - 1);
 
   auto R_ngraph = ops::SparseSoftmaxCrossEntropyWithLogits(
       root_ngraph.WithOpName("R_ngraph"), features, labels);
@@ -624,8 +626,8 @@ TEST(tf_exec, DISABLED_Op_SparseSoftmaxCrossEntropyWithLogits) {
   ASSERT_OK(session.Run({R_ngraph.loss, R_ngraph.backprop}, &outputs_ngraph));
   ASSERT_OK(session.Run({R_cpu.loss, R_cpu.backprop}, &outputs_cpu));
 
-  ValidateTensorData(outputs_ngraph[0], outputs_cpu[0], 1e-6);
-  ValidateTensorData(outputs_ngraph[1], outputs_cpu[1], 1e-6);
+  Compare(outputs_ngraph[0], outputs_cpu[0], 1e-6);
+  Compare(outputs_ngraph[1], outputs_cpu[1], 1e-6);
 }
 
 TEST(tf_exec, DISABLED_Op_PreventGradient) {
@@ -654,10 +656,12 @@ TEST(tf_exec, DISABLED_Op_PreventGradient) {
                             &outputs_cpu));
   ASSERT_EQ(outputs_cpu[0].shape(), TensorShape({2, 2}));
 
-  AssertTensorEquals<float>(outputs_cpu[0], outputs_ng[0]);
+  Compare<float>(outputs_cpu[0], outputs_ng[0]);
 }
 
 #undef ASSERT_OK
+
+}  // namespace testing
 
 }  // namespace ngraph_bridge
 

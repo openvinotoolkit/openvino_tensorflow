@@ -149,7 +149,7 @@ TEST(MathOps, AnyKeepDims) {
 
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
   auto keep_dims = ops::Any::Attrs().KeepDims(true);
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = 0;
@@ -171,7 +171,7 @@ TEST(MathOps, AnyNegativeAxis) {
   std::vector<bool> v = {true, true, true, true, false, false};
 
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = -1;
@@ -193,7 +193,7 @@ TEST(MathOps, AnyPositiveAxis) {
                          false, true, false, false};
 
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = 1;
@@ -219,7 +219,7 @@ TEST(MathOps, AllKeepDims) {
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
   auto keep_dims = ops::All::Attrs().KeepDims(true);
 
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
 
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
@@ -244,7 +244,7 @@ TEST(MathOps, AllNegativeAxis) {
   std::vector<bool> v = {true, true, true, true, false, false};
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
 
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
 
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
@@ -270,7 +270,7 @@ TEST(MathOps, AllPositiveAxis) {
                          false, true, false, false};
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
 
-  AssignInputValuesFromVector<bool>(A, v);
+  AssignInputValues<bool>(A, v);
 
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
@@ -540,7 +540,7 @@ TEST(MathOps, Exp1D) {
 
   Tensor A(DT_FLOAT, TensorShape({dim1}));
 
-  AssignInputValues(A, 2.5);
+  AssignInputValues(A, 2.5f);
 
   vector<int> static_input_indexes = {};
   auto R = ops::Exp(root, A);
@@ -561,7 +561,7 @@ TEST(MathOps, Exp2D) {
 
   Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
 
-  AssignInputValues(A, 3.6);
+  AssignInputValues(A, 3.6f);
 
   vector<int> static_input_indexes = {};
   auto R = ops::Exp(root, A);
@@ -722,10 +722,10 @@ TEST(MathOps, LogicalOr) {
   std::vector<bool> v2 = {false, true, false, true, false, false};
 
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
-  AssignInputValuesFromVector(A, v1);
+  AssignInputValues(A, v1);
 
   Tensor B(DT_BOOL, TensorShape({dim1, dim2}));
-  AssignInputValuesFromVector(B, v2);
+  AssignInputValues(B, v2);
 
   vector<int> static_input_indexes = {};
 
