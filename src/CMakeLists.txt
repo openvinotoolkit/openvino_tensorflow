@@ -16,6 +16,7 @@ set(LIB_NAME ngraph_bridge)
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
+include_directories(${ABSL_INCLUDE_DIR})
 
 set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -50,6 +51,9 @@ add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries( ${LIB_NAME} ngraph_logger) 
 target_link_libraries( ${LIB_NAME} tensorflow_framework_lib )
 target_link_libraries( ${LIB_NAME} ngraph_lib )
+target_link_libraries( ${LIB_NAME} absl_algorithm )
+target_link_libraries( ${LIB_NAME} absl_container )
+target_link_libraries( ${LIB_NAME} absl_strings )
 
 target_compile_definitions( 
     ${LIB_NAME} PRIVATE

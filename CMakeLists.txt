@@ -159,9 +159,9 @@ add_dependencies(ngraph_lib ext_ngraph)
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 
 # Add the directories to be built
+add_subdirectory(third-party)
 add_subdirectory(logging)
 add_subdirectory(src)
-add_subdirectory(third-party)
 if (UNIT_TEST_ENABLE)
     if (NOT DEFINED TF_SRC_DIR)
         message(FATAL_ERROR "Provide TensorFlow source directory: -DTF_SRC_DIR=<directory>")
