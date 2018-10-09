@@ -72,20 +72,22 @@ class OpExecuter {
 
   // Creates the tf graph from tf Scope
   // Translates the tf graph to nGraph
-  // Executes the nGraph on nGraph CPU Backend
+  // Executes the nGraph on nGraph Backend specified by backend_name
   // Returns outputs as tf Tensors
-  void ExecuteOnNGraph(vector<Tensor>& outputs);
+  // NOTE: Env Variable NGRAPH_TF_BACKEND if set, overrides ng_backend_name
+  void ExecuteOnNGraph(vector<Tensor>& outputs,
+                       const string& ng_backend_name = "CPU");
 
   // Creates tf Session from tf Scope
   // Executes on TF
   // Returns outputs
   void ExecuteOnTF(vector<Tensor>& outputs);
 
-  // Executes on NGraph, then executes on TF, and compares the results
-  void RunTest();
+  // Executes on NGraph backend, then executes on TF, and compares the results
+  // NOTE: Env Variable NGRAPH_TF_BACKEND if set, overrides ng_backend_name
+  void RunTest(const string& ng_backend_name = "CPU");
 
   // TODO(malikshr) : Overload RunTest() to take in tolerance
-  static void RunTest(float tolerance);
 
  private:
   Scope tf_scope_;

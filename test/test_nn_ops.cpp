@@ -402,8 +402,8 @@ TEST(NNOps, FusedBatchNormGradNHWC) {
   opexecuter_all_output.RunTest();
 }
 
-// Test Op :"Op_L2Loss"
-TEST(NNOps, Op_L2Loss) {
+// Test Op :"L2Loss"
+TEST(NNOps, L2Loss) {
   std::vector<std::vector<int64>> input_sizes;
   input_sizes.push_back({2, 3, 4});
   input_sizes.push_back({0});

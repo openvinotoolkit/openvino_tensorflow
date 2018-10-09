@@ -129,9 +129,9 @@ OpExecuter::OpExecuter(const Scope sc, const string test_op,
 // Destructor
 OpExecuter::~OpExecuter() {}
 
-void OpExecuter::RunTest() {
+void OpExecuter::RunTest(const string& ng_backend_name) {
   vector<Tensor> ngraph_outputs;
-  ExecuteOnNGraph(ngraph_outputs);
+  ExecuteOnNGraph(ngraph_outputs, ng_backend_name);
   vector<Tensor> tf_outputs;
   ExecuteOnTF(tf_outputs);
   Compare(tf_outputs, ngraph_outputs);
@@ -164,7 +164,8 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
 // 5. Executes ng::Function on CPU backend
 // 6. Updates output of ng::Function into ngraph_output
 // TODO : Refactor
-void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
+void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
+                                 const string& ng_backend_name) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
 
@@ -320,8 +321,18 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   }
 
   // Create nGraph backend
-  // Create the nGraph backend
-  auto backend = ng::runtime::Backend::create("CPU");
+  // If NGRAPH_TF_BACKEND is set create that backend
+  // Else create backend of type ng_backend_name
+  string ng_backend_type = ng_backend_name;
+  const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
+  if (ng_backend_env_value != nullptr) {
+    string backend_env = std::string(ng_backend_env_value);
+    if (!backend_env.empty()) {
+      ng_backend_type = backend_env;
+    }
+  }
+  NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
+  auto backend = ng::runtime::Backend::create(ng_backend_type);
 
   // Allocate tensors for inputs
   vector<std::shared_ptr<ngraph::runtime::Tensor>> ng_ip_tensors;
