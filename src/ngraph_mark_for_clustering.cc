@@ -37,18 +37,18 @@ namespace ngraph_bridge {
 // Each TensorFlow op supported by nGraph has a "confirmation function"
 // associated with it. When the confirmation pass encounters a node of op "Op",
 // the confirmation function for "Op" first checks if this particular instance
-// of the op can be placed on nGraph, possibly attaching extra metadata to the
-// node for later use, and returns "true" if placement is allowed. Every
-// confirmed op has the attribute "_ngraph_marked_for_clustering" set to
-// "true".
-//
-// See the body of "MarkForClustering" for more details on what a "confirmation
-// function" does.
-//
+// of the op can be placed on nGraph, and returns "true" if placement is
+// allowed. This is followed by checks for deadness and input datatype of the
+// op.
+
+// Each op that passes all the checks, has the attribute
+// "_ngraph_marked_for_clustering" set to "true". Additional metadata (Static
+// Inputs) for the op is also set.
 
 using ConfirmationFunction = std::function<Status(Node*, bool*)>;
 using TypeConstraintMap =
     std::map<std::string, std::map<std::string, gtl::ArraySlice<DataType>>>;
+using SetAttributesFunction = std::function<Status(Node*)>;
 
 // Different Checks before we mark for clustering
 //
@@ -62,7 +62,7 @@ static Status NGraphPlacementRequested(Node* node, bool& placement_ok) {
   return Status::OK();
 }
 
-#if (TF_VERSION_GEQ_1_11)
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 // Checks if the node's inputs have mismatching deadness
 static Status DeadnessOk(Node* node,
                          std::unique_ptr<DeadnessAnalysis>* deadness_analyzer,
@@ -98,36 +98,43 @@ static Status TypeConstraintOk(Node* node,
 // Checks if the node meets the confirmation constraints
 static Status ConfirmationOk(
     Node* node,
-    std::map<std::string, ConfirmationFunction>& confirmation_functions,
+    std::map<std::string, ConfirmationFunction>& confirmation_function_map,
     bool& confirmation_ok) {
-  auto it = confirmation_functions.find(node->type_string());
+  auto it = confirmation_function_map.find(node->type_string());
 
-  if (it != confirmation_functions.end()) {
+  if (it != confirmation_function_map.end()) {
     TF_RETURN_IF_ERROR(it->second(node, &confirmation_ok));
   }
   return Status::OK();
 }
 
 //
-// Marks the input indices in "inputs" as static, i.e., inputs that must be
-// driven either by an _Arg or by a Const in the encapsulated graph.
-//
+// Marks the input indices in "inputs" as static
 static inline void SetStaticInputs(Node* n, std::vector<int32> inputs) {
   n->AddAttr("_ngraph_static_inputs", inputs);
 }
 
-// Generates a "simple" confirmation function which always returns true, and
-// tags the input indices given in static_input_indices as static. A negative
-// value in static_input_indices indicates that the input index is counted from
-// the right.
-static ConfirmationFunction SimpleConfirmationFunction(
+// Marks the input indices given in static_input_indices as static, i.e., inputs
+// that must be driven either by an _Arg or by a Const in the encapsulated
+// graph (meaning that its value must be known at translation-to-nGraph time). A
+// negative value in static_input_indices indicates that the input index is
+// counted from the right.
+static SetAttributesFunction SetStaticInputs(
     const std::vector<int32>& static_input_indices = {}) {
-  auto cf = [static_input_indices](Node* n, bool* result) {
+  auto cf = [static_input_indices](Node* n) {
     // Adjust negative input indices.
     auto indices = static_input_indices;
     std::transform(indices.begin(), indices.end(), indices.begin(),
                    [n](int x) { return x >= 0 ? x : n->num_inputs() + x; });
     SetStaticInputs(n, indices);
+    return Status::OK();
+  };
+  return cf;
+};
+
+// Generates a "simple" confirmation function which always returns true,
+static ConfirmationFunction SimpleConfirmationFunction() {
+  auto cf = [](Node* n, bool* result) {
     *result = true;
     return Status::OK();
   };
@@ -165,28 +172,41 @@ Status MarkForClustering(Graph* graph) {
 
   //
   // A map of op types (e.g. "Add") to confirmation functions. These can be
-  // used to check arbitrary constraints, and attach information to the node
-  // in the process. For example:
+  // used to check arbitrary constraints. For example:
   //
-  //    confirmation_functions["MyOp"] = [](Node* n, bool* confirmed) {
+  //    confirmation_function_map["MyOp"] = [](Node* n, bool* confirmed) {
   //      int dummy;
   //      if (GetAttr(n->attrs(),"my_unsupported_attr",&dummy).ok()) {
   //        *confirmed = false;
   //        return Status::OK();
   //      }
-  //
-  //      SetStaticInputs(n, {0});
   //      *confirmed = true;
   //      return Status::OK();
   //    };
   //
   // The foregoing function checks every "MyOp" node to make sure that it does
   // not have the attribute "my_unsupported_attr", and rejects placement if it
-  // does. Otherwise, it marks the zeroth input to the node as static (meaning
-  // that its value must be known at translation-to-nGraph time, and accepts
-  // placement.
+  // does.
+
+  static std::map<std::string, ConfirmationFunction> confirmation_function_map;
+
   //
-  static std::map<std::string, ConfirmationFunction> confirmation_functions;
+  // A map of op types (e.g. "Add") to set_attribute functions. These can be
+  // used to set any additional attributes. For example:
+  //
+  //    confirmation_function_map["MyOp"] = [](Node* n) {
+  //     if(n->condition()){
+  //        int dummy=5;
+  //        n->AddAttr("_ngraph_dummy_attr", dummy);
+  //      }
+  //
+  //      vector<int32> static_input_index =5;
+  //      n->AddAttr("_ngraph_static_inputs", static_input_index);
+  //      return Status::OK();
+  //    };
+  //
+
+  static std::map<std::string, SetAttributesFunction> set_attributes_map;
 
   mutex init_mu;
   static bool initialized = false;
@@ -194,15 +214,132 @@ Status MarkForClustering(Graph* graph) {
   // If the type constraint and confirmation function maps have not been
   // initialized, initialize them.
   //
-  // IF YOU ARE ADDING A NEW OP IMPLEMENTATION, ADD TYPE CONSTRAINTS AND A
-  // CONFIRMATION FUNCTION FOR THE OP HERE. The constraint function should
-  // refuse placement if the node is not supported in the builder, and tag
-  // the node with any data that will be needed in case the graph is broken
-  // up in a later rewrite pass (for example, constant data).
+  // IF YOU ARE ADDING A NEW OP IMPLEMENTATION, YOU MUST ADD A CONFIRMATION
+  // FUNCTION, TYPE CONTRAINTS (IF ANY) AND STATIC INPUTS INDEXES (IF ANY) FOR
+  // THE OP HERE.
+
+  // The constraint function should refuse placement if the node is not
+  // supported in the builder, and tag the node with any data that will be
+  // needed in case the graph is broken up in a later rewrite pass (for example,
+  // constant data).
+
   {
     mutex_lock l(init_mu);
 
     if (!initialized) {
+      //
+      // Initialize confirmation function map.
+      //
+      // Please keep these in alphabetical order by op name.
+      //
+      confirmation_function_map["Abs"] = SimpleConfirmationFunction();
+      confirmation_function_map["Add"] = SimpleConfirmationFunction();
+      confirmation_function_map["AddN"] = SimpleConfirmationFunction();
+      confirmation_function_map["Any"] = SimpleConfirmationFunction();
+      confirmation_function_map["All"] = SimpleConfirmationFunction();
+      confirmation_function_map["ArgMax"] = SimpleConfirmationFunction();
+      confirmation_function_map["ArgMin"] = SimpleConfirmationFunction();
+      confirmation_function_map["AvgPool"] = SimpleConfirmationFunction();
+      confirmation_function_map["AvgPoolGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["BatchMatMul"] = SimpleConfirmationFunction();
+      confirmation_function_map["BiasAdd"] = SimpleConfirmationFunction();
+      confirmation_function_map["BiasAddGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Cast"] = SimpleConfirmationFunction();
+      confirmation_function_map["ConcatV2"] = SimpleConfirmationFunction();
+      confirmation_function_map["Const"] = SimpleConfirmationFunction();
+      confirmation_function_map["Conv2D"] = SimpleConfirmationFunction();
+      confirmation_function_map["Conv2DBackpropFilter"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Conv2DBackpropInput"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["DepthwiseConv2dNative"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Equal"] = SimpleConfirmationFunction();
+      confirmation_function_map["Exp"] = SimpleConfirmationFunction();
+      confirmation_function_map["ExpandDims"] = SimpleConfirmationFunction();
+      confirmation_function_map["Fill"] = SimpleConfirmationFunction();
+      confirmation_function_map["Floor"] = SimpleConfirmationFunction();
+      confirmation_function_map["FloorDiv"] = SimpleConfirmationFunction();
+      confirmation_function_map["FloorMod"] = SimpleConfirmationFunction();
+      confirmation_function_map["FusedBatchNorm"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["FusedBatchNormGrad"] = [](Node* n,
+                                                           bool* result) {
+        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "is_training", result));
+        return Status::OK();
+      };
+      confirmation_function_map["Greater"] = SimpleConfirmationFunction();
+      confirmation_function_map["GreaterEqual"] = SimpleConfirmationFunction();
+      confirmation_function_map["HorovodAllreduce"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Identity"] = SimpleConfirmationFunction();
+      confirmation_function_map["L2Loss"] = SimpleConfirmationFunction();
+      confirmation_function_map["Less"] = SimpleConfirmationFunction();
+      confirmation_function_map["LessEqual"] = SimpleConfirmationFunction();
+      confirmation_function_map["Log"] = SimpleConfirmationFunction();
+      confirmation_function_map["LogicalAnd"] = SimpleConfirmationFunction();
+      confirmation_function_map["LogicalNot"] = SimpleConfirmationFunction();
+      confirmation_function_map["LogicalOr"] = SimpleConfirmationFunction();
+      confirmation_function_map["MatMul"] = SimpleConfirmationFunction();
+      confirmation_function_map["Max"] = SimpleConfirmationFunction();
+      confirmation_function_map["Maximum"] = SimpleConfirmationFunction();
+      confirmation_function_map["MaxPool"] = SimpleConfirmationFunction();
+      confirmation_function_map["MaxPoolGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Mean"] = SimpleConfirmationFunction();
+      confirmation_function_map["Min"] = SimpleConfirmationFunction();
+      confirmation_function_map["Minimum"] = SimpleConfirmationFunction();
+      confirmation_function_map["Mul"] = SimpleConfirmationFunction();
+      confirmation_function_map["Neg"] = SimpleConfirmationFunction();
+      confirmation_function_map["Pad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Pow"] = SimpleConfirmationFunction();
+      confirmation_function_map["PreventGradient"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Prod"] = SimpleConfirmationFunction();
+      confirmation_function_map["RealDiv"] = SimpleConfirmationFunction();
+      confirmation_function_map["Reciprocal"] = SimpleConfirmationFunction();
+      confirmation_function_map["Relu"] = SimpleConfirmationFunction();
+      confirmation_function_map["Relu6"] = SimpleConfirmationFunction();
+      confirmation_function_map["ReluGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Reshape"] = SimpleConfirmationFunction();
+      confirmation_function_map["Rsqrt"] = SimpleConfirmationFunction();
+      confirmation_function_map["Shape"] = SimpleConfirmationFunction();
+      confirmation_function_map["Sigmoid"] = SimpleConfirmationFunction();
+      confirmation_function_map["SigmoidGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Sign"] = SimpleConfirmationFunction();
+      confirmation_function_map["Size"] = SimpleConfirmationFunction();
+      confirmation_function_map["Slice"] = SimpleConfirmationFunction();
+      confirmation_function_map["Snapshot"] = SimpleConfirmationFunction();
+      confirmation_function_map["Softmax"] = SimpleConfirmationFunction();
+      confirmation_function_map["SparseSoftmaxCrossEntropyWithLogits"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Split"] = SimpleConfirmationFunction();
+      confirmation_function_map["SplitV"] = SimpleConfirmationFunction();
+      confirmation_function_map["Square"] = SimpleConfirmationFunction();
+      confirmation_function_map["SquaredDifference"] =
+          SimpleConfirmationFunction();
+      confirmation_function_map["Squeeze"] = SimpleConfirmationFunction();
+      confirmation_function_map["StridedSlice"] = [](Node* n, bool* result) {
+        // Reject if "new_axis_mask" is set.
+        int tf_new_axis_mask;
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask));
+        if (tf_new_axis_mask != 0) {
+          *result = false;
+        } else {
+          *result = true;
+        }
+        return Status::OK();
+      };
+      confirmation_function_map["Pack"] = SimpleConfirmationFunction();
+      confirmation_function_map["Sub"] = SimpleConfirmationFunction();
+      confirmation_function_map["Sum"] = SimpleConfirmationFunction();
+      confirmation_function_map["Tanh"] = SimpleConfirmationFunction();
+      confirmation_function_map["TanhGrad"] = SimpleConfirmationFunction();
+      confirmation_function_map["Tile"] = SimpleConfirmationFunction();
+      confirmation_function_map["Transpose"] = SimpleConfirmationFunction();
+      confirmation_function_map["Unpack"] = SimpleConfirmationFunction();
+      confirmation_function_map["ZerosLike"] = SimpleConfirmationFunction();
+
       //
       // Initialize type constraint map.
       //
@@ -308,125 +445,41 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
       type_constraint_map["Unpack"]["T"] = NGraphDTypes();
 
-      //
-      // Initialize confirmation function map.
-      //
-      // Please keep these in alphabetical order by op name.
-      //
-      confirmation_functions["Abs"] = SimpleConfirmationFunction();
-      confirmation_functions["Add"] = SimpleConfirmationFunction();
-      confirmation_functions["AddN"] = SimpleConfirmationFunction();
-      confirmation_functions["Any"] = SimpleConfirmationFunction({1});
-      confirmation_functions["All"] = SimpleConfirmationFunction({1});
-      confirmation_functions["ArgMax"] = SimpleConfirmationFunction({1});
-      confirmation_functions["ArgMin"] = SimpleConfirmationFunction({1});
-      confirmation_functions["AvgPool"] = SimpleConfirmationFunction();
-      confirmation_functions["AvgPoolGrad"] = SimpleConfirmationFunction({0});
-      confirmation_functions["BatchMatMul"] = SimpleConfirmationFunction();
-      confirmation_functions["BiasAdd"] = SimpleConfirmationFunction();
-      confirmation_functions["BiasAddGrad"] = SimpleConfirmationFunction();
-      confirmation_functions["Cast"] = SimpleConfirmationFunction();
-      confirmation_functions["ConcatV2"] = SimpleConfirmationFunction({-1});
-      confirmation_functions["Const"] = SimpleConfirmationFunction();
-      confirmation_functions["Conv2D"] = SimpleConfirmationFunction();
-      confirmation_functions["Conv2DBackpropFilter"] =
-          SimpleConfirmationFunction({1});
-      confirmation_functions["Conv2DBackpropInput"] =
-          SimpleConfirmationFunction({0});
-      confirmation_functions["DepthwiseConv2dNative"] =
-          SimpleConfirmationFunction();
-      confirmation_functions["Equal"] = SimpleConfirmationFunction();
-      confirmation_functions["Exp"] = SimpleConfirmationFunction();
-      confirmation_functions["ExpandDims"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Fill"] = SimpleConfirmationFunction({0});
-      confirmation_functions["Floor"] = SimpleConfirmationFunction();
-      confirmation_functions["FloorDiv"] = SimpleConfirmationFunction();
-      confirmation_functions["FloorMod"] = SimpleConfirmationFunction();
-      confirmation_functions["FusedBatchNorm"] = SimpleConfirmationFunction();
-      confirmation_functions["FusedBatchNormGrad"] = [](Node* n, bool* result) {
-        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "is_training", result));
-        return Status::OK();
-      };
-      confirmation_functions["Greater"] = SimpleConfirmationFunction();
-      confirmation_functions["GreaterEqual"] = SimpleConfirmationFunction();
-      confirmation_functions["HorovodAllreduce"] = SimpleConfirmationFunction();
-      confirmation_functions["Identity"] = SimpleConfirmationFunction();
-      confirmation_functions["L2Loss"] = SimpleConfirmationFunction();
-      confirmation_functions["Less"] = SimpleConfirmationFunction();
-      confirmation_functions["LessEqual"] = SimpleConfirmationFunction();
-      confirmation_functions["Log"] = SimpleConfirmationFunction();
-      confirmation_functions["LogicalAnd"] = SimpleConfirmationFunction();
-      confirmation_functions["LogicalNot"] = SimpleConfirmationFunction();
-      confirmation_functions["LogicalOr"] = SimpleConfirmationFunction();
-      confirmation_functions["MatMul"] = SimpleConfirmationFunction();
-      confirmation_functions["Max"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Maximum"] = SimpleConfirmationFunction();
-      confirmation_functions["MaxPool"] = SimpleConfirmationFunction();
-      confirmation_functions["MaxPoolGrad"] = SimpleConfirmationFunction();
-      confirmation_functions["Mean"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Min"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Minimum"] = SimpleConfirmationFunction();
-      confirmation_functions["Mul"] = SimpleConfirmationFunction();
-      confirmation_functions["Neg"] = SimpleConfirmationFunction();
-      confirmation_functions["Pad"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Pow"] = SimpleConfirmationFunction();
-      confirmation_functions["PreventGradient"] = SimpleConfirmationFunction();
-      confirmation_functions["Prod"] = SimpleConfirmationFunction({1});
-      confirmation_functions["RealDiv"] = SimpleConfirmationFunction();
-      confirmation_functions["Reciprocal"] = SimpleConfirmationFunction();
-      confirmation_functions["Relu"] = SimpleConfirmationFunction();
-      confirmation_functions["Relu6"] = SimpleConfirmationFunction();
-      confirmation_functions["ReluGrad"] = SimpleConfirmationFunction();
-      confirmation_functions["Reshape"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Rsqrt"] = SimpleConfirmationFunction();
-      confirmation_functions["Shape"] = SimpleConfirmationFunction();
-      confirmation_functions["Sigmoid"] = SimpleConfirmationFunction();
-      confirmation_functions["SigmoidGrad"] = SimpleConfirmationFunction();
-      confirmation_functions["Sign"] = SimpleConfirmationFunction();
-      confirmation_functions["Size"] = SimpleConfirmationFunction();
-      confirmation_functions["Slice"] = SimpleConfirmationFunction({1, 2});
-      confirmation_functions["Snapshot"] = SimpleConfirmationFunction();
-      confirmation_functions["Softmax"] = SimpleConfirmationFunction();
-      confirmation_functions["SparseSoftmaxCrossEntropyWithLogits"] =
-          SimpleConfirmationFunction();
-      confirmation_functions["Split"] = SimpleConfirmationFunction({0});
-      confirmation_functions["SplitV"] = SimpleConfirmationFunction({1, 2});
-      confirmation_functions["Square"] = SimpleConfirmationFunction();
-      confirmation_functions["SquaredDifference"] =
-          SimpleConfirmationFunction();
-      confirmation_functions["Squeeze"] = SimpleConfirmationFunction();
-      confirmation_functions["StridedSlice"] = [](Node* n, bool* result) {
-        // Reject if "new_axis_mask" is set.
-        int tf_new_axis_mask;
-        TF_RETURN_IF_ERROR(
-            GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask));
-        if (tf_new_axis_mask != 0) {
-          *result = false;
-          return Status::OK();
-        }
-
-        return SimpleConfirmationFunction({1, 2, 3})(n, result);
-      };
-      confirmation_functions["Pack"] = SimpleConfirmationFunction();
-      confirmation_functions["Sub"] = SimpleConfirmationFunction();
-      confirmation_functions["Sum"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Tanh"] = SimpleConfirmationFunction();
-      confirmation_functions["TanhGrad"] = SimpleConfirmationFunction();
-      confirmation_functions["Tile"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Transpose"] = SimpleConfirmationFunction({1});
-      confirmation_functions["Unpack"] = SimpleConfirmationFunction();
-      confirmation_functions["ZerosLike"] = SimpleConfirmationFunction();
+      // Set Additional Attributes (if any)
+      set_attributes_map["Any"] = SetStaticInputs({1});
+      set_attributes_map["All"] = SetStaticInputs({1});
+      set_attributes_map["ArgMax"] = SetStaticInputs({1});
+      set_attributes_map["ArgMin"] = SetStaticInputs({1});
+      set_attributes_map["AvgPoolGrad"] = SetStaticInputs({0});
+      set_attributes_map["ConcatV2"] = SetStaticInputs({-1});
+      set_attributes_map["Conv2DBackpropFilter"] = SetStaticInputs({1});
+      set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
+      set_attributes_map["ExpandDims"] = SetStaticInputs({1});
+      set_attributes_map["Fill"] = SetStaticInputs({0});
+      set_attributes_map["Max"] = SetStaticInputs({1});
+      set_attributes_map["Mean"] = SetStaticInputs({1});
+      set_attributes_map["Min"] = SetStaticInputs({1});
+      set_attributes_map["Pad"] = SetStaticInputs({1});
+      set_attributes_map["Prod"] = SetStaticInputs({1});
+      set_attributes_map["Reshape"] = SetStaticInputs({1});
+      set_attributes_map["Slice"] = SetStaticInputs({1, 2});
+      set_attributes_map["Split"] = SetStaticInputs({0});
+      set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
+      set_attributes_map["StridedSlice"] = SetStaticInputs({1, 2, 3});
+      set_attributes_map["Sum"] = SetStaticInputs({1});
+      set_attributes_map["Tile"] = SetStaticInputs({1});
+      set_attributes_map["Transpose"] = SetStaticInputs({1});
 
       initialized = true;
     }
   }
 
-// If TF Version >= 1.11 do deadness analysis on the node
-#if (TF_VERSION_GEQ_1_11)
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
   std::unique_ptr<DeadnessAnalysis> deadness_analyzer;
   TF_RETURN_IF_ERROR(DeadnessAnalysis::Run(*graph, &deadness_analyzer));
 #endif
 
+  vector<Node*> nodes_marked_for_clustering;
   for (auto node : graph->op_nodes()) {
     bool mark_for_clustering = false;
 
@@ -439,7 +492,7 @@ Status MarkForClustering(Graph* graph) {
         break;
       }
 
-#if (TF_VERSION_GEQ_1_11)
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
       // check deadness
       bool deadness_ok = false;
       TF_RETURN_IF_ERROR(DeadnessOk(node, &deadness_analyzer, deadness_ok));
@@ -451,22 +504,22 @@ Status MarkForClustering(Graph* graph) {
       }
 #endif
 
+      // check node's confirmation constraints
+      bool confirmation_constraint_ok = false;
+      TF_RETURN_IF_ERROR(ConfirmationOk(node, confirmation_function_map,
+                                        confirmation_constraint_ok));
+      if (!confirmation_constraint_ok) {
+        NGRAPH_VLOG(5) << "Node does not meet confirmation constraints: "
+                       << node->name();
+        break;
+      }
+
       // check input type constraints
       bool type_constraint_ok = false;
       TF_RETURN_IF_ERROR(
           TypeConstraintOk(node, type_constraint_map, type_constraint_ok));
       if (!type_constraint_ok) {
         NGRAPH_VLOG(5) << "Inputs do not meet type constraints: "
-                       << node->name();
-        break;
-      }
-
-      // check node's confirmation constraints
-      bool confirmation_constraint_ok = false;
-      TF_RETURN_IF_ERROR(ConfirmationOk(node, confirmation_functions,
-                                        confirmation_constraint_ok));
-      if (!confirmation_constraint_ok) {
-        NGRAPH_VLOG(5) << "Node does not meet confirmation constraints: "
                        << node->name();
         break;
       }
@@ -480,11 +533,23 @@ Status MarkForClustering(Graph* graph) {
     if (mark_for_clustering) {
       NGRAPH_VLOG(4) << "Accepting: " << node->name() << "["
                      << node->type_string() << "]";
-      // TODO(amprocte): move attr name to a constant
-      node->AddAttr("_ngraph_marked_for_clustering", true);
+      nodes_marked_for_clustering.push_back(node);
     } else {
       NGRAPH_VLOG(4) << "Rejecting: " << node->name() << "["
                      << node->type_string() << "]";
+    }
+  }
+
+  // Set Attributes for nodes marked for clustering
+  // 1. Set Attribute "_ngraph_marked_for_clustering" as "true"
+  // 2. Set any other attributes as defined in set_attribute_map
+  for (auto node : nodes_marked_for_clustering) {
+    // TODO(amprocte): move attr name to a constant
+    node->AddAttr("_ngraph_marked_for_clustering", true);
+
+    auto it = set_attributes_map.find(node->type_string());
+    if (it != set_attributes_map.end()) {
+      TF_RETURN_IF_ERROR(it->second(node));
     }
   }
 

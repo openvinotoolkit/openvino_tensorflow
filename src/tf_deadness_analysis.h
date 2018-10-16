@@ -21,9 +21,9 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.h
 
 *******************************************************************************/
 
-#include "ngraph_version_utils.h"
+#include "ngraph_utils.h"
 
-#if (TF_VERSION_GEQ_1_11)
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 #ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #define NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #include "tensorflow/core/graph/graph.h"
@@ -77,4 +77,4 @@ class DeadnessAnalysis {
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
-#endif  // TF_VERSION_GEQ(1,11)
+#endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK

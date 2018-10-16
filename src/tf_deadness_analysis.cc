@@ -20,8 +20,8 @@ Revision: 6619dd5fdcad02f087f5758083e2585bdfef9e78
 File: tensorflow/tensorflow/compiler/jit/deadness_analysis.cc
 
 *******************************************************************************/
-#include "ngraph_version_utils.h"
-#if (TF_VERSION_GEQ_1_11)
+#include "ngraph_utils.h"
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/tensor_id.h"
@@ -479,4 +479,4 @@ DeadnessAnalysis::~DeadnessAnalysis() {}
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow
-#endif  // TF_VERSION_GEQ(1,11)
+#endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK
