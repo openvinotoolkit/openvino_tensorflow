@@ -39,6 +39,8 @@ Status RewriteForTracking(Graph* graph) {
 
       bool just_looking = true;
 
+      // If any of the nodes reading from this Variable node read the data as
+      // reference then we dont track it, else we do
       for (auto edge : node->out_edges()) {
         if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
             IsRefType(edge->dst()->input_type(edge->dst_input()))) {
@@ -82,6 +84,14 @@ Status RewriteForTracking(Graph* graph) {
                 .Finalize(graph, &replacement));
 
         replacement->set_assigned_device_name(node->assigned_device_name());
+
+        // Add edge from the input nodes (to the variable node (NGraphVariable))
+        // to the new replacement node (also of type NGraphVariable)
+        for (auto edge : node->in_edges()) {
+          NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
+          graph->AddEdge(edge->src(), edge->src_output(), replacement,
+                         edge->dst_input());
+        }
 
         std::vector<const Edge*> edges;
         for (auto edge : node->out_edges()) {
