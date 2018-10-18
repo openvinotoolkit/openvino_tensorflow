@@ -53,6 +53,31 @@ namespace testing {
 // Use only Tensors and ops::Const() to provide input to the test op
 // Please ensure the alphabetical order while adding the test functions
 
+// Test op: Dequantize
+// Dequantizes a tensor from i8 to float
+TEST(ArrayOps, Dequantizei8) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_QINT8, TensorShape({dim1, dim2}));
+  AssignInputValues<qint8>(A, {-5, -1, 0, 1, 5, 100});
+
+  auto attrs = ops::Dequantize::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::Dequantize R = ops::Dequantize(root, A, -6.0f, 128.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "Dequantize", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Dequantizei8
+
 // Test op: Fill
 TEST(ArrayOps, Fill) {
   std::vector<std::vector<int>> input_sizes;  // 1-D or higher
@@ -145,6 +170,89 @@ TEST(ArrayOps, PreventGradient) {
     opexecuter.RunTest();
   }
 }  // end of op PreventGradient
+
+// Test op: QuantizeV2
+// Quantizes a tensor from float to i8
+TEST(ArrayOps, QuantizeV2i8) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {0.9, 1.3, 2.6, 3.5, 4.2, 5.0});
+  auto quant_type = DT_QINT8;
+
+  auto attrs = ops::QuantizeV2::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeV2 R =
+      ops::QuantizeV2(root, A, -10.0f, 10.99f, quant_type, attrs);
+
+  vector<DataType> output_datatypes = {quant_type};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "QuantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op QuantizeV2i8
+// TODO: add tests for u8
+// TODO: add tests for other modes (MIN_COMBINED, MIN_FIRST)
+
+// Test op: QuantizeAndDequantizeV2
+// Quantizes and dequantize a tensor
+TEST(ArrayOps, QuantizeAndDequantizeV2x8xtruextrue) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {0.9, 1.3, 2.6, 3.5, 4.2, 5.0});
+
+  auto attrs = ops::QuantizeAndDequantizeV2::Attrs();
+  attrs.num_bits_ = 8;
+  attrs.range_given_ = true;
+  attrs.signed_input_ = true;
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeAndDequantizeV2 R =
+      ops::QuantizeAndDequantizeV2(root, A, -10.0f, 10.99f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "QuantizeAndDequantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op QuantizeAndDequantizeV2x8xtruextrue
+
+TEST(ArrayOps, QuantizeAndDequantizeV2x8xtruexfalse) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {0.9, 1.3, 2.6, 3.5, 4.2, 5.0});
+
+  auto attrs = ops::QuantizeAndDequantizeV2::Attrs();
+  attrs.num_bits_ = 8;
+  attrs.range_given_ = true;
+  attrs.signed_input_ = false;
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeAndDequantizeV2 R =
+      ops::QuantizeAndDequantizeV2(root, A, -10.0f, 10.99f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "QuantizeAndDequantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op QuantizeAndDequantizeV2x8xtruexfalse
 
 // Test op: Shape, outputs the shape of a tensor
 TEST(ArrayOps, Shape2D) {

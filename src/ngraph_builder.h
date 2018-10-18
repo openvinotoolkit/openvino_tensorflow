@@ -96,6 +96,11 @@ class Builder {
   TF_NGRAPH_CONST_MAP();
 
  private:
+  static void ComputeScaleOffsetFolded(const uint& num_bits,
+                                       const bool& unsigned_type,
+                                       const bool& scaled, const int min_range,
+                                       const int max_range, float* scale,
+                                       int* offset);
 };
 
 }  // namespace ngraph_bridge

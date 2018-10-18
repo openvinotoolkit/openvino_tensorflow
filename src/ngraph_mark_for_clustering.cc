@@ -254,6 +254,7 @@ Status MarkForClustering(Graph* graph) {
           SimpleConfirmationFunction();
       confirmation_function_map["DepthwiseConv2dNative"] =
           SimpleConfirmationFunction();
+      confirmation_function_map["Dequantize"] = SimpleConfirmationFunction();
       confirmation_function_map["Equal"] = SimpleConfirmationFunction();
       confirmation_function_map["Exp"] = SimpleConfirmationFunction();
       confirmation_function_map["ExpandDims"] = SimpleConfirmationFunction();
@@ -295,6 +296,23 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["PreventGradient"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Prod"] = SimpleConfirmationFunction();
+      confirmation_function_map["QuantizeAndDequantizeV2"] = [](Node* n,
+                                                                bool* result) {
+        // accept only when num_bits == 8 and range is given
+        bool range_given;
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(n->attrs(), "range_given", &range_given));
+        int num_bits;
+        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "num_bits", &num_bits));
+        *result = (num_bits == 8) && range_given;
+        return Status::OK();
+      };
+      confirmation_function_map["QuantizeV2"] = [](Node* n, bool* result) {
+        string mode;
+        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "mode", &mode));
+        *result = (mode.compare("SCALED") == 0);
+        return Status::OK();
+      };
       confirmation_function_map["RealDiv"] = SimpleConfirmationFunction();
       confirmation_function_map["Reciprocal"] = SimpleConfirmationFunction();
       confirmation_function_map["Relu"] = SimpleConfirmationFunction();
@@ -365,6 +383,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Conv2D"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Conv2DBackpropInput"]["T"] = NGraphNumericDTypes();
       type_constraint_map["DepthwiseConv2dNative"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["Dequantize"]["T"] = NGraphSupportedQuantizedDTypes();
       type_constraint_map["Equal"]["T"] = NGraphDTypes();
       type_constraint_map["Exp"]["T"] = NGraphNumericDTypes();
       type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
@@ -403,6 +422,8 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["PreventGradient"]["T"] = NGraphDTypes();
       type_constraint_map["Prod"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Prod"]["Tidx"] = NGraphIndexDTypes();
+      type_constraint_map["QuantizeAndDequantizeV2"]["T"] = NGraphRealDTypes();
+      type_constraint_map["QuantizeV2"]["T"] = NGraphSupportedQuantizedDTypes();
       type_constraint_map["RealDiv"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Relu"]["T"] = NGraphNumericDTypes();
@@ -454,6 +475,7 @@ Status MarkForClustering(Graph* graph) {
       set_attributes_map["ConcatV2"] = SetStaticInputs({-1});
       set_attributes_map["Conv2DBackpropFilter"] = SetStaticInputs({1});
       set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
+      set_attributes_map["Dequantize"] = SetStaticInputs({1, 2});
       set_attributes_map["ExpandDims"] = SetStaticInputs({1});
       set_attributes_map["Fill"] = SetStaticInputs({0});
       set_attributes_map["Max"] = SetStaticInputs({1});
@@ -461,6 +483,8 @@ Status MarkForClustering(Graph* graph) {
       set_attributes_map["Min"] = SetStaticInputs({1});
       set_attributes_map["Pad"] = SetStaticInputs({1});
       set_attributes_map["Prod"] = SetStaticInputs({1});
+      set_attributes_map["QuantizeAndDequantizeV2"] = SetStaticInputs({1, 2});
+      set_attributes_map["QuantizeV2"] = SetStaticInputs({1, 2});
       set_attributes_map["Reshape"] = SetStaticInputs({1});
       set_attributes_map["Slice"] = SetStaticInputs({1, 2});
       set_attributes_map["Split"] = SetStaticInputs({0});

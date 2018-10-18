@@ -114,6 +114,12 @@ void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2) {
       case DT_BOOL:
         Compare<bool>(v1[i], v2[i]);
         break;
+      case DT_QINT8:
+        Compare<qint8>(v1[i], v2[i]);
+        break;
+      case DT_QUINT8:
+        Compare<quint8>(v1[i], v2[i]);
+        break;
       default:
         ASSERT_TRUE(false)
             << "Could not find the corresponding function for the "
