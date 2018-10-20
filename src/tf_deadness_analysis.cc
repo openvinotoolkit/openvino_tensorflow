@@ -346,7 +346,7 @@ std::vector<Predicate*> DeadnessAnalysisImpl::GetIncomingPreds(
         (!in_edge->IsControlEdge() && edge_kind == EdgeKind::kDataOnly);
     if (should_process) {
       auto it = predicate_map_.find(InputEdgeToTensorId(in_edge));
-      if (it != predicate_map_.end()) {
+      if (it == predicate_map_.end()) {
         NGRAPH_VLOG(5) << "Cannot find predicate for Edge ";
         NGRAPH_VLOG(5) << "Src " << in_edge->src()->name() << "["
                        << in_edge->src()->type_string() << "]"
@@ -452,7 +452,7 @@ bool DeadnessAnalysisImpl::HasInputsWithMismatchingDeadness(const Node& node) {
   Predicate* pred = nullptr;
   for (const Edge* edge : node.in_edges()) {
     auto it = predicate_map_.find(InputEdgeToTensorId(edge));
-    if (it != predicate_map_.end()) {
+    if (it == predicate_map_.end()) {
       NGRAPH_VLOG(5) << "Cannot find predicate for Edge ";
       NGRAPH_VLOG(5) << "Src " << edge->src()->name() << "["
                      << edge->src()->type_string() << "]"

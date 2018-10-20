@@ -90,10 +90,16 @@ Status CaptureVariables(Graph* graph) {
 
         // Add edge from the input nodes (to the variable node (VariableV2))
         // to the replacement node (NGraphVariable)
+        NGRAPH_VLOG(4) << "Replacing Node " << node->DebugString() << " with "
+                       << replacement->DebugString();
+
+        // Though edges will be removed when we remove the node
+        // we specifically remove the edges to be sure
         for (auto edge : node->in_edges()) {
           NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
           graph->AddEdge(edge->src(), edge->src_output(), replacement,
                          edge->dst_input());
+          graph->RemoveEdge(edge);
         }
 
         for (auto edge : node->out_edges()) {
@@ -102,8 +108,9 @@ Status CaptureVariables(Graph* graph) {
 
         for (auto edge : edges) {
           NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-          graph->UpdateEdge(replacement, edge->src_output(), edge->dst(),
-                            edge->dst_input());
+          graph->AddEdge(replacement, edge->src_output(), edge->dst(),
+                         edge->dst_input());
+          graph->RemoveEdge(edge);
         }
 
         replaced_nodes.push_back(node);
