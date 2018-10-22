@@ -30,6 +30,7 @@ FROM ubuntu:16.04
 # clang-format-3.9 is needed for code-style checks
 # python3-pil is needed to run the inception-resnet-v2 model
 # python3-tk is used by matplotlib (pip installed below)
+# libsdl1.2-dev is needed to run the A3C model
 RUN apt-get update &&  apt-get install -y \
     python3-pip virtualenv \
     python3-numpy python3-dev python3-wheel \
@@ -43,7 +44,8 @@ RUN apt-get update &&  apt-get install -y \
     locate curl \
     clang-format-3.9 \
     python3-pil \
-    python3-tk
+    python3-tk \
+    libsdl1.2-dev
 
 # The "locate" command uses a prepopulated index.  If this index is not built,
 # then "locate" will find absolutely nothing.  In Tensorflow's configure,
