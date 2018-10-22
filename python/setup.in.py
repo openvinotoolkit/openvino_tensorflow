@@ -33,10 +33,10 @@ ext = 'dylib' if system() == 'Darwin' else 'so'
 
 setup( 
     name='ngraph',
-    version='0.6.1',
+    version='0.7.0',
     description='Intel nGraph compiler and runtime',
     packages=['ngraph'], 
-    author='Intel-Nervana AIPG', 
+    author='Intel Nervana', 
     include_package_data=True,
     package_data={
         'ngraph': [@ngraph_libraries@],

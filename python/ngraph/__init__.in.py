@@ -141,4 +141,4 @@ def stop_logging_placement():
 def is_logging_placement():
   return ngraph.ngraph_is_logging_placement()
 
-__version__ = '0.6.1'
+__version__ = '0.7.0'

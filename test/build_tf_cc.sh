@@ -33,6 +33,9 @@ export USE_DEFAULT_PYTHON_LIB_PATH=1
 
 export TF_NEED_NGRAPH=0
 
+export TF_NEED_IGNITE=0
+export TF_NEED_ROCM=0
+
 export TF_NEED_JEMALLOC=1
 export TF_NEED_AWS=0
 export TF_NEED_GCP=0
@@ -54,7 +57,7 @@ pushd "${TF_ROOT}"
 ./configure
 
 # Build the TensorFlow C++ Library 
-bazel build --config=opt ${COPT} //tensorflow:libtensorflow_cc.so
+bazel build --config=opt ${COPT} --config=mkl //tensorflow:libtensorflow_cc.so
 
 popd
 
