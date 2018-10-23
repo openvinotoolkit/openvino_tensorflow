@@ -144,6 +144,13 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
       DumpGraphs(options, idx, "precapture", "Pre-Capture Graph");
     }
 
+    // If NGRAPH_TF_DISABLE is set we will not do anything; all subsequent
+    // passes become a no-op.
+    //
+    if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+      return Status::OK();
+    }
+
     // Do variable capture then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(CaptureVariables(options.graph->get()));
     if (DumpCapturedGraphs()) {
@@ -201,6 +208,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     if (DumpUnmarkedGraphs()) {
       DumpGraphs(options, idx, "unmarked", "Unmarked Graph");
+    }
+
+    // If NGRAPH_TF_DISABLE is set we will not do anything; all subsequent
+    // passes become a no-op.
+    //
+    if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+      return Status::OK();
     }
 
     // 1. Mark for clustering then, if requested, dump the graphs.

@@ -43,13 +43,6 @@ Status CaptureVariables(Graph* graph) {
     return Status::OK();
   }
 
-  //
-  // If NGRAPH_TF_DISABLE is set we will not capture anything.
-  //
-  if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
-    return Status::OK();
-  }
-
   std::vector<Node*> replaced_nodes;
 
   for (auto node : graph->op_nodes()) {

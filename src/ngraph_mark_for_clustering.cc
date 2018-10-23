@@ -150,14 +150,6 @@ Status MarkForClustering(Graph* graph) {
   }
 
   //
-  // If NGRAPH_TF_DISABLE is set we will not mark anything; all subsequent
-  // passes become a no-op.
-  //
-  if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
-    return Status::OK();
-  }
-
-  //
   // A map of op types (e.g. "Add") to type constraint maps. For (fake)
   // example:
   //
