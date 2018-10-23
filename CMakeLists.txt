@@ -68,6 +68,15 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+execute_process(COMMAND cat /etc/os-release 
+    OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+string(REGEX MATCH "ID=\"([a-z])+\"" OS_VERSION "${LSB_RELEASE_ID_SHORT}")
+string(REGEX MATCH "\"([a-z])+\"" OS_VERSION "${OS_VERSION}")
+message("OS version is ${OS_VERSION}")
+
 # Default to four jobs if the command fails.
 if(NPROC_RESULT)
     message (WARNING "Unable to detect number of processors. Building nGraph with make -j4.")
@@ -148,12 +157,20 @@ ExternalProject_Add(
 set( NGRAPH_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 
 
+
+if(OS_VERSION STREQUAL "\"centos\"")
+	set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/lib64/${LIBNGRAPH_SO})
+else()
+	set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/lib/${LIBNGRAPH_SO})
+endif()
+
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties( 
     ngraph_lib 
     PROPERTIES IMPORTED_LOCATION 
-    ${NGRAPH_INSTALL_DIR}/lib/${LIBNGRAPH_SO}
+    ${NGRAPH_IMPORTED_LOCATION}
 )
+
 add_dependencies(ngraph_lib ext_ngraph)
 
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
