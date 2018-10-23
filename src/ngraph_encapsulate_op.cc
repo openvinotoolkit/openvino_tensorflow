@@ -517,6 +517,9 @@ class NGraphEncapsulateOp : public OpKernel {
 
  private:
   Graph m_graph;
+  static std::weak_ptr<ng::runtime::Backend> s_ng_backend_wptr;
+  std::shared_ptr<ng::runtime::Backend> m_ng_backend
+      GUARDED_BY(s_ng_backend_mutex);
   std::unordered_map<std::string, std::shared_ptr<ngraph::Function>>
       m_ng_functions;
   NgFunctionIOCache m_ng_function_input_cache_map;
@@ -525,9 +528,6 @@ class NGraphEncapsulateOp : public OpKernel {
   int m_ngraph_cluster;
   std::vector<bool> m_input_is_static;
 
-  static std::weak_ptr<ng::runtime::Backend> s_ng_backend_wptr;
-  std::shared_ptr<ng::runtime::Backend> m_ng_backend
-      GUARDED_BY(s_ng_backend_mutex);
   static std::string s_ng_backend_name;
   static mutex s_ng_backend_mutex;
 };
