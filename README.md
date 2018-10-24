@@ -38,12 +38,12 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
         pip install -U tensorflow
 
-3. Checkout `v0.7.0` from the `ngraph-tf` repo and build the bridge
+3. Checkout `v0.7.0-rc0` from the `ngraph-tf` repo and build the bridge
    as follows: 
    
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.7.0
+        git checkout v0.7.0-rc0
         mkdir build
         cd build
         cmake ..
