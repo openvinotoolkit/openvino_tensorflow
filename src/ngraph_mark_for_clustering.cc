@@ -101,7 +101,6 @@ static Status ConfirmationOk(
     std::map<std::string, ConfirmationFunction>& confirmation_function_map,
     bool& confirmation_ok) {
   auto it = confirmation_function_map.find(node->type_string());
-
   if (it != confirmation_function_map.end()) {
     TF_RETURN_IF_ERROR(it->second(node, &confirmation_ok));
   }
@@ -246,6 +245,7 @@ Status MarkForClustering(Graph* graph) {
           SimpleConfirmationFunction();
       confirmation_function_map["DepthwiseConv2dNative"] =
           SimpleConfirmationFunction();
+      confirmation_function_map["DepthToSpace"] = SimpleConfirmationFunction();
       confirmation_function_map["Dequantize"] = SimpleConfirmationFunction();
       confirmation_function_map["Equal"] = SimpleConfirmationFunction();
       confirmation_function_map["Exp"] = SimpleConfirmationFunction();
@@ -320,6 +320,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["Slice"] = SimpleConfirmationFunction();
       confirmation_function_map["Snapshot"] = SimpleConfirmationFunction();
       confirmation_function_map["Softmax"] = SimpleConfirmationFunction();
+      confirmation_function_map["SpaceToDepth"] = SimpleConfirmationFunction();
       confirmation_function_map["SparseSoftmaxCrossEntropyWithLogits"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Split"] = SimpleConfirmationFunction();
@@ -374,6 +375,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Const"]["dtype"] = NGraphDTypes();
       type_constraint_map["Conv2D"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Conv2DBackpropInput"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["DepthToSpace"]["T"] = NGraphDTypes();
       type_constraint_map["DepthwiseConv2dNative"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Dequantize"]["T"] = NGraphSupportedQuantizedDTypes();
       type_constraint_map["Equal"]["T"] = NGraphDTypes();
@@ -435,6 +437,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
       type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
       type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["SpaceToDepth"]["T"] = NGraphDTypes();
       type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
           NGraphNumericDTypes();
       type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =

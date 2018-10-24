@@ -70,6 +70,11 @@ void PrintTensor(const Tensor& T1) {
   LOG(INFO) << "print tensor values" << T1.DebugString();
 }
 
+// Only displays values in tensor without shape information etc.
+void PrintTensorAllValues(const Tensor& T1, int64 max_entries) {
+  LOG(INFO) << "all tensor values" << T1.SummarizeValue(max_entries) << endl;
+}
+
 // Compares Tensors considering tolerance
 void Compare(Tensor& T1, Tensor& T2, float tol) {
   ASSERT_EQ(T1.dtype(), T2.dtype());

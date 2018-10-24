@@ -53,6 +53,87 @@ namespace testing {
 // Use only Tensors and ops::Const() to provide input to the test op
 // Please ensure the alphabetical order while adding the test functions
 
+// Test DepthToSpace with NHWC data format
+TEST(ArrayOps, DepthToSpaceNHWC) {
+  std::map<std::vector<int64>, int> input_map;
+  input_map.insert(pair<std::vector<int64>, int>({1, 1, 1, 4}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 1, 1, 12}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 1, 1, 27}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({1, 1, 1, 500}, 10));
+  input_map.insert(pair<std::vector<int64>, int>({1, 4, 2, 75}, 5));
+  input_map.insert(pair<std::vector<int64>, int>({2, 1, 2, 27}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({10, 5, 5, 40}, 2));
+
+  vector<int> static_input_indexes = {};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  map<std::vector<int64>, int>::iterator iter;
+  for (iter = input_map.begin(); iter != input_map.end(); iter++) {
+    std::vector<int64> shape = iter->first;
+    int block_size = iter->second;
+
+    Scope root = Scope::NewRootScope();
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+
+    auto R = ops::DepthToSpace(root, input_data, block_size);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "DepthToSpace", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+    opexecuter.RunTest();
+  }
+}  // end of op DepthToSpaceNHWC
+
+// Test DepthToSpace with NCHW data format
+TEST(ArrayOps, DepthToSpaceNCHW) {
+  std::map<std::vector<int64>, int> input_map;
+  input_map.insert(pair<std::vector<int64>, int>({1, 4, 1, 1}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 250, 1, 1}, 5));
+  input_map.insert(pair<std::vector<int64>, int>({1, 180, 1, 1}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({2, 27, 2, 1}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({10, 40, 5, 5}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({2, 9, 5, 1}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({30, 3000, 3, 3}, 10));
+
+  vector<int> static_input_indexes = {};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  ops::DepthToSpace::Attrs attrs;
+  attrs.data_format_ = "NCHW";
+
+  map<std::vector<int64>, int>::iterator iter;
+  for (iter = input_map.begin(); iter != input_map.end(); iter++) {
+    std::vector<int64> shape = iter->first;
+    int block_size = iter->second;
+
+    Scope root = Scope::NewRootScope();
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+
+    auto R = ops::DepthToSpace(root, input_data, block_size, attrs);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "DepthToSpace", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    vector<Tensor> ngraph_outputs;
+    opexecuter.ExecuteOnNGraph(ngraph_outputs);
+
+    // On CPU, the op only supports NHWC data format
+    Scope tf_scope = Scope::NewRootScope();
+    auto input_data_NHWC = ops::Transpose(tf_scope, input_data, {0, 2, 3, 1});
+    auto r_tf = ops::DepthToSpace(tf_scope, input_data_NHWC, block_size);
+    auto r_tf_NCHW = ops::Transpose(tf_scope, r_tf, {0, 3, 1, 2});
+    vector<Output> sess_run_fetchoutputs_tf = {r_tf_NCHW};
+    OpExecuter opexecuter_tf(tf_scope, "DepthToSpace", static_input_indexes,
+                             output_datatypes, sess_run_fetchoutputs_tf);
+
+    vector<Tensor> tf_outputs;
+    opexecuter_tf.ExecuteOnTF(tf_outputs);
+
+    // Compare NGraph and TF Outputs
+    Compare(tf_outputs, ngraph_outputs);
+  }
+}  // end of op DepthToSpaceNCHW
+
 // Test op: Dequantize
 // Dequantizes a tensor from i8 to float
 TEST(ArrayOps, Dequantizei8) {
@@ -364,6 +445,119 @@ TEST(ArrayOps, SizeOpDefault) {
     opexecuter.RunTest();
   }
 }  // end of op SizeDefault
+
+// Test slice op
+TEST(ArrayOps, Slice) {
+  std::vector<std::vector<int64>> input_shapes;
+  input_shapes.push_back({1, 2, 4, 1});
+
+  std::vector<int64> begin = {0, 0, 2, 0};
+  std::vector<int64> size = {-1, -1, 2, -1};
+
+  vector<int> static_input_indexes = {1, 2};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  for (auto const& shape : input_shapes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+    Tensor begin_tensor(DT_INT64, TensorShape({4}));
+    AssignInputValues(begin_tensor, begin);
+    Tensor size_tensor(DT_INT64, TensorShape({4}));
+    AssignInputValues(size_tensor, size);
+
+    auto R = ops::Slice(root, input_data, begin_tensor, size_tensor);
+
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "Slice", static_input_indexes, output_datatypes,
+                          sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}  // end of op Slice
+
+// Test SpaceToDepth with NHWC data format
+TEST(ArrayOps, SpaceToDepthNHWC) {
+  std::map<std::vector<int64>, int> input_map;
+  input_map.insert(pair<std::vector<int64>, int>({1, 2, 2, 1}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 2, 2, 3}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 3, 3, 3}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({1, 10, 10, 5}, 10));
+  input_map.insert(pair<std::vector<int64>, int>({1, 6, 4, 1}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 20, 10, 3}, 5));
+  input_map.insert(pair<std::vector<int64>, int>({2, 3, 6, 3}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({10, 10, 10, 10}, 2));
+
+  vector<int> static_input_indexes = {};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  map<std::vector<int64>, int>::iterator iter;
+  for (iter = input_map.begin(); iter != input_map.end(); iter++) {
+    std::vector<int64> shape = iter->first;
+    int block_size = iter->second;
+
+    Scope root = Scope::NewRootScope();
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+
+    auto R = ops::SpaceToDepth(root, input_data, block_size);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "SpaceToDepth", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+    opexecuter.RunTest();
+  }
+}  // end of op SpaceToDepthNHWC
+
+// Test SpaceToDepth with NCHW data format
+TEST(ArrayOps, SpaceToDepthNCHW) {
+  std::map<std::vector<int64>, int> input_map;
+  input_map.insert(pair<std::vector<int64>, int>({1, 1, 2, 2}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({1, 10, 5, 5}, 5));
+  input_map.insert(pair<std::vector<int64>, int>({1, 20, 3, 3}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({2, 3, 6, 3}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({10, 10, 10, 10}, 2));
+  input_map.insert(pair<std::vector<int64>, int>({2, 1, 15, 3}, 3));
+  input_map.insert(pair<std::vector<int64>, int>({30, 30, 30, 30}, 10));
+
+  vector<int> static_input_indexes = {};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  ops::SpaceToDepth::Attrs attrs;
+  attrs.data_format_ = "NCHW";
+
+  map<std::vector<int64>, int>::iterator iter;
+  for (iter = input_map.begin(); iter != input_map.end(); iter++) {
+    std::vector<int64> shape = iter->first;
+    int block_size = iter->second;
+
+    Scope root = Scope::NewRootScope();
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+
+    auto R = ops::SpaceToDepth(root, input_data, block_size, attrs);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "SpaceToDepth", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    vector<Tensor> ngraph_outputs;
+    opexecuter.ExecuteOnNGraph(ngraph_outputs);
+
+    // On CPU, the op only supports NHWC data format
+    Scope tf_scope = Scope::NewRootScope();
+    auto input_data_NHWC = ops::Transpose(tf_scope, input_data, {0, 2, 3, 1});
+    auto r_tf = ops::SpaceToDepth(tf_scope, input_data_NHWC, block_size);
+    auto r_tf_NCHW = ops::Transpose(tf_scope, r_tf, {0, 3, 1, 2});
+    vector<Output> sess_run_fetchoutputs_tf = {r_tf_NCHW};
+    OpExecuter opexecuter_tf(tf_scope, "SpaceToDepth", static_input_indexes,
+                             output_datatypes, sess_run_fetchoutputs_tf);
+
+    vector<Tensor> tf_outputs;
+    opexecuter_tf.ExecuteOnTF(tf_outputs);
+
+    // Compare NGraph and TF Outputs
+    Compare(tf_outputs, ngraph_outputs);
+  }
+}  // end of op SpaceToDepthNCHW
 
 // Test op: Tile, constructs a tensor by tiling a given tensor
 TEST(ArrayOps, Tile) {

@@ -1354,6 +1354,160 @@ static Status TranslateConv2DBackpropInputOp(
   return Status::OK();
 }
 
+// Translate DepthToSpace op
+static Status TranslateDepthToSpaceOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  // Get the attributes
+  int64 block_size;
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "block_size", &block_size));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  std::map<std::string, int> format_to_int_map = {
+      {"NHWC", 0}, {"NCHW", 1}, {"NCHW_VECT_C", 1}};
+
+  int channel_dimension;
+  int num_spatial_dimensions = 2;  // H, W are spatial dimensions
+
+  switch (format_to_int_map[tf_data_format]) {
+    // NHWC
+    case 0:
+      channel_dimension = 3;
+      break;
+    // NCHW or NCHW_VEC_C
+    case 1:
+      channel_dimension = 1;
+      break;
+    default:
+      return errors::InvalidArgument(
+          "DepthToSpace supported data format is NCHW, NHWC, or NCHW_VECT_C");
+  }
+
+  // Error checking : depth must be divisible by square of the block_size
+  if (input_shape[channel_dimension] % (block_size * block_size) != 0) {
+    return errors::InvalidArgument(
+        "Input tensor's channel dimension ,", input_shape[channel_dimension],
+        " is not divisible by square of the block_size ", block_size);
+  }
+
+  ng::AxisVector ng_reshape_shape;
+  ng::AxisVector ng_transpose_shape;
+  ng::AxisVector ng_output_shape;
+
+  switch (format_to_int_map[tf_data_format]) {
+    // NHWC
+    case 0: {
+      // ng_reshape_shape = [batch_size,
+      //                     height,
+      //                     width,
+      //                     block_size,
+      //                     block_size,
+      //                     channel / (block_size * block_size)]
+      ng_reshape_shape.push_back(input_shape[0]);
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_reshape_shape.push_back(input_shape[i + 1]);
+      }
+
+      int64 num_blocks = 1;
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_reshape_shape.push_back(block_size);
+        num_blocks *= block_size;
+      }
+      ng_reshape_shape.push_back(input_shape[channel_dimension] / num_blocks);
+
+      // ng_transpose_shape = [batch_size,
+      //                       height,
+      //                       block_size,
+      //                       width,
+      //                       block_size,
+      //                       channel / (block_size * block_size)]
+      ng_transpose_shape.push_back(0);
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_transpose_shape.push_back(i + 1);
+        ng_transpose_shape.push_back(i + 1 + num_spatial_dimensions);
+      }
+      ng_transpose_shape.push_back(channel_dimension + num_spatial_dimensions);
+
+      // ng_output_shape = [batch_size,
+      //                    height * block_size,
+      //                    width * block_size,
+      //                    channel / (block_size * block_size)]
+      ng_output_shape.push_back(input_shape[0]);
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_output_shape.push_back(input_shape[i + 1] * block_size);
+      }
+      ng_output_shape.push_back(input_shape[channel_dimension] / num_blocks);
+      break;
+    }  // end of case NHWC
+
+    // NCHW
+    case 1: {
+      // ng_reshape_shape = [batch_size,
+      //                     block_size,
+      //                     block_size,
+      //                     channel / (block_size * block_size),
+      //                     height,
+      //                     width]
+      int64 num_blocks = 1;
+      ng_reshape_shape.push_back(input_shape[0]);  // N dimension
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_reshape_shape.push_back(block_size);
+        num_blocks *= block_size;
+      }
+      ng_reshape_shape.push_back(input_shape[channel_dimension] / num_blocks);
+
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_reshape_shape.push_back(input_shape[i + 2]);
+      }
+
+      // ng_transpose_shape = [batch_size,
+      //                       channel / (block_size * block_size)
+      //                       height,
+      //                       block_size,
+      //                       width,
+      //                       block_size]
+      ng_transpose_shape.push_back(0);
+      ng_transpose_shape.push_back(1 + num_spatial_dimensions);
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_transpose_shape.push_back(i + 2 + num_spatial_dimensions);
+        ng_transpose_shape.push_back(i + 1);
+      }
+
+      // ng_output_shape = [batch_size,
+      //                    channel / (block_size * block_size)
+      //                    height * block_size,
+      //                    width * block_size]
+      ng_output_shape.push_back(input_shape[0]);
+      ng_output_shape.push_back(input_shape[channel_dimension] / num_blocks);
+      for (int i = 0; i < num_spatial_dimensions; i++) {
+        ng_output_shape.push_back(input_shape[i + 2] * block_size);
+      }
+      break;
+    }  // end of case NCHW
+  }
+
+  ng::AxisVector ng_axis_order(input_shape.size());
+  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
+  auto reshaped =
+      make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_reshape_shape);
+
+  auto transposed = ng::builder::numpy_transpose(reshaped, ng_transpose_shape);
+
+  ng::AxisVector ng_axis_order_second_reshape(transposed->get_shape().size());
+  std::iota(ng_axis_order_second_reshape.begin(),
+            ng_axis_order_second_reshape.end(), 0);
+  auto final_reshape = make_shared<ng::op::Reshape>(
+      transposed, ng_axis_order_second_reshape, ng_output_shape);
+  SaveNgOp(ng_op_map, op->name(), final_reshape);
+
+  return Status::OK();
+}
+
 static Status TranslateDepthwiseConv2dNativeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2839,6 +2993,84 @@ static Status TranslateSoftmaxOp(
   return Status::OK();
 }
 
+// Translate SpaceToDepthOp
+static Status TranslateSpaceToDepthOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  // Get the attributes
+  int64 block_size;
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "block_size", &block_size));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  ng::Shape input_shape = ng_input->get_shape();
+  std::map<std::string, int> format_to_int_map = {
+      {"NHWC", 0}, {"NCHW", 1}, {"NCHW_VECT_C", 1}};
+
+  int height_index;
+  int width_index;
+  int channel_index;
+
+  switch (format_to_int_map[tf_data_format]) {
+    // NHWC
+    case 0:
+      height_index = 1;
+      width_index = 2;
+      channel_index = 3;
+      break;
+    // NCHW or NCHW_VEC_C
+    case 1:
+      height_index = 2;
+      width_index = 3;
+      channel_index = 1;
+      break;
+    default:
+      return errors::InvalidArgument(
+          "SpaceToDepth supported data format is NCHW, NHWC, or NCHW_VECT_C");
+  }
+
+  // Error checking: width and height must be divisible by block_size
+  if (input_shape[height_index] % block_size != 0) {
+    return errors::InvalidArgument(
+        "Input tensor's height ,", input_shape[height_index],
+        " is not divisible by block_size ", block_size);
+  }
+
+  if (input_shape[width_index] % block_size != 0) {
+    return errors::InvalidArgument(
+        "Input tensor's width ,", input_shape[width_index],
+        " is not divisible by block_size ", block_size);
+  }
+
+  // Upper indexes will be the same for all strided slices
+  std::vector<size_t> upper = {input_shape[0], input_shape[1], input_shape[2],
+                               input_shape[3]};
+  // Store the strided_slice result for concat
+  std::vector<std::shared_ptr<ng::Node>> strided_slice_result;
+
+  for (size_t counter_height = 0; counter_height < block_size;
+       counter_height++) {
+    for (size_t counter_width = 0; counter_width < block_size;
+         counter_width++) {
+      std::vector<size_t> begin = {0, 0, 0, 0};
+      begin[width_index] = counter_width;
+      begin[height_index] = counter_height;
+      std::vector<size_t> strides = {1, 1, 1, 1};
+      strides[width_index] = size_t(block_size);
+      strides[height_index] = size_t(block_size);
+      strided_slice_result.push_back(
+          make_shared<ng::op::Slice>(ng_input, begin, upper, strides));
+    }
+  }
+
+  SaveNgOp(ng_op_map, op->name(), make_shared<ngraph::op::Concat>(
+                                      strided_slice_result, channel_index));
+  return Status::OK();
+}
+
 static Status TranslateSparseSoftmaxCrossEntropyWithLogitsOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3437,6 +3669,7 @@ const static std::map<
         {"Conv2D", TranslateConv2DOp},
         {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
         {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
+        {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
         {"Dequantize", TranslateDequantizeOp},
         {"Equal", TranslateBinaryOp<ngraph::op::Equal>},
@@ -3496,6 +3729,7 @@ const static std::map<
         {"Slice", TranslateSliceOp},
         {"Snapshot", TranslateSnapshotOp},
         {"Softmax", TranslateSoftmaxOp},
+        {"SpaceToDepth", TranslateSpaceToDepthOp},
         {"SparseSoftmaxCrossEntropyWithLogits",
          TranslateSparseSoftmaxCrossEntropyWithLogitsOp},
         {"Split", TranslateSplitOp},

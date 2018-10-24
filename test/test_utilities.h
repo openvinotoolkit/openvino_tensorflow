@@ -38,6 +38,9 @@ void DeactivateNGraph();
 
 // Print Functions
 void PrintTensor(const Tensor& T1);
+void PrintTensorAllValues(
+    const Tensor& T1,
+    int64 max_entries);  // print max_entries of elements in the Tensor
 
 // Assignment Functions
 // TODO : Retire AssignInputValuesAnchor and AssignInputValuesRandom
