@@ -40,6 +40,11 @@ def calculate_output(param_dict, select_device, input_example):
 
     with tf.Graph().as_default() as graph:
         tf.import_graph_def(graph_def)
+        if len(output_tensor_name) == 0:
+            # if no outputs are specified, then compare for all tensors
+            output_tensor_name = sum(
+                [[j.name for j in i.outputs] for i in graph.get_operations()],
+                [])
 
     # Create the tensor to its corresponding example map
     tensor_to_example_map = {}
@@ -48,7 +53,7 @@ def calculate_output(param_dict, select_device, input_example):
         tensor_to_example_map[t] = input_example[item]
 
     #input_placeholder = graph.get_tensor_by_name(input_tensor_name)
-    output_tensor = graph.get_tensor_by_name(output_tensor_name)
+    output_tensor = [graph.get_tensor_by_name(i) for i in output_tensor_name]
 
     config = tf.ConfigProto(
         allow_soft_placement=True,
@@ -57,7 +62,7 @@ def calculate_output(param_dict, select_device, input_example):
 
     with tf.Session(graph=graph, config=config) as sess:
         output_tensor = sess.run(output_tensor, feed_dict=tensor_to_example_map)
-        return output_tensor
+        return output_tensor, output_tensor_name
 
 
 def calculate_norm(ngraph_output, tf_output, desired_norm):
@@ -135,32 +140,37 @@ if __name__ == '__main__':
         input_tensor_dim_map[name] = random_input
 
     # Run the model on tensorflow
-    result_tf_graph = calculate_output(parameters, "CPU", input_tensor_dim_map)
+    result_tf_graph_arrs, out_tensor_names_cpu = calculate_output(
+        parameters, "CPU", input_tensor_dim_map)
     # Run the model on ngraph
-    result_ngraph = calculate_output(parameters, "NGRAPH", input_tensor_dim_map)
+    result_ngraph_arrs, out_tensor_names_ngraph = calculate_output(
+        parameters, "NGRAPH", input_tensor_dim_map)
 
-    l1_norm = calculate_norm(result_ngraph, result_tf_graph, 1)
-    l2_norm = calculate_norm(result_ngraph, result_tf_graph, 2)
-    inf_norm = calculate_norm(result_ngraph, result_tf_graph, np.inf)
-
+    assert all(
+        [i == j for i, j in zip(out_tensor_names_cpu, out_tensor_names_ngraph)])
     l1_norm_threshold = parameters["l1_norm_threshold"]
     l2_norm_threshold = parameters["l2_norm_threshold"]
     inf_norm_threshold = parameters["inf_norm_threshold"]
+    for tname, result_ngraph, result_tf_graph in zip(
+            out_tensor_names_cpu, result_ngraph_arrs, result_tf_graph_arrs):
+        l1_norm = calculate_norm(result_ngraph, result_tf_graph, 1)
+        l2_norm = calculate_norm(result_ngraph, result_tf_graph, 2)
+        inf_norm = calculate_norm(result_ngraph, result_tf_graph, np.inf)
 
-    if l1_norm > l1_norm_threshold:
-        print("The L1 norm %f is greater than the threshold %f " %
-              (l1_norm, l1_norm_threshold))
-    else:
-        print("L1 norm test passed")
+        if l1_norm > l1_norm_threshold:
+            print("The L1 norm %f is greater than the threshold %f for %s" %
+                  (l1_norm, l1_norm_threshold, tname))
+        else:
+            print("L1 norm test passed for ", tname)
 
-    if l2_norm > l2_norm_threshold:
-        print("The L2 norm %f is greater than the threshold %f " %
-              (l2_norm, l2_norm_threshold))
-    else:
-        print("L2 norm test passed")
+        if l2_norm > l2_norm_threshold:
+            print("The L2 norm %f is greater than the threshold %f for %s" %
+                  (l2_norm, l2_norm_threshold, tname))
+        else:
+            print("L2 norm test passed for ", tname)
 
-    if inf_norm > inf_norm_threshold:
-        print("The inf norm %f is greater than the threshold %f " %
-              (inf_norm, inf_norm_threshold))
-    else:
-        print("inf norm test passed")
+        if inf_norm > inf_norm_threshold:
+            print("The inf norm %f is greater than the threshold %f for %s" %
+                  (inf_norm, inf_norm_threshold, tname))
+        else:
+            print("inf norm test passed for ", tname)
