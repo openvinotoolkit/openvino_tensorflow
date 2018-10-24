@@ -2364,13 +2364,12 @@ static void ComputeScaleOffsetFolded(const uint& num_bits,
   }
   uint raise_to = num_bits - (unsigned_type ? 0 : 1);
   int max_type = (1 << raise_to) - 1;
-  if (unsigned_type && scaled) max_type = max_type - 1;
   float adj_min_range, adj_max_range;
   if (scaled) {
     auto abs_min_range = std::abs(min_range);
     auto abs_max_range = std::abs(max_range);
     auto range_boundary = std::max(abs_min_range, abs_max_range);
-    adj_min_range = -range_boundary;
+    adj_min_range = unsigned_type ? 0 : -range_boundary;
     adj_max_range = range_boundary;
   } else {
     // TODO: Adjust range or fail?
@@ -2653,7 +2652,7 @@ static Status TranslateDequantizeOp(
       break;
     default:
       return errors::InvalidArgument(
-          "Expected QuantizeV2's datatype to be of int8 or uint8 but got ",
+          "Expected Dequantize's datatype to be of int8 or uint8 but got ",
           dtype);
   }
 
