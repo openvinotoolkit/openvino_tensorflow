@@ -27,7 +27,6 @@ import tensorflow as tf
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestElementwiseOperations(NgraphTest):
 
     @pytest.mark.parametrize(("v1", "v2", "expected"),
@@ -37,13 +36,11 @@ class TestElementwiseOperations(NgraphTest):
     def test_maximum(self, v1, v2, expected):
         val1 = tf.placeholder(tf.float32, shape=(None))
         val2 = tf.placeholder(tf.float32, shape=(None))
+        out = tf.maximum(val1, val2)
 
-        with self.device:
-            out = tf.maximum(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(
         ("v1", "v2", "expected"),
@@ -54,13 +51,11 @@ class TestElementwiseOperations(NgraphTest):
     def test_less_equal(self, v1, v2, expected):
         val1 = tf.placeholder(tf.float32, shape=(None))
         val2 = tf.placeholder(tf.float32, shape=(None))
+        out = tf.less_equal(val1, val2)
 
-        with self.device:
-            out = tf.less_equal(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(
         ("v1", "v2", "expected"),
@@ -71,13 +66,11 @@ class TestElementwiseOperations(NgraphTest):
     def test_less(self, v1, v2, expected):
         val1 = tf.placeholder(tf.float32, shape=(None))
         val2 = tf.placeholder(tf.float32, shape=(None))
+        out = tf.less(val1, val2)
 
-        with self.device:
-            out = tf.less(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(
         ("v1", "v2", "expected"),
@@ -88,13 +81,11 @@ class TestElementwiseOperations(NgraphTest):
     def test_greater_equal(self, v1, v2, expected):
         val1 = tf.placeholder(tf.float32, shape=(None))
         val2 = tf.placeholder(tf.float32, shape=(None))
+        out = tf.greater_equal(val1, val2)
 
-        with self.device:
-            out = tf.greater_equal(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(
         ("v1", "v2", "expected"),
@@ -105,13 +96,11 @@ class TestElementwiseOperations(NgraphTest):
     def test_greater(self, v1, v2, expected):
         val1 = tf.placeholder(tf.float32, shape=(None))
         val2 = tf.placeholder(tf.float32, shape=(None))
+        out = tf.greater(val1, val2)
 
-        with self.device:
-            out = tf.greater(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(("v1", "v2", "expected"),
                              ((True, True, [True]), (True, False, ([False],)),
@@ -121,35 +110,28 @@ class TestElementwiseOperations(NgraphTest):
     def test_logical_and(self, v1, v2, expected):
         val1 = tf.placeholder(tf.bool, shape=(None))
         val2 = tf.placeholder(tf.bool, shape=(None))
+        out = tf.logical_and(val1, val2)
 
-        with self.device:
-            out = tf.logical_and(val1, val2)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})
-                assert np.allclose(result, expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     @pytest.mark.parametrize(("test_input", "expected"), ((False, True),
                                                           (True, False)))
     def test_logicalnot_1d(self, test_input, expected):
         val = tf.placeholder(tf.bool, shape=(1,))
+        out = tf.logical_not(val)
 
-        with self.device:
-            out = tf.logical_not(val)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val: (test_input,)})
-                assert result[0] == expected
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()
 
     def test_logicalnot_2d(self):
         test_input = ((True, False, True), (False, True, False))
         expected = np.logical_not(test_input)
-
         val = tf.placeholder(tf.bool, shape=(2, 3))
+        out = tf.logical_not(val)
 
-        with self.device:
-            out = tf.logical_not(val)
-
-            with self.session as sess:
-                (result,) = sess.run((out,), feed_dict={val: test_input})
-                assert (result == expected).all()
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})[0]
+        assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
+        assert (self.with_ngraph(sess_fn) == expected).all()

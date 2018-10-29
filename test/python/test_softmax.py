@@ -28,7 +28,6 @@ import numpy as np
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSoftmax(NgraphTest):
 
     def test_softmax_2d(self):
@@ -42,10 +41,7 @@ class TestSoftmax(NgraphTest):
         y_np = np.exp(x_np)
         a_np = y_np / np.reshape(np.sum(y_np, dim), one_only_on_dim)
         expected = a_np
-        with self.device:
-            a = tf.nn.softmax(x)
-            with self.session as sess:
-                (result_a) = sess.run((a), feed_dict={x: x_np})
-        atol = 1e-5
-        error = np.absolute(result_a - expected)
-        assert np.amax(error) <= atol
+        a = tf.nn.softmax(x)
+        sess_fn = lambda sess: sess.run((a), feed_dict={x: x_np})
+        np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
+        np.allclose(self.with_ngraph(sess_fn), expected)

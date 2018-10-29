@@ -51,13 +51,7 @@ pushd python
 # We need to explictly run python here, since "pytest" is also a shell script,
 # and that shell script starts with "#! /usr/bin/python", overriding any
 # python installed in a virtual environment.
-python -m pytest \
-    test_abs.py \
-    test_cast.py \
-    test_resize_to_dynamic_shape.py \
-    test_slice.py \
-    test_sigmoidgrad.py \
-    test_tanhgrad.py
+python -m pytest
 popd
 
 echo "--------------------------------------------------------------------------"

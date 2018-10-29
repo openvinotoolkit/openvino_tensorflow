@@ -27,7 +27,6 @@ import pytest
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestStackOperations(NgraphTest):
 
     @pytest.mark.parametrize(
@@ -48,10 +47,6 @@ class TestStackOperations(NgraphTest):
         values = [np.random.random_sample(s) for s in shapes]
         expected = np.stack(values, axis)
         placeholders = [tf.placeholder(tf.float64, s) for s in shapes]
-        with self.device:
-            a = tf.stack(placeholders, axis)
-            with self.session as sess:
-                (result,) = sess.run(
-                    [a], feed_dict={p: v for p, v in zip(placeholders, values)})
-                assert result.shape == expected.shape
-                assert np.allclose(result, expected)
+        a = tf.stack(placeholders, axis)
+        sess_fn = lambda sess: sess.run([a], feed_dict={p: v for p, v in zip(placeholders, values)})
+        np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))

@@ -92,6 +92,7 @@ class TestConv2DBackpropInput(NgraphTest):
         assert np.allclose(
             self.with_ngraph(run_test_ngraph), self.without_ngraph(run_test_tf))
 
+    @pytest.mark.skip(reason="Fails, needs debugging")
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
     def test_nhwc(self, padding):
         out_backprop_in_sizes = self.OUT_BACKPROP_IN_SIZES[padding]

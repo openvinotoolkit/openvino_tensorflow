@@ -23,34 +23,27 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
-
+import numpy as np
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestFloorOperations(NgraphTest):
 
     @pytest.mark.parametrize(("test_input", "expected"),
                              ((1.4, 1.0), (0.5, 0.0), (-0.3, -1.0)))
     def test_floor_1d(self, test_input, expected):
         val = tf.placeholder(tf.float32, shape=(1,))
-
-        with self.device:
-            out = tf.floor(val)
-
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val: (test_input,)})
-                assert result[0] == expected
+        out = tf.floor(val)
+        sess_fn = lambda sess: sess.run(out, feed_dict={val: (test_input,)})
+        assert np.isclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)).all()
 
     def test_floor_2d(self):
         test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
         expected = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
-
         val = tf.placeholder(tf.float32, shape=(2, 3))
-
-        with self.device:
-            out = tf.floor(val)
-
-            with self.session as sess:
-                (result,) = sess.run((out,), feed_dict={val: test_input})
-                assert (result == expected).all()
+        out = tf.floor(val)
+        assert np.isclose(
+            self.with_ngraph(
+                lambda sess: sess.run(out, feed_dict={val: test_input})),
+            np.array(expected)).all()

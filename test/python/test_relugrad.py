@@ -29,6 +29,7 @@ from tensorflow.python.ops.gen_nn_ops import relu_grad
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestReluGradOperations(NgraphTest):
 
     def test_relugrad_2d(self):

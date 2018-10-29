@@ -53,30 +53,19 @@ class TestAvgPoolBackpropInput(NgraphTest):
             grad_input = tf.placeholder(tf.float32, shape=(128, 112, 74, 3))
         elif padding == "SAME":
             grad_input = tf.placeholder(tf.float32, shape=(128, 112, 75, 3))
+        out = avg_pool_grad(
+            self.forward_arg_shape_NHWC,
+            grad_input,
+            self.ksize,
+            self.strides,
+            padding=padding,
+            data_format="NHWC")
 
-        with self.device:
-            a = avg_pool_grad(
-                self.forward_arg_shape_NHWC,
-                grad_input,
-                self.ksize,
-                self.strides,
-                padding=padding,
-                data_format="NHWC")
-            with self.session as sess:
-                (result) = sess.run(a, feed_dict={grad_input: np_nhwc})
+        def run_test(sess):
+            return sess.run(out, feed_dict={grad_input: np_nhwc})
 
-        with tf.device('/cpu:0'):
-            b = avg_pool_grad(
-                self.forward_arg_shape_NHWC,
-                grad_input,
-                self.ksize,
-                self.strides,
-                padding=padding,
-                data_format="NHWC")
-            with self.session as sess:
-                (expected) = sess.run(b, feed_dict={grad_input: np_nhwc})
-
-        np.testing.assert_allclose(result, expected, rtol=5e-7)
+        assert np.isclose(
+            self.with_ngraph(run_test), self.without_ngraph(run_test)).all()
 
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
     def test_nchw(self, padding):
@@ -87,33 +76,26 @@ class TestAvgPoolBackpropInput(NgraphTest):
         elif padding == "SAME":
             grad_input = tf.placeholder(tf.float32, shape=(128, 3, 75, 224))
 
-        with self.device:
-            a = avg_pool_grad(
-                self.forward_arg_shape_NCHW,
-                grad_input,
-                self.ksize,
-                self.strides,
-                padding=padding,
-                data_format="NCHW")
-            with self.session as sess:
-                (result) = sess.run(a, feed_dict={grad_input: np_nchw})
+        out_ngtf = avg_pool_grad(
+            self.forward_arg_shape_NCHW,
+            grad_input,
+            self.ksize,
+            self.strides,
+            padding=padding,
+            data_format="NCHW")
+
         # To validate on the CPU side we will need to run in NHWC, because the CPU
         # implementation of avgpool backprop does not support NCHW. We will
         # transpose on the way in and on the way out
-        with tf.device('/cpu:0'):
-            grad_input = tf.transpose(grad_input, [0, 2, 3, 1])
-            np_nchw = np.transpose(np_nchw, [0, 2, 3, 1])
-            self.ksize = [1, 3, 1, 1]
-            self.strides = [1, 3, 1, 2]
-            b = avg_pool_grad(
-                self.forward_arg_shape_NHWC,
-                grad_input,
-                self.ksize,
-                self.strides,
-                padding=padding,
-                data_format="NHWC")
-            b = tf.transpose(b, [0, 3, 1, 2])
-            with self.session as sess:
-                (expected) = sess.run(b, feed_dict={grad_input: np_nchw})
-
-        np.testing.assert_allclose(result, expected, rtol=5e-7)
+        grad_input_transposed = tf.transpose(grad_input, [0, 2, 3, 1])
+        self.ksize = [1, 3, 1, 1]
+        self.strides = [1, 3, 1, 2]
+        b = avg_pool_grad(
+            self.forward_arg_shape_NHWC,
+            grad_input_transposed,
+            self.ksize,
+            self.strides,
+            padding=padding,
+            data_format="NHWC")
+        out_tf = tf.transpose(b, [0, 3, 1, 2])
+        assert np.isclose(self.with_ngraph(lambda sess : sess.run(out_ngtf, feed_dict={grad_input: self.grad_input_nchw[padding]})), self.without_ngraph(lambda sess : sess.run(out_tf, feed_dict={grad_input: self.grad_input_nchw[padding]}))).all()

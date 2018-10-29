@@ -41,13 +41,10 @@ class TestProductOperations(NgraphTest):
     def test_prod(self, v1, axis, expected):
         tensor = tf.placeholder(tf.float32, shape=(None))
         assert np.allclose(np.prod(v1, axis), expected)
-
-        with self.device:
-            out = tf.reduce_prod(tensor, axis=axis)
-
-            with self.session as sess:
-                result = sess.run([out], feed_dict={tensor: v1})
-                assert np.allclose(result, expected)
+        out = tf.reduce_prod(tensor, axis=axis)
+        sess_fn = sess.run([out], feed_dict={tensor: v1})
+        assert np.allclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
 
     @pytest.mark.parametrize(("v1", "expected"), (((2.0, 2.0), [4.0]),))
     def test_prod_no_axis(self, v1, expected):

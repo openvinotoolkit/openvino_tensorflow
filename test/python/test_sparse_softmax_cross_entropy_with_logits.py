@@ -29,6 +29,7 @@ import numpy as np
 from common import NgraphTest
 
 
+@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSparseSoftmaxCrossEntropyWithLogitsOperations(NgraphTest):
 
     def test_sparse_softmax_cross_entropy_with_logits_2d(self):
