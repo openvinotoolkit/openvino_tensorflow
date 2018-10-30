@@ -57,7 +57,7 @@ pushd "${TF_ROOT}"
 ./configure
 
 # Build the TensorFlow C++ Library 
-bazel build --config=opt ${COPT} --config=mkl //tensorflow:libtensorflow_cc.so
+bazel build --config=opt ${COPT} //tensorflow:libtensorflow_cc.so
 
 popd
 

@@ -44,6 +44,7 @@ set(SRC
    ngraph_utils.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
+   version.cc
 )
 
 add_library(${LIB_NAME} SHARED ${SRC})
