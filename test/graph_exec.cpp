@@ -51,7 +51,8 @@ TEST(graph_exec, axpy) {
   // during the graph rewrite passes and considered internal
   opts.allow_internal_ops = true;
 
-  ASSERT_EQ(ConvertGraphDefToGraph(opts, gdef, &input_graph), Status::OK());
+  ASSERT_EQ(ConvertGraphDefToGraph(opts, gdef, &input_graph), Status::OK())
+      << "Could not convert graphdef to graph";
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
   Tensor y(DT_FLOAT, TensorShape({2, 3}));
@@ -65,7 +66,8 @@ TEST(graph_exec, axpy) {
   shared_ptr<ng::Function> ng_function;
   ASSERT_EQ(Status::OK(),
             ngraph_bridge::Builder::TranslateGraph(inputs, static_input_map,
-                                                   &input_graph, ng_function));
+                                                   &input_graph, ng_function))
+      << "Could not complete TranslateGraph successfully";
 
   // Create the nGraph backend
   auto backend = ng::runtime::Backend::create("CPU");

@@ -77,8 +77,21 @@ void PrintTensorAllValues(const Tensor& T1, int64 max_entries) {
 
 // Compares Tensors considering tolerance
 void Compare(Tensor& T1, Tensor& T2, float tol) {
-  ASSERT_EQ(T1.dtype(), T2.dtype());
-  ASSERT_EQ(T1.shape(), T2.shape());
+  // Assert rank
+  ASSERT_EQ(T1.dims(), T2.dims())
+      << "Ranks unequal for T1 and T2. T1.shape = " << T1.shape()
+      << " T2.shape = " << T2.shape();
+
+  // Assert each dimension
+  for (int i = 0; i < T1.dims(); i++) {
+    ASSERT_EQ(T1.dim_size(i), T2.dim_size(i))
+        << "T1 and T2 shapes do not match in dimension " << i
+        << ". T1.shape = " << T1.shape() << " T2.shape = " << T2.shape();
+  }
+
+  // Assert type
+  ASSERT_EQ(T1.dtype(), T2.dtype()) << "Types of T1 and T2 did not match";
+
   auto T_size = T1.flat<float>().size();
   auto T1_data = T1.flat<float>().data();
   auto T2_data = T2.flat<float>().data();
@@ -97,7 +110,7 @@ void Compare(Tensor& T1, Tensor& T2, float tol) {
 
 // Compares Tensor vectors
 void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2) {
-  ASSERT_EQ(v1.size(), v2.size());
+  ASSERT_EQ(v1.size(), v2.size()) << "Length of 2 tensor vectors do not match.";
   for (int i = 0; i < v1.size(); i++) {
     auto expected_dtype = v1[i].dtype();
     switch (expected_dtype) {

@@ -141,7 +141,8 @@ void OpExecuter::RunTest(const string& ng_backend_name) {
 void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   DeactivateNGraph();
   ClientSession session(tf_scope_);
-  ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs));
+  ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
+      << "Failed to run opexecutor on TF";
   for (int i = 0; i < tf_outputs.size(); i++) {
     NGRAPH_VLOG(5) << " TF op " << i << tf_outputs[i].DebugString();
   }
@@ -196,11 +197,14 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
   for (int i = 0; i < number_of_inputs; i++) {
     Node* ip;
-    ASSERT_EQ(Status::OK(), test_op->input_node(i, &ip));
+    ASSERT_EQ(Status::OK(), test_op->input_node(i, &ip))
+        << "Failed to get input number " << i << " named " << ip->name();
     input_node.push_back(ip);
 
     Tensor ip_tensor;
-    ASSERT_EQ(Status::OK(), GetNodeAttr(ip->attrs(), "value", &ip_tensor));
+    ASSERT_EQ(Status::OK(), GetNodeAttr(ip->attrs(), "value", &ip_tensor))
+        << "Failed to get values from input number " << i << " named "
+        << ip->name();
     input_shapes.push_back(ip_tensor.shape());
     input_dt.push_back(ip_tensor.dtype());
     tf_inputs.push_back(ip_tensor);
@@ -231,7 +235,8 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     // Add node to graph
     Status status;
     Node* arg_node = graph.AddNode(new_arg_node_def, &status);
-    ASSERT_EQ(Status::OK(), status);
+    ASSERT_EQ(Status::OK(), status) << "Failed to add node " << i << " named "
+                                    << ip_node->name();
 
     // Remove the Const Node
     graph.RemoveNode(input_node[i]);
@@ -268,7 +273,8 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
                   new_ret_node_def);
     Status status;
     Node* ret_node = graph.AddNode(new_ret_node_def, &status);
-    ASSERT_EQ(Status::OK(), status);
+    ASSERT_EQ(Status::OK(), status) << "Failed to add output " << i
+                                    << " of type _Retval";
 
     // Add edges from _Retval to sink
     for (int j = 0; j < dest_nodes_metadata.size(); j++) {
@@ -297,10 +303,13 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   shared_ptr<ng::Function> ng_function;
   ASSERT_EQ(Status::OK(),
             Builder::TranslateGraph(input_shapes, static_input_map, &graph,
-                                    ng_function));
+                                    ng_function))
+      << "Failed to TranslateGraph";
 
   // ng function should get same number of outputs
-  ASSERT_EQ(expected_output_datatypes_.size(), ng_function->get_output_size());
+  ASSERT_EQ(expected_output_datatypes_.size(), ng_function->get_output_size())
+      << "Number of outputs of requested outputs and ngraph function outputs "
+         "do not match";
 
   // For debug
   // Serialize to nGraph if needed
@@ -343,10 +352,14 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   for (int i = 0; i < tf_inputs.size(); i++) {
     ng::Shape ng_shape;
     ASSERT_EQ(Status::OK(),
-              TFTensorShapeToNGraphShape(tf_inputs[i].shape(), &ng_shape));
+              TFTensorShapeToNGraphShape(tf_inputs[i].shape(), &ng_shape))
+        << "Shape of " << i << "th input did not match";
     ng::element::Type ng_et;
     ASSERT_EQ(Status::OK(),
-              TFDataTypeToNGraphElementType(tf_inputs[i].dtype(), &ng_et));
+              TFDataTypeToNGraphElementType(tf_inputs[i].dtype(), &ng_et))
+        << "Datatype of " << i << "th input is "
+        << DataTypeString(tf_inputs[i].dtype()) << ". Ngraph's element type is "
+        << ng_et;
     void* src_ptr = (void*)DMAHelper::base(&tf_inputs[i]);
     auto result = backend->create_tensor(ng_et, ng_shape, src_ptr);
     ng_ip_tensors.push_back(result);
@@ -359,12 +372,16 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     auto ng_op_type = ng_function->get_output_element_type(i);
 
     ng::element::Type ng_et_expected;
-    ASSERT_EQ(Status::OK(),
-              TFDataTypeToNGraphElementType(expected_output_datatypes_[i],
-                                            &ng_et_expected));
+    ASSERT_EQ(Status::OK(), TFDataTypeToNGraphElementType(
+                                expected_output_datatypes_[i], &ng_et_expected))
+        << "Datatype of " << i << "th output is "
+        << DataTypeString(expected_output_datatypes_[i])
+        << ". Ngraph's element type is " << ng_et_expected;
 
     // Expected element type should match ng_op_type
-    ASSERT_EQ(ng_et_expected, ng_op_type);
+    ASSERT_EQ(ng_et_expected, ng_op_type)
+        << "Expected Ngraph datatype of " << i << "th output is "
+        << ng_et_expected << ", but ngraph function has " << ng_op_type;
     vector<int64> dims;
     for (auto dim : ng_op_shape) {
       dims.push_back(dim);
