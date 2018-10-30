@@ -2,14 +2,37 @@ import tensorflow as tf
 import argparse
 import numpy as np
 import ngraph
+from google.protobuf import text_format
 import json
 import os
 
 
-def calculate_output(param_dict, select_device, input_example):
-    """Calculate the output of the imported frozen graph given the input.
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print('Error: Creating directory. ' + directory)
 
-    Load the graph def from frozen_graph_file on selected device, then get the tensors based on the input and output name from the graph,
+
+def set_os_env(select_device):
+    if select_device == 'CPU':
+        # run on TF only
+        ngraph.disable()
+    else:
+        if not ngraph.is_enabled():
+            ngraph.enable()
+
+        assert select_device[:
+                             7] == "NGRAPH_", "Expecting device name to start with NGRAPH_"
+        back_end = select_device.split("NGRAPH_")
+        os.environ['NGRAPH_TF_BACKEND'] = back_end[1]
+
+
+def calculate_output(param_dict, select_device, input_example):
+    """Calculate the output of the imported graph given the input.
+
+    Load the graph def from graph file on selected device, then get the tensors based on the input and output name from the graph,
     then feed the input_example to the graph and retrieves the output vector.
 
     Args:
@@ -20,23 +43,22 @@ def calculate_output(param_dict, select_device, input_example):
     Returns:
         The output vector obtained from running the input_example through the graph.
     """
-    frozen_graph_filename = param_dict["frozen_graph_location"]
+    graph_filename = param_dict["graph_location"]
     output_tensor_name = param_dict["output_tensor_name"]
 
-    if not tf.gfile.Exists(frozen_graph_filename):
-        raise Exception("Input graph file '" + frozen_graph_filename +
+    if not tf.gfile.Exists(graph_filename):
+        raise Exception("Input graph file '" + graph_filename +
                         "' does not exist!")
 
-    with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
-        graph_def = tf.GraphDef()
-        graph_def.ParseFromString(f.read())
-
-    if select_device == 'CPU':
-        ngraph.disable()
+    graph_def = tf.GraphDef()
+    if graph_filename.endswith("pbtxt"):
+        with open(graph_filename, "r") as f:
+            text_format.Merge(f.read(), graph_def)
     else:
-        # run on NGRAPH
-        if not ngraph.is_enabled():
-            ngraph.enable()
+        with open(graph_filename, "rb") as f:
+            graph_def.ParseFromString(f.read())
+
+    set_os_env(select_device)
 
     with tf.Graph().as_default() as graph:
         tf.import_graph_def(graph_def)
@@ -95,8 +117,12 @@ def calculate_norm(ngraph_output, tf_output, desired_norm):
     if desired_norm not in [1, 2, np.inf]:
         raise Exception('Only L2, L2, and inf norms are supported')
 
-    return np.linalg.norm((ngraph_output_flatten - tf_output_flatten),
-                          desired_norm)
+    n = np.linalg.norm((ngraph_output_flatten - tf_output_flatten),
+                       desired_norm)
+    if desired_norm is np.inf:
+        return n
+    else:
+        return n / len(ngraph_output_flatten)
 
 
 def parse_json():
@@ -123,6 +149,23 @@ if __name__ == '__main__':
 
     parameters = parse_json()
 
+    # Get reference/testing backend to compare
+    device1 = parameters["reference_backend"]
+    device2 = parameters["testing_backend"]
+
+    # Get L1/L2/Inf threshold value
+    l1_norm_threshold = parameters["l1_norm_threshold"]
+    l2_norm_threshold = parameters["l2_norm_threshold"]
+    inf_norm_threshold = parameters["inf_norm_threshold"]
+
+    # Create a folder to save output tensor arrays
+    output_folder = device1 + "-" + device2
+    createFolder(output_folder)
+    os.chdir(output_folder)
+    print("Model name: " + parameters["model_name"])
+    print("L1/L2/Inf norm configuration: {}, {}, {}".format(
+        l1_norm_threshold, l2_norm_threshold, inf_norm_threshold))
+
     # Generate random input based on input_dimension
     np.random.seed(100)
     input_dimension = parameters["input_dimension"]
@@ -133,26 +176,33 @@ if __name__ == '__main__':
         input_tensor_name
     ), "input_tensor_name dimension should match input_dimension in json file"
 
+    # Get random value range
+    rand_val_range = parameters["random_val_range"]
+
     # Matches the input tensors name with its required dimensions
     input_tensor_dim_map = {}
     for (dim, name) in zip(input_dimension, input_tensor_name):
-        random_input = np.random.random_sample([bs] + dim)
+        random_input = np.random.randint(
+            rand_val_range, size=[bs] + dim).astype('float32')
         input_tensor_dim_map[name] = random_input
 
-    # Run the model on tensorflow
+    # Run the model on reference backend
     result_tf_graph_arrs, out_tensor_names_cpu = calculate_output(
-        parameters, "CPU", input_tensor_dim_map)
-    # Run the model on ngraph
+        parameters, device1, input_tensor_dim_map)
+    # Run the model on testing backend
     result_ngraph_arrs, out_tensor_names_ngraph = calculate_output(
-        parameters, "NGRAPH", input_tensor_dim_map)
+        parameters, device2, input_tensor_dim_map)
 
     assert all(
         [i == j for i, j in zip(out_tensor_names_cpu, out_tensor_names_ngraph)])
-    l1_norm_threshold = parameters["l1_norm_threshold"]
-    l2_norm_threshold = parameters["l2_norm_threshold"]
-    inf_norm_threshold = parameters["inf_norm_threshold"]
     for tname, result_ngraph, result_tf_graph in zip(
             out_tensor_names_cpu, result_ngraph_arrs, result_tf_graph_arrs):
+        new_out_layer = tname.replace("/", "_")
+        nparray_tf = np.array(result_tf_graph)
+        nparray_ngraph = np.array(result_ngraph)
+        np.save(device1 + "-" + new_out_layer + ".npy", nparray_tf)
+        np.save(device2 + "-" + new_out_layer + ".npy", nparray_ngraph)
+
         l1_norm = calculate_norm(result_ngraph, result_tf_graph, 1)
         l2_norm = calculate_norm(result_ngraph, result_tf_graph, 2)
         inf_norm = calculate_norm(result_ngraph, result_tf_graph, np.inf)
