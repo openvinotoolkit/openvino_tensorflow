@@ -427,6 +427,50 @@ TEST(NNOps, L2Loss) {
   }
 }
 
+// Note: TF only supports QUINT8 for QMP in CPU
+// Source:
+// https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantized_pooling_ops.cc#L127
+// Computes Quantized Maxpool
+TEST(NNOps, QuantizedMaxPool) {
+  int dim1 = 2;
+  int dim2 = 3;
+  int channels = 2;
+
+  for (int windowsize1 = 1; windowsize1 < 3; windowsize1++) {
+    for (int windowsize2 = 1; windowsize2 < 3; windowsize2++) {
+      for (int stride1 = 1; stride1 < 3; stride1++) {
+        for (int stride2 = 1; stride2 < 3; stride2++) {
+          for (auto padding_mode : {"SAME", "VALID"}) {
+            Scope root = Scope::NewRootScope();
+            auto quant_type = DT_QUINT8;
+            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            AssignInputValues<quint8>(
+                A, {50, 242, 14, 0, 17, 22, 100, 250, 34, 60, 79, 255});
+            vector<int> ksize = {1, windowsize1, windowsize2, 1};
+            vector<int> strides = {1, stride1, stride2, 1};
+
+            vector<int> static_input_indexes = {1, 2};
+            auto R = ops::QuantizedMaxPool(root, A, -10.0f, 10.99f, ksize,
+                                           strides, padding_mode);
+
+            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
+                                                 DT_FLOAT};
+
+            std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
+                                                         R.max_output};
+            OpExecuter opexecuter(root, "QuantizedMaxPool",
+                                  static_input_indexes, output_datatypes,
+                                  sess_run_fetchoutputs);
+
+            opexecuter.RunTest();
+          }
+        }
+      }
+    }
+  }
+}
+// TODO: add a quantized maxpool test, where min-max are equal or close together
+
 // Computes softmax cross entropy cost and gradients to backpropagate.
 TEST(NNOps, SparseSoftmaxCrossEntropyWithLogits) {
   Scope root = Scope::NewRootScope();

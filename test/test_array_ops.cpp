@@ -305,6 +305,35 @@ TEST(ArrayOps, QuantizeV2i8) {
 }  // end of test op QuantizeV2i8
 
 // Test op: QuantizeV2
+// Quantizes a tensor from float to i8. Also tests min-max output
+// TODO: enable this test when min-max output generation is supported
+TEST(ArrayOps, DISABLED_QuantizeV2i8minmax) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {-0.9, -1.3, 2.6, 3.5, 4.2, 5.0});
+  auto quant_type = DT_QINT8;
+
+  auto attrs = ops::QuantizeV2::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeV2 R =
+      ops::QuantizeV2(root, A, -10.0f, 10.99f, quant_type, attrs);
+
+  vector<DataType> output_datatypes = {quant_type, DT_FLOAT, DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output, R.output_min,
+                                               R.output_max};
+  OpExecuter opexecuter(root, "QuantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op QuantizeV2i8
+
+// Test op: QuantizeV2
 // Quantizes a tensor from float to u8
 TEST(ArrayOps, QuantizeV2u8SameRange) {
   Scope root = Scope::NewRootScope();
@@ -347,9 +376,10 @@ TEST(ArrayOps, QuantizeV2u8DiffRange) {
   vector<int> static_input_indexes = {1, 2};
   ops::QuantizeV2 R = ops::QuantizeV2(root, A, 0.0f, 6.0f, quant_type, attrs);
 
-  vector<DataType> output_datatypes = {quant_type};
+  vector<DataType> output_datatypes = {quant_type, DT_FLOAT, DT_FLOAT};
 
-  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  std::vector<Output> sess_run_fetchoutputs = {R.output, R.output_min,
+                                               R.output_max};
   OpExecuter opexecuter(root, "QuantizeV2", static_input_indexes,
                         output_datatypes, sess_run_fetchoutputs);
 
@@ -357,6 +387,7 @@ TEST(ArrayOps, QuantizeV2u8DiffRange) {
 }  // end of test op QuantizeV2u8DiffRange
 
 // TODO: add tests for other modes (MIN_COMBINED, MIN_FIRST)
+// TODO: add a test where min==max
 
 // Test op: QuantizeAndDequantizeV2
 // Quantizes and dequantize a tensor

@@ -299,6 +299,8 @@ Status MarkForClustering(Graph* graph) {
         *result = (num_bits == 8) && range_given;
         return Status::OK();
       };
+      confirmation_function_map["QuantizedMaxPool"] =
+          SimpleConfirmationFunction();
       confirmation_function_map["QuantizeV2"] = [](Node* n, bool* result) {
         string mode;
         TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "mode", &mode));
@@ -417,6 +419,8 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Prod"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Prod"]["Tidx"] = NGraphIndexDTypes();
       type_constraint_map["QuantizeAndDequantizeV2"]["T"] = NGraphRealDTypes();
+      type_constraint_map["QuantizedMaxPool"]["T"] =
+          NGraphSupportedQuantizedDTypes();
       type_constraint_map["QuantizeV2"]["T"] = NGraphSupportedQuantizedDTypes();
       type_constraint_map["RealDiv"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
