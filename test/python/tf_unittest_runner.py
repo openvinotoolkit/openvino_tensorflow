@@ -44,6 +44,10 @@ def main():
         help=
         "Runs the testcase and returns the output. Eg:math_ops_test.DivNoNanTest.testBasic"
     )
+    optional.add_argument(
+        '--run_tests_from_file',
+        help="""Reads the test names specified in a file and runs them. 
+        Eg:--run_tests_from_file=tests_to_run.txt""")
     parser._action_groups.append(optional)
     arguments = parser.parse_args()
 
@@ -53,7 +57,15 @@ def main():
         print('\n'.join(test_list))
     if (arguments.run_test):
         test_list = get_test_list(arguments.tensorflow_path, arguments.run_test)
+        print('\n'.join(test_list))
         run_test(test_list)
+    if (arguments.run_tests_from_file):
+        list_of_tests = read_tests_from_file(arguments.run_tests_from_file)
+        for test in list_of_tests:
+            test_list = get_test_list(arguments.tensorflow_path, test)
+            test_list = list(set(test_list))
+            print('\n'.join(test_list))
+            run_test(test_list)
 
 
 def get_test_list(tf_path, test_regex):
@@ -183,6 +195,15 @@ def run_test(test_list, verbosity=2):
     for test in test_list:
         tests = loader.loadTestsFromName(test)
         test_result = unittest.TextTestRunner(verbosity=verbosity).run(tests)
+
+
+def read_tests_from_file(filename):
+    with open(filename) as list_of_tests:
+        return [
+            line.split('#')[0].rstrip('\n').strip(' ')
+            for line in list_of_tests.readlines()
+            if line[0] != '#'
+        ]
 
 
 if __name__ == '__main__':
