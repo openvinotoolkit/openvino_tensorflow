@@ -128,6 +128,13 @@ else()
     set(LIBNGRAPH_SO "libngraph.so")
 endif(APPLE)
 
+if (NGRAPH_PLAIDML_ENABLE)
+    if (NOT DEFINED PlaidML_DIR)
+        message(FATAL_ERROR "Provide the PlaidML SDK directory: -DPlaidML_DIR=<directory>")
+    endif()
+    message(STATUS "nGraph/PlaidML enabled")
+endif()
+
 # Find and build ngraph
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 ExternalProject_Add(
@@ -144,6 +151,8 @@ ExternalProject_Add(
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DNGRAPH_GPU_ENABLE=${NGRAPH_GPU_ENABLE}
         -DNGRAPH_DEBUG_ENABLE=${NGRAPH_DEBUG_ENABLE}
+        -DNGRAPH_PLAIDML_ENABLE=${NGRAPH_PLAIDML_ENABLE}
+        -DPlaidML_DIR=${PlaidML_DIR}
     TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
     STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
     DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"

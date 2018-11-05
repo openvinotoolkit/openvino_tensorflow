@@ -79,14 +79,14 @@ if (PYTHON)
             message(FATAL_ERROR "Cannot update @loader_path")
         endif()
 
-        set(lib_list 
+        set(cpu_lib_list
             libmkldnn.0.dylib
             libmklml.dylib
             libiomp5.dylib
             libtbb.dylib
         )
 
-        FOREACH(lib_file ${lib_list})
+        FOREACH(lib_file ${cpu_lib_list})
             message("Library: " ${lib_file})
             execute_process(COMMAND 
                 install_name_tool -change 
@@ -98,6 +98,52 @@ if (PYTHON)
                 ERROR_STRIP_TRAILING_WHITESPACE
             )
         ENDFOREACH()
+
+        if ("${NGRAPH_LIB_FILES};" MATCHES "/libplaidml_backend.dylib;")
+            execute_process(COMMAND
+                install_name_tool -change
+                libngraph.${NGRAPH_VERSION}.dylib
+                @loader_path/libngraph.${NGRAPH_VERSION}.dylib
+                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                RESULT_VARIABLE result
+                ERROR_VARIABLE ERR
+                ERROR_STRIP_TRAILING_WHITESPACE
+            )
+            if(${result})
+                message(FATAL_ERROR "Cannot update @loader_path")
+            endif()
+
+            execute_process(COMMAND
+                install_name_tool -change
+                libplaidml.dylib
+                @loader_path/libplaidml.dylib
+                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                RESULT_VARIABLE result
+                ERROR_VARIABLE ERR
+                ERROR_STRIP_TRAILING_WHITESPACE
+            )
+            if(${result})
+                message(FATAL_ERROR "Cannot update @loader_path")
+            endif()
+
+            set(plaidml_lib_list
+                libplaidml.dylib
+            )
+
+            FOREACH(lib_file ${plaidml_lib_list})
+                message("Library: " ${lib_file})
+                execute_process(COMMAND
+                    install_name_tool -change
+                    @rpath/${lib_file}
+                    @loader_path/${lib_file}
+                    ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                    RESULT_VARIABLE result
+                    ERROR_VARIABLE ERR
+                    ERROR_STRIP_TRAILING_WHITESPACE
+                )
+            ENDFOREACH()
+        endif()
+
     endif()
 
     execute_process(
