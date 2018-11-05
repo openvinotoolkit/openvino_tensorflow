@@ -71,7 +71,7 @@ rm -rf benchmarks
 git clone https://github.com/tensorflow/benchmarks.git
 pushd benchmarks/scripts/tf_cnn_benchmarks/
 git checkout 4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed
-echo "import ngraph" >> convnet_builder.py
+echo "import ngraph_config" >> convnet_builder.py
 export JUNIT_WRAP_FILE="${BUILD_DIR}/junit_resnet50_imagenet_inference.xml"
 export JUNIT_WRAP_SUITE='inference_validation'
 export JUNIT_WRAP_TEST='tf_cnn_benchmarks_resnet50'

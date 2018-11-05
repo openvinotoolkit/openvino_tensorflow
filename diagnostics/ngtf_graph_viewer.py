@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 
-import ngraph
+import ngraph_config
 import tensorflow as tf
 import numpy as np
 import re

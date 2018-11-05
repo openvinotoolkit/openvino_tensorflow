@@ -53,7 +53,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 4. Test the installation by running the following command:
 
-        python -c "import tensorflow as tf; print('TensorFlow version: r',tf.__version__);import ngraph; print(ngraph.__version__)"
+        python -c "import tensorflow as tf; print('TensorFlow version: r',tf.__version__);import ngraph_config; print(ngraph.__version__)"
 
 ### Option 2: Build nGraph bridge from source using TensorFlow source
 
@@ -159,12 +159,12 @@ the dependencies.
 
 8. Test the installation by running the following command:
 
-        python -c "import tensorflow as tf; print('TensorFlow version: r',tf.__version__);import ngraph; print(ngraph.__version__)"
+        python -c "import tensorflow as tf; print('TensorFlow version: r',tf.__version__);import ngraph_config; print(ngraph.__version__)"
 
 Once the build and installation steps are complete, you can start using TensorFlow 
 with nGraph backends. 
 
-Please add the following line to enable nGraph: `import ngraph`
+Please add the following line to enable nGraph: `import ngraph_config`
 
 Note: The actual filename for the pip package may be different as it's version 
 dependent. Please check the `build/python/dist` directory for the actual pip wheel.

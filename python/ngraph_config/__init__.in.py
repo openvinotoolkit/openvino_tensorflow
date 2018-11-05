@@ -41,7 +41,6 @@ __all__ = ['enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
 
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
-ngraph = None
 
 TF_VERSION = tf.VERSION
 TF_GIT_VERSION = tf.GIT_VERSION
@@ -84,6 +83,7 @@ print("nGraph bridge built with: {0} ({1})".format(TF_VERSION_NEEDED,
 TF_INSTALLED_VER = TF_VERSION.split('.')
 TF_NEEDED_VER = TF_VERSION_NEEDED.split('.')
 
+ngraph_bridge_lib = None
 if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):

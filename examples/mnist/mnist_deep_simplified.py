@@ -37,7 +37,7 @@ import time
 from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
-import ngraph
+import ngraph_config
 
 FLAGS = None
 
