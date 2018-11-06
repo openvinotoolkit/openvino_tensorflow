@@ -28,12 +28,10 @@ FROM ubuntu:16.04
 # curl and locate are needed by Tensorflow's configure command
 # enum appears to be used in the TensorFlow build
 # clang-format-3.9 is needed for code-style checks
-# python3-pil is needed to run the inception-resnet-v2 model
-# python3-tk is used by matplotlib (pip installed below)
-# libsdl1.2-dev is needed to run the A3C model
+# python-tk is used by matplotlib (pip installed below)
 RUN apt-get update &&  apt-get install -y \
-    python3-pip virtualenv \
-    python3-numpy python3-dev python3-wheel \
+    python-pip virtualenv \
+    python-numpy python-dev python-wheel \
     git \
     unzip wget \
     sudo \
@@ -43,9 +41,7 @@ RUN apt-get update &&  apt-get install -y \
     zip golang-go \
     locate curl \
     clang-format-3.9 \
-    python3-pil \
-    python3-tk \
-    libsdl1.2-dev
+    python-tk
 
 # The "locate" command uses a prepopulated index.  If this index is not built,
 # then "locate" will find absolutely nothing.  In Tensorflow's configure,
@@ -59,16 +55,16 @@ RUN updatedb
 # matplotlib and librosa are needed to run inference models
 # opencv-python is used by some inference models (for import cv2)
 # yapf and futures are needed for code-format checks (ngraph-tf PR#211)
-RUN pip3 install --upgrade pip
-RUN pip3 install six enum34 mock
-RUN pip3 install scipy portpicker sklearn
-RUN pip3 install keras_applications keras_preprocessing
-RUN pip3 install matplotlib librosa opencv-python
-RUN pip3 install yapf
-RUN pip3 install futures
+RUN pip install --upgrade pip
+RUN pip install six enum34 mock
+RUN pip install scipy portpicker sklearn
+RUN pip install keras_applications keras_preprocessing
+RUN pip install matplotlib librosa opencv-python
+RUN pip install yapf
+RUN pip install futures
 
 # We include pytest so the Docker image can be used for daily validation
-RUN pip3 install --upgrade pytest
+RUN pip install --upgrade pytest
 
 # FROM NG-TF:
 # We need to be careful to run apt-get update in any RUN where apt-get install
@@ -79,7 +75,7 @@ RUN pip3 install --upgrade pytest
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 #
 # This bazel version works with current TF
-RUN wget -c https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel_0.16.0-linux-x86_64.deb
+RUN wget --no-verbose -c https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel_0.16.0-linux-x86_64.deb
 RUN dpkg -i bazel_0.16.0-linux-x86_64.deb || true
 
 # Copy in the run-as-user.sh script

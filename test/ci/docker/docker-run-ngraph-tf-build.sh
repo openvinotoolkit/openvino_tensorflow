@@ -55,10 +55,26 @@ case "${NG_TF_PY_VERSION}" in
         exit 1
         ;;
 esac
+
 IMAGE_ID="${1}"
 if [ -z "${IMAGE_ID}" ] ; then
     echo 'Please provide an image version as the first parameter'
     exit 1
+fi
+
+# Check if we have a docker ID of image:ID, or just ID
+# Use || true to make sure the exit code is always zero, so that the script is
+# not killed if ':' is not found
+long_ID=`echo ${IMAGE_ID} | grep ':' || true`
+
+# If we have just ID, then IMAGE_CLASS AND IMAGE_ID have
+# already been set above
+#
+# Handle case where we have image:ID
+if [ ! -z "${long_ID}" ] ; then
+    IMAGE_CLASS=` echo ${IMAGE_ID} | sed -e 's/:[^:]*$//' `
+    IMAGE_ID=` echo ${IMAGE_ID} | sed -e 's/^[^:]*://' `
+    # TODO: set python version here based on presence of _py3
 fi
 
 # Find the top-level bridge directory, so we can mount it into the docker

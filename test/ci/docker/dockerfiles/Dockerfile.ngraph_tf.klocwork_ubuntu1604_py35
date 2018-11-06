@@ -1,0 +1,6 @@
+FROM ngraph_tf_builds_ubuntu1604_py35
+
+# Make sure we can run 32-bit binaries, because Klocwork seems to be stuck
+# in the 1990s
+RUN dpkg --add-architecture i386
+RUN apt-get update && apt-get install -y libc6:i386 libstdc++6:i386

@@ -1,0 +1,89 @@
+# ==============================================================================
+#  Copyright 2018 Intel Corporation
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+# ==============================================================================
+
+# Environment to build and unit-test ngraph-tensorflow-bridge
+
+FROM ubuntu:16.04
+
+# Default python environment is python 2, thus python-pip and virtualenv
+# python-numpy, python-dev, and python-wheel all needed for TensorFlow build
+# git is needed to clone tensorflow repository
+# unzip and wget are needed for installing bazel
+# sudo is required for installing the TF wheel into /usr/local/...
+# zlib1g, zlib1g-dev and bash-completion are required by bazel install
+# zip and golang-go are needed to run TensorFlow tests
+# curl and locate are needed by Tensorflow's configure command
+# enum appears to be used in the TensorFlow build
+# clang-format-3.9 is needed for code-style checks
+# python3-pil is needed to run the inception-resnet-v2 model
+# python3-tk is used by matplotlib (pip installed below)
+# libsdl1.2-dev is needed to run the A3C model
+RUN apt-get update &&  apt-get install -y \
+    python3-pip virtualenv \
+    python3-numpy python3-dev python3-wheel \
+    git \
+    unzip wget \
+    sudo \
+    zlib1g zlib1g-dev bash-completion \
+    build-essential cmake \
+    libtinfo-dev \
+    zip golang-go \
+    locate curl \
+    clang-format-3.9 \
+    python3-pil \
+    python3-tk \
+    libsdl1.2-dev
+
+# The "locate" command uses a prepopulated index.  If this index is not built,
+# then "locate" will find absolutely nothing.  In Tensorflow's configure,
+# this manifests itself as a silent failure of the configure script to run to
+# completion.  Therefore, updatedb MUST BE RUN to provide an index for "locate".
+RUN updatedb
+
+# six, enum34 and mock are required for building the tensorflow wheel
+# scipy, portpicker, and sklearn are needed by some TensorFlow tests
+# keras_applications and keras_preprocessing are needed for modern TensorFlow builds
+# matplotlib and librosa are needed to run inference models
+# opencv-python is used by some inference models (for import cv2)
+# yapf and futures are needed for code-format checks (ngraph-tf PR#211)
+RUN pip3 install --upgrade pip
+RUN pip3 install six enum34 mock
+RUN pip3 install scipy portpicker sklearn
+RUN pip3 install keras_applications keras_preprocessing
+RUN pip3 install matplotlib librosa opencv-python
+RUN pip3 install yapf
+RUN pip3 install futures
+
+# We include pytest so the Docker image can be used for daily validation
+RUN pip3 install --upgrade pytest
+
+# FROM NG-TF:
+# We need to be careful to run apt-get update in any RUN where apt-get install
+# might be run.  This is needed due to docker layer limitations.
+# RUN apt-get update && ./initial-setup-once-per-machine.ubuntu-16.04.sh
+#
+# REPLACED BY:
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+#
+# This bazel version works with current TF
+RUN wget --no-verbose -c https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel_0.16.0-linux-x86_64.deb
+RUN dpkg -i bazel_0.16.0-linux-x86_64.deb || true
+
+# Copy in the run-as-user.sh script
+# This will allow the builds, which are done in a mounted directory, to
+# be run as the user who runs "docker run".  This then allows the mounted
+# directory to be properly deleted by the user later (e.g. by jenkins).
+WORKDIR /home

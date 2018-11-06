@@ -16,7 +16,10 @@
 #  limitations under the License.
 # ==============================================================================
 
-# First parameter *must* be the IMAGE_ID
+# Script parameters:
+#
+# $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+# $2 ImageType  Optional: Type of docker image to build
 #
 # Additional parameters are passed to docker-build command
 #
@@ -26,26 +29,74 @@
 #
 # NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
 
+DIR_DOCKERFILES='dockerfiles'
+PRE_DOCKERFILE='Dockerfile.ngraph_tf.'
+PRE_NAME='ngraph_tf_'
+
+syntax() {
+    cmd=`basename ${0}`
+    echo "Syntax: ${cmd} DTag [ ImageType [ docker-run-options] ]"
+    echo "where:"
+    echo "    DTag         Required: tag for the docker image (as in DRepo:DTag)"
+    echo "    ImageType    Optional: which type of image to create"
+    echo 'Additional parameters are passed directly to the "docker run" command'
+    echo ' '
+    echo "Image types available:"
+    ls -1 "${DIR_DOCKERFILES}" | grep "${PRE_DOCKERFILE}" | sed -e "s/${PRE_DOCKERFILE}//"
+}  # syntax()
+
+if [ "${1}" = '-h' -o "${1}" = '--help' -o "${1}" = '' ] ; then
+    syntax
+    exit 0
+fi
+
 set -e  # Fail on any command with non-zero exit
 
-IMAGE_ID="${1}"
-if [ -z "${IMAGE_ID}" ] ; then
+IMAGE_ID="$1"
+if [ -z "${IMAGE_ID}" ] ; then  # Parameter 1 is REQUIRED
     echo 'Please provide an image version as the only argument'
     exit 1
+else
+    shift 1  # We found parameter one, remove it from $@
 fi
 
-# Set defaults
-
-if [ -z "${NG_TF_PY_VERSION}" ] ; then
-    NG_TF_PY_VERSION='2'  # Default is Python 2
+IMAGE_TYPE="$1"  # Second parameter has been shifted to be first parameter
+if [ -z "${IMAGE_TYPE}" ] ; then  # PARAMETER 2 is OPTIONAL
+    IMAGE_TYPE='default'
+else
+    shift 1  # We found parameter two, remove it from $@
 fi
 
-# If there are more parameters, which are intended to be directly passed to
-# the "docker build ..." command-line, then shift off the IMAGE_NAME
-if [ "x${2}" = 'x' ] ; then
-    shift
-fi
+# We accomodate both the old-style dockerfile names and a new
+# scalable naming, where IMAGE_TYPE matches the extension
+case "${IMAGE_TYPE}" in
+    default)
+        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
+        IMAGE_NAME='ngraph_tf_ci_py2'
+        ;;
+    default_py27)
+        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
+        IMAGE_NAME='ngraph_tf_ci_py2'
+        ;;
+    default_py35)
+        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py3'
+        IMAGE_NAME='ngraph_tf_ci_py3'
+        ;;
+    *)  # Look for a dockerfile with an extension matching IMAGE_TYPE
+        if [ -f "${DIR_DOCKERFILES}/${PRE_DOCKERFILE}${IMAGE_TYPE}" ] ; then
+            DOCKER_FILE="${PRE_DOCKERFILE}${IMAGE_TYPE}"
+            IMAGE_NAME="${PRE_NAME}${IMAGE_TYPE}"
+        else
+            echo "Dockerfile ${DIR_DOCKERFILES}/${PRE_DOCKERFILE}${IMAGE_TYPE} not found for image type ${IMAGE_TYPE}"
+            exit 1
+        fi
+        ;;
+esac
 
+
+# The NG_TF_PY_VERSION takes precedence over the optional IMAGE_TYPE parameter,
+# because NG_TF_PY_VERSION existed first and we need to maintain backward
+# compatibility (for now)
 case "${NG_TF_PY_VERSION}" in
     2)
         DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
@@ -56,12 +107,18 @@ case "${NG_TF_PY_VERSION}" in
         IMAGE_NAME='ngraph_tf_ci_py3'
         ;;
     *)
-        echo 'NG_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
-        exit 1
+        # Do nothing if NG_TF_PY_VERSION is explicitly not set
         ;;
 esac
 
 set -u  # No unset variables after this point
+
+# Show in log what is being build
+echo "make-docker-ngraph-tf-ci is building the following:"
+echo "    Image Type         IMAGE_TYPE: ${IMAGE_TYPE}"
+echo "    Dockerfile        DOCKER_FILE: ${DOCKER_FILE}"
+echo "    Docker Repository  IMAGE_NAME: ${IMAGE_NAME}"
+echo "    Docker Tag           IMAGE_ID: ${IMAGE_ID}"
 
 # If proxy settings are detected in the environment, make sure they are
 # included on the docker-build command-line.  This mirrors a similar system
@@ -85,7 +142,18 @@ fi
 # The $@ allows us to pass command-line options easily to docker build.
 # Note that a "shift" is done above to remove the IMAGE_ID from the cmd line.
 #
-docker build  --rm=true \
-       ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
-       $@ \
-       -f="${DOCKER_FILE}"  -t="${IMAGE_NAME}:${IMAGE_ID}"   .
+dbuild_cmd="docker build  --rm=true \
+            ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
+            $@ \
+            -f=${DIR_DOCKERFILES}/${DOCKER_FILE}  -t=${IMAGE_NAME}:${IMAGE_ID}  ."
+echo "Docker build command: ${dbuild_cmd}"
+$dbuild_cmd
+dbuild_result=$?
+
+if [ $dbuild_result = 0 ] ; then
+    echo ' '
+    echo "Successfully created docker image ${IMAGE_NAME}:${IMAGE_ID}"
+else
+    echo ' '
+    echo "Docker image build reported an error (exit code ${dbuild_result})"
+fi
