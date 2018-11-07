@@ -19,7 +19,18 @@ NGTF uses the std error to output its logs, so it is necessary to pipe it correc
 
 ### A full dump
 To get a **full** dump use the following set of flags
-```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 NGRAPH_TF_VLOG_LEVEL=5 NGRAPH_GENERATE_GRAPHS_PBTXT=1 NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_VALIDATE_CLUSTER_GRAPHS=1 NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
+```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 NGRAPH_TF_VLOG_LEVEL=5 NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_DUMP_CLUSTERS=1 NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
+
+## Debug flags
+* ```NGRAPH_ENABLE_SERIALIZE=1```: Generate nGraph level serialized graphs .json
+* ```NGRAPH_CPU_TRACING=1```: Generate nGraph level function timelines
+* ```NGRAPH_TF_VLOG_LEVEL=5```: Generate ngraph-tf logging info for different passes
+* ```NGRAPH_GENERATE_GRAPHS_PBTXT=1```: Generate .pbtxt files for different phases in ngraph-tf bridge
+* ```NGRAPH_TF_LOG_PLACEMENT=1```: Generates op placement log at stdout
+* ```NGRAPH_TF_DUMP_CLUSTERS=1```: Dumps Encapsulated TF Graphs: ngraph_cluster_<cluster_num>
+* ```NGRAPH_TF_DUMP_GRAPHS=1```: Dumps TF graphs for different passes : precapture, capture, unmarked, marked, clustered, declustered, encapsulated
+* ```TF_CPP_MIN_VLOG_LEVEL=1```: Enables TF CPP Logs 
+* ```NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1```: Dumps graphs with final clusters assigned. Use this to view TF computation graph with colored nodes indicating clusters
 
 ### Visualizing encapsulates using TB
 * Run your script with this flag: ```NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1 python run_TF_network.py```
@@ -38,16 +49,6 @@ if ngraph is enabled by calling ```ngraph.is_enabled()```
 * _Caution_: The above functions are only effective at the beginning of the execution. Once the session is created and ```run``` is called, the above functions will not be able to disable ngraph. 
 * For example usage, take a look at the ```model_test/verify_model.py``` in the diagnostics folder
 
-## Debug flags
-* ```NGRAPH_ENABLE_SERIALIZE=1```: Generate nGraph level serialized graphs .json
-* ```NGRAPH_CPU_TRACING=1```: Generate nGraph level function timelines
-* ```NGRAPH_TF_VLOG_LEVEL=5```: Generate ngraph-tf logging info for different passes
-* ```NGRAPH_GENERATE_GRAPHS_PBTXT=1```: Generate .pbtxt files for different phases in ngraph-tf bridge
-* ```NGRAPH_TF_LOG_PLACEMENT=1```: will generate op placement log to stdout
-* ```NGRAPH_TF_DUMP_CLUSTERS=1```: Dumps Encapsulated TF Graphs: ngraph_cluster_<cluster_num>
-* ```NGRAPH_TF_DUMP_GRAPHS=1```: dumps TF graphs for different passes : precapture, capture, unmarked, marked, clustered, declustered, encapsulated
-* ```TF_CPP_MIN_VLOG_LEVEL=1```: Enables TF CPP Logs 
-* ```NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1```: To view TF computation graph with colored nodes indicating clusters
 
 ## Protobuf Visualization
 The python script ngtf_graph_viewer.py can convert a protobuf (pb or pbtxt) into a dot file or a TB log, which can be viewed using TB. If the input is a pbtxt then ngtf_graph_viewer can also sanitize node names to remove underscores from the front of node names (which indicate they are internal nodes and might cause TB to complain). It can also prepend strings in front of certain node names, a feature which can be used  to append encapsulate information for clustering nodes together
