@@ -311,6 +311,7 @@ class DeadnessAnalysisImpl : public DeadnessAnalysis {
   Status Populate();
   bool HasInputsWithMismatchingDeadness(const Node& node) override;
   void Print() const override;
+  Status GetNodePredicate(const Node& node, string& pred_string);
 
  private:
   enum class EdgeKind { kDataAndControl, kDataOnly, kControlOnly };
@@ -346,16 +347,7 @@ std::vector<Predicate*> DeadnessAnalysisImpl::GetIncomingPreds(
         (!in_edge->IsControlEdge() && edge_kind == EdgeKind::kDataOnly);
     if (should_process) {
       auto it = predicate_map_.find(InputEdgeToTensorId(in_edge));
-      if (it == predicate_map_.end()) {
-        NGRAPH_VLOG(5) << "Cannot find predicate for Edge ";
-        NGRAPH_VLOG(5) << "Src " << in_edge->src()->name() << "["
-                       << in_edge->src()->type_string() << "]"
-                       << " ,Src Idx " << in_edge->src_output() << " DST "
-                       << in_edge->dst()->name() << "["
-                       << in_edge->dst()->type_string() << "]"
-                       << " ,Dst Idx " << in_edge->dst_input();
-      }
-      CHECK(it != predicate_map_.end());
+      CHECK(it != predicate_map_.end()) << in_edge->DebugString();
       incoming_preds.push_back(it->second);
     }
   }
@@ -452,16 +444,7 @@ bool DeadnessAnalysisImpl::HasInputsWithMismatchingDeadness(const Node& node) {
   Predicate* pred = nullptr;
   for (const Edge* edge : node.in_edges()) {
     auto it = predicate_map_.find(InputEdgeToTensorId(edge));
-    if (it == predicate_map_.end()) {
-      NGRAPH_VLOG(5) << "Cannot find predicate for Edge ";
-      NGRAPH_VLOG(5) << "Src " << edge->src()->name() << "["
-                     << edge->src()->type_string() << "]"
-                     << " ,Src Idx " << edge->src_output() << " DST "
-                     << edge->dst()->name() << "[" << edge->dst()->type_string()
-                     << "]"
-                     << " ,Dst Idx " << edge->dst_input();
-    }
-    CHECK(it != predicate_map_.end());
+    CHECK(it != predicate_map_.end()) << edge->DebugString();
     if (vlog_) {
       VLOG(2) << "  " << InputEdgeToTensorId(edge).ToString() << ": "
               << it->second->ToString();
@@ -484,6 +467,33 @@ bool DeadnessAnalysisImpl::HasInputsWithMismatchingDeadness(const Node& node) {
   }
   return false;
 }
+
+Status DeadnessAnalysisImpl::GetNodePredicate(const Node& node,
+                                              string& pred_string) {
+  if (node.IsSource() || node.IsSink() || node.IsControlFlow()) {
+    DeadnessAnalysis::GetControlFlowPredString(pred_string);
+    return Status::OK();
+  }
+
+  Predicate* pred = nullptr;
+  for (const Edge* edge : node.out_edges()) {
+    auto it = predicate_map_.find(InputEdgeToTensorId(edge));
+    CHECK(it != predicate_map_.end()) << edge->DebugString();
+
+    // This node is not control flow but has different output predicates
+    if (pred != nullptr && *pred != *it->second) {
+      return errors::Internal(node.name(), "[", node.type_string(), "]",
+                              " is a non control flow op. But its outputs have "
+                              "different predicates");
+    }
+    pred = it->second;
+  }
+
+  // All outputs have the same predicate
+  pred_string = pred->ToString();
+  return Status::OK();
+}
+
 void DeadnessAnalysisImpl::Print() const {
   std::vector<TensorId> tensor_ids;
   for (const auto& kv_pair : predicate_map_) {
@@ -493,23 +503,29 @@ void DeadnessAnalysisImpl::Print() const {
   for (TensorId tensor_id : tensor_ids) {
     auto it = predicate_map_.find(tensor_id);
     CHECK(it != predicate_map_.end()) << tensor_id.ToString();
-    VLOG(2) << tensor_id.ToString() << " -> " << it->second->ToString();
+    NGRAPH_VLOG(5) << tensor_id.ToString() << " -> " << it->second->ToString();
   }
 }
 }  // namespace
 DeadnessAnalysis::~DeadnessAnalysis() {}
+
 /*static*/ Status DeadnessAnalysis::Run(
     const Graph& graph, std::unique_ptr<DeadnessAnalysis>* result) {
   std::unique_ptr<DeadnessAnalysisImpl> analysis(
       new DeadnessAnalysisImpl(&graph));
 
   TF_RETURN_IF_ERROR(analysis->Populate());
-  if (VLOG_IS_ON(2)) {
+  if (NGRAPH_VLOG_IS_ON(5)) {
     analysis->Print();
   }
   *result = std::move(analysis);
   return Status::OK();
 }
+
+/*static*/ const std::string DeadnessAnalysis::CONTROL_FLOW_PRED_STRING =
+    "#control_flow";
+// Same as the True predicate used in AndPredicate
+/*static*/ const std::string DeadnessAnalysis::TRUE_PRED_STRING = "#true";
 
 }  // namespace ngraph_bridge
 

@@ -18,7 +18,6 @@
 #include "ngraph_utils.h"
 #include "ngraph_version_utils.h"
 #include "tensorflow/core/graph/graph.h"
-#include "tf_deadness_analysis.h"
 
 using namespace std;
 
@@ -38,7 +37,7 @@ namespace ngraph_bridge {
 // associated with it. When the confirmation pass encounters a node of op "Op",
 // the confirmation function for "Op" first checks if this particular instance
 // of the op can be placed on nGraph, and returns "true" if placement is
-// allowed. This is followed by checks for deadness and input datatype of the
+// allowed. This is followed by checks for input datatype of the
 // op.
 
 // Each op that passes all the checks, has the attribute
@@ -61,18 +60,6 @@ static Status NGraphPlacementRequested(Node* node, bool& placement_ok) {
   placement_ok = true;
   return Status::OK();
 }
-
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
-// Checks if the node's inputs have mismatching deadness
-static Status DeadnessOk(Node* node,
-                         std::unique_ptr<DeadnessAnalysis>* deadness_analyzer,
-                         bool& deadness_ok) {
-  deadness_ok =
-      !(node->IsMerge() ||
-        (*deadness_analyzer)->HasInputsWithMismatchingDeadness(*node));
-  return Status::OK();
-}
-#endif
 
 // Checks if the node's inputs meet all the type constraints
 static Status TypeConstraintOk(Node* node,
@@ -497,11 +484,6 @@ Status MarkForClustering(Graph* graph) {
     }
   }
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
-  std::unique_ptr<DeadnessAnalysis> deadness_analyzer;
-  TF_RETURN_IF_ERROR(DeadnessAnalysis::Run(*graph, &deadness_analyzer));
-#endif
-
   vector<Node*> nodes_marked_for_clustering;
   for (auto node : graph->op_nodes()) {
     bool mark_for_clustering = false;
@@ -514,18 +496,6 @@ Status MarkForClustering(Graph* graph) {
         NGRAPH_VLOG(5) << "Placement not requested: " << node->name();
         break;
       }
-
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
-      // check deadness
-      bool deadness_ok = false;
-      TF_RETURN_IF_ERROR(DeadnessOk(node, &deadness_analyzer, deadness_ok));
-      if (!deadness_ok) {
-        NGRAPH_VLOG(5) << "Node Inputs have mismatching deadness or Node is of "
-                          "type Merge: "
-                       << node->name();
-        break;
-      }
-#endif
 
       // check node's confirmation constraints
       bool confirmation_constraint_ok = false;
