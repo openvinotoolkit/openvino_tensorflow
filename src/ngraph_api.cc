@@ -76,8 +76,8 @@ tensorflow::Status SetBackend(const string& type) {
 void StartLoggingPlacement() { _is_logging_placement = true; }
 void StopLoggingPlacement() { _is_logging_placement = false; }
 bool IsLoggingPlacement() {
-  return _is_logging_placement ||
-         (std::getenv("NGRAPH_TF_LOG_PLACEMENT") != nullptr);
+  return _is_enabled && (_is_logging_placement ||
+                         std::getenv("NGRAPH_TF_LOG_PLACEMENT") != nullptr);
 }
 
 }  // namespace config

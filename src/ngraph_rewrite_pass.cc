@@ -17,6 +17,7 @@
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
 
+#include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_capture_variables.h"
 #include "ngraph_deassign_clusters.h"
@@ -24,7 +25,6 @@
 #include "ngraph_log.h"
 #include "ngraph_mark_for_clustering.h"
 #include "ngraph_rewrite_for_tracking.h"
-
 #include "tf_graph_writer.h"
 
 #include <iomanip>
@@ -144,10 +144,11 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
       DumpGraphs(options, idx, "precapture", "Pre-Capture Graph");
     }
 
-    // If NGRAPH_TF_DISABLE is set we will not do anything; all subsequent
+    // If ngraph is disabled via ngraph_config api or NGRAPH_TF_DISABLE is set
+    // we will not do anything; all subsequent
     // passes become a no-op.
-    //
-    if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+    if (config::IsEnabled() == false ||
+        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
       return Status::OK();
     }
 
@@ -210,10 +211,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       DumpGraphs(options, idx, "unmarked", "Unmarked Graph");
     }
 
-    // If NGRAPH_TF_DISABLE is set we will not do anything; all subsequent
+    // If ngraph is disabled via ngraph_config api or NGRAPH_TF_DISABLE is set
+    // we will not do anything; all subsequent
     // passes become a no-op.
-    //
-    if (std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+    if (config::IsEnabled() == false ||
+        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
       return Status::OK();
     }
 

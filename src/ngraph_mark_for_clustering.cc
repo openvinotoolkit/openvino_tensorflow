@@ -131,10 +131,6 @@ static ConfirmationFunction SimpleConfirmationFunction() {
 // Main entry point for the marking pass.
 //
 Status MarkForClustering(Graph* graph) {
-  if (config::IsEnabled() == false) {
-    return Status::OK();
-  }
-
   //
   // A map of op types (e.g. "Add") to type constraint maps. For (fake)
   // example:
