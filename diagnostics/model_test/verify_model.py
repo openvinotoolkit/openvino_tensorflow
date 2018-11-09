@@ -21,6 +21,7 @@ import ngraph_config
 from google.protobuf import text_format
 import json
 import os
+import sys
 
 
 def createFolder(directory):
@@ -36,7 +37,7 @@ def set_os_env(select_device):
         # run on TF only
         ngraph_config.disable()
     else:
-        if not ngraph.is_enabled():
+        if not ngraph_config.is_enabled():
             ngraph_config.enable()
 
         assert select_device[:
@@ -211,6 +212,12 @@ if __name__ == '__main__':
 
     assert all(
         [i == j for i, j in zip(out_tensor_names_cpu, out_tensor_names_ngraph)])
+    passed = True
+    th_dict = {
+        "L1": l1_norm_threshold,
+        "L2": l2_norm_threshold,
+        "inf": inf_norm_threshold
+    }
     for tname, result_ngraph, result_tf_graph in zip(
             out_tensor_names_cpu, result_ngraph_arrs, result_tf_graph_arrs):
         new_out_layer = tname.replace("/", "_")
@@ -223,20 +230,20 @@ if __name__ == '__main__':
         l2_norm = calculate_norm(result_ngraph, result_tf_graph, 2)
         inf_norm = calculate_norm(result_ngraph, result_tf_graph, np.inf)
 
-        if l1_norm > l1_norm_threshold:
-            print("The L1 norm %f is greater than the threshold %f for %s" %
-                  (l1_norm, l1_norm_threshold, tname))
-        else:
-            print("L1 norm test passed for ", tname)
-
-        if l2_norm > l2_norm_threshold:
-            print("The L2 norm %f is greater than the threshold %f for %s" %
-                  (l2_norm, l2_norm_threshold, tname))
-        else:
-            print("L2 norm test passed for ", tname)
-
-        if inf_norm > inf_norm_threshold:
-            print("The inf norm %f is greater than the threshold %f for %s" %
-                  (inf_norm, inf_norm_threshold, tname))
-        else:
-            print("inf norm test passed for ", tname)
+        norm_dict = {"L1": l1_norm, "L2": l2_norm, "inf": inf_norm}
+        print("\n[" + tname + "]")
+        #start the loop and check norms
+        for norm_name in norm_dict:
+            np.set_printoptions(precision=15)
+            if norm_dict[norm_name] > th_dict[norm_name]:
+                print(
+                    "The %s norm is greater than %s threshold - %s norm: %f, %s threshold: %f"
+                    % (norm_name, norm_name, norm_name, norm_dict[norm_name],
+                       norm_name, th_dict[norm_name]))
+                passed = False
+            else:
+                print("The %s norm test passed - %s norm: %f, %s threshold: %f"
+                      % (norm_name, norm_name, norm_dict[norm_name], norm_name,
+                         th_dict[norm_name]))
+    if not passed:
+        sys.exit(1)
