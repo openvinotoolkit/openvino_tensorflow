@@ -58,14 +58,19 @@ def main():
     if (arguments.run_test):
         test_list = get_test_list(arguments.tensorflow_path, arguments.run_test)
         print('\n'.join(test_list))
-        run_test(test_list)
+        status_list = run_test(test_list)
+        print_results(status_list)
     if (arguments.run_tests_from_file):
+        all_test_list = []
         list_of_tests = read_tests_from_file(arguments.run_tests_from_file)
         for test in list_of_tests:
             test_list = get_test_list(arguments.tensorflow_path, test)
             test_list = list(set(test_list))
-            print('\n'.join(test_list))
-            run_test(test_list)
+            for test_name in test_list:
+                all_test_list.append(test_name)
+            print('\n'.join(all_test_list))
+        status_list = run_test(all_test_list)
+        print_results(status_list)
 
 
 def get_test_list(tf_path, test_regex):
@@ -80,15 +85,15 @@ def get_test_list(tf_path, test_regex):
     except:
         module_list = []
         print(
-            """Invalid module name. Use bazel query below to get list of tensorflow python test modules.
-            bazel query 'kind(".*_test rule", //tensorflow/python:nn_test)' --output label"""
+            """\nInvalid module name. Use bazel query below to get list of tensorflow python test modules.
+            bazel query 'kind(".*_test rule", //tensorflow/python:nn_test)' --output label\n"""
         )
     try:
         test_list = list_tests(module_list, test_regex)
     except:
         test_list = []
         print(
-            "Enter a valid argument to --list_tests or --run_test.\nList of accepted formats:"
+            "\nEnter a valid argument to --list_tests or --run_test.\n \nLIST OF ACCEPTED FORMATS:"
         )
         print('\n'.join(accepted_formats))
     return test_list
@@ -176,7 +181,19 @@ def list_tests(module_list, regex_input):
         for test in alltests:
             if test_name in test:
                 listtests.append(test)
+        if not listtests:
+            print("\nTest is not a part of this test suite\n")
+            sys.exit()
         return listtests
+
+
+def read_tests_from_file(filename):
+    with open(filename) as list_of_tests:
+        return [
+            line.split('#')[0].rstrip('\n').strip(' ')
+            for line in list_of_tests.readlines()
+            if line[0] != '#'
+        ]
 
 
 def run_test(test_list, verbosity=2):
@@ -192,18 +209,45 @@ def run_test(test_list, verbosity=2):
     of every test and the result.
     """
     loader = unittest.TestLoader()
+    succeeded = []
+    failures = []
+    errors = []
     for test in test_list:
-        tests = loader.loadTestsFromName(test)
-        test_result = unittest.TextTestRunner(verbosity=verbosity).run(tests)
+        test_result = unittest.TextTestRunner(verbosity=verbosity).run(
+            loader.loadTestsFromName(test))
+        if test_result.wasSuccessful():
+            succeeded.append(test)
+        elif test_result.failures:
+            failures.append(test)
+        elif test_result.errors:
+            errors.append(test)
+    summary = {"PASSED": succeeded, "FAILED": failures, "ERRORS": errors}
+    return summary
 
 
-def read_tests_from_file(filename):
-    with open(filename) as list_of_tests:
-        return [
-            line.split('#')[0].rstrip('\n').strip(' ')
-            for line in list_of_tests.readlines()
-            if line[0] != '#'
-        ]
+def print_results(status_list):
+    print('\033[1m' + '\n==SUMMARY==' + '\033[0m')
+    for key in ["PASSED", "ERRORS", "FAILED"]:
+        test_name = status_list[key]
+        for test in test_name:
+            if key is "PASSED":
+                print(test + '\033[92m' + ' ..PASS' + '\033[0m')
+            if key is "FAILED":
+                print(test + '\033[91m' + ' ..FAIL' + '\033[0m')
+            if key is "ERRORS":
+                print(test + '\033[33m' + ' ..ERROR' + '\033[0m')
+
+    print('\033[1m' + '\n==STATS==' + '\033[0m')
+    for key in ["PASSED", "ERRORS", "FAILED"]:
+        test_class_name = {}
+        test_name = status_list[key]
+        for test in test_name:
+            module, classname, testcase = test.split('.')
+            module_classname = module + '.' + classname
+            test_class_name[module_classname] = test_class_name.get(
+                module_classname, 0) + 1
+        for k in test_class_name:
+            print('Number of tests ' + key + ' ' + k, test_class_name[k])
 
 
 if __name__ == '__main__':
