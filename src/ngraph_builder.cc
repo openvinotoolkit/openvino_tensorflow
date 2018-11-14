@@ -3021,14 +3021,12 @@ static Status TranslateSoftmaxOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
   auto ng_input_shape = ng_input->get_shape();
-
   // We apply softmax on the 2nd dimension by following TF
   // And we restrict the softmax input argument to be 2D for now
   ng::AxisSet ng_axes_softmax;
   auto shape_size = ng_input_shape.size();
-
-  if (shape_size != 2) {
-    return errors::InvalidArgument("TF Softmax logits must be 2-dimensional");
+  if (shape_size < 1) {
+    return errors::InvalidArgument("TF Softmax logits must be >=1 dimension");
   }
 
   ng_axes_softmax.insert(1);
