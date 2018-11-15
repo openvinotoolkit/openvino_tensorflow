@@ -1035,7 +1035,33 @@ TEST(NNOps, QuantizedMaxPool) {
     }
   }
 }
-// TODO: add a quantized maxpool test, where min-max are equal or close together
+
+// Computes Quantized Maxpool when min==max
+TEST(NNOps, QuantizedMaxPoolSameMinMax) {
+  int dim1 = 2;
+  int dim2 = 3;
+  int channels = 2;
+
+  Scope root = Scope::NewRootScope();
+  auto quant_type = DT_QUINT8;
+  Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+  AssignInputValues<quint8>(A, {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5});
+  vector<int> ksize = {1, 2, 2, 1};
+  vector<int> strides = {1, 2, 2, 1};
+
+  vector<int> static_input_indexes = {1, 2};
+  auto R =
+      ops::QuantizedMaxPool(root, A, -10.0f, -10.0f, ksize, strides, "SAME");
+
+  vector<DataType> output_datatypes = {quant_type, DT_FLOAT, DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
+                                               R.max_output};
+  OpExecuter opexecuter(root, "QuantizedMaxPool", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
 
 // Computes softmax cross entropy cost and gradients to backpropagate.
 TEST(NNOps, SparseSoftmaxCrossEntropyWithLogits) {

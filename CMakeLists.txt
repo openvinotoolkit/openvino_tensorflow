@@ -140,7 +140,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE
 ExternalProject_Add(
     ext_ngraph
     GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-    GIT_TAG 516fbe13f24878a66b01f7a37a8d1ff166d84890
+    GIT_TAG 1286fd444ea6e981a2c7195ecf522d6fee1ca772
     CMAKE_ARGS 
         -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
         -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist 

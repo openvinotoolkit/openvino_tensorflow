@@ -185,6 +185,9 @@ const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes();
 // Returns an ArraySlice containing supported real/non-integer data types
 const gtl::ArraySlice<DataType>& NGraphRealDTypes();
 
+// Returns an ArraySlice containing supported bias types for custom quant op
+const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
+
 // Check to make sure the axis dimension for reduction are in within range.
 // Returns error if axis is out of range. Otherwise returns Status::OK().
 Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
