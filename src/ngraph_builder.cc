@@ -2498,7 +2498,7 @@ static Status TranslateQuantizeAndDequantizeV2Op(
   auto ng_offset = std::make_shared<ng::op::Constant>(ng_q_et, ng::Shape(),
                                                       std::vector<int>({0}));
   ng::op::Quantize::RoundMode ng_round_mode =
-      ng::op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
   auto ng_quant = make_shared<ng::op::Quantize>(
       ng_input, ng_scale, ng_offset, ng_q_et, ng::AxisSet(), ng_round_mode);
   SaveNgOp(ng_op_map, op->name(),
@@ -2645,7 +2645,7 @@ static Status TranslateQuantizeV2Op(
   string mode;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "mode", &mode));
 
-  // TODO: Since, currently only ng::HALF_AWAY_FROM_ZERO is supported,
+  // TODO: Since, currently only ng::ROUND_NEAREST_TOWARD_INFINITY is supported,
   // just reading this value here, but not using it for now.
   string round_mode;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "round_mode", &round_mode));
@@ -2697,10 +2697,10 @@ static Status TranslateQuantizeV2Op(
   auto ng_offset = std::make_shared<ng::op::Constant>(
       ng_et, ng::Shape(), std::vector<int>({ng_offset_val}));
 
-  // TODO: Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now.
+  // TODO: Only RoundMode = ROUND_NEAREST_TOWARD_INFINITY is supported, for now.
   // Support HALF_TO_EVEN later
   ng::op::Quantize::RoundMode ng_round_mode =
-      ng::op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
   SaveNgOp(ng_op_map, op->name(),
            make_shared<ng::op::Quantize>(ng_input, ng_scale, ng_offset, ng_et,
