@@ -60,7 +60,12 @@ template <typename T>
 using Vec = typename VecStruct<T>::type;
 
 struct Node {
-  Node() : in(4), out(4) {}  // Small hashtables for in/out edges
+  Node()
+      : rank(-1),
+        visited(false),
+        data(0),
+        in(4),
+        out(4) {}  // Small hashtables for in/out edges
 
   int32 rank;    // rank number assigned by Pearce-Kelly algorithm
   bool visited;  // Temporary marker used by depth-first-search

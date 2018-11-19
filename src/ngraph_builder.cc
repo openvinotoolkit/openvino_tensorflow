@@ -2387,7 +2387,7 @@ Status QuantizeAndDequantizeV2Helper(
     const bool& range_given, const bool& signed_input, const int& num_bits,
     float* scale_out) {
   // TODO: currently handling only float, generalize later?
-  T min_range, max_range;
+  T min_range = 0, max_range = 0;
   if (range_given) {
     std::vector<T> input_min, input_max;
     TF_RETURN_IF_ERROR(
@@ -2432,7 +2432,8 @@ Status QuantizeAndDequantizeV2Helper(
                                     ? max_quantized / max_range
                                     : std::numeric_limits<T>::max();
   T scale, inverse_scale;
-  if (scale_from_min_side < scale_from_max_side) {
+  if (scale_from_min_side < scale_from_max_side && min_quantized != 0) {
+    // min_quantized != 0 is not really necessary but klocwork complains
     scale = scale_from_min_side;
     inverse_scale = min_range / min_quantized;
     // max_range = max_quantized * inverse_scale;
