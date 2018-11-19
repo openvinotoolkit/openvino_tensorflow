@@ -129,6 +129,29 @@ fi
 
 xtime="$(date)"
 echo  ' '
+echo  "===== Checking gcc and OS version at ${xtime} ====="
+echo  ' '
+
+echo 'gcc is being run from:'
+which gcc
+
+echo ' '
+echo 'gcc verison is:'
+gcc --version
+
+echo 'g++ is being run from:'
+which g++
+
+echo ' '
+echo 'g++ version is:'
+g++ --version
+
+echo ' '
+echo 'Ubuntu version is:'
+cat /etc/os-release
+
+xtime="$(date)"
+echo  ' '
 echo  "===== Starting nGraph TensorFlow Bridge Source Code Format Check at ${xtime} ====="
 echo  ' '
 
@@ -186,7 +209,9 @@ echo  ' '
 
 cd "${tf_dir}"
 
-bazel build --config=opt --verbose_failures //tensorflow/tools/pip_package:build_pip_package
+cmd="bazel build --config=opt --verbose_failures //tensorflow/tools/pip_package:build_pip_package"
+echo "Running bazel command: ${cmd}"
+${cmd}
 
 xtime="$(date)"
 echo  ' '
@@ -215,7 +240,9 @@ echo  "===== Starting Tensorflow C++ Library Build at ${xtime} ====="
 echo  ' '
 
 cd "${tf_dir}"
-bazel build --config=opt //tensorflow:libtensorflow_cc.so
+cmd="bazel build --config=opt //tensorflow:libtensorflow_cc.so"
+echo "Running bazel command: ${cmd}"
+${cmd}
 
 xtime="$(date)"
 echo  ' '
@@ -226,10 +253,21 @@ cd "${bridge_dir}"
 
 mkdir "${bbuild_dir}"
 cd "${bbuild_dir}"
-cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR="${tf_dir}" ..
-make -j16
-make install
-make -j16 gtest_ngtf
+cmd="cmake -DUNIT_TEST_ENABLE=TRUE -DTF_SRC_DIR=${tf_dir} .."
+echo "Running cmake command: ${cmd}"
+${cmd}
+
+cmd="make -j16"
+echo "Running make command: ${cmd}"
+${cmd}
+
+cmd="make install"
+echo "Running make command: ${cmd}"
+${cmd}
+
+cmd="make -j16 gtest_ngtf"
+echo "Running make command: ${cmd}"
+${cmd}
 
 xtime="$(date)"
 echo  ' '
@@ -277,6 +315,10 @@ xtime="$(date)"
 echo  ' '
 echo  "===== Installing nGraph Wheel at ${xtime} ====="
 echo  ' '
+
+echo 'md5sum of wheel that was built above, and will be installed:'
+cd "${bridge_dir}"
+md5sum ngraph*.whl
 
 cd "${bridge_dir}"
 pip install ngraph*.whl
