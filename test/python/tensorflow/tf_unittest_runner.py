@@ -33,7 +33,7 @@ def main():
     required.add_argument(
         '--tensorflow_path',
         help=
-        "Specify the path where Tensorflow is installed. Eg:/localdisk/skantama/tf-ngraph/tensorflow \n",
+        "Specify the path to Tensorflow source code. Eg:/localdisk/skantama/tf-ngraph/tensorflow \n",
         required=True)
     optional.add_argument(
         '--list_tests',
@@ -111,8 +111,8 @@ def regex_walk(dirname, regex_input):
     be able to import the modules.
     
     Args:
-    dirname: This is the tensorflow_path passed as an argument where 
-    tensorflow is installed.
+    dirname: This is the tensorflow_path passed as an argument is the path to 
+    tensorflow source code.
     
     regex_input: Regular expression input string to filter and list/run tests.
     Few examples of accepted regex_input are:
