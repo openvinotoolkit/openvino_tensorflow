@@ -104,7 +104,7 @@ if (PYTHON)
                 install_name_tool -change
                 libngraph.${NGRAPH_VERSION}.dylib
                 @loader_path/libngraph.${NGRAPH_VERSION}.dylib
-                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libplaidml_backend.dylib
                 RESULT_VARIABLE result
                 ERROR_VARIABLE ERR
                 ERROR_STRIP_TRAILING_WHITESPACE
@@ -117,7 +117,7 @@ if (PYTHON)
                 install_name_tool -change
                 libplaidml.dylib
                 @loader_path/libplaidml.dylib
-                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libplaidml_backend.dylib
                 RESULT_VARIABLE result
                 ERROR_VARIABLE ERR
                 ERROR_STRIP_TRAILING_WHITESPACE
@@ -136,7 +136,7 @@ if (PYTHON)
                     install_name_tool -change
                     @rpath/${lib_file}
                     @loader_path/${lib_file}
-                    ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph/libplaidml_backend.dylib
+                    ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libplaidml_backend.dylib
                     RESULT_VARIABLE result
                     ERROR_VARIABLE ERR
                     ERROR_STRIP_TRAILING_WHITESPACE
