@@ -16,15 +16,6 @@ declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Relative to ngraph-tf/build-dir/test, where this script is run
 declare BUILD_DIR="$( realpath .. )"  
 
-if [ -z ${TF_ROOT+x} ]; then
-    TF_ROOT="$THIS_SCRIPT_DIR"/../../../tensorflow
-fi
-
-if [ ! -e $TF_ROOT ]; then
-    echo "TensorFlow installation directory not found: " $TF_ROOT
-    exit 1
-fi
-
 # Wrapper to produce JUnit XML result output
 declare JUNIT="${THIS_SCRIPT_DIR}/junit-wrap.sh"
 
