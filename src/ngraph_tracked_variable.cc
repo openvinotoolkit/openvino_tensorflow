@@ -39,6 +39,8 @@ namespace ngraph_bridge {
 //
 // (Changes: Renamed from LegacyVar, modified to take a TensorShape in
 // constructor.)
+
+// THIS CLASS IS NOT BEING USED ANYWHERE
 class NGraphVar : public ResourceBase {
  public:
   explicit NGraphVar(DataType dtype, TensorShape shape)

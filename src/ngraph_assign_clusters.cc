@@ -91,11 +91,41 @@ namespace {
 struct Cluster {
   int index;
   std::set<tensorflow::Node*> nodes;
+  std::string backend;
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
   std::string predicate_string;
   std::set<const Edge*> outgoing_edges;
 #endif
 };
+
+Status InitialiseNodeBackend(Node* node, string* backend) {
+  NGRAPH_VLOG(5) << "Initialize Node Backend " << node->name();
+  if (!HasNodeAttr(node->def(), "_ngraph_backend")) {
+    *backend = "HOST";
+    return Status::OK();
+  }
+  NGRAPH_VLOG(5) << "Should have been assigned Node Backend " << node->name();
+  TF_RETURN_IF_ERROR(GetNodeBackend(node, backend));
+  // TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "_ngraph_backend", backend));
+  return Status::OK();
+}
+
+Status CanContractEdgeBackendCheck(
+    Edge* edge, const std::map<Node*, std::shared_ptr<Cluster>>& cluster_map,
+    bool& is_backend_ok) {
+  Node* src = edge->src();
+  Node* dst = edge->dst();
+
+  string src_backend = cluster_map.at(src)->backend;
+  string dst_backend = cluster_map.at(dst)->backend;
+
+  if (src_backend == dst_backend) {
+    is_backend_ok = true;
+  } else {
+    is_backend_ok = false;
+  }
+  return Status::OK();
+}
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 // Returns the predicate of the merged cluster
@@ -303,9 +333,14 @@ Status AssignClusters(Graph* graph) {
     int new_index = gc.NewNode();
     cluster_map[node] = std::make_shared<Cluster>();
     cluster_map[node]->index = new_index;
+    string backend;
+    TF_RETURN_IF_ERROR(InitialiseNodeBackend(node, &backend));
+
+    cluster_map[node]->backend = backend;
     cluster_map[node]->nodes.insert(node);
     NGRAPH_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
-                   << node->name() << "[" << node->type_string() << "]";
+                   << node->name() << "[" << node->type_string() << "]"
+                   << " backend " << backend;
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
     // get predicate string for the node
@@ -425,9 +460,26 @@ Status AssignClusters(Graph* graph) {
           CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
       if (!is_deadness_ok) {
         // do not contract, src and dst node cannot be in the same cluster
+        NGRAPH_VLOG(5) << "Skipping (deadness not ok): " << src->name() << "["
+                       << edge->src_output() << "]@" << src_index << " -> "
+                       << dst->name() << "[" << edge->dst_input() << "]@"
+                       << dst_index;
         continue;
       }
 #endif
+
+      // check if the edge can be constracted with respect to backend
+      bool is_backend_ok = false;
+      TF_RETURN_IF_ERROR(
+          CanContractEdgeBackendCheck(edge, cluster_map, is_backend_ok));
+      if (!is_backend_ok) {
+        NGRAPH_VLOG(5) << "Skipping (backend not ok): " << src->name() << "["
+                       << edge->src_output() << "]@" << src_index << " -> "
+                       << dst->name() << "[" << edge->dst_input() << "]@"
+                       << dst_index;
+        // do not contract, src and dst node cannot be in the same cluster
+        continue;
+      }
 
       // Check if contracting the edge will lead to cycles
       // if not, MergeClusters
