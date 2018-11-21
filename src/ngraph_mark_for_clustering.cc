@@ -323,11 +323,10 @@ Status MarkForClustering(Graph* graph) {
         int tf_new_axis_mask;
         TF_RETURN_IF_ERROR(
             GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask));
-        if (tf_new_axis_mask != 0) {
-          *result = false;
-        } else {
-          *result = true;
-        }
+        int tf_ellipsis_mask;
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(n->attrs(), "ellipsis_mask", &tf_ellipsis_mask));
+        *result = (tf_new_axis_mask == 0) && (tf_ellipsis_mask == 0);
         return Status::OK();
       };
       confirmation_function_map["Pack"] = SimpleConfirmationFunction();

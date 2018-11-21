@@ -68,9 +68,7 @@ class TestSliceOperations(NgraphTest):
         x = tf.placeholder(dtype=dtypes.float32)
 
         slice_ts.append(x[:])
-        slice_ts.append(x[...])
         slice_ts.append(x[:, :])
-        slice_ts.append(x[:, ...])
         slice_ts.append(x[1:, :-2])
         slice_ts.append(x[::2, :-2])
         slice_ts.append(x[1, :])
@@ -80,8 +78,32 @@ class TestSliceOperations(NgraphTest):
         slice_ts.append(x[0][1])
         slice_ts.append(x[-1])
 
-        # unsupported currently
+        # Various ways of representing identity slice
+        slice_ts.append(x[:, :])
+        slice_ts.append(x[::, ::])
+        slice_ts.append(x[::1, ::1])
+
+        # Reverse in each dimension independently
+        slice_ts.append(x[::-1, :])
+        slice_ts.append(x[:, ::-1])
+
+        ## negative index tests i.e. n-2 in first component
+        slice_ts.append(x[-2::-1, ::1])
+
+        # degenerate by offering a forward interval with a negative stride
+        slice_ts.append(x[0:-1:-1, :])
+        # degenerate with a reverse interval with a positive stride
+        slice_ts.append(x[-1:0, :])
+        # empty interval in every dimension
+        slice_ts.append(x[-1:0, 2:3:-1])
+        slice_ts.append(x[2:2, 2:3:-1])
+        # stride greater than range
+        slice_ts.append(x[1:3:7, :])
+
+        # Unsupported on ngraph currently
         # slice_ts.append(x[:, tf.newaxis])
+        # slice_ts.append(x[...])
+        # slice_ts.append(x[:, ...])
 
         def run_test(sess):
             return sess.run(slice_ts, feed_dict={x: a})
@@ -89,9 +111,7 @@ class TestSliceOperations(NgraphTest):
         slice_vals = self.with_ngraph(run_test)
 
         expected.append(inp[:])
-        expected.append(inp[...])
         expected.append(inp[:, :])
-        expected.append(inp[:, ...])
         expected.append(inp[1:, :-2])
         expected.append(inp[::2, :-2])
         expected.append(inp[1, :])
@@ -100,6 +120,33 @@ class TestSliceOperations(NgraphTest):
         expected.append(inp[0])
         expected.append(inp[0][1])
         expected.append(inp[-1])
+        #TODO: support ellipses and new_axis correctly
 
+        # Various ways of representing identity slice
+        expected.append(inp[:, :])
+        expected.append(inp[::, ::])
+        expected.append(inp[::1, ::1])
+
+        # Reverse in each dimension independently
+        expected.append(inp[::-1, :])
+        expected.append(inp[:, ::-1])
+
+        ## negative index tests i.e. n-2 in first component
+        expected.append(inp[-2::-1, ::1])
+
+        # degenerate by offering a forward interval with a negative stride
+        expected.append(inp[0:-1:-1, :])
+        # degenerate with a reverse interval with a positive stride
+        expected.append(inp[-1:0, :])
+        # empty interval in every dimension
+        expected.append(inp[-1:0, 2:3:-1])
+        expected.append(inp[2:2, 2:3:-1])
+        # stride greater than range
+        expected.append(inp[1:3:7, :])
+
+        # Unsupported on ngraph currently
+        #expected.append(inp[...])
+        #expected.append(inp[:, ...])
+        # expected.append(inp[:, tf.newaxis])
         for v, e in zip(slice_vals, expected):
             np.testing.assert_array_equal(v, e)
