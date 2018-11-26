@@ -61,7 +61,7 @@ RUN pip install --upgrade pip
 RUN pip install six enum34 mock
 RUN pip install scipy portpicker sklearn
 RUN pip install keras_applications keras_preprocessing
-RUN pip install yapf
+RUN pip install yapf==0.24.0
 RUN pip install futures
 
 # We include pytest so the Docker image can be used for daily validation
