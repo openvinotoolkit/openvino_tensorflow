@@ -45,18 +45,10 @@ if (PYTHON)
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})
     if (APPLE)
-        set(NGRAPH_VERSION 0.9)
-        # Note: Currently the ngraph version number (i.e., libngraph.0.9.dylib)
-        # is hardcoded as there is no way to get this from the nGraph library.
-        # Once we figure that out, we will replace this.
-        # Possible solutions:
-        # 1. Get the NGRAPH_VERSION exported from nGraph CMake
-        # 2. If #1 isn't possible, then determine this by looking at the 
-        # dependency list?
         execute_process(COMMAND 
             install_name_tool -change 
-            libngraph.${NGRAPH_VERSION}.dylib 
-            @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
+            libngraph.dylib 
+            @loader_path/libngraph.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libngraph_bridge.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
@@ -68,8 +60,8 @@ if (PYTHON)
 
         execute_process(COMMAND 
             install_name_tool -change 
-            libngraph.${NGRAPH_VERSION}.dylib 
-            @loader_path/libngraph.${NGRAPH_VERSION}.dylib 
+            libngraph.dylib 
+            @loader_path/libngraph.dylib 
             ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libcpu_backend.dylib
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
@@ -102,8 +94,8 @@ if (PYTHON)
         if ("${NGRAPH_LIB_FILES};" MATCHES "/libplaidml_backend.dylib;")
             execute_process(COMMAND
                 install_name_tool -change
-                libngraph.${NGRAPH_VERSION}.dylib
-                @loader_path/libngraph.${NGRAPH_VERSION}.dylib
+                libngraph.dylib
+                @loader_path/libngraph.dylib
                 ${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/libplaidml_backend.dylib
                 RESULT_VARIABLE result
                 ERROR_VARIABLE ERR

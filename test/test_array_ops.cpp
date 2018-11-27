@@ -692,11 +692,11 @@ TEST(ArrayOps, StridedSliceTest1) {
   std::vector<int64> cend = {0, 2};
   std::vector<int64> cstride = {1, 1};
 
-  Tensor begin(DT_INT64, TensorShape({cstart.size()}));
+  Tensor begin(DT_INT64, TensorShape({static_cast<int>(cstart.size())}));
   AssignInputValues<int64>(begin, cstart);
-  Tensor end(DT_INT64, TensorShape({cend.size()}));
+  Tensor end(DT_INT64, TensorShape({static_cast<int>(cend.size())}));
   AssignInputValues<int64>(end, cend);
-  Tensor strides(DT_INT64, TensorShape({cstride.size()}));
+  Tensor strides(DT_INT64, TensorShape({static_cast<int>(cstride.size())}));
   AssignInputValues<int64>(strides, cstride);
 
   ops::StridedSlice::Attrs attrs;
@@ -883,11 +883,11 @@ TEST(ArrayOps, DISABLED_StridedSlice) {
           std::iota(data_vect.begin(), data_vect.end(), 0.0f);
           AssignInputValues<float>(input_data, data_vect);
 
-          Tensor begin(DT_INT64, TensorShape({rank}));
+          Tensor begin(DT_INT64, TensorShape({static_cast<int>(rank)}));
           AssignInputValues<int64>(begin, cstart);
-          Tensor end(DT_INT64, TensorShape({rank}));
+          Tensor end(DT_INT64, TensorShape({static_cast<int>(rank)}));
           AssignInputValues<int64>(end, cend);
-          Tensor strides(DT_INT64, TensorShape({rank}));
+          Tensor strides(DT_INT64, TensorShape({static_cast<int>(rank)}));
           AssignInputValues<int64>(strides, cstride);
 
           auto R = ops::StridedSlice(root, input_data, begin, end, strides);

@@ -21,7 +21,7 @@ from subprocess import check_output, call
 import sys
 import shutil
 import glob
-
+import platform
 
 def build_ngraph(src_location, cmake_flags):
     pwd = os.getcwd()
@@ -82,6 +82,16 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir):
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
 
+    # Patch the MacOS pip to avoid the TLS issue
+    if (platform.system() == 'Darwin'):
+        get_pip = open("get-pip.py", "wb")
+        call([
+            "curl",
+            "https://bootstrap.pypa.io/get-pip.py",
+        ],
+             stdout=get_pip)
+        call(["python3", "./get-pip.py"])
+
     # Install the pip packages
     call([
         "pip",
@@ -125,7 +135,10 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir):
     os.environ["PYTHON_BIN_PATH"] = python_executable
     os.environ["PYTHON_LIB_PATH"] = python_lib_path
     os.environ["TF_NEED_IGNITE"] = "0"
-    os.environ["TF_ENABLE_XLA"] = "1"
+    if (platform.system() == 'Darwin'):
+        os.environ["TF_ENABLE_XLA"] = "0"
+    else:
+        os.environ["TF_ENABLE_XLA"] = "1"
     os.environ["TF_NEED_OPENCL_SYCL"] = "0"
     os.environ["TF_NEED_COMPUTECPP"] = "0"
     os.environ["TF_NEED_ROCM"] = "0"
@@ -199,10 +212,13 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
     call(["pip", "install", "-U", tf_wheel_files[0]])
 
-    import tensorflow as tf
-    cxx_abi = tf.__cxx11_abi_flag__
-    print("LIB: %s" % tf.sysconfig.get_lib())
-    print("CXX_ABI: %d" % cxx_abi)
+
+    cxx_abi = "0"
+    if (platform.system() == 'Linux'):
+        import tensorflow as tf
+        cxx_abi = tf.__cxx11_abi_flag__
+        print("LIB: %s" % tf.sysconfig.get_lib())
+        print("CXX_ABI: %d" % cxx_abi)
 
     # popd
     os.chdir(pwd)
@@ -329,7 +345,7 @@ def main():
     os.chdir(build_dir)
 
     # Component versions
-    ngraph_version = "6e06cded1d30030136d5677e0b3851dd4cc04bee"
+    ngraph_version = "v0.10.0-rc.0"
     tf_version = "v1.12.0"
 
     # Download TensorFlow

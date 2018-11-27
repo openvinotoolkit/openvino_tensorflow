@@ -94,10 +94,13 @@ void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2,
              float tolerance);
 
 // Compares two arguments
-template <class T>
+template <typename T>
 bool Compare(T arg0, T arg1) {
   return arg0 == arg1;
 }
+
+template <>
+bool Compare(float arg0, float arg1);
 
 // Compares two Tensors
 template <typename T>
