@@ -75,6 +75,7 @@ static void MaybeLogPlacement(const Graph* graph) {
     }
     final_cluster_map[cluster_idx].insert(node);
   }
+  if (number_of_nodes == 0) return;
 
   int perc_marked_for_clustering_of_total =
       (int)((nodes_marked_for_clustering * 100.0) / number_of_nodes);
