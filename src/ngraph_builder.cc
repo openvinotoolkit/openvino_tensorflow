@@ -2009,9 +2009,9 @@ static Status TranslateMaxPoolOp(
 static Status TranslateMaxPoolGradOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_grad;
+  shared_ptr<ng::Node> ng_input, ng_grad, ng_fwd;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, &ng_input, nullptr, &ng_grad));
+      GetInputNodes(ng_op_map, op, &ng_input, &ng_fwd, &ng_grad));
 
   std::vector<int32> tf_strides;
   std::vector<int32> tf_ksize;
@@ -2041,6 +2041,7 @@ static Status TranslateMaxPoolGradOp(
   BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
   BatchToNGraph(is_nhwc, ng_input);
   BatchToNGraph(is_nhwc, ng_grad);
+  BatchToNGraph(is_nhwc, ng_fwd);
 
   NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
   NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
@@ -2053,9 +2054,9 @@ static Status TranslateMaxPoolGradOp(
                        ng_strides, ng_padding_below, ng_padding_above);
 
   std::shared_ptr<ng::Node> ng_maxpool_backprop =
-      make_shared<ng::op::MaxPoolBackprop>(ng_input, ng_grad, ng_kernel_shape,
-                                           ng_strides, ng_padding_below,
-                                           ng_padding_above);
+      make_shared<ng::op::MaxPoolBackprop>(ng_input, ng_grad, ng_fwd,
+                                           ng_kernel_shape, ng_strides,
+                                           ng_padding_below, ng_padding_above);
   BatchToTensorflow(is_nhwc, ng_maxpool_backprop);
   NGRAPH_VLOG(3) << "maxpoolbackprop outshape: {"
                  << ng::join(ng_maxpool_backprop->get_shape()) << "}";
