@@ -176,7 +176,9 @@ if(USE_PRE_BUILT_NGRAPH)
     if (NOT EXISTS ${NGRAPH_ARTIFACTS_DIR})
         message(FATAL_ERROR 
             "nGraph artifacts directory doesn't exist: " ${NGRAPH_ARTIFACTS_DIR} )
-    endif()    
+    endif() 
+else()
+    set(NGRAPH_ARTIFACTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 endif()
 
 if(UNIT_TEST_TF_CC_DIR)
@@ -214,7 +216,7 @@ if (NOT USE_PRE_BUILT_NGRAPH)
         GIT_TAG v0.10.0-rc.5
         CMAKE_ARGS 
             -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
-            -DNGRAPH_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist 
+            -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR} 
             -DNGRAPH_USE_CXX_ABI=${TensorFlow_CXX_ABI}
             -DNGRAPH_UNIT_TEST_ENABLE=FALSE
             -DNGRAPH_TOOLS_ENABLE=${NGRAPH_TOOLS_ENABLE}
@@ -233,11 +235,8 @@ if (NOT USE_PRE_BUILT_NGRAPH)
         UPDATE_COMMAND ""
         INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
     )
-
-    set(NGRAPH_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
-else()
-    set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
 endif() 
+set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
 
 
 if(OS_VERSION STREQUAL "\"centos\"")

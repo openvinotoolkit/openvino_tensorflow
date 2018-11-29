@@ -41,8 +41,11 @@ setup(
     license='Apache License, Version 2.0',
     platforms='Ubuntu 16.04, macOS Sierra',
     include_package_data=True,
-    package_data={
-        'ngraph_config': [@ngraph_libraries@],
-                 },
+    package_data=
+    {
+        'ngraph_config': [
+            @ngraph_libraries@ @license_files@ @licence_top_level@
+        ],
+    },
     cmdclass={'bdist_wheel': BinaryBdistWheel},
 )
