@@ -45,7 +45,6 @@ class BackendManager {
  public:
   // Returns the backend name currently set
   static string GetCurrentlySetBackendName() {
-    NGRAPH_VLOG(5) << "Getting backend";
     return BackendManager::ng_backend_name_;
   };
 

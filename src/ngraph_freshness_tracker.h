@@ -52,7 +52,8 @@ namespace ngraph_bridge {
 //   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
 //
 //   tracker->AddTensor(tensor_base_ptr); // registers "t"
-//   tracker->MarkFresh(tensor_base_ptr); // marks "t" fresh for ng_func1
+//   tracker->MarkFresh(tensor_base_ptr, ng_func1); // marks "t" fresh for
+//   ng_func1
 //
 //   [tracker->IsFresh(tensor_base_ptr,ng_func1) will return true]
 //   [tracker->IsFresh(tensor_base_ptr,ng_func2) will return false]
@@ -90,18 +91,36 @@ class NGraphFreshnessTracker : public ResourceBase {
 
   std::string DebugString() override { return "FreshnessTracker"; }
 
+  // If freshness_map_ has the base_pointer, then inserts the user function into
+  // its set of user functions
   void MarkFresh(const void* base_pointer,
                  std::shared_ptr<ngraph::Function> user);
+
+  // Checks if the freshness_map_ has the user function for base_pointer, else
+  // returns false
   bool IsFresh(const void* base_pointer,
                std::shared_ptr<ngraph::Function> user);
+
+  // Removes all the functions for the base_pointer in the freshness_map_, i.e.
+  // sets the set<ng::Function> for base_pointer to empty
   void MarkStale(const void* base_pointer);
 
+  // Inserts the base_pointer in the map, initialises the set of functions as
+  // empty set
   void AddTensor(const void* base_pointer);
+
+  // Erases the base_pointer from the freshness_map_
   void RemoveTensor(const void* base_pointer);
+
+  // Removes the user function from the freshness_map_
   void RemoveUser(std::shared_ptr<ngraph::Function> user);
 
  private:
+  // mutex protecting the freshness_map_
   mutex mu_;
+  // for each base pointer (of tensor), maintains a set of ng::Functions that
+  // use it
+  // Each ng function in thus set is then a user of the base_pointer
   std::map<const void*, std::set<std::shared_ptr<ngraph::Function>>>
       freshness_map_;
 

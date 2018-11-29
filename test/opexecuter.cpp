@@ -341,7 +341,8 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     }
   }
   NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
-  auto backend = ng::runtime::Backend::create(ng_backend_type);
+  BackendManager::CreateBackendIfDoesNotExist(ng_backend_type);
+  auto backend = BackendManager::GetBackend(ng_backend_type);
 
   // Allocate tensors for inputs
   vector<std::shared_ptr<ngraph::runtime::Tensor>> ng_ip_tensors;
@@ -360,8 +361,14 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
         << "Datatype of " << i << "th input is "
         << DataTypeString(tf_inputs[i].dtype()) << ". Ngraph's element type is "
         << ng_et;
+
     void* src_ptr = (void*)DMAHelper::base(&tf_inputs[i]);
     auto result = backend->create_tensor(ng_et, ng_shape, src_ptr);
+
+    if (ng_backend_type != "CPU") {
+      result->write(src_ptr, 0, result->get_element_count() * ng_et.size());
+    }
+
     ng_ip_tensors.push_back(result);
   }
 
@@ -394,7 +401,17 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
   // Execute the nGraph
   NGRAPH_VLOG(5) << " Executing on nGraph ";
-  backend->call(ng_function, ng_op_tensors, ng_ip_tensors);
+  BackendManager::LockBackend(ng_backend_type);
+  try {
+    backend->call(ng_function, ng_op_tensors, ng_ip_tensors);
+  } catch (const std::exception& exp) {
+    std::cout << "Exception while executing on nGraph " << exp.what()
+              << std::endl;
+  } catch (...) {
+    std::cout << "Exception while executing on nGraph " << std::endl;
+  }
+  BackendManager::UnlockBackend(ng_backend_type);
+
   NGRAPH_VLOG(5) << " Writing to Tensors ";
   for (auto i = 0; i < ng_function->get_output_size(); i++) {
     // Convert to tf tensor

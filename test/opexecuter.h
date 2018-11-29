@@ -19,6 +19,7 @@
 #include <fstream>
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph_backend_manager.h"
 #include "ngraph_builder.h"
 #include "ngraph_utils.h"
 #include "test_utilities.h"

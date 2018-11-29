@@ -511,26 +511,25 @@ class NGraphEncapsulateOp : public OpKernel {
   }  // end compute
 
  private:
+  // TF Graph for the cluster
   Graph m_graph;
+
   std::unordered_map<std::string, std::shared_ptr<ngraph::Function>>
       m_ng_functions;
   NgFunctionIOCache m_ng_function_input_cache_map;
   NgFunctionIOCache m_ng_function_output_cache_map;
+
+  // Freshness tracker maintains a set of ng::functions using a particular base
+  // pointer(for Tensor)
+  // A single instance of freshness_tracker is used across all
+  // nGraphEncapsulateOp and nGraphVariable op
   NGraphFreshnessTracker* m_freshness_tracker;
   int m_ngraph_cluster;
   std::vector<bool> m_input_is_static;
   std::mutex m_compute_lock;
   string m_op_backend_name;
-  // static std::weak_ptr<ng::runtime::Backend> s_ng_backend_wptr;
-  // static std::string s_ng_backend_name;
-  // static mutex s_ng_backend_mutex;
-  // std::shared_ptr<ng::runtime::Backend> m_ng_backend
-  //     GUARDED_BY(s_ng_backend_mutex);
 };
 
-// std::weak_ptr<ng::runtime::Backend> NGraphEncapsulateOp::s_ng_backend_wptr;
-// std::string NGraphEncapsulateOp::s_ng_backend_name;
-// mutex NGraphEncapsulateOp::s_ng_backend_mutex;
 }  // namespace ngraph_bridge
 
 REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device(DEVICE_CPU),
