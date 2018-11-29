@@ -1,8 +1,13 @@
 math_ops_test.DivNoNanTest.testBasic
 #nn_ops
 math_ops_test.X*
-softmax_centered_test.S*
-softmax_op_test.Softmax #this is a softmax test
-nn_test.MomentsTest
-nn_test.L2*
-nn_test.CReluTest.test_session
+
+core_test.ExpandDimsTest.*
+core_test.IdentityTest.*
+
+core_test.TransposeTest.*
+#softmax_centered_test.S*
+#softmax_op_test.Softmax #this is a softmax test
+#nn_test.MomentsTest
+#nn_test.L2*
+#nn_test.CReluTest.test_session
