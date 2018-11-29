@@ -261,7 +261,7 @@ def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags):
         raise Exception("Error running make command ")
 
     os.chdir(os.path.join("python", "dist"))
-    ngtf_wheel_files = glob.glob("ngraph_config-*.whl")
+    ngtf_wheel_files = glob.glob("ngraph_tensorflow_bridge-*.whl")
     if (len(ngtf_wheel_files) != 1):
         raise Exception(
             "Error getting the ngraph-tf wheel file"
@@ -294,7 +294,7 @@ def install_ngraph_tf(venv_dir, ngtf_pip_whl):
     import tensorflow as tf; 
     print('TensorFlow version: r',tf.__version__); 
     print(tf.__compiler_version__);
-    import ngraph_config; print(ngraph_config.__version__)
+    import ngraph_bridge; print(ngraph_bridge.__version__)
 
 def download_repo(target_name, repo, version):
 

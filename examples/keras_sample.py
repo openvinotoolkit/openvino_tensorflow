@@ -16,7 +16,7 @@
 import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
 import numpy as np
-import ngraph_config
+import ngraph_bridge
 
 # A simple script to run inference and training on resnet 50
 

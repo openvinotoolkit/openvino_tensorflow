@@ -19,7 +19,7 @@
 from __future__ import print_function
 
 import tensorflow as tf
-import ngraph_config
+import ngraph_bridge
 
 if __name__ == '__main__':
     print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)

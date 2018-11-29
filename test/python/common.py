@@ -20,7 +20,7 @@ import random
 
 import tensorflow as tf
 
-import ngraph_config
+import ngraph_bridge
 
 __all__ = ['LIBNGRAPH_BRIDGE', 'NgraphTest']
 
@@ -36,7 +36,7 @@ class NgraphTest(object):
             'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
-        ngraph_config.enable()
+        ngraph_bridge.enable()
         with tf.Session(config=config) as sess:
             retval = l(sess)
 
@@ -52,7 +52,7 @@ class NgraphTest(object):
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-        ngraph_config.disable()
+        ngraph_bridge.disable()
         with tf.Session(config=config) as sess:
             retval = l(sess)
 

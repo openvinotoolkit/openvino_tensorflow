@@ -32,11 +32,11 @@ class BinaryBdistWheel(bdist_wheel):
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
 setup( 
-    name='ngraph_config',
+    name='ngraph_tensorflow_bridge',
     version='0.8.0-rc0',
     description='Intel nGraph compiler and runtime for TensorFlow',
     url='https://ai.intel.com/intel-ngraph/',
-    packages=['ngraph_config'], 
+    packages=['ngraph_bridge'], 
     author='Intel Nervana', 
     license='Apache License, Version 2.0',
     platforms='Ubuntu 16.04, macOS Sierra',

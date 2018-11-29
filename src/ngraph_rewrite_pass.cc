@@ -144,7 +144,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
       DumpGraphs(options, idx, "precapture", "Pre-Capture Graph");
     }
 
-    // If ngraph is disabled via ngraph_config api or NGRAPH_TF_DISABLE is set
+    // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
     if (config::IsEnabled() == false ||
@@ -211,7 +211,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       DumpGraphs(options, idx, "unmarked", "Unmarked Graph");
     }
 
-    // If ngraph is disabled via ngraph_config api or NGRAPH_TF_DISABLE is set
+    // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
     if (config::IsEnabled() == false ||

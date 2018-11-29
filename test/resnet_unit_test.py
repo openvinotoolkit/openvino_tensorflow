@@ -31,7 +31,7 @@ from __future__ import print_function
 import tensorflow as tf
 import argparse
 import numpy as np
-import ngraph_config
+import ngraph_bridge
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3

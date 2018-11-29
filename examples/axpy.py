@@ -25,7 +25,7 @@ import ctypes
 
 import numpy as np
 import tensorflow as tf
-import ngraph_config
+import ngraph_bridge
 
 print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
 

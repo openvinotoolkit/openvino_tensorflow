@@ -17,7 +17,7 @@
 import tensorflow as tf
 import argparse
 import numpy as np
-import ngraph_config
+import ngraph_bridge
 from google.protobuf import text_format
 import json
 import os
@@ -35,10 +35,10 @@ def createFolder(directory):
 def set_os_env(select_device):
     if select_device == 'CPU':
         # run on TF only
-        ngraph_config.disable()
+        ngraph_bridge.disable()
     else:
-        if not ngraph_config.is_enabled():
-            ngraph_config.enable()
+        if not ngraph_bridge.is_enabled():
+            ngraph_bridge.enable()
 
         assert select_device[:
                              7] == "NGRAPH_", "Expecting device name to start with NGRAPH_"
