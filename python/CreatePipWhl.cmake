@@ -47,15 +47,13 @@ if (PYTHON)
     
     # Copy the licenses for ngraph-tf
     foreach(DEP_FILE ${NGRAPH_TF_LICENCE_FILES})
-    message(STATUS "Lic file: ${DEP_FILE}")
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)
-    message(STATUS "lic_file_real_path ${lic_file_real_path}")
         set(
             license_files 
             "${license_files}\"licenses/${lic_file_name}\",\n\t")
         file(COPY ${lic_file_real_path} 
-            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/licenses")        
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge/licenses")        
     endforeach()            
 
     # Get the list of license files for ngraph
@@ -63,25 +61,21 @@ if (PYTHON)
     
     # Copy the licenses for ngraph-tf
     foreach(DEP_FILE ${NGRAPH_LICENCE_FILES})
-    message(STATUS "Lic file: ${DEP_FILE}")
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)
-    message(STATUS "lic_file_real_path ${lic_file_real_path}")
         set(
             license_files 
             "${license_files}\"licenses/${lic_file_name}\",\n\t")
         file(COPY ${lic_file_real_path} 
-            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config/licenses")        
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge/licenses")        
     endforeach()            
 
     # Copy the LICENSE at the toplevel
     file(COPY ${CMAKE_SOURCE_DIR}/../LICENSE 
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_config")        
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge")        
     set(
         licence_top_level 
         "\"LICENSE\"")
-
-    message(STATUS "NGRAPH_INSTALL_DIR ${NGRAPH_INSTALL_DIR}")
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})

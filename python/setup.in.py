@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     package_data=
     {
-        'ngraph_config': [
+        'ngraph_bridge': [
             @ngraph_libraries@ @license_files@ @licence_top_level@
         ],
     },
