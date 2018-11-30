@@ -345,7 +345,7 @@ def main():
     os.chdir(build_dir)
 
     # Component versions
-    ngraph_version = "v0.10.0-rc.6"
+    ngraph_version = "v0.10.0"
     tf_version = "v1.12.0"
 
     # Download TensorFlow
@@ -374,7 +374,9 @@ def main():
         "-DNGRAPH_DISTRIBUTED_ENABLE=FALSE", "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
         "-DNGRAPH_UNIT_TEST_ENABLE=NO", "-DNGRAPH_TOOLS_ENABLE=YES",
         "-DNGRAPH_DEX_ONLY=TRUE", "-DNGRAPH_GPU_ENABLE=NO",
-        "-DNGRAPH_PLAIDML_ENABLE=NO", "-DNGRAPH_DEBUG_ENABLE=NO"
+        "-DNGRAPH_PLAIDML_ENABLE=NO", "-DNGRAPH_DEBUG_ENABLE=NO",
+        "-DNGRAPH_TARGET_ARCH=haswell",
+        "-DNGRAPH_TUNE_ARCH=haswell",
     ]
     if (arguments.debug_build):
         ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
@@ -386,6 +388,8 @@ def main():
 
     ngraph_tf_cmake_flags = [
         "-DUSE_PRE_BUILT_NGRAPH=ON",
+        "-DNGRAPH_TARGET_ARCH=haswell",
+        "-DNGRAPH_TUNE_ARCH=haswell",
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
         "-DUNIT_TEST_ENABLE=ON", "-DTF_SRC_DIR=" + tf_src_dir,
         "-DUNIT_TEST_TF_CC_DIR=" +

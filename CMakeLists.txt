@@ -200,6 +200,18 @@ if(UNIT_TEST_TF_CC_DIR)
 
 endif()
 
+# Enable build target CPU features
+set(
+    NGRAPH_TARGET_ARCH 
+    haswell 
+    CACHE STRING "Target CPU architecture to build for.")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
+
+set(
+    NGRAPH_TUNE_ARCH 
+    haswell 
+    CACHE STRING "Target CPU architecture to tune for")
+
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
 message(STATUS "UNIT_TEST_TF_CC_DIR:        ${TF_PRE_BUILT_LOCATION}")
 
@@ -207,13 +219,15 @@ message(STATUS "NGRAPH_ARTIFACTS_DIR:       ${NGRAPH_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_NGRAPH:       ${USE_PRE_BUILT_NGRAPH}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:  ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_PLAIDML_ENABLE:      ${NGRAPH_PLAIDML_ENABLE}")
+message(STATUS "NGRAPH_TARGET_ARCH:         ${NGRAPH_TARGET_ARCH}")
+message(STATUS "NGRAPH_TUNE_ARCH:           ${NGRAPH_TUNE_ARCH}")
 
 # Find and build ngraph - if not using pre-built one
 if (NOT USE_PRE_BUILT_NGRAPH)
     ExternalProject_Add(
         ext_ngraph
         GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-        GIT_TAG v0.10.0-rc.6
+        GIT_TAG v0.10.0
         CMAKE_ARGS 
             -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
             -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR} 
@@ -226,6 +240,8 @@ if (NOT USE_PRE_BUILT_NGRAPH)
             -DNGRAPH_DEBUG_ENABLE=${NGRAPH_DEBUG_ENABLE}
             -DNGRAPH_PLAIDML_ENABLE=${NGRAPH_PLAIDML_ENABLE}
             -DPlaidML_DIR=${PlaidML_DIR}
+            -DNGRAPH_TARGET_ARCH=${NGRAPH_TARGET_ARCH}
+            -DNGRAPH_TUNE_ARCH=${NGRAPH_TUNE_ARCH}
         TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
         STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
         DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"
