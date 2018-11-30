@@ -51,7 +51,10 @@ class BackendManager {
   // Returns the nGraph supported backend names
   static unordered_set<string> GetSupportedBackendNames();
 
-  static bool IsSupportedBackend(string& backend_name);
+  static size_t GetNumOfSupportedBackends() {
+    return ng_supported_backends_.size();
+  }
+  static bool IsSupportedBackend(const string& backend_name);
 
   static Status SetBackendName(const string& backend_name);
 

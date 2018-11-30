@@ -79,7 +79,7 @@ unordered_set<string> BackendManager::GetSupportedBackendNames() {
   return ng_supported_backends_;
 }
 
-bool BackendManager::IsSupportedBackend(string& backend_name) {
+bool BackendManager::IsSupportedBackend(const string& backend_name) {
   auto itr = BackendManager::ng_supported_backends_.find(backend_name);
   if (itr == BackendManager::ng_supported_backends_.end()) {
     return false;

@@ -550,10 +550,12 @@ Status MarkForClustering(Graph* graph) {
   const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
   if (ng_backend_env_value != nullptr) {
     string backend_env = std::string(ng_backend_env_value);
-    if (!backend_env.empty() &&
-        BackendManager::IsSupportedBackend(backend_env)) {
-      current_backend = backend_env;
+    if (backend_env.empty() ||
+        !BackendManager::IsSupportedBackend(backend_env)) {
+      return errors::Internal("NGRAPH_TF_BACKEND: ", backend_env,
+                              " is not supported");
     }
+    current_backend = backend_env;
   }
   NGRAPH_VLOG(5) << "Found NG Backend " << current_backend;
 

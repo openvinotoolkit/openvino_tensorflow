@@ -336,10 +336,13 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
   if (ng_backend_env_value != nullptr) {
     string backend_env = std::string(ng_backend_env_value);
-    if (!backend_env.empty()) {
-      ng_backend_type = backend_env;
-    }
+    bool valid_ngraph_tf_backend =
+        !backend_env.empty() && BackendManager::IsSupportedBackend(backend_env);
+    ASSERT_TRUE(valid_ngraph_tf_backend) << "NGRAPH_TF_BACKEND " << backend_env
+                                         << " is not a supported backend";
+    ng_backend_type = backend_env;
   }
+
   NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
   BackendManager::CreateBackendIfDoesNotExist(ng_backend_type);
   auto backend = BackendManager::GetBackend(ng_backend_type);

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph/runtime/backend.hpp"
 
 #include "ngraph_api.h"
 
@@ -30,6 +29,7 @@ void ngraph_disable() { Disable(); }
 bool ngraph_is_enabled() { return IsEnabled(); }
 
 size_t ngraph_backends_len() { return BackendsLen(); }
+
 bool ngraph_list_backends(char** backends, int backends_len) {
   const auto ngraph_backends = ListBackends();
   if (backends_len != ngraph_backends.size()) {
@@ -41,10 +41,20 @@ bool ngraph_list_backends(char** backends, int backends_len) {
   }
   return true;
 }
+
 bool ngraph_set_backend(const char* backend) {
   if (SetBackend(string(backend)) != tensorflow::Status::OK()) {
     return false;
   }
+  return true;
+}
+
+extern bool ngraph_is_supported_backend(const char* backend) {
+  return IsSupportedBackend(string(backend));
+}
+
+extern bool ngraph_get_currently_set_backend_name(char** backend) {
+  backend[0] = strdup(GetCurrentlySetBackendName().c_str());
   return true;
 }
 
@@ -59,18 +69,25 @@ void Enable() { _is_enabled = true; }
 void Disable() { _is_enabled = false; }
 bool IsEnabled() { return _is_enabled; }
 
-size_t BackendsLen() { return ListBackends().size(); }
+size_t BackendsLen() { return BackendManager::GetNumOfSupportedBackends(); }
+
 vector<string> ListBackends() {
-  return ngraph::runtime::Backend::get_registered_devices();
+  auto supported_backends = BackendManager::GetSupportedBackendNames();
+  vector<string> backend_list(supported_backends.begin(),
+                              supported_backends.end());
+  return backend_list;
 }
+
 tensorflow::Status SetBackend(const string& type) {
-  try {
-    ngraph::runtime::Backend::create(type);
-  } catch (const runtime_error& e) {
-    return tensorflow::errors::Unavailable("Backend unavailable: ", type,
-                                           " Reason: ", e.what());
-  }
-  return tensorflow::Status::OK();
+  return BackendManager::SetBackendName(type);
+}
+
+bool IsSupportedBackend(const string& type) {
+  return BackendManager::IsSupportedBackend(type);
+}
+
+string GetCurrentlySetBackendName() {
+  return BackendManager::GetCurrentlySetBackendName();
 }
 
 void StartLoggingPlacement() { _is_logging_placement = true; }
