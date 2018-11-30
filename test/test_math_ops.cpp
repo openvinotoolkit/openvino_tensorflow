@@ -671,6 +671,57 @@ TEST(MathOps, FloorModBroadcasting) {
   opexecuter.RunTest();
 }  // end of test op FloorModBroadcasting
 
+// Test op: FloorModNegInt
+// Currently failing with TF produces {2,2}, NG produces {-8,-3}
+// Should enable when NGraph fixes the FloorMod
+TEST(MathOps, DISABLED_FloorModNegInt) {
+  Scope root = Scope::NewRootScope();
+
+  vector<int> nums = {-8, -8};
+  vector<int> divs = {10, 5};
+
+  Tensor A(DT_INT32, TensorShape({1, 2}));
+  Tensor B(DT_INT32, TensorShape({1, 2}));
+
+  AssignInputValues(A, nums);
+  AssignInputValues(B, divs);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::FloorMod(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_INT32};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op FloorModNegInt
+
+TEST(MathOps, FloorModNegFloat) {
+  Scope root = Scope::NewRootScope();
+
+  vector<float> nums = {-8.f, -8.f};
+  vector<float> divs = {10.f, 5.f};
+
+  Tensor A(DT_FLOAT, TensorShape({1, 2}));
+  Tensor B(DT_FLOAT, TensorShape({1, 2}));
+
+  AssignInputValues(A, nums);
+  AssignInputValues(B, divs);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::FloorMod(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op FloorModNegFloat
+
 // Test op: Log
 TEST(MathOps, Log1D) {
   Scope root = Scope::NewRootScope();
