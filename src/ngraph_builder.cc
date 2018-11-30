@@ -3290,7 +3290,8 @@ static Status TranslateSplitOp(
     Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_input));
-
+  // num_split : The number of ways to split. Must evenly divide
+  // value.shape[split_dim]
   int32 num_split;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_split", &num_split));
 
@@ -3305,7 +3306,7 @@ static Status TranslateSplitOp(
   std::vector<int> split_dim_vec;
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 0, static_input_map, &split_dim_vec));
-  int split_dim = split_dim_vec[0];
+  int split_dim = split_dim_vec[0] + (split_dim_vec[0] < 0 ? (int64)rank : 0);
 
   int size = shape[split_dim] / num_split;
   int cursor = 0;
