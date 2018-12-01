@@ -101,9 +101,9 @@ if(DEFINED NGRAPH_TOOLS_ENABLE)
 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/bin/ DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
 endif()
 
-
 # Now create the Python pip package. The following variables are passed to the 
 # CreatePipWhl.cmake
+install(CODE "set(OS_VERSION ${OS_VERSION})")
 install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
 install(CODE "set(NGTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(NGTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")

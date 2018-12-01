@@ -203,13 +203,13 @@ endif()
 # Enable build target CPU features
 set(
     NGRAPH_TARGET_ARCH 
-    haswell 
+    native  
     CACHE STRING "Target CPU architecture to build for.")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 
 set(
     NGRAPH_TUNE_ARCH 
-    haswell 
+    native  
     CACHE STRING "Target CPU architecture to tune for")
 
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
@@ -227,7 +227,7 @@ if (NOT USE_PRE_BUILT_NGRAPH)
     ExternalProject_Add(
         ext_ngraph
         GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-        GIT_TAG v0.10.0
+        GIT_TAG v0.10.1
         CMAKE_ARGS 
             -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
             -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR} 

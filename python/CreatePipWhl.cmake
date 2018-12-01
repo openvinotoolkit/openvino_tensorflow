@@ -31,7 +31,15 @@ if (PYTHON)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python/ngraph_bridge)
 
     # Get the list of libraries we need for the Python pip package
-    file(GLOB NGRAPH_LIB_FILES "${NGTF_INSTALL_DIR}/lib/lib*")
+    # If we are building on CentOS then it's lib64 - else lib
+    set(LIB_SUFFIX lib)
+    if(NOT APPLE)
+        if(OS_VERSION STREQUAL "centos")
+            set(LIB_SUFFIX lib64)
+        endif()
+    endif()
+    message(STATUS "LIB_SUFFIX: ${NGTF_INSTALL_DIR}/${LIB_SUFFIX}")
+    file(GLOB NGRAPH_LIB_FILES "${NGTF_INSTALL_DIR}/${LIB_SUFFIX}/lib*")
     
     # Copy the ngraph_bridge libraries from install
     foreach(DEP_FILE ${NGRAPH_LIB_FILES})
@@ -72,7 +80,7 @@ if (PYTHON)
 
     # Copy the LICENSE at the toplevel
     file(COPY ${CMAKE_SOURCE_DIR}/../LICENSE 
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge")        
+        DESTINATION "${CMAKE_CURRENT_LIST_DIR}/python/ngraph_bridge")        
     set(
         licence_top_level 
         "\"LICENSE\"")
