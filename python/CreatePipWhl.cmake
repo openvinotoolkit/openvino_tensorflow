@@ -27,6 +27,11 @@ if (PYTHON)
     set(INIT_PY     "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge/__init__.py")
     set(PIP_PACKAGE "${CMAKE_CURRENT_BINARY_DIR}/build_pip")
 
+    # Set the readme document location
+    get_filename_component(
+        readme_file_path ${CMAKE_CURRENT_LIST_DIR}/../README.md ABSOLUTE)
+    set(README_DOC \"${readme_file_path}\")
+
     # Create the python/ngraph_bridge directory
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python/ngraph_bridge)
 

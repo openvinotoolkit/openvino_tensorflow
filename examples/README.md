@@ -25,13 +25,28 @@ Models](https://github.com/tensorflow/models/tree/master/official).
 
 ## Running examples from tf_cnn_benchmarks
 
-* First download benchmarks: ```git clone https://github.com/tensorflow/benchmarks.git```
-* Move into the TF scripts folder: ```cd benchmarks/scripts/tf_cnn_benchmarks/```
-* Edit ```convnet_builder.py``` by adding ```import ngraph_bridge```
-* Train for a few iterations:
-```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --data_format NCHW --num_inter_threads 2 --train_dir=./modelsavepath/ --model=resnet50 --num_batches 10 --batch_size=128```
-* Evaluate the model (Inference pass):
-```KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 python tf_cnn_benchmarks.py --data_format NCHW --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath --eval --model=resnet50 --batch_size=128```
+### Use the following instructions
+
+    git clone https://github.com/tensorflow/benchmarks.git
+    git checkout 4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed
+    cd benchmarks/scripts/tf_cnn_benchmarks/
+
+Next enable nGraph by editing the `convnet_builder.py` by adding `import ngraph_bridge` right after
+the `import tensorflow` line.
+
+### Train for a few iterations:
+
+    KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 \
+        python tf_cnn_benchmarks.py --data_format NCHW \
+        --num_inter_threads 2 --train_dir=./modelsavepath/ \
+        --model=resnet50 --num_batches 10 --batch_size=128
+
+### Evaluate the model (Inference pass):
+
+    KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 \
+        python tf_cnn_benchmarks.py --data_format NCHW \
+        --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath \
+        --eval --model=resnet50 --batch_size=128```
 
 
 ### Tips
