@@ -187,20 +187,24 @@ if __name__ == '__main__':
     np.random.seed(100)
     input_dimension = parameters["input_dimension"]
     input_tensor_name = parameters["input_tensor_name"]
+    # Get random value range
+    rand_val_range = parameters["random_val_range"]
     bs = int(parameters["batch_size"])
 
     assert len(input_dimension) == len(
         input_tensor_name
     ), "input_tensor_name dimension should match input_dimension in json file"
 
-    # Get random value range
-    rand_val_range = parameters["random_val_range"]
+    assert len(input_tensor_name) == len(
+        rand_val_range
+    ), "Length of random_val_range should match input_tensor_name in json file"
 
     # Matches the input tensors name with its required dimensions
     input_tensor_dim_map = {}
-    for (dim, name) in zip(input_dimension, input_tensor_name):
+    for (dim, name, val_range) in zip(input_dimension, input_tensor_name,
+                                      rand_val_range):
         random_input = np.random.randint(
-            rand_val_range, size=[bs] + dim).astype('float32')
+            val_range, size=[bs] + dim).astype('float32')
         input_tensor_dim_map[name] = random_input
 
     # Run the model on reference backend

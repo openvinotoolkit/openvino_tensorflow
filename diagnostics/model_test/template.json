@@ -5,7 +5,7 @@
     "frozen_graph_location": "/path/to/the/frozen_graph.pb",
     "input_tensor_name": ["input_tesor_1","input_tensor_2"],
     "output_tensor_name":["output_tensor_name1","output_tensor_name_2"],
-    "random_val_range": 255,
+    "random_val_range": [255],
     "l1_norm_threshold": 0.01,
     "l2_norm_threshold": 0.01,
     "inf_norm_threshold": 0.01,

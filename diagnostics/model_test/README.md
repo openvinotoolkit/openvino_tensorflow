@@ -14,7 +14,7 @@ multiple input tensors and output tensors. Put the input tensor names as a list 
 * Specify the the location of the graph file in the ```graph_location``` of the json file
 * Specify the ```batch_size``` field in the json file to the desired batch size for inference
 * Specify the tolerance between the TF and NGraph outputs at ```l1_norm_threshold```, ```l2_norm_threshold``` and ```inf_norm_threshold``` in the json file 
-* Specify the ```random_val_range``` used to generate the input within 0 to random_val_range
+* Specify the ```random_val_range``` used to generate the input within 0 to random_val_range. You will need to specify them for all the input tensors provided
 
 # To run the model test tool:
 	python verify_model.py --json_file="/path/to/your/json/file"
