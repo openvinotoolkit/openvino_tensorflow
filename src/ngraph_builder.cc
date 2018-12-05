@@ -3092,9 +3092,8 @@ static Status TranslateSoftmaxOp(
   if (shape_size < 1) {
     return errors::InvalidArgument("TF Softmax logits must be >=1 dimension");
   }
-
-  ng_axes_softmax.insert(1);
-
+  auto rank = ng_input->get_shape().size();
+  ng_axes_softmax.insert(rank - 1);
   SaveNgOp(ng_op_map, op->name(),
            make_shared<ng::op::Softmax>(ng_input, ng_axes_softmax));
   return Status::OK();

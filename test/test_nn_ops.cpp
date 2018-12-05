@@ -1063,6 +1063,88 @@ TEST(NNOps, QuantizedMaxPoolSameMinMax) {
   opexecuter.RunTest();
 }
 
+// Softmax on 2D tensor
+TEST(NNOps, Softmax2D) {
+  Scope root = Scope::NewRootScope();
+  int batch = 10;
+  int num_of_classes = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({batch, num_of_classes}));
+
+  AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Softmax(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// Softmax on 3D tensor
+TEST(NNOps, Softmax3D) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4}));
+
+  AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Softmax(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// The non softmax (non last) dim is zero
+TEST(NNOps, SoftmaxZeroDimTest1) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({3, 0, 2}));
+
+  AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Softmax(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// The softmax (last) dim is zero
+TEST(NNOps, SoftmaxZeroDimTest2) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({3, 2, 0}));
+
+  AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Softmax(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
 // Computes softmax cross entropy cost and gradients to backpropagate.
 TEST(NNOps, SparseSoftmaxCrossEntropyWithLogits) {
   Scope root = Scope::NewRootScope();
