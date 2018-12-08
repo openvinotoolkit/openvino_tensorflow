@@ -3332,16 +3332,6 @@ static Status TranslateSplitVOp(
   std::vector<int> lengths;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &lengths));
 
-  int length = 0;
-  int idx = -1;
-  for (int i = 0; i < lengths.size(); ++i) {
-    if (lengths[i] != -1) {
-      length += lengths[i];
-    } else {
-      idx = i;
-    }
-  }
-
   ng::Shape shape = ng_input->get_shape();
   int rank = shape.size();
   std::vector<size_t> lower(rank, 0);
@@ -3351,8 +3341,6 @@ static Status TranslateSplitVOp(
 
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 2, static_input_map, &split_dim_vec));
-
-  int split_dim = split_dim_vec[0] + (split_dim_vec[0] < 0 ? (int64)rank : 0);
 
   // there should be at least one element specified as axis and not more than
   // one
@@ -3365,9 +3353,37 @@ static Status TranslateSplitVOp(
 
   TF_RETURN_IF_ERROR(CheckAxisDimInRange(split_dim_vec, rank));
 
+  int split_dim = split_dim_vec[0] + (split_dim_vec[0] < 0 ? (int64)rank : 0);
+
+  // length: Length of size_splits
+  int length = 0;
+  int idx = -1;
+
+  // Find out the total length of the splits and locate -1 's index, if any
+  bool has_one_neg = false;
+  for (int i = 0; i < lengths.size(); ++i) {
+    if (lengths[i] != -1) {
+      length += lengths[i];
+    } else {
+      if (has_one_neg) {
+        return errors::InvalidArgument("size_splits can only have one -1");
+      } else {
+        idx = i;
+        has_one_neg = true;
+      }
+    }
+  }
+
   // Size splits must sum to the dimension of value along split_dim
   if (idx > 0) {
     lengths[idx] = shape[split_dim] - length;
+  }
+
+  if ((!has_one_neg && length != shape[split_dim]) ||
+      (has_one_neg && lengths[idx] < 0)) {
+    return errors::InvalidArgument(
+        "The length of size_splits must sum to the value of the dimension "
+        "along split_dim");
   }
 
   int cursor = 0;

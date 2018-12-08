@@ -1072,6 +1072,74 @@ TEST(ArrayOps, SplitVPositiveSizeSplits) {
   }
 }  // end of op SplitVPositiveSizeSplits
 
+// Test SplitVZeroSizeSplit op
+TEST(ArrayOps, SplitVZeroSizeSplit) {
+  std::vector<std::vector<int64>> input_shapes;
+  input_shapes.push_back({1, 10});
+
+  std::vector<int64> size_splits = {10, 0};
+  int64_t num_splits = 2;
+
+  vector<int> static_input_indexes = {1, 2};
+  vector<DataType> output_datatypes(num_splits, DT_FLOAT);
+
+  // axis at which the dimension will be inserted
+  // should be -rank <= axis < rank
+  Tensor axis(DT_INT32, TensorShape({}));
+  AssignInputValues<int>(axis, 1);
+
+  for (auto const& shape : input_shapes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+    Tensor size_tensor(DT_INT64, TensorShape({2}));
+    AssignInputValues(size_tensor, size_splits);
+
+    auto R = ops::SplitV(root, input_data, size_tensor, axis, num_splits);
+
+    std::vector<Output> sess_run_fetchoutputs = {R[0], R[1]};
+    OpExecuter opexecuter(root, "SplitV", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}  // end of op SplitVZeroSizeSplit
+
+// Test SplitVZeroSizeNegSplit op
+TEST(ArrayOps, SplitVZeroSizeNegSplit) {
+  std::vector<std::vector<int64>> input_shapes;
+  input_shapes.push_back({1, 10});
+
+  std::vector<int64> size_splits = {10, -1};
+  int64_t num_splits = 2;
+
+  vector<int> static_input_indexes = {1, 2};
+  vector<DataType> output_datatypes(num_splits, DT_FLOAT);
+
+  // axis at which the dimension will be inserted
+  // should be -rank <= axis < rank
+  Tensor axis(DT_INT32, TensorShape({}));
+  AssignInputValues<int>(axis, 1);
+
+  for (auto const& shape : input_shapes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    AssignInputValuesRandom<float>(input_data, -10.0f, 10.0f);
+    Tensor size_tensor(DT_INT64, TensorShape({2}));
+    AssignInputValues(size_tensor, size_splits);
+
+    auto R = ops::SplitV(root, input_data, size_tensor, axis, num_splits);
+
+    std::vector<Output> sess_run_fetchoutputs = {R[0], R[1]};
+    OpExecuter opexecuter(root, "SplitV", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}  // end of op SplitVZeroSizeNegSplit
+
 // Test op: Tile, constructs a tensor by tiling a given tensor
 TEST(ArrayOps, Tile) {
   std::vector<std::vector<int64>> input_sizes;  // 1-D or higher
