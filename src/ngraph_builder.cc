@@ -3580,7 +3580,6 @@ static Status TranslateStridedSliceOp(
     // take care to convert dim from sixze_t to int
     int tf_ignore_end_if_needed =
         end_mask ? (tf_stride > 0 ? dim : (-((int)dim + 1))) : tf_end_idx;
-
     // using size_t for clamped_begin_idx because: clamped_begin_idx is
     // inclusive, so it must lie in [0, dim-1]
     size_t clamped_begin_idx = clamper(tf_ignore_begin_if_needed, dim, true);
@@ -3686,6 +3685,11 @@ static Status TranslateStridedSliceOp(
   auto dim_vec = ng_input->get_shape();
   auto in_rank = dim_vec.size();
 
+  if (in_rank == 0) {
+    return errors::InvalidArgument("Index out of range using input dim ",
+                                   "; input has only ", in_rank, " dims");
+  }
+
   // TODO/Note/Question: Are begin, end and stride vectors are of equal length
 
   // begin, end and stride vectors may not have same size as input rank, hence
@@ -3716,7 +3720,6 @@ static Status TranslateStridedSliceOp(
   // atleast one stride was negative, in which case reverse the input
   if (neg_strides.size() > 0)
     ng_input = make_shared<ng::op::Reverse>(ng_input, neg_strides);
-
   NGRAPH_VLOG(3) << "NG Lower Vector " << ng::join(ng_begin_vec);
   NGRAPH_VLOG(3) << "NG End Vector " << ng::join(ng_end_vec);
   NGRAPH_VLOG(3) << "NG Stride Vector " << ng::join(ng_stride_vec);
@@ -3750,7 +3753,6 @@ static Status TranslateStridedSliceOp(
     }
 
     NGRAPH_VLOG(3) << "Shrink axis mask " << tf_shrink_axis_mask;
-
     ng::Shape ng_final_shape(output_shape);
     ng::AxisVector ng_axis_order(input_shape.size());
     std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
