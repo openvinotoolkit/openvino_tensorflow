@@ -3900,6 +3900,25 @@ static Status TranslateTransposeOp(
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 1, static_input_map, &permutation));
 
+  // Check to make sure that the permutation requested for transpose
+  // is valid for example:
+  // - it should not have duplicates,
+  // - it should have all the dimensions.
+
+  auto ng_input_rank = ng_input->get_shape().size();
+  vector<bool> count(ng_input_rank, false);
+  for (auto p : permutation) {
+    if (0 <= p && p < ng_input_rank) {
+      count[p] = true;
+    }
+  }
+  for (int i = 0; i < ng_input_rank; i++) {
+    if (!count[i]) {
+      return errors::InvalidArgument(i, " is missing from {",
+                                     ng::join(permutation), "}.");
+    }
+  }
+
   ng::AxisVector ng_axis_order;
   ng_axis_order.reserve(permutation.size());
 

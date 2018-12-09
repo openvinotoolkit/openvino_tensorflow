@@ -1174,6 +1174,47 @@ TEST(ArrayOps, Tile) {
   }
 }  // end of test op Tile
 
+// Test op: Transpose
+TEST(ArrayOps, Transpose) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+  int dim3 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2, dim3}));
+  Tensor perm(DT_INT32, TensorShape({3}));
+  AssignInputValues(A, 7.5f);
+  AssignInputValues(perm, vector<int>{2, 1, 0});
+
+  vector<int> static_input_indexes = {1};
+  auto R = ops::Transpose(root, A, perm);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Transpose", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Transpose
+
+// Test op: Transpose With Constant input and empty permuation vector
+TEST(ArrayOps, TransposeConstant) {
+  Scope root = Scope::NewRootScope();
+
+  auto A = ops::Const(root, 12.0f);
+  auto perm = ops::Const(root, std::initializer_list<int>{});
+  auto R = ops::Transpose(root, A, perm);
+
+  vector<int> static_input_indexes = {1};
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Transpose", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Transpose
+
 // Unpacks the given dimension of a rank R tensor into a (R-1) tensor
 TEST(ArrayOps, Unpack) {
   std::vector<std::vector<int64>> input_sizes;
