@@ -1724,12 +1724,23 @@ static Status TranslateFusedBatchNormOp(
     ng_y = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 0);
     ng_mean = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 1);
     ng_variance = make_shared<ng::op::GetOutputElement>(ng_batch_norm, 2);
+    // This is for Bessel's correction in ng_variance:
+    int ng_input_size = ng::shape_size(ng_input->get_shape());
+    int num_channels = ng::shape_size(ng_variance->get_shape());
+    int sample_size = ng_input_size / num_channels;
+    int sample_size_minus_one = sample_size > 1 ? (sample_size - 1) : 1;
+    float factor = float(sample_size) / float(sample_size_minus_one);
+    std::vector<float> Bessel_factor(num_channels, factor);
+    auto Bessel_scale = std::make_shared<ng::op::Constant>(
+        ng_variance->get_element_type(), ng_variance->get_shape(),
+        Bessel_factor);
+    auto variance = ng_variance * Bessel_scale;
 
     BatchToTensorflow(is_nhwc, ng_y);
 
     SaveNgOp(ng_op_map, op->name(), ng_y);
     SaveNgOp(ng_op_map, op->name(), ng_mean);
-    SaveNgOp(ng_op_map, op->name(), ng_variance);
+    SaveNgOp(ng_op_map, op->name(), variance);
     // Output reserve_space_1: A 1D Tensor for the computed batch mean, to be
     // reused in the gradient computation.
     SaveNgOp(ng_op_map, op->name(), ng_mean);
@@ -1744,7 +1755,6 @@ static Status TranslateFusedBatchNormOp(
     SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
   }
 
-  SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
   return Status::OK();
 }
 
