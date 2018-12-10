@@ -1092,6 +1092,14 @@ static Status TranslateConv2DOp(
 
   bool is_nhwc = (tf_data_format == "NHWC");
 
+  // TF Kernel Test Checks
+  // Strides in the batch and depth dimension is not supported
+  if (tf_strides[0] != 1 || tf_strides[is_nhwc ? 3 : 1] != 1) {
+    return errors::InvalidArgument(
+        "Strides in batch and depth dimensions is not supported: ",
+        op->type_string());
+  }
+
   NGRAPH_VLOG(3) << ng::join(tf_strides);
   NGRAPH_VLOG(3) << ng::join(tf_dilations);
   NGRAPH_VLOG(3) << tf_padding_type;
@@ -1160,18 +1168,10 @@ static Status TranslateConv2DBackpropFilterOp(
   bool is_nhwc = (tf_data_format == "NHWC");
 
   // Dilations in batch and depth dimensions must be 1
-  if (is_nhwc) {
-    if (tf_dilations[0] != 1 || tf_dilations[3] != 1) {
-      return errors::InvalidArgument(
-          "Dilations in batch and depth dimensions must be 1: ",
-          op->type_string());
-    }
-  } else {
-    if (tf_dilations[0] != 1 || tf_dilations[1] != 1) {
-      return errors::InvalidArgument(
-          "Dilations in batch and depth dimensions must be 1: ",
-          op->type_string());
-    }
+  if (tf_dilations[0] != 1 || tf_dilations[is_nhwc ? 3 : 1] != 1) {
+    return errors::InvalidArgument(
+        "Dilations in batch and depth dimensions must be 1: ",
+        op->type_string());
   }
 
   std::vector<int64> tf_filter_sizes;
