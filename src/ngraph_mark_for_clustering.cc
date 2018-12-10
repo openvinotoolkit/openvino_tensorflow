@@ -229,7 +229,12 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["DepthwiseConv2dNative"] =
           SimpleConfirmationFunction();
       confirmation_function_map["DepthToSpace"] = SimpleConfirmationFunction();
-      confirmation_function_map["Dequantize"] = SimpleConfirmationFunction();
+      confirmation_function_map["Dequantize"] = [](Node* n, bool* result) {
+        string mode;
+        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "mode", &mode));
+        *result = (mode.compare("SCALED") == 0);
+        return Status::OK();
+      };
       confirmation_function_map["Equal"] = SimpleConfirmationFunction();
       confirmation_function_map["Exp"] = SimpleConfirmationFunction();
       confirmation_function_map["ExpandDims"] = SimpleConfirmationFunction();

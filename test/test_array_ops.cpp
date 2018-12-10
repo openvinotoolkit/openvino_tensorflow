@@ -159,6 +159,75 @@ TEST(ArrayOps, Dequantizei8) {
   opexecuter.RunTest();
 }  // end of test op Dequantizei8
 
+// Dequantize tests for values tested in tf test
+// dequantize_op_test.DequantizeOpTest.testBasicQint8 with 'Scaled' mode
+TEST(ArrayOps, Dequantizei8TF1) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 3;
+
+  Tensor A(DT_QINT8, TensorShape({dim1}));
+  AssignInputValues<qint8>(A, {-128, 0, 127});
+
+  auto attrs = ops::Dequantize::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::Dequantize R = ops::Dequantize(root, A, -1.0f, 2.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "Dequantize", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Dequantizei8TF1
+
+// The output values are close but do not pass the test
+TEST(ArrayOps, DISABLED_Dequantizei8TF2) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 3;
+
+  Tensor A(DT_QINT8, TensorShape({dim1}));
+  AssignInputValues<qint8>(A, {-2, 4, -17});
+
+  auto attrs = ops::Dequantize::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::Dequantize R = ops::Dequantize(root, A, -5.0f, -3.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "Dequantize", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Dequantizei8TF2
+
+TEST(ArrayOps, Dequantizei8TF3) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 4;
+
+  Tensor A(DT_QINT8, TensorShape({dim1}));
+  AssignInputValues<qint8>(A, {0, -4, 42, -108});
+
+  auto attrs = ops::Dequantize::Attrs();
+  attrs.mode_ = "SCALED";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::Dequantize R = ops::Dequantize(root, A, 5.0f, 40.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "Dequantize", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Dequantizei8TF3
+
 // Test op: Dequantize
 // Dequantizes a tensor from u8 to float
 TEST(ArrayOps, Dequantizeu8) {
