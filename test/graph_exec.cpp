@@ -101,7 +101,7 @@ TEST(graph_exec, axpy) {
 
   // Execute the nGraph function.
   cout << "Calling nGraph function\n";
-  backend->call(ng_function, outputs, {t_x, t_y});
+  backend->call(backend->compile(ng_function), outputs, {t_x, t_y});
 
   for (auto i = 0; i < ng_function->get_output_size(); i++) {
     DumpNGTensor(cout, ng_function->get_output_op(i)->get_name(), outputs[i]);

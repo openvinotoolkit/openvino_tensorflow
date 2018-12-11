@@ -459,7 +459,8 @@ class NGraphEncapsulateOp : public OpKernel {
           << "NGraphEncapsulateOp::Compute call starting for cluster "
           << m_ngraph_cluster;
       try {
-        op_backend->call(ng_function, ng_outputs, ng_inputs);
+        op_backend->call(op_backend->compile(ng_function), ng_outputs,
+                         ng_inputs);
       } catch (const std::exception& exp) {
         OP_REQUIRES(ctx, false,
                     errors::Internal(
