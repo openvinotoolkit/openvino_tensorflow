@@ -22,8 +22,9 @@ ExternalProject_Add(
     ext_abseil
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
     GIT_TAG f21d187b80e3b7f08fb279775ea9c8b48c636030
-    CMAKE_ARGS 
+    CMAKE_ARGS
         -DBUILD_TESTING=OFF
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/abseil/src"
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/abseil/build"
     INSTALL_COMMAND ""

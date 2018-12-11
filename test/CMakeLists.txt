@@ -21,7 +21,7 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
    message(
-       FATAL_ERROR 
+       FATAL_ERROR
        "TensorFlow source directory.Use -DTF_SRC_DIR=<tf source directory>"
     )
 endif()
@@ -33,9 +33,9 @@ include_directories(${TensorFlow_SRC_DIR})
 include_directories(${TensorFlow_SRC_DIR}/bazel-genfiles)
 
 add_library(tensorflow_cc_lib SHARED IMPORTED)
-set_target_properties( 
-    tensorflow_cc_lib 
-    PROPERTIES IMPORTED_LOCATION 
+set_target_properties(
+    tensorflow_cc_lib
+    PROPERTIES IMPORTED_LOCATION
     ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so
 )
 
@@ -63,16 +63,16 @@ message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 add_executable(gtest_ngtf ${SRC})
 message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
-# The following custom commands are used to create symlinks for various 
+# The following custom commands are used to create symlinks for various
 # input files needed by the unit test
-add_custom_command( 
+add_custom_command(
     TARGET gtest_ngtf
     PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink 
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt 
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink 
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt 
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
 )
 
@@ -81,12 +81,12 @@ if (APPLE)
 endif()
 
 if (NOT UNIT_TEST_TF_CC_DIR)
-    add_custom_target( 
+    add_custom_target(
         build_tf_cc
         COMMENT "Building TensorFlow C++ library"
-        COMMAND 
-            ${CMAKE_CURRENT_SOURCE_DIR}/build_tf_cc.sh 
-            ${TensorFlow_SRC_DIR} 
+        COMMAND
+            ${CMAKE_CURRENT_SOURCE_DIR}/build_tf_cc.sh
+            ${TensorFlow_SRC_DIR}
             ${NGRAPH_TF_CXX11_ABI}
     )
 
@@ -94,11 +94,11 @@ if (NOT UNIT_TEST_TF_CC_DIR)
 endif()
 
 target_link_libraries(
-    gtest_ngtf 
-    ngraph_bridge 
+    gtest_ngtf
+    ngraph_bridge
     ngraph_lib
-    libgtest 
-    pthread 
+    libgtest
+    pthread
     tensorflow_framework_lib
     tensorflow_cc_lib
 )

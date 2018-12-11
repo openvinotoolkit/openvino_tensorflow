@@ -71,9 +71,9 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-if(NOT APPLE)    
+if(NOT APPLE)
     # FIXME: Doesn't work for Ubuntu
-    execute_process(COMMAND cat /etc/os-release 
+    execute_process(COMMAND cat /etc/os-release
         OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -106,7 +106,7 @@ endif()
 # Therefore we are setting two entries in the RPATH:
 # 1. $ORIGIN/.
 # 2. $ORIGIN/../tensorflow/
-# 
+#
 set(CMAKE_MACOSX_RPATH 1)
 if(APPLE)
     set(CMAKE_INSTALL_RPATH "@loader_path/;@loader_path/../tensorflow;")
@@ -120,18 +120,17 @@ endif()
 find_package(TensorFlow REQUIRED)
 
 add_library(tensorflow_framework_lib SHARED IMPORTED)
-set_target_properties( 
-    tensorflow_framework_lib 
-    PROPERTIES IMPORTED_LOCATION 
+set_target_properties(
+    tensorflow_framework_lib
+    PROPERTIES IMPORTED_LOCATION
     ${TensorFlow_DIR}/libtensorflow_framework.so
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(NGRAPH_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
     message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${NGRAPH_TF_CXX11_ABI}" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_TF_CXX11_ABI}")
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_TF_CXX11_ABI}")
 
 if(APPLE)
     set(LIBNGRAPH_SO "libngraph.dylib")
@@ -158,7 +157,7 @@ endif()
 if(USE_PRE_BUILT_NGRAPH)
     if(NOT NGRAPH_ARTIFACTS_DIR)
         message(
-            FATAL_ERROR 
+            FATAL_ERROR
             "USE_PRE_BUILT_NGRAPH is ON but NGRAPH_ARTIFACTS_DIR is missing"
         )
     endif()
@@ -174,9 +173,9 @@ if(USE_PRE_BUILT_NGRAPH)
         ABSOLUTE
     )
     if (NOT EXISTS ${NGRAPH_ARTIFACTS_DIR})
-        message(FATAL_ERROR 
+        message(FATAL_ERROR
             "nGraph artifacts directory doesn't exist: " ${NGRAPH_ARTIFACTS_DIR} )
-    endif() 
+    endif()
 else()
     set(NGRAPH_ARTIFACTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
 endif()
@@ -194,7 +193,7 @@ if(UNIT_TEST_TF_CC_DIR)
         ABSOLUTE
     )
     if (NOT EXISTS ${TF_PRE_BUILT_LOCATION})
-        message(FATAL_ERROR 
+        message(FATAL_ERROR
             "TensorFlow pre-built directory doesn't exist: " ${TF_PRE_BUILT_LOCATION} )
     endif()
 
@@ -202,14 +201,14 @@ endif()
 
 # Enable build target CPU features
 set(
-    NGRAPH_TARGET_ARCH 
-    native  
+    NGRAPH_TARGET_ARCH
+    native
     CACHE STRING "Target CPU architecture to build for.")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 
 set(
-    NGRAPH_TUNE_ARCH 
-    native  
+    NGRAPH_TUNE_ARCH
+    native
     CACHE STRING "Target CPU architecture to tune for")
 
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
@@ -228,14 +227,15 @@ if (NOT USE_PRE_BUILT_NGRAPH)
         ext_ngraph
         GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
         GIT_TAG 90aa7336dfbf21d3ecab1b50aa8676c2fe1bd75d
-        CMAKE_ARGS 
+        CMAKE_ARGS
             -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
-            -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR} 
+            -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR}
             -DNGRAPH_USE_CXX_ABI=${TensorFlow_CXX_ABI}
             -DNGRAPH_UNIT_TEST_ENABLE=FALSE
             -DNGRAPH_TOOLS_ENABLE=${NGRAPH_TOOLS_ENABLE}
-            -DNGRAPH_DEX_ONLY=TRUE         
+            -DNGRAPH_DEX_ONLY=TRUE
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DNGRAPH_GPU_ENABLE=${NGRAPH_GPU_ENABLE}
             -DNGRAPH_DEBUG_ENABLE=${NGRAPH_DEBUG_ENABLE}
             -DNGRAPH_PLAIDML_ENABLE=${NGRAPH_PLAIDML_ENABLE}
@@ -251,7 +251,7 @@ if (NOT USE_PRE_BUILT_NGRAPH)
         UPDATE_COMMAND ""
         INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
     )
-endif() 
+endif()
 set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
 
 
@@ -262,9 +262,9 @@ else()
 endif()
 
 add_library(ngraph_lib SHARED IMPORTED)
-set_target_properties( 
-    ngraph_lib 
-    PROPERTIES IMPORTED_LOCATION 
+set_target_properties(
+    ngraph_lib
+    PROPERTIES IMPORTED_LOCATION
     ${NGRAPH_IMPORTED_LOCATION}
 )
 
