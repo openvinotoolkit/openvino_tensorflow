@@ -25,7 +25,6 @@ To get a **full** dump use the following set of flags
 * ```NGRAPH_ENABLE_SERIALIZE=1```: Generate nGraph level serialized graphs .json
 * ```NGRAPH_CPU_TRACING=1```: Generate nGraph level function timelines
 * ```NGRAPH_TF_VLOG_LEVEL=5```: Generate ngraph-tf logging info for different passes
-* ```NGRAPH_GENERATE_GRAPHS_PBTXT=1```: Generate .pbtxt files for different phases in ngraph-tf bridge
 * ```NGRAPH_TF_LOG_PLACEMENT=1```: Generates op placement log at stdout
 * ```NGRAPH_TF_DUMP_CLUSTERS=1```: Dumps Encapsulated TF Graphs: ngraph_cluster_<cluster_num>
 * ```NGRAPH_TF_DUMP_GRAPHS=1```: Dumps TF graphs for different passes : precapture, capture, unmarked, marked, clustered, declustered, encapsulated

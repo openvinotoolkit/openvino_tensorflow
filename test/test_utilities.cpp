@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
+#include "ngraph_log.h"
 
 using namespace std;
 
@@ -109,13 +110,15 @@ void Compare(Tensor& T1, Tensor& T2, float tol) {
 }
 
 // Compares Tensor vectors
-void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2) {
+void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2, float rtol,
+             float atol) {
   ASSERT_EQ(v1.size(), v2.size()) << "Length of 2 tensor vectors do not match.";
   for (int i = 0; i < v1.size(); i++) {
+    NGRAPH_VLOG(3) << "Comparing output at index " << i;
     auto expected_dtype = v1[i].dtype();
     switch (expected_dtype) {
       case DT_FLOAT:
-        Compare<float>(v1[i], v2[i]);
+        Compare<float>(v1[i], v2[i], rtol, atol);
         break;
       case DT_INT8:
         Compare<int8>(v1[i], v2[i]);
@@ -149,11 +152,12 @@ void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2) {
 
 // Specialized template for Comparing float
 template <>
-bool Compare(float arg0, float arg1) {
-  if (arg0 == 0 && arg1 == 0) {
+bool Compare(float desired, float actual, float rtol, float atol) {
+  if (desired == 0 && actual == 0) {
     return true;
   } else {
-    return (abs(arg0 - arg1) / max(abs(arg0), abs(arg1)) <= 0.001);
+    // same as numpy.testing.assert_allclose
+    return std::abs(desired - actual) <= (atol + rtol * std::abs(desired));
   }
 }
 

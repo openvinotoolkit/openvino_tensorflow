@@ -85,26 +85,31 @@ void AssignInputValuesRandom(Tensor& A, T min, T max) {
   }
 }
 
-// Comparison Functions
 // Compares two Tensor vectors
-void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2);
+void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2,
+             float rtol = static_cast<float>(1e-05),
+             float atol = static_cast<float>(1e-08));
 
 // TODO: Compares two Tensor vectors considering tolerance
 void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2,
              float tolerance);
 
-// Compares two arguments
+// Compares two individual values in corresponding tensors
 template <typename T>
-bool Compare(T arg0, T arg1) {
+bool Compare(T arg0, T arg1, T rtol, T atol) {
   return arg0 == arg1;
 }
 
 template <>
-bool Compare(float arg0, float arg1);
+bool Compare(float arg0, float arg1, float rtol, float atol);
 
 // Compares two Tensors
+// Right now only tensors contain float values will modify the tolerance
+// parameters
 template <typename T>
-void Compare(const Tensor& T1, const Tensor& T2) {
+void Compare(const Tensor& T1, const Tensor& T2,
+             float rtol = static_cast<float>(1e-05),
+             float atol = static_cast<float>(1e-08)) {
   // Assert rank
   ASSERT_EQ(T1.dims(), T2.dims())
       << "Ranks unequal for T1 and T2. T1.shape = " << T1.shape()
@@ -125,7 +130,7 @@ void Compare(const Tensor& T1, const Tensor& T2) {
   for (int k = 0; k < T_size; k++) {
     auto a = T1_data[k];
     auto b = T2_data[k];
-    bool rt = Compare<T>(a, b);
+    bool rt = Compare<T>(a, b, rtol, atol);
     EXPECT_TRUE(rt) << " TF output " << a << endl << " NG output " << b;
   }
 }

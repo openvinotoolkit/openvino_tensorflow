@@ -85,7 +85,11 @@ class OpExecuter {
 
   // Executes on NGraph backend, then executes on TF, and compares the results
   // NOTE: Env Variable NGRAPH_TF_BACKEND if set, overrides ng_backend_name
-  void RunTest(const string& ng_backend_name = "CPU");
+  void RunTest(const string& ng_backend_name = "CPU",
+               float rtol = static_cast<float>(1e-05),
+               float atol = static_cast<float>(1e-08));
+  // If only want to set tolerance values and running using default backends
+  void RunTest(float rtol, float atol) { return RunTest("CPU", rtol, atol); };
 
   // TODO(malikshr) : Overload RunTest() to take in tolerance
 

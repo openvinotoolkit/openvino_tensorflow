@@ -4047,6 +4047,7 @@ const static std::map<
         {"FloorDiv", TranslateFloorDivOp},
         {"FloorMod", TranslateFloorModOp},
         {"FusedBatchNorm", TranslateFusedBatchNormOp},
+        {"FusedBatchNormV2", TranslateFusedBatchNormOp},
         {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
         {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
         {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},

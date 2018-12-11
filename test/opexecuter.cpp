@@ -129,12 +129,13 @@ OpExecuter::OpExecuter(const Scope sc, const string test_op,
 // Destructor
 OpExecuter::~OpExecuter() {}
 
-void OpExecuter::RunTest(const string& ng_backend_name) {
+void OpExecuter::RunTest(const string& ng_backend_name, float rtol,
+                         float atol) {
   vector<Tensor> ngraph_outputs;
   ExecuteOnNGraph(ngraph_outputs, ng_backend_name);
   vector<Tensor> tf_outputs;
   ExecuteOnTF(tf_outputs);
-  Compare(tf_outputs, ngraph_outputs);
+  Compare(tf_outputs, ngraph_outputs, rtol, atol);
 }
 
 // Uses tf_scope to execute on TF
