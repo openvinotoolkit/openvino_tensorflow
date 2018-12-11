@@ -34,13 +34,10 @@ unordered_set<string> BackendManager::ng_supported_backends_(
     ng_supported_backends.begin(), ng_supported_backends.end());
 
 Status BackendManager::SetBackendName(const string& backend_name) {
-  // Should check if the backend is supported only {"INTERPRETER","CPU"}
-  // currently Should also check if the backend library exists????
   std::lock_guard<std::mutex> lock(BackendManager::ng_backend_name_mutex_);
-  auto itr = BackendManager::ng_supported_backends_.find(backend_name);
-  if (itr == BackendManager::ng_supported_backends_.end()) {
+  if (backend_name.empty() || !IsSupportedBackend(backend_name)) {
     return errors::Internal("Backend ", backend_name,
-                            " is not suported on nGraph");
+                            " is not supported on nGraph");
   }
   BackendManager::ng_backend_name_ = backend_name;
   return Status::OK();
@@ -80,7 +77,8 @@ unordered_set<string> BackendManager::GetSupportedBackendNames() {
 }
 
 bool BackendManager::IsSupportedBackend(const string& backend_name) {
-  auto itr = BackendManager::ng_supported_backends_.find(backend_name);
+  auto itr = BackendManager::ng_supported_backends_.find(
+      backend_name.substr(0, backend_name.find(':')));
   if (itr == BackendManager::ng_supported_backends_.end()) {
     return false;
   }
