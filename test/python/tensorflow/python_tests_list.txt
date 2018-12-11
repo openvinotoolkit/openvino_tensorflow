@@ -305,7 +305,7 @@ slice_op_test.SliceTest.testEmpty
 slice_op_test.SliceTest.testGradientsAll
 slice_op_test.SliceTest.testInt32
 slice_op_test.SliceTest.testInt64Slicing
-#slice_op_test.SliceTest.testInvalidIndex
+slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testRandom
 slice_op_test.SliceTest.testScalarInput
 slice_op_test.SliceTest.testSelectAll
