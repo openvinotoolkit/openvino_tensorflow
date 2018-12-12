@@ -418,7 +418,7 @@ def main():
     os.chdir(build_dir)
 
     # Component versions
-    ngraph_version = "v0.11.0-rc.1"
+    ngraph_version = "v0.11.0"
     tf_version = "v1.12.0"
     venv_dir = 'venv-tf-py3'
     artifacts_location = 'artifacts'
