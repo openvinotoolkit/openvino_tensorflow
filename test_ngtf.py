@@ -100,6 +100,7 @@ def main():
     num_cores = int(psutil.cpu_count(logical=False))
     print("OMP_NUM_THREADS: %s " % str(num_cores))
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
+    os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
     if call([
             "python", test_script, "--tensorflow_path", tensorflow_src_dir,
