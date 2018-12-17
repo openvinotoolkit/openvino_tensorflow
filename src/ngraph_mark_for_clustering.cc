@@ -426,6 +426,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["QuantizedMaxPool"]["T"] =
           NGraphSupportedQuantizedDTypes();
       type_constraint_map["QuantizeV2"]["T"] = NGraphSupportedQuantizedDTypes();
+      type_constraint_map["Rank"]["T"] = NGraphNumericDTypes();
       type_constraint_map["RealDiv"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Relu"]["T"] = NGraphNumericDTypes();

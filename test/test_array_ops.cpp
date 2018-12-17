@@ -512,6 +512,29 @@ TEST(ArrayOps, QuantizeAndDequantizeV2x8xtruexfalse) {
   opexecuter.RunTest();
 }  // end of test op QuantizeAndDequantizeV2x8xtruexfalse
 
+// Test op: Rank Op
+TEST(ArrayOps, Rank) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+  int dim3 = 3;
+
+  Tensor A(DT_INT32, TensorShape({dim1, dim2, dim3}));
+  AssignInputValuesRandom<int32>(A, 2, 20);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::Rank(root, A);
+
+  vector<DataType> output_datatypes = {DT_INT32};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Rank", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of RankOp
+
 // Test op: Shape, outputs the shape of a tensor
 TEST(ArrayOps, Shape2D) {
   Scope root = Scope::NewRootScope();
