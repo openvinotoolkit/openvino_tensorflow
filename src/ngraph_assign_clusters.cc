@@ -192,7 +192,12 @@ Status CanContractEdgeDeadnessCheck(
       Node* src_cluster_dst = src_cluster_edge->dst();
       std::string src_cluster_dst_pred =
           cluster_map.at(src_cluster_dst)->predicate_string;
-      if (pred_check != src_cluster_dst_pred) {
+      // Note that if dst predicate is True, then it does not matter what the
+      // src_cluster_dst_pred is; After merge the merged cluster will always
+      // have a less strict predicate, True (since True is the least strict
+      // predicate)
+      if (!DeadnessAnalysis::IsTruePredString(pred_check) &&
+          pred_check != src_cluster_dst_pred) {
         found_same_out_preds = false;
         break;
       }

@@ -289,7 +289,9 @@ TEST(DeadnessCheck, DTestG3) {
 // Cluster 1: B1
 // Cluster 2: A1, N1, N2, N3
 // Cluster 3: N4
-TEST(DeadnessCheck, DTestG4) {
+// Disabling this test now. Its behaviour has changed and is captured in
+// DTestG4New
+TEST(DeadnessCheck, DISABLED_DTestG4) {
   Scope root = Scope::NewRootScope();
 
   auto dataX = ops::Placeholder(root.WithOpName("dataX"), DataType::DT_FLOAT);
@@ -334,6 +336,71 @@ TEST(DeadnessCheck, DTestG4) {
   ASSERT_NE(A1_cluster, B1_cluster);
   ASSERT_NE(A1_cluster, N4_Sub_cluster);
   ASSERT_NE(B1_cluster, N4_Sub_cluster);
+}
+
+// There will be 4 clusters after the new change
+// Cluster 1: N2
+// Cluster 2: A1, N1, B1
+// Cluster 3: N3
+// Cluster 4: N4
+TEST(DeadnessCheck, DTestG4New) {
+  Scope root = Scope::NewRootScope();
+
+  auto dataX = ops::Placeholder(root.WithOpName("dataX"), DataType::DT_FLOAT);
+  auto predX = ops::Placeholder(root.WithOpName("PredX"), DataType::DT_BOOL);
+  auto SX = ops::Switch(root.WithOpName("SwitchX"), dataX, predX);
+  auto dataY = ops::Placeholder(root.WithOpName("dataY"), DataType::DT_FLOAT);
+  auto predY = ops::Placeholder(root.WithOpName("PredY"), DataType::DT_BOOL);
+  auto SY = ops::Switch(root.WithOpName("SwitchY"), dataY, predY);
+
+  auto A1 = ops::Const(root.WithOpName("A1"), {3.f, 2.f});
+  auto B1 = ops::Const(root.WithOpName("B1"), {3.f, 2.f});
+  auto N1_Add = ops::Add(root.WithOpName("N1_Add"), A1, B1);
+  auto N2_Add = ops::Add(root.WithOpName("N2_Add"), N1_Add, SX.output_false);
+  auto N3_Mul = ops::Mul(root.WithOpName("N3_Mul"), N1_Add, SX.output_false);
+  auto N4_Sub = ops::Sub(root.WithOpName("N4_Sub"), B1, SY.output_false);
+
+  Graph graph(OpRegistry::Global());
+  TF_CHECK_OK(root.ToGraph(&graph));
+  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(AssignClusters(&graph));
+
+  std::map<std::string, Node*> node_map;
+  for (auto node : graph.op_nodes()) {
+    node_map[node->name()] = node;
+  }
+
+  std::vector<std::vector<std::string>> arrangement_specs = {
+      {"A1", "B1", "N1_Add"}, {"N2_Add"}, {"N3_Mul"}, {"N4_Sub"}};
+  int num_groups = arrangement_specs.size();
+  std::vector<int> representative_group_id(num_groups, -1);
+  // Check that all members of a group are assigned the same cluster
+  for (int group_id = 0; group_id < num_groups; group_id++) {
+    auto group = arrangement_specs[group_id];
+    ASSERT_OK(GetNodeCluster(node_map[group[0]],
+                             &(representative_group_id[group_id])));
+    for (int i = 1; i < group.size(); i++) {
+      int curr_node_cluster_id;
+      ASSERT_OK(GetNodeCluster(node_map[group[i]], &curr_node_cluster_id));
+      ASSERT_TRUE(curr_node_cluster_id == representative_group_id[group_id])
+          << "Group " << group_id << " (" << ng::join(group)
+          << ") does not have all members in the same cluster. Expected "
+             "cluster "
+          << representative_group_id[group_id] << " got "
+          << curr_node_cluster_id << " for " << group[i];
+    }
+  }
+
+  // Check that nodes that should be in different clusters are actually in
+  // separate clusters
+  for (int i = 0; i < num_groups; i++) {
+    for (int j = i + 1; j < num_groups; j++) {
+      ASSERT_TRUE(representative_group_id[i] != representative_group_id[j])
+          << " Group " << i << " (" << ng::join(arrangement_specs[i])
+          << ") and group " << j << " (" << ng::join(arrangement_specs[j])
+          << ") were assigned the same cluster " << representative_group_id[i];
+    }
+  }
 }
 
 // Graph 5
