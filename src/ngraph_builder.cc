@@ -2322,7 +2322,7 @@ static Status TranslateRankOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
   ng::Shape input_shape = ng_input->get_shape();
-  auto input_rank = input_shape.size();
+  auto input_rank = static_cast<int>(input_shape.size());
 
   auto ng_rank = std::make_shared<ng::op::Constant>(
       ng::element::i32, ng::Shape(), std::vector<int>({input_rank}));
