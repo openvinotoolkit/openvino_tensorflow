@@ -80,6 +80,8 @@ if (APPLE)
     set(NGRAPH_TF_CXX11_ABI 0)
 endif()
 
+# If pre-built tensorflow CC library is not provided, then build one.
+# TODO: Remove this option once we migrate to build_ngtf.py 
 if (NOT UNIT_TEST_TF_CC_DIR)
     add_custom_target(
         build_tf_cc

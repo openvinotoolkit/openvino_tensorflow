@@ -15,6 +15,8 @@
 #  limitations under the License.
 # ==============================================================================
 import argparse
+from argparse import RawTextHelpFormatter
+
 import errno
 import os
 from subprocess import check_output, call
@@ -23,8 +25,22 @@ import shutil
 import glob
 import platform
 
+def command_executor(cmd, verbose = False, msg=None, stdout=None):
+    '''
+    Executes the command.
+    Example: 
+      - command_executor('ls -lrt')
+      - command_executor(['ls', '-lrt'])
+    '''
+    if type(cmd) == type([]):  #if its a list, convert to string
+        cmd = ' '.join(cmd)
+    if verbose:
+        tag = 'Running COMMAND: ' if msg is None else msg
+        print(tag + cmd)
+    if (call(cmd.split(' '), stdout=stdout) != 0):
+        raise Exception("Error running command: " + cmd)
 
-def build_ngraph(src_location, cmake_flags):
+def build_ngraph(src_location, cmake_flags, verbose):
     pwd = os.getcwd()
 
     src_location = os.path.abspath(src_location)
@@ -47,14 +63,16 @@ def build_ngraph(src_location, cmake_flags):
     cmake_cmd.extend(cmake_flags)
     cmake_cmd.extend([src_location])
 
-    print("nGraph CMAKE flags: %s" % cmake_cmd)
-    result = call(cmake_cmd)
-    if (result != 0):
-        raise Exception("Error running command: " + str(cmake_cmd))
+    command_executor(cmake_cmd, verbose=True)
 
-    result = call(["make", "-j", "install"])
-    if (result != 0):
-        raise Exception("Error running command: make -j install")
+    import psutil
+    num_cores = str(psutil.cpu_count(logical=True))
+    cmd = ["make", "-j"+num_cores, "install"]
+    if verbose:
+        cmd.extend(['VERBOSE=1'])
+
+    command_executor(cmd, verbose=True)
+
     os.chdir(pwd)
 
 
@@ -66,10 +84,7 @@ def install_virtual_env(venv_dir):
     venv_dir = os.path.abspath(venv_dir)
     # Note: We assume that we are using Python 3 (as this script is also being
     # executed under Python 3 as marked in line 1)
-    result = call(["virtualenv", "-p", "python3", venv_dir])
-    if (result != 0):
-        raise Exception("Error running command: virtualenv -p python3 " + venv_dir)
-
+    command_executor(["virtualenv", "-p", "python3", venv_dir])
 
 
 def load_venv(venv_dir):
@@ -91,37 +106,6 @@ def load_venv(venv_dir):
         
     return venv_dir
 
-def load_venv2(venv_dir):
-    # Check if we are already inside the virtual environment
-    return (hasattr(sys, 'real_prefix')
-            or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
-
-    venv_dir = os.path.abspath(venv_dir)
-    old_os_path = os.environ.get('PATH', '')
-    os.environ['PATH'] = os.path.join(venv_dir,
-                                      'bin') + os.pathsep + old_os_path
-    print("PATH %s" % os.environ['PATH'])
-    base = venv_dir
-    if sys.platform == 'win32':
-        site_packages = os.path.join(base, 'Lib', 'site-packages')
-    else:
-        site_packages = os.path.join(base, 'lib', 'python%s' % sys.version[:3],
-                                     'site-packages')
-    prev_sys_path = list(sys.path)
-
-    import site
-    site.addsitedir(site_packages)
-    sys.real_prefix = sys.prefix
-    sys.prefix = base
-    # Move the added items to the front of the path:
-    new_sys_path = []
-    for item in list(sys.path):
-        if item not in prev_sys_path:
-            new_sys_path.append(item)
-            sys.path.remove(item)
-    sys.path[:0] = new_sys_path
-
-
 def setup_venv(venv_dir):
     load_venv(venv_dir)
 
@@ -139,12 +123,13 @@ def setup_venv(venv_dir):
         call(["python3", "./get-pip.py"])
 
     # Install the pip packages
-    if call([
+    package_list = [
         "pip",
         "install",
         "-U",
         "pip",
         "setuptools",
+        "psutil",
         "six",
         "numpy",
         "wheel",
@@ -154,15 +139,13 @@ def setup_venv(venv_dir):
         "--no-deps",
         "keras_preprocessing==1.0.3",
         "--no-deps",
-    ]) != 0:
-        raise Exception("Error running command: pip install ")
-
+    ]
+    command_executor(package_list)
 
     # Print the current packages
-    call(["pip", "list"])
+    command_executor(["pip", "list"])
 
-
-def build_tensorflow(venv_dir, src_dir, artifacts_dir):
+def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
 
     base = sys.prefix
     python_lib_path = os.path.join(base, 'lib', 'python%s' % sys.version[:3],
@@ -198,11 +181,9 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir):
     os.environ["TF_NEED_CUDA"] = "0"
     os.environ["TF_DOWNLOAD_CLANG"] = "0"
     os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
-    os.environ["CC_OPT_FLAGS"] = "-march=native"
+    os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch
 
-    call([
-        "./configure",
-    ])
+    command_executor("./configure")
 
     # Build the python package
     cmd = [
@@ -211,18 +192,15 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir):
         "--config=opt",
         "//tensorflow/tools/pip_package:build_pip_package",
     ]
-    print("Running CMD: " + str(cmd))
-    result = call(cmd)
-    if (result != 0):
-        raise Exception("Error running command: " + str(cmd))
+    if verbosity:
+        cmd.extend(['-s'])
 
-    # Make the pip wheel
-    result = call([
+    command_executor(cmd)
+
+    command_executor([
         "bazel-bin/tensorflow/tools/pip_package/build_pip_package",
         artifacts_dir
     ])
-    if (result != 0):
-        raise Exception("Error running command: build_pip_package: " + artifacts_dir)
 
     # Get the name of the TensorFlow pip package
     tf_wheel_files = glob.glob(os.path.join(artifacts_dir, "tensorflow-*.whl"))
@@ -232,11 +210,7 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir):
     cmd = [
         "bazel", "build", "--config=opt", "//tensorflow:libtensorflow_cc.so"
     ]
-
-    print("Running CMD: " + str(cmd))
-    result = call(cmd)
-    if (result != 0):
-        raise Exception("Error running command: " + str(cmd))
+    command_executor(cmd)
 
     tf_cc_lib_file = "bazel-bin/tensorflow/libtensorflow_cc.so"
 
@@ -274,9 +248,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
             "artifacts directory contains more than 1 version of tensorflow wheel"
         )
 
-    result = call(["pip", "install", "-U", tf_wheel_files[0]])
-    if (result != 0):
-        raise Exception("Error running command: " + str(cmd))
+    command_executor(["pip", "install", "-U", tf_wheel_files[0]])
 
     cxx_abi = "0"
     if (platform.system() == 'Linux'):
@@ -290,13 +262,13 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
     return str(cxx_abi)
 
-def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags):
+def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags, verbose):
     pwd = os.getcwd()
 
     # Load the virtual env
     load_venv(venv_dir)
 
-    call(["pip", "list"])
+    command_executor(["pip", "list"])
 
     # Get the absolute path for the artifacts
     artifacts_location = os.path.abspath(artifacts_location)
@@ -319,12 +291,15 @@ def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags):
     cmake_cmd = ["cmake"]
     cmake_cmd.extend(cmake_flags)
     cmake_cmd.extend([ngtf_src_loc])
-    print("NGRAPH_TF Cmake options: %s" + str(cmake_cmd))
-    if (call(cmake_cmd) != 0):
-        raise Exception("Error running cmake command: " + str(cmake_cmd))
+    command_executor(cmake_cmd)
 
-    if (call(["make", "-j", "install"]) != 0):
-        raise Exception("Error running make command ")
+    import psutil
+    num_cores = str(psutil.cpu_count(logical=True))
+    make_cmd = ["make", "-j"+num_cores, "install"]
+    if verbose:
+        make_cmd.extend(['VERBOSE=1'])
+
+    command_executor(make_cmd)
 
     os.chdir(os.path.join("python", "dist"))
     ngtf_wheel_files = glob.glob("ngraph_tensorflow_bridge-*.whl")
@@ -353,8 +328,7 @@ def install_ngraph_tf(venv_dir, ngtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
-    # Intall the ngtf_wheel
-    call(["pip", "install", "-U", ngtf_pip_whl])
+    command_executor(["pip", "install", "-U", ngtf_pip_whl])
 
     import tensorflow as tf
     print('TensorFlow version: r', tf.__version__)
@@ -375,8 +349,7 @@ def download_repo(target_name, repo, version):
     os.chdir(target_name)
 
     # checkout the specified branch
-    call(["git", "checkout", version])
-
+    command_executor(["git", "checkout", version])
     os.chdir(pwd)
 
 
@@ -384,7 +357,7 @@ def main():
     '''
     Builds TensorFlow, ngraph, and ngraph-tf for python 3
     '''
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
         '--debug_build',
@@ -392,22 +365,56 @@ def main():
         action="store_true")
 
     parser.add_argument(
-        '--skip_tf_build',
-        help="Don't build TensorFlow - use existing one\n",
+        '--verbose_build',
+        help="Display verbose error messages\n",
         action="store_true")
+
+    parser.add_argument(
+        '--use_prebuilt_binaries',
+        help="Skip building nGraph and TensorFlow. Rather use \"build\" directory.\n" + 
+            "The following directory structure is assumed:\n" + 
+            "build\n" + 
+            "  |\n" + 
+            "   -- artifacts\n" + 
+            "  |   |\n" + 
+            "  |   |-- bin (contains binaries from nGraph build)\n" + 
+            "  |   |-- include (contains include files from nGraph build)\n" + 
+            "  |   |-- lib (contains library files from nGraph build)\n" + 
+            "  |   |-- . . . \n" + 
+            "  |   |-- tensorflow (contains tf whl and tf_cc lib)\n" + 
+            "  |\n" +
+            "  |-- tensorflow (contains tf source)\n" +
+            "  |-- venv-tf-py3 (Virtualenv directory to be used)\n",
+        action="store_true"
+        )
 
     arguments = parser.parse_args()
 
     if (arguments.debug_build):
         print("Building in DEBUG mode\n")
 
+    verbosity = False
+    if (arguments.verbose_build):
+        print("Building in with VERBOSE output messages\n")
+        verbosity = True
+
     #-------------------------------
     # Recipe
     #-------------------------------
 
-    # Create the build directory
-    # mkdir build directory
+    # Component versions
+    ngraph_version = "v0.11.0"
+    tf_version = "v1.12.0"
+
+    # Default directories
     build_dir = 'build'
+
+    # Override the pre-built location is specified
+    use_prebuilt_binaries = False
+    if (arguments.use_prebuilt_binaries):
+        print("Using prebuilt artifacts.")
+        use_prebuilt_binaries = True
+
     try:
         os.makedirs(build_dir)
     except OSError as exc:  # Python >2.5
@@ -417,71 +424,75 @@ def main():
     pwd = os.getcwd()
     os.chdir(build_dir)
 
-    # Component versions
-    ngraph_version = "v0.11.0"
-    tf_version = "v1.12.0"
     venv_dir = 'venv-tf-py3'
     artifacts_location = 'artifacts'
 
-    #install virtualenv
-    install_virtual_env(venv_dir)
+    if not use_prebuilt_binaries:
+        #install virtualenv
+        install_virtual_env(venv_dir)
 
     # Load the virtual env
     load_venv(venv_dir)
 
-    # Setup the virtual env
-    setup_venv(venv_dir)
+    if not use_prebuilt_binaries:
+        # Setup the virtual env
+        setup_venv(venv_dir)
 
-    if (not arguments.skip_tf_build):
+    #target_arch = 'native'
+    #if (platform.system() != 'Darwin'):
+    target_arch = 'core-avx2'
+
+    if not use_prebuilt_binaries:
         # Download TensorFlow
         download_repo("tensorflow",
                       "https://github.com/tensorflow/tensorflow.git",
                       tf_version)
 
         # Build TensorFlow
-        build_tensorflow(venv_dir, "tensorflow", artifacts_location)
+        build_tensorflow(venv_dir, "tensorflow", artifacts_location, target_arch, verbosity)
     else:
         print("Skipping the TensorFlow build")
 
     # Install tensorflow
     cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
-    # Download nGraph
-    download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                  ngraph_version)
+    if not use_prebuilt_binaries:
+        # Download nGraph
+        download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
+                    ngraph_version)
 
-    # Now build nGraph
-    artifacts_location = os.path.abspath(artifacts_location)
-    print("ARTIFACTS location: " + artifacts_location)
+        # Now build nGraph
+        artifacts_location = os.path.abspath(artifacts_location)
+        print("ARTIFACTS location: " + artifacts_location)
 
-    ngraph_cmake_flags = [
-        "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-        "-DNGRAPH_DISTRIBUTED_ENABLE=FALSE",
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-        "-DNGRAPH_UNIT_TEST_ENABLE=NO",
-        "-DNGRAPH_DEX_ONLY=TRUE",
-        "-DNGRAPH_GPU_ENABLE=NO",
-        "-DNGRAPH_PLAIDML_ENABLE=NO",
-        "-DNGRAPH_DEBUG_ENABLE=NO",
-        "-DNGRAPH_TARGET_ARCH=native",
-        "-DNGRAPH_TUNE_ARCH=native",
-    ]
-    if (platform.system() != 'Darwin'):
-        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=YES"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=NO"])
+        ngraph_cmake_flags = [
+            "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
+            "-DNGRAPH_DISTRIBUTED_ENABLE=FALSE",
+            "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
+            "-DNGRAPH_UNIT_TEST_ENABLE=NO",
+            "-DNGRAPH_DEX_ONLY=TRUE",
+            "-DNGRAPH_GPU_ENABLE=NO",
+            "-DNGRAPH_PLAIDML_ENABLE=NO",
+            "-DNGRAPH_DEBUG_ENABLE=NO",
+            "-DNGRAPH_TARGET_ARCH=" + target_arch,
+            "-DNGRAPH_TUNE_ARCH=" + target_arch,
+        ]
+        if (platform.system() != 'Darwin'):
+            ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=YES"])
+        else:
+            ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=NO"])
 
-    if (arguments.debug_build):
-        ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+        if (arguments.debug_build):
+            ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-    build_ngraph("./ngraph", ngraph_cmake_flags)
+        build_ngraph("./ngraph", ngraph_cmake_flags, verbosity)
 
     # Next build CMAKE options for the bridge
     tf_src_dir = os.path.abspath("tensorflow")
 
     ngraph_tf_cmake_flags = [
-        "-DUSE_PRE_BUILT_NGRAPH=ON", "-DNGRAPH_TARGET_ARCH=native",
-        "-DNGRAPH_TUNE_ARCH=native",
+        "-DUSE_PRE_BUILT_NGRAPH=ON", "-DNGRAPH_TARGET_ARCH=" + target_arch,
+        "-DNGRAPH_TUNE_ARCH=" + target_arch,
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
         "-DUNIT_TEST_ENABLE=ON",
         "-DTF_SRC_DIR=" + tf_src_dir, "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(
@@ -492,7 +503,7 @@ def main():
 
     # Now build the bridge
     ng_tf_whl = build_ngraph_tf(artifacts_location, "../", venv_dir,
-                                ngraph_tf_cmake_flags)
+                                ngraph_tf_cmake_flags, verbosity)
 
     print("SUCCESSFULLY generated wheel: %s" % ng_tf_whl)
 
