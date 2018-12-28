@@ -24,6 +24,7 @@ import sys
 import shutil
 import glob
 import platform
+import shlex
 
 def command_executor(cmd, verbose = False, msg=None, stdout=None):
     '''
@@ -37,7 +38,7 @@ def command_executor(cmd, verbose = False, msg=None, stdout=None):
     if verbose:
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd)
-    if (call(cmd.split(' '), stdout=stdout) != 0):
+    if (call(shlex.split(cmd), stdout=stdout) != 0):
         raise Exception("Error running command: " + cmd)
 
 def build_ngraph(src_location, cmake_flags, verbose):
@@ -341,6 +342,8 @@ def download_repo(target_name, repo, version):
 
     # First download to a temp folder
     call(["git", "clone", repo, target_name])
+
+    call(["git", "fetch"])
 
     # Next goto this folder nd determine the name of the root folder
     pwd = os.getcwd()
