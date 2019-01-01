@@ -16,6 +16,7 @@
 #ifndef NGRAPH_TF_BRIDGE_UTILS_H_
 #define NGRAPH_TF_BRIDGE_UTILS_H_
 
+#include <fstream>
 #include <ostream>
 #include <sstream>
 
@@ -26,6 +27,7 @@
 #include "tensorflow/core/platform/tensor_coding.h"
 #include "tensorflow/core/util/saved_tensor_slice_util.h"
 
+#include "ngraph/serializer.hpp"
 #include "ngraph_log.h"
 
 namespace tensorflow {
@@ -191,6 +193,10 @@ const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
 // Check to make sure the axis dimension for reduction are in within range.
 // Returns error if axis is out of range. Otherwise returns Status::OK().
 Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
+
+// Serialize a ngraph function into a file
+void NgraphSerialize(const std::string&,
+                     const std::shared_ptr<ngraph::Function>&);
 
 }  // namespace ngraph_bridge
 

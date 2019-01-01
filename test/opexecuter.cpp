@@ -315,19 +315,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   // For debug
   // Serialize to nGraph if needed
   if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-    std::string file_name = "unit_test_" + test_op_type_ + ".json";
-    NGRAPH_VLOG(0) << "Serializing graph to: " << file_name << endl;
-    std::string js = ngraph::serialize(ng_function, 4);
-    std::ofstream f;
-    f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-    try {
-      f.open(file_name);
-      f << js;
-      f.close();
-    } catch (std::ofstream::failure& e) {
-      std::cerr << "Exception opening/closing file " << file_name << endl;
-      std::cerr << e.what() << endl;
-    }
+    NgraphSerialize("unit_test_" + test_op_type_ + ".json", ng_function);
   }
 
   // Create nGraph backend
@@ -409,10 +397,13 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   try {
     backend->call(backend->compile(ng_function), ng_op_tensors, ng_ip_tensors);
   } catch (const std::exception& exp) {
-    std::cout << "Exception while executing on nGraph " << exp.what()
-              << std::endl;
+    BackendManager::UnlockBackend(ng_backend_type);
+    NgraphSerialize("unit_test_error_" + test_op_type_ + ".json", ng_function);
+    FAIL() << "Exception while executing on nGraph " << exp.what();
   } catch (...) {
-    std::cout << "Exception while executing on nGraph " << std::endl;
+    BackendManager::UnlockBackend(ng_backend_type);
+    NgraphSerialize("unit_test_error_" + test_op_type_ + ".json", ng_function);
+    FAIL() << "Exception while executing on nGraph";
   }
   BackendManager::UnlockBackend(ng_backend_type);
 

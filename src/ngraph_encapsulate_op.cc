@@ -14,7 +14,6 @@
  * limitations under the License.
  *******************************************************************************/
 #include <cstdlib>
-#include <fstream>
 #include <mutex>
 #include <utility>
 
@@ -26,8 +25,6 @@
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
-
-#include "ngraph/serializer.hpp"
 
 #include "ngraph_backend_manager.h"
 #include "ngraph_builder.h"
@@ -263,20 +260,8 @@ class NGraphEncapsulateOp : public OpKernel {
 
       // Serialize to nGraph if needed
       if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-        std::string file_name =
-            "tf_function_" + ctx->op_kernel().name() + ".json";
-        NGRAPH_VLOG(0) << "Serializing graph to: " << file_name;
-        std::string js = ngraph::serialize(ng_function, 4);
-        std::ofstream f;
-        f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-        try {
-          f.open(file_name);
-          f << js;
-          f.close();
-        } catch (std::ofstream::failure& e) {
-          std::cerr << "Exception opening/closing file " << file_name << endl;
-          std::cerr << e.what() << endl;
-        }
+        NgraphSerialize("tf_function_" + ctx->op_kernel().name() + ".json",
+                        ng_function);
       }
 
       m_ng_functions[signature] = ng_function;
@@ -462,11 +447,19 @@ class NGraphEncapsulateOp : public OpKernel {
         op_backend->call(op_backend->compile(ng_function), ng_outputs,
                          ng_inputs);
       } catch (const std::exception& exp) {
+        BackendManager::UnlockBackend(m_op_backend_name);
+        NgraphSerialize(
+            "tf_function_error_" + ctx->op_kernel().name() + ".json",
+            ng_function);
         OP_REQUIRES(ctx, false,
                     errors::Internal(
                         "Caught exception while executing nGraph computation: ",
                         exp.what(), "\n"));
       } catch (...) {
+        BackendManager::UnlockBackend(m_op_backend_name);
+        NgraphSerialize(
+            "tf_function_error_" + ctx->op_kernel().name() + ".json",
+            ng_function);
         OP_REQUIRES(
             ctx, false,
             errors::Internal("Error in executing the nGraph computation\n"));
