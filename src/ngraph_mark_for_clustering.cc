@@ -228,6 +228,7 @@ Status MarkForClustering(Graph* graph) {
           SimpleConfirmationFunction();
       confirmation_function_map["DepthwiseConv2dNative"] =
           SimpleConfirmationFunction();
+      confirmation_function_map["Conv3D"] = SimpleConfirmationFunction();
       confirmation_function_map["DepthToSpace"] = SimpleConfirmationFunction();
       confirmation_function_map["Dequantize"] = [](Node* n, bool* result) {
         string mode;
@@ -370,6 +371,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Const"]["dtype"] = NGraphDTypes();
       type_constraint_map["Conv2D"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Conv2DBackpropInput"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["Conv3D"]["T"] = NGraphNumericDTypes();
       type_constraint_map["DepthToSpace"]["T"] = NGraphDTypes();
       type_constraint_map["DepthwiseConv2dNative"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Dequantize"]["T"] = NGraphSupportedQuantizedDTypes();
