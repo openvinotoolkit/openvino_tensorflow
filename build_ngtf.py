@@ -14,6 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
+
 import argparse
 from argparse import RawTextHelpFormatter
 
@@ -305,6 +306,9 @@ def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags, ver
     os.chdir(os.path.join("python", "dist"))
     ngtf_wheel_files = glob.glob("ngraph_tensorflow_bridge-*.whl")
     if (len(ngtf_wheel_files) != 1):
+        print("Multiple Python whl files exist. Please remove old wheels")
+        for whl in nnp_wheel_files:
+            print(whl)
         raise Exception("Error getting the ngraph-tf wheel file")
 
     output_wheel = ngtf_wheel_files[0]
@@ -373,6 +377,11 @@ def main():
         action="store_true")
 
     parser.add_argument(
+        '--target_arch',
+        help="Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
+    )
+
+    parser.add_argument(
         '--use_prebuilt_binaries',
         help="Skip building nGraph and TensorFlow. Rather use \"build\" directory.\n" + 
             "The following directory structure is assumed:\n" + 
@@ -406,7 +415,7 @@ def main():
     #-------------------------------
 
     # Component versions
-    ngraph_version = "v0.11.0"
+    ngraph_version = "v0.12.0-rc.0"
     tf_version = "v1.12.0"
 
     # Default directories
@@ -441,10 +450,13 @@ def main():
         # Setup the virtual env
         setup_venv(venv_dir)
 
-    #target_arch = 'native'
-    #if (platform.system() != 'Darwin'):
-    target_arch = 'core-avx2'
+    target_arch = 'native'
+    if (arguments.target_arch):
+        target_arch = arguments.target_arch
 
+    print("Target Arch: %s" % target_arch)
+
+    cxx_abi = 0
     if not use_prebuilt_binaries:
         # Download TensorFlow
         download_repo("tensorflow",
@@ -453,11 +465,13 @@ def main():
 
         # Build TensorFlow
         build_tensorflow(venv_dir, "tensorflow", artifacts_location, target_arch, verbosity)
+
+        # Install tensorflow
+        cxx_abi = install_tensorflow(venv_dir, artifacts_location)
     else:
         print("Skipping the TensorFlow build")
-
-    # Install tensorflow
-    cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+        import tensorflow as tf
+        cxx_abi = tf.__cxx11_abi_flag__
 
     if not use_prebuilt_binaries:
         # Download nGraph

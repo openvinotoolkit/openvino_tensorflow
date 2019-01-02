@@ -84,7 +84,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.9.0
+        git checkout v0.10.0
 
    
 2. Next run the following Python script to build TensorFlow, nGraph and the bridge:
