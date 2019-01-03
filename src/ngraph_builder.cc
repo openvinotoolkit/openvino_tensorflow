@@ -15,6 +15,7 @@
  *******************************************************************************/
 
 #include "ngraph_builder.h"
+#include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph_conversions.h"
 #include "ngraph_log.h"
 #include "ngraph_utils.h"
@@ -462,64 +463,15 @@ static Status TranslateAddNOp(
   return Status::OK();
 }
 
-static Status TranslateAnyOp(const Node* op,
-                             const std::vector<const Tensor*>& static_input_map,
-                             Builder::OpMap& ng_op_map) {
+template <typename T>
+static Status TranslateLogicalReduction(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input, ng_axes_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axes_op));
-  bool tf_keep_dims;
-  if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
-    tf_keep_dims = false;
-  }
 
-  std::vector<int64> axes;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &axes));
-
-  ng::Shape input_shape = ng_input->get_shape();
-  size_t input_rank = ng_input->get_shape().size();
-
-  TF_RETURN_IF_ERROR(CheckAxisDimInRange(axes, input_rank));
-
-  std::vector<size_t> ng_reduction_axes_vect(axes.size());
-  std::transform(
-      axes.begin(), axes.end(), ng_reduction_axes_vect.begin(),
-      [input_rank](int idx) { return idx + (idx < 0 ? (int)input_rank : 0); });
-  ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
-
-  std::vector<bool> init_val = {false};
-  auto arg_init = make_shared<ng::op::Constant>(ng_input->get_element_type(),
-                                                ng::Shape(0), init_val);
-  auto f_A = make_shared<ng::op::Parameter>(ng::element::boolean, ng::Shape{});
-  auto f_B = make_shared<ng::op::Parameter>(ng::element::boolean, ng::Shape{});
-  auto ng_or = make_shared<ng::Function>(make_shared<ng::op::Or>(f_A, f_B),
-                                         ng::ParameterVector{f_A, f_B});
-
-  shared_ptr<ng::Node> ng_any =
-      make_shared<ng::op::Reduce>(ng_input, arg_init, ng_or, ng_reduction_axes);
-
-  // If keep_dims is specified we need to reshape to put back the reduced
-  // axes, with length 1.
-  if (tf_keep_dims) {
-    ng::Shape ng_result_shape_with_keep(input_rank);
-    for (size_t i = 0; i < input_rank; i++) {
-      ng_result_shape_with_keep[i] =
-          ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
-    }
-    ng::AxisVector ng_axis_order(ng_any->get_shape().size());
-    std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
-    ng_any = make_shared<ng::op::Reshape>(ng_any, ng_axis_order,
-                                          ng_result_shape_with_keep);
-  }
-
-  SaveNgOp(ng_op_map, op->name(), ng_any);
-  return Status::OK();
-}
-
-static Status TranslateAllOp(const Node* op,
-                             const std::vector<const Tensor*>& static_input_map,
-                             Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_axes_op;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_axes_op));
+  static_assert(std::is_base_of<ngraph::op::util::LogicalReduction, T>::value,
+                "Expected LogicalReduction type op (Any or All)");
 
   bool tf_keep_dims;
   if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
@@ -540,16 +492,8 @@ static Status TranslateAllOp(const Node* op,
       [input_rank](int idx) { return idx + (idx < 0 ? (int)input_rank : 0); });
   ng::AxisSet ng_reduction_axes(ng_reduction_axes_vect);
 
-  std::vector<bool> init_val = {true};
-  auto arg_init = make_shared<ng::op::Constant>(ng_input->get_element_type(),
-                                                ng::Shape(0), init_val);
-  auto f_A = make_shared<ng::op::Parameter>(ng::element::boolean, ng::Shape{});
-  auto f_B = make_shared<ng::op::Parameter>(ng::element::boolean, ng::Shape{});
-  auto ng_and = make_shared<ng::Function>(make_shared<ng::op::And>(f_A, f_B),
-                                          ng::ParameterVector{f_A, f_B});
-
-  shared_ptr<ng::Node> ng_all = make_shared<ng::op::Reduce>(
-      ng_input, arg_init, ng_and, ng_reduction_axes);
+  shared_ptr<ng::Node> ng_all_or_any =
+      make_shared<T>(ng_input, ng_reduction_axes);
 
   // If keep_dims is specified we need to reshape to put back the reduced
   // axes, with length 1.
@@ -561,13 +505,13 @@ static Status TranslateAllOp(const Node* op,
           ng_reduction_axes.count(i) == 0 ? input_shape[i] : 1;
     }
 
-    ng::AxisVector ng_axis_order(ng_all->get_shape().size());
+    ng::AxisVector ng_axis_order(ng_all_or_any->get_shape().size());
     std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
-    ng_all = make_shared<ng::op::Reshape>(ng_all, ng_axis_order,
-                                          ng_result_shape_with_keep);
+    ng_all_or_any = make_shared<ng::op::Reshape>(ng_all_or_any, ng_axis_order,
+                                                 ng_result_shape_with_keep);
   }
 
-  SaveNgOp(ng_op_map, op->name(), ng_all);
+  SaveNgOp(ng_op_map, op->name(), ng_all_or_any);
   return Status::OK();
 }
 
@@ -4114,8 +4058,8 @@ const static std::map<
         {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
         {"Add", TranslateBinaryOp<ngraph::op::Add>},
         {"AddN", TranslateAddNOp},
-        {"Any", TranslateAnyOp},
-        {"All", TranslateAllOp},
+        {"Any", TranslateLogicalReduction<ng::op::Any>},
+        {"All", TranslateLogicalReduction<ng::op::All>},
         {"ArgMax", TranslateArgMaxOp},
         {"ArgMin", TranslateArgMinOp},
         {"AvgPool", TranslateAvgPoolOp},
