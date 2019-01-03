@@ -1116,6 +1116,62 @@ TEST(NNOps, L2Loss) {
   }
 }
 
+// Test Op :"MaxPool3D"
+TEST(NNOps, MaxPool3DNDHWCSame) {
+  std::vector<std::vector<int64>> input_sizes;
+  input_sizes.push_back({2, 3, 4, 4, 3});
+  input_sizes.push_back({10, 30, 15, 20, 3});
+
+  vector<int> static_input_indexes = {};
+
+  for (auto const& input_size : input_sizes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(input_size));
+    AssignInputValuesRandom<float>(input_data, -10, 10);
+
+    vector<int> filter = {1, 2, 2, 2, 1};
+    vector<int> stride = {1, 1, 1, 1, 1};
+
+    auto R = ops::MaxPool3D(root, input_data, filter, stride, "SAME");
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    std::vector<Output> sess_run_fetchoutputs = {R};
+
+    OpExecuter opexecuter(root, "MaxPool3D", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}  // end of MaxPool3DNDHWCSame op
+
+// Test Op :"MaxPool3D"
+TEST(NNOps, MaxPool3DNDHWCValid) {
+  std::vector<std::vector<int64>> input_sizes;
+  input_sizes.push_back({2, 3, 4, 4, 3});
+  input_sizes.push_back({10, 30, 15, 20, 3});
+
+  vector<int> static_input_indexes = {};
+
+  for (auto const& input_size : input_sizes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(input_size));
+    AssignInputValuesRandom<float>(input_data, -10, 10);
+
+    vector<int> filter = {1, 2, 2, 2, 1};
+    vector<int> stride = {1, 1, 1, 1, 1};
+
+    auto R = ops::MaxPool3D(root, input_data, filter, stride, "VALID");
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    std::vector<Output> sess_run_fetchoutputs = {R};
+
+    OpExecuter opexecuter(root, "MaxPool3D", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}  // end of MaxPool3DNDHWCValid op
+
 // Note: TF only supports QUINT8 for QMP in CPU
 // Source:
 // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantized_pooling_ops.cc#L127

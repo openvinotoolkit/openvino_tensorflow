@@ -2035,6 +2035,68 @@ static Status TranslateMaxPoolOp(
   return Status::OK();
 }
 
+static Status TranslateMaxPool3DOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  std::vector<int32> tf_strides;
+  std::vector<int32> tf_ksize;
+  std::string tf_padding_type;
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  if (tf_data_format != "NDHWC" && tf_data_format != "NCDHW") {
+    return errors::InvalidArgument(
+        "MaxPool3D data format is neither NDHWC nor NCDHW");
+  }
+
+  bool is_ndhwc = (tf_data_format == "NDHWC");
+
+  NGRAPH_VLOG(3) << ng::join(tf_strides);
+  NGRAPH_VLOG(3) << ng::join(tf_ksize);
+  NGRAPH_VLOG(3) << tf_padding_type;
+  NGRAPH_VLOG(3) << tf_data_format;
+
+  ng::Strides ng_strides(3);
+  ng::Shape ng_image_shape(3);
+  ng::Shape ng_kernel_shape(3);
+
+  BatchedOpParam3DToNGraph(is_ndhwc, tf_strides, ng_strides);
+  BatchedOpParam3DToNGraph(is_ndhwc, ng_input->get_shape(), ng_image_shape);
+  BatchedOpParam3DToNGraph(is_ndhwc, tf_ksize, ng_kernel_shape);
+  BatchToNGraph3D(is_ndhwc, ng_input);
+  NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+  NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+  NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+
+  // TODO: change this once nGraph supports negative padding
+  // (CoordinateDiff) for MaxPool
+  // ng::CoordinateDiff ng_padding_below{0,0};
+  // ng::CoordinateDiff ng_padding_above{0,0};
+  ng::Shape ng_padding_below{0, 0, 0};
+  ng::Shape ng_padding_above{0, 0, 0};
+
+  Builder::MakePadding3D(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_padding_below, ng_padding_above);
+
+  std::shared_ptr<ng::Node> ng_maxpool =
+      make_shared<ng::op::MaxPool>(ng_input, ng_kernel_shape, ng_strides,
+                                   ng_padding_below, ng_padding_above);
+
+  BatchToTensorflow3D(is_ndhwc, ng_maxpool);
+
+  NGRAPH_VLOG(3) << "maxpool outshape: {" << ng::join(ng_maxpool->get_shape())
+                 << "}";
+
+  SaveNgOp(ng_op_map, op->name(), ng_maxpool);
+  return Status::OK();
+}
+
 static Status TranslateMaxPoolGradOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4102,6 +4164,7 @@ const static std::map<
         {"Max", TranslateMaxOp},
         {"Maximum", TranslateBinaryOp<ngraph::op::Maximum>},
         {"MaxPool", TranslateMaxPoolOp},
+        {"MaxPool3D", TranslateMaxPool3DOp},
         {"MaxPoolGrad", TranslateMaxPoolGradOp},
         {"Mean", TranslateMeanOp},
         {"Min", TranslateMinOp},
