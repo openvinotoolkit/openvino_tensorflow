@@ -31,6 +31,8 @@ def run_ngtf_gtests(build_dir):
     root_pwd = os.getcwd()
     build_dir = os.path.abspath(build_dir)
 
+    os.environ['GTEST_OUTPUT'] = 'xml:%s/xunit_gtest.xml' % build_dir
+
     if not os.path.isdir(build_dir):
         raise Exception("build directory doesn't exist: " + build_dir)
 
@@ -62,7 +64,8 @@ def run_ngtf_pytests(venv_dir, build_dir):
     # Next run the ngraph-tensorflow python tests
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
-    command_executor(["python", "-m", "pytest"])
+    command_executor(["python", "-m", "pytest",
+                      ('--junitxml=%s/xunit_pytest.xml' % build_dir)])
 
     os.chdir(root_pwd)
 
@@ -123,6 +126,8 @@ def run_resnet50(build_dir):
 
     call(['git', 'checkout', '4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed'])
 
+    junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
+
     # Update the script by adding `import ngraph_bridge`
     with open('convnet_builder.py', 'a') as outfile:
         call(['echo', 'import ngraph_bridge'], stdout=outfile)
@@ -140,16 +145,24 @@ def run_resnet50(build_dir):
     if os.path.exists(model_save_dir) and os.path.isdir(model_save_dir):
         shutil.rmtree(model_save_dir)
 
+    os.environ['JUNIT_WRAP_FILE'] = "%s/junit_training_test.xml" % build_dir
+    os.environ['JUNIT_WRAP_SUITE'] = 'models'
+    os.environ['JUNIT_WRAP_TEST'] = 'resnet50-training'
+
     # Run training job
-    cmd = [
+    cmd = [junit_script,
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--num_batches', '10', '--model=resnet50', '--batch_size=128'
     ]
     command_executor(cmd)
 
+    os.environ['JUNIT_WRAP_FILE'] = "%s/junit_inference_test.xml" % build_dir
+    os.environ['JUNIT_WRAP_SUITE'] = 'models'
+    os.environ['JUNIT_WRAP_TEST'] = 'resnet50-inference'
+
     # Run inference job
-    cmd = [
+    cmd = [junit_script,
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
