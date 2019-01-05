@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
 #include "tensorflow/core/framework/attr_value_util.h"
 #include "tensorflow/core/framework/graph.pb.h"
@@ -53,6 +54,9 @@ namespace ngraph_bridge {
 
 static const int MIN_NONTRIVIAL_NODES = 2;
 
+unordered_map<string, int> deassigned_histogram;
+int num_nodes_marked_before_deassign = 0;
+
 static void MaybeLogPlacement(const Graph* graph) {
   if (!config::IsLoggingPlacement()) return;
 
@@ -78,35 +82,44 @@ static void MaybeLogPlacement(const Graph* graph) {
   if (number_of_nodes == 0) return;
 
   int perc_marked_for_clustering_of_total =
-      (int)((nodes_marked_for_clustering * 100.0) / number_of_nodes);
+      (int)((num_nodes_marked_before_deassign * 100.0) / number_of_nodes);
   int perc_assigned_clusters_of_total =
       (int)((nodes_assigned_a_cluster * 100.0) / number_of_nodes);
   int perc_assigned_clusters_of_marked =
-      nodes_marked_for_clustering > 0
+      num_nodes_marked_before_deassign > 0
           ? (int)((nodes_assigned_a_cluster * 100.0) /
-                  nodes_marked_for_clustering)
+                  num_nodes_marked_before_deassign)
           : 0;
 
-  std::cout << "Number of nodes in the graph: " << number_of_nodes << std::endl;
-  std::cout << "Number of nodes marked for clustering: "
-            << nodes_marked_for_clustering << " ("
+  std::cout << "\n";  // insert a new line at the start of NGTF_SUMMARY
+  std::cout << "NGTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
+            << std::endl;
+  // print out the number of nodes marked before deassign
+  std::cout << "NGTF_SUMMARY: Number of nodes marked for clustering: "
+            << num_nodes_marked_before_deassign << " ("
             << perc_marked_for_clustering_of_total << "% of total nodes)"
             << std::endl;
-  std::cout << "Number of nodes assigned a cluster: "
+  // print out the number of nodes that are running on NGraph after deassign
+  std::cout << "NGTF_SUMMARY: Number of nodes assigned a cluster: "
             << nodes_assigned_a_cluster << " ("
             << perc_assigned_clusters_of_total << "% of total nodes) \t"
             << " (" << perc_assigned_clusters_of_marked
             << "% of nodes marked for clustering) \t" << std::endl;
-  std::cout << "Number of ngraph clusters :" << final_cluster_map.size() - 1
-            << std::endl;
+  std::cout << "NGTF_SUMMARY: Number of ngraph clusters :"
+            << final_cluster_map.size() - 1 << std::endl;
 
   for (auto kv : final_cluster_map) {
     int cluster_idx = kv.first;
     if (cluster_idx != -1) {
-      std::cout << "Size of nGraph Cluster[" << cluster_idx << "]\t"
-                << kv.second.size() << std::endl;
+      std::cout << "NGTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
+                << "]:\t" << kv.second.size() << std::endl;
     }
   }
+
+  // log the ops gets deassigned
+  std::cout << "NGTF_SUMMARY: Op_deassigned: ";
+  print_node_histogram(deassigned_histogram);
+  std::cout << "\n" << endl;  // insert a line between summary and op placement
 
   for (auto kv : final_cluster_map) {
     int cluster_idx = kv.first;
@@ -123,6 +136,7 @@ static void MaybeLogPlacement(const Graph* graph) {
       std::cout << placement_dev.str() << std::endl;
     }
   }
+  std::cout << endl;
 }
 
 Status DeassignClusters(Graph* graph) {
@@ -130,7 +144,18 @@ Status DeassignClusters(Graph* graph) {
   // When running unit tests, we do not want to see trivial clusters
   // deassigned. This flag (used by the Python tests) makes this possible.
   //
+  num_nodes_marked_before_deassign = 0;  // reset for every TF graph
+  deassigned_histogram.clear();          // reset the histogram
+
   if (std::getenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS") != nullptr) {
+    // still need to calculate num_nodes_marked_before_deassign
+    for (auto node : graph->nodes()) {
+      int cluster_idx;
+
+      if (GetNodeCluster(node, &cluster_idx) == Status::OK()) {
+        num_nodes_marked_before_deassign++;
+      }
+    }
     MaybeLogPlacement(graph);
     return Status::OK();
   }
@@ -144,6 +169,7 @@ Status DeassignClusters(Graph* graph) {
       continue;
     }
 
+    num_nodes_marked_before_deassign++;
     cluster_map[cluster_idx].insert(node);
   }
 
@@ -170,6 +196,8 @@ Status DeassignClusters(Graph* graph) {
         node->ClearAttr("_ngraph_cluster");
         // TODO(amprocte): move attr name to a constant
         node->ClearAttr("_ngraph_marked_for_clustering");
+
+        deassigned_histogram[node->type_string()]++;
       }
     }
   }

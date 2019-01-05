@@ -150,6 +150,9 @@ T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
   return result;
 }
 
+// // Descending sort the map based on the value
+void print_node_histogram(std::unordered_map<string, int>, bool sorted = true);
+
 // Prints the tensor to the given output stream
 std::ostream& DumpNGTensor(std::ostream& s, const std::string& name,
                            const std::shared_ptr<ngraph::runtime::Tensor>& t);
