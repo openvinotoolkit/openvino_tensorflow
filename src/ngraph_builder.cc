@@ -1517,9 +1517,15 @@ static Status TranslateDepthToSpaceOp(
   auto reshaped =
       make_shared<ng::op::Reshape>(ng_input, ng_axis_order, ng_reshape_shape);
 
-  auto final_result = make_shared<ng::op::Reshape>(
-      reshaped, ng_transpose_permutation, ng_output_shape);
-  SaveNgOp(ng_op_map, op->name(), final_result);
+  auto transposed =
+      ng::builder::numpy_transpose(reshaped, ng_transpose_permutation);
+
+  ng::AxisVector ng_axis_order_second_reshape(transposed->get_shape().size());
+  std::iota(ng_axis_order_second_reshape.begin(),
+            ng_axis_order_second_reshape.end(), 0);
+  auto final_reshape = make_shared<ng::op::Reshape>(
+      transposed, ng_axis_order_second_reshape, ng_output_shape);
+  SaveNgOp(ng_op_map, op->name(), final_reshape);
 
   return Status::OK();
 }
