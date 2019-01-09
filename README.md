@@ -21,7 +21,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 1. You need to instantiate a specific kind of `virtualenv`  to 
    be able to proceed with the `ngraph-tf` bridge installation. For 
-   systems with Python 3.n or Python 2.7, these commands are
+   systems with Python 3.5 or Python 2.7, these commands are
 
         virtualenv --system-site-packages -p python3 your_virtualenv 
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
@@ -87,7 +87,7 @@ The installation prerequisites are the same as described in the TensorFlow
         git checkout v0.10.0-rc0
 
    
-2. Next run the following Python script to build TensorFlow, nGraph and the bridge:
+2. Next run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
 
         python3 build_ngtf.py
 
