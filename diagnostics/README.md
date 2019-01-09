@@ -37,7 +37,7 @@ To get a **full** dump use the following set of flags
 * Run this script to parse the dumped graphs to know which encapsulate a node belongs to. At this step nodemap.pkl is created: ```python get_node_encapsulate_map.py ./path/to/folder/where/run_TF_network.py/exists/where/the/dumps/were/created/in/the/last/step/ nodemap.pkl```
 * Modify the graphdef and dump TB file in ```./vis``` using encapsulate information in ```nodemap.pkl```: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt ./vis```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)
 *  View the original network with encapsulate information by running tensorboard, using the files created in ```./vis```.
-
+* Note: you may need to preprocess your protobuffers (pbtxt) to remove the `_class` attribute if any of the above steps result in an error such as `{NodeType} expects to be colocated with unknown node ...`. In that case, first run ```python remove_protobuf_class_attribute.py -d /path/to/pbtxt/to/process/``` and then follow the above steps again.
 ### Disable NGRAPH in python
 * In your script, import ngraph_bridge by using: ```import ngraph_bridge```
 * Disable ngraph by calling: ```ngraph_bridge.disable()```
