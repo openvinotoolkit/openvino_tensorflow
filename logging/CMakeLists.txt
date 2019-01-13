@@ -43,3 +43,12 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Installation
+if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+else()
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
+endif()
+
+install(FILES ngraph_log.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

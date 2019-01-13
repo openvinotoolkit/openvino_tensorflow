@@ -27,7 +27,8 @@ import glob
 import platform
 import shlex
 
-def command_executor(cmd, verbose = False, msg=None, stdout=None):
+
+def command_executor(cmd, verbose=False, msg=None, stdout=None):
     '''
     Executes the command.
     Example: 
@@ -41,6 +42,7 @@ def command_executor(cmd, verbose = False, msg=None, stdout=None):
         print(tag + cmd)
     if (call(shlex.split(cmd), stdout=stdout) != 0):
         raise Exception("Error running command: " + cmd)
+
 
 def build_ngraph(src_location, cmake_flags, verbose):
     pwd = os.getcwd()
@@ -69,7 +71,7 @@ def build_ngraph(src_location, cmake_flags, verbose):
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    cmd = ["make", "-j"+num_cores, "install"]
+    cmd = ["make", "-j" + num_cores, "install"]
     if verbose:
         cmd.extend(['VERBOSE=1'])
 
@@ -105,8 +107,9 @@ def load_venv(venv_dir):
         compile(
             open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
         dict(__file__=activate_this_file), dict(__file__=activate_this_file))
-        
+
     return venv_dir
+
 
 def setup_venv(venv_dir):
     load_venv(venv_dir)
@@ -146,6 +149,7 @@ def setup_venv(venv_dir):
 
     # Print the current packages
     command_executor(["pip", "list"])
+
 
 def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
 
@@ -214,19 +218,24 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
     ]
     command_executor(cmd)
 
-    tf_cc_lib_file = "bazel-bin/tensorflow/libtensorflow_cc.so"
-
     # Remove just in case
     try:
         doomed_file = os.path.join(artifacts_dir, "libtensorflow_cc.so")
+        os.remove(doomed_file)
+        doomed_file = os.path.join(artifacts_dir, "libtensorflow_framework.so")
         os.remove(doomed_file)
     except OSError:
         print("Cannot remove: %s" % doomed_file)
         pass
 
-    # Now copy
+    # Now copy the TF libraries
+    tf_cc_lib_file = "bazel-bin/tensorflow/libtensorflow_cc.so"
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
-    shutil.copy2(tf_cc_lib_file, artifacts_dir)
+    shutil.copy(tf_cc_lib_file, artifacts_dir)
+
+    tf_cc_fmwk_file = "bazel-bin/tensorflow/libtensorflow_framework.so"
+    print("Copying %s to %s" % (tf_cc_fmwk_file, artifacts_dir))
+    shutil.copy(tf_cc_fmwk_file, artifacts_dir)
 
     # popd
     os.chdir(pwd)
@@ -264,7 +273,9 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
     return str(cxx_abi)
 
-def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags, verbose):
+
+def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags,
+                    verbose):
     pwd = os.getcwd()
 
     # Load the virtual env
@@ -297,7 +308,7 @@ def build_ngraph_tf(artifacts_location, ngtf_src_loc, venv_dir, cmake_flags, ver
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    make_cmd = ["make", "-j"+num_cores, "install"]
+    make_cmd = ["make", "-j" + num_cores, "install"]
     if verbose:
         make_cmd.extend(['VERBOSE=1'])
 
@@ -378,27 +389,24 @@ def main():
 
     parser.add_argument(
         '--target_arch',
-        help="Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
+        help=
+        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
     )
 
     parser.add_argument(
         '--use_prebuilt_binaries',
-        help="Skip building nGraph and TensorFlow. Rather use \"build\" directory.\n" + 
-            "The following directory structure is assumed:\n" + 
-            "build\n" + 
-            "  |\n" + 
-            "   -- artifacts\n" + 
-            "  |   |\n" + 
-            "  |   |-- bin (contains binaries from nGraph build)\n" + 
-            "  |   |-- include (contains include files from nGraph build)\n" + 
-            "  |   |-- lib (contains library files from nGraph build)\n" + 
-            "  |   |-- . . . \n" + 
-            "  |   |-- tensorflow (contains tf whl and tf_cc lib)\n" + 
-            "  |\n" +
-            "  |-- tensorflow (contains tf source)\n" +
-            "  |-- venv-tf-py3 (Virtualenv directory to be used)\n",
-        action="store_true"
-        )
+        help=
+        "Skip building nGraph and TensorFlow. Rather use \"build\" directory.\n"
+        + "The following directory structure is assumed:\n" + "build\n" +
+        "  |\n" + "   -- artifacts\n" + "  |   |\n" +
+        "  |   |-- bin (contains binaries from nGraph build)\n" +
+        "  |   |-- include (contains include files from nGraph build)\n" +
+        "  |   |-- lib (contains library files from nGraph build)\n" +
+        "  |   |-- . . . \n" +
+        "  |   |-- tensorflow (contains tf whl and tf_cc lib)\n" + "  |\n" +
+        "  |-- tensorflow (contains tf source)\n" +
+        "  |-- venv-tf-py3 (Virtualenv directory to be used)\n",
+        action="store_true")
 
     arguments = parser.parse_args()
 
@@ -439,6 +447,9 @@ def main():
     venv_dir = 'venv-tf-py3'
     artifacts_location = 'artifacts'
 
+    artifacts_location = os.path.abspath(artifacts_location)
+    print("ARTIFACTS location: " + artifacts_location)
+
     if not use_prebuilt_binaries:
         #install virtualenv
         install_virtual_env(venv_dir)
@@ -456,7 +467,7 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
-    cxx_abi = 0
+    cxx_abi = "0"
     if not use_prebuilt_binaries:
         # Download TensorFlow
         download_repo("tensorflow",
@@ -464,7 +475,8 @@ def main():
                       tf_version)
 
         # Build TensorFlow
-        build_tensorflow(venv_dir, "tensorflow", artifacts_location, target_arch, verbosity)
+        build_tensorflow(venv_dir, "tensorflow", artifacts_location,
+                         target_arch, verbosity)
 
         # Install tensorflow
         cxx_abi = install_tensorflow(venv_dir, artifacts_location)
@@ -476,11 +488,9 @@ def main():
     if not use_prebuilt_binaries:
         # Download nGraph
         download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                    ngraph_version)
+                      ngraph_version)
 
         # Now build nGraph
-        artifacts_location = os.path.abspath(artifacts_location)
-        print("ARTIFACTS location: " + artifacts_location)
 
         ngraph_cmake_flags = [
             "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
@@ -508,6 +518,7 @@ def main():
     tf_src_dir = os.path.abspath("tensorflow")
 
     ngraph_tf_cmake_flags = [
+        "-DNGRAPH_TF_INSTALL_PREFIX=" + artifacts_location,
         "-DUSE_PRE_BUILT_NGRAPH=ON", "-DNGRAPH_TARGET_ARCH=" + target_arch,
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,

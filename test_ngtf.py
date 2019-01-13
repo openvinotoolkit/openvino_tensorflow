@@ -64,8 +64,10 @@ def run_ngtf_pytests(venv_dir, build_dir):
     # Next run the ngraph-tensorflow python tests
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
-    command_executor(["python", "-m", "pytest",
-                      ('--junitxml=%s/xunit_pytest.xml' % build_dir)])
+    command_executor([
+        "python", "-m", "pytest",
+        ('--junitxml=%s/xunit_pytest.xml' % build_dir)
+    ])
 
     os.chdir(root_pwd)
 
@@ -108,8 +110,8 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
     command_executor([
-            "python", test_script, "--tensorflow_path", tf_src_dir,
-            "--run_tests_from_file", test_manifest_file
+        "python", test_script, "--tensorflow_path", tf_src_dir,
+        "--run_tests_from_file", test_manifest_file
     ])
 
     os.chdir(root_pwd)
@@ -150,9 +152,9 @@ def run_resnet50(build_dir):
     os.environ['JUNIT_WRAP_TEST'] = 'resnet50-training'
 
     # Run training job
-    cmd = [junit_script,
-        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
-        '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
+    cmd = [
+        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format',
+        'NCHW', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--num_batches', '10', '--model=resnet50', '--batch_size=128'
     ]
     command_executor(cmd)
@@ -162,13 +164,53 @@ def run_resnet50(build_dir):
     os.environ['JUNIT_WRAP_TEST'] = 'resnet50-inference'
 
     # Run inference job
-    cmd = [junit_script,
-        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
-        '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
+    cmd = [
+        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format',
+        'NCHW', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
     ]
     command_executor(cmd)
 
+    os.chdir(root_pwd)
+
+
+def run_cpp_example_test(build_dir):
+
+    root_pwd = os.getcwd()
+    build_dir = os.path.abspath(build_dir)
+    os.chdir(build_dir)
+
+    # Create the example workspace directory and chdir there
+    path = 'cpp_example'
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+    os.chdir(path)
+
+    # Copy the files
+    files = [
+        '../../examples/tf_cpp_examples/hello_tf.cpp',
+        '../../examples/tf_cpp_examples/Makefile'
+    ]
+    command_executor(['cp', files[0], './'])
+    command_executor(['cp', files[1], './'])
+
+    # Now execute Make
+    command_executor(['make'])
+
+    # Now run the hello_tf example
+    # First setup the LD_LIB_PATH
+    if (platform.system() == 'Darwin'):
+        ld_path_name = 'DYLD_LIBRARY_PATH'
+    else:
+        ld_path_name = 'LD_LIBRARY_PATH'
+
+    os.environ[ld_path_name] = '../artifacts/lib:../artifacts/tensorflow'
+    command_executor('./hello_tf')
+
+    # Return to the original directory
     os.chdir(root_pwd)
 
 
@@ -196,6 +238,9 @@ def main():
 
     # Next run Python unit tests
     run_ngtf_pytests(venv_dir, build_dir)
+
+    # Run the C++ example build/run test
+    run_cpp_example_test('build')
 
     # Next run the TensorFlow python tests
     run_tensorflow_pytests(venv_dir, build_dir, './', 'build/tensorflow')
