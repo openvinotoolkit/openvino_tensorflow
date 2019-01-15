@@ -26,6 +26,7 @@
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
+#include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_cluster_manager.h"
 #include "ngraph_log.h"
@@ -435,6 +436,34 @@ Status AssignClusters(Graph* graph) {
 
   NGRAPH_VLOG(2) << "Starting contraction";
   bool changed;
+  bool collect_non_contracting_edge_info = false;  // Must init with false
+
+  // 7 exhaustive reasons why edges might non contract
+  // The reasons are not mutually exclusive, but there is an order of priority
+  // that makes them mutually exclusive
+  enum EdgeNonContractionReasons {
+    NOTANOP,      // edge connects to non-ops
+    UNSUPPORTED,  // either the src or dst is an unsupported op
+    DEADNESS,     // deadness criteria not met
+    BACKEND,      // different backends
+    SAMECLUSTER,  // both ends lie in the same cluster
+    STATICINPUT,  // static input in dst (not fed by const)
+    PATHEXISTS    // base case reason. contraction causes cycles
+  };
+  // a cluster pair is the string "cluster1_id, cluster2_id"
+  // Using string, because a pair won't hash unless implemented
+  // Note that we store a vector of "reasons", because there could be multiple
+  // reasons
+  using ClusterPairToReason =
+      std::unordered_map<std::string, std::vector<EdgeNonContractionReasons>>;
+  ClusterPairToReason cluster_separation_reason;
+  auto get_string_key = [](int x, int y) {
+    return to_string(x) + "," + to_string(y);
+  };
+  // (src id, dst id) -> (src predicate, dst predicate, other neighbours
+  // predicates)
+  std::unordered_map<std::string, tuple<string, string, vector<string>>>
+      deadness_info;
 
   do {
     changed = false;
@@ -443,18 +472,26 @@ Status AssignClusters(Graph* graph) {
       Node* src = edge->src();
       Node* dst = edge->dst();
 
-      if (!src->IsOp() || !dst->IsOp()) {
-        continue;
-      }
-
       int src_index = cluster_map[src]->index;
       int dst_index = cluster_map[dst]->index;
+
+      if (!src->IsOp() || !dst->IsOp()) {
+        if (collect_non_contracting_edge_info) {
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(EdgeNonContractionReasons::NOTANOP);
+        }
+        continue;
+      }
 
       if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
         NGRAPH_VLOG(5) << "Skipping (not marked): " << src->name() << "["
                        << edge->src_output() << "]@" << src_index << " -> "
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
+        if (collect_non_contracting_edge_info) {
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(EdgeNonContractionReasons::UNSUPPORTED);
+        }
         continue;
       }
 
@@ -469,6 +506,24 @@ Status AssignClusters(Graph* graph) {
                        << edge->src_output() << "]@" << src_index << " -> "
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
+        if (collect_non_contracting_edge_info) {
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(EdgeNonContractionReasons::DEADNESS);
+
+          auto src_cluster = cluster_map[src];
+          auto dst_cluster = cluster_map[dst];
+          vector<string> neighbours_predicate;
+          // Collect predicates of src's neighbours (except dst)
+          for (const Edge* src_cluster_edge : src_cluster->outgoing_edges) {
+            if (src_cluster_edge != edge) {
+              neighbours_predicate.push_back(
+                  cluster_map[src_cluster_edge->dst()]->predicate_string);
+            }
+          }
+          deadness_info[get_string_key(src_index, dst_index)] = make_tuple(
+              cluster_map.at(src)->predicate_string,
+              cluster_map.at(dst)->predicate_string, neighbours_predicate);
+        }
         continue;
       }
 #endif
@@ -482,6 +537,10 @@ Status AssignClusters(Graph* graph) {
                        << edge->src_output() << "]@" << src_index << " -> "
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
+        if (collect_non_contracting_edge_info) {
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(EdgeNonContractionReasons::BACKEND);
+        }
         // do not contract, src and dst node cannot be in the same cluster
         continue;
       }
@@ -493,14 +552,46 @@ Status AssignClusters(Graph* graph) {
         MergeClusters(edge, cluster_map);
         // something changed
         changed = true;
+      } else {
+        if (collect_non_contracting_edge_info) {
+          // either static input
+          // or there exists a longer path, so contracting this edge causes
+          // cycles
+          std::vector<int32> static_inputs;
+          GetStaticInputs(dst, &static_inputs);
+          bool is_static = std::find(static_inputs.begin(), static_inputs.end(),
+                                     edge->dst_input()) != static_inputs.end();
+          // 3 possible reasons here:
+          // src dst lies in same cluster, so nothing to do (trivial cycle
+          // induced in graphcycles)
+          // dst has static input
+          // a longer irreducible path exists
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(src_index == dst_index
+                             ? EdgeNonContractionReasons::SAMECLUSTER
+                             : (is_static
+                                    ? EdgeNonContractionReasons::STATICINPUT
+                                    : EdgeNonContractionReasons::PATHEXISTS));
+        }
+      }
+    }
+
+    if (!changed && config::IsLoggingPlacement()) {
+      // This will be entered only once if logging is enabled
+      // When entered, it will force the do-while to run one last time,
+      // collecting information
+      if (!collect_non_contracting_edge_info) {
+        changed = true;
+        collect_non_contracting_edge_info = true;
       }
     }
   } while (changed);
+
   NGRAPH_VLOG(2) << "Contraction done";
 
   NGRAPH_VLOG(2) << "Starting tagging";
   std::set<Cluster*> seen;
-
+  unordered_map<int, int> cluster_to_encapsulate;
   for (auto kv : cluster_map) {
     auto cluster = kv.second.get();
     if (seen.count(cluster) != 0) {
@@ -559,11 +650,90 @@ Status AssignClusters(Graph* graph) {
 
       // TODO(amprocte): move attr name to a constant
       node->AddAttr("_ngraph_cluster", cluster_idx);
+
+      if (config::IsLoggingPlacement()) {
+        // map from cluster id to ngraph_cluster id
+        cluster_to_encapsulate[cluster->index] = cluster_idx;
+      }
     }
 
     seen.insert(cluster);
   }
   NGRAPH_VLOG(2) << "Tagging done";
+
+  if (config::IsLoggingPlacement()) {
+    std::cout << "\n=============Edge contraction logs=============\n";
+    int num_reasons = 7;  // the number of elements in the reasons enum
+    vector<int> reason_count(num_reasons,
+                             0);  // histogram of reasons of non-contraction
+    int num_non_contracted = 0;
+    std::vector<string> reason_string(  // to convert the enum to string
+        {"NOTANOP", "UNSUPPORTED", "DEADNESS", "BACKEND", "SAMECLUSTER",
+         "STATICINPUT", "PATHEXISTS"});
+    std::cout
+        << "_ngraph_cluster i->j: non contraction reason histogram (Cannot be "
+           "UNSUPPORTED or NOTANOP because unsupported ops will not be "
+           "assigned an "
+           "encapsulate)\n";
+    for (auto it : cluster_separation_reason) {
+      num_non_contracted += it.second.size();
+      auto cluster_id_vector = ng::split(it.first, ',');
+      // function to find if this cluster became an ngraph_cluster
+      // returns ngraph_cluster id if yes, else returns -1
+      auto find_in_map = [&cluster_to_encapsulate, &cluster_id_vector](int x) {
+        auto itr = cluster_to_encapsulate.find(stoi(cluster_id_vector[x]));
+        return itr == cluster_to_encapsulate.end() ? -1 : itr->second;
+      };
+      int src_encapsulate = find_in_map(0);
+      int dst_encapsulate = find_in_map(1);
+      bool both_src_dst_are_encapsulates =
+          src_encapsulate >= 0 && dst_encapsulate >= 0;
+      bool src_dst_are_distinct = src_encapsulate != dst_encapsulate;
+      if (both_src_dst_are_encapsulates && src_dst_are_distinct) {
+        // vector of reasons why 2 clusters were separated
+        vector<string> reasons_for_this_separation;
+        for (auto& inner_itr : it.second) {
+          reason_count[inner_itr]++;
+          reasons_for_this_separation.push_back(reason_string[inner_itr]);
+        }
+        auto reasons_string = ng::join(reasons_for_this_separation);
+        if (reasons_string.find(reason_string[0]) != std::string::npos) {
+          return errors::Internal(
+              "UNSUPPORTED should not be a reason why 2 encapsulates did not "
+              "merge, because unsupported ops would not end up in "
+              "encapsulates",
+              reasons_string);
+        }
+        std::unordered_map<string, int> pair_reason_hist;
+        for (auto& i : ng::split(reasons_string, ',')) {
+          pair_reason_hist[i]++;
+        }
+        std::cout << src_encapsulate << "->" << dst_encapsulate << ": ";
+        print_node_histogram(pair_reason_hist);
+        std::cout << endl;
+        auto deadness_itr = deadness_info.find(it.first);
+        if (deadness_itr != deadness_info.end()) {
+          auto deadness_predicates_tpl = deadness_itr->second;
+          std::cout << "Source[" << src_encapsulate
+                    << "] predicate: " << std::get<0>(deadness_predicates_tpl)
+                    << " Destination[" << dst_encapsulate
+                    << "] predicate: " << std::get<1>(deadness_predicates_tpl)
+                    << " Neighbours predicates: "
+                    << ng::join(std::get<2>(deadness_predicates_tpl)) << endl;
+        }
+      }
+    }
+    std::cout << endl;
+    if (num_non_contracted != graph->num_edges()) {
+      return errors::Internal(
+          "Number of non contracted edges ", num_non_contracted,
+          " should match number of edges ", graph->num_edges());
+    }
+    for (int i = 0; i < num_reasons; i++) {
+      std::cout << (i == 0 ? "NGTF_SUMMARY: " : "") << reason_string[i] << ": "
+                << reason_count[i] << (i < (num_reasons - 1) ? ", " : "\n");
+    }
+  }
 
   return Status::OK();
 }

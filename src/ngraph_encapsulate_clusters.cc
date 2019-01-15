@@ -34,6 +34,7 @@
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
+#include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_cluster_manager.h"
 #include "ngraph_encapsulate_clusters.h"
@@ -148,12 +149,16 @@ Status EncapsulateClusters(Graph* graph) {
   // add inputs for them to the corresponding FunctionDef(s).
   std::map<int, int> retval_index_count;
   std::map<int, int> arg_index_count;
+  int count_arg = 0, count_retval = 0, count_both_arg_retval = 0,
+      count_free = 0, count_encapsulated = 0, count_tot = 0;
 
   for (auto edge : graph->edges()) {
+    count_tot++;
     // TODO(amprocte): should actually keep of these. During clustering we
     // will already have identified any intra-cluster control deps. Should
     // maintain inter-cluster control deps.
     if (edge->IsControlEdge()) {
+      count_free++;
       continue;
     }
 
@@ -163,6 +168,7 @@ Status EncapsulateClusters(Graph* graph) {
     // TODO(amprocte): the following rejects edges involving source/sink. Is
     // that what we want to do?
     if (!src->IsOp() || !dst->IsOp()) {
+      count_free++;
       continue;
     }
 
@@ -177,6 +183,7 @@ Status EncapsulateClusters(Graph* graph) {
     // Ignore edges within a cluster. (Note that this test also works when
     // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
     if (dst_cluster_idx == src_cluster_idx) {
+      count_encapsulated++;
       continue;
     }
 
@@ -190,6 +197,8 @@ Status EncapsulateClusters(Graph* graph) {
                    << edge->src_output() << "] in " << src_cluster_idx << " to "
                    << dst->name() << "[" << edge->dst_input() << "] in "
                    << dst_cluster_idx << ", datatype: " << dt;
+
+    bool edge_is_retval = false, edge_is_arg = false;
 
     // If the source node lies within a cluster, we must create an output for
     // it from the source cluster. For the moment we will just store this
@@ -209,6 +218,7 @@ Status EncapsulateClusters(Graph* graph) {
           NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
       new_output_node_def->set_name(output_name);
       new_output_node_def->set_op("_Retval");
+      edge_is_retval = true;
 
       std::stringstream ss_input_to_retval;
       ss_input_to_retval << src->name() << ":" << edge->src_output();
@@ -246,6 +256,7 @@ Status EncapsulateClusters(Graph* graph) {
           NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
       new_input_node_def->set_name(new_input_name);
       new_input_node_def->set_op("_Arg");
+      edge_is_arg = true;
 
       SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
       SetAttrValue(arg_index_count[dst_cluster_idx],
@@ -255,6 +266,38 @@ Status EncapsulateClusters(Graph* graph) {
 
       cluster_input_map[dst_cluster_idx].push_back(
           std::make_tuple(src->id(), edge->src_output(), dt));
+    }
+
+    if (config::IsLoggingPlacement()) {
+      if (edge_is_arg && edge_is_retval) {
+        count_both_arg_retval++;
+      } else {
+        if (edge_is_arg) {
+          count_arg++;
+        } else {
+          count_retval++;
+        }
+      }
+    }
+  }
+
+  if (config::IsLoggingPlacement()) {
+    int computed_edge_number = count_arg + count_retval +
+                               count_both_arg_retval + count_free +
+                               count_encapsulated;
+    std::cout << "NGTF_SUMMARY: Types of edges:: args: " << count_arg
+              << ", retvals: " << count_retval
+              << ", both arg and retval: " << count_both_arg_retval
+              << ", free: " << count_free
+              << ", encapsulated: " << count_encapsulated
+              << ", total: " << count_tot
+              << ", computed total: " << computed_edge_number << endl;
+    if (!(computed_edge_number == count_tot &&
+          count_tot == graph->num_edges())) {
+      return errors::Internal("Computed number of edges ", computed_edge_number,
+                              " and counted number of edges ", count_tot,
+                              " and number of edges from querying TF api ",
+                              graph->num_edges(), " do not match up\n");
     }
   }
 
