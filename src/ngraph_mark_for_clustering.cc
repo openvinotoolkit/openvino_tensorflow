@@ -322,6 +322,7 @@ Status MarkForClustering(Graph* graph) {
           SimpleConfirmationFunction();
       confirmation_function_map["Split"] = SimpleConfirmationFunction();
       confirmation_function_map["SplitV"] = SimpleConfirmationFunction();
+      confirmation_function_map["Sqrt"] = SimpleConfirmationFunction();
       confirmation_function_map["Square"] = SimpleConfirmationFunction();
       confirmation_function_map["SquaredDifference"] =
           SimpleConfirmationFunction();
@@ -457,6 +458,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Split"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["T"] = NGraphDTypes();
       type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
+      type_constraint_map["Sqrt"]["T"] = NGraphDTypes();
       type_constraint_map["Square"]["T"] = NGraphDTypes();
       type_constraint_map["SquaredDifference"]["T"] = NGraphDTypes();
       type_constraint_map["Squeeze"]["T"] = NGraphDTypes();
