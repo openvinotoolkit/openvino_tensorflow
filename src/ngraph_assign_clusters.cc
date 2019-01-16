@@ -662,19 +662,30 @@ Status AssignClusters(Graph* graph) {
   NGRAPH_VLOG(2) << "Tagging done";
 
   if (config::IsLoggingPlacement()) {
-    std::cout << "\n=============Edge contraction logs=============\n";
     int num_reasons = 7;  // the number of elements in the reasons enum
-    vector<int> reason_count(num_reasons,
-                             0);  // histogram of reasons of non-contraction
+    // histogram of reasons of non-contraction of clusters
+    vector<int> reason_count_clusters(num_reasons, 0);
+    vector<int> reason_count_encapsulates(num_reasons, 0);
     int num_non_contracted = 0;
     std::vector<string> reason_string(  // to convert the enum to string
         {"NOTANOP", "UNSUPPORTED", "DEADNESS", "BACKEND", "SAMECLUSTER",
          "STATICINPUT", "PATHEXISTS"});
+    auto forbidden_reasons_for_not_merging_clusters =
+        std::set<EdgeNonContractionReasons>{
+            EdgeNonContractionReasons::NOTANOP,
+            EdgeNonContractionReasons::UNSUPPORTED,
+            EdgeNonContractionReasons::SAMECLUSTER};
+    std::function<bool(EdgeNonContractionReasons)> is_forbidden_reason =
+        [&forbidden_reasons_for_not_merging_clusters](
+            EdgeNonContractionReasons r) -> bool {
+      return forbidden_reasons_for_not_merging_clusters.find(r) !=
+             forbidden_reasons_for_not_merging_clusters.end();
+    };
     std::cout
-        << "_ngraph_cluster i->j: non contraction reason histogram (Cannot be "
-           "UNSUPPORTED or NOTANOP because unsupported ops will not be "
-           "assigned an "
-           "encapsulate)\n";
+        << "Encapsulate i->j: non contraction reason histogram (Cannot be "
+           "UNSUPPORTED, NOTANOP or SAMECLUSTER because unsupported ops will "
+           "not be "
+           "assigned an encapsulate)\n";
     for (auto it : cluster_separation_reason) {
       num_non_contracted += it.second.size();
       auto cluster_id_vector = ng::split(it.first, ',');
@@ -689,50 +700,88 @@ Status AssignClusters(Graph* graph) {
       bool both_src_dst_are_encapsulates =
           src_encapsulate >= 0 && dst_encapsulate >= 0;
       bool src_dst_are_distinct = src_encapsulate != dst_encapsulate;
-      if (both_src_dst_are_encapsulates && src_dst_are_distinct) {
-        // vector of reasons why 2 clusters were separated
-        vector<string> reasons_for_this_separation;
-        for (auto& inner_itr : it.second) {
-          reason_count[inner_itr]++;
-          reasons_for_this_separation.push_back(reason_string[inner_itr]);
+      vector<int> reason_count_encapsulates_for_pair(num_reasons, 0);
+      bool pair_has_reason = false;
+      string deadness_string = "";
+      for (auto& inner_itr : it.second) {
+        // This if checks if the pair are 2 distinct encapsulates
+        // In which case it asserts certain non-merging reasons are not possible
+        // And also prints the reasons of non-merging
+        if (both_src_dst_are_encapsulates && src_dst_are_distinct) {
+          if (is_forbidden_reason(inner_itr)) {
+            return errors::Internal(
+                inner_itr,
+                " should not be a reason why 2 encapsulates did not "
+                "merge, because unsupported ops would not end up in "
+                "encapsulates");
+          }
+          pair_has_reason = true;
+          reason_count_encapsulates_for_pair[inner_itr]++;
+          auto deadness_itr = deadness_info.find(it.first);
+          if (deadness_itr != deadness_info.end()) {
+            auto deadness_predicates_tpl = deadness_itr->second;
+            deadness_string +=
+                ("Source[" + to_string(src_encapsulate) + "] predicate: " +
+                 std::get<0>(deadness_predicates_tpl) + " Destination[" +
+                 to_string(dst_encapsulate) + "] predicate: " +
+                 std::get<1>(deadness_predicates_tpl) +
+                 " Neighbours predicates: " +
+                 ng::join(std::get<2>(deadness_predicates_tpl)) + "\n");
+          }
         }
-        auto reasons_string = ng::join(reasons_for_this_separation);
-        if (reasons_string.find(reason_string[0]) != std::string::npos) {
-          return errors::Internal(
-              "UNSUPPORTED should not be a reason why 2 encapsulates did not "
-              "merge, because unsupported ops would not end up in "
-              "encapsulates",
-              reasons_string);
-        }
-        std::unordered_map<string, int> pair_reason_hist;
-        for (auto& i : ng::split(reasons_string, ',')) {
-          pair_reason_hist[i]++;
-        }
-        std::cout << src_encapsulate << "->" << dst_encapsulate << ": ";
-        print_node_histogram(pair_reason_hist);
-        std::cout << endl;
-        auto deadness_itr = deadness_info.find(it.first);
-        if (deadness_itr != deadness_info.end()) {
-          auto deadness_predicates_tpl = deadness_itr->second;
-          std::cout << "Source[" << src_encapsulate
-                    << "] predicate: " << std::get<0>(deadness_predicates_tpl)
-                    << " Destination[" << dst_encapsulate
-                    << "] predicate: " << std::get<1>(deadness_predicates_tpl)
-                    << " Neighbours predicates: "
-                    << ng::join(std::get<2>(deadness_predicates_tpl)) << endl;
-        }
+        reason_count_clusters[inner_itr]++;
+      }  // end of the for over each cluster pair's reason vector
+
+      if (deadness_string != "") {
+        std::cout << "Deadness predicates information\n";
+        std::cout << deadness_string;
       }
-    }
+
+      if (pair_has_reason) {
+        std::cout << src_encapsulate << "->" << dst_encapsulate << ": ";
+        for (int reason_id = 0; reason_id < num_reasons; reason_id++) {
+          if (!is_forbidden_reason(
+                  static_cast<EdgeNonContractionReasons>(reason_id))) {
+            // Update global histogram with current pair's counts
+            reason_count_encapsulates[reason_id] +=
+                reason_count_encapsulates_for_pair[reason_id];
+            cout << reason_string[reason_id] << ":"
+                 << reason_count_encapsulates_for_pair[reason_id]
+                 << (reason_id < (num_reasons - 1) ? ", " : "");
+          }
+        }
+        std::cout << endl;
+      }
+    }  // end of the for over cluster_separation_reason
     std::cout << endl;
     if (num_non_contracted != graph->num_edges()) {
       return errors::Internal(
           "Number of non contracted edges ", num_non_contracted,
           " should match number of edges ", graph->num_edges());
     }
-    for (int i = 0; i < num_reasons; i++) {
-      std::cout << (i == 0 ? "NGTF_SUMMARY: " : "") << reason_string[i] << ": "
-                << reason_count[i] << (i < (num_reasons - 1) ? ", " : "\n");
-    }
+
+    auto print_reason_summary = [&reason_string, &num_reasons](
+        vector<int> reasons_count,
+        std::function<bool(EdgeNonContractionReasons)>
+            forbidden_reasons_filter) {
+      bool first = true;
+      for (int i = 0; i < num_reasons; i++) {
+        if (!forbidden_reasons_filter(
+                static_cast<EdgeNonContractionReasons>(i))) {
+          std::cout << (first ? "NGTF_SUMMARY: " : "") << reason_string[i]
+                    << ": " << reasons_count[i]
+                    << (i < (num_reasons - 1) ? ", " : "\n");
+          first = false;
+        }
+      }
+    };
+    std::cout << "NGTF_SUMMARY: Summary of reasons why a pair of edge "
+                 "connected encapsulates did not merge\n";
+    print_reason_summary(reason_count_encapsulates, is_forbidden_reason);
+    std::cout << "NGTF_SUMMARY: Summary of reasons why a pair of edge "
+                 "connected clusters did not merge\n";
+    print_reason_summary(reason_count_clusters,
+                         [](EdgeNonContractionReasons x) { return false; });
   }
 
   return Status::OK();

@@ -105,8 +105,14 @@ static void MaybeLogPlacement(const Graph* graph) {
             << perc_assigned_clusters_of_total << "% of total nodes) \t"
             << " (" << perc_assigned_clusters_of_marked
             << "% of nodes marked for clustering) \t" << std::endl;
-  std::cout << "NGTF_SUMMARY: Number of ngraph clusters :"
-            << final_cluster_map.size() - 1 << std::endl;
+  int num_encapsulates = final_cluster_map.size() - 1;
+  std::cout << "NGTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
+            << std::endl;
+  std::cout << "NGTF_SUMMARY: Nodes per cluster: "
+            << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
+                                          float(num_encapsulates))
+                                       : 0)
+            << endl;
 
   for (auto kv : final_cluster_map) {
     int cluster_idx = kv.first;

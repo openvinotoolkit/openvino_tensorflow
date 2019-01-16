@@ -149,7 +149,7 @@ Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
   return Status::OK();
 }
 
-void print_node_histogram(std::unordered_map<string, int> histogram,
+void print_node_histogram(const std::unordered_map<string, int>& histogram,
                           bool sorted) {
   int histogram_size = histogram.size();
   if (histogram_size == 0) {
