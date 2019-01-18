@@ -408,6 +408,11 @@ def main():
         "  |-- venv-tf-py3 (Virtualenv directory to be used)\n",
         action="store_true")
 
+    parser.add_argument(
+        '--distributed_build',
+        help="Builds a distributed version of the nGraph components\n",
+        action="store_true")
+
     arguments = parser.parse_args()
 
     if (arguments.debug_build):
@@ -494,7 +499,6 @@ def main():
 
         ngraph_cmake_flags = [
             "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-            "-DNGRAPH_DISTRIBUTED_ENABLE=FALSE",
             "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
             "-DNGRAPH_UNIT_TEST_ENABLE=NO",
             "-DNGRAPH_DEX_ONLY=TRUE",
@@ -512,6 +516,11 @@ def main():
         if (arguments.debug_build):
             ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
+        if (arguments.distributed_build): 
+            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])
+        else:
+            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
+
         build_ngraph("./ngraph", ngraph_cmake_flags, verbosity)
 
     # Next build CMAKE options for the bridge
@@ -528,6 +537,11 @@ def main():
     ]
     if (arguments.debug_build):
         ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+
+    if (arguments.distributed_build):
+        ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])
+    else:
+        ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
 
     # Now build the bridge
     ng_tf_whl = build_ngraph_tf(artifacts_location, "../", venv_dir,

@@ -253,7 +253,7 @@ Status MarkForClustering(Graph* graph) {
       };
       confirmation_function_map["Greater"] = SimpleConfirmationFunction();
       confirmation_function_map["GreaterEqual"] = SimpleConfirmationFunction();
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED
       confirmation_function_map["HorovodAllreduce"] =
           SimpleConfirmationFunction();
 #endif
@@ -389,7 +389,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["FusedBatchNormGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Greater"]["T"] = NGraphDTypes();
       type_constraint_map["GreaterEqual"]["T"] = NGraphDTypes();
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED
       type_constraint_map["HorovodAllreduce"]["T"] = NGraphNumericDTypes();
 #endif
       type_constraint_map["Identity"]["T"] = NGraphDTypes();

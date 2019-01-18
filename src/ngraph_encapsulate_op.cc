@@ -36,6 +36,10 @@
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 
+#if defined NGRAPH_DISTRIBUTED
+#include "ngraph/distributed.hpp"
+#endif
+
 using namespace std;
 namespace ng = ngraph;
 
@@ -260,8 +264,18 @@ class NGraphEncapsulateOp : public OpKernel {
 
       // Serialize to nGraph if needed
       if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
+        std::string file_name =
+            "tf_function_" + ctx->op_kernel().name() + ".json";
         NgraphSerialize("tf_function_" + ctx->op_kernel().name() + ".json",
                         ng_function);
+#if defined NGRAPH_DISTRIBUTED
+        ngraph::Distributed dist;
+        int Rank_ID;
+        Rank_ID = dist.get_rank();
+        NgraphSerialize("tf_function_" + ctx->op_kernel().name() + "_" +
+                            to_string(Rank_ID) + ".json",
+                        ng_function);
+#endif
       }
 
       m_ng_functions[signature] = ng_function;
