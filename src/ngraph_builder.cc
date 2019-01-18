@@ -3542,13 +3542,17 @@ static Status TranslateSqueezeOp(
     Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+  size_t input_dims = ng_input->get_shape().size();
 
   std::vector<int32> tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "squeeze_dims", &tf_axis));
+
+  // If input dimension is negative, make it positive
+  for (int i = 0; i < tf_axis.size(); i++) {
+    tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
+  }
+
   std::set<int> axis_set(tf_axis.begin(), tf_axis.end());
-
-  size_t input_dims = ng_input->get_shape().size();
-
   ng::Shape input_shape = ng_input->get_shape();
   std::vector<int> dims;
 
