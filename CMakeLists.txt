@@ -144,14 +144,16 @@ option(NGRAPH_ARTIFACTS_DIR "Where would nGraph be installed after build" FALSE)
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" )
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
-option(NGRAPH_PLAIDML_ENABLE "Build PlaidML backend" FALSE)
+
+
+find_package(PlaidML CONFIG)
+option(NGRAPH_PLAIDML_ENABLE "Build PlaidML backend" ${PLAIDML_FOUND})
 
 # Validate the options
 if (NGRAPH_PLAIDML_ENABLE)
-    if (NOT DEFINED PlaidML_DIR)
-        message(FATAL_ERROR "Provide the PlaidML SDK directory: -DPlaidML_DIR=<directory>")
+    if (NOT PLAIDML_FOUND)
+        message(FATAL_ERROR "Unable to find PlaidML; use \"pip install plaidml\" to install it.")
     endif()
-    message(STATUS "nGraph/PlaidML enabled")
 endif()
 
 if(USE_PRE_BUILT_NGRAPH)
@@ -250,7 +252,6 @@ if (NOT USE_PRE_BUILT_NGRAPH)
             -DNGRAPH_GPU_ENABLE=${NGRAPH_GPU_ENABLE}
             -DNGRAPH_DEBUG_ENABLE=${NGRAPH_DEBUG_ENABLE}
             -DNGRAPH_PLAIDML_ENABLE=${NGRAPH_PLAIDML_ENABLE}
-            -DPlaidML_DIR=${PlaidML_DIR}
             -DNGRAPH_TARGET_ARCH=${NGRAPH_TARGET_ARCH}
             -DNGRAPH_TUNE_ARCH=${NGRAPH_TUNE_ARCH}
         TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
