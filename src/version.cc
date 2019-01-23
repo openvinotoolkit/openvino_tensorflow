@@ -27,7 +27,7 @@
 // The version suffix is used for pre-release version numbers
 // For example before v0.7.0 we may do a pre-release i.e., a release
 // candidate such as v0.7.0-rc0
-#define NG_TF_VERSION_SUFFIX "-rc0"
+#define NG_TF_VERSION_SUFFIX "-rc1"
 
 #define VERSION_STR_HELPER(x) #x
 #define VERSION_STR(x) VERSION_STR_HELPER(x)
