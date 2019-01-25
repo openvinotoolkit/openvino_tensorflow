@@ -169,7 +169,7 @@ TEST(NNOps, Conv2DBackpropFilterNCHWSame) {
   opexecuter_tf.ExecuteOnTF(tf_outputs);
 
   // Compare NGraph and TF Outputs
-  Compare(tf_outputs, ngraph_outputs);
+  Compare(tf_outputs, ngraph_outputs, 1e-03, 1e-03);
 }
 
 TEST(NNOps, Conv2DBackpropFilterNCHWSameWithDilation) {
@@ -289,7 +289,7 @@ TEST(NNOps, Conv2DBackpropFilterNCHWValid) {
   opexecuter_tf.ExecuteOnTF(tf_outputs);
 
   // Compare NGraph and TF Outputs
-  Compare(tf_outputs, ngraph_outputs, 1e-05, 1e-05);
+  Compare(tf_outputs, ngraph_outputs, 1e-03, 1e-03);
 }
 
 TEST(NNOps, Conv2DBackpropFilterNCHWValidWithDilation) {
@@ -946,7 +946,7 @@ TEST(NNOps, Conv3DNDHWCSame) {
   OpExecuter opexecuter(root, "Conv3D", static_input_indexes, output_datatypes,
                         sess_run_fetchoutputs);
 
-  opexecuter.RunTest(1e-04, 1e-04);
+  opexecuter.RunTest(1e-03, 1e-03);
 }
 
 // FusedBatchNormV2 op test with only DT_FLOAT datatype
