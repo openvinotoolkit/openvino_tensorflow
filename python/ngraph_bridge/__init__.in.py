@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function 
 
+import importlib
 import os
 import sys
 import time
@@ -109,6 +110,16 @@ ngraph_bridge_lib.ngraph_is_supported_backend.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
+
+
+try:
+    importlib.import_module('plaidml.settings')
+    # Importing plaidml.settings -- if it exists -- will have read the
+    # user's settings and configured the runtime environment
+    # appropriately.
+except ImportError:
+    pass
+
 
 def enable():
   ngraph_bridge_lib.ngraph_enable()
