@@ -450,6 +450,9 @@ Status AssignClusters(Graph* graph) {
     STATICINPUT,  // static input in dst (not fed by const)
     PATHEXISTS    // base case reason. contraction causes cycles
   };
+  static std::vector<string> reason_string(  // to convert the enum to string
+      {"NOTANOP", "UNSUPPORTED", "DEADNESS", "BACKEND", "SAMECLUSTER",
+       "STATICINPUT", "PATHEXISTS"});
   // a cluster pair is the string "cluster1_id, cluster2_id"
   // Using string, because a pair won't hash unless implemented
   // Note that we store a vector of "reasons", because there could be multiple
@@ -468,6 +471,16 @@ Status AssignClusters(Graph* graph) {
   do {
     changed = false;
 
+    auto log_reason = [](EdgeNonContractionReasons reason, Edge* edge) {
+      NGRAPH_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << ": "
+                     << edge->src()->name() << "<" << edge->src()->type_string()
+                     << ">"
+                     << "[" << edge->src_output() << "] -> "
+                     << edge->dst()->name() << "<" << edge->dst()->type_string()
+                     << ">"
+                     << "[" << edge->dst_input() << "]";
+    };
+
     for (auto edge : graph->edges()) {
       Node* src = edge->src();
       Node* dst = edge->dst();
@@ -477,6 +490,7 @@ Status AssignClusters(Graph* graph) {
 
       if (!src->IsOp() || !dst->IsOp()) {
         if (collect_non_contracting_edge_info) {
+          log_reason(EdgeNonContractionReasons::NOTANOP, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
               .push_back(EdgeNonContractionReasons::NOTANOP);
         }
@@ -489,6 +503,7 @@ Status AssignClusters(Graph* graph) {
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
         if (collect_non_contracting_edge_info) {
+          log_reason(EdgeNonContractionReasons::UNSUPPORTED, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
               .push_back(EdgeNonContractionReasons::UNSUPPORTED);
         }
@@ -507,6 +522,7 @@ Status AssignClusters(Graph* graph) {
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
         if (collect_non_contracting_edge_info) {
+          log_reason(EdgeNonContractionReasons::DEADNESS, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
               .push_back(EdgeNonContractionReasons::DEADNESS);
 
@@ -538,6 +554,7 @@ Status AssignClusters(Graph* graph) {
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
         if (collect_non_contracting_edge_info) {
+          log_reason(EdgeNonContractionReasons::BACKEND, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
               .push_back(EdgeNonContractionReasons::BACKEND);
         }
@@ -561,17 +578,20 @@ Status AssignClusters(Graph* graph) {
           GetStaticInputs(dst, &static_inputs);
           bool is_static = std::find(static_inputs.begin(), static_inputs.end(),
                                      edge->dst_input()) != static_inputs.end();
+          bool is_not_const = src->type_string() != "Const";
           // 3 possible reasons here:
           // src dst lies in same cluster, so nothing to do (trivial cycle
           // induced in graphcycles)
           // dst has static input
           // a longer irreducible path exists
-          cluster_separation_reason[get_string_key(src_index, dst_index)]
-              .push_back(src_index == dst_index
+          auto reason = (src_index == dst_index
                              ? EdgeNonContractionReasons::SAMECLUSTER
-                             : (is_static
+                             : ((is_not_const && is_static)
                                     ? EdgeNonContractionReasons::STATICINPUT
                                     : EdgeNonContractionReasons::PATHEXISTS));
+          log_reason(reason, edge);
+          cluster_separation_reason[get_string_key(src_index, dst_index)]
+              .push_back(reason);
         }
       }
     }
@@ -667,9 +687,6 @@ Status AssignClusters(Graph* graph) {
     vector<int> reason_count_clusters(num_reasons, 0);
     vector<int> reason_count_encapsulates(num_reasons, 0);
     int num_non_contracted = 0;
-    std::vector<string> reason_string(  // to convert the enum to string
-        {"NOTANOP", "UNSUPPORTED", "DEADNESS", "BACKEND", "SAMECLUSTER",
-         "STATICINPUT", "PATHEXISTS"});
     auto forbidden_reasons_for_not_merging_clusters =
         std::set<EdgeNonContractionReasons>{
             EdgeNonContractionReasons::NOTANOP,
@@ -760,7 +777,7 @@ Status AssignClusters(Graph* graph) {
           " should match number of edges ", graph->num_edges());
     }
 
-    auto print_reason_summary = [&reason_string, &num_reasons](
+    auto print_reason_summary = [&num_reasons](
         vector<int> reasons_count,
         std::function<bool(EdgeNonContractionReasons)>
             forbidden_reasons_filter) {
