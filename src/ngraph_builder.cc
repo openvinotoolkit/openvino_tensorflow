@@ -2625,26 +2625,46 @@ static Status TranslateQuantizeAndDequantizeV2Op(
   return Status::OK();
 }
 
-static Status TranslateQuantizedConv2DWithBiasAndReluAndRequantizeOp(
+static Status TranslateQuantizedConv(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_filter, ng_bias;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_input));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_filter));
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_bias));
-  std::vector<std::shared_ptr<ng::op::Constant>> static_inps(6);
-  for (int i = 0; i < static_inps.size(); i++) {
-    std::vector<float> tmp_vect;
-    TF_RETURN_IF_ERROR(
-        GetStaticInputVector(op, 3 + i, static_input_map, &tmp_vect));
-    if (tmp_vect.size() != 1) {
-      return errors::InvalidArgument(
-          "QuantizedConv2DWithBiasAndReluAndRequantize Op: Input number ",
-          (3 + i), " must be scalar. Got a vector of size, ", tmp_vect.size());
-    }
-    static_inps[i] = std::make_shared<ng::op::Constant>(
-        ng::element::f32, ng::Shape({}), tmp_vect);
+    Builder::OpMap& ng_op_map,
+    std::function<std::shared_ptr<ng::Node>(
+        std::vector<std::shared_ptr<ng::Node>>, ng::Strides, ng::Strides,
+        ng::CoordinateDiff, ng::CoordinateDiff, ng::Strides,
+        std::vector<std::shared_ptr<ng::op::Constant>>)>
+        create_quantized_conv_node) {
+  size_t num_tf_op_inputs = op->num_inputs();
+  std::vector<int32> static_inps_idxs;
+  if (GetNodeAttr(op->attrs(), "_ngraph_static_inputs", &static_inps_idxs) !=
+      Status::OK()) {
+    return errors::Internal(
+        "Did not find static inputs in quantized convolution op");
   }
+  size_t num_static_inputs = static_inps_idxs.size();
+  size_t num_node_inputs = num_tf_op_inputs - num_static_inputs;
+  std::vector<std::shared_ptr<ng::op::Constant>> static_inps(num_static_inputs);
+  std::vector<std::shared_ptr<ng::Node>> node_inps(num_node_inputs);
+  size_t static_inp_count = 0;
+  for (size_t inp_idx = 0; inp_idx < num_tf_op_inputs; inp_idx++) {
+    if (std::find(static_inps_idxs.begin(), static_inps_idxs.end(), inp_idx) ==
+        static_inps_idxs.end()) {
+      TF_RETURN_IF_ERROR(GetInputNode(
+          ng_op_map, op, inp_idx, &(node_inps[inp_idx - static_inp_count])));
+    } else {
+      std::vector<float> tmp_vect;
+      TF_RETURN_IF_ERROR(
+          GetStaticInputVector(op, inp_idx, static_input_map, &tmp_vect));
+      if (tmp_vect.size() != 1) {
+        return errors::InvalidArgument(
+            "TranslateQuantizedConv: Input number ", inp_idx,
+            " must be scalar. Got a vector of size, ", tmp_vect.size());
+      }
+      static_inps[static_inp_count] = std::make_shared<ng::op::Constant>(
+          ng::element::f32, ng::Shape({}), tmp_vect);
+      static_inp_count++;
+    }
+  }
+
   std::vector<int32> tf_strides;
   std::vector<int32> tf_dilations;
   std::string tf_padding_type;
@@ -2658,28 +2678,31 @@ static Status TranslateQuantizedConv2DWithBiasAndReluAndRequantizeOp(
   ng::Shape ng_image_shape(2);
   ng::Shape ng_kernel_shape(2);
   BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
-  BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
+  BatchedOpParamToNGraph(is_nhwc, node_inps[0]->get_shape(), ng_image_shape);
   BatchedOpParamToNGraph(is_nhwc, tf_dilations, ng_dilations);
-  BatchToNGraph(is_nhwc, ng_input);
-  auto& ng_filter_shape = ng_filter->get_shape();
+  // Generally, the mapping is: 0->input, 1->filter, 2->bias, 3->sum input
+  BatchToNGraph(is_nhwc, node_inps[0]);
+  if (num_node_inputs == 4) {
+    BatchToNGraph(is_nhwc, node_inps[3]);
+  }
+  auto& ng_filter_shape = node_inps[1]->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Reshape<3, 2, 0, 1>(ng_filter);
+  Reshape<3, 2, 0, 1>(node_inps[1]);
   ng::CoordinateDiff ng_padding_below{0, 0};
   ng::CoordinateDiff ng_padding_above{0, 0};
   Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
                        ng_strides, ng_dilations, ng_padding_below,
                        ng_padding_above);
-  // It is expected by ScaledQuantizedConvolutionBias that the min max inputs be
-  // constant nodes
+
+  // It is expected by ScaledQuantizedConvolutionBias (and other builder
+  // functions) that the min max inputs be constant nodes
   // Hence declaring them static, reading their values and converting to
   // constant nodes
-  std::shared_ptr<ng::Node> ng_quant_conv_bias =
-      ng::builder::ScaledQuantizedConvolutionBias(
-          ng_input, ng_filter, ng_bias, ng_strides, ng_dilations,
-          ng_padding_below, ng_padding_above, ng_data_dilations, static_inps[0],
-          static_inps[1], static_inps[2], static_inps[3], static_inps[4],
-          static_inps[5], true);
+  std::shared_ptr<ng::Node> ng_quant_conv_bias = create_quantized_conv_node(
+      node_inps, ng_strides, ng_dilations, ng_padding_below, ng_padding_above,
+      ng_data_dilations, static_inps);
+
   BatchToTensorflow(is_nhwc, ng_quant_conv_bias);
   SaveNgOp(ng_op_map, op->name(), ng_quant_conv_bias);
   // Forward the min_freezed_output input to output min
@@ -2687,6 +2710,61 @@ static Status TranslateQuantizedConv2DWithBiasAndReluAndRequantizeOp(
   // Forward the max_freezed_output input to output max
   SaveNgOp(ng_op_map, op->name(), static_inps[5]);
   return Status::OK();
+}
+
+template <bool IsRelu>
+static Status TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  auto create_quantized_conv_node = [](
+      std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
+      ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
+      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+    return ng::builder::ScaledQuantizedConvolutionBias(
+        node_inps[0], node_inps[1], node_inps[2], ng_strides, ng_dilations,
+        ng_padding_below, ng_padding_above, ng_data_dilations, static_inps[0],
+        static_inps[1], static_inps[2], static_inps[3], static_inps[4],
+        static_inps[5], IsRelu);
+  };
+  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
+                                create_quantized_conv_node);
+}
+
+static Status TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  auto create_quantized_conv_node = [](
+      std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
+      ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
+      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+    return ng::builder::ScaledQuantizedConvolutionBiasAdd(
+        node_inps[0], node_inps[1], node_inps[2], node_inps[3], ng_strides,
+        ng_dilations, ng_padding_below, ng_padding_above, ng_data_dilations,
+        static_inps[0], static_inps[1], static_inps[2], static_inps[3],
+        static_inps[4], static_inps[5], static_inps[6], static_inps[7], true);
+  };
+  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
+                                create_quantized_conv_node);
+}
+
+static Status TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  auto create_quantized_conv_node = [](
+      std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
+      ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
+      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+    return ng::builder::ScaledQuantizedConvolutionBiasSignedAdd(
+        node_inps[0], node_inps[1], node_inps[2], node_inps[3], ng_strides,
+        ng_dilations, ng_padding_below, ng_padding_above, ng_data_dilations,
+        static_inps[0], static_inps[1], static_inps[2], static_inps[3],
+        static_inps[4], static_inps[5], static_inps[6], static_inps[7], true);
+  };
+  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
+                                create_quantized_conv_node);
 }
 
 static Status TranslateQuantizedMaxPoolOp(
@@ -4193,7 +4271,13 @@ const static std::map<
         {"Prod", TranslateProdOp},
         {"QuantizeAndDequantizeV2", TranslateQuantizeAndDequantizeV2Op},
         {"QuantizedConv2DWithBiasAndReluAndRequantize",
-         TranslateQuantizedConv2DWithBiasAndReluAndRequantizeOp},
+         TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<true>},
+        {"QuantizedConv2DWithBiasAndRequantize",
+         TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<false>},
+        {"QuantizedConv2DWithBiasSignedSumAndReluAndRequantize",
+         TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp},
+        {"QuantizedConv2DWithBiasSumAndReluAndRequantize",
+         TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp},
         {"QuantizedMaxPool", TranslateQuantizedMaxPoolOp},
         {"QuantizeV2", TranslateQuantizeV2Op},
         {"Rank", TranslateRankOp},
