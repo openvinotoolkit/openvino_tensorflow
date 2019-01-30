@@ -1,0 +1,15 @@
+{
+    "model_name": "resnet20",
+    "reference_backend": "CPU",
+    "testing_backend": "NGRAPH_CPU",
+    "checkpoint_graph_location": "/nfs/site/home/skantama/resnet20/model.ckpt-0",
+    "input_tensor_name": ["synthetic_inputs/TruncatedNormal:0"],
+    "output_tensor_name":[],
+    "random_val_range": [255],
+    "l1_norm_threshold": 0.01,
+    "l2_norm_threshold": 0.01,
+    "inf_norm_threshold": 0.01,
+    "input_dimension" : [[32,32,3]],
+    "batch_size": 32
+}
+
