@@ -154,6 +154,50 @@ def parse_json():
         return parsed_json
 
 
+def read_inputs_from_file(param_dict):
+    """
+        Create and return a map between input tensor names and the values read from provided input files
+    """
+    # utility to remove '/' and ':' from tensor names to get strings usable as file paths
+    tensor_name_change = lambda tname: tname.replace('/', '_').replace(':', '-')
+
+    input_tensor_names = param_dict['input_tensor_name']
+    all_input_files = os.listdir(param_dict['input_val_location'])
+    assert len(all_input_files) == len(input_tensor_names), "Found " + str(
+        len(all_input_files)) + " inputs, but was expecting " + str(
+            len(input_tensor_names)) + " inputs"
+    num_inp_tensors = len(input_tensor_names)
+    inp_tensor_idx_to_file_map = {}
+    # the next for loop populates inp_tensor_idx_to_file_map.
+    for idx in range(num_inp_tensors):
+        for flname in all_input_files:
+            if tensor_name_change(input_tensor_names[idx]) in flname:
+                assert (idx not in inp_tensor_idx_to_file_map
+                       ), "Found 2 input files matching this input tensor"
+                inp_tensor_idx_to_file_map[idx] = param_dict[
+                    'input_val_location'].rstrip('/') + '/' + flname
+
+    in_tensor_name_to_val = {}
+    # the next for loop populates in_tensor_name_to_val
+    for i in range(num_inp_tensors):
+        filepath = inp_tensor_idx_to_file_map[i]
+        try:
+            val = np.load(filepath)
+        except:
+            assert False, "Failed to read " + input_tensor_names[
+                i] + " from " + filepath
+        if 'input_dimension' in param_dict:
+            input_shape_from_json = [param_dict['batch_size']
+                                    ] + param_dict['input_dimension'][i]
+            assert (len(val.shape) == len(input_shape_from_json)) and np.all([
+                i1 == i2 for i1, i2 in zip(val.shape, input_shape_from_json)
+            ]), 'Input shapes provided ' + str(
+                input_shape_from_json) + ' did not match shape of data ' + str(
+                    val.shape) + ' that was read for ' + input_tensor_names[i]
+        in_tensor_name_to_val[input_tensor_names[i]] = val
+    return in_tensor_name_to_val
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -178,34 +222,39 @@ if __name__ == '__main__':
     # Create a folder to save output tensor arrays
     output_folder = device1 + "-" + device2
     createFolder(output_folder)
+
+    # Matches the input tensors name with its required dimensions
+    input_tensor_dim_map = {}
+    use_random_inputs = "input_val_location" not in parameters
+    if use_random_inputs:
+        input_dimension = parameters["input_dimension"]
+        input_tensor_name = parameters["input_tensor_name"]
+        # Get random value range
+        rand_val_range = parameters["random_val_range"]
+        bs = int(parameters["batch_size"])
+
+        assert len(input_dimension) == len(
+            input_tensor_name
+        ), "input_tensor_name dimension should match input_dimension in json file"
+
+        assert len(input_tensor_name) == len(
+            rand_val_range
+        ), "Length of random_val_range should match input_tensor_name in json file"
+
+        # Generate random input based on input_dimension
+        np.random.seed(100)
+        for (dim, name, val_range) in zip(input_dimension, input_tensor_name,
+                                          rand_val_range):
+            random_input = np.random.randint(
+                val_range, size=[bs] + dim).astype('float32')
+            input_tensor_dim_map[name] = random_input
+    else:
+        input_tensor_dim_map = read_inputs_from_file(parameters)
+
     os.chdir(output_folder)
     print("Model name: " + parameters["model_name"])
     print("L1/L2/Inf norm configuration: {}, {}, {}".format(
         l1_norm_threshold, l2_norm_threshold, inf_norm_threshold))
-
-    # Generate random input based on input_dimension
-    np.random.seed(100)
-    input_dimension = parameters["input_dimension"]
-    input_tensor_name = parameters["input_tensor_name"]
-    # Get random value range
-    rand_val_range = parameters["random_val_range"]
-    bs = int(parameters["batch_size"])
-
-    assert len(input_dimension) == len(
-        input_tensor_name
-    ), "input_tensor_name dimension should match input_dimension in json file"
-
-    assert len(input_tensor_name) == len(
-        rand_val_range
-    ), "Length of random_val_range should match input_tensor_name in json file"
-
-    # Matches the input tensors name with its required dimensions
-    input_tensor_dim_map = {}
-    for (dim, name, val_range) in zip(input_dimension, input_tensor_name,
-                                      rand_val_range):
-        random_input = np.random.randint(
-            val_range, size=[bs] + dim).astype('float32')
-        input_tensor_dim_map[name] = random_input
 
     # Run the model on reference backend
     result_tf_graph_arrs, out_tensor_names_cpu = calculate_output(

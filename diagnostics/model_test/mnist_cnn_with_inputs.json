@@ -1,0 +1,12 @@
+{
+    "model_name": "mnist_cnn",
+    "reference_backend": "CPU",
+    "testing_backend": "NGRAPH_CPU",
+    "graph_location": "/nfs/site/home/mingshan/frozen_graphs/frozen_mnist.pb",
+    "input_tensor_name": ["import/Placeholder:0"],
+    "output_tensor_name": ["import/Placeholder:0", "import/fc2/yconv:0"],
+    "input_val_location" : "./mnist_inputs",
+    "l1_norm_threshold": 0.01,
+    "l2_norm_threshold": 0.01,
+    "inf_norm_threshold": 0.01
+}
