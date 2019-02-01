@@ -228,7 +228,13 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["DepthwiseConv2dNative"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Conv3D"] = SimpleConfirmationFunction();
-      confirmation_function_map["DepthToSpace"] = SimpleConfirmationFunction();
+      confirmation_function_map["DepthToSpace"] = [](Node* n, bool* result) {
+        std::string tf_data_format;
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(n->attrs(), "data_format", &tf_data_format));
+        *result = tf_data_format != "NCHW_VECT_C";
+        return Status::OK();
+      };
       confirmation_function_map["Dequantize"] = [](Node* n, bool* result) {
         string mode;
         TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "mode", &mode));
@@ -325,7 +331,8 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["Slice"] = SimpleConfirmationFunction();
       confirmation_function_map["Snapshot"] = SimpleConfirmationFunction();
       confirmation_function_map["Softmax"] = SimpleConfirmationFunction();
-      confirmation_function_map["SpaceToDepth"] = SimpleConfirmationFunction();
+      confirmation_function_map["SpaceToDepth"] =
+          confirmation_function_map["DepthToSpace"];
       confirmation_function_map["SparseSoftmaxCrossEntropyWithLogits"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Split"] = SimpleConfirmationFunction();

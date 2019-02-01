@@ -1399,10 +1399,14 @@ static Status TranslateDepthToSpaceOp(
     case 0:
       channel_dimension = 3;
       break;
-    // NCHW or NCHW_VEC_C
+    // NCHW
     case 1:
       channel_dimension = 1;
       break;
+    // NCHW_VEC_C
+    case 2:
+      return errors::InvalidArgument(
+          "NCHW_VECT_C is not supported in DepthToSpace for now");
     default:
       return errors::InvalidArgument(
           "DepthToSpace supported data format is NCHW, NHWC, or NCHW_VECT_C");
@@ -3319,12 +3323,16 @@ static Status TranslateSpaceToDepthOp(
       width_index = 2;
       channel_index = 3;
       break;
-    // NCHW or NCHW_VEC_C
+    // NCHW
     case 1:
       height_index = 2;
       width_index = 3;
       channel_index = 1;
       break;
+    // NCHW_VEC_C
+    case 2:
+      return errors::InvalidArgument(
+          "NCHW_VECT_C is not supported in SpaceToDepth for now");
     default:
       return errors::InvalidArgument(
           "SpaceToDepth supported data format is NCHW, NHWC, or NCHW_VECT_C");
