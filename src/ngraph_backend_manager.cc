@@ -23,6 +23,9 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+BackendManager::~BackendManager() {
+  NGRAPH_VLOG(2) << "BackendManager::~BackendManager() DONE";
+}
 // initialize backend manager
 string BackendManager::ng_backend_name_ = "CPU";
 mutex BackendManager::ng_backend_name_mutex_;
@@ -32,6 +35,8 @@ vector<string> ng_supported_backends =
     ng::runtime::BackendManager::get_registered_backends();
 unordered_set<string> BackendManager::ng_supported_backends_(
     ng_supported_backends.begin(), ng_supported_backends.end());
+
+std::map<std::string, int> BackendManager::ref_count_each_backend_;
 
 Status BackendManager::SetBackendName(const string& backend_name) {
   std::lock_guard<std::mutex> lock(BackendManager::ng_backend_name_mutex_);
@@ -43,7 +48,7 @@ Status BackendManager::SetBackendName(const string& backend_name) {
   return Status::OK();
 }
 
-void BackendManager::CreateBackendIfDoesNotExist(const string& backend_name) {
+void BackendManager::CreateBackend(const string& backend_name) {
   std::lock_guard<std::mutex> lock(BackendManager::ng_backend_map_mutex_);
   auto itr = BackendManager::ng_backend_map_.find(backend_name);
   // if backend does not exist create it
@@ -53,6 +58,24 @@ void BackendManager::CreateBackendIfDoesNotExist(const string& backend_name) {
         ng::runtime::Backend::create(backend_name);
     bend->backend_ptr = std::move(bend_ptr);
     BackendManager::ng_backend_map_[backend_name] = bend;
+    BackendManager::ref_count_each_backend_[backend_name] = 0;
+  }
+  BackendManager::ref_count_each_backend_[backend_name]++;
+
+  NGRAPH_VLOG(2) << "BackendManager::CreateBackend(): " << backend_name
+                 << " ref_count: "
+                 << BackendManager::ref_count_each_backend_[backend_name];
+}
+
+void BackendManager::ReleaseBackend(const string& backend_name) {
+  std::lock_guard<std::mutex> lock(BackendManager::ng_backend_map_mutex_);
+  BackendManager::ref_count_each_backend_[backend_name]--;
+  NGRAPH_VLOG(2) << "BackendManager::ReleaseBackend(): " << backend_name
+                 << " ref_count: "
+                 << BackendManager::ref_count_each_backend_[backend_name];
+  if (BackendManager::ref_count_each_backend_[backend_name] == 0) {
+    BackendManager::ng_backend_map_[backend_name]->backend_ptr.reset();
+    BackendManager::ng_backend_map_.erase(backend_name);
   }
 }
 

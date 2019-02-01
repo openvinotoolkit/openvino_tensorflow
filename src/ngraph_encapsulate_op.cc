@@ -67,6 +67,7 @@ class NGraphEncapsulateOp : public OpKernel {
       : OpKernel(ctx),
         m_graph(OpRegistry::Global()),
         m_freshness_tracker(nullptr) {
+    NGRAPH_VLOG(2) << "NGraphEncapsulateOp: Name: " << name();
     GraphDef* graph_def;
 
     OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ngraph_cluster", &m_ngraph_cluster));
@@ -128,7 +129,7 @@ class NGraphEncapsulateOp : public OpKernel {
     // Set the backend type for the op
     OP_REQUIRES_OK(ctx,
                    ctx->GetAttr<string>("_ngraph_backend", &m_op_backend_name));
-    BackendManager::CreateBackendIfDoesNotExist(m_op_backend_name);
+    BackendManager::CreateBackend(m_op_backend_name);
   }
 
   ~NGraphEncapsulateOp() override {
@@ -143,6 +144,10 @@ class NGraphEncapsulateOp : public OpKernel {
       // TODO(amprocte): We should be able to unref the tracker here, but it
       // seems to screw things up in the C++ unit tests.
       // m_freshness_tracker->Unref();
+
+      // Release the backend
+      BackendManager::ReleaseBackend(m_op_backend_name);
+      NGRAPH_VLOG(2) << "~NGraphEncapsulateOp()";
     }
   }
 

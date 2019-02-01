@@ -333,7 +333,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   }
 
   NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
-  BackendManager::CreateBackendIfDoesNotExist(ng_backend_type);
+  BackendManager::CreateBackend(ng_backend_type);
   auto backend = BackendManager::GetBackend(ng_backend_type);
 
   // Allocate tensors for inputs
@@ -416,6 +416,9 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     ngraph_outputs.push_back(output_tensor);
     NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs[i].DebugString();
   }
+
+  // Release the backend
+  BackendManager::ReleaseBackend(ng_backend_type);
 
 }  // ExecuteOnNGraph
 
