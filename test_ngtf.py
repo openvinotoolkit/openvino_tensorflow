@@ -102,6 +102,7 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     test_src_dir = os.path.join(ngraph_tf_src_dir, "test/python/tensorflow")
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
     test_manifest_file = os.path.join(test_src_dir, "python_tests_list.txt")
+    test_xml_report = '%s/junit_tensorflow_tests.xml' % build_dir
 
     import psutil
     num_cores = int(psutil.cpu_count(logical=False))
@@ -111,7 +112,8 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
 
     command_executor([
         "python", test_script, "--tensorflow_path", tf_src_dir,
-        "--run_tests_from_file", test_manifest_file
+        "--run_tests_from_file", test_manifest_file, 
+        "--xml_report", test_xml_report
     ])
 
     os.chdir(root_pwd)
