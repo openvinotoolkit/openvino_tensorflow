@@ -56,4 +56,7 @@ setup(
         ],
     },
     cmdclass={'bdist_wheel': BinaryBdistWheel},
+    extras_require={
+        'plaidml': ["plaidml>=0.5.0"],
+    },
 )
