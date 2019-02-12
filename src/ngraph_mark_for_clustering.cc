@@ -287,6 +287,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["PreventGradient"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Prod"] = SimpleConfirmationFunction();
+      confirmation_function_map["Rank"] = SimpleConfirmationFunction();
       confirmation_function_map["QuantizeAndDequantizeV2"] = [](Node* n,
                                                                 bool* result) {
         // accept only when num_bits == 8 and range is given
