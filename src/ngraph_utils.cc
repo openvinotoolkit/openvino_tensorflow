@@ -242,6 +242,27 @@ void NgraphSerialize(const std::string& file_name,
                    << std::endl;
     NGRAPH_VLOG(0) << e.what() << std::endl;
   }
+}
+
+void MemoryProfile(long& vm_usage, long& resident_set) {
+  vm_usage = 0;
+  resident_set = 0;
+
+  // Get the two fields we want
+  long vsize;
+  long rss;
+
+  std::ifstream ifs("/proc/self/stat", std::ios_base::in);
+  std::string mem_in;
+  getline(ifs, mem_in);
+  vector<string> mem_str = ng::split(mem_in, ' ');
+  vsize = std::stol(mem_str[22]);
+  rss = std::stol(mem_str[23]);
+
+  long page_size_kb = sysconf(_SC_PAGE_SIZE) /
+                      1024;  // in case x86-64 is configured to use 2MB pages
+  vm_usage = vsize / 1024;   // unit kb
+  resident_set = rss * page_size_kb;
 };
 
 }  // namespace ngraph_bridge
