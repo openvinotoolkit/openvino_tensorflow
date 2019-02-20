@@ -32,6 +32,7 @@
 #include "ngraph_freshness_tracker.h"
 #include "ngraph_log.h"
 #include "ngraph_mark_for_clustering.h"
+#include "ngraph_timer.h"
 #include "ngraph_utils.h"
 
 #include "ngraph/runtime/backend.hpp"
@@ -230,6 +231,7 @@ class NGraphEncapsulateOp : public OpKernel {
   // OpKernel::Compute
   //---------------------------------------------------------------------------
   void Compute(OpKernelContext* ctx) override {
+    Timer compute_time;
     std::lock_guard<std::mutex> lock(m_compute_lock);
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                    << m_ngraph_cluster;
@@ -238,6 +240,7 @@ class NGraphEncapsulateOp : public OpKernel {
     ng::runtime::Backend* op_backend =
         BackendManager::GetBackend(m_op_backend_name);
 
+    Timer function_lookup_or_create;
     // Get the inputs
     std::vector<TensorShape> input_shapes;
     std::stringstream signature_ss;
@@ -370,8 +373,12 @@ class NGraphEncapsulateOp : public OpKernel {
       ng_function = it->second;
     }
 
+    int time_func_create_or_lookup = function_lookup_or_create.ElapsedInMS();
+
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute got graph for cluster "
                    << m_ngraph_cluster;
+
+    Timer create_or_lookup_tensors;
 
     if (m_freshness_tracker == nullptr) {
       auto creator = [](NGraphFreshnessTracker** tracker) {
@@ -542,10 +549,11 @@ class NGraphEncapsulateOp : public OpKernel {
         << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
         << m_ngraph_cluster;
 
+    int time_create_or_lookup_tensors = create_or_lookup_tensors.ElapsedInMS();
+
     // Execute the nGraph function.
+    Timer execute_function;
     {
-      // mutex_lock l(s_ng_backend_mutex);
-      // std::lock_guard<std::mutex> lock(backend_mutex_ptr);
       BackendManager::LockBackend(m_op_backend_name);
       NGRAPH_VLOG(4)
           << "NGraphEncapsulateOp::Compute call starting for cluster "
@@ -574,6 +582,7 @@ class NGraphEncapsulateOp : public OpKernel {
       }
       BackendManager::UnlockBackend(m_op_backend_name);
     }
+    int time_execute_function = execute_function.ElapsedInMS();
 
     long vm, rss;
     MemoryProfile(vm, rss);
@@ -590,6 +599,8 @@ class NGraphEncapsulateOp : public OpKernel {
                    << m_ngraph_cluster;
 
     // Copy value to host if backend is not CPU
+    Timer copy_output_tensors_to_host;
+
     try {
       if (m_op_backend_name != "CPU") {
         for (size_t i = 0; i < output_caches.size(); ++i) {
@@ -618,10 +629,22 @@ class NGraphEncapsulateOp : public OpKernel {
       void* src_ptr = (void*)DMAHelper::base(&ctx->input(i));
       m_freshness_tracker->MarkFresh(src_ptr, ng_function);
     }
+    int time_copy_output_tensors_to_host =
+        copy_output_tensors_to_host.ElapsedInMS();
 
     NGRAPH_VLOG(4)
         << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
         << m_ngraph_cluster;
+    NGRAPH_VLOG(1) << "NGRAPH_TF_TIMING_PROFILE: OP_ID: " << my_instance_id
+                   << " Step_ID: " << ctx->step_id()
+                   << " Cluster: " << ctx->op_kernel().name()
+                   << " Time-Compute: " << compute_time.ElapsedInMS()
+                   << " Function-Create-or-Lookup: "
+                   << time_func_create_or_lookup << " Create-and-copy-tensors: "
+                   << time_create_or_lookup_tensors
+                   << " Execute: " << time_execute_function
+                   << " Copy-outputs-to-host: "
+                   << time_copy_output_tensors_to_host;
   }  // end compute
 
  private:

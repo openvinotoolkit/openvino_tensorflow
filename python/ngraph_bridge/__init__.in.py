@@ -16,7 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
-from __future__ import print_function 
+from __future__ import print_function
 
 import importlib
 import os
@@ -24,7 +24,7 @@ import sys
 import time
 import getpass
 from platform import system
-   
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow as py_tf
@@ -35,11 +35,12 @@ from tensorflow.python.framework import ops
 
 import ctypes
 
-
-__all__ = ['enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
-    'set_backend', 'is_supported_backend', 'get_currently_set_backend_name' ,'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__']
-
+__all__ = [
+    'enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
+    'set_backend', 'is_supported_backend', 'get_currently_set_backend_name',
+    'start_logging_placement', 'stop_logging_placement',
+    'is_logging_placement', '__version__'
+]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
@@ -50,34 +51,33 @@ TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
 
 # converting version representations to strings if not already
 try:
-  TF_VERSION = str(TF_VERSION, 'ascii')
+    TF_VERSION = str(TF_VERSION, 'ascii')
 except TypeError:  # will happen for python 2 or if already string
-  pass
+    pass
 
 try:
-  TF_VERSION_NEEDED = str(TF_VERSION_NEEDED, 'ascii')
+    TF_VERSION_NEEDED = str(TF_VERSION_NEEDED, 'ascii')
 except TypeError:
-  pass
+    pass
 
 try:
-  if TF_GIT_VERSION.startswith("b'"):  # TF version can be a bytes __repr__()
-    TF_GIT_VERSION = eval(TF_GIT_VERSION)
-  TF_GIT_VERSION = str(TF_GIT_VERSION, 'ascii')
+    if TF_GIT_VERSION.startswith("b'"):  # TF version can be a bytes __repr__()
+        TF_GIT_VERSION = eval(TF_GIT_VERSION)
+    TF_GIT_VERSION = str(TF_GIT_VERSION, 'ascii')
 except TypeError:
-  pass
- 
+    pass
+
 try:
-  if TF_GIT_VERSION_BUILT_WITH.startswith("b'"):
-    TF_GIT_VERSION_BUILT_WITH = eval(TF_GIT_VERSION_BUILT_WITH)
-  TF_GIT_VERSION_BUILT_WITH = str(TF_GIT_VERSION_BUILT_WITH, 'ascii')
+    if TF_GIT_VERSION_BUILT_WITH.startswith("b'"):
+        TF_GIT_VERSION_BUILT_WITH = eval(TF_GIT_VERSION_BUILT_WITH)
+    TF_GIT_VERSION_BUILT_WITH = str(TF_GIT_VERSION_BUILT_WITH, 'ascii')
 except TypeError:
-  pass
+    pass
 
-print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
-  TF_GIT_VERSION))
-print("nGraph bridge built with: {0} ({1})".format(TF_VERSION_NEEDED,
-  TF_GIT_VERSION_BUILT_WITH))
-
+# print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
+#                                                        TF_GIT_VERSION))
+# print("nGraph bridge built with: {0} ({1})".format(TF_VERSION_NEEDED,
+#                                                    TF_GIT_VERSION_BUILT_WITH))
 
 # We need to revisit this later. We can automate that using cmake configure
 # command.
@@ -89,16 +89,19 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
-    ngraph_bridge_lib = ctypes.cdll.LoadLibrary(os.path.join(
-      libpath, 'libngraph_bridge.' + ext))
+    ngraph_bridge_lib = ctypes.cdll.LoadLibrary(
+        os.path.join(libpath, 'libngraph_bridge.' + ext))
 else:
-    raise ValueError("Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}".format(
-      TF_VERSION, TF_VERSION_NEEDED ))
+    raise ValueError(
+        "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
+        .format(TF_VERSION, TF_VERSION_NEEDED))
 
 
 def requested():
-    return ops.get_default_graph()._attr_scope(
-        {"_ngraph_requested": attr_value_pb2.AttrValue(b=True)})
+    return ops.get_default_graph()._attr_scope({
+        "_ngraph_requested":
+        attr_value_pb2.AttrValue(b=True)
+    })
 
 
 ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
@@ -110,7 +113,7 @@ ngraph_bridge_lib.ngraph_is_supported_backend.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
-
+ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
 
 try:
     importlib.import_module('plaidml.settings')
@@ -122,57 +125,66 @@ except ImportError:
 
 
 def enable():
-  ngraph_bridge_lib.ngraph_enable()
+    ngraph_bridge_lib.ngraph_enable()
 
 
 def disable():
-  ngraph_bridge_lib.ngraph_disable()
+    ngraph_bridge_lib.ngraph_disable()
 
 
 def is_enabled():
-  return ngraph_bridge_lib.ngraph_is_enabled()
+    return ngraph_bridge_lib.ngraph_is_enabled()
 
 
 def backends_len():
-  return ngraph_bridge_lib.ngraph_backends_len()
+    return ngraph_bridge_lib.ngraph_backends_len()
 
 
 def list_backends():
-  len_backends = backends_len()
-  result = (ctypes.c_char_p * len_backends)()
-  if not ngraph_bridge_lib.ngraph_list_backends(result, len_backends):
-    raise Exception("Expected " + str(len_backends) + " backends, but got some  other number of backends")
-  list_result = list(result)
-  # convert bytes to string required for py3 (encode/decode bytes)
-  backend_list = []
-  for backend in list_result:
-    backend_list.append(backend.decode("utf-8"))
-  return backend_list
+    len_backends = backends_len()
+    result = (ctypes.c_char_p * len_backends)()
+    if not ngraph_bridge_lib.ngraph_list_backends(result, len_backends):
+        raise Exception("Expected " + str(len_backends) +
+                        " backends, but got some  other number of backends")
+    list_result = list(result)
+    # convert bytes to string required for py3 (encode/decode bytes)
+    backend_list = []
+    for backend in list_result:
+        backend_list.append(backend.decode("utf-8"))
+    return backend_list
 
 
 def set_backend(backend):
-  if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
-    raise Exception("Backend " + backend + " unavailable.")
+    if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
+        raise Exception("Backend " + backend + " unavailable.")
+
 
 def is_supported_backend(backend):
-  return ngraph_bridge_lib.ngraph_is_supported_backend(backend.encode("utf-8"))
+    return ngraph_bridge_lib.ngraph_is_supported_backend(
+        backend.encode("utf-8"))
+
 
 def get_currently_set_backend_name():
-  result = (ctypes.c_char_p * 1)()
-  if not ngraph_bridge_lib.ngraph_get_currently_set_backend_name(result):
-    raise Exception("Cannot get currently set backend")
-  list_result = list(result)
-  return list_result[0].decode("utf-8")
+    result = (ctypes.c_char_p * 1)()
+    if not ngraph_bridge_lib.ngraph_get_currently_set_backend_name(result):
+        raise Exception("Cannot get currently set backend")
+    list_result = list(result)
+    return list_result[0].decode("utf-8")
+
 
 def start_logging_placement():
-  ngraph_bridge_lib.ngraph_start_logging_placement()
+    ngraph_bridge_lib.ngraph_start_logging_placement()
 
 
 def stop_logging_placement():
-  ngraph_bridge_lib.ngraph_stop_logging_placement()
+    ngraph_bridge_lib.ngraph_stop_logging_placement()
 
 
 def is_logging_placement():
-  return ngraph_bridge_lib.ngraph_is_logging_placement()
- 
-__version__ = ngraph_bridge_lib.ngraph_tf_version()
+    return ngraph_bridge_lib.ngraph_is_logging_placement()
+
+__version__ = \
+  "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
+  "nGraph version used: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
+  "TensorFlow verion used: " + TF_GIT_VERSION_BUILT_WITH
+  

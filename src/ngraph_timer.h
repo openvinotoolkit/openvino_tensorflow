@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_VERSION_H_
-#define NGRAPH_TF_VERSION_H_
+#ifndef NGRAPH_TF_BRIDGE_TIMER_H_
+#define NGRAPH_TF_BRIDGE_TIMER_H_
+
+#include <chrono>
 
 namespace tensorflow {
 namespace ngraph_bridge {
-extern "C" {
-// Returns the ngraph-tensorflow library version
-const char* ngraph_tf_version();
 
-// Returns the nGraph version this bridge was compiled with
-const char* ngraph_lib_version();
-}
+class Timer {
+ public:
+  Timer() : m_start(std::chrono::high_resolution_clock::now()) {}
+  int ElapsedInMS() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::high_resolution_clock::now() - m_start)
+        .count();
+  }
+
+ private:
+  const std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+};
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_VERSION_H_
+#endif  // NGRAPH_TF_BRIDGE_TIMER_H_

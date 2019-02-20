@@ -17,6 +17,7 @@
 #include "version.h"
 #include <iostream>
 #include <string>
+#include "ngraph/ngraph.hpp"
 
 // nGraph-TensorFlow bridge uses semantic versioning: see http://semver.org/
 
@@ -38,8 +39,11 @@
       NG_TF_MINOR_VERSION) "." VERSION_STR(NG_TF_PATCH_VERSION) \
        NG_TF_VERSION_SUFFIX)
 
+extern "C" const char* get_ngraph_version_string();
+
 namespace tensorflow {
 namespace ngraph_bridge {
 const char* ngraph_tf_version() { return (NG_TF_VERSION_STRING); }
+const char* ngraph_lib_version() { return get_ngraph_version_string(); }
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
