@@ -244,6 +244,7 @@ def main():
     run_ngtf_gtests(build_dir)
 
     # Next run Python unit tests
+    load_venv(venv_dir)
     run_ngtf_pytests(venv_dir, build_dir)
 
     if (arguments.test_examples): 
@@ -257,7 +258,6 @@ def main():
     run_resnet50(build_dir)
 
     os.chdir(root_pwd)
-
 
 if __name__ == '__main__':
     main()

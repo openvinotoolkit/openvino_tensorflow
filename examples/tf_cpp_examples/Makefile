@@ -2,9 +2,21 @@
 
 # Location of the ngraph-tf directory
 NGRAPH_TF_DIR=../../
-# Set the CXX_ABI_FLAG to 0 if you are using Clang or gcc 4.8
-# Also ensure that TensorFlow is built with the same compiler version. 
-CXX_ABI_FLAG=1
+
+define GET_TF_CXX_ABI
+import tensorflow as tf
+print (" ".join(str(tf.__cxx11_abi_flag__)))
+endef
+
+ifneq ("$(wildcard /etc/redhat-release)","")
+LIB_DIR := lib64
+else
+LIB_DIR := lib
+endif
+
+# Set the CXX_ABI_FLAG based on what is used to build TensorFlow that is being used
+CXX_ABI_FLAG := $(shell python3 -c '$(GET_TF_CXX_ABI)')
+$(info CXX_ABI_FLAG $(CXX_ABI_FLAG))
 
 CXXFLAGS=-std=c++11 -Wall -pedantic \
 	-I $(NGRAPH_TF_DIR)/build/artifacts/include \
@@ -17,7 +29,7 @@ CXXFLAGS=-std=c++11 -Wall -pedantic \
 ODIR=obj
 INCDIR = include
 LD_FLAGS=\
-	-L $(NGRAPH_TF_DIR)/build/artifacts/lib \
+	-L $(NGRAPH_TF_DIR)/build/artifacts/$(LIB_DIR) \
 	-L $(NGRAPH_TF_DIR)/build/artifacts/tensorflow 
 
 BIN = hello_tf

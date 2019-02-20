@@ -95,20 +95,18 @@ void RunSimpleNetworkExample() {
 int main(int argc, char** argv) {
   PrintAvailableBackends();
 
-  if (SetNGraphBackend("CPU") != tensorflow::Status::OK()) {
-    std::cout << "Error: Cannot set the backend" << std::endl;
+  const char* backend = "INTERPRETER";
+
+  if (argc > 1) {
+    backend = argv[1];
+  }
+
+  if (SetNGraphBackend(backend) != tensorflow::Status::OK()) {
+    std::cout << "Error: Cannot set the backend: " << backend << std::endl;
     return -1;
   }
 
   // Run the MatMul example
-  RunSimpleNetworkExample();
-
-  // Now set the backend to INTERPRETER
-  if (SetNGraphBackend("INTERPRETER") != tensorflow::Status::OK()) {
-    std::cout << "Error: Cannot set the backend" << std::endl;
-    return -1;
-  }
-
   RunSimpleNetworkExample();
 
   return 0;

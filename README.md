@@ -53,7 +53,7 @@ TensorFlow model scripts and running them the usual way:
 
 Note: The version of the ngraph-tensorflow-bridge is not going to be exactly the same as when you build from source. This is due to delay in the source release and publishing the corresponding Python wheel. 
 
-### Option 2: Build nGraph bridge from source using TensorFlow source
+### Option 2: Build nGraph bridge from source
 
 To use the latest version, or to run unit tests, or if you are planning to contribute, install the nGraph 
 bridge using the TensorFlow source tree as follows: 
