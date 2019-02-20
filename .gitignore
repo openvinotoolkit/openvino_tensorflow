@@ -8,7 +8,6 @@ cpu_codegen/
 *.pbtxt
 *.dot
 *.whl
-*.bzl
 .bazelrc
 
 .*.swp
