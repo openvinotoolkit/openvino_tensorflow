@@ -37,14 +37,14 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
    
 4. Test the installation by running the following command:
 
-        python -c "import tensorflow as tf; print('TensorFlow version: r',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
+        python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
 
 This will produce something like this:
 
-        TensorFlow version: r 1.12.0
-        TensorFlow version installed: 1.12.0 (v1.12.0-0-ga6d8ffae09)
-        nGraph bridge built with: 1.12.0 (v1.12.0-0-ga6d8ffae09)
-        b'0.10.0'
+        TensorFlow version:  1.12.0
+        nGraph bridge version: b'0.11.0'
+        nGraph version used for this build: b'0.14.0+56a54ca'
+        TensorFlow version used for this build: v1.12.0-0-ga6d8ffae09
 
 Next you can try out the TensorFlow models by adding one line to your existing 
 TensorFlow model scripts and running them the usual way:

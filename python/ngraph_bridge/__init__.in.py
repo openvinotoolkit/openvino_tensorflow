@@ -185,6 +185,5 @@ def is_logging_placement():
 
 __version__ = \
   "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
-  "nGraph version used: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
-  "TensorFlow verion used: " + TF_GIT_VERSION_BUILT_WITH
-  
+  "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
+  "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH
