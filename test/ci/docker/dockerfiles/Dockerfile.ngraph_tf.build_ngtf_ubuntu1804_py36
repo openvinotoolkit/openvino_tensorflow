@@ -1,0 +1,73 @@
+# ==============================================================================
+#  Copyright 2018 Intel Corporation
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+# ==============================================================================
+
+# Environment to build and unit-test ngraph-tensorflow-bridge
+
+FROM ubuntu:18.04
+
+# Default python environment is python 3, thus python3-pip and virtualenv
+# Default gcc 7.3 for ubuntu 18.04
+# python3-dev is needed for TensorFlow build
+# git is needed to clone tensorflow repository
+# unzip and wget are needed for installing bazel
+# sudo is required for installing the TF wheel into /usr/local/...
+# zlib1g, zlib1g-dev and bash-completion are required by bazel install
+# zip and golang-go are needed to run TensorFlow tests
+# curl and locate are needed by Tensorflow's configure command
+# clang-format-3.9 is needed for code-style checks
+
+RUN apt-get update &&  apt-get install -y \
+    python3-pip virtualenv \
+    python3-dev \
+    git \
+    unzip wget \
+    sudo \
+    zlib1g zlib1g-dev bash-completion \
+    build-essential cmake \
+    libtinfo-dev \
+    zip golang-go \
+    locate curl \
+    clang-format-3.9
+
+# Report which gcc and g++ versions are present
+RUN which gcc && gcc --version || true
+RUN which c++ && c++ --version || true
+
+# The "locate" command uses a prepopulated index.  If this index is not built,
+# then "locate" will find absolutely nothing.  In Tensorflow's configure,
+# this manifests itself as a silent failure of the configure script to run to
+# completion.  Therefore, updatedb MUST BE RUN to provide an index for "locate".
+RUN updatedb
+
+# The pip-upgrade for pip, setuptools, and virtualenv is to avoid a nasty
+#   bug in setuptools: "_NamespacePath object has no attribute sort"
+RUN pip3 install --upgrade pip setuptools virtualenv==16.1.0
+
+# We include pytest so the Docker image can be used for daily validation
+RUN pip3 install --upgrade pytest
+
+# We include openjdk-8-jdk
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+
+# This bazel version works with current TF
+RUN wget --no-verbose -c https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel_0.16.0-linux-x86_64.deb
+RUN dpkg -i bazel_0.16.0-linux-x86_64.deb || true
+
+# Copy in the run-as-user.sh script
+# This will allow the builds, which are done in a mounted directory, to
+# be run as the user who runs "docker run".  This then allows the mounted
+# directory to be properly deleted by the user later (e.g. by jenkins).
+WORKDIR /home
