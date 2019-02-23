@@ -413,68 +413,41 @@ class NGraphEncapsulateOp : public OpKernel {
                                                         &ng_element_type));
 
       // At the first call of the ng_function, both last_src_ptr and
-      // last_tv shall point to null. Otherwise, they are retrived
+      // last_ng_tensor shall point to null. Otherwise, they are retrived
       // from cache.
       void* last_src_ptr = input_caches[i].first;
-      std::shared_ptr<ng::runtime::Tensor> last_tv = input_caches[i].second;
+      std::shared_ptr<ng::runtime::Tensor> last_ng_tensor =
+          input_caches[i].second;
 
       void* current_src_ptr = (void*)DMAHelper::base(&ctx->input(i));
-      std::shared_ptr<ng::runtime::Tensor> current_tv;
+      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
+          get_current_ng_tensor(current_src_ptr, last_src_ptr, last_ng_tensor,
+                                false, ng_function, op_backend, ng_element_type,
+                                ng_shape);
 
-      try {
-        if (m_op_backend_name == "CPU") {
-          // We need to check last_tv != nullptr, since there are cases where at
-          // the first call to the ng_function, both the current_src_ptr (when
-          // the input is a 0-sized tensor) and last_src_ptr (uninitialized at
-          // the first call) are nullptr
-          if (current_src_ptr == last_src_ptr && last_tv != nullptr) {
-            // Mark each tensor as non-stale if:
-            //   1. the freshness tracker says the tensor has not changed since
-            //      the last time ng_function was called, and
-            //   2. we are using the same tensor in this argument position as
-            //      the one we used last time ng_function was called.
-            last_tv->set_stale(
-                !m_freshness_tracker->IsFresh(current_src_ptr, ng_function));
-            current_tv = last_tv;
-          } else {
-            current_tv = op_backend->create_tensor(ng_element_type, ng_shape,
-                                                   current_src_ptr);
-            current_tv->set_stale(true);
-            ng_input_tensor_size_in_bytes += current_tv->get_size_in_bytes();
-          }
-        } else {
-          if (last_tv != nullptr) {
-            if (current_src_ptr == last_src_ptr) {
-              last_tv->set_stale(
-                  !m_freshness_tracker->IsFresh(current_src_ptr, ng_function));
-            } else {
-              last_tv->set_stale(true);
-            }
-            current_tv = last_tv;
-          } else {
-            current_tv = op_backend->create_tensor(ng_element_type, ng_shape);
-            current_tv->set_stale(true);
-            ng_input_tensor_size_in_bytes += current_tv->get_size_in_bytes();
-          }
-          if (current_tv->get_stale()) {
-            current_tv->write(
-                current_src_ptr, 0,
-                current_tv->get_element_count() * ng_element_type.size());
-          }
-        }  // if (m_op_backend_name == "CPU")
-      } catch (const std::exception& exp) {
-        OP_REQUIRES(
-            ctx, false,
-            errors::Internal(
-                "Caught exception while transferring tensor data to nGraph: ",
-                exp.what(), "\n"));
-      } catch (...) {
-        OP_REQUIRES(
-            ctx, false,
-            errors::Internal("Error in transferring tensor data to nGraph\n"));
+      bool is_cpu = m_op_backend_name == "CPU";
+
+      if (!is_cpu && current_ng_tensor->get_stale()) {
+        // Fresh or stale, in case of CPU this step is never needed
+        try {
+          current_ng_tensor->write(
+              current_src_ptr, 0,
+              current_ng_tensor->get_element_count() * ng_element_type.size());
+        } catch (const std::exception& exp) {
+          OP_REQUIRES(
+              ctx, false,
+              errors::Internal(
+                  "Caught exception while transferring tensor data to nGraph: ",
+                  exp.what(), "\n"));
+        } catch (...) {
+          OP_REQUIRES(ctx, false,
+                      errors::Internal(
+                          "Error in transferring tensor data to nGraph\n"));
+        }
       }
-      input_caches[i] = std::make_pair(current_src_ptr, current_tv);
-      ng_inputs.push_back(current_tv);
+
+      input_caches[i] = std::make_pair(current_src_ptr, current_ng_tensor);
+      ng_inputs.push_back(current_ng_tensor);
     }  // for (int i = 0; i < input_shapes.size(); i++)
 
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
@@ -514,35 +487,18 @@ class NGraphEncapsulateOp : public OpKernel {
                            "the element type expected by TensorFlow"));
 
       void* last_dst_ptr = output_caches[i].first;
-      std::shared_ptr<ng::runtime::Tensor> last_tv = output_caches[i].second;
+      std::shared_ptr<ng::runtime::Tensor> last_ng_tensor =
+          output_caches[i].second;
 
       void* current_dst_ptr = DMAHelper::base(output_tensor);
-      std::shared_ptr<ng::runtime::Tensor> current_tv;
+      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
+          get_current_ng_tensor(current_dst_ptr, last_dst_ptr, last_ng_tensor,
+                                true, ng_function, op_backend, ng_element_type,
+                                ng_shape);
 
-      if (m_op_backend_name == "CPU") {
-        // We need to check last_tv != nullptr, since there are cases where at
-        // the first call to the ng_function, both the current_dst_ptr (when the
-        // output is a 0-sized tensor) and last_dst_ptr (uninitialized at the
-        // first call) are nullptr
-        if (current_dst_ptr == last_dst_ptr && last_tv != nullptr) {
-          current_tv = last_tv;
-        } else {
-          current_tv = op_backend->create_tensor(ng_element_type, ng_shape,
-                                                 current_dst_ptr);
-          ng_output_tensor_size_in_bytes += current_tv->get_size_in_bytes();
-        }
-      } else {
-        if (last_tv != nullptr) {
-          current_tv = last_tv;
-        } else {
-          current_tv = op_backend->create_tensor(ng_element_type, ng_shape);
-          ng_output_tensor_size_in_bytes += current_tv->get_size_in_bytes();
-        }
-      }  // if (m_op_backend_name == "CPU")
-
-      current_tv->set_stale(true);
-      output_caches[i] = std::make_pair(current_dst_ptr, current_tv);
-      ng_outputs.push_back(current_tv);
+      current_ng_tensor->set_stale(true);
+      output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
+      ng_outputs.push_back(current_ng_tensor);
     }
 
     NGRAPH_VLOG(4)
@@ -605,11 +561,11 @@ class NGraphEncapsulateOp : public OpKernel {
       if (m_op_backend_name != "CPU") {
         for (size_t i = 0; i < output_caches.size(); ++i) {
           void* dst_ptr;
-          std::shared_ptr<ng::runtime::Tensor> dst_tv;
-          std::tie(dst_ptr, dst_tv) = output_caches[i];
-          auto ng_element_type = dst_tv->get_element_type();
-          dst_tv->read(dst_ptr, 0,
-                       dst_tv->get_element_count() * ng_element_type.size());
+          std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
+          std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
+          auto ng_element_type = dst_ng_tensor->get_element_type();
+          dst_ng_tensor->read(dst_ptr, 0, dst_ng_tensor->get_element_count() *
+                                              ng_element_type.size());
         }
       }
     } catch (const std::exception& exp) {
@@ -625,6 +581,8 @@ class NGraphEncapsulateOp : public OpKernel {
     }
 
     // Mark input tensors as fresh for the next time around.
+    // Note: these ng_tensors are being marked fresh so that in the next
+    // iteration if this encapsulate finds the tensor fresh, then it will use it
     for (int i = 0; i < input_shapes.size(); i++) {
       void* src_ptr = (void*)DMAHelper::base(&ctx->input(i));
       m_freshness_tracker->MarkFresh(src_ptr, ng_function);
@@ -665,6 +623,61 @@ class NGraphEncapsulateOp : public OpKernel {
   std::vector<bool> m_input_is_static;
   std::mutex m_compute_lock;
   string m_op_backend_name;
+
+  std::shared_ptr<ng::runtime::Tensor> get_current_ng_tensor(
+      void* current_tf_ptr, void* last_tf_ptr,
+      const std::shared_ptr<ng::runtime::Tensor>& last_ng_tensor,
+      const bool& output_tensor,
+      const std::shared_ptr<ngraph::Function>& ng_function,
+      ng::runtime::Backend* op_backend,
+      const ng::element::Type& ng_element_type, const ng::Shape& ng_shape) {
+    // NOTE: we assume that TF's pointers WILL change if it actually changes
+    // values. ie, it will not reuse the same space if its rewritten it
+    bool tf_tensor_has_changed = current_tf_ptr != last_tf_ptr;
+    bool no_ng_tensor_found = last_ng_tensor == nullptr;
+    bool is_cpu = m_op_backend_name == "CPU";
+
+    // We need to check last_ng_tensor != nullptr, since there are cases where
+    // at the first call to the ng_function, both current_dst_ptr (when the
+    // output is a 0-sized tensor) and last_dst_ptr (uninitialized at the
+    // first call) are nullptr
+    // A new tensor needs to be created for sure if no_ng_tensor_found
+    // Additionally for CPU, it needs to be created if tf_tensor_has_changed,
+    // for others, we do not create
+    bool need_new_tensor_creation;
+    if (is_cpu) {
+      need_new_tensor_creation = no_ng_tensor_found || tf_tensor_has_changed;
+    } else {
+      need_new_tensor_creation = no_ng_tensor_found;
+    }
+
+    // It is stale if a new tensor was created OR the tf tensor has changed OR
+    // (tf tensor has not changed, but freshness tracker says its stale)
+    bool is_stale;
+    if (output_tensor) {
+      is_stale = true;  // For output tensors, it is always set stale to true
+    } else {
+      is_stale = need_new_tensor_creation || tf_tensor_has_changed ||
+                 (!tf_tensor_has_changed &&
+                  !m_freshness_tracker->IsFresh(current_tf_ptr, ng_function));
+    }
+
+    // create a new ng tensor or use the last one
+    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
+    if (need_new_tensor_creation) {
+      if (is_cpu) {
+        current_ng_tensor = op_backend->create_tensor(ng_element_type, ng_shape,
+                                                      current_tf_ptr);
+      } else {
+        current_ng_tensor =
+            op_backend->create_tensor(ng_element_type, ng_shape);
+      }
+    } else {
+      current_ng_tensor = last_ng_tensor;
+    }
+    current_ng_tensor->set_stale(is_stale);
+    return current_ng_tensor;
+  }
   std::list<std::string> m_lru;
   int my_function_cache_depth_in_items = 16;
   static int s_instance_count;
