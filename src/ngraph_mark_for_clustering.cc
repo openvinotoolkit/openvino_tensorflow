@@ -537,15 +537,6 @@ Status MarkForClustering(Graph* graph) {
       set_attributes_map["Pad"] = SetStaticInputs({1});
       set_attributes_map["Prod"] = SetStaticInputs({1});
       set_attributes_map["QuantizeAndDequantizeV2"] = SetStaticInputs({1, 2});
-      set_attributes_map["QuantizedConv2DWithBiasAndReluAndRequantize"] =
-          SetStaticInputs({3, 4, 5, 6, 7, 8});
-      set_attributes_map["QuantizedConv2DWithBiasAndRequantize"] =
-          SetStaticInputs({3, 4, 5, 6, 7, 8});
-      set_attributes_map
-          ["QuantizedConv2DWithBiasSignedSumAndReluAndRequantize"] =
-              SetStaticInputs({3, 4, 5, 6, 7, 8, 10, 11});
-      set_attributes_map["QuantizedConv2DWithBiasSumAndReluAndRequantize"] =
-          SetStaticInputs({3, 4, 5, 6, 7, 8, 10, 11});
       set_attributes_map["QuantizeV2"] = SetStaticInputs({1, 2});
       set_attributes_map["Reshape"] = SetStaticInputs({1});
       set_attributes_map["Slice"] = SetStaticInputs({1, 2});

@@ -2630,43 +2630,17 @@ static Status TranslateQuantizeAndDequantizeV2Op(
 }
 
 static Status TranslateQuantizedConv(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map,
+    const Node* op, Builder::OpMap& ng_op_map,
     std::function<std::shared_ptr<ng::Node>(
         std::vector<std::shared_ptr<ng::Node>>, ng::Strides, ng::Strides,
-        ng::CoordinateDiff, ng::CoordinateDiff, ng::Strides,
-        std::vector<std::shared_ptr<ng::op::Constant>>)>
+        ng::CoordinateDiff, ng::CoordinateDiff, ng::Strides)>
         create_quantized_conv_node) {
   size_t num_tf_op_inputs = op->num_inputs();
-  std::vector<int32> static_inps_idxs;
-  if (GetNodeAttr(op->attrs(), "_ngraph_static_inputs", &static_inps_idxs) !=
-      Status::OK()) {
-    return errors::Internal(
-        "Did not find static inputs in quantized convolution op");
-  }
-  size_t num_static_inputs = static_inps_idxs.size();
-  size_t num_node_inputs = num_tf_op_inputs - num_static_inputs;
-  std::vector<std::shared_ptr<ng::op::Constant>> static_inps(num_static_inputs);
+  size_t num_node_inputs = num_tf_op_inputs;
   std::vector<std::shared_ptr<ng::Node>> node_inps(num_node_inputs);
-  size_t static_inp_count = 0;
   for (size_t inp_idx = 0; inp_idx < num_tf_op_inputs; inp_idx++) {
-    if (std::find(static_inps_idxs.begin(), static_inps_idxs.end(), inp_idx) ==
-        static_inps_idxs.end()) {
-      TF_RETURN_IF_ERROR(GetInputNode(
-          ng_op_map, op, inp_idx, &(node_inps[inp_idx - static_inp_count])));
-    } else {
-      std::vector<float> tmp_vect;
-      TF_RETURN_IF_ERROR(
-          GetStaticInputVector(op, inp_idx, static_input_map, &tmp_vect));
-      if (tmp_vect.size() != 1) {
-        return errors::InvalidArgument(
-            "TranslateQuantizedConv: Input number ", inp_idx,
-            " must be scalar. Got a vector of size, ", tmp_vect.size());
-      }
-      static_inps[static_inp_count] = std::make_shared<ng::op::Constant>(
-          ng::element::f32, ng::Shape({}), tmp_vect);
-      static_inp_count++;
-    }
+    TF_RETURN_IF_ERROR(
+        GetInputNode(ng_op_map, op, inp_idx, &(node_inps[inp_idx])));
   }
 
   std::vector<int32> tf_strides;
@@ -2686,8 +2660,9 @@ static Status TranslateQuantizedConv(
   BatchedOpParamToNGraph(is_nhwc, tf_dilations, ng_dilations);
   // Generally, the mapping is: 0->input, 1->filter, 2->bias, 3->sum input
   BatchToNGraph(is_nhwc, node_inps[0]);
-  if (num_node_inputs == 4) {
-    BatchToNGraph(is_nhwc, node_inps[3]);
+  // QconvBiasAdd variants
+  if (num_node_inputs == 12) {
+    BatchToNGraph(is_nhwc, node_inps[9]);
   }
   auto& ng_filter_shape = node_inps[1]->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
@@ -2705,14 +2680,16 @@ static Status TranslateQuantizedConv(
   // constant nodes
   std::shared_ptr<ng::Node> ng_quant_conv_bias = create_quantized_conv_node(
       node_inps, ng_strides, ng_dilations, ng_padding_below, ng_padding_above,
-      ng_data_dilations, static_inps);
+      ng_data_dilations);
 
   BatchToTensorflow(is_nhwc, ng_quant_conv_bias);
   SaveNgOp(ng_op_map, op->name(), ng_quant_conv_bias);
+  // QconvBiasAdd variants have summand and its min/max as the last input nodes
+  auto adjust_idx = num_node_inputs == 12 ? 3 : 0;
   // Forward the min_freezed_output input to output min
-  SaveNgOp(ng_op_map, op->name(), static_inps[4]);
+  SaveNgOp(ng_op_map, op->name(), node_inps[num_node_inputs - 2 - adjust_idx]);
   // Forward the max_freezed_output input to output max
-  SaveNgOp(ng_op_map, op->name(), static_inps[5]);
+  SaveNgOp(ng_op_map, op->name(), node_inps[num_node_inputs - 1 - adjust_idx]);
   return Status::OK();
 }
 
@@ -2723,16 +2700,14 @@ static Status TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp(
   auto create_quantized_conv_node = [](
       std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
       ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
-      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
-      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations) {
     return ng::builder::ScaledQuantizedConvolutionBias(
         node_inps[0], node_inps[1], node_inps[2], ng_strides, ng_dilations,
-        ng_padding_below, ng_padding_above, ng_data_dilations, static_inps[0],
-        static_inps[1], static_inps[2], static_inps[3], static_inps[4],
-        static_inps[5], IsRelu);
+        ng_padding_below, ng_padding_above, ng_data_dilations, node_inps[3],
+        node_inps[4], node_inps[5], node_inps[6], node_inps[7], node_inps[8],
+        IsRelu);
   };
-  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
-                                create_quantized_conv_node);
+  return TranslateQuantizedConv(op, ng_op_map, create_quantized_conv_node);
 }
 
 static Status TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp(
@@ -2741,16 +2716,14 @@ static Status TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp(
   auto create_quantized_conv_node = [](
       std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
       ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
-      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
-      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations) {
     return ng::builder::ScaledQuantizedConvolutionBiasAdd(
-        node_inps[0], node_inps[1], node_inps[2], node_inps[3], ng_strides,
+        node_inps[0], node_inps[1], node_inps[2], node_inps[9], ng_strides,
         ng_dilations, ng_padding_below, ng_padding_above, ng_data_dilations,
-        static_inps[0], static_inps[1], static_inps[2], static_inps[3],
-        static_inps[4], static_inps[5], static_inps[6], static_inps[7], true);
+        node_inps[3], node_inps[4], node_inps[5], node_inps[6], node_inps[7],
+        node_inps[8], node_inps[10], node_inps[11], true);
   };
-  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
-                                create_quantized_conv_node);
+  return TranslateQuantizedConv(op, ng_op_map, create_quantized_conv_node);
 }
 
 static Status TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp(
@@ -2759,16 +2732,14 @@ static Status TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp(
   auto create_quantized_conv_node = [](
       std::vector<std::shared_ptr<ng::Node>> node_inps, ng::Strides ng_strides,
       ng::Strides ng_dilations, ng::CoordinateDiff ng_padding_below,
-      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations,
-      std::vector<std::shared_ptr<ng::op::Constant>> static_inps) {
+      ng::CoordinateDiff ng_padding_above, ng::Strides ng_data_dilations) {
     return ng::builder::ScaledQuantizedConvolutionBiasSignedAdd(
-        node_inps[0], node_inps[1], node_inps[2], node_inps[3], ng_strides,
+        node_inps[0], node_inps[1], node_inps[2], node_inps[9], ng_strides,
         ng_dilations, ng_padding_below, ng_padding_above, ng_data_dilations,
-        static_inps[0], static_inps[1], static_inps[2], static_inps[3],
-        static_inps[4], static_inps[5], static_inps[6], static_inps[7], true);
+        node_inps[3], node_inps[4], node_inps[5], node_inps[6], node_inps[7],
+        node_inps[8], node_inps[10], node_inps[11], true);
   };
-  return TranslateQuantizedConv(op, static_input_map, ng_op_map,
-                                create_quantized_conv_node);
+  return TranslateQuantizedConv(op, ng_op_map, create_quantized_conv_node);
 }
 
 static Status TranslateQuantizedMaxPoolOp(
@@ -2895,10 +2866,10 @@ static Status TranslateQuantizeV2Op(
   auto ng_offset = std::make_shared<ng::op::Constant>(
       ng_et, ng::Shape(), std::vector<int>({ng_offset_val}));
 
-  // TODO: Only RoundMode = ROUND_NEAREST_TOWARD_INFINITY is supported, for now.
-  // Support HALF_TO_EVEN later
+  // TODO: Only RoundMode = ROUND_NEAREST_TOWARD_EVEN is supported, for now.
+  // Support other modes later
   ng::op::Quantize::RoundMode ng_round_mode =
-      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
+      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
   SaveNgOp(ng_op_map, op->name(),
            make_shared<ng::op::Quantize>(ng_input, ng_scale, ng_offset, ng_et,

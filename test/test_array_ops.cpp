@@ -359,6 +359,7 @@ TEST(ArrayOps, QuantizeV2i8) {
 
   auto attrs = ops::QuantizeV2::Attrs();
   attrs.mode_ = "SCALED";
+  attrs.round_mode_ = "HALF_TO_EVEN";
 
   vector<int> static_input_indexes = {1, 2};
   ops::QuantizeV2 R =
@@ -387,6 +388,7 @@ TEST(ArrayOps, DISABLED_QuantizeV2i8minmax) {
 
   auto attrs = ops::QuantizeV2::Attrs();
   attrs.mode_ = "SCALED";
+  attrs.round_mode_ = "HALF_TO_EVEN";
 
   vector<int> static_input_indexes = {1, 2};
   ops::QuantizeV2 R =
@@ -415,6 +417,7 @@ TEST(ArrayOps, QuantizeV2u8SameRange) {
 
   auto attrs = ops::QuantizeV2::Attrs();
   attrs.mode_ = "SCALED";
+  attrs.round_mode_ = "HALF_TO_EVEN";
 
   vector<int> static_input_indexes = {1, 2};
   ops::QuantizeV2 R = ops::QuantizeV2(root, A, 0.9f, 5.0f, quant_type, attrs);
@@ -441,6 +444,7 @@ TEST(ArrayOps, QuantizeV2u8DiffRange) {
 
   auto attrs = ops::QuantizeV2::Attrs();
   attrs.mode_ = "SCALED";
+  attrs.round_mode_ = "HALF_TO_EVEN";
 
   vector<int> static_input_indexes = {1, 2};
   ops::QuantizeV2 R = ops::QuantizeV2(root, A, 0.0f, 6.0f, quant_type, attrs);
