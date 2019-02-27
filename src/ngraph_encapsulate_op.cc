@@ -319,7 +319,8 @@ class NGraphEncapsulateOp : public OpKernel {
         m_ng_functions.erase(m_lru.back());
 
         // Call delete function here pf he erased func
-        op_backend->remove_compiled_function(evicted_ng_function);
+        auto exec = op_backend->compile(evicted_ng_function);
+        op_backend->remove_compiled_function(exec);
 
         // Now clean the input cache
         std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
@@ -515,9 +516,8 @@ class NGraphEncapsulateOp : public OpKernel {
           << "NGraphEncapsulateOp::Compute call starting for cluster "
           << m_ngraph_cluster;
       try {
-        op_backend->call(op_backend->compile(ng_function), ng_outputs,
-                         ng_inputs);
-
+        auto exec = op_backend->compile(ng_function);
+        exec->call(ng_outputs, ng_inputs);
       } catch (const std::exception& exp) {
         BackendManager::UnlockBackend(m_op_backend_name);
         NgraphSerialize(
