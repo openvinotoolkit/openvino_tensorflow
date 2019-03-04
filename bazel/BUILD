@@ -65,6 +65,7 @@ cc_binary(
         "@local_config_tf//:tf_header_lib",
         "@ngraph//:ngraph_headers",
         "@ngraph//:ngraph_core",
+        "@ngraph//:ngraph_version",
     ],
     copts = [
         "-pthread", 

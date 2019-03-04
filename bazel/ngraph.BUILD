@@ -35,6 +35,7 @@ cc_library(
         "src/ngraph/op/*.cpp",
         "src/ngraph/op/experimental/generate_mask.cpp",
         "src/ngraph/op/experimental/quantized_avg_pool.cpp",
+        "src/ngraph/op/experimental/quantized_concat.cpp",
         "src/ngraph/op/experimental/quantized_conv.cpp",
         "src/ngraph/op/experimental/quantized_conv_bias.cpp",
         "src/ngraph/op/experimental/quantized_conv_relu.cpp",
@@ -113,3 +114,35 @@ cc_binary(
     visibility = ["//visibility:public"],
 )
  
+cc_library(
+    name = 'ngraph_version',
+    srcs = glob([
+        "src/ngraph/ngraph.cpp"
+    ]),
+    deps = [
+        ":ngraph_headers",
+    ],
+    copts = [
+        "-I external/ngraph/src",
+        "-I external/ngraph/src/ngraph",
+        "-I external/nlohmann_json_lib/include/",
+        "-D_FORTIFY_SOURCE=2",
+        "-Wformat",
+        "-Wformat-security",
+        "-Wformat",
+        "-fstack-protector-all",
+        '-D SHARED_LIB_PREFIX=\\"lib\\"',
+        '-D SHARED_LIB_SUFFIX=\\".so\\"',
+        '-D NGRAPH_VERSION=\\"0.14.0\\"',
+        "-D NGRAPH_DEX_ONLY",
+        '-D PROJECT_ROOT_DIR=\\"\\"',
+    ] + CXX_ABI,
+    linkopts = [
+        "-Wl,-z,noexecstack",
+        "-Wl,-z,relro",
+        "-Wl,-z,now",
+    ],
+    visibility = ["//visibility:public"],
+    alwayslink = 1,
+)
+
