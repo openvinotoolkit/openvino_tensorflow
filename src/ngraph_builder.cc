@@ -33,6 +33,10 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#if defined(NGRAPH_DISTRIBUTED)
+#include <mpi.h>
+#endif
+
 using namespace std;
 namespace ng = ngraph;
 
@@ -442,7 +446,16 @@ static Status TranslateAllreduceOp(
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
-  SaveNgOp(ng_op_map, op->name(), make_shared<ng::op::AllReduce>(ng_input));
+  // Get the corresponding TF op to ng_input
+  // Set name of the ng input node same as TF op
+  Node* tf_input;
+  TF_RETURN_IF_ERROR(op->input_node(0, &tf_input));
+  ng_input->set_friendly_name(tf_input->name());
+
+  auto ng_all_reduce = make_shared<ng::op::AllReduce>(ng_input);
+  ng_all_reduce->set_friendly_name(op->name());
+  SaveNgOp(ng_op_map, op->name(), ng_all_reduce);
+
   return Status::OK();
 }
 
@@ -4172,6 +4185,18 @@ Status Builder::TranslateGraph(
   vector<const Node*> tf_ret_vals;
   vector<const Node*> tf_ops;
 
+#if defined(NGRAPH_DISTRIBUTED)
+  int flag = 0;
+  int mpi_rank = -1;
+  bool mpi_initialized = false;
+  MPI_Initialized(&flag);
+  if (!flag) {
+    MPI_Init(NULL, NULL);
+    mpi_initialized = true;
+  }
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+#endif
+
   for (const auto n : ordered) {
     if (n->IsSink() || n->IsSource()) {
       continue;
@@ -4189,8 +4214,23 @@ Status Builder::TranslateGraph(
       tf_ret_vals.push_back(n);
     } else {
       tf_ops.push_back(n);
+#if defined(NGRAPH_DISTRIBUTED)
+      if (n->type_string() == "HorovodAllreduce") {
+        NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << mpi_rank << "]: " << n->name();
+      }
+#endif
     }
   }
+
+#if defined(NGRAPH_DISTRIBUTED)
+  if (mpi_initialized) {
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (flag) {
+      MPI_Finalize();
+    }
+  }
+#endif
 
   //
   // The op map holds a mapping from TensorFlow op names (strings) to
