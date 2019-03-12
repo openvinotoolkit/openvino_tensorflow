@@ -351,8 +351,9 @@ def install_ngraph_tf(venv_dir, ngtf_pip_whl):
     command_executor(["pip", "install", "-U", ngtf_pip_whl])
 
     import tensorflow as tf
-    print('TensorFlow version: r', tf.__version__)
-    print(tf.__compiler_version__)
+    print('Version information:')
+    print('TensorFlow version: ', tf.__version__)
+    print('C Compiler version used in building TensorFlow: ', tf.__compiler_version__)
     import ngraph_bridge
     print(ngraph_bridge.__version__)
 
@@ -398,6 +399,14 @@ def main():
     )
 
     parser.add_argument(
+        '--ngraph_also_build_gpu_backend',
+        help=
+        "nGraph backends will include nVidia GPU.\n"
+        "Note: You need to have CUDA headers and libraries available on the build system.\n",
+        action="store_true"
+    )
+
+    parser.add_argument(
         '--use_prebuilt_binaries',
         help=
         "Skip building nGraph and TensorFlow. Rather use \"build\" directory.\n"
@@ -432,7 +441,7 @@ def main():
     #-------------------------------
 
     # Component versions
-    ngraph_version = "v0.15.0-rc.1"
+    ngraph_version = "v0.15.0"
     tf_version = "v1.12.0"
 
     # Default directories
@@ -506,7 +515,6 @@ def main():
             "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
             "-DNGRAPH_UNIT_TEST_ENABLE=NO",
             "-DNGRAPH_DEX_ONLY=TRUE",
-            "-DNGRAPH_GPU_ENABLE=NO",
             "-DNGRAPH_PLAIDML_ENABLE=NO",
             "-DNGRAPH_DEBUG_ENABLE=NO",
             "-DNGRAPH_TARGET_ARCH=" + target_arch,
@@ -524,6 +532,11 @@ def main():
             ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE"])
         else:
             ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=FALSE"])
+
+        if (arguments.ngraph_also_build_gpu_backend):
+            ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=YES"])
+        else:
+            ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=NO"])
 
         build_ngraph("./ngraph", ngraph_cmake_flags, verbosity)
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 #include "opexecuter.h"
+#include <cstdlib>
 
 using namespace std;
 namespace ng = ngraph;
@@ -89,7 +90,7 @@ void OpExecuter::ValidateGraph(const Graph& graph,
                                const vector<string> allowed_nodes) {
   NGRAPH_VLOG(5) << "Validate graph";
   bool found_test_op = false;
-  Node* test_op;
+  Node* test_op = nullptr;
   for (Node* node : graph.nodes()) {
     if (node->IsSource() || node->IsSink()) {
       continue;
@@ -135,6 +136,16 @@ void OpExecuter::RunTest(const string& ng_backend_name, float rtol,
   ExecuteOnNGraph(ngraph_outputs, ng_backend_name);
   vector<Tensor> tf_outputs;
   ExecuteOnTF(tf_outputs);
+
+  // Override the test result tolerance
+  if (std::getenv("NGRAPH_TF_UTEST_RTOL") != nullptr) {
+    rtol = std::atof(std::getenv("NGRAPH_TF_UTEST_RTOL"));
+  }
+
+  if (std::getenv("NGRAPH_TF_UTEST_ATOL") != nullptr) {
+    atol = std::atof(std::getenv("NGRAPH_TF_UTEST_ATOL"));
+  }
+
   Compare(tf_outputs, ngraph_outputs, rtol, atol);
 }
 
@@ -355,10 +366,12 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
         << ng_et;
 
     void* src_ptr = (void*)DMAHelper::base(&tf_inputs[i]);
-    auto result = backend->create_tensor(ng_et, ng_shape, src_ptr);
-
+    std::shared_ptr<ngraph::runtime::Tensor> result;
     if (ng_backend_type != "CPU") {
+      result = backend->create_tensor(ng_et, ng_shape);
       result->write(src_ptr, 0, result->get_element_count() * ng_et.size());
+    } else {
+      result = backend->create_tensor(ng_et, ng_shape, src_ptr);
     }
 
     ng_ip_tensors.push_back(result);
