@@ -363,8 +363,6 @@ def download_repo(target_name, repo, version):
     # First download to a temp folder
     call(["git", "clone", repo, target_name])
 
-    call(["git", "fetch"])
-
     # Next goto this folder nd determine the name of the root folder
     pwd = os.getcwd()
 
@@ -372,6 +370,7 @@ def download_repo(target_name, repo, version):
     os.chdir(target_name)
 
     # checkout the specified branch
+    call(["git", "fetch"])
     command_executor(["git", "checkout", version])
     os.chdir(pwd)
 
@@ -441,7 +440,7 @@ def main():
     #-------------------------------
 
     # Component versions
-    ngraph_version = "v0.15.0"
+    ngraph_version = "v0.15.1-rc.2"
     tf_version = "v1.12.0"
 
     # Default directories
@@ -513,9 +512,8 @@ def main():
         ngraph_cmake_flags = [
             "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
             "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-            "-DNGRAPH_UNIT_TEST_ENABLE=NO",
+            "-DNGRAPH_UNIT_TEST_ENABLE=YES",
             "-DNGRAPH_DEX_ONLY=TRUE",
-            "-DNGRAPH_PLAIDML_ENABLE=NO",
             "-DNGRAPH_DEBUG_ENABLE=NO",
             "-DNGRAPH_TARGET_ARCH=" + target_arch,
             "-DNGRAPH_TUNE_ARCH=" + target_arch,

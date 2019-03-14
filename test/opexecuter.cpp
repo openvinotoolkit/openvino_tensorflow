@@ -431,6 +431,10 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs[i].DebugString();
   }
 
+  // Clear the tesnors
+  ng_ip_tensors.clear();
+  ng_op_tensors.clear();
+
   // Release the backend
   BackendManager::ReleaseBackend(ng_backend_type);
 
