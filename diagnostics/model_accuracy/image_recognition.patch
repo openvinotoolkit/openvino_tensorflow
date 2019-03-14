@@ -1,0 +1,12 @@
+diff --git a/research/slim/eval_image_classifier.py b/research/slim/eval_image_classifier.py
+index 8a42641f..025142d5 100644
+--- a/research/slim/eval_image_classifier.py
++++ b/research/slim/eval_image_classifier.py
+@@ -20,6 +20,7 @@ from __future__ import print_function
+ 
+ import math
+ import tensorflow as tf
++import ngraph_bridge
+ 
+ from datasets import dataset_factory
+ from nets import nets_factory

@@ -1,0 +1,49 @@
+diff --git a/research/object_detection/model_main.py b/research/object_detection/model_main.py
+index 5e8db1e5..74f20cf0 100644
+--- a/research/object_detection/model_main.py
++++ b/research/object_detection/model_main.py
+@@ -21,6 +21,7 @@ from __future__ import print_function
+ from absl import flags
+ 
+ import tensorflow as tf
++import ngraph_bridge
+ 
+ from object_detection import model_hparams
+ from object_detection import model_lib
+diff --git a/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config b/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config
+index a80117b5..ad4eb1cd 100644
+--- a/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config
++++ b/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config
+@@ -153,7 +153,7 @@ train_config: {
+       epsilon: 1.0
+     }
+   }
+-  fine_tune_checkpoint: "PATH_TO_BE_CONFIGURED/model.ckpt"
++  # fine_tune_checkpoint: "PATH_TO_BE_CONFIGURED/model.ckpt"
+   from_detection_checkpoint: true
+   # Note: The below line limits the training process to 200K steps, which we
+   # empirically found to be sufficient enough to train the pets dataset. This
+@@ -172,9 +172,9 @@ train_config: {
+ 
+ train_input_reader: {
+   tf_record_input_reader {
+-    input_path: "PATH_TO_BE_CONFIGURED/mscoco_train.record-?????-of-00100"
++    input_path: "/mnt/data/mscoco2014/tf_records_train/coco_train.record*"
+   }
+-  label_map_path: "PATH_TO_BE_CONFIGURED/mscoco_label_map.pbtxt"
++  label_map_path: "/nfs/site/home/skantama/validation/models/research/mscoco_label_map.pbtxt"
+ }
+ 
+ eval_config: {
+@@ -186,9 +186,9 @@ eval_config: {
+ 
+ eval_input_reader: {
+   tf_record_input_reader {
+-    input_path: "PATH_TO_BE_CONFIGURED/mscoco_val.record-?????-of-00010"
++  input_path: "/mnt/data/mscoco2014/tf_recors_val/coco_val.record*" #/mscoco_val.record-?????-of-00010"
+   }
+-  label_map_path: "PATH_TO_BE_CONFIGURED/mscoco_label_map.pbtxt"
++  label_map_path: "/nfs/site/home/skantama/validation/models/research/mscoco_label_map.pbtxt"
+   shuffle: false
+   num_readers: 1
+ }
