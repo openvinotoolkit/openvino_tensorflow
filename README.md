@@ -27,7 +27,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
         source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
     
-2. Install TensorFlow v1.12.0:
+2. Install TensorFlow v1.13.1:
 
         pip install -U tensorflow
 
@@ -41,10 +41,10 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 This will produce something like this:
 
-        TensorFlow version:  1.12.0
-        nGraph bridge version: b'0.11.0'
-        nGraph version used for this build: b'0.14.0+56a54ca'
-        TensorFlow version used for this build: v1.12.0-0-ga6d8ffae09
+        TensorFlow version:  1.13.1
+        nGraph bridge version: b'0.12.0-rc1'
+        nGraph version used for this build: b'0.21.0-rc.0+b638705'
+        TensorFlow version used for this build: v1.13.1-0-g6612da8951
 
 Next you can try out the TensorFlow models by adding one line to your existing 
 TensorFlow model scripts and running them the usual way:
@@ -63,11 +63,11 @@ bridge using the TensorFlow source tree as follows:
 The installation prerequisites are the same as described in the TensorFlow 
 [prepare environment] for linux.
 
-1. TensorFlow uses a build system called "bazel". These instructions were tested with [bazel version 0.16.0]. 
+1. TensorFlow uses a build system called "bazel". These instructions were tested with [bazel version 0.21.0]. 
 
-        wget https://github.com/bazelbuild/bazel/releases/download/0.16.0/bazel-0.16.0-installer-linux-x86_64.sh      
-        chmod +x bazel-0.16.0-installer-linux-x86_64.sh
-        ./bazel-0.16.0-installer-linux-x86_64.sh --user
+        wget https://github.com/bazelbuild/bazel/releases/download/0.21.0/bazel-0.21.0-installer-linux-x86_64.sh      
+        chmod +x bazel-0.21.0-installer-linux-x86_64.sh
+        ./bazel-0.21.0-installer-linux-x86_64.sh --user
 
 2. Add and source the ``bin`` path to your ``~/.bashrc`` file in order to be 
    able to call bazel from the user's installation we set up:
@@ -84,7 +84,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.11.0
+        git checkout v0.12.0-rc1
 
    
 2. Next run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
@@ -114,70 +114,6 @@ Once the build and installation steps are complete, you can start using TensorFl
 with nGraph backends. 
 
 Please add the following line to enable nGraph: `import ngraph_bridge`
-
-## Option 3: Using the upstreamed version
-
-nGraph is updated in the TensorFlow source tree using pull requests periodically. 
-
-In order to build that version of nGraph, follow the steps below, which involves building TensorFlow from source with certain settings.
-
-1. Install bazel using the same instructions outlined in option 2, step 1 above.
-
-2. Create a virtual environment using the instructions outlined in option 1, step 1 above.
-
-3. Get tensorflow v1.12.0
-
-        git clone https://github.com/tensorflow/tensorflow.git
-        cd tensorflow
-        git checkout v1.12.0
-
-Note: To get the latest version of nGraph, use the tip of `master` branch of TensorFlow. The exact version of `bazel` changes for a specific version of TensorFlow. Please consult the build instructions from TensorFlow web site for specific bazel requirements.
-
-4. Now run `./configure` and choose `no` for the following when prompted to build TensorFlow.
-
-    XLA support:
-
-        Do you wish to build TensorFlow with XLA JIT support? [Y/n]: n
-        No XLA JIT support will be enabled for TensorFlow.
-
-    CUDA support:
-    
-        Do you wish to build TensorFlow with CUDA support? [y/N]: N
-        No CUDA support will be enabled for TensorFlow.
-    
-    :warning: Note that if you are running TensorFlow on a Skylake family processor then select
-    `-march=broadwell` when prompted to specify the optimization flags:
-    
-        Please specify optimization flags to use during compilation 
-        when bazel option "--config=opt" is specified 
-        [Default is -march=native]: -march=broadwell
-    
-    This is due to an issue in TensorFlow tracked here: 
-    https://github.com/tensorflow/tensorflow/issues/17273
-
-5. Prepare the pip package
-
-        bazel build --config=opt --config=ngraph //tensorflow/tools/pip_package:build_pip_package 
-        bazel-bin/tensorflow/tools/pip_package/build_pip_package ./
-
-Note: The specific questions for the `configure` step and the build command mentioned above changes for different versions of TensorFlow. 
-
-6. Once the pip package is built, install using
-
-        pip install -U ./tensorflow-1.*whl
-
-For this final option, there is **no need to separately build `ngraph-tf` or to 
-use `pip` to install the nGraph module**. With this configuration, your TensorFlow model scripts will work without any changes, ie, you do not need to add `import ngraph_bridge`, like option 1 and 2. 
-
-Note: The version that is available in the upstreamed version of TensorFlow usually
-lags the features and bug fixes available in the `master` branch of this repository.
-
-You can run a few of your own DL models to validate the end-to-end 
-functionality. Also, you can use the `ngraph-tf/examples` directory and try to 
-run the following model: 
-
-        cd examples
-        python3 keras_sample.py 
 
 ## Using OS X 
 
@@ -223,7 +159,7 @@ See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
 [DSO]:http://csweb.cs.wfu.edu/~torgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
 [Github issues]: https://github.com/NervanaSystems/ngraph-tf/issues
 [pull request]: https://github.com/NervanaSystems/ngraph-tf/pulls
-[bazel version 0.16.0]: https://github.com/bazelbuild/bazel/releases/tag/0.16.0
+[bazel version 0.21.0]: https://github.com/bazelbuild/bazel/releases/tag/0.21.0
 [prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
 [diagnostics]:diagnostics/README.md
 [ops]:http://ngraph.nervanasys.com/docs/latest/ops/index.html
