@@ -46,6 +46,7 @@ set(SRC
    ngraph_rewrite_pass.cc
    ngraph_tracked_variable.cc
    ngraph_utils.cc
+   ngraph_timer.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
    version.cc
