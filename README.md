@@ -117,7 +117,7 @@ Please add the following line to enable nGraph: `import ngraph_bridge`
 
 ## Using OS X 
 
-The build and installation instructions are idential for Ubuntu 16.04 and OS X. However, please
+The build and installation instructions are identical for Ubuntu 16.04 and OS X. However, please
 note that the Python setup is not always the same across various Mac OS versions. TensorFlow build
 instructions recommend using Homebrew and often people use Pyenv. There is also Anaconda/Miniconda 
 which some users prefer. Ensure that you can build TenorFlow successfully on OS X with a suitable 
