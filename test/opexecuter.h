@@ -87,11 +87,14 @@ class OpExecuter {
   // If only want to set tolerance values and running using default backends
   void RunTest(float rtol, float atol) { return RunTest("CPU", rtol, atol); };
 
+  shared_ptr<ng::Function> get_ng_function() { return ng_function; }
+
   // TODO(malikshr) : Overload RunTest() to take in tolerance
 
  private:
   Scope tf_scope_;
   const string test_op_type_;
+  shared_ptr<ng::Function> ng_function;
   set<int> static_input_indexes_;
   const vector<DataType> expected_output_datatypes_;
   const std::vector<Output> sess_run_fetchoutputs_;

@@ -312,7 +312,6 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
   // Create nGraph function
   NGRAPH_VLOG(5) << " Create ng function ";
-  shared_ptr<ng::Function> ng_function;
   ASSERT_EQ(Status::OK(),
             Builder::TranslateGraph(input_shapes, static_input_map, &graph,
                                     ng_function))
