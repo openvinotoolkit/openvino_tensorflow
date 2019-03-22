@@ -15,26 +15,27 @@
 # ==============================================================================
 
 workspace(name = "ngraph_bridge")
-load("//tf_configure:tf_configure.bzl", "tf_configure")
+load("@//tf_configure:tf_configure.bzl", "tf_configure")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 tf_configure(
     name = "local_config_tf",
 )
 
-new_http_archive(
+http_archive(
     name = "ngraph",
-    build_file = "bazel/ngraph.BUILD",
-    sha256 = "013868077223a7a2ca10d8604e1b743e64fa26abda2b97694922696ab3e3d3eb",
-    strip_prefix = "ngraph-0.15.0-rc.1",
+    build_file = "//:bazel/ngraph.BUILD",
+    sha256 = "02b07294ff3403c461acf7b1a282061560972daa8c5fb67a4f15722dd80a2922",
+    strip_prefix = "ngraph-0.16.0-rc.0",
     urls = [
-        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.15.0-rc.1.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.15.0-rc.1.tar.gz",
+        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.16.0-rc.0.tar.gz",
+        "https://github.com/NervanaSystems/ngraph/archive/v0.16.0-rc.0.tar.gz",
     ],
 )
 
-new_http_archive(
+http_archive(
     name = "nlohmann_json_lib",
-    build_file = "bazel/nlohmann_json.BUILD",
+    build_file = "//:bazel/nlohmann_json.BUILD",
     sha256 = "e0b1fc6cc6ca05706cce99118a87aca5248bd9db3113e703023d23f044995c1d",
     strip_prefix = "json-3.5.0",
     urls = [

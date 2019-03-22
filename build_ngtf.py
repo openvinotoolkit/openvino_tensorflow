@@ -398,7 +398,7 @@ def main():
     )
 
     parser.add_argument(
-        '--ngraph_also_build_gpu_backend',
+        '--build_gpu_backend',
         help=
         "nGraph backends will include nVidia GPU.\n"
         "Note: You need to have CUDA headers and libraries available on the build system.\n",
@@ -406,24 +406,21 @@ def main():
     )
 
     parser.add_argument(
-        '--use_prebuilt_binaries',
+        '--build_plaidml_backend',
         help=
-        "Skip building nGraph and TensorFlow. Rather use \"build_cmake\" directory.\n"
-        + "The following directory structure is assumed:\n" + "build_cmake\n" +
-        "  |\n" + "   -- artifacts\n" + "  |   |\n" +
-        "  |   |-- bin (contains binaries from nGraph build)\n" +
-        "  |   |-- include (contains include files from nGraph build)\n" +
-        "  |   |-- lib (contains library files from nGraph build)\n" +
-        "  |   |-- . . . \n" +
-        "  |   |-- tensorflow (contains tf whl and tf_cc lib)\n" + "  |\n" +
-        "  |-- tensorflow (contains tf source)\n" +
-        "  |-- venv-tf-py3 (Virtualenv directory to be used)\n",
+        "nGraph backends will include PlaidML bckend\n",
+        action="store_true")
+
+    parser.add_argument(
+        '--use_prebuilt_tensorflow',
+        help="Skip building TensorFlow and use downloaded version.\n" + 
+        "Note that in this case C++ unit tests won't be build for nGrapg-TF bridge",
         action="store_true")
 
     parser.add_argument(
         '--distributed_build',
         help="Builds a distributed version of the nGraph components\n",
-        action="store_true")
+        action="store")
 
     arguments = parser.parse_args()
 
@@ -446,12 +443,6 @@ def main():
     # Default directories
     build_dir = 'build_cmake'
 
-    # Override the pre-built location is specified
-    use_prebuilt_binaries = False
-    if (arguments.use_prebuilt_binaries):
-        print("Using prebuilt artifacts.")
-        use_prebuilt_binaries = True
-
     try:
         os.makedirs(build_dir)
     except OSError as exc:  # Python >2.5
@@ -467,16 +458,14 @@ def main():
     artifacts_location = os.path.abspath(artifacts_location)
     print("ARTIFACTS location: " + artifacts_location)
 
-    if not use_prebuilt_binaries:
-        #install virtualenv
-        install_virtual_env(venv_dir)
+    #install virtualenv
+    install_virtual_env(venv_dir)
 
     # Load the virtual env
     load_venv(venv_dir)
 
-    if not use_prebuilt_binaries:
-        # Setup the virtual env
-        setup_venv(venv_dir)
+    # Setup the virtual env
+    setup_venv(venv_dir)
 
     target_arch = 'native'
     if (arguments.target_arch):
@@ -485,7 +474,18 @@ def main():
     print("Target Arch: %s" % target_arch)
 
     cxx_abi = "0"
-    if not use_prebuilt_binaries:
+
+    if arguments.use_prebuilt_tensorflow:
+        print("Using existing TensorFlow")
+        command_executor(["pip", "install", "-U", "tensorflow==" + tf_version])
+
+        import tensorflow as tf
+        print('Version information:')
+        print('TensorFlow version: ', tf.__version__)
+        print('C Compiler version used in building TensorFlow: ', tf.__compiler_version__)
+        cxx_abi = str(tf.__cxx11_abi_flag__)
+    else:
+        print("Building TensorFlow")
         # Download TensorFlow
         download_repo("tensorflow",
                       "https://github.com/tensorflow/tensorflow.git",
@@ -497,46 +497,51 @@ def main():
 
         # Install tensorflow
         cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+
+    # Download nGraph
+    download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
+                    ngraph_version)
+
+    # Now build nGraph
+
+    ngraph_cmake_flags = [
+        "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
+        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
+        "-DNGRAPH_DEX_ONLY=TRUE",
+        "-DNGRAPH_DEBUG_ENABLE=NO",
+        "-DNGRAPH_TARGET_ARCH=" + target_arch,
+        "-DNGRAPH_TUNE_ARCH=" + target_arch,
+    ]
+    if (platform.system() != 'Darwin'):
+        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=YES"])
     else:
-        print("Skipping the TensorFlow build")
-        import tensorflow as tf
-        cxx_abi = tf.__cxx11_abi_flag__
+        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=NO"])
 
-    if not use_prebuilt_binaries:
-        # Download nGraph
-        download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                      ngraph_version)
+    if arguments.debug_build:
+        ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-        # Now build nGraph
+    if arguments.distributed_build: 
+        ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE"])
+    else:
+        ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=FALSE"])
 
-        ngraph_cmake_flags = [
-            "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-            "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-            "-DNGRAPH_UNIT_TEST_ENABLE=YES",
-            "-DNGRAPH_DEX_ONLY=TRUE",
-            "-DNGRAPH_DEBUG_ENABLE=NO",
-            "-DNGRAPH_TARGET_ARCH=" + target_arch,
-            "-DNGRAPH_TUNE_ARCH=" + target_arch,
-        ]
-        if (platform.system() != 'Darwin'):
-            ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=YES"])
-        else:
-            ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=NO"])
+    if arguments.build_gpu_backend:
+        ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=YES"])
+    else:
+        ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=NO"])
 
-        if (arguments.debug_build):
-            ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+    if arguments.build_plaidml_backend:
+        command_executor(["pip", "install", "-U", "plaidML"])
+        ngraph_cmake_flags.extend(["-DNGRAPH_PLAIDML_ENABLE=YES"])
+    else:
+        ngraph_cmake_flags.extend(["-DNGRAPH_PLAIDML_ENABLE=NO"])
 
-        if (arguments.distributed_build): 
-            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE"])
-        else:
-            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=FALSE"])
+    if not arguments.use_prebuilt_tensorflow:
+        ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=YES"])
+    else:
+        ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=NO"])
 
-        if (arguments.ngraph_also_build_gpu_backend):
-            ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=YES"])
-        else:
-            ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=NO"])
-
-        build_ngraph(build_dir, "./ngraph", ngraph_cmake_flags, verbosity)
+    build_ngraph(build_dir, "./ngraph", ngraph_cmake_flags, verbosity)
 
     # Next build CMAKE options for the bridge
     tf_src_dir = os.path.abspath("tensorflow")
@@ -546,12 +551,17 @@ def main():
         "-DUSE_PRE_BUILT_NGRAPH=ON", "-DNGRAPH_TARGET_ARCH=" + target_arch,
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
-        "-DUNIT_TEST_ENABLE=ON",
-        "-DTF_SRC_DIR=" + tf_src_dir, "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(
-            artifacts_location, "tensorflow")
     ]
     if (arguments.debug_build):
         ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+
+    if arguments.use_prebuilt_tensorflow:
+        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=OFF"])
+    else:
+        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
+        ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
+        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_TF_CC_DIR=" + 
+            os.path.join(artifacts_location, "tensorflow")])
 
     if (arguments.distributed_build):
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])

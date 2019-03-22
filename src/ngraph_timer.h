@@ -106,8 +106,8 @@ class Event {
   std::string m_name;
   std::string m_category;
   std::string m_args;
-  int m_pid;
-  int m_tid;
+  int m_pid{0};
+  int m_tid{0};
   static std::mutex s_file_mutex;
   static std::ofstream s_event_log;
 };
