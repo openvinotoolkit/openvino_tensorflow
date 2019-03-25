@@ -117,7 +117,6 @@ then
     echo
     ((NUM_PASSED += 1))
 else
-    local TEST_EXIT_CODE=${?}
     ((JUNIT_TESTS += 1))
     ((JUNIT_FAIL += 1))
     ((JUNIT_SUITE_TESTS += 1))
@@ -141,3 +140,7 @@ echo "<testsuites tests=\"${JUNIT_TESTS}\" failures=\"${JUNIT_FAIL}\" disabled=\
 echo "${JUNIT_XML}" >> "${JUNIT_WRAP_FILE}"
 echo '</testsuites>' >> "${JUNIT_WRAP_FILE}"
 echo "JUnit XML output written to ${JUNIT_WRAP_FILE}"
+
+# Exit the junit-wrap script with the exact exit code of the unit-test process,
+# so that any upstream script properly triggers on the exit code
+exit ${STATUS}
