@@ -61,7 +61,7 @@ TEST(tf_exec, hello_world) {
   LOG(INFO) << outputs[0].matrix<float>();
 }
 
-TEST(tf_exec, DISABLED_axpy) {
+TEST(tf_exec, axpy) {
   GraphDef gdef;
   // auto status = ReadTextProto(Env::Default(), "test_py.pbtxt",
   // &gdef);
