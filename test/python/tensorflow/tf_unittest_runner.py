@@ -157,7 +157,7 @@ def regex_walk(dirname, regex_input):
                 name = os.path.splitext(name)[0]
                 module_list.append(name)
     if not module_list:
-        sys.exit()
+        sys.exit(1)
     return module_list
 
 
