@@ -3665,6 +3665,43 @@ static Status TranslateTileOp(
   return Status::OK();
 }
 
+// Translate TopKV2 Op using ngraph core op TopK
+static Status TranslateTopKV2Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ngraph::Node> ng_input;
+  ValidateInputCount(op, 2);
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_input));
+
+  size_t k_axis = ng_input->get_shape().size() - 1;
+
+  std::vector<int32> ng_k;
+  size_t k;
+  bool sorted = true;
+
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &ng_k));
+  k = ng_k[0];
+
+  // sorted = false is not supported right now, it falls back to TF if set to
+  // false.
+  GetNodeAttr(op->attrs(), "sorted", &sorted);
+
+  // index element type - currently only int32 or int64 are supported by ngraph
+
+  shared_ptr<ngraph::Node> ng_result = ConstructNgNode<ngraph::op::TopK>(
+      op->name(), ng_input, k_axis, ng::element::i32, k, sorted);
+
+  shared_ptr<ngraph::Node> ng_values =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_result, 1);
+  shared_ptr<ngraph::Node> ng_indices =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_result, 0);
+
+  SaveNgOp(ng_op_map, op->name(), ng_values);
+  SaveNgOp(ng_op_map, op->name(), ng_indices);
+
+  return Status::OK();
+}
+
 static Status TranslateTransposeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3761,6 +3798,26 @@ static Status TranslateUnpackOp(
         op->name(), slice, ng_axis_order, output_shape);
     SaveNgOp(ng_op_map, op->name(), reshaped);
   }
+  return Status::OK();
+}
+
+static Status TranslateSelectOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input1, ng_input2, ng_input3;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, &ng_input1, &ng_input2, &ng_input3));
+
+  // broadcast to make all tensors same shape, as required by ngraph select op
+  std::tie(ng_input1, ng_input2) =
+      ng::builder::numpy_broadcast(std::make_pair(ng_input1, ng_input2));
+  std::tie(ng_input2, ng_input3) =
+      ng::builder::numpy_broadcast(std::make_pair(ng_input2, ng_input3));
+
+  auto ng_select = ConstructNgNode<ng::op::Select>(op->name(), ng_input1,
+                                                   ng_input2, ng_input3);
+
+  SaveNgOp(ng_op_map, op->name(), ng_select);
   return Status::OK();
 }
 
@@ -3867,6 +3924,7 @@ const static std::map<
         {"ReluGrad", TranslateReluGradOp},
         {"Reshape", TranslateReshapeOp},
         {"Rsqrt", TranslateRsqrtOp},
+        {"Select", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateSigmoidOp},
         {"SigmoidGrad", TranslateSigmoidGradOp},
@@ -3890,6 +3948,7 @@ const static std::map<
         {"Tanh", TranslateUnaryOp<ngraph::op::Tanh>},
         {"TanhGrad", TranslateTanhGradOp},
         {"Tile", TranslateTileOp},
+        {"TopKV2", TranslateTopKV2Op},
         {"Transpose", TranslateTransposeOp},
         {"Unpack", TranslateUnpackOp},
         {"ZerosLike", TranslateZerosLikeOp}};

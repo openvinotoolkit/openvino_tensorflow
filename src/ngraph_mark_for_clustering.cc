@@ -324,6 +324,7 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["ReluGrad"] = SimpleConfirmationFunction();
       confirmation_function_map["Reshape"] = SimpleConfirmationFunction();
       confirmation_function_map["Rsqrt"] = SimpleConfirmationFunction();
+      confirmation_function_map["Select"] = SimpleConfirmationFunction();
       confirmation_function_map["Shape"] = SimpleConfirmationFunction();
       confirmation_function_map["Sigmoid"] = SimpleConfirmationFunction();
       confirmation_function_map["SigmoidGrad"] = SimpleConfirmationFunction();
@@ -360,6 +361,15 @@ Status MarkForClustering(Graph* graph) {
       confirmation_function_map["Tanh"] = SimpleConfirmationFunction();
       confirmation_function_map["TanhGrad"] = SimpleConfirmationFunction();
       confirmation_function_map["Tile"] = SimpleConfirmationFunction();
+      confirmation_function_map["TopKV2"] = [](Node* n, bool* result) {
+        bool sorted = true;
+        TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "sorted", &sorted));
+
+        // sorted = false is not supported right now, it falls back to TF if set
+        // to false.
+        *result = sorted;
+        return Status::OK();
+      };
       confirmation_function_map["Transpose"] = SimpleConfirmationFunction();
       confirmation_function_map["Unpack"] = SimpleConfirmationFunction();
       confirmation_function_map["ZerosLike"] = SimpleConfirmationFunction();
@@ -483,6 +493,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["Reshape"]["T"] = NGraphDTypes();
       type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
       type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
+      type_constraint_map["Select"]["T"] = NGraphDTypes();
       type_constraint_map["Shape"]["T"] = NGraphDTypes();
       type_constraint_map["Shape"]["out_type"] = NGraphIndexDTypes();
       type_constraint_map["Sigmoid"]["T"] = NGraphNumericDTypes();
@@ -515,6 +526,7 @@ Status MarkForClustering(Graph* graph) {
       type_constraint_map["TanhGrad"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Tile"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Tile"]["Tmultiples"] = NGraphIndexDTypes();
+      type_constraint_map["TopKV2"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Transpose"]["T"] = NGraphDTypes();
       type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
       type_constraint_map["Unpack"]["T"] = NGraphDTypes();
@@ -542,6 +554,7 @@ Status MarkForClustering(Graph* graph) {
       set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
       set_attributes_map["StridedSlice"] = SetStaticInputs({1, 2, 3});
       set_attributes_map["Sum"] = SetStaticInputs({1});
+      set_attributes_map["TopKV2"] = SetStaticInputs({1});
       set_attributes_map["Tile"] = SetStaticInputs({1});
       set_attributes_map["Transpose"] = SetStaticInputs({1});
 
