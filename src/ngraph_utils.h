@@ -205,6 +205,8 @@ void NgraphSerialize(const std::string&,
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);
 
+// Insert constrol dependency for AllReduce ops to ensure execution order
+void AllreduceOpControlOrder(const std::shared_ptr<ngraph::Function>&);
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow

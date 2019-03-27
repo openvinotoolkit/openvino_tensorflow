@@ -34,7 +34,7 @@
 #include "tensorflow/core/lib/core/errors.h"
 
 #if defined(NGRAPH_DISTRIBUTED)
-#include <mpi.h>
+#include "ngraph/distributed.hpp"
 #endif
 
 using namespace std;
@@ -3972,18 +3972,6 @@ Status Builder::TranslateGraph(
   vector<const Node*> tf_ret_vals;
   vector<const Node*> tf_ops;
 
-#if defined(NGRAPH_DISTRIBUTED)
-  int flag = 0;
-  int mpi_rank = -1;
-  bool mpi_initialized = false;
-  MPI_Initialized(&flag);
-  if (!flag) {
-    MPI_Init(NULL, NULL);
-    mpi_initialized = true;
-  }
-  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-#endif
-
   for (const auto n : ordered) {
     if (n->IsSink() || n->IsSource()) {
       continue;
@@ -4002,22 +3990,15 @@ Status Builder::TranslateGraph(
     } else {
       tf_ops.push_back(n);
 #if defined(NGRAPH_DISTRIBUTED)
+      ngraph::Distributed dist;
+      int rank_id;
+      rank_id = dist.get_rank();
       if (n->type_string() == "HorovodAllreduce") {
-        NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << mpi_rank << "]: " << n->name();
+        NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << rank_id << "]: " << n->name();
       }
 #endif
     }
   }
-
-#if defined(NGRAPH_DISTRIBUTED)
-  if (mpi_initialized) {
-    int flag = 0;
-    MPI_Initialized(&flag);
-    if (flag) {
-      MPI_Finalize();
-    }
-  }
-#endif
 
   //
   // The op map holds a mapping from TensorFlow op names (strings) to
@@ -4112,6 +4093,10 @@ Status Builder::TranslateGraph(
   // Create the nGraph function.
   //
   ng_function = make_shared<ng::Function>(ng_result_list, ng_parameter_list);
+
+#if defined NGRAPH_DISTRIBUTED
+  AllreduceOpControlOrder(ng_function);
+#endif
 
   //
   // Request row-major layout on results.
