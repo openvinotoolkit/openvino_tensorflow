@@ -1172,6 +1172,89 @@ TEST(NNOps, MaxPool3DNDHWCValid) {
   }
 }  // end of MaxPool3DNDHWCValid op
 
+TEST(NNOps, QuantizedAvgPoolEvenInput) {
+  int dim1 = 2;
+  int dim2 = 4;
+  int channels = 2;
+
+  vector<int> window_sizes = {1, 2};
+  vector<int> stride_sizes = {2, 4};
+
+  for (int windowsize1 : window_sizes) {
+    for (int windowsize2 : window_sizes) {
+      for (int stride1 : stride_sizes) {
+        for (int stride2 : stride_sizes) {
+          for (auto padding_mode : {"SAME", "VALID"}) {
+            Scope root = Scope::NewRootScope();
+            auto quant_type = DT_QUINT8;
+            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            AssignInputValues<quint8>(A, {50, 242, 14, 0, 16, 22, 100, 250, 34,
+                                          60, 79, 254, 34, 18, 20, 48});
+            vector<int> ksize = {1, windowsize1, windowsize2, 1};
+            vector<int> strides = {1, stride1, stride2, 1};
+
+            vector<int> static_input_indexes = {1, 2};
+            auto R = ops::QuantizedAvgPool(root, A, -10.0f, 10.99f, ksize,
+                                           strides, padding_mode);
+
+            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
+                                                 DT_FLOAT};
+
+            std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
+                                                         R.max_output};
+            OpExecuter opexecuter(root, "QuantizedAvgPool",
+                                  static_input_indexes, output_datatypes,
+                                  sess_run_fetchoutputs);
+
+            opexecuter.RunTest();
+          }
+        }
+      }
+    }
+  }
+}  // end of testing QuantizedAvgPoolEvenInput
+
+// TF and NG round modes are different
+// hence disable the test now
+TEST(NNOps, DISABLED_QuantizedAvgPool) {
+  int dim1 = 2;
+  int dim2 = 3;
+  int channels = 2;
+
+  for (int windowsize1 = 1; windowsize1 < 3; windowsize1++) {
+    for (int windowsize2 = 1; windowsize2 < 3; windowsize2++) {
+      for (int stride1 = 1; stride1 < 2; stride1++) {
+        for (int stride2 = 1; stride2 < 2; stride2++) {
+          for (auto padding_mode : {"SAME", "VALID"}) {
+            Scope root = Scope::NewRootScope();
+            auto quant_type = DT_QUINT8;
+            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            AssignInputValues<quint8>(
+                A, {50, 242, 14, 0, 17, 22, 100, 250, 34, 60, 79, 255});
+            vector<int> ksize = {1, windowsize1, windowsize2, 1};
+            vector<int> strides = {1, stride1, stride2, 1};
+
+            vector<int> static_input_indexes = {1, 2};
+            auto R = ops::QuantizedAvgPool(root, A, -10.0f, 10.99f, ksize,
+                                           strides, padding_mode);
+
+            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
+                                                 DT_FLOAT};
+
+            std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
+                                                         R.max_output};
+            OpExecuter opexecuter(root, "QuantizedAvgPool",
+                                  static_input_indexes, output_datatypes,
+                                  sess_run_fetchoutputs);
+
+            opexecuter.RunTest();
+          }
+        }
+      }
+    }
+  }
+}  // end of testing QuantizedAvgPool
+
 // Note: TF only supports QUINT8 for QMP in CPU
 // Source:
 // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantized_pooling_ops.cc#L127

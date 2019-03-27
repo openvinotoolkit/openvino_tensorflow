@@ -450,6 +450,80 @@ static Status TranslateBinaryOp(
       });
 }
 
+// Helper function for translating QuantizedAvgPool and QuantizedMaxPool
+static Status TranslateQuantizedPoolOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map, std::string pooling_name) {
+  bool is_quantizedAvgPool = pooling_name == "QuantizedAvgPool";
+  bool is_quantizedMaxPool = pooling_name == "QuantizedMaxPool";
+
+  if (!(is_quantizedAvgPool || is_quantizedMaxPool)) {
+    return errors::InvalidArgument(
+        "Expected quantized pooling type node to be ScaledQuantizedAvgPool or "
+        "ScaledQuantizedMaxPool");
+  }
+  shared_ptr<ng::Node> ng_input, ng_min, ng_max;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_min, &ng_max));
+  std::vector<int32> tf_strides;
+  std::vector<int32> tf_ksize;
+  std::string tf_padding_type;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+
+  NGRAPH_VLOG(3) << ng::join(tf_strides);
+  NGRAPH_VLOG(3) << ng::join(tf_ksize);
+  NGRAPH_VLOG(3) << tf_padding_type;
+
+  bool is_nhwc = true;  // The input data format is always NHWC
+  ng::Strides ng_strides(2);
+  ng::Shape ng_image_shape(2);
+  ng::Shape ng_kernel_shape(2);
+  BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
+  BatchedOpParamToNGraph(is_nhwc, ng_input->get_output_shape(0),
+                         ng_image_shape);
+  BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
+  BatchToNGraph(is_nhwc, ng_input);
+
+  NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+  NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+  NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+
+  ng::Shape ng_padding_below{0, 0};
+  ng::Shape ng_padding_above{0, 0};
+  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                       ng_strides, ng_padding_below, ng_padding_above);
+
+  // Creating and passing dummy nodes to quantized pool operation because it
+  // does
+  // not use them. If it ever starts using min/max, the dummy min-max would
+  // cause it to fail
+  shared_ptr<ng::Node> dummy_min(nullptr), dummy_max(nullptr);
+
+  std::shared_ptr<ng::Node> ng_quant_pool;
+  if (is_quantizedAvgPool) {
+    // QuantizeAvgPool
+    // TF doesn't include padding in avg calculation
+    ng_quant_pool = ng::builder::ScaledQuantizedAvgPool(
+        ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
+        ng_padding_above, false, dummy_min, dummy_max);
+  } else {
+    // QuantizeMaxPool
+    ng_quant_pool = ng::builder::ScaledQuantizedMaxPool(
+        ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
+        ng_padding_above, dummy_min, dummy_max);
+  }
+
+  BatchToTensorflow(is_nhwc, ng_quant_pool);
+  SaveNgOp(ng_op_map, op->name(), ng_quant_pool);
+  // For QuantizedAvgPool and QuantizedMaxPool input min-max remains unchanged
+  // and is just propagated along
+  // https://github.com/tensorflow/tensorflow/blob/9590c4c32dd4346ea5c35673336f5912c6072bf2/tensorflow/core/kernels/quantized_pooling_ops.cc#L99
+  SaveNgOp(ng_op_map, op->name(), ng_min);
+  SaveNgOp(ng_op_map, op->name(), ng_max);
+  return Status::OK();
+}
+
 static Status TranslateAllreduceOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2422,6 +2496,129 @@ static Status TranslateQuantizeAndDequantizeV2Op(
   return Status::OK();
 }
 
+static Status TranslateQuantizedAvgPoolOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateQuantizedPoolOp(op, static_input_map, ng_op_map,
+                                  "QuantizedAvgPool");
+}
+
+// Helper function to translate QuantizedConcat and QuantizedConcatV2
+static Status TranslateQuantizedConcatOpHelper(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map, std::string op_name) {
+  int axis_index;         // index for concat_axis input
+  int value_start_index;  // start index for N tensor inputs
+  auto num_of_tensors_to_concat = (op->num_inputs() - 1) / 3;
+
+  if (op_name == "QuantizedConcat") {
+    axis_index = 0;
+    value_start_index = 1;
+  } else if (op_name == "QuantizedConcatV2") {
+    axis_index = num_of_tensors_to_concat;
+    value_start_index = 0;
+  } else {
+    return errors::InvalidArgument(
+        "This helper function is only used for QuantizedConcat and "
+        "QuantizedConcatV2 ops");
+  }
+
+  auto collect_nodes = [&op, &ng_op_map](int start, int end,
+                                         ng::NodeVector* p_ng_args) {
+    for (int i = start; i < end; i++) {
+      shared_ptr<ng::Node> ng_arg;
+      TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, &ng_arg));
+      (*p_ng_args).push_back(ng_arg);
+    }
+    return Status::OK();
+  };
+
+  // Collect the N input tensors to concat with
+  ng::NodeVector ng_args;
+  if (op_name == "QuantizedConcat") {
+    TF_RETURN_IF_ERROR(collect_nodes(value_start_index,
+                                     num_of_tensors_to_concat + 1, &ng_args));
+  } else if (op_name == "QuantizedConcatV2") {
+    TF_RETURN_IF_ERROR(
+        collect_nodes(value_start_index, num_of_tensors_to_concat, &ng_args));
+  }
+
+  // Get the input concat_axis
+  std::vector<int64> tf_concat_axis_vec;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, axis_index, static_input_map,
+                                          &tf_concat_axis_vec));
+
+  // QuantizedConcat doesn't have negative concat_axis
+  int64 concat_axis = tf_concat_axis_vec[0];
+
+  // Get input_mins and input_maxs
+  std::vector<float> all_mins(num_of_tensors_to_concat),
+      all_maxs(num_of_tensors_to_concat);
+
+  // Construct input parameters to ScaledQuantizedConcat op
+  ng::NodeVector ng_all_mins, ng_all_maxs;
+  std::vector<float> min_tmp, max_tmp;
+
+  // Collect the N input mins and input maxes
+  for (int idx = 0; idx < num_of_tensors_to_concat; idx++) {
+    TF_RETURN_IF_ERROR(GetStaticInputVector(
+        op, num_of_tensors_to_concat + 1 + idx, static_input_map, &min_tmp));
+    TF_RETURN_IF_ERROR(
+        GetStaticInputVector(op, 2 * num_of_tensors_to_concat + 1 + idx,
+                             static_input_map, &max_tmp));
+
+    all_mins[idx] = min_tmp[0];
+    all_maxs[idx] = max_tmp[0];
+
+    auto min_node =
+        make_shared<ng::op::Constant>(ng::element::f32, ng::Shape{}, min_tmp);
+    auto max_node =
+        make_shared<ng::op::Constant>(ng::element::f32, ng::Shape{}, max_tmp);
+
+    ng_all_mins.push_back(std::make_shared<ngraph::op::Reshape>(
+        min_node, ngraph::AxisVector{}, ngraph::Shape{1}));
+    ng_all_maxs.push_back(std::make_shared<ngraph::op::Reshape>(
+        max_node, ngraph::AxisVector{}, ngraph::Shape{1}));
+  }
+
+  // return the min among the input_mins, and the max among the input_maxs
+  // TODO: TF has a different way of determine the output_min and output_max
+  // TF reference:
+  // https://github.com/tensorflow/tensorflow/blob/86950c2c440be956a9fcb3a25868a1df15444467/tensorflow/core/kernels/quantized_concat_op.cc#L78
+  std::vector<float> min_of_mins(
+      1, *std::min_element(all_mins.begin(), all_mins.end()));
+  std::vector<float> max_of_maxs(
+      1, *std::max_element(all_maxs.begin(), all_maxs.end()));
+
+  // construct output_min and output_max
+  shared_ptr<ng::Node> ng_min_of_mins =
+      make_shared<ng::op::Constant>(ng::element::f32, ng::Shape{}, min_of_mins);
+  shared_ptr<ng::Node> ng_max_of_maxs =
+      make_shared<ng::op::Constant>(ng::element::f32, ng::Shape{}, max_of_maxs);
+
+  auto ng_qconcat = ng::builder::ScaledQuantizedConcat(
+      ng_args, size_t(concat_axis), ng_all_mins, ng_all_maxs);
+
+  SaveNgOp(ng_op_map, op->name(), ng_qconcat);
+  SaveNgOp(ng_op_map, op->name(), ng_min_of_mins);
+  SaveNgOp(ng_op_map, op->name(), ng_max_of_maxs);
+  return Status::OK();
+}
+
+static Status TranslateQuantizedConcatOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateQuantizedConcatOpHelper(op, static_input_map, ng_op_map,
+                                          "QuantizedConcat");
+}
+
+static Status TranslateQuantizedConcatV2Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateQuantizedConcatOpHelper(op, static_input_map, ng_op_map,
+                                          "QuantizedConcatV2");
+}
+
 static Status TranslateQuantizedConv(
     const Node* op, Builder::OpMap& ng_op_map,
     std::function<std::shared_ptr<ng::Node>(
@@ -2538,43 +2735,8 @@ static Status TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp(
 static Status TranslateQuantizedMaxPoolOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_min, ng_max;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_min, &ng_max));
-  std::vector<int32> tf_strides;
-  std::vector<int32> tf_ksize;
-  std::string tf_padding_type;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
-  bool is_nhwc = true;  // TODO, is this correct?
-  ng::Strides ng_strides(2);
-  ng::Shape ng_image_shape(2);
-  ng::Shape ng_kernel_shape(2);
-  BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
-  BatchedOpParamToNGraph(is_nhwc, ng_input->get_output_shape(0),
-                         ng_image_shape);
-  BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
-  BatchToNGraph(is_nhwc, ng_input);
-  ng::Shape ng_padding_below{0, 0};
-  ng::Shape ng_padding_above{0, 0};
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_padding_below, ng_padding_above);
-
-  // Creating and passing dummy nodes to ScaledQuantizedMaxPool because it does
-  // not use them. If it ever starts using min/max, the dummy min-max would
-  // cause it to fail
-  shared_ptr<ng::Node> dummy_min(nullptr), dummy_max(nullptr);
-  std::shared_ptr<ng::Node> ng_quant_maxpool =
-      ng::builder::ScaledQuantizedMaxPool(ng_input, ng_kernel_shape, ng_strides,
-                                          ng_padding_below, ng_padding_above,
-                                          dummy_min, dummy_max);
-  BatchToTensorflow(is_nhwc, ng_quant_maxpool);
-  SaveNgOp(ng_op_map, op->name(), ng_quant_maxpool);
-  // For maxpool input min-max remains unchanged and is just propagated along
-  // https://github.com/tensorflow/tensorflow/blob/9590c4c32dd4346ea5c35673336f5912c6072bf2/tensorflow/core/kernels/quantized_pooling_ops.cc#L99
-  SaveNgOp(ng_op_map, op->name(), ng_min);
-  SaveNgOp(ng_op_map, op->name(), ng_max);
-  return Status::OK();
+  return TranslateQuantizedPoolOp(op, static_input_map, ng_op_map,
+                                  "QuantizedMaxPool");
 }
 
 static Status TranslateQuantizeV2Op(
@@ -3906,6 +4068,9 @@ const static std::map<
         {"PreventGradient", TranslateIdentityOp},
         {"Prod", TranslateDirectReduceOp<ng::op::Product>},
         {"QuantizeAndDequantizeV2", TranslateQuantizeAndDequantizeV2Op},
+        {"QuantizedAvgPool", TranslateQuantizedAvgPoolOp},
+        {"QuantizedConcat", TranslateQuantizedConcatOp},
+        {"QuantizedConcatV2", TranslateQuantizedConcatV2Op},
         {"QuantizedConv2DWithBiasAndReluAndRequantize",
          TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<true>},
         {"QuantizedConv2DWithBiasAndRequantize",

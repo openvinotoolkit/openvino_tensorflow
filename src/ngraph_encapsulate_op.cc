@@ -375,6 +375,7 @@ class NGraphEncapsulateOp : public OpKernel {
       Event event_compile("Compile nGraph", name().c_str());
       try {
         ng_exec = op_backend->compile(ng_function);
+
       } catch (const std::exception& exp) {
         BackendManager::UnlockBackend(m_op_backend_name);
         NgraphSerialize(
