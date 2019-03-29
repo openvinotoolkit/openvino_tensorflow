@@ -98,4 +98,10 @@ class TestAvgPoolBackpropInput(NgraphTest):
             padding=padding,
             data_format="NHWC")
         out_tf = tf.transpose(b, [0, 3, 1, 2])
-        assert np.isclose(self.with_ngraph(lambda sess : sess.run(out_ngtf, feed_dict={grad_input: self.grad_input_nchw[padding]})), self.without_ngraph(lambda sess : sess.run(out_tf, feed_dict={grad_input: self.grad_input_nchw[padding]}))).all()
+        assert np.isclose(
+            self.with_ngraph(lambda sess: sess.run(
+                out_ngtf, feed_dict={grad_input: self.grad_input_nchw[padding]})
+                            ),
+            self.without_ngraph(lambda sess: sess.run(
+                out_tf, feed_dict={grad_input: self.grad_input_nchw[padding]}))
+        ).all()

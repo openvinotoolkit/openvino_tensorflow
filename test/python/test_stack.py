@@ -48,5 +48,6 @@ class TestStackOperations(NgraphTest):
         expected = np.stack(values, axis)
         placeholders = [tf.placeholder(tf.float64, s) for s in shapes]
         a = tf.stack(placeholders, axis)
-        sess_fn = lambda sess: sess.run([a], feed_dict={p: v for p, v in zip(placeholders, values)})
+        sess_fn = lambda sess: sess.run(
+            [a], feed_dict={p: v for p, v in zip(placeholders, values)})
         np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))

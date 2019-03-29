@@ -38,7 +38,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.float32, shape=(None))
         out = tf.maximum(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -53,7 +57,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.float32, shape=(None))
         out = tf.less_equal(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -68,7 +76,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.float32, shape=(None))
         out = tf.less(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -83,7 +95,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.float32, shape=(None))
         out = tf.greater_equal(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -98,7 +114,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.float32, shape=(None))
         out = tf.greater(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -112,7 +132,11 @@ class TestElementwiseOperations(NgraphTest):
         val2 = tf.placeholder(tf.bool, shape=(None))
         out = tf.logical_and(val1, val2)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val1: (v1,), val2: (v2,)})[0]
+        sess_fn = lambda sess: sess.run((out,),
+                                        feed_dict={
+                                            val1: (v1,),
+                                            val2: (v2,)
+                                        })[0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
@@ -122,7 +146,8 @@ class TestElementwiseOperations(NgraphTest):
         val = tf.placeholder(tf.bool, shape=(1,))
         out = tf.logical_not(val)
 
-        sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})[0]
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})[
+            0]
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 

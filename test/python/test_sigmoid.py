@@ -46,5 +46,10 @@ class TestSigmoid(NgraphTest):
         b_np = 1. / (1. + np.exp(-a_np))
         expected = b_np
 
-        sess_fn = lambda sess: sess.run((a, b), feed_dict={x: x_np, y: y_np, z: z_np})
+        sess_fn = lambda sess: sess.run((a, b),
+                                        feed_dict={
+                                            x: x_np,
+                                            y: y_np,
+                                            z: z_np
+                                        })
         np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))

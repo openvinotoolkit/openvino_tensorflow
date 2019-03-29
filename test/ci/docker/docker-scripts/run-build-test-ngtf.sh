@@ -122,11 +122,11 @@ echo  ' '
 # if PS2 is not set.
 PS1='prompt> '
 PS2='prompt-more> '
-virtualenv --system-site-packages -p /usr/bin/python2 "${venv_dir}"
+virtualenv --system-site-packages -p /usr/bin/python3 "${venv_dir}"
 source "${venv_dir}/bin/activate"
 
 # yapf and futures are needed for code-format checks (ngraph-tf PR#211)
-pip install yapf==0.24.0
+pip install yapf==0.26.0
 pip install futures
 
 xtime="$(date)"

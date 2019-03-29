@@ -44,6 +44,5 @@ class TestFloorOperations(NgraphTest):
         val = tf.placeholder(tf.float32, shape=(2, 3))
         out = tf.floor(val)
         assert np.isclose(
-            self.with_ngraph(
-                lambda sess: sess.run(out, feed_dict={val: test_input})),
-            np.array(expected)).all()
+            self.with_ngraph(lambda sess: sess.run(
+                out, feed_dict={val: test_input})), np.array(expected)).all()

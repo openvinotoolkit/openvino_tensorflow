@@ -50,5 +50,10 @@ class TestRelu6(NgraphTest):
         c_np = np.maximum(c_np, np.full(c_np.shape, 0.0))
         expected = np.minimum(c_np, np.full(c_np.shape, 6.0))
 
-        sess_fn = lambda sess : sess.run((a, c, d), feed_dict={x: x_np, y: y_np, z: z_np})
+        sess_fn = lambda sess: sess.run((a, c, d),
+                                        feed_dict={
+                                            x: x_np,
+                                            y: y_np,
+                                            z: z_np
+                                        })
         np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))

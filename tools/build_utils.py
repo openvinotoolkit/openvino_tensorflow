@@ -103,9 +103,10 @@ def load_venv(venv_dir):
     # The execfile API is for Python 2. We keep here just in case you are on an
     # obscure system without Python 3
     # execfile(activate_this_file, dict(__file__=activate_this_file))
-    exec (compile(
-        open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
-          dict(__file__=activate_this_file), dict(__file__=activate_this_file))
+    exec(
+        compile(
+            open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
+        dict(__file__=activate_this_file), dict(__file__=activate_this_file))
 
     return venv_dir
 
