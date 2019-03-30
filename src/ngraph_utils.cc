@@ -267,6 +267,87 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
   }
 }
 
+std::string DotFilename(std::string kind, int idx) {
+  return GraphFilenamePrefix(kind, idx) + ".dot";
+}
+
+std::string DotFilename(std::string kind, int idx, int sub_idx) {
+  return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
+}
+
+std::string PbtxtFilename(std::string kind, int idx) {
+  return GraphFilenamePrefix(kind, idx) + ".pbtxt";
+}
+
+std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
+  return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
+}
+
+std::string GraphFilenamePrefix(std::string kind, int idx) {
+  std::stringstream ss;
+  ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
+#if defined NGRAPH_DISTRIBUTED
+  ngraph::Distributed dist;
+  int Rank_ID = dist.get_rank();
+  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+#endif
+  return ss.str();
+}
+
+std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
+  std::stringstream ss;
+  ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
+     << std::setw(4) << sub_idx;
+#if defined NGRAPH_DISTRIBUTED
+  ngraph::Distributed dist;
+  int Rank_ID = dist.get_rank();
+  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+#endif
+  return ss.str();
+}
+
+bool DumpAllGraphs() { return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr; }
+
+bool DumpPrecaptureGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
+}
+
+bool DumpCapturedGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
+}
+
+bool DumpUnmarkedGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
+}
+
+bool DumpMarkedGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
+}
+
+bool DumpClusteredGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
+}
+
+bool DumpDeclusteredGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
+}
+
+bool DumpEncapsulatedGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
+}
+
+bool DumpTrackedGraphs() {
+  return DumpAllGraphs() ||
+         std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
+}
+
 void AllreduceOpControlOrder(
     const std::shared_ptr<ngraph::Function>& ng_function) {
   // Get the serialized ops and stored the allreduce ops to a vector and

@@ -107,9 +107,11 @@ TEST(DeadnessCheck, livedead1) {
   auto M = ops::Mul(root.WithOpName("M"), P, Q);
   auto D = ops::RealDiv(root.WithOpName("D"), Q, R);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -144,9 +146,11 @@ TEST(DeadnessCheck, DTestG1) {
   auto N1_Add = ops::Add(root.WithOpName("N1_Add"), A1, SX.output_false);
   auto N2_Sub = ops::Sub(root.WithOpName("N2_Sub"), A1, SX.output_false);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -193,9 +197,11 @@ TEST(DeadnessCheck, DTestG2) {
   auto N2_Sub = ops::Sub(root.WithOpName("N2_Sub"), SY.output_true, A1);
   auto N3_Mul = ops::Mul(root.WithOpName("N3_Mul"), N2_Sub, A1);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -244,9 +250,11 @@ TEST(DeadnessCheck, DTestG3) {
   auto N3_Mul = ops::Mul(root.WithOpName("N3_Mul"), N1_Add, SX.output_false);
   auto N4_Sub = ops::Sub(root.WithOpName("N4_Sub"), A1, SX.output_false);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -308,9 +316,11 @@ TEST(DeadnessCheck, DISABLED_DTestG4) {
   auto N3_Mul = ops::Mul(root.WithOpName("N3_Mul"), N1_Add, SX.output_false);
   auto N4_Sub = ops::Sub(root.WithOpName("N4_Sub"), B1, SY.output_false);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -360,9 +370,11 @@ TEST(DeadnessCheck, DTestG4New) {
   auto N3_Mul = ops::Mul(root.WithOpName("N3_Mul"), N1_Add, SX.output_false);
   auto N4_Sub = ops::Sub(root.WithOpName("N4_Sub"), B1, SY.output_false);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -447,9 +459,11 @@ TEST(DeadnessCheck, DTestG5) {
   auto N5_Add = ops::Add(root.WithOpName("N5_Add"), SY.output_true, B);
   auto N6_Mul = ops::Mul(root.WithOpName("N6_Mul"), N5_Add, B);
 
+  std::vector<string> skip_these_nodes = {};
+
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;

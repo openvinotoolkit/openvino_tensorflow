@@ -91,10 +91,12 @@ TEST(BackendManager, BackendAssignment) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
 
+  std::vector<string> skip_these_nodes = {};
+
   // Set backend 1
   string backend1 = "INTERPRETER";
   ASSERT_OK(BackendManager::SetBackendName(backend1));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   std::map<std::string, Node*> node_map;
   for (auto node : graph.op_nodes()) {
     node_map[node->name()] = node;
@@ -112,7 +114,7 @@ TEST(BackendManager, BackendAssignment) {
   // Set backend 2
   string backend2 = "CPU";
   ASSERT_OK(BackendManager::SetBackendName(backend2));
-  ASSERT_OK(MarkForClustering(&graph));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
 
   ASSERT_OK(GetNodeBackend(node_map["A"], &bA));
   ASSERT_OK(GetNodeBackend(node_map["B"], &bB));
@@ -134,7 +136,9 @@ TEST(BackendManager, BackendClustering) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
 
-  ASSERT_OK(MarkForClustering(&graph));
+  std::vector<string> skip_these_nodes = {};
+
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
 
   string backend1 = "INTERPRETER";
 

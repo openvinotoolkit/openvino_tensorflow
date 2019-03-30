@@ -25,6 +25,7 @@
 #include "ngraph_log.h"
 #include "ngraph_mark_for_clustering.h"
 #include "ngraph_rewrite_for_tracking.h"
+#include "ngraph_utils.h"
 #include "tf_graph_writer.h"
 
 #include <iomanip>
@@ -86,46 +87,6 @@ class NGraphRewritePass : public GraphOptimizationPass {
     return s_serial_counter++;
   }
 
-  static bool DumpAllGraphs() {
-    return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr;
-  }
-
- private:
-  static std::string DotFilename(std::string kind, int idx) {
-    return GraphFilenamePrefix(kind, idx) + ".dot";
-  }
-  static std::string PbtxtFilename(std::string kind, int idx) {
-    return GraphFilenamePrefix(kind, idx) + ".pbtxt";
-  }
-  static std::string DotFilename(std::string kind, int idx, int sub_idx) {
-    return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
-  }
-  static std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
-    return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
-  }
-  static std::string GraphFilenamePrefix(std::string kind, int idx) {
-    std::stringstream ss;
-    ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
-#if defined NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
-    int Rank_ID = dist.get_rank();
-    ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
-#endif
-    return ss.str();
-  }
-  static std::string GraphFilenamePrefix(std::string kind, int idx,
-                                         int sub_idx) {
-    std::stringstream ss;
-    ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
-       << std::setw(4) << sub_idx;
-#if defined NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
-    int Rank_ID = dist.get_rank();
-    ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
-#endif
-    return ss.str();
-  }
-
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
   static mutex s_serial_counter_mutex;
 };
@@ -167,22 +128,14 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     }
 
     // Do variable capture then, if requested, dump the graphs.
-    TF_RETURN_IF_ERROR(CaptureVariables(options.graph->get()));
+    std::vector<string> skip_these_nodes = {};
+    TF_RETURN_IF_ERROR(
+        CaptureVariables(options.graph->get(), skip_these_nodes));
     if (DumpCapturedGraphs()) {
       DumpGraphs(options, idx, "captured", "Graph With Variables Captured");
     }
 
     return Status::OK();
-  }
-
- private:
-  static bool DumpPrecaptureGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
-  }
-  static bool DumpCapturedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
   }
 };
 
@@ -234,7 +187,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     // 1. Mark for clustering then, if requested, dump the graphs.
-    TF_RETURN_IF_ERROR(MarkForClustering(options.graph->get()));
+    std::vector<string> skip_these_nodes = {};
+    TF_RETURN_IF_ERROR(
+        MarkForClustering(options.graph->get(), skip_these_nodes));
     if (DumpMarkedGraphs()) {
       DumpGraphs(options, idx, "marked", "Graph Marked for Clustering");
     }
@@ -267,32 +222,6 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     return Status::OK();
-  }
-
- private:
-  static bool DumpUnmarkedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
-  }
-  static bool DumpMarkedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
-  }
-  static bool DumpClusteredGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
-  }
-  static bool DumpDeclusteredGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
-  }
-  static bool DumpEncapsulatedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
-  }
-  static bool DumpTrackedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
   }
 };
 

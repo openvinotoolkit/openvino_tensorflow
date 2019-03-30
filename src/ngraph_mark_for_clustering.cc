@@ -61,6 +61,14 @@ static Status NGraphPlacementRequested(Node* node, bool& placement_ok) {
   return Status::OK();
 }
 
+static Status CheckIfOutputNode(const Node* node,
+                                const std::vector<string> skip_these_nodes,
+                                bool& skip_it) {
+  skip_it = std::find(skip_these_nodes.begin(), skip_these_nodes.end(),
+                      node->name()) != skip_these_nodes.end();
+  return Status::OK();
+}
+
 // Checks if the node's inputs meet all the type constraints
 static Status TypeConstraintOk(Node* node,
                                TypeConstraintMap& type_constraint_map,
@@ -129,7 +137,8 @@ static ConfirmationFunction SimpleConfirmationFunction() {
 //
 // Main entry point for the marking pass.
 //
-Status MarkForClustering(Graph* graph) {
+Status MarkForClustering(Graph* graph,
+                         const std::vector<string> skip_these_nodes) {
   //
   // A map of op types (e.g. "Add") to type constraint maps. For (fake)
   // example:
@@ -604,6 +613,15 @@ Status MarkForClustering(Graph* graph) {
     bool mark_for_clustering = false;
 
     do {
+      // check if output node
+      bool skip_it = false;
+      TF_RETURN_IF_ERROR(CheckIfOutputNode(node, skip_these_nodes, skip_it));
+      if (skip_it) {
+        NGRAPH_VLOG(5) << "Found Output Node: " << node->name()
+                       << " - skip marking it for clustering";
+        break;
+      }
+
       // check placement
       bool placement_ok = false;
       TF_RETURN_IF_ERROR(NGraphPlacementRequested(node, placement_ok));
