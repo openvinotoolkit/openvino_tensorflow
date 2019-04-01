@@ -79,14 +79,22 @@ else
 
     # Add a user with UID of person running docker (in ${RUN_UID})
     # If $HOME does not yet exist, then it will be created
-    adduser --disabled-password --gecos 'Docker-User' -u "${RUN_UID}" "${DOCK_USER}"
-    # Add dockuser to the sudo group.  Sudo *is* used for installing packages,
-    # so make sure dockuser can run sudo without requesting a password.
-    adduser "${DOCK_USER}" sudo
+    # Also add dockuser to the sudo group.  Sudo *is* used for installing
+    # packages, so make sure dockuser can run sudo without requesting a password.
+    #
+    # First check if we are on a RedHat derived system...
+    if [ -f '/etc/redhat-release' ] ; then
+      echo "run-as-user: Detected RedHat-derived release.  Adding user ${DOCK_USER} with UID ${RUN_UID}"
+      adduser -u "${RUN_UID}" "${DOCK_USER}"
+    else  # Otherwise assume an Ubuntu/Debian system
+      echo "run-as-user: Detected Debian/Ubuntu-derived release.  Adding user ${DOCK_USER} with UID ${RUN_UID}"
+      adduser --disabled-password --gecos 'Docker-User' -u "${RUN_UID}" "${DOCK_USER}"
+      adduser "${DOCK_USER}" sudo
+    fi
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
     if [ -z "${RUN_CMD+x}" ] ; then  # Launch a shell as dockuser
-      echo 'Running interactive shell (/bin/bash) as dockuser'
+      echo 'run-as-user: Running interactive shell (/bin/bash) as dockuser'
       su -m "${DOCK_USER}" -c /bin/bash
     else                         # Run command as dockuser
 
@@ -95,7 +103,7 @@ else
         exit 1
       fi
 
-      echo "Running command [${RUN_CMD}] as dockuser"
+      echo "run-as-user: Running command [${RUN_CMD}] as dockuser"
       su -m "${DOCK_USER}" -c "${RUN_CMD}"
 
     fi
