@@ -2399,6 +2399,57 @@ static Status TranslateDirectReduceOp(
       });
 }
 
+static Status TranslateOneHotOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_features, ng_on, ng_off;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, &ng_features, nullptr, &ng_on, &ng_off));
+
+  auto ng_features_shape = ng_features->get_shape();
+  auto ng_features_rank = ng_features_shape.size();
+
+  std::vector<int> depth;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
+
+  // Depth must be scalar
+  if (depth.size() != 1) {
+    return errors::InvalidArgument(
+        "OneHot Op: depth of one hot dimension must be scalar ", depth.size());
+  }
+
+  int one_hot_axis;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &one_hot_axis));
+
+  ng::Shape output_shape(ng_features_shape);
+  auto pos = output_shape.begin();
+  if (one_hot_axis == -1) {
+    one_hot_axis = ng_features_rank;
+    pos = output_shape.end();
+  } else {
+    pos = output_shape.begin() + one_hot_axis;
+  }
+  output_shape.insert(pos, depth[0]);
+
+  auto ng_onehot_labels = ConstructNgNode<ng::op::OneHot>(
+      op->name(), ng_features, output_shape, one_hot_axis);
+
+  shared_ptr<ng::Node> ng_onehot_bool = ConstructNgNode<ng::op::Convert>(
+      op->name(), ng_onehot_labels, ng::element::boolean);
+
+  // broadcast to make all tensors same shape, as required by ngraph select op
+  std::tie(ng_onehot_bool, ng_on) =
+      ng::builder::numpy_broadcast(std::make_pair(ng_onehot_bool, ng_on));
+  std::tie(ng_onehot_bool, ng_off) =
+      ng::builder::numpy_broadcast(std::make_pair(ng_onehot_bool, ng_off));
+
+  auto ng_onehot = ConstructNgNode<ng::op::Select>(op->name(), ng_onehot_bool,
+                                                   ng_on, ng_off);
+
+  SaveNgOp(ng_op_map, op->name(), ng_onehot);
+  return Status::OK();
+}
+
 static Status TranslatePackOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4228,6 +4279,7 @@ const static std::map<
         // reasons, but they have no data flow inputs or outputs.
         {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
                     Builder::OpMap&) { return Status::OK(); }},
+        {"OneHot", TranslateOneHotOp},
         {"Pack", TranslatePackOp},
         {"Pad", TranslatePadOp},
         {"Pow", TranslateBinaryOp<ngraph::op::Power>},
