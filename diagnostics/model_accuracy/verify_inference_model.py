@@ -82,7 +82,6 @@ def run_inference(model_name, models_dir):
                 command_executor("export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`")
                 command_executor('git apply ' + pwd +
                                  '/image_recognition.patch')
-
             p = command_executor(data[i]["cmd"])
             os.chdir(pwd)
             return model_name, p
@@ -99,7 +98,7 @@ def check_accuracy(model, p):
     data = json.loads(accuracy)
 
     for line in p.splitlines():
-        print(line)
+        print(line.decode())
         if ('eval/Accuracy'.encode() in line):
             top1_accuracy = re.search("\[(.*?)\]", line.decode()).group(1)
         #for now we just validate top 1 accuracy, but calculating top5 anyway.
@@ -111,13 +110,18 @@ def check_accuracy(model, p):
         if (model in data[i]["model_name"]):
             # Tolerance check
             diff = abs(float(top1_accuracy) - float(data[i]["accuracy"]))
+            print('\033[1m' + '\nModel Accuracy Verification' + '\033[0m')
             if (diff <= 0.001):
-                print("\nRESULT: Functional accuracy " + top1_accuracy +
+                print('\033[92m' + 'PASS' + '\033[0m' +
+                      " Functional accuracy " + top1_accuracy +
                       " is as expected for " + data[i]["model_name"])
+                return True
             else:
-                print("\nRESULT: Functional accuracy " + top1_accuracy +
+                print('\033[91m' + 'FAIL' + '\033[0m' +
+                      " Functional accuracy " + top1_accuracy +
                       " is not as expected for " + data[i]["model_name"] +
-                      "\nExpected accuracy is " + data[i]["accuracy"])
+                      "\nExpected accuracy = " + data[i]["accuracy"])
+                return False
 
 
 if __name__ == '__main__':
