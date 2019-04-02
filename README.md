@@ -42,7 +42,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 This will produce something like this:
 
         TensorFlow version:  1.13.1
-        nGraph bridge version: b'0.12.0-rc1'
+        nGraph bridge version: b'0.12.0-rc2'
         nGraph version used for this build: b'0.21.0-rc.0+b638705'
         TensorFlow version used for this build: v1.13.1-0-g6612da8951
 
@@ -84,7 +84,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.12.0-rc1
+        git checkout v0.12.0-rc2
 
    
 2. Next run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
