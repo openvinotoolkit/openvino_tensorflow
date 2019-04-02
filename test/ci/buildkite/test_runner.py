@@ -27,6 +27,7 @@ from distutils.sysconfig import get_python_lib
 #from tools.build_utils import load_venv, command_executor
 from tools.test_utils import *
 
+
 def main():
     '''
     Tests nGraph-TensorFlow Python 3. This script needs to be run after 
@@ -35,14 +36,31 @@ def main():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--test_examples',
-        help="Builds and tests the examples.\n",
+        '--test_cpp',
+        help="Runs C++ tests (GTest based).\n",
         action="store_true")
 
     parser.add_argument(
-        '--gpu_unit_tests_enable',
-        help="Builds and tests the examples.\n",
+        '--test_python',
+        help="Runs Python tests (Pytest based).\n",
         action="store_true")
+
+    parser.add_argument(
+        '--test_tf_python',
+        help="Runs TensorFlow Python tests (Pytest based).\n",
+        action="store_true")
+
+    parser.add_argument(
+        '--test_resnet',
+        help="Runs TensorFlow Python tests (Pytest based).\n",
+        action="store_true")
+
+    parser.add_argument(
+        '--artifacts_dir',
+        type=str,
+        help=
+        "Location of the artifacts that would be used for running the tests\n",
+        action="store")
 
     arguments = parser.parse_args()
 
@@ -52,45 +70,21 @@ def main():
 
     root_pwd = os.getcwd()
 
-    # Constants
-    build_dir = 'build_cmake'
-    venv_dir = 'build_cmake/venv-tf-py3'
-    tf_src_dir = 'build_cmake/tensorflow'
+    # Check for mandetary parameters
+    if not arguments.artifacts_dir:
+        raise Exception("Need to specify --artifacts_dir")
 
-    if (platform.system() != 'Darwin'):
-        # Run the bazel based buil
-        run_bazel_build_test(venv_dir, build_dir)
-
-    # First run the C++ gtests
-    run_ngtf_gtests(build_dir,None)
-
-    # If the GPU tests are requested, then run them as well
-    if (arguments.gpu_unit_tests_enable):
-        os.environ['NGRAPH_TF_BACKEND'] = 'GPU'
-        run_ngtf_gtests(
-            build_dir, 
-            str("-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
-            "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
-            "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
-            "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-            "NNOps.SparseSoftmaxCrossEntropyWithLogits")
-        )
-
-    os.environ['NGRAPH_TF_BACKEND'] = 'CPU'
-
-    # Next run Python unit tests
-    load_venv(venv_dir)
-    run_ngtf_pytests(venv_dir, build_dir)
-
-    if (arguments.test_examples):
-        # Run the C++ example build/run test
-        run_cpp_example_test('build')
-
-    # Next run the TensorFlow python tests
-    run_tensorflow_pytests(venv_dir, build_dir, './', tf_src_dir)
-
-    # Finally run Resnet50 based training and inferences
-    run_resnet50(build_dir)
+    # Decide which tests to run
+    if (arguments.test_cpp):
+        run_ngtf_cpp_gtests(arguments.artifacts_dir, './', None)
+    elif (arguments.test_python):
+        run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
+    elif (arguments.test_tf_python):
+        raise Exception("TensorFlow Python tests are not yet supported")
+    elif (arguments.test_resnet):
+        run_resnet50_from_artifacts(arguments.artifacts_dir)
+    else:
+        raise Exception("No tests specified")
 
     os.chdir(root_pwd)
 
