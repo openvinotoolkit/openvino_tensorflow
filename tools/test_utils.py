@@ -28,6 +28,14 @@ from distutils.sysconfig import get_python_lib
 from tools.build_utils import load_venv, command_executor
 
 
+def get_os_type():
+    if platform.system() == 'Darwin':
+        return 'Darwin'
+
+    if platform.linux_distribution():
+        return platform.linux_distribution()[0]
+
+
 def install_ngraph_bridge(artifacts_dir):
     # Determine the ngraph whl
     ngtf_wheel_files = glob.glob(artifacts_dir +
@@ -77,7 +85,11 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
         raise Exception("Artifacts directory doesn't exist: " + artifacts_dir)
 
     # First run the C++ gtests
-    os.environ['LD_LIBRARY_PATH'] = os.path.join(artifacts_dir, "lib")
+    lib_dir = 'lib'
+    if 'CentOS' in get_os_type():
+        lib_dir = 'lib64'
+
+    os.environ['LD_LIBRARY_PATH'] = os.path.join(artifacts_dir, lib_dir)
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters
@@ -280,6 +292,10 @@ def run_resnet50_from_artifacts(artifact_dir):
     if os.path.exists(model_save_dir) and os.path.isdir(model_save_dir):
         shutil.rmtree(model_save_dir)
 
+    eval_eventlog_dir = os.getcwd() + '/eval_eventlog_dir'
+    if os.path.exists(eval_eventlog_dir) and os.path.isdir(eval_eventlog_dir):
+        shutil.rmtree(eval_eventlog_dir)
+
     # os.environ['JUNIT_WRAP_FILE'] = "%s/junit_training_test.xml" % build_dir
     # os.environ['JUNIT_WRAP_SUITE'] = 'models'
     # os.environ['JUNIT_WRAP_TEST'] = 'resnet50-training'
@@ -290,10 +306,12 @@ def run_resnet50_from_artifacts(artifact_dir):
     #     'NCHW', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
     #     '--num_batches', '10', '--model=resnet50', '--batch_size=128'
     # ]
+
     cmd = [
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
-        '--num_batches', '10', '--model=resnet50', '--batch_size=128'
+        '--num_batches', '10', '--model=resnet50', '--batch_size=128',
+        '--eval_dir=' + eval_eventlog_dir
     ]
     command_executor(cmd)
 
@@ -310,7 +328,8 @@ def run_resnet50_from_artifacts(artifact_dir):
     cmd = [
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
-        '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
+        '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval',
+        '--eval_dir=' + eval_eventlog_dir
     ]
     command_executor(cmd)
 
