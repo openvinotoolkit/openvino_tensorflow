@@ -498,6 +498,29 @@ TEST(ArrayOps, OneHot3dNegAxis) {
 
 }  // end of op OneHot
 
+TEST(ArrayOps, Pad) {
+  Scope root = Scope::NewRootScope();
+
+  vector<int> static_input_indexes = {1};
+
+  Tensor input(DT_INT32, TensorShape({2, 3}));
+
+  Tensor paddings(DT_INT32, TensorShape({2, 2}));
+
+  AssignInputValuesRandom<int>(input, 1, 4);
+  AssignInputValuesRandom<int>(paddings, 2, 5);
+
+  auto R = ops::Pad(root, input, paddings);
+  vector<DataType> output_datatypes = {DT_INT32};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+
+  OpExecuter opexecuter(root, "Pad", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+
+}  // end of op Pad
+
 // Test op: PreventGradient
 TEST(ArrayOps, PreventGradient) {
   Scope scope_cpu = Scope::NewRootScope();

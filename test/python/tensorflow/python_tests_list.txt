@@ -422,4 +422,3 @@ transpose_op_test.TransposeTest.testTranspose2DAuto
 #transpose_op_test.TransposeTest.testInt16 
 #transpose_op_test.TransposeTest.testInt8 
 transpose_op_test.TransposeTest.testError 
-

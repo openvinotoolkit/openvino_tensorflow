@@ -2522,9 +2522,10 @@ static Status TranslatePadOp(const Node* op,
         "elements");
   }
 
-  ng::Shape padding_below(paddings.size() / 2);
-  ng::Shape padding_above(paddings.size() / 2);
+  ng::CoordinateDiff padding_below(paddings.size() / 2);
+  ng::CoordinateDiff padding_above(paddings.size() / 2);
   ng::Shape padding_interior(paddings.size() / 2);
+  auto pad_mode = ng::op::PadMode::CONSTANT;
 
   for (size_t i = 0; i < paddings.size() / 2; i++) {
     padding_below[i] = paddings[2 * i];
@@ -2539,9 +2540,8 @@ static Status TranslatePadOp(const Node* op,
   auto pad_val_op = ConstructNgNode<ng::op::Constant>(
       op->name(), ng_input->get_element_type(), ng::Shape{},
       std::vector<std::string>{"0"});
-  auto pad_op = ConstructNgNode<ng::op::Pad>(op->name(), ng_input, pad_val_op,
-                                             padding_below, padding_above,
-                                             padding_interior);
+  auto pad_op = ConstructNgNode<ng::op::Pad>(
+      op->name(), ng_input, pad_val_op, padding_below, padding_above, pad_mode);
 
   SaveNgOp(ng_op_map, op->name(), pad_op);
   return Status::OK();
