@@ -51,6 +51,11 @@ def main():
         action="store_true")
 
     parser.add_argument(
+        '--test_bazel_build',
+        help="Runs the bazel based build\n",
+        action="store_true")
+
+    parser.add_argument(
         '--test_resnet',
         help="Runs TensorFlow Python tests (Pytest based).\n",
         action="store_true")
@@ -86,13 +91,31 @@ def main():
 
     # Decide which tests to run
     if (arguments.test_cpp):
-        run_ngtf_cpp_gtests(arguments.artifacts_dir, './', None)
+        test_filter = None
+        if arguments.backend:
+            if 'GPU' in arguments.backend:
+                test_filter = str(
+                    "-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
+                    "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
+                    "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
+                    "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
+                    "NNOps.SparseSoftmaxCrossEntropyWithLogits")
+        run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
+    elif (arguments.test_bazel_build):
+        run_bazel_build()
     elif (arguments.test_tf_python):
         raise Exception("TensorFlow Python tests are not yet supported")
     elif (arguments.test_resnet):
-        run_resnet50_from_artifacts(arguments.artifacts_dir)
+        batch_size = 128
+        iterations = 10
+        if arguments.backend:
+            if 'GPU' in arguments.backend:
+                batch_size = 64
+                iterations = 100
+        run_resnet50_from_artifacts(arguments.artifacts_dir, batch_size,
+                                    iterations)
     else:
         raise Exception("No tests specified")
 

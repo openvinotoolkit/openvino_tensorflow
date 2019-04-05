@@ -44,7 +44,6 @@ cc_binary(
         "src/ngraph_rewrite_for_tracking.h",
         "src/ngraph_rewrite_pass.cc",
         "src/ngraph_timer.h",
-        "src/ngraph_timer.cc",
         "src/ngraph_tracked_variable.cc",
         "src/ngraph_utils.cc",
         "src/ngraph_utils.h",

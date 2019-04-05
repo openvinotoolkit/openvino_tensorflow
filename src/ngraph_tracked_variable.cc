@@ -22,8 +22,8 @@
 
 #include "tensorflow/core/platform/default/logging.h"
 
+#include "ngraph/event_tracing.hpp"
 #include "ngraph_freshness_tracker.h"
-#include "ngraph_timer.h"
 #include "ngraph_utils.h"
 
 namespace tensorflow {
@@ -110,7 +110,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   mutex_lock l(init_mu_);
   std::ostringstream oss;
   oss << "NGraphVariable: " << my_instance_id << ": " << name();
-  Event event_compute(oss.str().c_str(), name().c_str());
+  ngraph::Event event_compute(oss.str(), name(), "");
 
   if (!initialized_) {
     OP_REQUIRES_OK(ctx, cinfo_.Init(ctx->resource_manager(), def(),
@@ -183,7 +183,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     ctx->record_persistent_memory_allocation(var->tensor()->AllocatedBytes());
   }
   var->Unref();
-  Event::WriteTrace(event_compute);
+  ngraph::Event::write_trace(event_compute);
 }
 
 REGISTER_OP("NGraphVariable")

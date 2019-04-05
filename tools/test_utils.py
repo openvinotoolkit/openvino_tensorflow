@@ -260,7 +260,7 @@ def run_resnet50(build_dir):
     os.chdir(root_pwd)
 
 
-def run_resnet50_from_artifacts(artifact_dir):
+def run_resnet50_from_artifacts(artifact_dir, batch_size, iterations):
 
     root_pwd = os.getcwd()
     artifact_dir = os.path.abspath(artifact_dir)
@@ -310,7 +310,8 @@ def run_resnet50_from_artifacts(artifact_dir):
     cmd = [
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
-        '--num_batches', '10', '--model=resnet50', '--batch_size=128',
+        '--num_batches',
+        str(iterations), '--model=resnet50', '--batch_size=' + str(batch_size),
         '--eval_dir=' + eval_eventlog_dir
     ]
     command_executor(cmd)
@@ -328,8 +329,8 @@ def run_resnet50_from_artifacts(artifact_dir):
     cmd = [
         'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
-        '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval',
-        '--eval_dir=' + eval_eventlog_dir
+        '--model=resnet50', '--batch_size=' + str(batch_size), '--num_batches',
+        str(iterations), '--eval', '--eval_dir=' + eval_eventlog_dir
     ]
     command_executor(cmd)
 
@@ -380,6 +381,23 @@ def run_bazel_build_test(venv_dir, build_dir):
     # Load the virtual env
     venv_dir_absolute = load_venv(venv_dir)
 
+    # Next patch the TensorFlow so that the tests run using ngraph_bridge
+    root_pwd = os.getcwd()
+
+    # Now run the configure
+    command_executor(['bash', 'configure_bazel.sh'])
+
+    # Build the bridge
+    command_executor(['bazel', 'build', 'libngraph_bridge.so'])
+
+    # Build the backend
+    command_executor(['bazel', 'build', '@ngraph//:libinterpreter_backend.so'])
+
+    # Return to the original directory
+    os.chdir(root_pwd)
+
+
+def run_bazel_build():
     # Next patch the TensorFlow so that the tests run using ngraph_bridge
     root_pwd = os.getcwd()
 

@@ -35,6 +35,7 @@
 #include "ngraph_timer.h"
 #include "ngraph_utils.h"
 
+#include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 #if defined NGRAPH_DISTRIBUTED
@@ -76,7 +77,7 @@ class NGraphEncapsulateOp : public OpKernel {
 
     std::ostringstream oss;
     oss << "Encapsulate_" << my_instance_id << ": " << name();
-    Event event(oss.str().c_str(), name().c_str());
+    ngraph::Event event(oss.str(), name(), "");
 
     NGRAPH_VLOG(1) << "NGraphEncapsulateOp: " << my_instance_id
                    << " Name: " << name();
@@ -144,7 +145,7 @@ class NGraphEncapsulateOp : public OpKernel {
                    ctx->GetAttr<string>("_ngraph_backend", &m_op_backend_name));
     BackendManager::CreateBackend(m_op_backend_name);
     event.Stop();
-    Event::WriteTrace(event);
+    ngraph::Event::write_trace(event);
   }
 
   //---------------------------------------------------------------------------
@@ -153,7 +154,7 @@ class NGraphEncapsulateOp : public OpKernel {
   ~NGraphEncapsulateOp() override {
     std::ostringstream oss;
     oss << "Destroy Encapsulate_" << my_instance_id << ": " << name();
-    Event event(oss.str().c_str(), name().c_str());
+    ngraph::Event event(oss.str(), name(), "");
 
     // If the kernel goes away, we must de-register all of its cached
     // functions
@@ -172,7 +173,7 @@ class NGraphEncapsulateOp : public OpKernel {
       NGRAPH_VLOG(2) << "~NGraphEncapsulateOp()";
     }
     event.Stop();
-    Event::WriteTrace(event);
+    ngraph::Event::write_trace(event);
   }
 
   template <typename T>
@@ -245,7 +246,7 @@ class NGraphEncapsulateOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override {
     std::ostringstream oss;
     oss << "Execute: Encapsulate_" << my_instance_id << ": " << name();
-    Event event(oss.str().c_str(), name().c_str());
+    ngraph::Event event(oss.str(), name(), "");
 
     Timer compute_time;
     std::lock_guard<std::mutex> lock(m_compute_lock);
@@ -256,7 +257,7 @@ class NGraphEncapsulateOp : public OpKernel {
     ng::runtime::Backend* op_backend =
         BackendManager::GetBackend(m_op_backend_name);
 
-    Event event_func_maybe_create("FunctionMaybeCreate", name().c_str());
+    ngraph::Event event_func_maybe_create("FunctionMaybeCreate", name(), "");
     Timer function_lookup_or_create;
     // Get the inputs
     std::vector<TensorShape> input_shapes;
@@ -372,7 +373,7 @@ class NGraphEncapsulateOp : public OpKernel {
 
       BackendManager::LockBackend(m_op_backend_name);
 
-      Event event_compile("Compile nGraph", name().c_str());
+      ngraph::Event event_compile("Compile nGraph", name(), "");
       try {
         ng_exec = op_backend->compile(ng_function);
 
@@ -447,7 +448,7 @@ class NGraphEncapsulateOp : public OpKernel {
         << m_ngraph_cluster;
 
     // Allocate tensors for input arguments.
-    Event event_alloc_input("Input: maybe create", name().c_str());
+    ngraph::Event event_alloc_input("Input: maybe create", name(), "");
 
     vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
     int ng_input_tensor_size_in_bytes = 0;
@@ -510,7 +511,7 @@ class NGraphEncapsulateOp : public OpKernel {
     event_alloc_input.Stop();
 
     // Allocate tensors for the output results.
-    Event event_alloc_output("Output: maybe create", name().c_str());
+    ngraph::Event event_alloc_output("Output: maybe create", name(), "");
     vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
     int ng_output_tensor_size_in_bytes = 0;
 
@@ -568,7 +569,7 @@ class NGraphEncapsulateOp : public OpKernel {
     event_alloc_output.Stop();
 
     // Execute the nGraph function.
-    Event event_execute_function("Execute nGraph", name().c_str());
+    ngraph::Event event_execute_function("Execute nGraph", name(), "");
     Timer execute_function;
     {
       BackendManager::LockBackend(m_op_backend_name);
@@ -617,24 +618,24 @@ class NGraphEncapsulateOp : public OpKernel {
                    << m_ngraph_cluster;
 
     // Copy value to host if backend is not CPU
-    Event event_copy_output("Output - copy back", name().c_str());
+    ngraph::Event event_copy_output("Output - copy back", name(), "");
     Timer copy_output_tensors_to_host;
 
     try {
       if (m_op_backend_name != "CPU") {
         size_t output_tensor_count = output_caches.size();
-        std::vector<std::unique_ptr<Event>> events;
+        std::vector<std::unique_ptr<ngraph::Event>> events;
         for (size_t i = 0; i < output_tensor_count; ++i) {
           void* dst_ptr;
           std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
           std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
           auto ng_element_type = dst_ng_tensor->get_element_type();
-          std::unique_ptr<Event> event_copy_output_next(
-              new Event(("Output_" + std::to_string(i) + "_" +
-                         std::to_string(dst_ng_tensor->get_element_count() *
-                                        ng_element_type.size()))
-                            .c_str(),
-                        name().c_str()));
+          std::unique_ptr<ngraph::Event> event_copy_output_next(
+              new ngraph::Event(
+                  ("Output_" + std::to_string(i) + "_" +
+                   std::to_string(dst_ng_tensor->get_element_count() *
+                                  ng_element_type.size())),
+                  name(), ""));
           dst_ng_tensor->read(dst_ptr, 0, dst_ng_tensor->get_element_count() *
                                               ng_element_type.size());
           event_copy_output_next->Stop();
@@ -643,7 +644,7 @@ class NGraphEncapsulateOp : public OpKernel {
 
         // Now write the events back
         for (auto& next : events) {
-          Event::WriteTrace(*next.get());
+          ngraph::Event::write_trace(*next.get());
         }
       }
     } catch (const std::exception& exp) {
@@ -683,12 +684,12 @@ class NGraphEncapsulateOp : public OpKernel {
                    << " Copy-outputs-to-host: "
                    << time_copy_output_tensors_to_host;
     event.Stop();
-    Event::WriteTrace(event_func_maybe_create);
-    Event::WriteTrace(event_alloc_output);
-    Event::WriteTrace(event_alloc_input);
-    Event::WriteTrace(event_execute_function);
-    Event::WriteTrace(event_copy_output);
-    Event::WriteTrace(event);
+    ngraph::Event::write_trace(event_func_maybe_create);
+    ngraph::Event::write_trace(event_alloc_output);
+    ngraph::Event::write_trace(event_alloc_input);
+    ngraph::Event::write_trace(event_execute_function);
+    ngraph::Event::write_trace(event_copy_output);
+    ngraph::Event::write_trace(event);
 
   }  // end compute
 
