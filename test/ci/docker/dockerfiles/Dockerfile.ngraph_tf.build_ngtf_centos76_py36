@@ -18,7 +18,7 @@
 
 FROM centos:7.6.1810
 
-# Python environment is python 3.4, which is preferred Py3 on CentOS 7.6
+# Python environment is python 3.6, which is preferred Py3 on CentOS 7.6
 # git is needed to clone tensorflow repository
 # unzip and wget are needed for installing bazel
 # sudo is required for installing the TF wheel into /usr/local/...
@@ -32,7 +32,7 @@ FROM centos:7.6.1810
 RUN yum groupinstall -y "Development Tools" && \
     yum -y --enablerepo=extras install epel-release && \
     yum -y install \
-    python34 python34-devel python34-setuptools python34-pip \
+    python36 python36-devel python36-setuptools python36-pip \
     java-1.8.0-openjdk \
     git \
     unzip \
