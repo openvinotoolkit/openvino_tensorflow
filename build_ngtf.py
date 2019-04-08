@@ -17,10 +17,17 @@
 
 from tools.build_utils import *
 
+
 def main():
     '''
     Builds TensorFlow, ngraph, and ngraph-tf for python 3
     '''
+
+    # Component versions
+    ngraph_version = "v0.17.0-rc.1"
+    tf_version = "v1.13.1"
+
+    # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -41,21 +48,18 @@ def main():
 
     parser.add_argument(
         '--build_gpu_backend',
-        help=
-        "nGraph backends will include nVidia GPU.\n"
+        help="nGraph backends will include nVidia GPU.\n"
         "Note: You need to have CUDA headers and libraries available on the build system.\n",
-        action="store_true"
-    )
+        action="store_true")
 
     parser.add_argument(
         '--build_plaidml_backend',
-        help=
-        "nGraph backends will include PlaidML bckend\n",
+        help="nGraph backends will include PlaidML bckend\n",
         action="store_true")
 
     parser.add_argument(
         '--use_prebuilt_tensorflow',
-        help="Skip building TensorFlow and use downloaded version.\n" + 
+        help="Skip building TensorFlow and use downloaded version.\n" +
         "Note that in this case C++ unit tests won't be build for nGrapg-TF bridge",
         action="store_true")
 
@@ -75,6 +79,20 @@ def main():
         type=str,
         help="Copy the artifacts to the given directory\n",
         action="store")
+
+    parser.add_argument(
+        '--ngraph_version',
+        type=str,
+        help="nGraph version to use (Default: " + ngraph_version + ")\n",
+        action="store")
+
+    parser.add_argument(
+        '--skip_tensorflow_build',
+        help="Use TensorFlow that's already installed" +
+        "(do not build or install) \n",
+        action="store_true")
+
+    # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
     if (arguments.debug_build):
@@ -89,10 +107,6 @@ def main():
     # Recipe
     #-------------------------------
 
-    # Component versions
-    ngraph_version = "v0.17.0-rc.1"
-    tf_version = "v1.13.1"
-
     # Default directories
     build_dir = 'build_cmake'
 
@@ -104,7 +118,7 @@ def main():
 
     pwd = os.getcwd()
     ngraph_tf_src_dir = os.path.abspath(pwd)
-
+    build_dir_abs = os.path.abspath(build_dir)
     os.chdir(build_dir)
 
     venv_dir = 'venv-tf-py3'
@@ -132,8 +146,8 @@ def main():
 
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc 4.8 - this flag is set to 0 and newer ones, this is set to 1
-    # The scpeific value is determined from the TensorFlow build 
-    # Normally the shipped TensorFlow is built with gcc 4.8 and thus this 
+    # The specific value is determined from the TensorFlow build
+    # Normally the shipped TensorFlow is built with gcc 4.8 and thus this
     # flag is set to 0
     cxx_abi = "0"
 
@@ -144,27 +158,40 @@ def main():
         import tensorflow as tf
         print('Version information:')
         print('TensorFlow version: ', tf.__version__)
-        print('C Compiler version used in building TensorFlow: ', tf.__compiler_version__)
+        print('C Compiler version used in building TensorFlow: ',
+              tf.__compiler_version__)
         cxx_abi = str(tf.__cxx11_abi_flag__)
     else:
-        print("Building TensorFlow")
-        # Download TensorFlow
-        download_repo("tensorflow",
-                      "https://github.com/tensorflow/tensorflow.git",
-                      tf_version)
+        if not arguments.skip_tensorflow_build:
+            print("Building TensorFlow")
+            # Download TensorFlow
+            download_repo("tensorflow",
+                          "https://github.com/tensorflow/tensorflow.git",
+                          tf_version)
 
-        # Build TensorFlow
-        build_tensorflow(venv_dir, "tensorflow", artifacts_location,
-                         target_arch, verbosity)
+            # Build TensorFlow
+            build_tensorflow(venv_dir, "tensorflow", artifacts_location,
+                             target_arch, verbosity)
 
-        # Install tensorflow
-        # Note that if gcc 4.8 is used for building TensorFlow this flag 
-        # will be 0 
-        cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+            # Install tensorflow
+            # Note that if gcc 4.8 is used for building TensorFlow this flag
+            # will be 0
+            cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+        else:
+            import tensorflow as tf
+            print('Version information:')
+            print('TensorFlow version: ', tf.__version__)
+            print('C Compiler version used in building TensorFlow: ',
+                  tf.__compiler_version__)
+            cxx_abi = str(tf.__cxx11_abi_flag__)
 
     # Download nGraph
+    if arguments.ngraph_version:
+        ngraph_version = arguments.ngraph_version
+
+    print("nGraph Version: ", ngraph_version)
     download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                    ngraph_version)
+                  ngraph_version)
 
     # Now build nGraph
     ngraph_cmake_flags = [
@@ -183,9 +210,9 @@ def main():
     if arguments.debug_build:
         ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-    if (arguments.distributed_build=="OMPI"): 
+    if (arguments.distributed_build == "OMPI"):
         ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OMPI"])
-    elif (arguments.distributed_build=="MLSL"): 
+    elif (arguments.distributed_build == "MLSL"):
         ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=MLSL"])
     else:
         ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OFF"])
@@ -213,7 +240,8 @@ def main():
 
     ngraph_tf_cmake_flags = [
         "-DNGRAPH_TF_INSTALL_PREFIX=" + artifacts_location,
-        "-DUSE_PRE_BUILT_NGRAPH=ON", "-DNGRAPH_TARGET_ARCH=" + target_arch,
+        "-DUSE_PRE_BUILT_NGRAPH=ON",
+        "-DNGRAPH_TARGET_ARCH=" + target_arch,
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
     ]
@@ -225,28 +253,43 @@ def main():
     else:
         ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
         ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
-        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_TF_CC_DIR=" + 
-            os.path.join(artifacts_location, "tensorflow")])
+        ngraph_tf_cmake_flags.extend([
+            "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
+                                                    "tensorflow")
+        ])
 
-    if ((arguments.distributed_build=="OMPI") or (arguments.distributed_build=="MLSL")):
+    if ((arguments.distributed_build == "OMPI")
+            or (arguments.distributed_build == "MLSL")):
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])
     else:
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
 
     if (arguments.use_grappler_optimizer):
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=TRUE"])
+        ngraph_tf_cmake_flags.extend(
+            ["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=TRUE"])
     else:
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=FALSE"])
+        ngraph_tf_cmake_flags.extend(
+            ["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=FALSE"])
 
     # Now build the bridge
-    ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location, ngraph_tf_src_dir, venv_dir,
+    ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
+                                ngraph_tf_src_dir, venv_dir,
                                 ngraph_tf_cmake_flags, verbosity)
 
     print("SUCCESSFULLY generated wheel: %s" % ng_tf_whl)
+    print("PWD: " + os.getcwd())
+
+    # Copy the TensorFlow Python code tree to artifacts directory so that they can
+    # be used for running TensorFlow Python unit tests
+    command_executor([
+        'cp', '-r', build_dir_abs + '/tensorflow/tensorflow/python',
+        os.path.join(artifacts_location, "tensorflow")
+    ])
 
     # Run a quick test
     install_ngraph_tf(venv_dir, os.path.join(artifacts_location, ng_tf_whl))
 
+    print('\033[1;32mBuild successful\033[0m')
     os.chdir(pwd)
 
 

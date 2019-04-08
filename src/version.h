@@ -24,6 +24,11 @@ const char* ngraph_tf_version();
 
 // Returns the nGraph version this bridge was compiled with
 const char* ngraph_lib_version();
+
+// Returns the 0 if _GLIBCXX_USE_CXX11_ABI wasn't set by the
+// compiler (e.g., clang or gcc pre 4.8) or the value of the
+// _GLIBCXX_USE_CXX11_ABI set during the compilation time
+int ngraph_tf_cxx11_abi_flag();
 }
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

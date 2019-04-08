@@ -52,6 +52,7 @@ setup(
     package_data=
     {
         'ngraph_bridge': [
+            "include/ngraph/*",
             @ngraph_libraries@ @license_files@ @licence_top_level@
         ],
     },

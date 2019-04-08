@@ -348,7 +348,7 @@ def install_ngraph_tf(venv_dir, ngtf_pip_whl):
     command_executor(["pip", "install", "-U", ngtf_pip_whl])
 
     import tensorflow as tf
-    print('Version information:')
+    print('\033[1;34mVersion information\033[0m')
     print('TensorFlow version: ', tf.__version__)
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)

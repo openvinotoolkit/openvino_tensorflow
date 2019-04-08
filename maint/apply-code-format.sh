@@ -36,24 +36,22 @@ else
     SED_FLAGS='-rn'
 fi
 
-# Find out python version. Use yapf only when in Python 3
-if PYTHON_VERSION=$(python -c 'import sys; print(sys.version_info[:][0])')
-then
-    if [[ "3" != "${PYTHON_VERSION}" ]]; then
-        echo "Python reports version number '${PYTHON_VERSION}' so will skip yapf formatting. Please use Python3"
-    fi
-else
-    bash_lib_print_error "Failed invocation of Python."
-    exit 1
-fi
-
-
 declare CLANG_FORMAT_BASENAME="clang-format-3.9"
 declare REQUIRED_CLANG_FORMAT_VERSION=3.9
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
-    declare YAPF_FORMAT_BASENAME="yapf"
-    declare REQUIRED_YAPF_FORMAT_VERSION=0.26
+declare YAPF_FORMAT_BASENAME="yapf"
+declare REQUIRED_YAPF_FORMAT_VERSION=0.26.0
+
+# Check the YAPF format
+declare YAPF_VERSION=`python -c "import yapf; print(yapf.__version__)"`
+
+if [[ "${YAPF_VERSION}" != "${REQUIRED_YAPF_FORMAT_VERSION}" ]] ; then
+    echo -n "Unable to match version for ${YAPF_FORMAT_BASENAME}"
+    echo -n " Required: ${REQUIRED_YAPF_FORMAT_VERSION}"
+    echo  " Installed: ${YAPF_VERSION}"
+    exit -1
 fi
+
+declare YAPF_FORMAT_PROG="python3 -m ${YAPF_FORMAT_BASENAME}"
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -65,19 +63,8 @@ if ! CLANG_FORMAT_PROG="$(which "${CLANG_FORMAT_BASENAME}")"; then
     bash_lib_die "Unable to find program ${CLANG_FORMAT_BASENAME}" >&2
 fi
 
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
-    declare YAPF_FORMAT_PROG
-    if ! YAPF_FORMAT_PROG="$(which "${YAPF_FORMAT_BASENAME}")"; then
-        bash_lib_die "Unable to find program ${YAPF_FORMAT_BASENAME}" >&2
-    fi
-fi
-
 format_lib_verify_version "${CLANG_FORMAT_PROG}" "${REQUIRED_CLANG_FORMAT_VERSION}" "CLANG"
 bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_VERSION}'"
-if [[ "3" == "${PYTHON_VERSION}" ]]; then
-    format_lib_verify_version "${YAPF_FORMAT_PROG}" "${REQUIRED_YAPF_FORMAT_VERSION}" "YAPF"
-    bash_lib_status "Verified that '${YAPF_FORMAT_PROG}' has version '${REQUIRED_YAPF_FORMAT_VERSION}'"
-fi
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
@@ -88,7 +75,7 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
 	    bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
     else
-        bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        bash_lib_status "Formatting C/C++ code in: '$(pwd)/${ROOT_SUBDIR}'"
 
         # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
@@ -102,20 +89,15 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
                              -or -name '*.cpp' -or -name '*.hpp' \) \
              -print \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
 
-        bash_lib_status "Done."
-
-        if [[ "3" == "${PYTHON_VERSION}" ]]; then
-            bash_lib_status "About to format Python code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
-            declare SRC_FILE
-            # ignore the .in.py file (python/setup.in.py) which has format that crashes yapf
-            for SRC_FILE in $(find "${ROOT_SUBDIR}"                                      \
-                            -name *.in.py -prune -o                                   \
-                            \( -type f -and \( -name '*.py' \)                        \
-                                -print \) ); do
-                "${YAPF_FORMAT_PROG}"  -i -p --style google --no-local-style "${SRC_FILE}"
-            done
-            bash_lib_status "Done."
-        fi
+        bash_lib_status "Formatting Python code in: '$(pwd)/${ROOT_SUBDIR}' ..."
+        declare SRC_FILE
+        # ignore the .in.py file (python/setup.in.py) which has format that crashes yapf
+        for SRC_FILE in $(find "${ROOT_SUBDIR}"                                      \
+                        -name *.in.py -prune -o                                   \
+                        \( -type f -and \( -name '*.py' \)                        \
+                            -print \) ); do
+            python3 -m yapf -i -p --style google --no-local-style "${SRC_FILE}"
+        done
     fi
 done
 

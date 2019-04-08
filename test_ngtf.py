@@ -27,6 +27,7 @@ from distutils.sysconfig import get_python_lib
 #from tools.build_utils import load_venv, command_executor
 from tools.test_utils import *
 
+
 def main():
     '''
     Tests nGraph-TensorFlow Python 3. This script needs to be run after 
@@ -62,19 +63,18 @@ def main():
         run_bazel_build_test(venv_dir, build_dir)
 
     # First run the C++ gtests
-    run_ngtf_gtests(build_dir,None)
+    run_ngtf_gtests(build_dir, None)
 
     # If the GPU tests are requested, then run them as well
     if (arguments.gpu_unit_tests_enable):
         os.environ['NGRAPH_TF_BACKEND'] = 'GPU'
         run_ngtf_gtests(
-            build_dir, 
+            build_dir,
             str("-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
-            "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
-            "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
-            "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-            "NNOps.SparseSoftmaxCrossEntropyWithLogits")
-        )
+                "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
+                "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
+                "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
+                "NNOps.SparseSoftmaxCrossEntropyWithLogits"))
 
     os.environ['NGRAPH_TF_BACKEND'] = 'CPU'
 

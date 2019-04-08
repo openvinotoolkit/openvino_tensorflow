@@ -113,6 +113,9 @@ endif()
 
 # Now create the Python pip package. The following variables are passed to the 
 # CreatePipWhl.cmake
+# CMake "install" target "CODE" will propagate these variables to the 
+# target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
+# So any variable that we need to propagate needs to be added here
 install(CODE "set(OS_VERSION ${OS_VERSION})")
 install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
 install(CODE "set(NGTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
