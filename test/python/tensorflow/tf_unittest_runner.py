@@ -250,9 +250,9 @@ def run_test(test_list, xml_report, verbosity=2):
             if test_result.wasSuccessful():
                 succeeded.append(test)
             elif test_result.failures:
-                failures.append(test)
+                failures.append(test_result.failures)
             elif test_result.errors:
-                errors.append(test)
+                errors.append(test_result.errors)
         summary = {"PASSED": succeeded, "FAILED": failures, "ERRORS": errors}
         return summary
 
@@ -275,9 +275,11 @@ def print_results(status_list, invalid_list):
             if key is "PASSED":
                 print(test + '\033[92m' + ' ..PASS' + '\033[0m')
             if key is "FAILED":
-                print(test + '\033[91m' + ' ..FAIL' + '\033[0m')
+                print(test[0][0].id() + '\033[91m' + ' ..FAIL' + '\033[0m')
+                print(test[0][1])
             if key is "ERRORS":
-                print(test + '\033[33m' + ' ..ERROR' + '\033[0m')
+                print(test[0][0].id() + '\033[33m' + ' ..ERROR' + '\033[0m')
+                print(test[0][1])
 
     if (len(invalid_list) != 0):
         print('\033[1m' + '\nInvalid Tests' + '\033[0m')
@@ -288,10 +290,16 @@ def print_results(status_list, invalid_list):
         test_class_name = {}
         test_name = status_list[key]
         for test in test_name:
-            module, classname, testcase = test.split('.')
-            module_classname = module + '.' + classname
-            test_class_name[module_classname] = test_class_name.get(
-                module_classname, 0) + 1
+            if key is "PASSED":
+                module, classname, testcase = test.split('.')
+                module_classname = module + '.' + classname
+                test_class_name[module_classname] = test_class_name.get(
+                    module_classname, 0) + 1
+            if key is "FAILED" or key is "ERRORS":
+                module, classname, testcase = test[0][0].id().split('.')
+                module_classname = module + '.' + classname
+                test_class_name[module_classname] = test_class_name.get(
+                    module_classname, 0) + 1
         for k in test_class_name:
             print('Number of tests ' + key + ' ' + k, test_class_name[k])
 

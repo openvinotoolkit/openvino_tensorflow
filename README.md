@@ -1,6 +1,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph-tf/blob/master/LICENSE) 
-[![Build Status](https://badge.buildkite.com/f20db2a4be0e82e493faa08de85953d45b313b3be12abf4acf.svg)](https://buildkite.com/ngraph/ngtf-master-cpu)
+[![Build Status](https://badge.buildkite.com/f20db2a4be0e82e493faa08de85953d45b313b3be12abf4acf.svg?branch=master)](https://buildkite.com/ngraph/ngtf-master-cpu)
 
 
 # Intel(R) nGraph(TM) Compiler and runtime for TensorFlow*
@@ -47,9 +47,10 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 This will produce something like this:
 
         TensorFlow version:  1.13.1
-        nGraph bridge version: b'0.12.0-rc3'
-        nGraph version used for this build: b'0.21.0-rc.0+b638705'
+        nGraph bridge version: b'0.12.0-rc4'
+        nGraph version used for this build: b'0.17.0-rc.1+045b71e'
         TensorFlow version used for this build: v1.13.1-0-g6612da8951
+        CXX11_ABI flag used for this build: 1
 
 Next you can try out the TensorFlow models by adding one line to your existing 
 TensorFlow model scripts and running them the usual way:
@@ -89,7 +90,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/NervanaSystems/ngraph-tf.git
         cd ngraph-tf
-        git checkout v0.12.0-rc3
+        git checkout v0.12.0-rc4
 
    
 2. Next run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
