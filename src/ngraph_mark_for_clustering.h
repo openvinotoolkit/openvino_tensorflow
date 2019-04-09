@@ -28,7 +28,7 @@ Status MarkForClustering(Graph* graph, std::vector<string> skip_these_nodes);
 bool NodeIsMarkedForClustering(const Node* node);
 void GetStaticInputs(const Node* node, std::vector<int32>* inputs);
 bool InputIsStatic(const Node* node, int index);
-Status GetNodeBackend(Node* node, string* backend_name);
+Status GetNodeBackend(const Node* node, string* backend_name);
 void SetNodeBackend(Node* node, string& backend_name);
 }  // namespace ngraph_bridge
 

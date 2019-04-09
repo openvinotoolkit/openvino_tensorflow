@@ -171,7 +171,26 @@ depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedLarger
 depthtospace_op_test.DepthToSpaceTest.testNonSquare
 
 #dequantize_op_test.DequantizeOpTest.testBasicQuint8 
-#dequantize_op_test.DequantizeOpTest.testBasicQint8 
+#dequantize_op_test.DequantizeOpTest.testBasicQint8
+
+
+# Note that all these test will pass on CPU (except testUInt32AndUInt64), because on CPU gather falls back to TF
+# In case of NNPI all except the last pass. But CI wont be tracking it because CI runs on CPU backend only
+gather_op_test.GatherTest.testBadAxis
+gather_op_test.GatherTest.testBadIndicesCPU
+#gather_op_test.GatherTest.testEmptySlices  ...failure in backend due to int64
+#gather_op_test.GatherTest.testScalar1D ...failure in backend due to int64
+#gather_op_test.GatherTest.testScalar2D ...failure in backend due to int64
+#gather_op_test.GatherTest.testSimpleTwoD32 ...failure in backend due to int64
+gather_op_test.GatherTest.testString
+#gather_op_test.GatherTest.testUInt32AndUInt64  ...Unsupported TensorFlow data type: DT_UINT32
+gather_op_test.GatherTest.testUnknownAxis
+gather_op_test.GatherTest.testUnknownIndices
+gather_op_test.GatherTest.test_session
+#gather_op_test.GatherTest.testHigherRank ..ERROR
+
+# This test set fails on NNPI
+#batch_gather_op_test
 
 identity_n_op_py_test.IdentityNOpTest.testInt32String_6 
 identity_n_op_py_test.IdentityNOpTest.testInt32_shapes
