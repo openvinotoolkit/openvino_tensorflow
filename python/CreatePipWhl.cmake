@@ -47,8 +47,10 @@ if (PYTHON)
     file(GLOB NGRAPH_LIB_FILES "${NGTF_INSTALL_DIR}/${LIB_SUFFIX}/lib*")
 
     # Copy the ngraph_bridge include from install
+    message(STATUS "NGTF_INSTALL_DIR: ${NGTF_INSTALL_DIR}")
+    
     file(
-        COPY "${NGTF_INSTALL_DIR}/include" 
+        COPY "${NGRAPH_INSTALL_DIR}/include" 
         DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge"
     )
     

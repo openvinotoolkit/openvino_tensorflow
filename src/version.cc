@@ -30,7 +30,7 @@
 // candidate such as v0.7.0-rc0
 // The code in master will always have the last released version number
 // with a suffix of '-master'
-#define NG_TF_VERSION_SUFFIX "-rc4"
+#define NG_TF_VERSION_SUFFIX "-rc5"
 
 #define VERSION_STR_HELPER(x) #x
 #define VERSION_STR(x) VERSION_STR_HELPER(x)

@@ -39,7 +39,7 @@ with open(@README_DOC@, "r") as fh:
 
 setup( 
     name='ngraph_tensorflow_bridge',
-    version='0.12.0rc4',
+    version='0.12.0rc5',
     description='Intel nGraph compiler and runtime for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -52,7 +52,7 @@ setup(
     package_data=
     {
         'ngraph_bridge': [
-            "include/ngraph/*",
+            "include/ngraph/**/*",
             @ngraph_libraries@ @license_files@ @licence_top_level@
         ],
     },
