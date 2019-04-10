@@ -69,11 +69,15 @@ def main():
         print('\n'.join(test_list[0]))
     if (arguments.run_test):
         test_list = get_test_list(arguments.tensorflow_path, arguments.run_test)
-        status_list = run_test(test_list[0], xml_report)
-        try:
-            print_results(status_list, test_list[1])
-        except:
-            print("XML Report generated")
+        test_list, test_result = run_test(test_list[0], xml_report)
+        results = parse_test_results(test_list, test_result)
+        status = print_results(results, test_list[1])
+        if status == False:
+            for key in ["ERRORS", "FAILED"]:
+                test_name = results[key][0][0][0].id()
+                print('\n')
+                raise Exception(test_name + ' failed due to ' + key)
+
     if (arguments.run_tests_from_file):
         all_test_list = []
         invalid_list = []
@@ -86,11 +90,14 @@ def main():
             test_list = list(set(test_list[0]))
             for test_name in test_list:
                 all_test_list.append(test_name)
-        status_list = run_test(all_test_list, xml_report)
-        try:
-            print_results(status_list, invalid_list)
-        except:
-            print("XML Report generated")
+        test_list, test_result = run_test(all_test_list, xml_report)
+        results = parse_test_results(test_list, test_result)
+        status = print_results(results, invalid_list)
+        if status == False:
+            for key in ["ERRORS", "FAILED"]:
+                test_name = results[key][0][0][0].id()
+                print('\n')
+                raise Exception(test_name + ' failed due to ' + key)
 
 
 def get_test_list(tf_path, test_regex):
@@ -230,9 +237,6 @@ def run_test(test_list, xml_report, verbosity=2):
     verbosity: Python verbose logging is set to 2. You get the help string 
     of every test and the result.
     """
-    succeeded = []
-    failures = []
-    errors = []
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     if xml_report is not None:
@@ -242,35 +246,54 @@ def run_test(test_list, xml_report, verbosity=2):
         with open(xml_report, 'wb') as output:
             test_result = xmlrunner.XMLTestRunner(
                 verbosity=verbosity, output=output).run(suite)
-        return None
     else:
         for test in test_list:
             test_result = unittest.TextTestRunner(verbosity=verbosity).run(
                 loader.loadTestsFromName(test))
-            if test_result.wasSuccessful():
-                succeeded.append(test)
-            elif test_result.failures:
-                failures.append(test_result.failures)
-            elif test_result.errors:
-                errors.append(test_result.errors)
-        summary = {"PASSED": succeeded, "FAILED": failures, "ERRORS": errors}
-        return summary
+    return test_list, test_result
 
 
-def print_results(status_list, invalid_list):
+def parse_test_results(test_list, test_result):
+    """
+    Parses the test_result object returned by TestRunner.
+    Seperates the tests based on PASS/ERROR/FAIL in lists.
+
+    Args:
+    test_list: This is the list of tests to run,filtered based on the
+    regex_input passed as an argument.
+    test_result: This is a list of test cases that ran along with their
+    status Pass, Fail or Error.
+    """
+    succeeded = []
+    failures = []
+    errors = []
+    for test in test_list:
+        if test_result.wasSuccessful():
+            succeeded.append(test)
+        elif test_result.failures:
+            failures.append(test_result.failures)
+        elif test_result.errors:
+            errors.append(test_result.errors)
+
+    summary = {"PASSED": succeeded, "FAILED": failures, "ERRORS": errors}
+    return summary
+
+
+def print_results(test_result, invalid_list):
     """
     Prints the results of the tests run and the stats.
     Prints the list of invalid tests if any.
 
     Args:
-    status_list: This is a list of test cases that ran along with their 
+    test_result: This is a list of test cases that ran along with their 
     status Pass, Fail or Error. 
     invalid_list: When tests are run from file, if there is an invalid test 
     name this list is printed along with summary.
     """
+    status = True
     print('\033[1m' + '\n==SUMMARY==' + '\033[0m')
     for key in ["PASSED", "ERRORS", "FAILED"]:
-        test_name = status_list[key]
+        test_name = test_result[key]
         for test in test_name:
             if key is "PASSED":
                 print(test + '\033[92m' + ' ..PASS' + '\033[0m')
@@ -288,7 +311,7 @@ def print_results(status_list, invalid_list):
     print('\033[1m' + '\n==STATS==' + '\033[0m')
     for key in ["PASSED", "ERRORS", "FAILED"]:
         test_class_name = {}
-        test_name = status_list[key]
+        test_name = test_result[key]
         for test in test_name:
             if key is "PASSED":
                 module, classname, testcase = test.split('.')
@@ -296,12 +319,14 @@ def print_results(status_list, invalid_list):
                 test_class_name[module_classname] = test_class_name.get(
                     module_classname, 0) + 1
             if key is "FAILED" or key is "ERRORS":
+                status = False
                 module, classname, testcase = test[0][0].id().split('.')
                 module_classname = module + '.' + classname
                 test_class_name[module_classname] = test_class_name.get(
                     module_classname, 0) + 1
         for k in test_class_name:
             print('Number of tests ' + key + ' ' + k, test_class_name[k])
+    return status
 
 
 if __name__ == '__main__':
