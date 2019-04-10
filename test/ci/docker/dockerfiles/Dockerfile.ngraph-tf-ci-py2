@@ -19,6 +19,7 @@
 FROM ubuntu:16.04
 
 # Default python environment is python 2, thus python-pip and virtualenv
+# python3-* packages are needed for the code-format check, which uses python3
 # python-numpy, python-dev, and python-wheel all needed for TensorFlow build
 # git is needed to clone tensorflow repository
 # unzip and wget are needed for installing bazel
@@ -32,6 +33,7 @@ FROM ubuntu:16.04
 RUN apt-get update &&  apt-get install -y \
     python-pip virtualenv \
     python-numpy python-dev python-wheel \
+    python3-pip python3-numpy python3-dev python3-wheel \
     git \
     unzip wget \
     sudo \
@@ -62,6 +64,11 @@ RUN pip install keras_applications keras_preprocessing
 RUN pip install matplotlib librosa opencv-python
 RUN pip install yapf==0.26.0
 RUN pip install futures
+
+# yapf and futures are needed for code-format checks
+RUN pip3 install yapf==0.26.0
+RUN pip3 install futures
+
 
 # We include pytest so the Docker image can be used for daily validation
 RUN pip install --upgrade pytest
