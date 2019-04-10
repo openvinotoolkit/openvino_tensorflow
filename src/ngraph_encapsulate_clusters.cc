@@ -70,7 +70,7 @@ static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
 }
 // ...end code copied and pasted (and modified) from graph.cc
 
-Status EncapsulateClusters(Graph* graph) {
+Status EncapsulateClusters(Graph* graph, int graph_id) {
   // A map from cluster indices to the expected device name for nodes
   // in that cluster.
   std::map<int, std::string> device_name_map;
@@ -331,6 +331,7 @@ Status EncapsulateClusters(Graph* graph) {
                         .Attr("_ngraph_backend", cluster_backend)
                         .Attr("Targuments", input_types)
                         .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+                        .Attr("ngraph_graph_id", graph_id)
                         .Device(device_name_map[cluster_idx])
                         .Input(inputs)
                         .Finalize(graph, &n);

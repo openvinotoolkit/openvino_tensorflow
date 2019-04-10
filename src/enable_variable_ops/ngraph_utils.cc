@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_utils.h"
-
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
+#include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/attr_value_util.h"
 #include "tensorflow/core/framework/graph.pb.h"
@@ -29,6 +28,7 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "ngraph_utils.h"
 using namespace std;
 namespace ng = ngraph;
 
@@ -36,8 +36,61 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
+// static int testing_graph_id=30;
+
+Status IsCopyLogEnabled(int graph_id, bool& is_copy_log_enabled) {
+  const char* copy_env_var = std::getenv("NGRAPH_TF_LOG_COPIES");
+  if (copy_env_var == nullptr) {
+    is_copy_log_enabled = false;
+    return Status::OK();
+  }
+  int test_graph_id;
+
+  try {
+    test_graph_id = stoi(string(copy_env_var));
+  } catch (const std::invalid_argument& ia) {
+    return errors::InvalidArgument("Invalid argument for NGRAPH_TF_LOG_COPIES");
+  }
+
+  // if -1 copies are logged for all graphs
+  is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);
+  return Status::OK();
+}
+
+void PrintTFTensor(Tensor& T1) {
+  NGRAPH_VLOG(4) << "all tensor values" << (T1).SummarizeValue(64) << endl;
+}
+
+std::string DebugNode(Node* node) {
+  std::string temp = node->name();
+  temp += "[" + node->type_string() + "]";
+  return temp;
+}
+
+std::string PrintBool(bool var) { return (var ? "Yes" : "No"); }
+
 bool IsNGVariableType(string node_type) {
-  return node_type == "NGraphVariable";
+  return (node_type == "NGraphVariable" || node_type == "NGraphAssign");
+};
+
+bool IsNGSupportedType(string node_type) {
+  return (IsNGVariableType(node_type) || node_type == "NGraphEncapsulate");
+};
+
+// Read from this ng_tensor into tf_tensor
+void ReadNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
+                  Tensor* tf_tensor) {
+  void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
+  ng_tensor->read(tf_src_ptr, 0, ng_tensor->get_element_count() *
+                                     ng_tensor->get_element_type().size());
+}
+
+// Write into this ng_tensor from tf_tensor
+void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
+                   Tensor* tf_tensor) {
+  void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
+  ng_tensor->write(tf_src_ptr, 0, ng_tensor->get_element_count() *
+                                      ng_tensor->get_element_type().size());
 }
 
 void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
@@ -268,111 +321,6 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
                         1024;  // in case x86-64 is configured to use 2MB pages
     vm_usage = vsize / 1024;   // unit kb
     resident_set = rss * page_size_kb;
-  }
-}
-
-std::string DotFilename(std::string kind, int idx) {
-  return GraphFilenamePrefix(kind, idx) + ".dot";
-}
-
-std::string DotFilename(std::string kind, int idx, int sub_idx) {
-  return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
-}
-
-std::string PbtxtFilename(std::string kind, int idx) {
-  return GraphFilenamePrefix(kind, idx) + ".pbtxt";
-}
-
-std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
-  return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
-}
-
-std::string GraphFilenamePrefix(std::string kind, int idx) {
-  std::stringstream ss;
-  ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
-#if defined NGRAPH_DISTRIBUTED
-  ngraph::Distributed dist;
-  int Rank_ID = dist.get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
-#endif
-  return ss.str();
-}
-
-std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
-  std::stringstream ss;
-  ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
-     << std::setw(4) << sub_idx;
-#if defined NGRAPH_DISTRIBUTED
-  ngraph::Distributed dist;
-  int Rank_ID = dist.get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
-#endif
-  return ss.str();
-}
-
-bool DumpAllGraphs() { return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr; }
-
-bool DumpPrecaptureGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
-}
-
-bool DumpCapturedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
-}
-
-bool DumpUnmarkedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
-}
-
-bool DumpMarkedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
-}
-
-bool DumpClusteredGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
-}
-
-bool DumpDeclusteredGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
-}
-
-bool DumpEncapsulatedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
-}
-
-bool DumpTrackedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
-}
-
-void AllreduceOpControlOrder(
-    const std::shared_ptr<ngraph::Function>& ng_function) {
-  // Get the serialized ops and stored the allreduce ops to a vector and
-  ng::NodeVector allreduce_op_list;
-  for (const shared_ptr<ng::Node>& node : ng_function->get_ordered_ops()) {
-    if (node->description() == "AllReduce") {
-      allreduce_op_list.push_back(node);
-    }
-    // Sort the allreduce ops according to the TF names
-    std::sort(allreduce_op_list.begin(), allreduce_op_list.end(),
-              [](const shared_ptr<ng::Node>& x, const shared_ptr<ng::Node>& y) {
-                return x->get_friendly_name() < y->get_friendly_name();
-              });
-    // Add control dependency in for the allreduce ops
-    if (allreduce_op_list.size() > 1) {
-      for (size_t i = 1; i < allreduce_op_list.size(); ++i) {
-        auto pre_node = allreduce_op_list[i - 1];
-        auto cur_node = allreduce_op_list[i];
-        cur_node->add_control_dependency(pre_node);
-      }
-    }
   }
 };
 

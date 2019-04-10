@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,21 @@
 
 #pragma once
 
+#ifndef NGRAPH_TF_REPLACE_OPTIMIZERS_H_
+#define NGRAPH_TF_REPLACE_OPTIMIZERS_H_
+
+#include "ngraph/runtime/backend.hpp"
 #include "tensorflow/core/graph/graph.h"
 
+using namespace std;
+namespace ng = ngraph;
 namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status EncapsulateClusters(Graph* graph, int graph_id);
+Status ReplaceModifiers(Graph* graph, int graph_id);
 
-}  // namespace ngraph_bridge
+}  // ngraph_bridge
+}  // tensorflow
 
-}  // namespace tensorflow
+#endif  // NGRAPH_TF_REPLACE_OPTIMIZERS_H_

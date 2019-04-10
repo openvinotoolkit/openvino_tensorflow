@@ -22,7 +22,7 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status RewriteForTracking(Graph* graph);
+Status RewriteForTracking(Graph* graph, int graph_id);
 
 }  // namespace ngraph_bridge
 

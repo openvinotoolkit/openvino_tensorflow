@@ -643,8 +643,15 @@ Status MarkForClustering(Graph* graph,
   std::unordered_map<string, int> fail_confirmation_histogram;
   std::unordered_map<string, int> fail_constraint_histogram;
   vector<Node*> nodes_marked_for_clustering;
+  vector<Node*> variable_type_nodes;
+
   for (auto node : graph->op_nodes()) {
     bool mark_for_clustering = false;
+
+    if (IsNGVariableType(node->type_string())) {
+      variable_type_nodes.push_back(node);
+      continue;
+    }
 
     do {
       // check if output node
@@ -731,6 +738,10 @@ Status MarkForClustering(Graph* graph,
     if (it != set_attributes_map.end()) {
       TF_RETURN_IF_ERROR(it->second(node));
     }
+  }
+
+  for (auto node : variable_type_nodes) {
+    SetNodeBackend(node, current_backend);
   }
 
   return Status::OK();

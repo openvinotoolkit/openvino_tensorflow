@@ -30,7 +30,7 @@ namespace ngraph_bridge {
 //
 // Main entry point for rewrite-for-tracking.
 //
-Status RewriteForTracking(Graph* graph) {
+Status RewriteForTracking(Graph* graph, int graph_id) {
   std::vector<Node*> replaced_nodes;
 
   for (auto node : graph->op_nodes()) {

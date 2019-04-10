@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+#include <iomanip>
+
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
@@ -22,13 +24,12 @@
 #include "ngraph_capture_variables.h"
 #include "ngraph_deassign_clusters.h"
 #include "ngraph_encapsulate_clusters.h"
+#include "ngraph_enter_in_catalog.h"
 #include "ngraph_log.h"
 #include "ngraph_mark_for_clustering.h"
+#include "ngraph_replace_variable_modifiers.h"
 #include "ngraph_rewrite_for_tracking.h"
-#include "ngraph_utils.h"
 #include "tf_graph_writer.h"
-
-#include <iomanip>
 
 #if defined NGRAPH_DISTRIBUTED
 #include "ngraph/distributed.hpp"
@@ -87,6 +88,46 @@ class NGraphRewritePass : public GraphOptimizationPass {
     return s_serial_counter++;
   }
 
+  static bool DumpAllGraphs() {
+    return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr;
+  }
+
+ private:
+  static std::string DotFilename(std::string kind, int idx) {
+    return GraphFilenamePrefix(kind, idx) + ".dot";
+  }
+  static std::string PbtxtFilename(std::string kind, int idx) {
+    return GraphFilenamePrefix(kind, idx) + ".pbtxt";
+  }
+  static std::string DotFilename(std::string kind, int idx, int sub_idx) {
+    return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
+  }
+  static std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
+    return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
+  }
+  static std::string GraphFilenamePrefix(std::string kind, int idx) {
+    std::stringstream ss;
+    ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
+#if defined NGRAPH_DISTRIBUTED
+    ngraph::Distributed dist;
+    int Rank_ID = dist.get_rank();
+    ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+#endif
+    return ss.str();
+  }
+  static std::string GraphFilenamePrefix(std::string kind, int idx,
+                                         int sub_idx) {
+    std::stringstream ss;
+    ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
+       << std::setw(4) << sub_idx;
+#if defined NGRAPH_DISTRIBUTED
+    ngraph::Distributed dist;
+    int Rank_ID = dist.get_rank();
+    ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+#endif
+    return ss.str();
+  }
+
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
   static mutex s_serial_counter_mutex;
 };
@@ -137,6 +178,16 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 
     return Status::OK();
   }
+
+ private:
+  static bool DumpPrecaptureGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
+  }
+  static bool DumpCapturedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
+  }
 };
 
 //
@@ -186,6 +237,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    // 0. Replace optimizers then, if requested, dump the graphs.
+    TF_RETURN_IF_ERROR(ReplaceModifiers(options.graph->get(), idx));
+    if (DumpMarkedGraphs()) {
+      DumpGraphs(options, idx, "replaced_modifier",
+                 "Graph with Modifiers replaced");
+    }
+
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::vector<string> skip_these_nodes = {};
     TF_RETURN_IF_ERROR(
@@ -221,7 +279,45 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Variables Rewritten for Tracking");
     }
 
+    // Enter in catalog then.
+    TF_RETURN_IF_ERROR(EnterInCatalog(options.graph->get(), idx));
+    if (DumpCatalogedGraphs()) {
+      DumpGraphs(options, idx, "cataloged",
+                 "Graph with Variables Inputs Entered in Catalog");
+    }
+
     return Status::OK();
+  }
+
+ private:
+  static bool DumpUnmarkedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
+  }
+  static bool DumpMarkedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
+  }
+  static bool DumpClusteredGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
+  }
+  static bool DumpDeclusteredGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
+  }
+  static bool DumpEncapsulatedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
+  }
+  static bool DumpTrackedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
+  }
+
+  static bool DumpCatalogedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_CATALOGED_GRAPHS") != nullptr;
   }
 };
 
