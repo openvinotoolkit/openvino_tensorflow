@@ -460,6 +460,8 @@ Status MarkForClustering(Graph* graph,
       type_constraint_map["Minimum"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
       type_constraint_map["Neg"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["NonMaxSuppressionV4"]["T"] = {
+          DT_FLOAT};  // TF allows half too
       type_constraint_map["OneHot"]["T"] = NGraphDTypes();
       type_constraint_map["Pack"]["T"] = NGraphDTypes();
       type_constraint_map["Pad"]["T"] = NGraphDTypes();
@@ -574,6 +576,7 @@ Status MarkForClustering(Graph* graph,
       set_attributes_map["Max"] = SetStaticInputs({1});
       set_attributes_map["Mean"] = SetStaticInputs({1});
       set_attributes_map["Min"] = SetStaticInputs({1});
+      set_attributes_map["NonMaxSuppressionV4"] = SetStaticInputs({2, 3, 4});
       set_attributes_map["OneHot"] = SetStaticInputs({1});
       set_attributes_map["Pad"] = SetStaticInputs({1});
       set_attributes_map["Prod"] = SetStaticInputs({1});
@@ -626,7 +629,6 @@ Status MarkForClustering(Graph* graph,
                               " is not supported");
     }
     current_backend = backend_env;
-    // TODO: set backend. Then don't use current_backend
   }
 
   // Right now it cannot be inside the if(!initialized) block, because it is
@@ -635,6 +637,12 @@ Status MarkForClustering(Graph* graph,
                                                              bool* result) {
     // TODO: replace current_backend ->
     // BackendManager::GetCurrentlySetBackendName()
+    *result = (current_backend == "NNPI");
+    return Status::OK();
+  };
+
+  confirmation_function_map["NonMaxSuppressionV4"] = [&current_backend](
+      Node* n, bool* result) {
     *result = (current_backend == "NNPI");
     return Status::OK();
   };
