@@ -53,7 +53,7 @@ if (PYTHON)
         COPY "${NGRAPH_INSTALL_DIR}/include" 
         DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/ngraph_bridge"
     )
-    
+
     # Copy the ngraph_bridge libraries from install
     foreach(DEP_FILE ${NGRAPH_LIB_FILES})
         get_filename_component(lib_file_real_path ${DEP_FILE} ABSOLUTE)
