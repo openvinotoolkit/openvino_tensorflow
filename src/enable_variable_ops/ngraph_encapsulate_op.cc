@@ -146,6 +146,7 @@ class NGraphEncapsulateOp : public OpKernel {
     // Set the backend type for the op
     OP_REQUIRES_OK(ctx,
                    ctx->GetAttr<string>("_ngraph_backend", &m_op_backend_name));
+    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name();
     BackendManager::CreateBackend(m_op_backend_name);
     event.Stop();
     ngraph::Event::write_trace(event);
@@ -158,7 +159,7 @@ class NGraphEncapsulateOp : public OpKernel {
     std::ostringstream oss;
     oss << "Destroy Encapsulate_" << my_instance_id << ": " << name();
     ngraph::Event event(oss.str(), name(), "");
-
+    NGRAPH_VLOG(2) << "~NGraphEncapsulateOp::" << name();
     // If the kernel goes away, we must de-register all of its cached
     // functions
     // from the freshness tracker.
@@ -172,22 +173,17 @@ class NGraphEncapsulateOp : public OpKernel {
       // m_freshness_tracker->Unref();
     }
 
-    string node_name = "_ngraph_cluster_" + to_string(m_ngraph_cluster);
-    // TODO(malikshr) : Could be erroreneous we dont know if this
-    // destructor is called at the very end, if some modifier that uses this
-    // tensor is still active.
     for (int i = 0; i < m_number_outputs; i++) {
-      string key = NGraphCatalog::CreateNodeKey(m_graph_id, node_name, i);
+      string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
       if (NGraphCatalog::ExistsInEncapOutputTensorMap(key)) {
-        auto temp = NGraphCatalog::GetTensorFromEncapOutputTensorMap(key);
-        temp.reset();
         NGraphCatalog::DeleteFromEncapOutputTensorMap(key);
+        NGRAPH_VLOG(2) << "Deleting from output tensor map " << key;
       }
     }
 
     // Release the backend
+    NGRAPH_VLOG(2) << "~NGraphEncapsulateOp():: ReleaseBackend";
     BackendManager::ReleaseBackend(m_op_backend_name);
-    NGRAPH_VLOG(2) << "~NGraphEncapsulateOp()";
 
     event.Stop();
     ngraph::Event::write_trace(event);
@@ -431,7 +427,7 @@ class NGraphEncapsulateOp : public OpKernel {
                      << "  Delta RSS: " << delta_res_mem
                      << "  Function size: " << function_size
                      << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
-                     << " VM: " << vm / (1024 * 1024) << " GB" << endl;
+                     << " VM: " << vm / (1024 * 1024) << " GB";
     }  // end of input signature not found in m_ng_exec_map
     else {
       // Found the input signature in m_ng_exec_map, use the cached executable
@@ -705,7 +701,6 @@ class NGraphEncapsulateOp : public OpKernel {
     Timer copy_output_tensors_to_host;
 
     try {
-      // Done to delete the tensors from catalog in the destructor
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
         m_number_outputs = output_caches.size();
@@ -720,7 +715,7 @@ class NGraphEncapsulateOp : public OpKernel {
         std::tie(dst_ptr, dst_tv) = output_caches[i];
 
         if (ref_exists) {
-          NGRAPH_VLOG(4) << "Saving output in Catalog " << key << dst_tv;
+          NGRAPH_VLOG(4) << "Adding in output tensor map " << key;
           NGraphCatalog::AddToEncapOutputTensorMap(key, dst_tv);
         }
 

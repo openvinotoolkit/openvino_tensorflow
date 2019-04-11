@@ -76,6 +76,7 @@ void BackendManager::ReleaseBackend(const string& backend_name) {
   if (BackendManager::ref_count_each_backend_[backend_name] == 0) {
     BackendManager::ng_backend_map_[backend_name]->backend_ptr.reset();
     BackendManager::ng_backend_map_.erase(backend_name);
+    NGRAPH_VLOG(2) << "Deleted Backend " << backend_name;
   }
 }
 

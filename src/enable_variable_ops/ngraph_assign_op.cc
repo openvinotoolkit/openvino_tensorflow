@@ -58,6 +58,7 @@ class NGraphAssignOp : public OpKernel {
   // use_exclusive_lock_, validate_shape_, relax_constraints_;
 
  public:
+  ~NGraphAssignOp() { NGRAPH_VLOG(4) << "~NGraphAssignOp::" << name() << endl; }
   explicit NGraphAssignOp(OpKernelConstruction* context)
       : OpKernel(context), just_looking_(false), copy_to_tf_(false) {
     OP_REQUIRES_OK(context, context->GetAttr("just_looking", &just_looking_));

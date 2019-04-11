@@ -54,6 +54,7 @@ class NGraphVar : public ResourceBase {
     }
 
     // Create Backend
+    NGRAPH_VLOG(4) << "NGraphVar::Create Backend ";
     BackendManager::CreateBackend(ng_backend_name_);
     ng::runtime::Backend* op_backend =
         BackendManager::GetBackend(ng_backend_name_);
@@ -90,8 +91,8 @@ class NGraphVar : public ResourceBase {
   bool sync_ng_tensor_;
   ~NGraphVar() override {
     // Release the backend
+    NGRAPH_VLOG(2) << "~NGraphVar::ReleaseBackend";
     BackendManager::ReleaseBackend(ng_backend_name_);
-    NGRAPH_VLOG(2) << "~NGraphVar";
   }
 };
 
