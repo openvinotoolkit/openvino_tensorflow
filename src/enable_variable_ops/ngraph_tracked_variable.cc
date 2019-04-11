@@ -99,7 +99,10 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
                  << " ,backend_name " << ng_backend_name_;
 }
 
-NGraphVariableOp::~NGraphVariableOp() { tracker_->Unref(); }
+NGraphVariableOp::~NGraphVariableOp() {
+  NGRAPH_VLOG(4) << "~NGraphVariableOp:: " << name() << endl;
+  tracker_->Unref();
+}
 
 // (Changes: Renamed from VariableOp, modified to pass TensorShape to NGraphVar
 // constructor.)
@@ -151,6 +154,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   }
 
   auto creator = [this](NGraphVar** var) {
+    NGRAPH_VLOG(4) << "Create NGraphVar Tensors for " << name() << endl;
     *var = new NGraphVar(dtype_, shape_, ng_backend_name_);
     return Status::OK();
   };

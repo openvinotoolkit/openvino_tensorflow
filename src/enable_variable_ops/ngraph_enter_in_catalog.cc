@@ -96,13 +96,13 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
 
       // output ng-copy map catalog
       unordered_set<int> op_index_to_copy;
-      NGRAPH_VLOG(4) << "Finding Output Copy required for " << node->name();
       for (auto edge : node->out_edges()) {
         if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
             !IsNGVariableType(edge->dst()->type_string())) {
-          NGRAPH_VLOG(4) << "Output Copy required for " << node->name()
-                         << " ,index: " << edge->src_output() << " dstOpType "
-                         << edge->dst()->type_string();
+          NGRAPH_VLOG(4) << "Adding in OutputCopyIndexesMap ";
+          NGRAPH_VLOG(4) << "Key: " << node->name();
+          NGRAPH_VLOG(4) << "Ouput Index: " << edge->src_output();
+          NGRAPH_VLOG(4) << "Required by " << DebugNode(edge->dst());
           op_index_to_copy.insert(edge->src_output());
         }
       }
@@ -127,7 +127,6 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         int src_output = edge->src_output();
         string node_key =
             NGraphCatalog::CreateNodeKey(graph_id, src->name(), src_output);
-
         // Will be updated with real tensors in Encapsulate
         NGraphCatalog::AddToEncapOutputTensorMap(node_key, nullptr);
         NGRAPH_VLOG(4) << "Adding in Output Tensor Map";
