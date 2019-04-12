@@ -1,0 +1,67 @@
+steps:
+  - block: "Run build?"
+  - command: "rm -rf /localdisk/buildkite/artifacts\nvirtualenv -p /usr/bin/python3 /localdisk/buildkite/artifacts/venv && source /localdisk/buildkite/artifacts/venv/bin/activate && pip install -U yapf==0.26.0"
+    label: ":gear: Setup"
+    agents:
+    - "queue=cpu"
+    parallelism: 1
+
+  - wait
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && maint/check-code-format.sh"
+    label: ":pencil: Code Format ?"
+    agents:
+    - "queue=cpu"
+    parallelism: 1
+
+  - wait
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && python3 build_ngtf.py --artifacts /localdisk/buildkite/artifacts"
+    label: ":hammer_and_wrench: Build"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+    parallelism: 1
+
+  - wait
+  
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && pip install -U /localdisk/buildkite/artifacts/tensorflow/tensorflow-1.13.1-cp35-cp35m-linux_x86_64.whl\nPYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py --artifacts /localdisk/buildkite/artifacts --test_bazel"
+    label: ":bazel: Bazel Build"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
+  - wait
+
+  - command: "PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py --artifacts /localdisk/buildkite/artifacts --test_cpp"
+    label: ":chrome: C++ Unit Test"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
+  - wait 
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && pip install psutil && pip install -U /localdisk/buildkite/artifacts/tensorflow/tensorflow-1.13.1-cp35-cp35m-linux_x86_64.whl"
+    label: ":gear: Install"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && pip install pytest\nPYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py --artifacts /localdisk/buildkite/artifacts --test_python"
+    label: ":python: nGraph Pytest"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && pip install pytest\nPYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py --artifacts /localdisk/buildkite/artifacts --test_tf_python"
+    label: ":python: TensorFlow Pytest"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
+  - command: "source /localdisk/buildkite/artifacts/venv/bin/activate && PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py --artifacts /localdisk/buildkite/artifacts --test_resnet"
+    label: ":bar_chart: ResNet50"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=cpu"
+
