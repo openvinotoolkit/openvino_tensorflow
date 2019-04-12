@@ -1919,16 +1919,9 @@ static Status TranslateFusedBatchNormGradOp(
 static Status TranslateGatherV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_input));
-
-  std::vector<int64> tf_indices;
+  shared_ptr<ng::Node> ng_input, ng_input_coords;
   TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 1, static_input_map, &tf_indices));
-  // It seems indices cannot be negative, so no need to handle that
-  std::vector<size_t> indices(tf_indices.size());
-  std::transform(tf_indices.begin(), tf_indices.end(), indices.begin(),
-                 [](int64 x) { return (size_t)(x); });
+      GetInputNodes(ng_op_map, op, &ng_input, &ng_input_coords, nullptr));
 
   std::vector<int64> tf_axis;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &tf_axis));
@@ -1949,7 +1942,7 @@ static Status TranslateGatherV2Op(
   }
 
   ng::runtime::Backend* backend = BackendManager::GetBackend(backend_name);
-  auto coords = ng::Coordinate(indices);
+
   // Negative axis is supported. Accounting for that
   auto ng_input_shape = ng_input->get_shape();
   size_t ng_input_rank = ng_input_shape.size();
@@ -1965,37 +1958,13 @@ static Status TranslateGatherV2Op(
                                    "), but got ", tf_axis[0]);
   }
 
-  for (size_t indices_idx = 0; indices_idx < indices.size(); indices_idx++) {
-    if (indices[indices_idx] >= ng_input_shape[axis]) {
-      // TODO: this error returnign must be generalized when indices = vector of
-      // vectors is supported
-      return errors::InvalidArgument("indices[0,", indices_idx, "] = ",
-                                     indices[indices_idx], " is not in [0, ",
-                                     ng_input_shape[axis], ")");
-    }
+  shared_ptr<ng::Node> ng_gather =
+      backend->get_backend_op("Gather", &ng_input, &ng_input_coords, &axis);
+  if (ng_gather == nullptr) {
+    return errors::Internal("In translating GatherV2 op ", op->name(),
+                            " backend could not return valid ngraph node");
   }
-
-  vector<size_t> possibly_empty_node_size(ng_input_shape);
-  possibly_empty_node_size[axis] = indices.size();
-
-  if (std::any_of(possibly_empty_node_size.begin(),
-                  possibly_empty_node_size.end(),
-                  [](size_t x) { return x == 0; })) {
-    std::vector<std::string> const_values(
-        ng::shape_size(possibly_empty_node_size), "0");
-    auto ng_empty = ConstructNgNode<ng::op::Constant>(
-        op->name(), ng_input->get_element_type(),
-        ng::Shape(possibly_empty_node_size), const_values);
-    SaveNgOp(ng_op_map, op->name(), ng_empty);
-  } else {
-    shared_ptr<ng::Node> ng_gather =
-        backend->get_backend_op("Gather", &ng_input, &coords, &axis);
-    if (ng_gather == nullptr) {
-      return errors::Internal("In translating GatherV2 op ", op->name(),
-                              " backend could not return valid ngraph node");
-    }
-    SaveNgOp(ng_op_map, op->name(), ng_gather);
-  }
+  SaveNgOp(ng_op_map, op->name(), ng_gather);
 
   return Status::OK();
 }

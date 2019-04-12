@@ -572,7 +572,7 @@ Status MarkForClustering(Graph* graph,
       set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
       set_attributes_map["ExpandDims"] = SetStaticInputs({1});
       set_attributes_map["Fill"] = SetStaticInputs({0});
-      set_attributes_map["GatherV2"] = SetStaticInputs({1, 2});
+      set_attributes_map["GatherV2"] = SetStaticInputs({2});
       set_attributes_map["Max"] = SetStaticInputs({1});
       set_attributes_map["Mean"] = SetStaticInputs({1});
       set_attributes_map["Min"] = SetStaticInputs({1});
