@@ -397,6 +397,7 @@ class NGraphEncapsulateOp : public OpKernel {
       }
       BackendManager::UnlockBackend(m_op_backend_name);
       event_compile.Stop();
+      ngraph::Event::write_trace(event_compile);
 
       m_ng_exec_map[signature] = ng_exec;
       // caching ng_function to serialize to ngraph if needed

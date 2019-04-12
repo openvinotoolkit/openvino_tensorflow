@@ -1953,7 +1953,7 @@ static Status TranslateGatherV2Op(
   // Negative axis is supported. Accounting for that
   auto ng_input_shape = ng_input->get_shape();
   size_t ng_input_rank = ng_input_shape.size();
-  size_t axis;
+  int axis;
   if (tf_axis[0] >= 0) {
     axis = tf_axis[0];
   } else {

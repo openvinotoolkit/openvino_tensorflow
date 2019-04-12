@@ -1098,7 +1098,6 @@ TEST(ArrayOps, StridedSliceTest1) {
   std::iota(data_vect.begin(), data_vect.end(), 0.0f);
   AssignInputValues<float>(input_data, data_vect);
 
-  auto rank = input_size.size();
   std::vector<int64> cstart = {0, 1};
   std::vector<int64> cend = {0, 2};
   std::vector<int64> cstride = {1, 1};
@@ -1182,43 +1181,6 @@ TEST(ArrayOps, DISABLED_StridedSlice) {
       (*coord)[i] = vectorized_idx % shape_vect[i];
       vectorized_idx = vectorized_idx / shape_vect[i];
     }
-  };
-
-  // r-rank index to vector index
-  auto coordinate_to_vectorized_idx = [](std::vector<int64> coord,
-                                         std::vector<int64> shape_vect,
-                                         int64* vectorized_idx) {
-    ASSERT_TRUE(coord.size() == shape_vect.size())
-        << "In coordinate_to_int_idx size of coord(" << coord.size()
-        << ") and shape_vector(" << shape_vect.size() << ") do not match";
-    ASSERT_TRUE(std::inner_product(
-        coord.begin(), coord.end(), shape_vect.begin(), true,
-        [](bool x, bool y) { return x && y; }, std::less<int64>()))
-        << "All coordinates should be less than the lengths along their "
-           "dimensions";
-    ASSERT_TRUE(std::accumulate(
-        begin(coord), end(coord), true,
-        [](bool acc, int64 item) { return (item >= 0) && acc; }))
-        << "Expected all elements of coord to be >= 0, but found some negative "
-           "ones";
-    ASSERT_TRUE(std::accumulate(
-        begin(shape_vect), end(shape_vect), true,
-        [](bool acc, int64 item) { return (item >= 0) && acc; }))
-        << "Expected all elements of shape_vect to be >= 0, but found some "
-           "negative ones";
-    vector<int64> cum_prod(shape_vect.size());
-    // Consider an example: shape_vect = {2, 3, 4},
-    // shape_vect.rbegin(): begin at the end ie 4. shape_vect.rend()-1: iterate
-    // upto the 2nd element (which is 3). cum_prod.rbegin()+1: populate results
-    // in reverse order
-    std::partial_sum(shape_vect.rbegin(), shape_vect.rend() - 1,
-                     cum_prod.rbegin() + 1, std::multiplies<int64>());
-    cum_prod.back() = 1;
-    // cum_prod is {12, 4, 1}. partial_sum computes the cumulative product
-    // values 12 and 4, while 1 is added to the vector later
-    *vectorized_idx =
-        std::inner_product(cum_prod.begin(), cum_prod.end(), coord.begin(),
-                           0);  // vector dot product of cum_prod and coord
   };
 
   // TODO: can input_size ever have an element which is 0

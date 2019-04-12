@@ -72,10 +72,10 @@ class NGraphVariableOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override;
 
  private:
-  DataType dtype_;
   TensorShape shape_;
   bool just_looking_;
   NGraphFreshnessTracker* tracker_;
+  DataType dtype_;
 
   mutex init_mu_;
   ContainerInfo cinfo_ GUARDED_BY(init_mu_);
@@ -91,8 +91,8 @@ int NGraphVariableOp::s_instance_count = 0;
 
 NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
     : OpKernel(context),
-      tracker_(nullptr),
       just_looking_(false),
+      tracker_(nullptr),
       dtype_(RemoveRefType(context->output_type(0))) {
   my_instance_id = s_instance_count;
   s_instance_count++;
