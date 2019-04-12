@@ -1,0 +1,26 @@
+diff --git a/tensorflow_scripts/ncf/ncf_main.py b/tensorflow_scripts/ncf/ncf_main.py
+index 094bd8fd..73fbc0c5 100644
+--- a/tensorflow_scripts/ncf/ncf_main.py
++++ b/tensorflow_scripts/ncf/ncf_main.py
+@@ -40,6 +40,7 @@ import ngraph_bridge
+ # pylint: enable=g-bad-import-order
+ import time
+ from datetime import datetime
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ import movielens
+ import constants as rconst
+@@ -319,7 +320,12 @@ def construct_estimator(num_gpus, model_dir, params, batch_size,
+     return train_estimator, eval_estimator
+ 
+   distribution = distribution_utils.get_distribution_strategy(num_gpus=num_gpus)
+-  run_config = tf.estimator.RunConfig(train_distribute=distribution)
++  config=tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=1)
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  config.graph_options.rewrite_options.MergeFrom(rewrite_options)
++  run_config = tf.estimator.RunConfig(train_distribute=distribution, session_config=config)
+   params["eval_batch_size"] = eval_batch_size
+   estimator = tf.estimator.Estimator(model_fn=neumf_model.neumf_model_fn,
+                                      model_dir=model_dir, config=run_config,

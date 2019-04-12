@@ -1,0 +1,27 @@
+diff --git a/tensorflow_scripts/wide_deep/wide_deep.py b/tensorflow_scripts/wide_deep/wide_deep.py
+index 754fd391..cbc73437 100644
+--- a/tensorflow_scripts/wide_deep/wide_deep.py
++++ b/tensorflow_scripts/wide_deep/wide_deep.py
+@@ -29,6 +29,7 @@ import hooks_helper#from official.utils.logs import hooks_helper
+ import model_helpers#from official.utils.misc import model_helpers
+ import time
+ from datetime import datetime
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ 
+ 
+@@ -170,8 +171,13 @@ def build_estimator(model_dir, model_type):
+ 
+       # Create a tf.estimator.RunConfig to ensure the model is run on CPU, which
+       # trains faster than GPU for this model.
++      config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=False)
++      rewrite_options = rewriter_config_pb2.RewriterConfig(
++          meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++          custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++      config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+       run_config = tf.estimator.RunConfig().replace(
+-          session_config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False))
++          session_config=config)
+ 
+       if model_type == 'wide':
+         return tf.estimator.LinearClassifier(

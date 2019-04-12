@@ -1,0 +1,23 @@
+diff --git a/tensorflow_scripts/research/slim/eval_image_classifier.py b/tensorflow_scripts/research/slim/eval_image_classifier.py
+index b1c65278..97519f63 100644
+--- a/tensorflow_scripts/research/slim/eval_image_classifier.py
++++ b/tensorflow_scripts/research/slim/eval_image_classifier.py
+@@ -28,6 +28,7 @@ from datasets import dataset_factory
+ from nets import nets_factory
+ from preprocessing import preprocessing_factory
+ import ngraph_bridge
++from tensorflow.core.protobuf import rewriter_config_pb2
+ #import ctypes
+ #lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
+ #lib = ctypes.cdll.LoadLibrary('libgraph_analyzer.so')
+@@ -233,6 +234,10 @@ def main(_):
+     tf.logging.info('Evaluating %s' % checkpoint_path)
+     print ("Batch size: ", FLAGS.batch_size)
+     config = tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=FLAGS.num_inter_threads)
++    rewrite_options = rewriter_config_pb2.RewriterConfig(
++        meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++        custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++    config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+     slim.evaluation.evaluate_once(
+         master=FLAGS.master,
+         checkpoint_path=checkpoint_path,

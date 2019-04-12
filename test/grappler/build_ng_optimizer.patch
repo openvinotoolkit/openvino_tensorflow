@@ -1,0 +1,26 @@
+diff --git a/tensorflow_scripts/yolov2/darkflow/darkflow/net/build.py b/tensorflow_scripts/yolov2/darkflow/darkflow/net/build.py
+index 77711c3d..4c1d51f6 100644
+--- a/tensorflow_scripts/yolov2/darkflow/darkflow/net/build.py
++++ b/tensorflow_scripts/yolov2/darkflow/darkflow/net/build.py
+@@ -10,6 +10,7 @@ from .framework import create_framework
+ from dark.darknet import Darknet
+ import json
+ import os
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ class TFNet(object):
+ 
+@@ -167,7 +168,12 @@ class TFNet(object):
+ 			self.summary_op = tf.summary.merge_all()
+ 			self.writer = tf.summary.FileWriter(self.FLAGS.summary + 'train')
+ 
+-		self.sess = tf.Session(config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=False))#**cfg))
++		config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=False)
++		rewrite_options = rewriter_config_pb2.RewriterConfig(
++			meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++			custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++		config.graph_options.rewrite_options.MergeFrom(rewrite_options)
++		self.sess = tf.Session(config = config)#**cfg))
+ 		self.sess.run(tf.global_variables_initializer())
+ 
+ 		if not self.ntrain: return

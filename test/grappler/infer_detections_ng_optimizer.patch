@@ -1,0 +1,26 @@
+diff --git a/tensorflow_scripts/research/object_detection/inference/infer_detections.py b/tensorflow_scripts/research/object_detection/inference/infer_detections.py
+index d91df2e6..b18434df 100644
+--- a/tensorflow_scripts/research/object_detection/inference/infer_detections.py
++++ b/tensorflow_scripts/research/object_detection/inference/infer_detections.py
+@@ -38,6 +38,7 @@ import itertools
+ import tensorflow as tf
+ from object_detection.inference import detection_inference
+ import time
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ tf.flags.DEFINE_string('input_tfrecord_paths', None,
+                        'A comma separated list of paths to input TFRecords.')
+@@ -66,7 +67,12 @@ def main(_):
+     if not getattr(FLAGS, flag_name):
+       raise ValueError('Flag --{} is required'.format(flag_name))
+ 
+-  with tf.Session(config=tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=1)) as sess:
++  config=tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=1)
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  config.graph_options.rewrite_options.MergeFrom(rewrite_options)
++  with tf.Session(config=config) as sess:
+     input_tfrecord_paths = [
+         v for v in FLAGS.input_tfrecord_paths.split(',') if v]
+     tf.logging.info('Reading input from %d files', len(input_tfrecord_paths))

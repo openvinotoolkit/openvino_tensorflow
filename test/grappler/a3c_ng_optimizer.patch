@@ -1,0 +1,23 @@
+diff --git a/tensorflow_scripts/a3c/a3c_display.py b/tensorflow_scripts/a3c/a3c_display.py
+index 8d85a172..c9c84512 100644
+--- a/tensorflow_scripts/a3c/a3c_display.py
++++ b/tensorflow_scripts/a3c/a3c_display.py
+@@ -20,6 +20,7 @@ from constants import LOG_FILE
+ import tensorflow as tf
+ import ngraph_bridge
+ from argparse import ArgumentParser
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ arg_parser = ArgumentParser(description='The launchpad for all performance scripts.')
+ arg_parser.add_argument('-p',  help='do tfprofile', dest="do_tfprofile", default=False)
+@@ -74,6 +75,10 @@ grad_applier = RMSPropApplier(learning_rate = learning_rate_input,
+                               device = device)
+ config = tf.ConfigProto(allow_soft_placement=True,
+                         intra_op_parallelism_threads=intra,inter_op_parallelism_threads=inter)
++rewrite_options = rewriter_config_pb2.RewriterConfig(
++  meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++  custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+ sess = tf.Session(config=config)
+ init = tf.global_variables_initializer()
+ sess.run(init)

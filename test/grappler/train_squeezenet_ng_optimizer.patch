@@ -1,0 +1,27 @@
+diff --git a/tensorflow_scripts/squeezenet_official/train_squeezenet.py b/tensorflow_scripts/squeezenet_official/train_squeezenet.py
+index 7db13184..903d978e 100755
+--- a/tensorflow_scripts/squeezenet_official/train_squeezenet.py
++++ b/tensorflow_scripts/squeezenet_official/train_squeezenet.py
+@@ -10,6 +10,8 @@ import ngraph_bridge
+ from dataloader import DataLoader
+ #lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
+ 
++from tensorflow.core.protobuf import rewriter_config_pb2
++
+ def _run(args):
+     with tf.device('/job:localhost/replica:0/task:0/device:'+'NGRAPH'+':0'):
+         network = networks.catalogue[args.network](args)
+@@ -23,7 +25,12 @@ def _run(args):
+             num_clones = args.num_gpus,
+             clone_on_cpu = False)
+ 
+-    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=1))#_configure_session())
++    config=tf.ConfigProto(allow_soft_placement=True,inter_op_parallelism_threads=1)
++    rewrite_options = rewriter_config_pb2.RewriterConfig(
++        meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++        custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++    config.graph_options.rewrite_options.MergeFrom(rewrite_options)
++    sess = tf.Session(config=config)#_configure_session())
+ 
+     with tf.device(deploy_config.variables_device()):
+         global_step = tf.train.create_global_step()

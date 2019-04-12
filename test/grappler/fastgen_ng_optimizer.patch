@@ -1,0 +1,23 @@
+diff --git a/tensorflow_scripts/wavenet/fastgen.py b/tensorflow_scripts/wavenet/fastgen.py
+index dabd9f0c..00f58251 100644
+--- a/tensorflow_scripts/wavenet/fastgen.py
++++ b/tensorflow_scripts/wavenet/fastgen.py
+@@ -24,6 +24,7 @@ import numpy as np
+ from scipy.io import wavfile
+ import tensorflow as tf
+ import time
++from tensorflow.core.protobuf import rewriter_config_pb2
+ '''
+ from magenta.models.nsynth import utils
+ from magenta.models.nsynth.wavenet.h512_bo16 import Config
+@@ -107,6 +108,10 @@ def encode(wav_data, checkpoint_path, sample_length=64000):
+   # Load up the model for encoding and find the encoding of "wav_data"
+   session_config = tf.ConfigProto(allow_soft_placement=True)
+   session_config.gpu_options.allow_growth = True
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  session_config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+   with tf.Graph().as_default(), tf.Session(config=session_config) as sess:
+     hop_length = Config().ae_hop_length
+     wav_data, sample_length = utils.trim_for_encoding(wav_data, sample_length,

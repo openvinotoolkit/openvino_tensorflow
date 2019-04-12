@@ -1,0 +1,15 @@
+diff --git a/tensorflow_scripts/transformer_official/tensor2tensor/utils/trainer_lib.py b/tensorflow_scripts/transformer_official/tensor2tensor/utils/trainer_lib.py
+index ddc2da83..4f06fa86 100644
+--- a/tensorflow_scripts/transformer_official/tensor2tensor/utils/trainer_lib.py
++++ b/tensorflow_scripts/transformer_official/tensor2tensor/utils/trainer_lib.py
+@@ -64,6 +64,10 @@ def create_session_config(log_device_placement=False,
+       log_device_placement=log_device_placement,
+       inter_op_parallelism_threads=inter_op_parallelism_threads,
+       intra_op_parallelism_threads=intra_op_parallelism_threads)
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++      meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++      custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+   return config
+ 
+ 

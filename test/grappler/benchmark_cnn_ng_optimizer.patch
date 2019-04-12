@@ -1,0 +1,16 @@
+diff --git a/tensorflow_scripts/tf_cnn_benchmarks/benchmark_cnn.py b/tensorflow_scripts/tf_cnn_benchmarks/benchmark_cnn.py
+index 45f342ac..d25fd967 100644
+--- a/tensorflow_scripts/tf_cnn_benchmarks/benchmark_cnn.py
++++ b/tensorflow_scripts/tf_cnn_benchmarks/benchmark_cnn.py
+@@ -765,7 +765,10 @@ def create_config_proto(params):
+   if params.variable_update == 'horovod':
+     import horovod.tensorflow as hvd  # pylint: disable=g-import-not-at-top
+     config.gpu_options.visible_device_list = str(hvd.local_rank())
+-
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+   return config
+ 
+ 

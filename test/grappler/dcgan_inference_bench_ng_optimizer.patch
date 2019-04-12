@@ -1,0 +1,23 @@
+diff --git a/tensorflow_scripts/DCGAN/cifar/inference_bench.py b/tensorflow_scripts/DCGAN/cifar/inference_bench.py
+index 64614291..a7848741 100644
+--- a/tensorflow_scripts/DCGAN/cifar/inference_bench.py
++++ b/tensorflow_scripts/DCGAN/cifar/inference_bench.py
+@@ -33,6 +33,7 @@ import ngraph_bridge
+ #lib = ctypes.cdll.LoadLibrary('libgraph_analyzer.so')
+ import time
+ from datetime import datetime
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ 
+ class _LoggerHook(tf.train.SessionRunHook):
+@@ -143,6 +144,10 @@ def create_config_proto():
+     config.allow_soft_placement = True
+     config.intra_op_parallelism_threads = FLAGS.num_intra_threads
+     config.inter_op_parallelism_threads = FLAGS.num_inter_threads
++    rewrite_options = rewriter_config_pb2.RewriterConfig(
++        meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++        custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++    config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+     return config
+ 
+ def main(_, run_eval_loop=True):

@@ -1,0 +1,23 @@
+diff --git a/tensorflow_scripts/unet/tf_unet/unet.py b/tensorflow_scripts/unet/tf_unet/unet.py
+index e51d5f7b..fa17cf3b 100644
+--- a/tensorflow_scripts/unet/tf_unet/unet.py
++++ b/tensorflow_scripts/unet/tf_unet/unet.py
+@@ -26,6 +26,7 @@ from collections import OrderedDict
+ import logging
+ 
+ import tensorflow as tf
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ from tf_unet import util
+ from tf_unet.layers import (weight_variable, weight_variable_devonc, bias_variable,
+@@ -259,6 +260,10 @@ class Unet(object):
+ 
+         init = tf.global_variables_initializer()
+         config = tf.ConfigProto(intra_op_parallelism_threads = intra,inter_op_parallelism_threads = inter,allow_soft_placement=True)
++        rewrite_options = rewriter_config_pb2.RewriterConfig(
++            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++            custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++        config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+         with tf.Session(config=config) as sess:
+             # Initialize variables
+             sess.run(init)

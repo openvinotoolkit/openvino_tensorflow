@@ -1,0 +1,24 @@
+diff --git a/tensorflow_scripts/ssd_vgg16/inference_model.py b/tensorflow_scripts/ssd_vgg16/inference_model.py
+index 6ae00bcb..df5931e7 100644
+--- a/tensorflow_scripts/ssd_vgg16/inference_model.py
++++ b/tensorflow_scripts/ssd_vgg16/inference_model.py
+@@ -16,6 +16,7 @@ import ctypes
+ from datetime import datetime
+ import ngraph_bridge
+ #lib = ctypes.cdll.LoadLibrary('libngraph_device.so')
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ 
+ import collections
+@@ -129,6 +130,11 @@ class EvaluateModel(PrepareData):
+                                 intra_op_parallelism_threads=self.intra_op,
+                                 allow_soft_placement=True)
+ 
++        rewrite_options = rewriter_config_pb2.RewriterConfig(
++            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++            custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++        config.graph_options.rewrite_options.MergeFrom(rewrite_options)
++
+ 
+         if not self.eval_loop:
+             # Standard evaluation loop.

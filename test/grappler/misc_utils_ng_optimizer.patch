@@ -1,0 +1,24 @@
+diff --git a/tensorflow_scripts/nmt/nmt/utils/misc_utils.py b/tensorflow_scripts/nmt/nmt/utils/misc_utils.py
+index 63dc5a69..620c5e98 100644
+--- a/tensorflow_scripts/nmt/nmt/utils/misc_utils.py
++++ b/tensorflow_scripts/nmt/nmt/utils/misc_utils.py
+@@ -27,6 +27,7 @@ from distutils import version
+ 
+ import numpy as np
+ import tensorflow as tf
++from tensorflow.core.protobuf import rewriter_config_pb2
+ 
+ 
+ def check_tensorflow_version():
+@@ -147,6 +148,11 @@ def get_config_proto(log_device_placement=False, allow_soft_placement=True,
+   if num_inter_threads:
+     config_proto.inter_op_parallelism_threads = num_inter_threads
+ 
++  rewrite_options = rewriter_config_pb2.RewriterConfig(
++    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
++    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
++  config_proto.graph_options.rewrite_options.MergeFrom(rewrite_options)
++
+   return config_proto
+ 
+ 
