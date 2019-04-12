@@ -91,7 +91,7 @@ TEST(BackendManager, BackendAssignment) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
 
-  std::vector<string> skip_these_nodes = {};
+  std::set<string> skip_these_nodes = {};
 
   // Set backend 1
   string backend1 = "INTERPRETER";
@@ -136,7 +136,7 @@ TEST(BackendManager, BackendClustering) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
 
-  std::vector<string> skip_these_nodes = {};
+  std::set<string> skip_these_nodes = {};
 
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
 

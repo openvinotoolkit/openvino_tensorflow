@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,10 +62,9 @@ static Status NGraphPlacementRequested(Node* node, bool& placement_ok) {
 }
 
 static Status CheckIfOutputNode(const Node* node,
-                                const std::vector<string> skip_these_nodes,
+                                const std::set<string> skip_these_nodes,
                                 bool& skip_it) {
-  skip_it = std::find(skip_these_nodes.begin(), skip_these_nodes.end(),
-                      node->name()) != skip_these_nodes.end();
+  skip_it = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
   return Status::OK();
 }
 
@@ -138,7 +137,7 @@ static ConfirmationFunction SimpleConfirmationFunction() {
 // Main entry point for the marking pass.
 //
 Status MarkForClustering(Graph* graph,
-                         const std::vector<string> skip_these_nodes) {
+                         const std::set<string> skip_these_nodes) {
   //
   // A map of op types (e.g. "Add") to type constraint maps. For (fake)
   // example:
@@ -666,7 +665,7 @@ Status MarkForClustering(Graph* graph,
       bool skip_it = false;
       TF_RETURN_IF_ERROR(CheckIfOutputNode(node, skip_these_nodes, skip_it));
       if (skip_it) {
-        NGRAPH_VLOG(5) << "Found Output Node: " << node->name()
+        NGRAPH_VLOG(5) << "[NGTF-OPTIMIZER] Found Output Node: " << node->name()
                        << " - skip marking it for clustering";
         break;
       }

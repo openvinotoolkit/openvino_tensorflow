@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,10 @@ namespace ngraph_bridge {
 // Utility function to check if it is an output node
 // Skip capturing it, if yes.
 static bool IsOutputNode(const Node* node,
-                         const std::vector<string> skip_these_nodes) {
-  bool found = std::find(skip_these_nodes.begin(), skip_these_nodes.end(),
-                         node->name()) != skip_these_nodes.end();
+                         const std::set<string> skip_these_nodes) {
+  bool found = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
   if (found) {
-    NGRAPH_VLOG(5) << "Found Output Node: " << node->name()
+    NGRAPH_VLOG(5) << "[NGTF-OPTIMIZER] Found Output Node: " << node->name()
                    << " - skip capturing it";
   }
   return found;
@@ -44,8 +43,7 @@ static bool IsOutputNode(const Node* node,
 //
 // Main entry point for the variable-capture.
 //
-Status CaptureVariables(Graph* graph,
-                        const std::vector<string> skip_these_nodes) {
+Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
   if (config::IsEnabled() == false) {
     return Status::OK();
   }

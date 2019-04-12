@@ -22,7 +22,7 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status CaptureVariables(Graph* graph, std::vector<string> skip_these_nodes);
+Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes);
 
 }  // namespace ngraph_bridge
 

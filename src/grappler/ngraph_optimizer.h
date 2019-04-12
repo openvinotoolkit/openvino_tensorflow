@@ -22,6 +22,7 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 #include "tensorflow/core/graph/graph_def_builder.h"
+#include "tensorflow/core/graph/node_builder.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer.h"
 
 #include "ngraph_api.h"
@@ -54,6 +55,15 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
     return Status::OK();
   }
 
+  // This is a grappler pass to change a TF graph to nGraph enabled TF graph.
+  // It accepts TF nodes that can be processed by nGraph and encapsulates them
+  // into NGraphEncapsulateOp
+  // To honour fetch (result-bearing) nodes, this pass does one of 2 things
+  // (which make it different from the normal non-grappler optimization passes):
+  // 1. The grappler pass attaches IdentityN nodes to fetch nodes
+  // 2. In case it is not able to attach IdentityN (no outputs or outputs with
+  // ref types), it rejects that node for clustering, thus ensuring functional
+  // correctness
   Status Optimize(tensorflow::grappler::Cluster*,
                   const tensorflow::grappler::GrapplerItem&,
                   GraphDef*) override;
