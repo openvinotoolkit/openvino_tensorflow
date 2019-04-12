@@ -147,6 +147,7 @@ def setup_venv(venv_dir):
         "--no-deps",
         "keras_preprocessing==1.0.5",
         "--no-deps",
+        "yapf==0.26.0",
     ]
     command_executor(package_list)
 

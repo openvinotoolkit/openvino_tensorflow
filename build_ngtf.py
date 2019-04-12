@@ -291,10 +291,11 @@ def main():
 
     # Copy the TensorFlow Python code tree to artifacts directory so that they can
     # be used for running TensorFlow Python unit tests
-    command_executor([
-        'cp', '-r', build_dir_abs + '/tensorflow/tensorflow/python',
-        os.path.join(artifacts_location, "tensorflow")
-    ])
+    if not arguments.use_prebuilt_tensorflow:
+        command_executor([
+            'cp', '-r', build_dir_abs + '/tensorflow/tensorflow/python',
+            os.path.join(artifacts_location, "tensorflow")
+        ])
 
     # Run a quick test
     install_ngraph_tf(venv_dir, os.path.join(artifacts_location, ng_tf_whl))

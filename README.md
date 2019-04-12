@@ -57,6 +57,8 @@ TensorFlow model scripts and running them the usual way:
 
         import ngraph_bridge
 
+Examples on how to use ngraph_bridge is here : https://github.com/NervanaSystems/ngraph-tf/tree/master/examples
+
 Note: The version of the ngraph-tensorflow-bridge is not going to be exactly the same as when you build from source. This is due to delay in the source release and publishing the corresponding Python wheel. 
 
 ### Option 2: Build nGraph bridge from source
@@ -104,7 +106,7 @@ The installation prerequisites are the same as described in the TensorFlow
 This is due to an issue in TensorFlow tracked here:
         https://github.com/tensorflow/tensorflow/issues/17273
 
-Once the build finishes, a new virtualenv directory is created in the `build/venv-tf-py3`. The build artifacts i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl` is created in the `build/artifacts` directory. 
+Once the build finishes, a new virtualenv directory is created in the `build_cmake/venv-tf-py3`. The build artifacts i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl` is created in the `build_cmake/artifacts` directory. 
 
 3. Test the installation by running the following command:
       
@@ -114,7 +116,7 @@ This command will run all the C++ and python unit tests from the ngraph-tf sourc
 
 4. To use the ngraph-tensorflow bridge, activate this virtual environment to start using nGraph with TensorFlow. 
 
-        source build/venv-tf-py3/bin/activate
+        source build_cmake/venv-tf-py3/bin/activate
 
 Once the build and installation steps are complete, you can start using TensorFlow 
 with nGraph backends. 
