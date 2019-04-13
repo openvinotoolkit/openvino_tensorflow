@@ -71,10 +71,11 @@ def build_ngraph(build_dir, src_location, cmake_flags, verbose):
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    cmd = ["make", "-j" + num_cores, "install"]
+    cmd = ["make", "-j" + num_cores]
     if verbose:
         cmd.extend(['VERBOSE=1'])
-
+    command_executor(cmd, verbose=True)
+    cmd = ["make", "install"]
     command_executor(cmd, verbose=True)
 
     os.chdir(pwd)

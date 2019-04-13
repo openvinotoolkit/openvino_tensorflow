@@ -20,6 +20,10 @@
 #include <iostream>
 #include <sstream>
 
+#if defined NGRAPH_DISTRIBUTED
+#include "ngraph/distributed.hpp"
+#endif
+
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/attr_value_util.h"
 #include "tensorflow/core/framework/graph.pb.h"
