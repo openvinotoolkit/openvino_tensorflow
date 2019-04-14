@@ -1,4 +1,3 @@
-isteps:
   - command: |
       rm -rf /localdisk/buildkite/artifacts
       virtualenv -p /usr/bin/python3 /localdisk/buildkite/artifacts/venv 
