@@ -39,7 +39,7 @@ static bool NGraphPlacementRequested(const Node* node) { return true; }
 //
 // Main entry point for the variable-capture.
 //
-Status CaptureVariables(Graph* graph, std::vector<string> skip_these_nodes) {
+Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes) {
   const static std::map<
       const string,
       const pair<string,

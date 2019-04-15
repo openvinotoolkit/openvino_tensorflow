@@ -169,7 +169,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     }
 
     // Do variable capture then, if requested, dump the graphs.
-    std::vector<string> skip_these_nodes = {};
+    std::set<string> skip_these_nodes = {};
     TF_RETURN_IF_ERROR(
         CaptureVariables(options.graph->get(), skip_these_nodes));
     if (DumpCapturedGraphs()) {
@@ -245,7 +245,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     // 1. Mark for clustering then, if requested, dump the graphs.
-    std::vector<string> skip_these_nodes = {};
+    std::set<string> skip_these_nodes = {};
     TF_RETURN_IF_ERROR(
         MarkForClustering(options.graph->get(), skip_these_nodes));
     if (DumpMarkedGraphs()) {
