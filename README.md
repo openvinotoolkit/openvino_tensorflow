@@ -1,7 +1,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph-tf/blob/master/LICENSE) 
-[![Build Status](https://badge.buildkite.com/f20db2a4be0e82e493faa08de85953d45b313b3be12abf4acf.svg?branch=master)](https://buildkite.com/ngraph/ngtf-master-cpu)
 
+[![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
 
 # Intel(R) nGraph(TM) Compiler and runtime for TensorFlow*
 
