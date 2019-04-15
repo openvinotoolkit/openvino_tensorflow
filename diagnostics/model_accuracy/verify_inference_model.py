@@ -44,19 +44,19 @@ def run_inference(model_name, models_dir):
     '[{"model_type" : "Image Recognition", "model_name" : "Inception_v4", \
         "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
                 python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/site/home/skantama/validation/models/research/checkpoints/inception_v4.ckpt \
+                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/inception4_slim/inception_v4.ckpt \
                 --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
                 --dataset_split_name=validation --model_name=inception_v4"},\
      {"model_type" : "Image Recognition", "model_name" : "MobileNet_v1", \
         "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
                 python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/site/home/skantama/validation/models/research/checkpoints/mobilenet_v1_1.0_224.ckpt \
+                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/mobilenet_v1/mobilenet_v1_1.0_224.ckpt \
                 --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
                 --dataset_split_name=validation --model_name=mobilenet_v1"}, \
      {"model_type" : "Image Recognition", "model_name" : "ResNet50_v1", \
         "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
                 python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/site/home/skantama/validation/models/research/checkpoints/resnet_v1_50.ckpt \
+                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/resnet50_v1_slim/resnet_v1_50.ckpt \
                 --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
                 --dataset_split_name=validation --model_name=resnet_v1_50 --labels_offset=1"}, \
      {"model_type" : "Object Detection", "model_name" : "SSD-MobileNet_v1", \
@@ -126,14 +126,17 @@ def check_accuracy(model, p):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Accuracy verification for TF models using ngraph.')
+        description='Accuracy verification for TF models using ngraph')
 
     parser.add_argument(
-        '--model_name', help='Model name to run inference', required=True)
+        '--model_name',
+        help=
+        'Model name to run inference. Availble models are Inception_v4, MobileNet_v1, ResNet50_v1',
+        required=True)
     parser.add_argument(
         '--models_dir',
-        help='Source of the model repository location on disk. \
-        If not specified, the local repository will be used. \
+        help='Source of the model repository location on disk \
+        If not specified, the local repository will be used \
         Example:ngraph-tf/diagnostics/model_accuracy/models')
     cwd = os.getcwd()
 
@@ -153,6 +156,4 @@ if __name__ == '__main__':
         model_name, p = run_inference(args.model_name, models_dir)
         check_accuracy(model_name, p)
     except:
-        print(
-            "Please pass a valid Model name. Availble models are Inception_v4, MobileNet_v1, ResNet50_v1"
-        )
+        print("Model accuracy verification failed.")
