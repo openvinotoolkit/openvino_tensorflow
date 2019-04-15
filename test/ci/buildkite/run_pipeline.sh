@@ -4,6 +4,8 @@ set -euo pipefail
 
 echo "BUILDKITE_PULL_REQUEST_REPO: " $BUILDKITE_PULL_REQUEST_REPO
 echo "BUILDKITE_REPO: $BUILDKITE_REPO"
+echo "PIPELINE OS: $PIPELINE_OS"
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ $BUILDKITE_PULL_REQUEST = 'false' ]]; then
