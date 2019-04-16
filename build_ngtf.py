@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-#  Copyright 2018 Intel Corporation
+#  Copyright 2018-2019 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "v0.18.0-rc.2"
+    ngraph_version = "v0.18.0"
     tf_version = "v1.13.1"
 
     # Command line parser options
