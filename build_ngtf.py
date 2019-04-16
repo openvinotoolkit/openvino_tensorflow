@@ -300,6 +300,12 @@ def main():
     # Run a quick test
     install_ngraph_tf(venv_dir, os.path.join(artifacts_location, ng_tf_whl))
 
+    if arguments.use_grappler_optimizer:
+        import tensorflow as tf
+        import ngraph_bridge
+        if not ngraph_bridge.is_grappler_enabled():
+            raise Exception("Build failed: 'use_grappler_optimizer' specified but not used")
+
     print('\033[1;32mBuild successful\033[0m')
     os.chdir(pwd)
 

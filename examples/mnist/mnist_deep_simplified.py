@@ -131,11 +131,13 @@ def train_mnist_cnn(FLAGS):
         log_device_placement=False,
         inter_op_parallelism_threads=1)
     # Enable the custom optimizer using the rewriter config options
-    if (FLAGS.use_grappler):
-        rewrite_options = rewriter_config_pb2.RewriterConfig(custom_optimizers=[
-            rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
-                name="ngraph-optimizer")
-        ])
+    if ngraph_bridge.is_grappler_enabled():
+        rewrite_options = rewriter_config_pb2.RewriterConfig(
+            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
+            custom_optimizers=[
+                rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
+                    name="ngraph-optimizer")
+            ])
         config.MergeFrom(
             tf.ConfigProto(
                 graph_options=tf.GraphOptions(rewrite_options=rewrite_options)))
@@ -259,12 +261,6 @@ if __name__ == '__main__':
         type=str,
         default='./mnist_trained/',
         help='enter model dir')
-
-    parser.add_argument(
-        '--use_grappler',
-        type=bool,
-        default=False,
-        help='Use grappler - NgraphOptimizer')
 
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

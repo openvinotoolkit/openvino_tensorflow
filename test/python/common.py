@@ -19,6 +19,7 @@ import platform
 import random
 
 import tensorflow as tf
+from tensorflow.core.protobuf import rewriter_config_pb2
 
 import ngraph_bridge
 
@@ -32,6 +33,18 @@ LIBNGRAPH_BRIDGE = 'libngraph_bridge.' + _ext
 class NgraphTest(object):
 
     def with_ngraph(self, l, config=tf.ConfigProto()):
+        if ngraph_bridge.is_grappler_enabled():
+            rewrite_options = rewriter_config_pb2.RewriterConfig(
+                meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.
+                ONE,
+                min_graph_nodes=-1,
+                custom_optimizers=[
+                    rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
+                        name="ngraph-optimizer")
+                ])
+            config = tf.ConfigProto(
+                graph_options=tf.GraphOptions(rewrite_options=rewrite_options))
+
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 

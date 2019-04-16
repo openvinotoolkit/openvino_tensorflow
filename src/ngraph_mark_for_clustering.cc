@@ -665,7 +665,7 @@ Status MarkForClustering(Graph* graph,
       bool skip_it = false;
       TF_RETURN_IF_ERROR(CheckIfOutputNode(node, skip_these_nodes, skip_it));
       if (skip_it) {
-        NGRAPH_VLOG(5) << "[NGTF-OPTIMIZER] Found Output Node: " << node->name()
+        NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Found Output Node: " << node->name()
                        << " - skip marking it for clustering";
         break;
       }

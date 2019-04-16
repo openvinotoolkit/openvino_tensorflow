@@ -25,6 +25,7 @@
 #include "tensorflow/core/graph/node_builder.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer.h"
 
+#include "ngraph_add_identityn.h"
 #include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_capture_variables.h"

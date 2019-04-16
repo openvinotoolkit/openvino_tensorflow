@@ -115,6 +115,7 @@ ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
 ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
 ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
+ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
 
 try:
     importlib.import_module('plaidml.settings')
@@ -184,9 +185,13 @@ def stop_logging_placement():
 def is_logging_placement():
     return ngraph_bridge_lib.ngraph_is_logging_placement()
 
+def is_grappler_enabled():
+    return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+
 __version__ = \
   "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
   "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
   "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
-  "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag())
+  "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
+  "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled())
 
