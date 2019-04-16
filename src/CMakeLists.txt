@@ -58,9 +58,6 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(REMOVE_ITEM SRC ngraph_capture_variables.cc)
     list(APPEND SRC enable_variable_ops/ngraph_capture_variables.cc)
 
-    list(REMOVE_ITEM SRC ngraph_encapsulate_op.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_encapsulate_op.cc)
-
     list(REMOVE_ITEM SRC ngraph_rewrite_for_tracking.cc)
     list(APPEND SRC enable_variable_ops/ngraph_rewrite_for_tracking.cc)
 
@@ -80,7 +77,8 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC enable_variable_ops/ngraph_replace_op_utilities.cc)
     list(APPEND SRC enable_variable_ops/ngraph_replace_variable_modifiers.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_modifiers.cc)
-
+    
+    add_definitions(-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
 endif()
 
 
