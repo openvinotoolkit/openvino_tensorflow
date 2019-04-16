@@ -849,8 +849,8 @@ class NGraphEncapsulateOp : public OpKernel {
   // A single instance of freshness_tracker is used across all
   // nGraphEncapsulateOp and nGraphVariable op
   NGraphFreshnessTracker* m_freshness_tracker;
-  int m_ngraph_cluster;
-  int m_graph_id;
+  int m_ngraph_cluster{-1};
+  int m_graph_id{-1};
   std::vector<bool> m_input_is_static;
   std::mutex m_compute_lock;
   string m_op_backend_name;
