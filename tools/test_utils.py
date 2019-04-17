@@ -335,8 +335,7 @@ def run_resnet50_from_artifacts(artifact_dir, batch_size, iterations):
     import ngraph_bridge
     if ngraph_bridge.is_grappler_enabled():
         # Apply the patch
-        
-
+        raise Exception('Cannot use this test with Grappler enabled')
 
     # Setup the env flags
     import psutil
