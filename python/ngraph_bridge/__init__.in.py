@@ -39,7 +39,8 @@ __all__ = [
     'enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
     'set_backend', 'is_supported_backend', 'get_currently_set_backend_name',
     'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__'
+    'is_logging_placement', '__version__', 'cxx11_abi_flag'
+    'is_grappler_enabled', 'are_variables_enabled'
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -116,6 +117,7 @@ ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
 ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
 ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
 ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
+ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
 
 try:
     importlib.import_module('plaidml.settings')
@@ -185,13 +187,22 @@ def stop_logging_placement():
 def is_logging_placement():
     return ngraph_bridge_lib.ngraph_is_logging_placement()
 
+def cxx11_abi_flag():
+    return ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()
+
 def is_grappler_enabled():
     return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+
+def are_variables_enabled():
+    return ngraph_bridge_lib.ngraph_tf_are_variables_enabled()
+
 
 __version__ = \
   "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
   "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
   "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
   "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
-  "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled())
+  "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
+  "nGraph bridge built with Variables and Optimizers Enablement: " \
+      + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())
 
