@@ -330,6 +330,14 @@ def run_resnet50_from_artifacts(artifact_dir, batch_size, iterations):
     with open('convnet_builder.py', 'a') as outfile:
         call(['echo', 'import ngraph_bridge'], stdout=outfile)
 
+    # Check to see if we need to patch the repo for Grappler
+    import tensorflow as tf
+    import ngraph_bridge
+    if ngraph_bridge.is_grappler_enabled():
+        # Apply the patch
+        
+
+
     # Setup the env flags
     import psutil
     num_cores = int(psutil.cpu_count(logical=False))
