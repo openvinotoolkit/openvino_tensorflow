@@ -477,6 +477,8 @@ class NGraphEncapsulateOp : public OpKernel {
         input_caches = m_ng_exec_input_cache_map[ng_exec];
     input_caches.resize(input_shapes.size());
 
+    std::vector<std::unique_ptr<ngraph::Event>> input_copy_events;
+
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     bool log_copies = false;
     OP_REQUIRES_OK(ctx, IsCopyLogEnabled(m_graph_id, log_copies));
@@ -529,9 +531,20 @@ class NGraphEncapsulateOp : public OpKernel {
           number_of_copies++;
           copy_log_str << " COPY_INP_VAL[" << i << "]";
 #endif
+          size_t copy_size =
+              current_ng_tensor->get_element_count() * ng_element_type.size();
+          string event_name =
+              "Input_" + to_string(i) + "_" + to_string(copy_size);
+          std::unique_ptr<ngraph::Event> event_copy_input_next(
+              new ngraph::Event(event_name, name(), ""));
+
           current_ng_tensor->write(
               current_src_ptr, 0,
               current_ng_tensor->get_element_count() * ng_element_type.size());
+
+          event_copy_input_next->Stop();
+          input_copy_events.push_back(std::move(event_copy_input_next));
+
         } catch (const std::exception& exp) {
           OP_REQUIRES(
               ctx, false,
@@ -553,6 +566,10 @@ class NGraphEncapsulateOp : public OpKernel {
                       "for cluster "
                    << m_ngraph_cluster;
 
+    // Now write the events back
+    for (auto& next : input_copy_events) {
+      ngraph::Event::write_trace(*next.get());
+    }
     event_alloc_input.Stop();
 
     // Allocate tensors for the output results.
@@ -606,7 +623,15 @@ class NGraphEncapsulateOp : public OpKernel {
       ng_outputs.push_back(current_ng_tensor);
     }
 
+    event_alloc_output.Stop();
+    NGRAPH_VLOG(4)
+        << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
+        << m_ngraph_cluster;
+
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+    NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute getting input variables "
+                      "from resource manager "
+                   << m_ngraph_cluster;
     ngraph::Event event_input_check_in_catalog(
         "Get Variable Inputs from Resource Manager", name(), "");
 
@@ -652,12 +677,7 @@ class NGraphEncapsulateOp : public OpKernel {
     ngraph::Event::write_trace(event_input_check_in_catalog);
 #endif
 
-    NGRAPH_VLOG(4)
-        << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
-        << m_ngraph_cluster;
-
     int time_create_or_lookup_tensors = create_or_lookup_tensors.ElapsedInMS();
-    event_alloc_output.Stop();
 
     // Execute the nGraph function.
     ngraph::Event event_execute_function("Execute nGraph", name(), "");
@@ -713,13 +733,13 @@ class NGraphEncapsulateOp : public OpKernel {
     Timer copy_output_tensors_to_host;
 
     try {
+      size_t output_tensor_count = output_caches.size();
+      std::vector<std::unique_ptr<ngraph::Event>> output_copy_events;
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
         m_number_outputs = output_caches.size();
       }
-      size_t output_tensor_count = output_caches.size();
-      std::vector<std::unique_ptr<ngraph::Event>> events;
       for (size_t i = 0; i < output_tensor_count; ++i) {
         string key = NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
         bool ref_exists = NGraphCatalog::ExistsInEncapOutputTensorMap(key);
@@ -749,13 +769,11 @@ class NGraphEncapsulateOp : public OpKernel {
           dst_tv->read(dst_ptr, 0,
                        dst_tv->get_element_count() * ng_element_type.size());
           event_copy_output_next->Stop();
-          events.push_back(std::move(event_copy_output_next));
+          output_copy_events.push_back(std::move(event_copy_output_next));
         }
       }
-#endif
+#else
       if (m_op_backend_name != "CPU") {
-        size_t output_tensor_count = output_caches.size();
-        std::vector<std::unique_ptr<ngraph::Event>> events;
         for (size_t i = 0; i < output_tensor_count; ++i) {
           void* dst_ptr;
           std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
@@ -770,13 +788,13 @@ class NGraphEncapsulateOp : public OpKernel {
           dst_ng_tensor->read(dst_ptr, 0, dst_ng_tensor->get_element_count() *
                                               ng_element_type.size());
           event_copy_output_next->Stop();
-          events.push_back(std::move(event_copy_output_next));
+          output_copy_events.push_back(std::move(event_copy_output_next));
         }
-
-        // Now write the events back
-        for (auto& next : events) {
-          ngraph::Event::write_trace(*next.get());
-        }
+      }
+#endif
+      // Now write the events back
+      for (auto& next : output_copy_events) {
+        ngraph::Event::write_trace(*next.get());
       }
     } catch (const std::exception& exp) {
       OP_REQUIRES(
