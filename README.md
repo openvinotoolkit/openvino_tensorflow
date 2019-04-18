@@ -1,7 +1,7 @@
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph-tf/blob/master/LICENSE) 
-
-[![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
+<p align="center">
+  <img src="images/ngraph-logo.png">
+</p>
 
 # Intel(R) nGraph(TM) Compiler and runtime for TensorFlow*
 
@@ -11,6 +11,9 @@ inference workloads. The nGraph Library and runtime suite can also be used to
 customize and deploy Deep Learning inference models that will "just work" with 
 a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the 
 [Intel(R) Nervana(TM) NNP](https://itpeernetwork.intel.com/inteldcisummit-artificial-intelligence/).
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph-tf/blob/master/LICENSE) 
+[![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
 
 *   [Build using Linux](#linux-instructions)
 *   [Build using OS X](#using-os-x)
