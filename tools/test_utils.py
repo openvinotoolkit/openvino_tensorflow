@@ -124,7 +124,7 @@ def run_ngtf_pytests(venv_dir, build_dir):
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
-        "python", "-m", "pytest", "-s", ('--junitxml=%s/xunit_pytest.xml' % build_dir)
+        "python", "-m", "pytest", ('--junitxml=%s/xunit_pytest.xml' % build_dir)
     ],
                      verbose=True)
 
