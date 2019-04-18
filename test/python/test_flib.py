@@ -44,7 +44,7 @@ def get_tensor(graph, tname):
 class TestFloorOperations(NgraphTest):
 
     def test_flib_1(self):
-        graph = import_pbtxt('../../../test/python/flib_graph_1.pbtxt')
+        graph = import_pbtxt('flib_graph_1.pbtxt')
 
         x = get_tensor(graph, "Placeholder:0")
         y = get_tensor(graph, "Placeholder_1:0")
@@ -66,7 +66,7 @@ class TestFloorOperations(NgraphTest):
 
     @pytest.mark.skip(reason="Not passing through grappler")
     def test_flib_2(self):
-        graph = import_pbtxt('../../../test/python/flib_graph_2.pbtxt')
+        graph = import_pbtxt('flib_graph_2.pbtxt')
 
         x = get_tensor(graph, "Variable_2/peek/_2:0")
         y = get_tensor(graph, "Variable_1/peek/_3:0")
