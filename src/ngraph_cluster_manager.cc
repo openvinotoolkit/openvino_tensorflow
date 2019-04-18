@@ -34,7 +34,7 @@ int NGraphClusterManager::NewCluster() {
 
 GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
-  return s_cluster_graphs[idx];
+  return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
 }
 
 }  // namespace ngraph_bridge

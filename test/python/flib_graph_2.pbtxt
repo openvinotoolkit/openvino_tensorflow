@@ -1,0 +1,478 @@
+node {
+  name: "Variable_2/peek/_2"
+  op: "NGraphVariable"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_DOUBLE
+    }
+  }
+  attr {
+    key: "just_looking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "Variable_2"
+    }
+  }
+}
+node {
+  name: "Variable_1/peek/_3"
+  op: "NGraphVariable"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_DOUBLE
+    }
+  }
+  attr {
+    key: "just_looking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "Variable_1"
+    }
+  }
+}
+node {
+  name: "Variable/peek/_4"
+  op: "NGraphVariable"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_DOUBLE
+    }
+  }
+  attr {
+    key: "just_looking"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "Variable"
+    }
+  }
+}
+node {
+  name: "ngraph_cluster_1"
+  op: "NGraphEncapsulate"
+  input: "Variable_2/peek/_2"
+  input: "Variable_1/peek/_3"
+  input: "Variable/peek/_4"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+        type: DT_DOUBLE
+        type: DT_DOUBLE
+        type: DT_DOUBLE
+      }
+    }
+  }
+  attr {
+    key: "Tresults"
+    value {
+      list {
+        type: DT_DOUBLE
+        type: DT_DOUBLE
+      }
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "ngraph_cluster"
+    value {
+      i: 1
+    }
+  }
+  attr {
+    key: "ngraph_graph_id"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "add_1"
+  op: "IdentityN"
+  input: "ngraph_cluster_1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_DOUBLE
+      }
+    }
+  }
+}
+node {
+  name: "Sigmoid"
+  op: "IdentityN"
+  input: "ngraph_cluster_1:1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_DOUBLE
+      }
+    }
+  }
+}
+library {
+  function {
+    signature {
+      name: "Enc_1_native_segment"
+      input_arg {
+        name: "ngraph_input_0"
+        type: DT_DOUBLE
+      }
+      input_arg {
+        name: "ngraph_input_1"
+        type: DT_DOUBLE
+      }
+      input_arg {
+        name: "ngraph_input_2"
+        type: DT_DOUBLE
+      }
+      output_arg {
+        name: "ngraph_output_0"
+        type: DT_DOUBLE
+      }
+      output_arg {
+        name: "ngraph_output_1"
+        type: DT_DOUBLE
+      }
+    }
+    node_def {
+      name: "Variable_2/read"
+      op: "Identity"
+      input: "ngraph_input_0"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_class"
+        value {
+          list {
+            s: "loc:@Variable_2"
+          }
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Variable_2/read"
+      }
+    }
+    node_def {
+      name: "Variable_1/read"
+      op: "Identity"
+      input: "ngraph_input_1"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_class"
+        value {
+          list {
+            s: "loc:@Variable_1"
+          }
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Variable_1/read"
+      }
+    }
+    node_def {
+      name: "Variable/read"
+      op: "Identity"
+      input: "ngraph_input_2"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_class"
+        value {
+          list {
+            s: "loc:@Variable"
+          }
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Variable/read"
+      }
+    }
+    node_def {
+      name: "add"
+      op: "Add"
+      input: "Variable/read:output:0"
+      input: "Variable_1/read:output:0"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_grappler:ArithmeticOptimizer:MinimizeBroadcasts"
+        value {
+          b: true
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "add"
+      }
+    }
+    node_def {
+      name: "add_1_ngraph/_0"
+      op: "Add"
+      input: "add:z:0"
+      input: "Variable_2/read:output:0"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_grappler:ArithmeticOptimizer:MinimizeBroadcasts"
+        value {
+          b: true
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "add_1_ngraph/_0"
+      }
+    }
+    node_def {
+      name: "Sigmoid_ngraph/_1"
+      op: "Sigmoid"
+      input: "add_1_ngraph/_0:z:0"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_DOUBLE
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Sigmoid_ngraph/_1"
+      }
+    }
+    ret {
+      key: "ngraph_output_0"
+      value: "add_1_ngraph/_0:z:0"
+    }
+    ret {
+      key: "ngraph_output_1"
+      value: "Sigmoid_ngraph/_1:y:0"
+    }
+  }
+  function {
+    signature {
+      name: "Enc_0_native_segment"
+    }
+  }
+}
+versions {
+  producer: 27
+}

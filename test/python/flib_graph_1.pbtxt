@@ -1,0 +1,284 @@
+node {
+  name: "Placeholder_2"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+}
+node {
+  name: "Placeholder_1"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+}
+node {
+  name: "Placeholder"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 3
+        }
+      }
+    }
+  }
+}
+node {
+  name: "ngraph_cluster_0"
+  op: "NGraphEncapsulate"
+  input: "Placeholder"
+  input: "Placeholder_1"
+  input: "Placeholder_2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_FLOAT
+        type: DT_FLOAT
+      }
+    }
+  }
+  attr {
+    key: "Tresults"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_FLOAT
+      }
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "ngraph_cluster"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "ngraph_graph_id"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "add_1"
+  op: "IdentityN"
+  input: "ngraph_cluster_0"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_FLOAT
+      }
+    }
+  }
+}
+node {
+  name: "Sigmoid"
+  op: "IdentityN"
+  input: "ngraph_cluster_0:1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_FLOAT
+      }
+    }
+  }
+}
+library {
+  function {
+    signature {
+      name: "Enc_0_native_segment"
+      input_arg {
+        name: "ngraph_input_0"
+        type: DT_FLOAT
+      }
+      input_arg {
+        name: "ngraph_input_1"
+        type: DT_FLOAT
+      }
+      input_arg {
+        name: "ngraph_input_2"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "ngraph_output_0"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "ngraph_output_1"
+        type: DT_FLOAT
+      }
+    }
+    node_def {
+      name: "add"
+      op: "Add"
+      input: "ngraph_input_0"
+      input: "ngraph_input_1"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "add"
+      }
+    }
+    node_def {
+      name: "add_1_ngraph/_0"
+      op: "Add"
+      input: "add:z:0"
+      input: "ngraph_input_2"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "add_1_ngraph/_0"
+      }
+    }
+    node_def {
+      name: "Sigmoid_ngraph/_1"
+      op: "Sigmoid"
+      input: "add_1_ngraph/_0:z:0"
+      device: "/job:localhost/replica:0/task:0/device:CPU:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "_ngraph_backend"
+        value {
+          s: "CPU"
+        }
+      }
+      attr {
+        key: "_ngraph_cluster"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "_ngraph_marked_for_clustering"
+        value {
+          b: true
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Sigmoid_ngraph/_1"
+      }
+    }
+    ret {
+      key: "ngraph_output_0"
+      value: "add_1_ngraph/_0:z:0"
+    }
+    ret {
+      key: "ngraph_output_1"
+      value: "Sigmoid_ngraph/_1:y:0"
+    }
+  }
+}
+versions {
+  producer: 27
+}
