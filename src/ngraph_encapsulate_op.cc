@@ -101,7 +101,10 @@ class NGraphEncapsulateOp : public OpKernel {
       const FunctionDef* fdef =
           flib.Find("Enc_" + to_string(m_ngraph_cluster) + "_native_segment");
       if (fdef == nullptr) {
-        // TODO: error
+        OP_REQUIRES_OK(
+            ctx, errors::Internal(
+                     "Did not find graphdef for encapsulate ", m_ngraph_cluster,
+                     " in NGraphClusterManager or function library"));
       }
       // TODO: how to convert from functiondef to graphdef. Anything easier?
       FunctionBody* fnbody;
