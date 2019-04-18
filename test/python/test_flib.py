@@ -44,6 +44,9 @@ def get_tensor(graph, tname):
 class TestFloorOperations(NgraphTest):
 
     def test_flib_1(self):
+        import os
+        cwd = os.getcwd()
+        print(cwd)
         graph = import_pbtxt('flib_graph_1.pbtxt')
 
         x = get_tensor(graph, "Placeholder:0")
