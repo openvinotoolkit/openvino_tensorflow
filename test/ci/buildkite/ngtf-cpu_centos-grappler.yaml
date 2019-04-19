@@ -69,6 +69,10 @@
     timeout_in_minutes: 30
     agents:
     - "queue=cpu-centos"
+  
+  - wait
+  - command: |
+      rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
 
   # - command: |
   #     source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
