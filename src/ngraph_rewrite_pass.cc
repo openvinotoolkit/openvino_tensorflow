@@ -123,8 +123,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // we will not do anything; all subsequent
     // passes become a no-op.
     if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(options.graph->get())) {
+        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
       return Status::OK();
     }
 
@@ -183,8 +182,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // we will not do anything; all subsequent
     // passes become a no-op.
     if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(options.graph->get())) {
+        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
       return Status::OK();
     }
 
