@@ -378,7 +378,12 @@ void AllreduceOpControlOrder(
       }
     }
   }
-};
+}
+
+bool IsProcessedByNgraphPass(Graph* g) {
+  // TODO:
+  return false;
+}
 
 }  // namespace ngraph_bridge
 
