@@ -48,45 +48,50 @@ class TestFloorOperations(NgraphTest):
         cwd = os.getcwd()
         print(cwd)
         graph = import_pbtxt('flib_graph_1.pbtxt')
+        with graph.as_default() as g:
 
-        x = get_tensor(graph, "Placeholder:0")
-        y = get_tensor(graph, "Placeholder_1:0")
-        z = get_tensor(graph, "Placeholder_2:0")
+            x = get_tensor(g, "Placeholder:0")
+            y = get_tensor(g, "Placeholder_1:0")
+            z = get_tensor(g, "Placeholder_2:0")
 
-        a = get_tensor(graph, "add_1:0")
-        b = get_tensor(graph, "Sigmoid:0")
+            a = get_tensor(g, "add_1:0")
+            b = get_tensor(g, "Sigmoid:0")
 
-        sess_fn = lambda sess: sess.run(
-            [a, b], feed_dict={i: np.full((2, 3), 1.0) for i in [x, y, z]})
+            sess_fn = lambda sess: sess.run(
+                [a, b], feed_dict={i: np.full((2, 3), 1.0) for i in [x, y, z]})
 
-        res1 = self.with_ngraph(sess_fn, graph=graph)
-        res2 = self.without_ngraph(sess_fn, graph=graph)
-        exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
-        # Note both run on Host (because NgraphEncapsulate can only run on host)
-        assert np.isclose(res1, res2).all()
-        # Comparing with expected value
-        assert np.isclose(res1, exp).all()
+            res1 = self.with_ngraph(sess_fn)
+            res2 = self.without_ngraph(sess_fn)
+            exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
+            # Note both run on Host (because NgraphEncapsulate can only run on host)
+            assert np.isclose(res1, res2).all()
+            # Comparing with expected value
+            assert np.isclose(res1, exp).all()
 
     @pytest.mark.skip(reason="Not passing through grappler")
     def test_flib_2(self):
         graph = import_pbtxt('flib_graph_2.pbtxt')
 
-        x = get_tensor(graph, "Variable_2/peek/_2:0")
-        y = get_tensor(graph, "Variable_1/peek/_3:0")
-        z = get_tensor(graph, "Variable/peek/_4:0")
+        graph = import_pbtxt('flib_graph_1.pbtxt')
+        with graph.as_default() as g:
 
-        a = get_tensor(graph, "add_1:0")
-        b = get_tensor(graph, "Sigmoid:0")
+            x = get_tensor(g, "Variable_2/peek/_2:0")
+            y = get_tensor(g, "Variable_1/peek/_3:0")
+            z = get_tensor(g, "Variable/peek/_4:0")
 
-        def sess_fn(sess):
-            #sess.run(tf.global_variables_initializer())
-            return sess.run(
-                [a, b], feed_dict={i: np.full((2, 3), 1.0) for i in [x, y, z]})
+            a = get_tensor(g, "add_1:0")
+            b = get_tensor(g, "Sigmoid:0")
 
-        res1 = self.with_ngraph(sess_fn, graph=graph)
-        res2 = self.without_ngraph(sess_fn, graph=graph)
-        exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
-        # Note both run on Host (because NgraphEncapsulate can only run on host)
-        assert np.isclose(res1, res2).all()
-        # Comparing with expected value
-        assert np.isclose(res1, exp).all()  #fails
+            def sess_fn(sess):
+                #sess.run(tf.global_variables_initializer())
+                return sess.run(
+                    [a, b],
+                    feed_dict={i: np.full((2, 3), 1.0) for i in [x, y, z]})
+
+            res1 = self.with_ngraph(sess_fn)
+            res2 = self.without_ngraph(sess_fn)
+            exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
+            # Note both run on Host (because NgraphEncapsulate can only run on host)
+            assert np.isclose(res1, res2).all()
+            # Comparing with expected value
+            assert np.isclose(res1, exp).all()  #fails
