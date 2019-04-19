@@ -79,9 +79,9 @@
   #   agents:
   #   - "queue=cpu-centos"
 
-  - wait 
+  # - wait 
 
-  - command: |
-    rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID 
+  # - command: |
+  #   rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID 
   
 
