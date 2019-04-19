@@ -15,7 +15,8 @@
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
-
+    agents:
+    - "queue=cpu-centos"
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
@@ -79,6 +80,8 @@
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
+    agents:
+    - "queue=cpu-centos"
 
   # - command: |
   #     source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
