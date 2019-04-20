@@ -87,7 +87,7 @@ def run_inference(model_name, models_dir):
             return model_name, p
 
 
-def check_accuracy(model, p):
+def check_accuracy(model, p, tolerance=0.001):
     #check if the accuracy of the model inference matches with the published numbers
     #Accuracy values picked up from here https://github.com/tensorflow/models/tree/master/research/slim
     accuracy = \
@@ -100,28 +100,29 @@ def check_accuracy(model, p):
     for line in p.splitlines():
         print(line.decode())
         if ('eval/Accuracy'.encode() in line):
-            top1_accuracy = re.search("\[(.*?)\]", line.decode()).group(1)
+            accuracy = re.split("eval/Accuracy", line.decode())[1]
+            top1_accuracy = re.search(r'\[(.*)\]', accuracy).group(1)
         #for now we just validate top 1 accuracy, but calculating top5 anyway.
         if ('eval/Recall_5'.encode() in line):
-            top5_accuracy = float(
-                re.search("\[(.*?)\]", line.decode()).group(1))
+            accuracy = re.split("eval/Recall_5", line.decode())[1]
+            top5_accuracy = float(re.search("\[(.*?)\]", accuracy).group(1))
 
     for i, d in enumerate(data):
         if (model in data[i]["model_name"]):
             # Tolerance check
-            diff = abs(float(top1_accuracy) - float(data[i]["accuracy"]))
+            diff = float(data[i]["accuracy"]) - float(top1_accuracy)
             print('\033[1m' + '\nModel Accuracy Verification' + '\033[0m')
-            if (diff <= 0.001):
-                print('\033[92m' + 'PASS' + '\033[0m' +
-                      " Functional accuracy " + top1_accuracy +
-                      " is as expected for " + data[i]["model_name"])
-                return True
-            else:
+            if (diff > tolerance):
                 print('\033[91m' + 'FAIL' + '\033[0m' +
                       " Functional accuracy " + top1_accuracy +
                       " is not as expected for " + data[i]["model_name"] +
                       "\nExpected accuracy = " + data[i]["accuracy"])
                 return False
+            else:
+                print('\033[92m' + 'PASS' + '\033[0m' +
+                      " Functional accuracy " + top1_accuracy +
+                      " is as expected for " + data[i]["model_name"])
+                return True
 
 
 if __name__ == '__main__':
@@ -155,5 +156,5 @@ if __name__ == '__main__':
     try:
         model_name, p = run_inference(args.model_name, models_dir)
         check_accuracy(model_name, p)
-    except:
-        print("Model accuracy verification failed.")
+    except Exception as ex:
+        print("Model accuracy verification failed. Exception: %s" % str(ex))
