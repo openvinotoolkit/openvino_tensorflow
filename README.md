@@ -31,34 +31,36 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
    be able to proceed with the `ngraph-tf` bridge installation. For 
    systems with Python 3.5 or Python 2.7, these commands are
 
-        virtualenv --system-site-packages -p python3 your_virtualenv 
-        virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
-        source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
+      virtualenv --system-site-packages -p python3 your_virtualenv 
+      virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
+      source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
     
 2. Install TensorFlow v1.13.1:
 
-        pip install -U tensorflow
+      pip install -U tensorflow
 
 2. Install nGraph-TensorFlow bridge:
 
-        pip install -U ngraph-tensorflow-bridge
+      pip install -U ngraph-tensorflow-bridge
    
 4. Test the installation by running the following command:
 
-        python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
-
+      python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
+     ```
 This will produce something like this:
 
-        TensorFlow version:  1.13.1
-        nGraph bridge version: b'0.12.0'
-        nGraph version used for this build: b'0.18.0-rc.2+c5d52f1'
-        TensorFlow version used for this build: v1.13.1-0-g6612da8951
-        CXX11_ABI flag used for this build: 1
+      TensorFlow version:  1.13.1
+      nGraph bridge version: b'0.12.0'
+      nGraph version used for this build: b'0.18.0-rc.2+c5d52f1'
+      TensorFlow version used for this build: v1.13.1-0-g6612da8951
+      CXX11_ABI flag used for this build: 1
+      nGraph bridge built with Grappler: False
+      nGraph bridge built with Variables and Optimizers Enablement: False
 
 Next you can try out the TensorFlow models by adding one line to your existing 
 TensorFlow model scripts and running them the usual way:
 
-        import ngraph_bridge
+      import ngraph_bridge
 
 Detailed examples on how to use ngraph_bridge are located in the [examples] directory.
 
@@ -162,7 +164,6 @@ improve it:
 ## About Intel(R) nGraph(TM)
 
 See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
-
 
 [linux-based install instructions on the TensorFlow website]:https://www.tensorflow.org/install/install_linux
 [tensorflow]:https://github.com/tensorflow/tensorflow.git
