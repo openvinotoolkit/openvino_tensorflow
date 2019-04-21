@@ -72,6 +72,8 @@
     agents:
     - "queue=cpu-centos"
 
+  - wait 
+
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
