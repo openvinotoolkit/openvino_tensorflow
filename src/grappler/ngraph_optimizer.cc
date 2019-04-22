@@ -68,7 +68,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
       std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
       IsProcessedByNgraphPass(&graph)) {
     NGRAPH_VLOG(0) << "NGTF_OPTIMIZER: Ngraph is disabled ";
-    // TODO: Doing this for grappler path only for now
     NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
