@@ -1,0 +1,93 @@
+  - command: |
+      rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/$BUILDKITE_BUILD_ID
+      virtualenv -p /usr/bin/python3 /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv 
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install -U yapf==0.26.0
+      
+    label: ":gear: Setup"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+    parallelism: 1
+
+  - wait
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      python3 build_ngtf.py --build_gpu_backend --enable_variables_and_optimizers \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+      
+    label: ":hammer_and_wrench: Build"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+    parallelism: 1
+
+  - wait
+  
+  - command: |
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --backend GPU \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
+    
+    label: ":chrome: C++ Unit Test"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+
+  - wait 
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install psutil && pip install -U \
+        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.13.1-cp35-cp35m-linux_x86_64.whl
+      
+    label: ":gear: Install"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+
+  - wait 
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install pytest
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --backend GPU \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
+    
+    label: ":python: nGraph Pytest"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install pytest
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --backend GPU \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
+    
+    label: ":python: TensorFlow Pytest"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --backend GPU \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet
+    label: ":bar_chart: ResNet50"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=gpu"
+
+  - wait
+  - command: |
+      rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+    label: ":wastebasket: Cleanup"
+    agents:
+    - "queue=gpu"
+
+
