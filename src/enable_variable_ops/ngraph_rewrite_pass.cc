@@ -22,6 +22,7 @@
 #include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_capture_variables.h"
+#include "ngraph_cluster_manager.h"
 #include "ngraph_deassign_clusters.h"
 #include "ngraph_encapsulate_clusters.h"
 #include "ngraph_enter_in_catalog.h"
@@ -164,7 +165,9 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // we will not do anything; all subsequent
     // passes become a no-op.
     if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+        std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
+        IsProcessedByNgraphPass(&graph)) {
+      NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
 
