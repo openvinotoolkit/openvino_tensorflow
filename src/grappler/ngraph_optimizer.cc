@@ -70,20 +70,38 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     return Status::OK();
   }
 
-  // Get the nodes to be skipped
+  // TODO: Find out a better way to preserve feed nodes, init_ops and
+  // keep_ops instead of just skipping those from clustering.
+  // Get nodes to be preserved/skipped
+  std::set<string> nodes_to_preserve;
+
+  // Feed Nodes
+  for (int i=0; i<item.feed.size(); i++) {
+    nodes_to_preserve.insert(item.feed[i].first);
+  }
+  // Keep Ops
+  for (const string& f : item.keep_ops ){
+    nodes_to_preserve.insert(f);
+  }
+  // Init Ops
+  for (const string& f : item.init_ops ){
+    nodes_to_preserve.insert(f);
+  }
+  // Fetch Nodes
   std::set<string> fetch_nodes;
   for (const string& f : item.fetch) {
     int pos = f.find(":");
     fetch_nodes.insert(f.substr(0, pos));
   }
-  std::set<string>& skip_these_nodes = fetch_nodes;
-
   // Rewrite graph to add IdentityN node so the fetch node can be encapsulated
   // as well
   // If the fetch node in question has 0 outputs or any of the outputs
   // has ref type as a data type then don't add IdentityN node, but the fetch
   // node will be skipped from capturing and marking for clustering.
-  TF_RETURN_IF_ERROR(AddIdentityN(&graph, skip_these_nodes));
+  TF_RETURN_IF_ERROR(AddIdentityN(&graph, fetch_nodes));
+
+  nodes_to_preserve.insert(fetch_nodes.begin(), fetch_nodes.end());
+  std::set<string>& skip_these_nodes = nodes_to_preserve;
 
   //
   // Variable capture: Part that replaces all instances of VariableV2 with the
