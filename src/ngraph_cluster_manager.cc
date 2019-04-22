@@ -37,6 +37,8 @@ GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
   return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
 }
 
+void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
+
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow

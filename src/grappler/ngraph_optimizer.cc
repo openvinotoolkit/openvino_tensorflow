@@ -15,6 +15,7 @@
  *******************************************************************************/
 
 #include "ngraph_optimizer.h"
+#include "ngraph_cluster_manager.h"
 
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
@@ -67,6 +68,8 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
       std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
       IsProcessedByNgraphPass(&graph)) {
     NGRAPH_VLOG(0) << "NGTF_OPTIMIZER: Ngraph is disabled ";
+    // TODO: Doing this for grappler path only for now
+    NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
   }
