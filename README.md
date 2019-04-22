@@ -12,7 +12,7 @@ customize and deploy Deep Learning inference models that will "just work" with
 a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the 
 [Intel(R) Nervana(TM) NNP](https://itpeernetwork.intel.com/inteldcisummit-artificial-intelligence/).
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph-tf/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/tensorflow/ngraph-bridge/blob/master/LICENSE)
 [![Build Status](https://badge.buildkite.com/180bbf814f1a884219849b4838cbda5fa1e03715e494185be3.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-ubuntu)
 [![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
 
@@ -27,36 +27,28 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 
 ### Option 1: Use a pre-built nGraph-TensorFlow bridge 
-
-1. You need to instantiate a specific kind of `virtualenv`  to 
-   be able to proceed with the `ngraph-tf` bridge installation. For 
-   systems with Python 3.5 or Python 2.7, these commands are
-
-      virtualenv --system-site-packages -p python3 your_virtualenv 
-      virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
-      source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
     
-2. Install TensorFlow v1.13.1:
+1. Install TensorFlow v1.13.1:
 
-      pip install -U tensorflow
+        pip install -U tensorflow
 
 2. Install nGraph-TensorFlow bridge:
 
-      pip install -U ngraph-tensorflow-bridge
+        pip install -U ngraph-tensorflow-bridge
    
 4. Test the installation by running the following command:
 
-      python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
+        python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
      ```
 This will produce something like this:
 
-      TensorFlow version:  1.13.1
-      nGraph bridge version: b'0.12.0'
-      nGraph version used for this build: b'0.18.0-rc.2+c5d52f1'
-      TensorFlow version used for this build: v1.13.1-0-g6612da8951
-      CXX11_ABI flag used for this build: 1
-      nGraph bridge built with Grappler: False
-      nGraph bridge built with Variables and Optimizers Enablement: False
+        TensorFlow version:  1.13.1
+        nGraph bridge version: b'0.12.0'
+        nGraph version used for this build: b'0.18.0-rc.2+c5d52f1'
+        TensorFlow version used for this build: v1.13.1-0-g6612da8951
+        CXX11_ABI flag used for this build: 1
+        nGraph bridge built with Grappler: False
+        nGraph bridge built with Variables and Optimizers Enablement: False
 
 Next you can try out the TensorFlow models by adding one line to your existing 
 TensorFlow model scripts and running them the usual way:
@@ -89,15 +81,21 @@ The installation prerequisites are the same as described in the TensorFlow
         export PATH=$PATH:~/bin
         source ~/.bashrc   
 
+3. We recomment using a `virtualenv` base Python setup (but not mandatory). Following are the commmands for setting up the `virtualenv`: 
+
+        virtualenv --system-site-packages -p python3 your_virtualenv 
+        virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
+        source your_virtualenv/bin/activate # bash, sh, ksh, or zsh
+
 3. Additionally, you need to install `cmake` version 3.1 or higher and gcc 4.8 or higher. 
 
 
 #### Build 
 
-1. Once TensorFlow's dependencies are installed, clone `ngraph-tf` repo:
+1. Once TensorFlow's dependencies are installed, clone `ngraph-bridge` repo:
 
-        git clone https://github.com/NervanaSystems/ngraph-tf.git
-        cd ngraph-tf
+        git clone https://github.com/tensorflow/ngraph-bridge.git
+        cd ngraph-bridge
         git checkout v0.12.0
 
    
@@ -105,20 +103,13 @@ The installation prerequisites are the same as described in the TensorFlow
 
         python3 build_ngtf.py
 
-:warning: Note that if you are running TensorFlow on a Skylake family processor then you need to pass the target_arch parameter, as below
-
-        python3 build_ngtf.py --target_arch=broadwell
-
-This is due to an issue in TensorFlow tracked here:
-        https://github.com/tensorflow/tensorflow/issues/17273
-
 Once the build finishes, a new virtualenv directory is created in the `build_cmake/venv-tf-py3`. The build artifacts i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl` is created in the `build_cmake/artifacts` directory. 
 
 3. Test the installation by running the following command:
       
         python3 test_ngtf.py
 
-This command will run all the C++ and python unit tests from the ngraph-tf source tree. Additionally this will also run various TensorFlow python tests using nGraph.
+This command will run all the C++ and python unit tests from the ngraph-bridge source tree. Additionally this will also run various TensorFlow python tests using nGraph.
 
 4. To use the ngraph-tensorflow bridge, activate this virtual environment to start using nGraph with TensorFlow. 
 
@@ -141,7 +132,7 @@ Python environment prior to building nGraph.
 
 See the instructions provided in the [diagnostics] directory.
 
-https://github.com/NervanaSystems/ngraph-tf/blob/master/diagnostics/README.md
+https://github.com/tensorflow/ngraph-bridge/blob/master/diagnostics/README.md
 
 
 ## Support
@@ -170,13 +161,13 @@ See the full documentation here:  <http://ngraph.nervanasys.com/docs/latest>
 [tensorflow]:https://github.com/tensorflow/tensorflow.git
 [open-source C++ library, compiler and runtime]: http://ngraph.nervanasys.com/docs/latest/
 [DSO]:http://csweb.cs.wfu.edu/~torgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
-[Github issues]: https://github.com/NervanaSystems/ngraph-tf/issues
-[pull request]: https://github.com/NervanaSystems/ngraph-tf/pulls
+[Github issues]: https://github.com/tensorflow/ngraph-bridge/issues
+[pull request]: https://github.com/tensorflow/ngraph-bridge/pulls
 [bazel version 0.21.0]: https://github.com/bazelbuild/bazel/releases/tag/0.21.0
 [prepare environment]: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
 [diagnostics]:diagnostics/README.md
 [examples]:examples/README.md
 [ops]:http://ngraph.nervanasys.com/docs/latest/ops/index.html
-[nGraph]:https://github.com/NervanaSystems/ngraph 
-[ngraph-tf bridge]:https://github.com/NervanaSystems/ngraph-tf 
+[nGraph]:https://github.com/tensorflow/ngraph 
+[ngraph-bridge bridge]:https://github.com/tensorflow/ngraph-bridge 
  
