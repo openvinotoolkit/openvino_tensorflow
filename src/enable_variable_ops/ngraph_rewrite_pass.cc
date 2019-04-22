@@ -166,7 +166,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // passes become a no-op.
     if (config::IsEnabled() == false ||
         std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(&graph)) {
+        IsProcessedByNgraphPass(options.graph->get())) {
       NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }

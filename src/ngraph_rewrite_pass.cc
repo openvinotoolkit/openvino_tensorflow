@@ -125,7 +125,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // passes become a no-op.
     if (config::IsEnabled() == false ||
         std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(&graph)) {
+        IsProcessedByNgraphPass(options.graph->get())) {
       // In the case that we run a network with ngraph, cluster manager gets
       // populated. Then we run a new network, it repopulates the cluster
       // manager. This works under the assumption that whenever
