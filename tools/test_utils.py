@@ -121,8 +121,8 @@ def run_ngtf_pytests(venv_dir, build_dir):
     load_venv(venv_dir)
 
     # Next run the ngraph-tensorflow python tests
-    command_executor(["pip", "install", "-U", "pytest"])
-    command_executor(["pip", "install", "-U", "psutil"])
+    command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
+    command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
     command_executor([
         "python", "-m", "pytest", ('--junitxml=%s/xunit_pytest.xml' % build_dir)
     ],
@@ -147,9 +147,10 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     os.chdir(test_dir)
 
     # Next run the ngraph-tensorflow python tests
-    command_executor(["pip", "install", "-U", "pytest"])
-    command_executor(["pip", "install", "-U", "psutil"])
-    command_executor([
+    command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
+    command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
+
+    command_executor([sys.executable, "-m",
         "python", "-m", "pytest",
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
