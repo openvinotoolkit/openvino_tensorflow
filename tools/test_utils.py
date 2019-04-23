@@ -150,8 +150,8 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
     command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
 
-    command_executor([sys.executable, "-m",
-        "python", "-m", "pytest",
+    command_executor([
+        sys.executable, "-m", "python", "-m", "pytest",
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
