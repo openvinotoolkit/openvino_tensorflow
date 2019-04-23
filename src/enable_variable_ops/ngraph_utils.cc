@@ -324,15 +324,14 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
   }
 };
 
+// TODO: Merge with normal path utils
 bool IsProcessedByNgraphPass(Graph* g) {
   // TODO: place a dummy node as a marker
   // Current method may fail when graph had no encapsulates or ngvars after
   // first pass
   // Also variable/optimizer change introduces other types of ng nodes
   for (Node* node : g->nodes()) {
-    if (node->type_string() == "NGraphEncapsulate" ||
-        node->type_string() == "NGraphVariable")
-      return true;
+    if (node->type_string() == "NGraphEncapsulate") return true;
   }
   return false;
 }
