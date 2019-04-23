@@ -107,6 +107,7 @@ def main():
         run_bazel_build()
     elif (arguments.test_tf_python):
         run_tensorflow_pytests_from_artifacts(
+            arguments.backend,
             './', arguments.artifacts_dir + '/tensorflow/python', False)
     elif (arguments.test_resnet):
         batch_size = 128
