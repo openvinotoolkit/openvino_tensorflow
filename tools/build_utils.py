@@ -55,7 +55,7 @@ def execute_pip_command(pip_command):
     split = (pip_command if type(cmd) == type([]) else shlex.split(pip_command))
     assert split[0] == 'pip', (
         "Expected a pip command, but found " + " ".join(split))
-    subprocess.call([sys.executable] + split)
+    subprocess.call([sys.executable, "-m"] + split)
 
 
 def build_ngraph(build_dir, src_location, cmake_flags, verbose):
