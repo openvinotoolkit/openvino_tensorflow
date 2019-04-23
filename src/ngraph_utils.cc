@@ -386,8 +386,7 @@ bool IsProcessedByNgraphPass(Graph* g) {
   // first pass
   // Also variable/optimizer change introduces other types of ng nodes
   for (Node* node : g->nodes()) {
-    if (node->type_string() == "NGraphEncapsulate")
-      return true;
+    if (node->type_string() == "NGraphEncapsulate") return true;
   }
   return false;
 }
