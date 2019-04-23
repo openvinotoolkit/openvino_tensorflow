@@ -52,7 +52,8 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None):
 
 # accepts a split list of pip commands
 def execute_pip_command(pip_command):
-    split = (pip_command if type(cmd) == type([]) else shlex.split(pip_command))
+    split = (pip_command if
+             (type(pip_command) == type([])) else shlex.split(pip_command))
     assert split[0] == 'pip', (
         "Expected a pip command, but found " + " ".join(split))
     subprocess.call([sys.executable, "-m"] + split)
