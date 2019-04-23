@@ -50,6 +50,7 @@ def install_ngraph_bridge(artifacts_dir):
     ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
     subprocess.call([sys.executable, "-m", "pip", "install", ng_whl])
 
+
 #@depricated
 def run_ngtf_gtests(build_dir, filters):
     root_pwd = os.getcwd()
