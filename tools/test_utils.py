@@ -23,6 +23,7 @@ import sys
 import shutil
 import glob
 import platform
+import subprocess
 from distutils.sysconfig import get_python_lib
 
 from tools.build_utils import load_venv, command_executor
@@ -46,10 +47,8 @@ def install_ngraph_bridge(artifacts_dir):
             print("Existing Wheel: " + whl)
         raise Exception("Error getting the ngraph-tf wheel file")
 
-    # First ensure that we have nGraph installed
     ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
-    command_executor(["pip", "install", "-U", ng_whl])
-
+    subprocess.call([sys.executable, "-m", "pip", "install", ng_whl])
 
 #@depricated
 def run_ngtf_gtests(build_dir, filters):
