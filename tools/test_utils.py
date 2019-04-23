@@ -150,8 +150,7 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
     command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
 
-    command_executor([sys.executable, "-m",
-        "python", "-m", "pytest",
+    command_executor([sys.executable, "-m", "pytest",
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
@@ -241,6 +240,7 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
     os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
+    # should this python be sys.executable?
     cmd = [
         "python",
         test_script,
