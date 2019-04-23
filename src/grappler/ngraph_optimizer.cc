@@ -79,14 +79,13 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   for (int i = 0; i < item.feed.size(); i++) {
     nodes_to_preserve.insert(item.feed[i].first);
   }
+
   // Keep Ops
-  for (const string& f : item.keep_ops) {
-    nodes_to_preserve.insert(f);
-  }
+  nodes_to_preserve.insert(item.keep_ops.begin(), item.keep_ops.end());
+
   // Init Ops
-  for (const string& f : item.init_ops) {
-    nodes_to_preserve.insert(f);
-  }
+  nodes_to_preserve.insert(item.init_ops.begin(), item.init_ops.end());
+
   // Fetch Nodes
   std::set<string> fetch_nodes;
   for (const string& f : item.fetch) {

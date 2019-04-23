@@ -56,6 +56,10 @@ set(SRC
     opexecuter.cpp
 )
 
+if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
+    list(APPEND SRC graph_rewrites/grappler_optimizer_test.cc)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
