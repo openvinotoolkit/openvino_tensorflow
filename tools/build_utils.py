@@ -26,6 +26,8 @@ import shutil
 import glob
 import platform
 import shlex
+import subprocess
+import sys
 
 
 def command_executor(cmd, verbose=False, msg=None, stdout=None):
@@ -40,8 +42,20 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None):
     if verbose:
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd)
-    if (call(shlex.split(cmd), stdout=stdout) != 0):
-        raise Exception("Error running command: " + cmd)
+    split = shlex.split(cmd)
+    if split[0] == 'pip':
+        execute_pip_command(split)
+    else:
+        if (call(split, stdout=stdout) != 0):
+            raise Exception("Error running command: " + cmd)
+
+
+# accepts a split list of pip commands
+def execute_pip_command(pip_command):
+    split = (pip_command if type(cmd) == type([]) else shlex.split(pip_command))
+    assert split[0] == 'pip', (
+        "Expected a pip command, but found " + " ".join(split))
+    subprocess.call([sys.executable] + split)
 
 
 def build_ngraph(build_dir, src_location, cmake_flags, verbose):
