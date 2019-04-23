@@ -26,7 +26,6 @@ import shutil
 import glob
 import platform
 import shlex
-import sys
 
 
 def command_executor(cmd, verbose=False, msg=None, stdout=None):
