@@ -41,25 +41,8 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None):
     if verbose:
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd)
-    split = shlex.split(cmd)
-    if split[0] == 'pip':
-        status = execute_pip_command(split)
-    else:
-        status = call(split, stdout=stdout)
-    if (status != 0):
+    if (call(shlex.split(cmd), stdout=stdout) != 0):
         raise Exception("Error running command: " + cmd)
-
-
-# accepts pip commands only
-def execute_pip_command(pip_command):
-    split = (pip_command if
-             (type(pip_command) == type([])) else shlex.split(pip_command))
-    assert split[0] == 'pip', (
-        "Expected a pip command, but found " + " ".join(split))
-    status = call([sys.executable, "-m"] + split)
-    if status != 0:
-        status = call(split)
-    return status
 
 
 def build_ngraph(build_dir, src_location, cmake_flags, verbose):

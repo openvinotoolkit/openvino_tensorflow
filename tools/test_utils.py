@@ -48,7 +48,7 @@ def install_ngraph_bridge(artifacts_dir):
 
     # First ensure that we have nGraph installed
     ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
-    command_executor(["pip", "install", "-U", ng_whl])
+    call([sys.executable, "-m", "pip", "install", "-U", ng_whl])
 
 
 #@depricated
