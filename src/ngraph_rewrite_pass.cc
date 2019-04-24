@@ -125,7 +125,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // passes become a no-op.
     bool ngraph_not_enabled =
         (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
-    bool already_processed = IsProcessedByNgraphPass(&graph);
+    bool already_processed = IsProcessedByNgraphPass(options.graph->get());
     if (ngraph_not_enabled || already_processed) {
       // In the case that we run a network with ngraph, cluster manager gets
       // populated. Then we run a new network, it repopulates the cluster
@@ -200,7 +200,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // passes become a no-op.
     bool ngraph_not_enabled =
         (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
-    bool already_processed = IsProcessedByNgraphPass(&graph);
+    bool already_processed = IsProcessedByNgraphPass(options.graph->get());
     if (ngraph_not_enabled || already_processed) {
       NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
                      << ngraph_not_enabled
