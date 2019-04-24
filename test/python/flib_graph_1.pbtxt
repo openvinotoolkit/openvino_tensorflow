@@ -146,7 +146,7 @@ node {
 library {
   function {
     signature {
-      name: "Enc_0_native_segment"
+      name: "ngraph_cluster_0"
       input_arg {
         name: "ngraph_input_0"
         type: DT_FLOAT
