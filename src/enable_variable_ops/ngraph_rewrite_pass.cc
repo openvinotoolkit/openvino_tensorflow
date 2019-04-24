@@ -165,9 +165,13 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(options.graph->get())) {
+    bool ngraph_not_enabled =
+        (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+    bool already_processed = IsProcessedByNgraphPass(&graph);
+    if (ngraph_not_enabled || already_processed) {
+      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+                     << ngraph_not_enabled
+                     << " Already processed: " << already_processed;
       NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
@@ -236,9 +240,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-        IsProcessedByNgraphPass(options.graph->get())) {
+    bool ngraph_not_enabled =
+        (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+    bool already_processed = IsProcessedByNgraphPass(&graph);
+    if (ngraph_not_enabled || already_processed) {
+      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+                     << ngraph_not_enabled
+                     << " Already processed: " << already_processed;
       NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }

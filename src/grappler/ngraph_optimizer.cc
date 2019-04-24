@@ -64,10 +64,13 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
   // we will not do anything; all subsequent
   // passes become a no-op.
-  if (config::IsEnabled() == false ||
-      std::getenv("NGRAPH_TF_DISABLE") != nullptr ||
-      IsProcessedByNgraphPass(&graph)) {
-    NGRAPH_VLOG(0) << "NGTF_OPTIMIZER: Ngraph is disabled ";
+  bool ngraph_not_enabled =
+      (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+  bool already_processed = IsProcessedByNgraphPass(&graph);
+  if (ngraph_not_enabled || already_processed) {
+    NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+                   << ngraph_not_enabled
+                   << " Already processed: " << already_processed;
     NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
