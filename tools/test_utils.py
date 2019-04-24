@@ -204,8 +204,8 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     os.chdir(root_pwd)
 
 
-def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir, tf_src_dir,
-                                          xml_output):
+def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
+                                          tf_src_dir, xml_output):
     root_pwd = os.getcwd()
 
     ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
@@ -231,8 +231,9 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir, tf_src_dir
     # Now run the TensorFlow python tests
     test_src_dir = os.path.join(ngraph_tf_src_dir, "test/python/tensorflow")
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
-    if 'GPU' in backend: 
-        test_manifest_file = os.path.join(test_src_dir, "python_tests_list_gpu.txt")
+    if 'GPU' in backend:
+        test_manifest_file = os.path.join(test_src_dir,
+                                          "python_tests_list_gpu.txt")
     else:
         test_manifest_file = os.path.join(test_src_dir, "python_tests_list.txt")
     test_xml_report = './junit_tensorflow_tests.xml'
