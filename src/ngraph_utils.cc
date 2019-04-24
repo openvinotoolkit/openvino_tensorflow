@@ -378,7 +378,17 @@ void AllreduceOpControlOrder(
       }
     }
   }
-};
+}
+
+bool IsProcessedByNgraphPass(Graph* g) {
+  // TODO: place a dummy node as a marker
+  // Current method may fail when graph has no encapsulates after first pass
+  // Also variable/optimizer change introduces other types of ng nodes
+  for (Node* node : g->nodes()) {
+    if (node->type_string() == "NGraphEncapsulate") return true;
+  }
+  return false;
+}
 
 }  // namespace ngraph_bridge
 

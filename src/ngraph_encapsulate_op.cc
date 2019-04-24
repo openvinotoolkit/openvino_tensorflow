@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
+#include "tensorflow/core/common_runtime/function.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
@@ -93,9 +94,28 @@ class NGraphEncapsulateOp : public OpKernel {
     OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ngraph_cluster", &m_ngraph_cluster));
     graph_def = NGraphClusterManager::GetClusterGraph(m_ngraph_cluster);
 
-    GraphConstructorOptions opts;
-    opts.allow_internal_ops = true;
-    OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
+    if (graph_def == nullptr) {
+      string flib_key = "ngraph_cluster_" + to_string(m_ngraph_cluster);
+      // Read graphdef from function library
+      const FunctionLibraryDefinition flib =
+          *ctx->function_library()->GetFunctionLibraryDefinition();
+      const FunctionDef* fdef = flib.Find(flib_key);
+      OP_REQUIRES(
+          ctx, fdef != nullptr,
+          errors::Internal("Did not find graphdef for encapsulate ", flib_key,
+                           " in NGraphClusterManager or function library"));
+      // TODO: how to convert from functiondef to graphdef. Anything easier?
+      FunctionBody* fnbody;
+      const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {
+        return flib.LookUpOpDef(op, sig);
+      };
+      FunctionDefToBodyHelper(*fdef, {}, &flib, get_func_sig, &fnbody);
+      CopyGraph(*fnbody->graph, &m_graph);
+    } else {
+      GraphConstructorOptions opts;
+      opts.allow_internal_ops = true;
+      OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
+    }
     OP_REQUIRES_OK(ctx, ctx->GetAttr("ngraph_graph_id", &m_graph_id));
     //
     // Initialize the "m_input_is_static" vector as follows:

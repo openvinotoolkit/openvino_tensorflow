@@ -22,6 +22,7 @@
 #include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_capture_variables.h"
+#include "ngraph_cluster_manager.h"
 #include "ngraph_deassign_clusters.h"
 #include "ngraph_encapsulate_clusters.h"
 #include "ngraph_enter_in_catalog.h"
@@ -29,6 +30,7 @@
 #include "ngraph_mark_for_clustering.h"
 #include "ngraph_replace_variable_modifiers.h"
 #include "ngraph_rewrite_for_tracking.h"
+#include "ngraph_utils.h"
 #include "tf_graph_writer.h"
 
 #if defined NGRAPH_DISTRIBUTED
@@ -163,8 +165,14 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+    bool ngraph_not_enabled =
+        (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+    bool already_processed = IsProcessedByNgraphPass(options.graph->get());
+    if (ngraph_not_enabled || already_processed) {
+      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+                     << ngraph_not_enabled
+                     << " Already processed: " << already_processed;
+      NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
 
@@ -232,8 +240,14 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    if (config::IsEnabled() == false ||
-        std::getenv("NGRAPH_TF_DISABLE") != nullptr) {
+    bool ngraph_not_enabled =
+        (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+    bool already_processed = IsProcessedByNgraphPass(options.graph->get());
+    if (ngraph_not_enabled || already_processed) {
+      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+                     << ngraph_not_enabled
+                     << " Already processed: " << already_processed;
+      NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
 

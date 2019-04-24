@@ -23,4 +23,15 @@ foreach(file ${files})
 )
 endforeach()
 
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/flib_graph_1.pbtxt
+        ${CMAKE_CURRENT_BINARY_DIR}/flib_graph_1.pbtxt
+)
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/flib_graph_2.pbtxt
+        ${CMAKE_CURRENT_BINARY_DIR}/flib_graph_2.pbtxt
+)
 
