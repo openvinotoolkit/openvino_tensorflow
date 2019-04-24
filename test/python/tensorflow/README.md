@@ -17,7 +17,7 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
  - Python tests using nGraph with grappler and using Tensorflow (using Option 2 in the instructions in the [top level documentation page](../../../README.md#option-2-build-ngraph-bridge-from-source-using-tensorflow-source)) by patching 
    TensorFlow as follows:
    ```
-   cp tf_unittest_ngraph.patch <your_virtual_env/lib/python<VERSION>/site-packages>
+   cp tf_unittest_ngraph_with_grappler.patch <your_virtual_env/lib/python<VERSION>/site-packages>
    cd <your_virtual_env/lib/python<VERSION>/site-packages>
    patch -p1 < tf_unittest_ngraph_with_grappler.patch 
    ```
