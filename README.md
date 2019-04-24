@@ -81,7 +81,7 @@ The installation prerequisites are the same as described in the TensorFlow
         export PATH=$PATH:~/bin
         source ~/.bashrc   
 
-3. We recomment using a `virtualenv` base Python setup (but not mandatory). Following are the commmands for setting up the `virtualenv`: 
+3. We recommend using a `virtualenv` base Python setup (but not mandatory). Following are the commmands for setting up the `virtualenv`: 
 
         virtualenv --system-site-packages -p python3 your_virtualenv 
         virtualenv --system-site-packages -p /usr/bin/python2 your_virtualenv  
