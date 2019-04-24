@@ -15,6 +15,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/tensorflow/ngraph-bridge/blob/master/LICENSE)
 [![Build Status](https://badge.buildkite.com/180bbf814f1a884219849b4838cbda5fa1e03715e494185be3.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-ubuntu)
 [![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
+[![Build Status](https://badge.buildkite.com/0aeaff43e378d387a160d30083f203f7147f010e3fb15b01d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-ubuntu-binary-tf)
 
 *   [Build using Linux](#linux-instructions)
 *   [Build using OS X](#using-os-x)
