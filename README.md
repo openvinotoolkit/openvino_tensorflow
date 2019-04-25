@@ -60,7 +60,7 @@ To use the latest version build and install nGraph using the following steps:
 
 ### Option 3: Build nGraph bridge from source
 
-if you are planning to contribute or planning to run unit testsinstall the nGraph 
+if you are planning to contribute or planning to run unit tests install the nGraph 
 bridge using the TensorFlow source tree as follows: 
 
 #### Prepare the build environment
