@@ -116,7 +116,7 @@ def main():
             if 'GPU' in arguments.backend:
                 batch_size = 64
                 iterations = 100
-        run_resnet50_from_artifacts(arguments.artifacts_dir, batch_size,
+        run_resnet50_from_artifacts('./', arguments.artifacts_dir, batch_size,
                                     iterations)
     else:
         raise Exception("No tests specified")

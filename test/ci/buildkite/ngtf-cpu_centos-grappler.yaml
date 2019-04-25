@@ -71,6 +71,26 @@
     timeout_in_minutes: 30
     agents:
     - "queue=cpu-centos"
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      pip install pytest
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
+
+    label: ":python: TensorFlow Pytest"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=cpu-centos"
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet
+    label: ":bar_chart: ResNet50"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=cpu-centos"
   
   - wait
   - command: |
@@ -78,15 +98,6 @@
     label: ":wastebasket: Cleanup"
     agents:
     - "queue=cpu-centos"
-
-  # - command: |
-  #     source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-  #     PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
-  #       --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet
-  #   label: ":bar_chart: ResNet50"
-  #   timeout_in_minutes: 30
-  #   agents:
-  #   - "queue=cpu-centos"
 
   # - wait 
 

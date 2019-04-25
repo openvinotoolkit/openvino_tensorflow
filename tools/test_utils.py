@@ -26,7 +26,7 @@ import platform
 import subprocess
 from distutils.sysconfig import get_python_lib
 
-from tools.build_utils import load_venv, command_executor
+from tools.build_utils import load_venv, command_executor, apply_patch
 
 
 def get_os_type():
@@ -180,8 +180,7 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     print("CURRENT DIR: " + os.getcwd())
 
     print("Patching TensorFlow using: %s" % patch_file)
-    result = call(["patch", "-p1", "-N", "-i", patch_file])
-    print("Patch result: %d" % result)
+    apply_patch(patch_file)
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
@@ -211,9 +210,13 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
 
     ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
 
+    # Check to see if we need to apply the patch for Grappler
+    import ngraph_bridge
+    patch_file_name = "test/python/tensorflow/tf_unittest_ngraph" + (
+        "_with_grappler"
+        if ngraph_bridge.is_grappler_enabled() else "") + ".patch"
     patch_file = os.path.abspath(
-        os.path.join(ngraph_tf_src_dir,
-                     "test/python/tensorflow/tf_unittest_ngraph.patch"))
+        os.path.join(ngraph_tf_src_dir, patch_file_name))
 
     # Next patch the TensorFlow so that the tests run using ngraph_bridge
     pwd = os.getcwd()
@@ -225,8 +228,7 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     print("CURRENT DIR: " + os.getcwd())
 
     print("Patching TensorFlow using: %s" % patch_file)
-    result = call(["patch", "-p1", "-N", "-i", patch_file])
-    print("Patch result: %d" % result)
+    apply_patch(patch_file)
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
@@ -317,31 +319,35 @@ def run_resnet50(build_dir):
     os.chdir(root_pwd)
 
 
-def run_resnet50_from_artifacts(artifact_dir, batch_size, iterations):
+def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
+                                iterations):
 
     root_pwd = os.getcwd()
     artifact_dir = os.path.abspath(artifact_dir)
-
+    ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
     install_ngraph_bridge(artifact_dir)
+
+    patch_file = os.path.abspath(
+        os.path.join(ngraph_tf_src_dir, "test/grappler/benchmark_cnn.patch"))
 
     # Now clone the repo and proceed
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
-    os.chdir('benchmarks/scripts/tf_cnn_benchmarks/')
-
+    os.chdir('benchmarks')
     call(['git', 'checkout', '4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed'])
+
+    # Check to see if we need to patch the repo for Grappler
+    import ngraph_bridge
+    if ngraph_bridge.is_grappler_enabled():
+        print("Patching repo using: %s" % patch_file)
+        apply_patch(patch_file)
+
+    os.chdir('scripts/tf_cnn_benchmarks/')
 
     # junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
 
     # Update the script by adding `import ngraph_bridge`
     with open('convnet_builder.py', 'a') as outfile:
         call(['echo', 'import ngraph_bridge'], stdout=outfile)
-
-    # Check to see if we need to patch the repo for Grappler
-    import tensorflow as tf
-    import ngraph_bridge
-    if ngraph_bridge.is_grappler_enabled():
-        # Apply the patch
-        raise Exception('Cannot use this test with Grappler enabled')
 
     # Setup the env flags
     import psutil
