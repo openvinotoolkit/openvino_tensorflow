@@ -285,7 +285,11 @@ def main():
     ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
                                 ngraph_tf_src_dir, venv_dir,
                                 ngraph_tf_cmake_flags, verbosity)
-
+    
+    # Make sure that the ngraph bridge whl is present in the artfacts directory
+    if not os.path.isfile(os.path.join(artifacts_location, ng_tf_whl)):
+        raise Exception("Cannot locate nGraph whl in the artifacts location")
+        
     print("SUCCESSFULLY generated wheel: %s" % ng_tf_whl)
     print("PWD: " + os.getcwd())
 
@@ -296,6 +300,7 @@ def main():
             'cp', '-r', build_dir_abs + '/tensorflow/tensorflow/python',
             os.path.join(artifacts_location, "tensorflow")
         ])
+
 
     # Run a quick test
     install_ngraph_tf(venv_dir, os.path.join(artifacts_location, ng_tf_whl))
