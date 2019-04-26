@@ -48,7 +48,7 @@ def install_ngraph_bridge(artifacts_dir):
         raise Exception("Error getting the ngraph-tf wheel file")
 
     ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
-    call([sys.executable, "-m", "pip", "install", "-U", ng_whl])
+    command_executor(["pip", "install", "-U", ng_whl])
 
 
 #@depricated
@@ -121,8 +121,8 @@ def run_ngtf_pytests(venv_dir, build_dir):
     load_venv(venv_dir)
 
     # Next run the ngraph-tensorflow python tests
-    command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
-    command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
+    command_executor(["pip", "install", "-U", "pytest"])
+    command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
         "python", "-m", "pytest", ('--junitxml=%s/xunit_pytest.xml' % build_dir)
     ],
@@ -147,11 +147,10 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     os.chdir(test_dir)
 
     # Next run the ngraph-tensorflow python tests
-    command_executor([sys.executable, "-m", "pip", "install", "-U", "pytest"])
-    command_executor([sys.executable, "-m", "pip", "install", "-U", "psutil"])
-
+    command_executor(["pip", "install", "-U", "pytest"])
+    command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
-        sys.executable, "-m", "pytest",
+        "python", "-m", "pytest",
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
@@ -247,7 +246,6 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
     os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
-    # should this python be sys.executable?
     cmd = [
         "python",
         test_script,
