@@ -169,7 +169,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
         (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
     bool already_processed = IsProcessedByNgraphPass(options.graph->get());
     if (ngraph_not_enabled || already_processed) {
-      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+      NGRAPH_VLOG(1) << "Not running through nGraph. nGraph not enabled: "
                      << ngraph_not_enabled
                      << " Already processed: " << already_processed;
       NGraphClusterManager::EvictAllClusters();
@@ -244,7 +244,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
     bool already_processed = IsProcessedByNgraphPass(options.graph->get());
     if (ngraph_not_enabled || already_processed) {
-      NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
+      NGRAPH_VLOG(1) << "Not running through nGraph. nGraph not enabled: "
                      << ngraph_not_enabled
                      << " Already processed: " << already_processed;
       NGraphClusterManager::EvictAllClusters();
