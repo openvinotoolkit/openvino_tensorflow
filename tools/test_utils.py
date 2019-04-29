@@ -247,16 +247,12 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
     cmd = [
-        "python",
-        test_script,
-        "--tensorflow_path",
-        tf_src_dir,
-        "--run_tests_from_file",
-        test_manifest_file,
+        "python", test_script, "--tensorflow_path", tf_src_dir,
+        "--run_tests_from_file", test_manifest_file
     ]
     if xml_output:
         cmd.extend(["--xml_report", test_xml_report])
-    command_executor(cmd)
+    command_executor(cmd, verbose=True)
 
     os.chdir(root_pwd)
 

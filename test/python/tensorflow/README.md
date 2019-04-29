@@ -27,11 +27,12 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
 ## Usage
 
     usage: tf_unittest_runner.py [-h] --tensorflow_path TENSORFLOW_PATH
-    
+
     [--list_tests LIST_TESTS] [--run_test RUN_TEST]
-    
+
     [--run_tests_from_file RUN_TESTS_FROM_FILE]
-    
+
+    [--xml_report XML_REPORT] [--verbose]
       
     required arguments:
     
@@ -62,7 +63,14 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
     
     them. Eg:--run_tests_from_file=tests_to_run.txt
 
-  
+    --xml_report XML_REPORT
+     
+     Generates results in xml file for jenkins to populate 
+     
+     in the test result. Need to specify xml file name
+
+  --verbose  Prints standard out if specified
+
 
 ## How to run tests
 
