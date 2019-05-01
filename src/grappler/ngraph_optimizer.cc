@@ -92,20 +92,38 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Init Ops
   nodes_to_preserve.insert(item.init_ops.begin(), item.init_ops.end());
 
+  // Find a list of nodes that are of the types that are disabled
+  std::set<string> disabled_nodes;
+  std::set<string> disabled_ops_set = config::GetDisabledOps();
+  for (auto itr : graph.nodes()) {
+    if (disabled_ops_set.find(itr->type_string()) != disabled_ops_set.end()) {
+      disabled_nodes.insert(itr->name());
+    }
+  }
+
   // Fetch Nodes
   std::set<string> fetch_nodes;
   for (const string& f : item.fetch) {
     int pos = f.find(":");
     fetch_nodes.insert(f.substr(0, pos));
   }
+
+  // nodes_to_add_identity_to = fetch_nodes - disabled_nodes
+  std::set<string> nodes_to_add_identity_to;
+  std::set_difference(fetch_nodes.begin(), fetch_nodes.end(),
+                      disabled_nodes.begin(), disabled_nodes.end(),
+                      std::inserter(nodes_to_add_identity_to,
+                                    nodes_to_add_identity_to.begin()));
+
   // Rewrite graph to add IdentityN node so the fetch node can be encapsulated
   // as well
   // If the fetch node in question has 0 outputs or any of the outputs
   // has ref type as a data type then don't add IdentityN node, but the fetch
   // node will be skipped from capturing and marking for clustering.
-  TF_RETURN_IF_ERROR(AddIdentityN(&graph, fetch_nodes));
+  TF_RETURN_IF_ERROR(AddIdentityN(&graph, nodes_to_add_identity_to));
 
-  nodes_to_preserve.insert(fetch_nodes.begin(), fetch_nodes.end());
+  nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
+                           nodes_to_add_identity_to.end());
   std::set<string>& skip_these_nodes = nodes_to_preserve;
 
   //

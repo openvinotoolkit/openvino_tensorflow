@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
+ * Copyright 2017-2019 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 
 #include "ngraph_api.h"
 
+namespace ng = ngraph;
+
 namespace tensorflow {
 namespace ngraph_bridge {
 namespace config {
 
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
+static std::set<std::string> disabled_op_types{};
 
 extern "C" {
 void ngraph_enable() { Enable(); }
@@ -61,6 +64,14 @@ extern bool ngraph_get_currently_set_backend_name(char** backend) {
 void ngraph_start_logging_placement() { StartLoggingPlacement(); }
 void ngraph_stop_logging_placement() { StopLoggingPlacement(); }
 bool ngraph_is_logging_placement() { return IsLoggingPlacement(); }
+
+extern void ngraph_set_disabled_ops(const char* op_type_list) {
+  SetDisabledOps(std::string(op_type_list));
+}
+
+extern const char* ngraph_get_disabled_ops() {
+  return ng::join(GetDisabledOps(), ",").c_str();
+}
 }
 
 // note that TensorFlow always uses camel case for the C++ API, but not for
@@ -95,6 +106,24 @@ void StopLoggingPlacement() { _is_logging_placement = false; }
 bool IsLoggingPlacement() {
   return _is_enabled && (_is_logging_placement ||
                          std::getenv("NGRAPH_TF_LOG_PLACEMENT") != nullptr);
+}
+
+std::set<string> GetDisabledOps() { return disabled_op_types; }
+
+void SetDisabledOps(string disabled_ops_str) {
+  auto disabled_ops_list = ng::split(disabled_ops_str, ',');
+  // In case string is '', then splitting yields ['']. So taking care that ['']
+  // corresponds to empty set {}
+  if (disabled_ops_list.size() >= 1 && disabled_ops_list[0] != "") {
+    SetDisabledOps(
+        set<string>(disabled_ops_list.begin(), disabled_ops_list.end()));
+  } else {
+    SetDisabledOps(set<string>{});
+  }
+}
+
+void SetDisabledOps(set<string> disabled_ops_set) {
+  disabled_op_types = disabled_ops_set;
 }
 
 }  // namespace config

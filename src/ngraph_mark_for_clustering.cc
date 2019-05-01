@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 #include "ngraph_mark_for_clustering.h"
-#include "ngraph_api.h"
+#include "ngraph_api.h"  // TODO: Importing this first causes a compile error
 #include "ngraph_backend_manager.h"
 #include "ngraph_utils.h"
 #include "ngraph_version_utils.h"
@@ -204,10 +204,17 @@ Status MarkForClustering(Graph* graph,
   // needed in case the graph is broken up in a later rewrite pass (for example,
   // constant data).
 
+  static std::set<string> disabled_ops_set = {};
+
+  std::set<string> disabled_ops_set_current = config::GetDisabledOps();
+
+  bool op_set_support_has_changed =
+      disabled_ops_set_current != disabled_ops_set;
+
   {
     mutex_lock l(init_mu);
 
-    if (!initialized) {
+    if (!initialized || op_set_support_has_changed) {
       //
       // Initialize confirmation function map.
       //
@@ -646,6 +653,23 @@ Status MarkForClustering(Graph* graph,
     *result = (current_backend == "NNPI");
     return Status::OK();
   };
+
+  if (op_set_support_has_changed) {
+    NGRAPH_VLOG(5) << "Changing op support";
+    disabled_ops_set = disabled_ops_set_current;
+    for (auto itr : disabled_ops_set) {
+      auto conf_itr = confirmation_function_map.find(itr);
+      if (conf_itr == confirmation_function_map.end()) {
+        // Note: This error means, we cannot disable NGraphEncapsulate and other
+        // ng ops, because they are expected to never appear in
+        // confirmation_function_map
+        return errors::Internal("Tried to disable ngraph unsupported op ", itr);
+      } else {
+        NGRAPH_VLOG(5) << "Disabling op: " << itr;
+        confirmation_function_map.erase(conf_itr);
+      }
+    }
+  }
 
   std::unordered_map<string, int> no_support_histogram;
   std::unordered_map<string, int> fail_confirmation_histogram;
