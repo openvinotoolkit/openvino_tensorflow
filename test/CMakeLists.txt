@@ -48,6 +48,7 @@ set(SRC
     graph_rewrites/assign_clusters.cc
     graph_rewrites/deadness_test.cc
     graph_rewrites/backend_manager_test.cc
+    graph_rewrites/encapsulate_clusters_test.cc
     graph_rewrites/disable_ops_test.cc
     test_utilities.cpp
     test_math_ops.cpp

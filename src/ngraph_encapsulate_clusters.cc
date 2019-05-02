@@ -23,6 +23,7 @@
 #include "tensorflow/core/framework/attr_value_util.h"
 #include "tensorflow/core/framework/function.pb.h"
 #include "tensorflow/core/framework/graph.pb.h"
+#include "tensorflow/core/framework/graph_to_functiondef.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
@@ -70,7 +71,8 @@ static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
 }
 // ...end code copied and pasted (and modified) from graph.cc
 
-Status EncapsulateClusters(Graph* graph, int graph_id) {
+Status EncapsulateClusters(Graph* graph, int graph_id,
+                           FunctionDefLibrary* fdeflib) {
   // A map from cluster indices to the expected device name for nodes
   // in that cluster.
   std::map<int, std::string> device_name_map;
@@ -401,6 +403,7 @@ Status EncapsulateClusters(Graph* graph, int graph_id) {
 
   // Pass 5: Make copies of all clustered nodes inside the cluster graphs,
   // rewiring the inputs in their NodeDefs as we go.
+  std::set<int> cluster_indices_for_this_graph;
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
 
@@ -455,6 +458,7 @@ Status EncapsulateClusters(Graph* graph, int graph_id) {
 
     auto node_def =
         NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+    cluster_indices_for_this_graph.insert(cluster_idx);
     *node_def = original_def;
 
     for (auto& input : *(node_def->mutable_input())) {
@@ -482,7 +486,27 @@ Status EncapsulateClusters(Graph* graph, int graph_id) {
     graph->RemoveNode(node);
   }
 
-  // Pass 7 (optional, only run if environment variable
+  // Pass 7: Insert to function library
+  // Note: We loop over cluster_indices_for_this_graph and not all the
+  // contents of ClusterManager
+  for (const auto& cluster_idx : cluster_indices_for_this_graph) {
+    // The transformation happening inside this loop is:
+    // graphdef --> graph --> functiondef
+    // NGraphClusterManager::GetClusterGraph(cluster_idx)-->subgraph-->fdef
+    // TODO: whats the right flib to use in subgraph's constructor?
+    Graph subgraph(graph->flib_def());
+    // TODO: When this works, NGraphClusterManager can go away
+    TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
+        GraphConstructorOptions(),
+        *(NGraphClusterManager::GetClusterGraph(cluster_idx)), &subgraph));
+    FunctionDef* fdef = fdeflib->add_function();
+    // TODO: if func lib has func with same name etc?
+    TF_RETURN_IF_ERROR(GraphToFunctionDef(
+        subgraph, strings::StrCat("ngraph_cluster_", to_string(cluster_idx)),
+        fdef));
+  }
+
+  // Pass 8 (optional, only run if environment variable
   // NGRAPH_TF_DUMP_CLUSTERS is set): validate the graph def, and
   // make sure we can construct a graph from it.
   if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
