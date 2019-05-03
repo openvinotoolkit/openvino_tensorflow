@@ -42,7 +42,8 @@ namespace ngraph_bridge {
 //
 ---------------------------------------------------*/
 
-Status IsCopyLogEnabled(int graph_id, bool& is_copy_log_enabled);
+Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
+                                        bool& is_copy_log_enabled);
 
 void PrintTFTensor(Tensor& T1);
 std::string DebugNode(Node* node);

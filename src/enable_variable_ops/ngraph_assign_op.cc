@@ -87,7 +87,8 @@ class NGraphAssignOp : public OpKernel {
                    << ng_graph_id_;
 
     bool log_copies = false;
-    OP_REQUIRES_OK(context, IsCopyLogEnabled(ng_graph_id_, log_copies));
+    OP_REQUIRES_OK(context,
+                   IsNgraphTFLogTensorCopiesEnabled(ng_graph_id_, log_copies));
     std::stringstream copy_log_str;
     copy_log_str << "KERNEL[" << type_string() << "]: " << name()
                  << " ,Copy_TF " << PrintBool(copy_to_tf_) << " ,Just_Looking "

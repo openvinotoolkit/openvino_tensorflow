@@ -117,7 +117,8 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   ngraph::Event event_compute(oss.str(), name(), "");
 
   bool log_copies = false;
-  OP_REQUIRES_OK(ctx, IsCopyLogEnabled(ng_graph_id_, log_copies));
+  OP_REQUIRES_OK(ctx,
+                 IsNgraphTFLogTensorCopiesEnabled(ng_graph_id_, log_copies));
   std::stringstream copy_log_str;
   copy_log_str << "KERNEL[" << type_string() << "]: " << name() << " ,Copy_TF "
                << PrintBool(copy_to_tf_) << " ,Just_Looking "

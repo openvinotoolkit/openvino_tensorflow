@@ -67,9 +67,6 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(REMOVE_ITEM SRC ngraph_tracked_variable.cc)
     list(APPEND SRC enable_variable_ops/ngraph_tracked_variable.cc)
 
-    list(REMOVE_ITEM SRC ngraph_utils.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_utils.cc)
-
     # new files
     list(APPEND SRC enable_variable_ops/ngraph_assign_op.cc)
     list(APPEND SRC enable_variable_ops/ngraph_catalog.cc)

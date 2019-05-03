@@ -525,7 +525,8 @@ class NGraphEncapsulateOp : public OpKernel {
     std::vector<std::unique_ptr<ngraph::Event>> input_copy_events;
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     bool log_copies = false;
-    OP_REQUIRES_OK(ctx, IsCopyLogEnabled(m_graph_id, log_copies));
+    OP_REQUIRES_OK(ctx,
+                   IsNgraphTFLogTensorCopiesEnabled(m_graph_id, log_copies));
     std::stringstream copy_log_str;
     copy_log_str << "KERNEL[" << type_string() << "]: " << name()
                  << " ,GraphID " << m_graph_id << "\n";
