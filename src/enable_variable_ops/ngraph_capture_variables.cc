@@ -57,34 +57,50 @@ Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes) {
           {"AssignSub", std::make_pair("NGraphAssignSub", ReplaceAssign)},
           {"VariableV2", std::make_pair("NGraphVariable", ReplaceVariable)}};
 
-  std::vector<Node*> replaced_nodes;
+  std::vector<Node*> nodes_to_capture;
+
   for (auto node : graph->op_nodes()) {
+    std::set<Node*> ref_list;
     if (NGraphPlacementRequested(node)) {
-      auto itr = CAPTURE_REPLACE_OP_MAP.find(node->type_string());
-      if (itr != CAPTURE_REPLACE_OP_MAP.end()) {
-        NGRAPH_VLOG(1) << "Capturing: " << node->name();
-        Node* replacement;
+      // Check if the node is a VariableV2
+      if (node->type_string() == "VariableV2") {
+        NGRAPH_VLOG(4) << "Found Variable: " << node->name();
+        // Add the Variable node to the ref list
+        ref_list.insert(node);
 
-        // Create the replacement node
-        TF_RETURN_IF_ERROR((itr->second.second)(graph, node, &replacement,
-                                                node->name(), itr->second.first,
-                                                false, false, 0, false));
+        // go over all the nodes leading from VariableV2 and store them
+        // in a list if they are ref type
+        StoreRefTypeOutputs(node, &ref_list);
 
-        std::vector<const Edge*> edges;
-
-        NGRAPH_VLOG(4) << "Replacing Node " << node->DebugString() << " with "
-                       << replacement->DebugString();
-
-        TF_RETURN_IF_ERROR(ReplaceInputControlEdges(graph, node, replacement));
-        TF_RETURN_IF_ERROR(ReplaceOutputEdges(graph, node, replacement));
-
-        replaced_nodes.push_back(node);
+        if (ref_list.size()) {
+          for (auto n : ref_list) {
+            auto itr = CAPTURE_REPLACE_OP_MAP.find(n->type_string());
+            if (itr != CAPTURE_REPLACE_OP_MAP.end()) {
+              nodes_to_capture.push_back(n);
+            }
+          }
+          ref_list.clear();
+        }
       }
+    }
+  }
 
-    }  // end of checking NGraphPlacementRequested
-  }    // end of looping through nodes in the graph
+  for (auto node : nodes_to_capture) {
+    Node* replacement;
+    auto itr = CAPTURE_REPLACE_OP_MAP.find(node->type_string());
+    // Create the replacement node
+    TF_RETURN_IF_ERROR((itr->second.second)(graph, node, &replacement,
+                                            node->name(), itr->second.first,
+                                            false, false, 0, false));
 
-  for (auto node : replaced_nodes) {
+    NGRAPH_VLOG(4) << "Replacing Node " << node->DebugString() << " with "
+                   << replacement->DebugString();
+
+    TF_RETURN_IF_ERROR(ReplaceInputControlEdges(graph, node, replacement));
+    TF_RETURN_IF_ERROR(ReplaceOutputEdges(graph, node, replacement));
+  }  // end of looping through nodes in the capture list
+
+  for (auto node : nodes_to_capture) {
     NGRAPH_VLOG(4) << "Removing: " << node->name();
     graph->RemoveNode(node);
   }

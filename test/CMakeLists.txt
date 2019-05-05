@@ -58,6 +58,10 @@ set(SRC
     opexecuter.cpp
 )
 
+if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+    list(APPEND SRC graph_rewrites/capture_variables.cc)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")

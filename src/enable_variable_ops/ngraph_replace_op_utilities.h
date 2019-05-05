@@ -45,15 +45,19 @@ Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
                        const bool just_looking, const bool outputs_ng_supported,
                        const int graph_id, const bool is_backend_set);
 
-// Adds the edges that are incoming control edges to node
+// Adds the edges that are incoming control edges to the original node
 // as incoming control edges to the replacement node
 // Removes the original edges
 Status ReplaceInputControlEdges(Graph* graph, Node* node, Node* replacement);
 
-// Adds the edges that are outgoing from node
-// as outgoing edges to the replacement node
+// Adds the edges that are outgoing from the original node
+// as outgoing edges from the replacement node
 // Removes the original edges
 Status ReplaceOutputEdges(Graph* graph, Node* node, Node* replacement);
+
+// Capture Pass checks
+bool IsValidateShape(Node* node);
+Status StoreRefTypeOutputs(Node* node, std::set<Node*>* ref_list);
 
 }  // namespace ngraph_bridge
 
