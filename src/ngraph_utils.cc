@@ -109,49 +109,6 @@ void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
   out << "\n";
 }
 
-std::ostream& DumpNGTensor(std::ostream& s, const string& name,
-                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
-  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
-  const ngraph::Shape& shape = t->get_shape();
-  s << "Tensor<" << name << ": ";
-
-  for (size_t i = 0; i < shape.size(); ++i) {
-    s << shape.at(i);
-    if (i + 1 < shape.size()) {
-      s << ", ";
-    }
-  }
-  size_t pos = 0;
-  s << ">{";
-  size_t rank = shape.size();
-  if (rank == 0) {
-    s << GetScalarFromTensor<float>(t, pos++);
-  } else if (rank <= 2) {
-    s << "[";
-    for (size_t i = 0; i < shape.at(0); ++i) {
-      if (rank == 1) {
-        s << GetScalarFromTensor<float>(t, pos++);
-      } else if (rank == 2) {
-        s << "[";
-        for (size_t j = 0; j < shape.at(1); ++j) {
-          s << GetScalarFromTensor<float>(t, pos++);
-
-          if (j + 1 < shape.at(1)) {
-            s << ", ";
-          }
-        }
-        s << "]";
-      }
-      if (i + 1 < shape.at(0)) {
-        s << ", ";
-      }
-    }
-    s << "]";
-  }
-  s << "}";
-  return s;
-}
-
 Status TFDataTypeToNGraphElementType(DataType tf_dt,
                                      ngraph::element::Type* ng_et) {
   switch (tf_dt) {

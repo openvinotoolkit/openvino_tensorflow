@@ -185,8 +185,63 @@ void print_node_histogram(const std::unordered_map<string, int>&,
                           bool sorted = true);
 
 // Prints the tensor to the given output stream
-std::ostream& DumpNGTensor(std::ostream& s, const std::string& name,
-                           const std::shared_ptr<ngraph::runtime::Tensor>& t);
+// TODO: internally convert ng types to cpptypes
+// so that users do not have to specify the template arg T
+template <typename T>
+std::ostream& DumpNGTensor(std::ostream& s, const string& name,
+                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
+  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
+  const ngraph::Shape& shape = t->get_shape();
+  s << "Tensor<" << name << ": ";
+  auto type = t->get_element_type();
+  bool T_is_integral = std::is_integral<T>::value;
+  bool type_is_integral = type.is_integral();
+  if (type_is_integral != T_is_integral) {
+    std::stringstream err_msg;
+    err_msg << "Tensor type " << type << " is"
+            << (type_is_integral ? " " : " not ")
+            << "integral but passed template is"
+            << (T_is_integral ? " " : " not ") << "integral";
+    throw std::invalid_argument(err_msg.str());
+  }
+
+  for (size_t i = 0; i < shape.size(); ++i) {
+    s << shape.at(i);
+    if (i + 1 < shape.size()) {
+      s << ", ";
+    }
+  }
+  size_t pos = 0;
+  s << ">{";
+  size_t rank = shape.size();
+  if (rank == 0) {
+    s << GetScalarFromTensor<T>(t, pos++);
+  } else if (rank <= 2) {
+    s << "[";
+    for (size_t i = 0; i < shape.at(0); ++i) {
+      if (rank == 1) {
+        s << GetScalarFromTensor<T>(t, pos++);
+      } else if (rank == 2) {
+        s << "[";
+        for (size_t j = 0; j < shape.at(1); ++j) {
+          s << GetScalarFromTensor<T>(t, pos++);
+
+          if (j + 1 < shape.at(1)) {
+            s << ", ";
+          }
+        }
+        s << "]";
+      }
+      if (i + 1 < shape.at(0)) {
+        s << ", ";
+      }
+    }
+    s << "]";
+  }
+  // TODO: extend for > 2 rank
+  s << "}";
+  return s;
+}
 
 // Converts a TensorFlow DataType to an nGraph element::Type. Returns
 // errors::Unimplemented if the element type is not supported by nGraph
