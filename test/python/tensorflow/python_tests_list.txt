@@ -150,14 +150,6 @@ constant_op_test.ConstantTest.testInt32
 constant_op_test.ConstantTest.testInt64
 constant_op_test.ConstantTest.testDouble 
 
-core_test.ExpandDimsTest.test_identity
-core_test.ExpandDimsTest.test_label
-core_test.ExpandDimsTest.test
-
-core_test.TransposeTest.test
-core_test.TransposeTest.test_default_axis_order
-core_test.TransposeTest.test_identity
-
 depthtospace_op_test.DepthToSpaceTest.testAgainstTranspose
 depthtospace_op_test.DepthToSpaceTest.testBasic
 depthtospace_op_test.DepthToSpaceTest.testBasicFloat16
@@ -200,8 +192,6 @@ identity_op_py_test.IdentityOpTest.testInt32_6
 
 identity_bijector_test.IdentityBijectorTest.testBijector
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency 
-
-math_grad_test.AbsOpTesttestComplexAbs
 
 math_grad_test.SquaredDifferenceOpTest.testGrad
 
@@ -378,7 +368,6 @@ reduction_ops_test.ReducedShapeTest.testZeros
 
 relu_op_test.Relu6Test.testGradientFloat32
 relu_op_test.Relu6Test.testGradientFloat64
-relu_op_test.Relu6Test.testNumbers
 
 relu_op_test.ReluTest.testGradGradFloat32
 relu_op_test.ReluTest.testGradGradFloat64
@@ -386,13 +375,11 @@ relu_op_test.ReluTest.testGradGradFloat64
 relu_op_test.ReluTest.testGradientFloat32
 relu_op_test.ReluTest.testGradientFloat64
 relu_op_test.ReluTest.testGradientScalar
-relu_op_test.ReluTest.testNumbers
 
 slice_op_test.SliceTest.testComplex
 slice_op_test.SliceTest.testEmpty
 slice_op_test.SliceTest.testGradientsAll
 slice_op_test.SliceTest.testInt32
-slice_op_test.SliceTest.testInt64Slicing
 slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testRandom
 slice_op_test.SliceTest.testScalarInput
@@ -420,7 +407,6 @@ softmax_op_test.SoftmaxTest.testLargeDims
 
 spacetodepth_op_test.SpaceToDepthTest.testAgainstTranspose
 spacetodepth_op_test.SpaceToDepthTest.testBasic
-spacetodepth_op_test.SpaceToDepthTest.testBasicFloat16
 spacetodepth_op_test.SpaceToDepthTest.testBatchSize0
 spacetodepth_op_test.SpaceToDepthTest.testBlockSize2Batch10
 spacetodepth_op_test.SpaceToDepthTest.testDepthInterleaved

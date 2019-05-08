@@ -51,7 +51,7 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
     
     Prints the list of test cases in this package.
     
-    Eg:math_ops_test
+    Eg:math_ops_test.*
     
     --run_test RUN_TEST Runs the testcase and returns the output.
     
@@ -86,9 +86,7 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
  - Tests can be run by specifying one or multiple tests at a time by
    passing the name of the module/test or regular expressions. Few examples of
    supported formats by `--run_test` argument :
- ``` math_ops_test 
-       math_ops_test.DivNanTest
-       math_ops_test.DivNoNanTest.testBasic
+ ```  math_ops_test.DivNoNanTest.testBasic
        math_ops_test.DivNoNanTest.*
        math_ops_test.D*
        math_ops_test.*
