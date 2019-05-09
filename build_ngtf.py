@@ -60,7 +60,7 @@ def main():
     parser.add_argument(
         '--use_prebuilt_tensorflow',
         help="Skip building TensorFlow and use downloaded version.\n" +
-        "Note that in this case C++ unit tests won't be build for nGrapg-TF bridge",
+        "Note that in this case C++ unit tests won't be build for nGraph-TF bridge",
         action="store_true")
 
     parser.add_argument(
@@ -86,9 +86,15 @@ def main():
         action="store")
 
     parser.add_argument(
+        '--ngraph_src_dir',
+        type=str,
+        help="Local nGraph source directory to use. Overrides --ngraph_version.\n",
+        action="store")
+
+    parser.add_argument(
         '--ngraph_version',
         type=str,
-        help="nGraph version to use (Default: " + ngraph_version + ")\n",
+        help="nGraph version to use. Overridden by --ngraph_src_dir. (Default: " + ngraph_version + ")\n",
         action="store")
 
     parser.add_argument(
@@ -190,13 +196,19 @@ def main():
                   tf.__compiler_version__)
             cxx_abi = str(tf.__cxx11_abi_flag__)
 
-    # Download nGraph
-    if arguments.ngraph_version:
-        ngraph_version = arguments.ngraph_version
+    # Download nGraph if required.
+    ngraph_src_dir='./ngraph'
+    if arguments.ngraph_src_dir:
+        ngraph_src_dir = arguments.ngraph_src_dir
 
-    print("nGraph Version: ", ngraph_version)
-    download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                  ngraph_version)
+        print("Using local nGraph source in directory ",ngraph_src_dir)
+    else:
+        if arguments.ngraph_version:
+            ngraph_version = arguments.ngraph_version
+
+        print("nGraph Version: ", ngraph_version)
+        download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
+                      ngraph_version)
 
     # Now build nGraph
     ngraph_cmake_flags = [
@@ -238,7 +250,7 @@ def main():
     else:
         ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=NO"])
 
-    build_ngraph(build_dir, "./ngraph", ngraph_cmake_flags, verbosity)
+    build_ngraph(build_dir, ngraph_src_dir, ngraph_cmake_flags, verbosity)
 
     # Next build CMAKE options for the bridge
     tf_src_dir = os.path.abspath("tensorflow")
