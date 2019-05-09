@@ -48,13 +48,18 @@ def main():
 
     parser.add_argument(
         '--build_gpu_backend',
-        help="nGraph backends will include nVidia GPU.\n"
+        help="nGraph backends will include nVidia GPU. Use: NGRAPH_TF_BACKEND=GPU\n"
         "Note: You need to have CUDA headers and libraries available on the build system.\n",
         action="store_true")
 
     parser.add_argument(
         '--build_plaidml_backend',
-        help="nGraph backends will include PlaidML bckend\n",
+        help="nGraph backends will include PlaidML bckend. Use: NGRAPH_TF_BACKEND=PLAIDML\n",
+        action="store_true")
+
+    parser.add_argument(
+        '--build_intelgpu_backend',
+        help="nGraph backends will include Intel GPU bckend. Use: NGRAPH_TF_BACKEND=INTELGPU\n",
         action="store_true")
 
     parser.add_argument(
@@ -219,10 +224,6 @@ def main():
         "-DNGRAPH_TARGET_ARCH=" + target_arch,
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
     ]
-    if (platform.system() != 'Darwin'):
-        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=YES"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=NO"])
 
     if arguments.debug_build:
         ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
@@ -234,21 +235,16 @@ def main():
     else:
         ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OFF"])
 
-    if arguments.build_gpu_backend:
-        ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=YES"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=NO"])
-
     if arguments.build_plaidml_backend:
         command_executor(["pip", "install", "-U", "plaidML"])
-        ngraph_cmake_flags.extend(["-DNGRAPH_PLAIDML_ENABLE=YES"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_PLAIDML_ENABLE=NO"])
 
-    if not arguments.use_prebuilt_tensorflow:
-        ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=YES"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=NO"])
+
+    flag_string_map = {True:'YES', False:'NO'}
+    ngraph_cmake_flags.extend(["-DNGRAPH_TOOLS_ENABLE=" + flag_string_map[platform.system() != 'Darwin']])
+    ngraph_cmake_flags.extend(["-DNGRAPH_GPU_ENABLE=" + flag_string_map[arguments.build_gpu_backend]])
+    ngraph_cmake_flags.extend(["-DNGRAPH_PLAIDML_ENABLE=" + flag_string_map[arguments.build_plaidml_backend]])
+    ngraph_cmake_flags.extend(["-DNGRAPH_INTELGPU_ENABLE=" + flag_string_map[arguments.build_intelgpu_backend]])
+    ngraph_cmake_flags.extend(["-DNGRAPH_UNIT_TEST_ENABLE=" + flag_string_map[not arguments.use_prebuilt_tensorflow]])
 
     build_ngraph(build_dir, ngraph_src_dir, ngraph_cmake_flags, verbosity)
 
@@ -265,10 +261,7 @@ def main():
     if (arguments.debug_build):
         ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-    if arguments.use_prebuilt_tensorflow:
-        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=OFF"])
-    else:
-        ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
+    if not arguments.use_prebuilt_tensorflow:
         ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
         ngraph_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
@@ -281,17 +274,9 @@ def main():
     else:
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
 
-    if (arguments.enable_variables_and_optimizers):
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=TRUE"])
-    else:
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=FALSE"])
-        
-    if (arguments.use_grappler_optimizer):
-        ngraph_tf_cmake_flags.extend(
-            ["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=TRUE"])
-    else:
-        ngraph_tf_cmake_flags.extend(
-            ["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=FALSE"])
+    ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=" + flag_string_map[not arguments.use_prebuilt_tensorflow]])
+    ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=" + flag_string_map[arguments.enable_variables_and_optimizers]])
+    ngraph_tf_cmake_flags.extend(["-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=" + flag_string_map[arguments.use_grappler_optimizer]])
 
     # Now build the bridge
     ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
