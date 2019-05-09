@@ -20,7 +20,10 @@ load("@ngraph_bridge//:cxx_abi_option.bzl", "CXX_ABI")
 
 cc_library(
     name = "ngraph_headers",
-    hdrs = glob(["src/ngraph/**/*.hpp"]),
+    hdrs = glob([
+        "src/ngraph/**/*.hpp",
+        "src/ngraph/*.hpp"
+    ]),
     visibility = ["//visibility:public"],
 )
 
@@ -66,6 +69,7 @@ cc_library(
     ],
     copts = [
         "-I external/ngraph/src",
+        "-I external/ngraph/src/ngraph",
         "-I external/nlohmann_json_lib/include/",
         "-D_FORTIFY_SOURCE=2",
         "-Wformat",
@@ -74,7 +78,7 @@ cc_library(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"0.18.0\\"',
+        '-D NGRAPH_VERSION=\\"0.19.0-rc.2\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
     ] + CXX_ABI,
@@ -127,7 +131,7 @@ cc_binary(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"0.18.0\\"',
+        '-D NGRAPH_VERSION=\\"0.19.0-rc.2\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
     ] + CXX_ABI,
@@ -159,7 +163,7 @@ cc_library(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"0.18.0\\"',
+        '-D NGRAPH_VERSION=\\"0.19.0-rc.2\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
     ] + CXX_ABI,
