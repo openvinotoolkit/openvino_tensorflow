@@ -39,40 +39,16 @@ def download_repo(repo, target_name=None, version='master'):
     command_executor("git clone " + repo)
 
 
-def run_inference(model_name, models_dir):
-    parameters = \
-    '[{"model_type" : "Image Recognition", "model_name" : "Inception_v4", \
-        "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
-                python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/inception4_slim/inception_v4.ckpt \
-                --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
-                --dataset_split_name=validation --model_name=inception_v4"},\
-     {"model_type" : "Image Recognition", "model_name" : "MobileNet_v1", \
-        "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
-                python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/mobilenet_v1/mobilenet_v1_1.0_224.ckpt \
-                --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
-                --dataset_split_name=validation --model_name=mobilenet_v1"}, \
-     {"model_type" : "Image Recognition", "model_name" : "ResNet50_v1", \
-        "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
-                python eval_image_classifier.py --alsologtostderr \
-                --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/resnet50_v1_slim/resnet_v1_50.ckpt \
-                --dataset_dir=/mnt/data/TF_ImageNet_latest/ --dataset_name=imagenet \
-                --dataset_split_name=validation --model_name=resnet_v1_50 --labels_offset=1"}, \
-     {"model_type" : "Object Detection", "model_name" : "SSD-MobileNet_v1", \
-        "cmd" : "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0 \
-                python object_detection/model_main.py --logtostderr \
-                --pipeline_config_path=object_detection/samples/configs/ssd_mobilenet_v1_coco.config \
-                --checkpoint_dir=/nfs/site/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/ssd_mobilenet_v1_coco_2018_01_28/ \
-                --run_once=True"}]'
+def run_inference(model_name, models_dir, json_file_name):
 
     try:
-        data = json.loads(parameters)
+        data = parse_json(args.json_file_name)
     except:
         print("Pass a valid model prameters dictionary")
+        sys.exit(1)
     pwd = os.getcwd()
-
     for i, d in enumerate(data):
+
         if (model_name in data[i]["model_name"]):
             if (data[i]["model_type"] == "Image Recognition"):
                 if models_dir is None:
@@ -87,25 +63,23 @@ def run_inference(model_name, models_dir):
             return model_name, p
 
 
-def check_accuracy(model, p, tolerance=0.001):
+def check_accuracy(model, p, json_file_name, tolerance=0.001):
     #check if the accuracy of the model inference matches with the published numbers
     #Accuracy values picked up from here https://github.com/tensorflow/models/tree/master/research/slim
-    accuracy = \
-    '[{"model_name" : "Inception_v4", "accuracy" : "0.802"},\
-     {"model_name" : "ResNet50_v1", "accuracy" : "0.752"}, \
-     {"model_name" : "MobileNet_v1", "accuracy" : "0.709"}]'
 
-    data = json.loads(accuracy)
-
+    data = parse_json(args.json_file_name)
     for line in p.splitlines():
         print(line.decode())
         if ('eval/Accuracy'.encode() in line):
-            accuracy = re.split("eval/Accuracy", line.decode())[1]
-            top1_accuracy = re.search(r'\[(.*)\]', accuracy).group(1)
+            is_match = re.search('eval/Accuracy\[([0-9.]+)]', line.decode())
+            if is_match and len(is_match.groups()) > 0:
+                top1_accuracy = is_match.group(1)
+
         #for now we just validate top 1 accuracy, but calculating top5 anyway.
         if ('eval/Recall_5'.encode() in line):
-            accuracy = re.split("eval/Recall_5", line.decode())[1]
-            top5_accuracy = float(re.search("\[(.*?)\]", accuracy).group(1))
+            is_match = re.search('.+eval/Recall_5\[([0-9.]+)]', line.decode())
+            if is_match and len(is_match.groups()) > 0:
+                top5_accuracy = is_match.group(1)
 
     for i, d in enumerate(data):
         if (model in data[i]["model_name"]):
@@ -134,6 +108,12 @@ if __name__ == '__main__':
         help=
         'Model name to run inference. Availble models are Inception_v4, MobileNet_v1, ResNet50_v1',
         required=True)
+
+    parser.add_argument(
+        '--json_file_name',
+        help=
+        'json file with model parameters to run inference and accuracy values to verify',
+        required=True)
     parser.add_argument(
         '--models_dir',
         help='Source of the model repository location on disk \
@@ -154,7 +134,14 @@ if __name__ == '__main__':
     #TODO(Sindhu): Run multiple or ALL models at once and compare accuracy.
 
     try:
-        model_name, p = run_inference(args.model_name, models_dir)
-        check_accuracy(model_name, p)
+        model_name, p = run_inference(args.model_name, models_dir,
+                                      args.json_file_name)
+        check_accuracy(model_name, p, args.json_file_name)
+        if check_accuracy(model_name, p, args.json_file_name):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
     except Exception as ex:
         print("Model accuracy verification failed. Exception: %s" % str(ex))
+        sys.exit(1)

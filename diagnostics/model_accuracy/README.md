@@ -4,11 +4,11 @@ After running the models using ngraph, the tool validates the accuracy by compar
 
 # Required setup to use the tool:
 ngraph_bridge should be installed to be able to use this tool. 
-Refer to Option#2 here on how to build and install - https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
+Refer to Option#2 here on how to build and install - https://github.com/tensorflow/ngraph-bridge/blob/master/README.md 
 
 
 # To run the model accuracy tool(example):
-	python verify_inference_model.py --model_name Inception_v4
+	python verify_inference_model.py --model_name Inception_v4 --json_file_name model-run.json
 
 # Limitations:
 The tool can run only one network at a time now, will be extended to run multiple models at once and validate accuracy of the same 

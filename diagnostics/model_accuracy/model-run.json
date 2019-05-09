@@ -1,0 +1,24 @@
+[
+
+  {
+    "model_name": "Inception_v4",
+    "accuracy" : "0.802",
+    "model_type": "Image Recognition",
+    "cmd": "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0, python eval_image_classifier.py --alsologtostderr --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/inception4_slim/inception_v4.ckpt --dataset_dir=/mnt/data/TF_ImageNet_latest ---dataset_name=imagenet --dataset_split_name=validation --model_name=inception_v4"
+  },
+
+  {
+    "model_name": "MobileNet_v1",
+    "accuracy" : "0.709",
+    "model_type": "Image Recognition",
+    "cmd": "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0, python eval_image_classifier.py --alsologtostderr --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/mobilenet_v1/mobilenet_v1_1.0_224.ckpt --dataset_dir=/mnt/data/TF_ImageNet_latest ---dataset_name=imagenet --dataset_split_name=validation --model_name=mobilenet_v1"
+  },
+
+  {
+    "model_name": "ResNet50_v1",
+    "accuracy" : "0.752",
+    "model_type": "Image Recognition",
+    "cmd": "OMP_NUM_THREADS=28 KMP_AFFINITY=granularity=fine,compact,1,0, python eval_image_classifier.py --alsologtostderr --checkpoint_path=/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/resnet50_v1_slim/resnet_v1_50.ckpt --dataset_dir=/mnt/data/TF_ImageNet_latest --dataset_name=imagenet --dataset_split_name=validation --model_name=resnet_v1_50 --labels_offset=1"
+  }
+
+]
