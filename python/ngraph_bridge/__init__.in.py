@@ -33,6 +33,8 @@ from tensorflow.python.framework import errors_impl
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops
 
+from tensorflow.core.protobuf import rewriter_config_pb2
+
 import ctypes
 
 __all__ = [
@@ -40,7 +42,7 @@ __all__ = [
     'set_backend', 'is_supported_backend', 'get_currently_set_backend_name',
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
-    'is_grappler_enabled', 'are_variables_enabled', 'set_disabled_ops', 'get_disabled_ops'
+    'is_grappler_enabled', 'update_config', 'are_variables_enabled', 'set_disabled_ops', 'get_disabled_ops'
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -194,6 +196,18 @@ def cxx11_abi_flag():
 
 def is_grappler_enabled():
     return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+
+def update_config(config):
+    #updating session config if grappler is enabled
+    if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
+        rewrite_options = rewriter_config_pb2.RewriterConfig(
+            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
+            custom_optimizers=[
+                rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
+                    name="ngraph-optimizer")
+            ])
+        config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewrite_options)))
+    return config
 
 def are_variables_enabled():
     return ngraph_bridge_lib.ngraph_tf_are_variables_enabled()

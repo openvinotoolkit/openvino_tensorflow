@@ -131,16 +131,7 @@ def train_mnist_cnn(FLAGS):
         log_device_placement=False,
         inter_op_parallelism_threads=1)
     # Enable the custom optimizer using the rewriter config options
-    if ngraph_bridge.is_grappler_enabled():
-        rewrite_options = rewriter_config_pb2.RewriterConfig(
-            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
-            custom_optimizers=[
-                rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
-                    name="ngraph-optimizer")
-            ])
-        config.MergeFrom(
-            tf.ConfigProto(
-                graph_options=tf.GraphOptions(rewrite_options=rewrite_options)))
+    config = ngraph_bridge.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
