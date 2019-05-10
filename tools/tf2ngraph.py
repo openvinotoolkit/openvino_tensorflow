@@ -177,6 +177,11 @@ def save_model(gdef, format, location):
     }[format](gdef, location)
 
 
+def attach_device(gdef):
+    for n in gdef.node:
+        n.device = "/job:localhost/replica:0/task:0/device:cpu:0"
+
+
 allowed_formats = {
     "input": ['savedmodel', 'pbtxt', 'pb'],
     "output": ['savedmodel', 'pbtxt', 'pb']
@@ -201,7 +206,9 @@ def convert(inp_format, inp_loc, out_format, out_loc, outnodes):
    """
     assert inp_format in allowed_formats['input']
     assert out_format in allowed_formats['output']
+    assert ngraph_bridge.is_grappler_enabled()
     input_gdef = get_gdef(inp_format, inp_loc)
+    attach_device(input_gdef)
     output_gdef = run_ngraph_grappler_optimizer(input_gdef, outnodes)
     save_model(output_gdef, out_format, out_loc)
 
