@@ -35,7 +35,6 @@ import getpass
 import time
 
 from tensorflow.examples.tutorials.mnist import input_data
-from tensorflow.core.protobuf import rewriter_config_pb2
 
 import tensorflow as tf
 import ngraph_bridge

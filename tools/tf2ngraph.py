@@ -18,7 +18,6 @@ import argparse
 import tensorflow as tf
 from google.protobuf import text_format
 from tensorflow.core.protobuf import meta_graph_pb2
-from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.grappler import tf_optimizer
 import ngraph_bridge
 import os
@@ -45,16 +44,10 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes):
     grappler_meta_graph_def.collection_def["train_op"].CopyFrom(
         output_collection)
 
-    rewriter_config = rewriter_config_pb2.RewriterConfig(
-        meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
-        custom_optimizers=[
-            rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
-                name="ngraph-optimizer")
-        ])
-
     session_config_with_trt = tf.ConfigProto()
-    session_config_with_trt.graph_options.rewrite_options.CopyFrom(
-        rewriter_config)
+    session_config_with_trt = ngraph_bridge.update_config(
+        session_config_with_trt)
+
     output_gdef = tf_optimizer.OptimizeGraph(
         session_config_with_trt, grappler_meta_graph_def, graph_id=b"tf_graph")
     return output_gdef

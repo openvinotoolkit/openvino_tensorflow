@@ -34,17 +34,7 @@ class NgraphTest(object):
 
     def with_ngraph(self, l, config=tf.ConfigProto()):
         # TODO: Stop grappler on failure (Add fail_on_optimizer_errors=True)
-        if ngraph_bridge.is_grappler_enabled():
-            rewrite_options = rewriter_config_pb2.RewriterConfig(
-                meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.
-                ONE,
-                min_graph_nodes=-1,
-                custom_optimizers=[
-                    rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
-                        name="ngraph-optimizer")
-                ])
-            config = tf.ConfigProto(
-                graph_options=tf.GraphOptions(rewrite_options=rewrite_options))
+        config = ngraph_bridge.update_config(config)
 
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
