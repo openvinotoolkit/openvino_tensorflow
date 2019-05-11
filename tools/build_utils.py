@@ -184,6 +184,7 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
     os.environ["TF_NEED_IGNITE"] = "0"
     if (platform.system() == 'Darwin'):
         os.environ["TF_ENABLE_XLA"] = "0"
+        os.environ["TF_CONFIGURE_IOS"] = "0"
     else:
         os.environ["TF_ENABLE_XLA"] = "1"
     os.environ["TF_NEED_OPENCL_SYCL"] = "0"
