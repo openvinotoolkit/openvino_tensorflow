@@ -2039,8 +2039,8 @@ static Status TranslateFusedConv2DOp(
                          ng_padding_above);
 
     ng_conv = ConstructNgNode<ng::op::Convolution>(
-        op->name(), ng_input, ng_filter, ng_strides, ng_dilations,
-        ng_padding_below, ng_padding_above);
+        op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+        ng_dilations, ng_padding_below, ng_padding_above);
 
     return Status::OK();
   };
@@ -2082,13 +2082,15 @@ static Status TranslateFusedConv2DOp(
     }
 
     auto ng_bias_broadcasted = ConstructNgNode<ng::op::Broadcast>(
-        op->name(), ng_bias, ng_conv_shape, ng_broadcast_axes);
-    auto ng_add =
-        ConstructNgNode<ng::op::Add>(op->name(), ng_conv, ng_bias_broadcasted);
+        op->name() + "_FusedConv2D_BiasAdd", ng_bias, ng_conv_shape,
+        ng_broadcast_axes);
+    auto ng_add = ConstructNgNode<ng::op::Add>(
+        op->name() + "_FusedConv2D_BiasAdd", ng_conv, ng_bias_broadcasted);
 
     if (VecStrCmp(fused_ops, {"BiasAdd", "Relu"})) {
       SaveNgOp(ng_op_map, op->name(),
-               ConstructNgNode<ng::op::Relu>(op->name(), ng_add));
+               ConstructNgNode<ng::op::Relu>(op->name() + "_FusedConv2D_Relu",
+                                             ng_add));
     } else {
       SaveNgOp(ng_op_map, op->name(), ng_add);
     }
@@ -2111,14 +2113,15 @@ static Status TranslateFusedConv2DOp(
 
     std::shared_ptr<ng::Node> ng_batch_norm =
         ConstructNgNode<ng::op::BatchNormInference>(
-            op->name(), tf_epsilon, ng_scale, ng_offset, ng_conv, ng_mean,
-            ng_variance);
+            op->name() + "_FusedConv2D_BatchNorm", tf_epsilon, ng_scale,
+            ng_offset, ng_conv, ng_mean, ng_variance);
 
     BatchToTensorflow(is_nhwc, ng_batch_norm);
 
     if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"})) {
       SaveNgOp(ng_op_map, op->name(),
-               ConstructNgNode<ng::op::Relu>(op->name(), ng_batch_norm));
+               ConstructNgNode<ng::op::Relu>(
+                   op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm));
     } else {
       SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
     }
