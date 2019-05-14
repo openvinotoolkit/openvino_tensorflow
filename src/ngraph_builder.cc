@@ -3241,6 +3241,37 @@ static Status TranslateRsqrtOp(
       });
 }
 
+static Status TranslateRsqrtGradOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  shared_ptr<ng::Node> ng_delta;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_delta));
+
+  //`grad = dy * -0.5 * y^3`, where `y = rsqrt(x)`, and `dy`
+  // Create a constant tensor populated with the value 3.
+  auto et = ng_input->get_element_type();
+  auto shape = ng_input->get_shape();
+  std::vector<std::string> constant_values(ng::shape_size(shape), "3");
+  auto ng_exponent =
+      ConstructNgNode<ng::op::Constant>(op->name(), et, shape, constant_values);
+
+  // Raise each element of the input to the power 3.
+  auto ng_pow =
+      ConstructNgNode<ng::op::Power>(op->name(), ng_input, ng_exponent);
+
+  // Create a constant tensor populated with the value -1/2.
+  std::vector<std::string> constant_diff(ng::shape_size(shape), "-0.5");
+  auto ng_diff =
+      ConstructNgNode<ng::op::Constant>(op->name(), et, shape, constant_diff);
+  auto ng_result = ConstructNgNode<ng::op::Multiply>(
+      op->name(),
+      (ConstructNgNode<ng::op::Multiply>(op->name(), ng_pow, ng_delta)),
+      ng_diff);
+  SaveNgOp(ng_op_map, op->name(), ng_result);
+  return Status::OK();
+}
+
 static Status TranslateShapeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4481,6 +4512,7 @@ const static std::map<
         {"ReluGrad", TranslateReluGradOp},
         {"Reshape", TranslateReshapeOp},
         {"Rsqrt", TranslateRsqrtOp},
+        {"RsqrtGrad", TranslateRsqrtGradOp},
         {"Select", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateSigmoidOp},
