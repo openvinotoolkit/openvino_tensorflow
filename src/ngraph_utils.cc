@@ -307,9 +307,8 @@ std::string GraphFilenamePrefix(std::string kind, int idx) {
   std::stringstream ss;
   ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
 #if defined NGRAPH_DISTRIBUTED
-  ngraph::Distributed dist;
-  int Rank_ID = dist.get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+  int rank_id = ng::get_distributed_interface()->get_rank();
+  ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
 #endif
   return ss.str();
 }
@@ -319,9 +318,8 @@ std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
   ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
      << std::setw(4) << sub_idx;
 #if defined NGRAPH_DISTRIBUTED
-  ngraph::Distributed dist;
-  int Rank_ID = dist.get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << Rank_ID;
+  int rank_id = ng::get_distributed_interface()->get_rank();
+  ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
 #endif
   return ss.str();
 }
