@@ -6,7 +6,7 @@ The application is linked with TensorFlow C++ library and nGraph-TensorFlow brid
 
 ## prerequisites
 
-The example application requires nGraph-TensorFlow bridge to be built first. Build the ngraph-tf by executing `build_ngtf.py` as per the [Option 2] instructions in the main readme. All the files needed to build this example application are located in the ngraph-tf/build directory.
+The example application requires nGraph-TensorFlow bridge to be built first. Build the ngraph-tf by executing `build_ngtf.py` as per the [Option 3] instructions in the main readme. All the files needed to build this example application are located in the ngraph-tf/build directory.
 
 ### Dependencies
 
@@ -30,13 +30,13 @@ Run the `make` command to build the application that will produce the executable
 
 Before running the application, set the `LD_LIBRARY_PATH` (or `DYLD_LIBRARY_PATH` for MacOS) to point to the library directories referred to in the `Makefile`:
 
-    export LD_LIBRARY_PATH=$NGRAPH_TF_DIR/build/artifacts/lib:$NGRAPH_TF_DIR/build/artifacts/tensorflow
+    export LD_LIBRARY_PATH=$NGRAPH_BRIDGE_DIR/build_cmake/artifacts/lib:$NGRAPH_BRIDGE_DIR/build_cmake/artifacts/tensorflow
 
-Where `NGRAPH_TF_DIR` should point to the directory where ngraph-tf was cloned.
+Where `NGRAPH_BRIDGE_DIR` should point to the directory where ngraph-tf was cloned.
 
 :warning: Note: If this example is built on CentOS then the library directory 
 is `lib64` - so please set the `LD_LIBRARY_PATH` accordingly
 
 Next run the executable `./hello_tf`
 
-[Option 2]: ../../README.md#option-2-build-ngraph-bridge-from-source
+[Option 3]: ../../README.md#option-3-build-ngraph-from-source
