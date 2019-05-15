@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-"""nGraph TensorFlow axpy
+"""nGraph TensorFlow axpy_variable_update
 
 """
 from __future__ import absolute_import
@@ -30,7 +30,7 @@ import json
 
 import ngraph_bridge
 
-print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+print("TensorFlow version: ", tf.VERSION)
 
 # Setup TensorBoard
 graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"
@@ -38,18 +38,29 @@ print('Saving graph to: %s' % graph_location)
 train_writer = tf.summary.FileWriter(graph_location)
 
 # Define the data
-a = tf.constant(np.full((2048, 2048), 0.05, dtype=np.float32), name='alpha')
-x = tf.placeholder(tf.float32, [None, 2048], name='x')
-y = tf.placeholder(tf.float32, shape=(2048, 2048), name='y')
+a = tf.constant(np.full((2048, 2048), 1.5, dtype=np.float32), name='alpha')
+x = tf.get_variable('x', [2048, 2048], initializer=tf.zeros_initializer)
+y = tf.constant(np.full((2048, 2048), 1.0, dtype=np.float32), name='y')
 
 c = a * x
 axpy = c + y
+
+train_step = x.assign(axpy)
+with tf.control_dependencies([train_step]):
+    train_op = tf.no_op('train_op')
 
 # Configure the session
 config = tf.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
-    inter_op_parallelism_threads=1)
+    inter_op_parallelism_threads=1,
+    graph_options=tf.GraphOptions(
+        optimizer_options=tf.OptimizerOptions(
+            opt_level=tf.OptimizerOptions.L0,
+            do_common_subexpression_elimination=False,
+            do_constant_folding=False,
+            do_function_inlining=False,
+        )))
 
 # Create session and run
 with tf.Session(config=config) as sess:
@@ -58,17 +69,15 @@ with tf.Session(config=config) as sess:
     run_metadata = tf.RunMetadata()
 
     event_times = []
+    sess.run(tf.global_variables_initializer())
     for i in range(10):
-        (result_axpy, result_c) = sess.run((axpy, c),
-                                           feed_dict={
-                                               x: np.ones((2048, 2048)),
-                                               y: np.ones((2048, 2048)),
-                                           },
-                                           options=options,
-                                           run_metadata=run_metadata)
+        (result_axpy) = sess.run((train_op),
+                                 options=options,
+                                 run_metadata=run_metadata),
         print(i)
         event_times.append(timeline.Timeline(run_metadata.step_stats))
 
+    print("Final value: ", x.eval())
     print("Writing event trace")
     with open('tf_event_trace.json', 'w') as f:
         f.write("[\n")
