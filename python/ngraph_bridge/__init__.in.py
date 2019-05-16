@@ -34,6 +34,7 @@ from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops
 
 from tensorflow.core.protobuf import rewriter_config_pb2
+from tensorflow.python.framework import load_library
 
 import ctypes
 
@@ -92,8 +93,9 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
-    ngraph_bridge_lib = ctypes.cdll.LoadLibrary(
-        os.path.join(libpath, 'libngraph_bridge.' + ext))
+    full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
+    _ = load_library.load_op_library(full_lib_path)
+    ngraph_bridge_lib = ctypes.cdll.LoadLibrary(full_lib_path)
 else:
     raise ValueError(
         "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
@@ -227,4 +229,3 @@ __version__ = \
   "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
   "nGraph bridge built with Variables and Optimizers Enablement: " \
       + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())
-

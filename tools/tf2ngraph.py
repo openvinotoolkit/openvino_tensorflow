@@ -161,8 +161,6 @@ def save_gdef_to_protobuf(gdef, location, as_text):
 
 
 def save_model(gdef, format, location):
-    if format == 'savedmodel':
-        raise Exception("TODO: Unimplemented")
     return {
         'savedmodel': save_gdef_to_savedmodel,
         'pbtxt': partial(save_gdef_to_protobuf, as_text=True),
