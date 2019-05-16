@@ -200,6 +200,29 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
   // Get Tensor input shapes and values from the const nodes
   int number_of_inputs = test_op->num_inputs();
+
+  // Create nGraph backend
+  // If NGRAPH_TF_BACKEND is set create that backend
+  // Else create backend of type ng_backend_name
+  string ng_backend_type = ng_backend_name;
+  const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
+
+  if (ng_backend_env_value != nullptr) {
+    string backend_env = std::string(ng_backend_env_value);
+    bool valid_ngraph_tf_backend =
+        !backend_env.empty() && BackendManager::IsSupportedBackend(backend_env);
+    ASSERT_TRUE(valid_ngraph_tf_backend) << "NGRAPH_TF_BACKEND " << backend_env
+                                         << " is not a supported backend";
+    ng_backend_type = backend_env;
+  }
+
+  NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
+  BackendManager::CreateBackend(ng_backend_type);
+  auto backend = BackendManager::GetBackend(ng_backend_type);
+
+  // Add the _ngraph_backend attr to the node
+  test_op->AddAttr("_ngraph_backend", ng_backend_type);
+
   // TODO : Validate static_input_indexes < number_of_inputs
   vector<TensorShape> input_shapes;
   vector<DataType> input_dt;
@@ -327,24 +350,6 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
     NgraphSerialize("unit_test_" + test_op_type_ + ".json", ng_function);
   }
-
-  // Create nGraph backend
-  // If NGRAPH_TF_BACKEND is set create that backend
-  // Else create backend of type ng_backend_name
-  string ng_backend_type = ng_backend_name;
-  const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
-  if (ng_backend_env_value != nullptr) {
-    string backend_env = std::string(ng_backend_env_value);
-    bool valid_ngraph_tf_backend =
-        !backend_env.empty() && BackendManager::IsSupportedBackend(backend_env);
-    ASSERT_TRUE(valid_ngraph_tf_backend) << "NGRAPH_TF_BACKEND " << backend_env
-                                         << " is not a supported backend";
-    ng_backend_type = backend_env;
-  }
-
-  NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
-  BackendManager::CreateBackend(ng_backend_type);
-  auto backend = BackendManager::GetBackend(ng_backend_type);
 
   // Allocate tensors for inputs
   vector<std::shared_ptr<ngraph::runtime::Tensor>> ng_ip_tensors;
