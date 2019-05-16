@@ -68,8 +68,9 @@ def run_mnist(_):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=1)
+    config_ngraph_enabled = ngraph_bridge.update_config(config)
 
-    sess = tf.Session(config=config)
+    sess = tf.Session(config=config_ngraph_enabled)
     tf.global_variables_initializer().run(session=sess)
     # Train
     train_loops = FLAGS.train_loop_count

@@ -130,6 +130,7 @@ def train_mnist_cnn(FLAGS):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=4)
+    config_ngraph_enabled = ngraph_bridge.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
@@ -164,7 +165,7 @@ def train_mnist_cnn(FLAGS):
     train_writer = tf.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.get_default_graph())
     saver = tf.train.Saver()
-    with tf.Session(config=config) as sess:
+    with tf.Session(config=config_ngraph_enabled) as sess:
         saver.restore(sess, FLAGS.model_dir)
         #sess.run(tf.global_variables_initializer())
         test_accuracy_final = 0

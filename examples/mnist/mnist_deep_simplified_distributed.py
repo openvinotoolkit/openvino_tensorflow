@@ -148,6 +148,7 @@ def train_mnist_cnn(FLAGS):
         allow_soft_placement=True,
         log_device_placement=False,
         inter_op_parallelism_threads=1)
+    config_ngraph_enabled = ngraph_bridge.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
@@ -207,7 +208,8 @@ def train_mnist_cnn(FLAGS):
         tf.train.StopAtStepHook(train_loops)
     ]
 
-    with tf.train.MonitoredTrainingSession(hooks=hooks, config=config) as sess:
+    with tf.train.MonitoredTrainingSession(
+            hooks=hooks, config=config_ngraph_enabled) as sess:
 
         step = 0
         start = time.time()

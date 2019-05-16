@@ -50,9 +50,10 @@ config = tf.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
+config_ngraph_enabled = ngraph_bridge.update_config(config)
 
 # Create session and run
-with tf.Session(config=config) as sess:
+with tf.Session(config=config_ngraph_enabled) as sess:
     print("Python: Running with Session")
     options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
     run_metadata = tf.RunMetadata()
