@@ -1116,6 +1116,30 @@ TEST(NNOps, L2Loss) {
   }
 }
 
+// Test Op :"LogSoftmax"
+TEST(NNOps, LogSoftmax) {
+  std::vector<std::vector<int64>> input_sizes = {
+      {3}, {3, 2}, {5, 6}, {3, 4, 5}, {2, 3, 4, 5}};
+
+  vector<int> static_input_indexes = {};
+
+  for (auto const& input_size : input_sizes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(input_size));
+    AssignInputValuesRandom<float>(input_data, -2, 2);
+
+    auto R = ops::LogSoftmax(root, input_data);
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    std::vector<Output> sess_run_fetchoutputs = {R};
+
+    OpExecuter opexecuter(root, "LogSoftmax", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}
+
 // Test Op :"MaxPool3D"
 TEST(NNOps, MaxPool3DNDHWCSame) {
   std::vector<std::vector<int64>> input_sizes;

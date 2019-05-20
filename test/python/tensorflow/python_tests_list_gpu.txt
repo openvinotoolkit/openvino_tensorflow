@@ -407,10 +407,10 @@ slice_op_test.SliceTest.testSliceOfSlice
 #softmax_op_test.SoftmaxTest.test1DTensorAsInputNoReshape
 #softmax_op_test.SoftmaxTest.test3DTensorAsInput
 #softmax_op_test.SoftmaxTest.test3DTensorAsInputNoReshape
-softmax_op_test.SoftmaxTest.testAlongFirstDimension
-softmax_op_test.SoftmaxTest.testAlongSecondDimension
+#softmax_op_test.SoftmaxTest.testAlongFirstDimension
+#softmax_op_test.SoftmaxTest.testAlongSecondDimension
 softmax_op_test.SoftmaxTest.testDimTooLarge
-softmax_op_test.SoftmaxTest.testDouble
+#softmax_op_test.SoftmaxTest.testDouble
 softmax_op_test.SoftmaxTest.testEmptyInput
 softmax_op_test.SoftmaxTest.testFloat
 #softmax_op_test.SoftmaxTest.testFloatGPU
