@@ -2238,7 +2238,7 @@ static Status TranslateLogSoftmaxOp(
   shared_ptr<ng::Node> ng_inp;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_inp));
   auto inp_shape = ng_inp->get_shape();
-  int rank = inp_shape.size();
+  size_t rank = inp_shape.size();
   auto ng_axis = ng::AxisSet{rank - 1};
   // Batch i, class j
   // logsoftmax[i, j] = logits[i, j] - log(sum(exp(logits[i])))
