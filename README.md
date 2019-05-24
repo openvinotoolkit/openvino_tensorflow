@@ -89,7 +89,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/tensorflow/ngraph-bridge.git
         cd ngraph-bridge
-        git checkout v0.12.0
+        git checkout v0.14.0
 
    
 2. Next run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
@@ -120,7 +120,7 @@ with nGraph backends. Please note that you can also install the TensorFlow and n
    This will produce something like this:
 
         TensorFlow version:  1.13.1
-        nGraph bridge version: b'0.12.0'
+        nGraph bridge version: b'0.14.0'
         nGraph version used for this build: b'0.18.0+c5d52f1'
         TensorFlow version used for this build: v1.13.1-0-g6612da8951
         CXX11_ABI flag used for this build: 0
