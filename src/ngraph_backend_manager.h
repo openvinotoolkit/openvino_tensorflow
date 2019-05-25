@@ -38,7 +38,7 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 struct Backend {
-  unique_ptr<ng::runtime::Backend> backend_ptr;
+  shared_ptr<ng::runtime::Backend> backend_ptr;
   mutex backend_mutex;
 };
 

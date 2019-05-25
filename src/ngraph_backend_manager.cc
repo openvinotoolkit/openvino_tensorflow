@@ -54,7 +54,7 @@ void BackendManager::CreateBackend(const string& backend_name) {
   // if backend does not exist create it
   if (itr == BackendManager::ng_backend_map_.end()) {
     Backend* bend = new Backend;
-    std::unique_ptr<ng::runtime::Backend> bend_ptr =
+    std::shared_ptr<ng::runtime::Backend> bend_ptr =
         ng::runtime::Backend::create(backend_name);
     bend->backend_ptr = std::move(bend_ptr);
     BackendManager::ng_backend_map_[backend_name] = bend;
