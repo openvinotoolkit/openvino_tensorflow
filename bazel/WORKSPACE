@@ -43,3 +43,47 @@ http_archive(
         "https://github.com/nlohmann/json/archive/v3.5.0.tar.gz",
     ],
 )
+
+http_archive(
+        name = "tbb",
+        build_file = "//:bazel/tbb.BUILD",
+        sha256 = "c3245012296f09f1418b78a8c2f17df5188b3bd0db620f7fd5fabe363320805a",
+        strip_prefix = "tbb-2019_U1",
+        urls = [
+            "http://mirror.tensorflow.org/github.com/01org/tbb/archive/2019_U1.zip",
+            "https://github.com/01org/tbb/archive/2019_U1.zip",
+        ],
+    )
+
+http_archive(
+        name = "eigen",
+        build_file = "//:bazel/eigen.BUILD",
+        sha256 = "74845ea27e19a1bcf63f3f271de62e06798f23e0467bb9d45b83a94918941b23",
+        strip_prefix = "eigen-eigen-20cbc6576426",
+        urls = [
+            "http://mirror.tensorflow.org/bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
+            "https://bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
+        ],
+    )
+
+http_archive(
+        name = "mkl_dnn",
+        build_file = "//:bazel/mkl_dnn.BUILD",
+        sha256 = "38a1c02104ee9f630c1ad68164119cd58ad0aaf59e04ccbe7bd5781add7bfbea",
+        strip_prefix = "mkl-dnn-0.18",
+        urls = [
+            "http://mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.18.tar.gz",
+            "https://github.com/intel/mkl-dnn/archive/v0.18.tar.gz",
+        ],
+    )
+
+http_archive(
+        name = "mkl_linux",
+        build_file = "//:bazel/mkl.BUILD",
+        sha256 = "f4129843d5c2996419f96f10928edd02b2150998861a088dc7cfa1b6a058102a",
+        strip_prefix = "mklml_lnx_2019.0.3.20190220",
+        urls = [
+            "http://mirror.tensorflow.org/github.com/intel/mkl-dnn/releases/download/v0.18/mklml_lnx_2019.0.3.20190220.tgz",
+            "https://github.com/intel/mkl-dnn/releases/download/v0.18/mklml_lnx_2019.0.3.20190220.tgz",
+        ],
+    )

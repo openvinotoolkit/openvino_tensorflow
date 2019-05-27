@@ -14,13 +14,15 @@ Go to the ngraph-tf directory and execute these commands to build the C++ librar
 
         ./configure_bazel.sh
         bazel build libngraph_bridge.so
-        bazel build @ngraph//:libinterpreter_backend.so   
+        bazel build @ngraph//:libinterpreter_backend.so
+        bazel build @ngraph//:libcpu_backend.so
 
 This will produce the following binary files:
 
 ```
     bazel-bin/libngraph_bridge.so
     bazel-bin/external/ngraph/libinterpreter_backend.so
+    bazel-bin/external/ngraph/libcpu_backend.so
 ```
 
 ### How to use the C++ library

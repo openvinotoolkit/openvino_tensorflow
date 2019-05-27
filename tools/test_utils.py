@@ -297,7 +297,7 @@ def run_resnet50(build_dir):
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--num_batches', '10', '--model=resnet50', '--batch_size=128'
     ]
-    command_executor(cmd)
+    command_executor(cmd, verbose=True)
 
     os.environ['JUNIT_WRAP_FILE'] = "%s/junit_inference_test.xml" % build_dir
     os.environ['JUNIT_WRAP_SUITE'] = 'models'
@@ -309,7 +309,7 @@ def run_resnet50(build_dir):
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
     ]
-    command_executor(cmd)
+    command_executor(cmd, verbose=True)
     os.chdir(root_pwd)
 
 
@@ -378,7 +378,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
         str(iterations), '--model=resnet50', '--batch_size=' + str(batch_size),
         '--eval_dir=' + eval_eventlog_dir
     ]
-    command_executor(cmd)
+    command_executor(cmd, verbose=True)
 
     # os.environ['JUNIT_WRAP_FILE'] = "%s/junit_inference_test.xml" % build_dir
     # os.environ['JUNIT_WRAP_SUITE'] = 'models'
@@ -396,7 +396,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
         '--model=resnet50', '--batch_size=' + str(batch_size), '--num_batches',
         str(iterations), '--eval', '--eval_dir=' + eval_eventlog_dir
     ]
-    command_executor(cmd)
+    command_executor(cmd, verbose=True)
 
     os.chdir(root_pwd)
 
