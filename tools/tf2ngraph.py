@@ -44,12 +44,10 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes):
     grappler_meta_graph_def.collection_def["train_op"].CopyFrom(
         output_collection)
 
-    session_config_with_trt = tf.ConfigProto()
-    session_config_with_trt = ngraph_bridge.update_config(
-        session_config_with_trt)
-
+    session_config = tf.ConfigProto()
+    session_config = ngraph_bridge.update_config(session_config)
     output_gdef = tf_optimizer.OptimizeGraph(
-        session_config_with_trt, grappler_meta_graph_def, graph_id=b"tf_graph")
+        session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
     return output_gdef
 
 
@@ -140,11 +138,8 @@ def filter_dict(prefix, dictionary):
 def save_gdef_to_savedmodel(gdef, location):
     builder = tf.saved_model.builder.SavedModelBuilder(location)
     with tf.Graph().as_default() as graph:
-        tf.import_graph_def(gdef)
+        tf.import_graph_def(gdef, name="")
         with tf.Session(graph=graph) as sess:
-            # TODO: This fails
-            # Err msg: Op NGraphEncapsulate is used by the graph, but is not registered
-            import ngraph_bridge
             builder.add_meta_graph_and_variables(
                 sess, [tf.saved_model.tag_constants.TRAINING])
             builder.add_meta_graph([tf.saved_model.tag_constants.SERVING],
@@ -170,7 +165,7 @@ def save_model(gdef, format, location):
 
 def attach_device(gdef):
     for n in gdef.node:
-        n.device = "/job:localhost/replica:0/task:0/device:cpu:0"
+        n.device = "/device:CPU:0"
 
 
 allowed_formats = {

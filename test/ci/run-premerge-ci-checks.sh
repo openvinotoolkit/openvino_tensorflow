@@ -42,7 +42,7 @@ pushd python
 # We need to explictly run python here, since "pytest" is also a shell script,
 # and that shell script starts with "#! /usr/bin/python", overriding any
 # python installed in a virtual environment.
-python -m pytest
+PYTHONPATH=`pwd`/../../:`pwd`/../../tools:PYTHONPATH python -m pytest
 popd
 
 echo "--------------------------------------------------------------------------"

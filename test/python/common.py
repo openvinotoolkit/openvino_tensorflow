@@ -21,6 +21,8 @@ import random
 import tensorflow as tf
 from tensorflow.core.protobuf import rewriter_config_pb2
 
+from google.protobuf import text_format
+
 import ngraph_bridge
 
 __all__ = ['LIBNGRAPH_BRIDGE', 'NgraphTest']
@@ -31,6 +33,19 @@ LIBNGRAPH_BRIDGE = 'libngraph_bridge.' + _ext
 
 
 class NgraphTest(object):
+
+    def get_tensor(self, graph, tname, loading_from_protobuf):
+        return graph.get_tensor_by_name(("", "import/")[loading_from_protobuf] +
+                                        tname)
+
+    def import_pbtxt(self, pb_filename):
+        graph_def = tf.GraphDef()
+        with open(pb_filename, "r") as f:
+            text_format.Merge(f.read(), graph_def)
+
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def)
+        return graph
 
     def with_ngraph(self, l, config=tf.ConfigProto()):
         # TODO: Stop grappler on failure (Add fail_on_optimizer_errors=True)
