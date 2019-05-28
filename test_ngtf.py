@@ -59,7 +59,7 @@ def main():
     tf_src_dir = 'build_cmake/tensorflow'
 
     if (platform.system() != 'Darwin'):
-        # Run the bazel based buil
+        # Run the bazel based build
         run_bazel_build_test(venv_dir, build_dir)
 
     # First run the C++ gtests

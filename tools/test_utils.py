@@ -18,7 +18,7 @@
 import argparse
 import errno
 import os
-from subprocess import check_output, call
+from subprocess import check_output, call, Popen
 import sys
 import shutil
 import glob
@@ -98,7 +98,6 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
         cmd = ['./gtest_ngtf']
 
     command_executor(cmd, verbose=True)
-
     os.chdir(root_pwd)
 
 
@@ -123,11 +122,18 @@ def run_ngtf_pytests(venv_dir, build_dir):
     # Next run the ngraph-tensorflow python tests
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
-    command_executor([
-        "python", "-m", "pytest", ('--junitxml=%s/xunit_pytest.xml' % build_dir)
-    ],
-                     verbose=True)
 
+    cmd = 'python -m pytest ' + ('--junitxml=%s/xunit_pytest.xml' % build_dir)
+    env = os.environ.copy()
+    new_paths = venv_dir + '/bin/python3:' + os.path.abspath(build_dir)
+    if 'PYTHONPATH' in env:
+        env["PYTHONPATH"] = new_paths + ":" + env["PYTHONPATH"]
+    else:
+        env["PYTHONPATH"] = new_paths
+    ps = Popen(cmd, shell=True, env=env)
+    so, se = ps.communicate()
+    errcode = ps.returncode
+    assert errcode == 0, "Error in running command: " + cmd
     os.chdir(root_pwd)
 
 

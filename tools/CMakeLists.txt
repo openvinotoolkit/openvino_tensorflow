@@ -26,7 +26,14 @@ install(
    FILES ${CMAKE_CURRENT_LIST_DIR}/tf2ngraph.py
    DESTINATION ${CMAKE_INSTALL_PREFIX}/tools
 )
+install(
+   FILES ${CMAKE_CURRENT_LIST_DIR}/build_utils.py
+   DESTINATION ${CMAKE_INSTALL_PREFIX}/tools
+)
 
 # copies to build_cmake/tools
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf2ngraph.py
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/build_utils.py
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
