@@ -67,6 +67,7 @@ REGISTER_OP("NGraphEncapsulate")
     .Attr("Tresults: list(type) >= 0")
     .Attr("ngraph_cluster: int")
     .Attr("ngraph_graph_id: int")
+    .Attr("ngraph_backend: string")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
@@ -168,7 +169,7 @@ class NGraphEncapsulateOp : public OpKernel {
 
     // Set the backend type for the op
     OP_REQUIRES_OK(ctx,
-                   ctx->GetAttr<string>("_ngraph_backend", &m_op_backend_name));
+                   ctx->GetAttr<string>("ngraph_backend", &m_op_backend_name));
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name();
     BackendManager::CreateBackend(m_op_backend_name);
     event.Stop();

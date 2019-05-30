@@ -151,7 +151,7 @@ node {
     }
   }
   attr {
-    key: "_ngraph_backend"
+    key: "ngraph_backend"
     value {
       s: "CPU"
     }

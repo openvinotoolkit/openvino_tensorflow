@@ -114,6 +114,10 @@ def prepare_argparser(formats):
     # Note: no other option must begin with "input" or "output"
     parser.add_argument(
         "--outnodes", help="Comma separated list of output nodes")
+    parser.add_argument(
+        "--ngbackend",
+        default='CPU',
+        help="Ngraph backend (with cardinality). Eg, NNPI:0")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -163,7 +167,9 @@ def save_model(gdef, format, location):
     }[format](gdef, location)
 
 
-def attach_device(gdef):
+def attach_device_and_ng_backend(gdef, ng_backend):
+    ngraph_bridge.set_backend(ng_backend)
+    # Assumes that the whole graph runs on a single ng_backend
     for n in gdef.node:
         n.device = "/device:CPU:0"
 
@@ -174,7 +180,7 @@ allowed_formats = {
 }
 
 
-def convert(inp_format, inp_loc, out_format, out_loc, outnodes):
+def convert(inp_format, inp_loc, out_format, out_loc, outnodes, ng_backend):
     """Functional api for converting TF models by inserting ngraph nodes.
     Sample usage:
     from tf2ngraph import convert
@@ -194,7 +200,7 @@ def convert(inp_format, inp_loc, out_format, out_loc, outnodes):
     assert out_format in allowed_formats['output']
     assert ngraph_bridge.is_grappler_enabled()
     input_gdef = get_gdef(inp_format, inp_loc)
-    attach_device(input_gdef)
+    attach_device_and_ng_backend(input_gdef, ng_backend)
     output_gdef = run_ngraph_grappler_optimizer(input_gdef, outnodes)
     save_model(output_gdef, out_format, out_loc)
 
@@ -202,14 +208,14 @@ def convert(inp_format, inp_loc, out_format, out_loc, outnodes):
 def main():
     """ Entry point of command line api for converting TF models by inserting ngraph nodes.
     Sample usage:
-    python tf2ngraph.py --inputsavedmodel test_graph_SM --outnodes out_node --outputpbtxt test_graph_SM_mod.pbtxt
-    python tf2ngraph.py --inputpbtxt test_graph_SM.pbtxt --outnodes out_node --outputpbtxt test_graph_SM_mod.pbtxt
+    python tf2ngraph.py --inputsavedmodel test_graph_SM --outnodes out_node --outputpbtxt test_graph_SM_mod.pbtxt --ngbackend NNPI:0
+    python tf2ngraph.py --inputpbtxt test_graph_SM.pbtxt --outnodes out_node --outputpbtxt test_graph_SM_mod.pbtxt --ngbackend NNPI:0
     """
     args = prepare_argparser(allowed_formats)
     inp_format, inp_loc = filter_dict("input", args.__dict__)
     out_format, out_loc = filter_dict("output", args.__dict__)
     outnodes = args.outnodes.split(',')
-    convert(inp_format, inp_loc, out_format, out_loc, outnodes)
+    convert(inp_format, inp_loc, out_format, out_loc, outnodes, args.ngbackend)
     print('Converted the model. Exiting now')
 
 
