@@ -62,6 +62,8 @@
     agents:
     - "queue=gpu"
 
+  - wait
+
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
@@ -73,6 +75,8 @@
     timeout_in_minutes: 30
     agents:
     - "queue=gpu"
+
+  - wait
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
