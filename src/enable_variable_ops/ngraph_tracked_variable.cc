@@ -171,14 +171,39 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
                           cinfo_.container(), cinfo_.name(), &var, creator));
 
   bool just_synced = false;
-  if (var->need_sync_ng_tensor()) {
+  // If NG-Tensor was modified by TF sync it
+  if (var->sync_ng_tensor()) {
     number_of_copies++;
     copy_log_str << "Var_Sync ";
     NGRAPH_VLOG(4) << "in tracked variable, ng tensor behind, needs to sync "
                       "with tf-tensor";
-    WriteNGTensor(var->ng_tensor(), var->tensor());
-    var->sync_ng_tensor(false);
+    var->set_sync_ng_tensor(false);
     just_synced = true;
+  }
+
+  // If TF needs the tensor
+  if (copy_to_tf_) {
+    // If it was just synced from TF
+    // We dont need to sync again
+    if (!just_synced) {
+      if (var->copy_ng_to_tf()) {
+        number_of_copies++;
+        copy_log_str << " COPY_TF ";
+      }
+      NGRAPH_VLOG(4) << "Copying to TF Tensor";
+    }
+
+    if (!just_looking_) {
+      // Some tf op might update the tf-tensor
+      // So we need to sync_it_later
+      var->set_sync_ng_tensor(true);
+      copy_log_str << " SET_SYNC ";
+    }
+  }
+
+  copy_log_str << " Number of copies " << number_of_copies << "\n";
+  if (log_copies) {
+    cout << copy_log_str.str();
   }
 
   // Output a reference to our tensor, so it may be updated.
@@ -217,27 +242,6 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   if (NGRAPH_VLOG_IS_ON(5)) {
     NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": added "
                    << DMAHelper::base(var->tensor());
-  }
-
-  if (copy_to_tf_) {
-    if (!just_synced) {
-      number_of_copies++;
-      copy_log_str << " COPY_TF ";
-      ReadNGTensor(var->ng_tensor(), var->tensor());
-      NGRAPH_VLOG(4) << "Copying to TF Tensor";
-    }
-
-    if (!just_looking_) {
-      // Some tf op might update the tf-tensor
-      // So we need to sync_it_later
-      var->sync_ng_tensor(true);
-      copy_log_str << " SET_SYNC ";
-    }
-  }
-
-  copy_log_str << " Number of copies " << number_of_copies << "\n";
-  if (log_copies) {
-    cout << copy_log_str.str();
   }
 
   if (!just_looking_) {

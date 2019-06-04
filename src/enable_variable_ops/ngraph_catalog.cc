@@ -28,7 +28,7 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 unordered_map<string, string> NGraphCatalog::input_variable_sharedname_map_;
-map<string, shared_ptr<ng::runtime::Tensor>>
+unordered_map<string, shared_ptr<ng::runtime::Tensor>>
     NGraphCatalog::encap_output_tensor_map_;
 unordered_map<string, unordered_set<int>>
     NGraphCatalog::encap_output_copy_indexes_map_;

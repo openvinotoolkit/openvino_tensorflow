@@ -59,7 +59,8 @@ class NGraphCatalog {
   //   otherwise
   //     string : GraphId + _ + nodename + : + output_index
   // Value : shared_ptr<ng::runtime::Tensor>
-  static map<string, shared_ptr<ng::runtime::Tensor>> encap_output_tensor_map_;
+  static unordered_map<string, shared_ptr<ng::runtime::Tensor>>
+      encap_output_tensor_map_;
 
   // Map keeps track of output indexes of NGraphEncapsulate Op
   // that will be used by TF Nodes or other NGraphEncapsulate Op

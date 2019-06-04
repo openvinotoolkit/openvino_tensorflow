@@ -111,13 +111,10 @@ class NGraphAssignOp : public OpKernel {
                        context->resource_manager()->default_container(),
                        get_ref_var_name, &var));
 
-    const Tensor& rhs = context->input(1);
+    Tensor* rhs_tensor = (Tensor*)&(context->input(1));
 
     // We always return the input ref.
     context->forward_ref_input_to_ref_output(0, 0);
-
-    // get the nGraphTensor
-    shared_ptr<ngraph::runtime::Tensor> ng_tensor_to_assign = var->ng_tensor();
 
     // DO NOT CARE ABOUT SYNCING AS WE ARE ALWAYS SETTING THE NGTENSOR
 
@@ -128,29 +125,28 @@ class NGraphAssignOp : public OpKernel {
       // Value is from encap
       NGRAPH_VLOG(4) << "NGraphAssign::Getting from catalog: " << valkey;
       auto ng_val = NGraphCatalog::GetTensorFromEncapOutputTensorMap(valkey);
-      ng_tensor_to_assign->copy_from(*ng_val);
+      var->update_ng_tensor(ng_val);
     } else {
-      number_of_copies++;
-      copy_log_str << " COPY_INP_VAL[0]";
       NGRAPH_VLOG(4) << "NGraphAssign::Getting from TF : " << valkey;
-      void* tf_src_ptr = (void*)DMAHelper::base(&rhs);
-      ng_tensor_to_assign->write(
-          tf_src_ptr, 0, ng_tensor_to_assign->get_element_count() *
-                             ng_tensor_to_assign->get_element_type().size());
+      if (var->update_ng_tensor(rhs_tensor)) {
+        number_of_copies++;
+        copy_log_str << " COPY_INP_VAL[0]";
+      }
     }
 
     mutex_lock l(*context->input_ref_mutex(0));
     Tensor old_lhs = context->mutable_input(0, /* lock_held */ true);
 
     if (copy_to_tf_) {
-      number_of_copies++;
-      copy_log_str << " COPY_TF ";
-      ReadNGTensor(ng_tensor_to_assign, &old_lhs);
+      if (var->copy_ng_to_tf()) {
+        number_of_copies++;
+        copy_log_str << " COPY_TF ";
+      }
 
       if (!just_looking_) {
         // Some tf op might update the ng-tensor value so mark it stale
         copy_log_str << " SET_SYNC ";
-        var->sync_ng_tensor(true);
+        var->set_sync_ng_tensor(true);
       }
     }
 
