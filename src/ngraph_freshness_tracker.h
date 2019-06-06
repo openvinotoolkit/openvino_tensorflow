@@ -89,7 +89,7 @@ class NGraphFreshnessTracker : public ResourceBase {
   NGraphFreshnessTracker(const NGraphFreshnessTracker&) = delete;
   NGraphFreshnessTracker& operator=(const NGraphFreshnessTracker&) = delete;
 
-  std::string DebugString() override { return "FreshnessTracker"; }
+  std::string DebugString() const override { return "FreshnessTracker"; }
 
   // If freshness_map_ has the base_pointer, then inserts the user function into
   // its set of user functions

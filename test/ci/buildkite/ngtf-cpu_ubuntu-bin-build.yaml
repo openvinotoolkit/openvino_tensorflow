@@ -5,7 +5,7 @@
     label: ":gear: Setup"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu"
+    - "queue=cpu-centos"
     parallelism: 1
 
   - wait
@@ -15,9 +15,9 @@
       python3 build_ngtf.py --use_prebuilt_tensorflow  --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
       
     label: ":hammer_and_wrench: Build"
-    timeout_in_minutes: 30
+    timeout_in_minutes: 40
     agents:
-    - "queue=cpu"
+    - "queue=cpu-centos"
     parallelism: 1
 
   - wait
@@ -30,7 +30,7 @@
     label: ":bazel: Bazel Build"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu"
+    - "queue=cpu-centos"
 
   - wait
 
@@ -43,12 +43,12 @@
     label: ":bar_chart: ResNet50"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu"
+    - "queue=cpu-centos"
 
   - wait
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
     agents:
-    - "queue=cpu"
+    - "queue=cpu-centos"
 

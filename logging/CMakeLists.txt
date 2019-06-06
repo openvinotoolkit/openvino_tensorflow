@@ -31,7 +31,7 @@ set(SRC
 add_library(${LIB_NAME} ${SRC})
 target_link_libraries( 
     ${LIB_NAME} 
-    tensorflow_framework_lib 
+    ${TensorFlow_FRAMEWORK_LIBRARY} 
 )
 
 target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

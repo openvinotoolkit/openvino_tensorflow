@@ -101,9 +101,17 @@ endif()
 message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
 
 # Make sure that the TF library exists
+if ( APPLE )
+    set(TF_LIB_NAME libtensorflow_framework.dylib)
+else()
+    set(TF_LIB_NAME libtensorflow_framework.so.1)
+endif()
+
+message(STATUS "TF_LIB: " ${TF_LIB_NAME})
+
 find_library(
   TensorFlow_FRAMEWORK_LIBRARY
-  NAME tensorflow_framework
+  NAME ${TF_LIB_NAME}
   PATHS ${TensorFlow_DIR}
   NO_DEFAULT_PATH
 )

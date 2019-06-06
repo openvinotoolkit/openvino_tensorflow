@@ -53,7 +53,7 @@ class NGraphVar : public ResourceBase {
   mutex* mu() { return &mu_; }
   Tensor* tensor() { return &tensor_; }
 
-  string DebugString() override {
+  string DebugString() const override {
     return strings::StrCat(DataTypeString(tensor_.dtype()), "/",
                            tensor_.shape().DebugString());
   }

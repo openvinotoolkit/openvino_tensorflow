@@ -79,7 +79,7 @@ class NGraphVar : public ResourceBase {
   Tensor* tensor() { return &tf_tensor_; }
   shared_ptr<ngraph::runtime::Tensor> ng_tensor() { return ng_tensor_; };
 
-  string DebugString() override {
+  string DebugString() const override {
     return strings::StrCat(DataTypeString(tf_tensor_.dtype()), "/",
                            tf_tensor_.shape().DebugString());
   }

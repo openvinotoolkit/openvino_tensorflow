@@ -100,7 +100,7 @@ endif()
 #       libngraph_bridge.so
 #       ...
 #     /tensorflow
-#       libtensorflow_framework.so
+#       libtensorflow_framework.so.1
 #       python/
 #           _pywrap....so
 # Therefore we are setting two entries in the RPATH:
@@ -119,12 +119,7 @@ endif()
 # Find TensorFlow
 find_package(TensorFlow REQUIRED)
 
-add_library(tensorflow_framework_lib SHARED IMPORTED)
-set_target_properties(
-    tensorflow_framework_lib
-    PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_DIR}/libtensorflow_framework.so
-)
+
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(NGRAPH_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")

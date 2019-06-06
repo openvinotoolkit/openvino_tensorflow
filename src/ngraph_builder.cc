@@ -1812,8 +1812,15 @@ static Status TranslateFusedBatchNormOp(
   NGRAPH_VLOG(3) << "is_training: " << tf_is_training;
 
   shared_ptr<ng::Node> ng_input, ng_scale, ng_offset, ng_mean, ng_variance;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_scale,
-                                   &ng_offset, &ng_mean, &ng_variance));
+  bool is_v3 = op->type_string() == "FusedBatchNormV3";
+  if (tf_is_training) {
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_input));
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_scale));
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_offset));
+  } else {
+    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_scale,
+                                     &ng_offset, &ng_mean, &ng_variance));
+  }
 
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
@@ -1876,12 +1883,32 @@ static Status TranslateFusedBatchNormOp(
     //(inverted variance in the cuDNN case), to be reused in the gradient
     // computation.
     SaveNgOp(ng_op_map, op->name(), ng_variance);
+    if (is_v3) {
+      // FusedBatchNormV3 has 6 outputs (reserve_space_3)
+      shared_ptr<ng::Node> ng_reserved_3 =
+          ConstructNgNode<ngraph::op::Constant>(
+              op->name(), ng_mean->get_element_type(), ng::Shape{},
+              std::vector<std::string>{""});
+      SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
+    }
   } else {
     ng_batch_norm = ConstructNgNode<ng::op::BatchNormInference>(
         op->name(), tf_epsilon, ng_scale, ng_offset, ng_input, ng_mean,
         ng_variance);
     BatchToTensorflow(is_nhwc, ng_batch_norm);
     SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+    if (is_v3) {
+      SaveNgOp(ng_op_map, op->name(), ng_mean);
+      SaveNgOp(ng_op_map, op->name(), ng_variance);
+      SaveNgOp(ng_op_map, op->name(), ng_mean);
+      SaveNgOp(ng_op_map, op->name(), ng_variance);
+      // FusedBatchNormV3 has 6 outputs (reserve_space_3)
+      shared_ptr<ng::Node> ng_reserved_3 =
+          ConstructNgNode<ngraph::op::Constant>(
+              op->name(), ng_mean->get_element_type(), ng::Shape{},
+              std::vector<std::string>{""});
+      SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
+    }
   }
 
   return Status::OK();
@@ -1890,7 +1917,8 @@ static Status TranslateFusedBatchNormOp(
 static Status TranslateFusedBatchNormGradOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  TF_RETURN_IF_ERROR(ValidateInputCount(op, 5));
+  bool is_v3 = op->type_string() == "FusedBatchNormGradV3";
+  TF_RETURN_IF_ERROR(ValidateInputCount(op, is_v3 ? 6 : 5));
 
   bool tf_is_training;
   // We only support is_training=true case. We marked rejection for the case
@@ -1908,8 +1936,14 @@ static Status TranslateFusedBatchNormGradOp(
   shared_ptr<ng::Node> ng_scale;
   shared_ptr<ng::Node> ng_mean;
   shared_ptr<ng::Node> ng_variance;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
-                                   &ng_scale, &ng_mean, &ng_variance));
+  if (is_v3) {
+    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
+                                     &ng_scale, &ng_mean, &ng_variance,
+                                     nullptr));
+  } else {
+    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
+                                     &ng_scale, &ng_mean, &ng_variance));
+  }
 
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
@@ -4546,7 +4580,9 @@ const static std::map<
         {"FloorMod", TranslateFloorModOp},
         {"FusedBatchNorm", TranslateFusedBatchNormOp},
         {"FusedBatchNormV2", TranslateFusedBatchNormOp},
+        {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
+        {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
         {"GatherV2", TranslateGatherV2Op},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"Greater", TranslateBinaryOp<ngraph::op::Greater>},

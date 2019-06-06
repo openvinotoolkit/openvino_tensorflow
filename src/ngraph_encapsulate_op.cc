@@ -106,7 +106,7 @@ class NGraphEncapsulateOp : public OpKernel {
           errors::Internal("Did not find graphdef for encapsulate ", flib_key,
                            " in NGraphClusterManager or function library"));
       // TODO: how to convert from functiondef to graphdef. Anything easier?
-      FunctionBody* fnbody;
+      std::unique_ptr<FunctionBody> fnbody;
       const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {
         return flib.LookUpOpDef(op, sig);
       };

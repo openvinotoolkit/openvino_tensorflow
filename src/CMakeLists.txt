@@ -91,7 +91,7 @@ message(STATUS "NGRAPH_TF_USE_GRAPPLER_OPTIMIZER: ${NGRAPH_TF_USE_GRAPPLER_OPTIM
 add_library(${LIB_NAME} SHARED ${SRC})
 
 target_link_libraries( ${LIB_NAME} ngraph_logger) 
-target_link_libraries( ${LIB_NAME} tensorflow_framework_lib )
+target_link_libraries( ${LIB_NAME} ${TensorFlow_FRAMEWORK_LIBRARY})
 target_link_libraries( ${LIB_NAME} ngraph_lib )
 target_link_libraries( ${LIB_NAME} absl_algorithm )
 target_link_libraries( ${LIB_NAME} absl_container )
