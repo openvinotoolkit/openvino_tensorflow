@@ -48,8 +48,8 @@ __all__ = [
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
-TF_VERSION = tf.VERSION
-TF_GIT_VERSION = tf.GIT_VERSION
+TF_VERSION = tf.version.VERSION
+TF_GIT_VERSION = tf.version.GIT_VERSION
 TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
 TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
 
