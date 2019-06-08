@@ -272,7 +272,7 @@ def run_resnet50(build_dir):
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
     os.chdir('benchmarks/scripts/tf_cnn_benchmarks/')
 
-    call(['git', 'checkout', '4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed'])
+    call(['git', 'checkout', 'cnn_tf_v1.13_compatible'])
 
     junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
 
@@ -333,7 +333,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # Now clone the repo and proceed
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
     os.chdir('benchmarks')
-    call(['git', 'checkout', '4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed'])
+    call(['git', 'checkout', 'cnn_tf_v1.13_compatible'])
 
     # Check to see if we need to patch the repo for Grappler
     import ngraph_bridge
