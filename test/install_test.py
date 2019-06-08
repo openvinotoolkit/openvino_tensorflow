@@ -22,4 +22,4 @@ import tensorflow as tf
 import ngraph_bridge
 
 if __name__ == '__main__':
-    print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+    print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)

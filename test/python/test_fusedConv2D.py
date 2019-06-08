@@ -38,6 +38,13 @@ class TestFusedConv2D(NgraphTest):
     FILTER_SIZES = [1, 1, 2, 2]
     BIAS_SIZES = [2]
 
+    def get_relu_op(self, relutype):
+        return {
+            'relu': nn_ops.relu,
+            'relu6': nn_ops.relu6,
+            '': (lambda x: x)
+        }[relutype]
+
     def test_fusedconv2d_bias(self):
         inp_values = np.random.rand(*self.INPUT_SIZES)
         filt_values = np.random.rand(*self.FILTER_SIZES)
@@ -60,7 +67,12 @@ class TestFusedConv2D(NgraphTest):
         assert np.allclose(
             self.without_ngraph(run_test), self.with_ngraph(run_test))
 
-    def test_fusedconv2d_bias_relu(self):
+    @pytest.mark.parametrize(("relutype",), (
+        ('relu',),
+        ('relu6',),
+        ('',),
+    ))
+    def test_fusedconv2d_bias_relu(self, relutype):
         inp_values = np.random.rand(*self.INPUT_SIZES)
         filt_values = np.random.rand(*self.FILTER_SIZES)
         bias_values = np.random.rand(*self.BIAS_SIZES)
@@ -69,8 +81,9 @@ class TestFusedConv2D(NgraphTest):
             inp = array_ops.placeholder(dtypes.float32)
             filt = array_ops.placeholder(dtypes.float32)
             bias = array_ops.placeholder(dtypes.float32)
+            relu_op = self.get_relu_op(relutype)
             return sess.run(
-                nn_ops.relu(
+                relu_op(
                     nn_ops.bias_add(
                         nn_ops.conv2d(
                             inp, filt, strides=[1, 1, 1, 1], padding="SAME"),

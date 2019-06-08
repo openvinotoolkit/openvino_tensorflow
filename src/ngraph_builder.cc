@@ -1042,7 +1042,99 @@ static Status TranslateCastOp(
   }
   return Status::OK();
 }
+static Status TranslateCombinedNonMaxSuppressionOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_boxes, ng_scores;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_boxes, &ng_scores,
+                                   nullptr, nullptr, nullptr, nullptr));
 
+  std::vector<int> max_output_size_per_class;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map,
+                                          &max_output_size_per_class));
+  std::vector<int> max_total_size;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 3, static_input_map, &max_total_size));
+  std::vector<float> iou_threshold;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 4, static_input_map, &iou_threshold));
+
+  std::vector<float> score_threshold;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 5, static_input_map, &score_threshold));
+
+  bool pad_per_class;
+  if (GetNodeAttr(op->attrs(), "pad_per_class", &pad_per_class) !=
+      Status::OK()) {
+    pad_per_class = false;
+  }
+  bool clip_boxes;
+  if (GetNodeAttr(op->attrs(), "clip_boxes", &clip_boxes) != Status::OK()) {
+    clip_boxes = false;
+  }
+  // max_output_size_per_class must be scalar
+  if (max_output_size_per_class.size() != 1) {
+    return errors::InvalidArgument(
+        "CombinedNonMaxSuppression Op: max_output_size_per_class of cnms must "
+        "be scalar ",
+        max_output_size_per_class.size());
+  }
+  // max_total_size must be scalar
+  if (max_total_size.size() != 1) {
+    return errors::InvalidArgument(
+        "CombinedNonMaxSuppression Op: max_total_size of cnms must be scalar ",
+        max_total_size.size());
+  }
+  // iou_threshold must be scalar
+  if (iou_threshold.size() != 1) {
+    return errors::InvalidArgument(
+        "CombinedNonMaxSuppression Op: iou_threshold of cnms must be scalar ",
+        iou_threshold.size());
+  }
+
+  // score_threshold must be scalar
+  if (score_threshold.size() != 1) {
+    return errors::InvalidArgument(
+        "CombinedNonMaxSuppression Op: score_threshold of cnms must be scalar ",
+        score_threshold.size());
+  }
+
+  std::string backend_name;
+  TF_RETURN_IF_ERROR(ngraph_bridge::GetNodeBackend(op, &backend_name));
+
+  if (backend_name != "NNPI") {
+    return errors::Internal("In translating CombinedNonMaxSuppression op ",
+                            op->name(), " found requested backend ",
+                            backend_name, " which is unsupported");
+  }
+
+  ng::runtime::Backend* backend = BackendManager::GetBackend(backend_name);
+
+  shared_ptr<ng::Node> ng_cnms = backend->get_backend_op(
+      "CombinedNonMaxSuppression", &ng_boxes, &ng_scores,
+      (size_t)(max_output_size_per_class[0]), (size_t)(max_total_size[0]),
+      (float)(iou_threshold[0]), (float)score_threshold[0], (bool)pad_per_class,
+      (bool)clip_boxes);
+  if (ng_cnms == nullptr) {
+    return errors::Internal("In translating CombinedNonMaxSuppression op ",
+                            op->name(),
+                            " backend could not return valid ngraph node");
+  }
+  shared_ptr<ngraph::Node> ng_nmsed_boxes =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_cnms, 0);
+  shared_ptr<ngraph::Node> ng_nmsed_scores =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_cnms, 1);
+  shared_ptr<ngraph::Node> ng_nmsed_classes =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_cnms, 2);
+  shared_ptr<ngraph::Node> ng_valid_detections =
+      ConstructNgNode<ngraph::op::GetOutputElement>(op->name(), ng_cnms, 3);
+
+  SaveNgOp(ng_op_map, op->name(), ng_nmsed_boxes);
+  SaveNgOp(ng_op_map, op->name(), ng_nmsed_scores);
+  SaveNgOp(ng_op_map, op->name(), ng_nmsed_classes);
+  SaveNgOp(ng_op_map, op->name(), ng_valid_detections);
+  return Status::OK();
+}
 static Status TranslateConcatV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2015,6 +2107,91 @@ static Status TranslateFusedBatchNormGradOp(
   return Status::OK();
 }
 
+static Status TranslateFusedMatMulOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  int num_args;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_args", &num_args));
+
+  std::vector<string> fused_ops;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "fused_ops", &fused_ops));
+
+  auto CreateNgDot = [&](shared_ptr<ng::Node>& ng_lhs,
+                         shared_ptr<ng::Node>& ng_rhs,
+                         shared_ptr<ng::Node>& ng_dot) {
+
+    // Transpose arguments if requested.
+    bool transpose_a = false;
+    bool transpose_b = false;
+
+    if (GetNodeAttr(op->attrs(), "transpose_a", &transpose_a) == Status::OK() &&
+        transpose_a) {
+      ng_lhs = ng::builder::numpy_transpose(ng_lhs, ng::AxisVector{1, 0});
+    }
+    if (GetNodeAttr(op->attrs(), "transpose_b", &transpose_b) == Status::OK() &&
+        transpose_b) {
+      ng_rhs = ng::builder::numpy_transpose(ng_rhs, ng::AxisVector{1, 0});
+    }
+
+    // The default axis count for nGraph's Dot op is 1, which is just what
+    // we need here.
+    ng_dot = ConstructNgNode<ngraph::op::Dot>(op->name(), ng_lhs, ng_rhs);
+
+    return Status::OK();
+  };
+
+  shared_ptr<ng::Node> ng_lhs, ng_rhs, ng_bias, ng_dot;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_lhs, &ng_rhs, &ng_bias));
+  TF_RETURN_IF_ERROR(CreateNgDot(ng_lhs, ng_rhs, ng_dot));
+
+  auto ng_dot_shape = ng_dot->get_shape();
+  auto ng_bias_shape = ng_bias->get_shape();
+
+  if (ng_bias_shape.size() != 1) {
+    return errors::InvalidArgument(
+        "Bias argument to BiasAdd does not have one dimension");
+  }
+
+  ng::AxisSet ng_broadcast_axes;
+
+  // TODO : _FusedMatMul doesn't have data_format attributes, insert broadcast
+  // axes as if it's NHWC for now.
+  for (size_t i = 0; i < ng_dot_shape.size() - 1; i++) {
+    ng_broadcast_axes.insert(i);
+  }
+
+  auto ng_bias_broadcasted = ConstructNgNode<ng::op::Broadcast>(
+      op->name(), ng_bias, ng_dot_shape, ng_broadcast_axes);
+
+  auto ng_add =
+      ConstructNgNode<ng::op::Add>(op->name(), ng_dot, ng_bias_broadcasted);
+  if (fused_ops.size() == 1) {  // Only fusing BiasAdd
+    SaveNgOp(ng_op_map, op->name(), ng_add);
+  } else if (fused_ops.size() == 2) {  // Also has activation
+    if (fused_ops[1] == "Relu") {
+      SaveNgOp(ng_op_map, op->name(),
+               ConstructNgNode<ng::op::Relu>(op->name(), ng_add));
+    } else if (fused_ops[1] == "Relu6") {
+      // TODO fill
+      auto constant_6 = ConstructNgNode<ng::op::Constant>(
+          op->name(), ng_add->get_element_type(), ng_add->get_shape(),
+          std::vector<std::string>(ng::shape_size(ng_add->get_shape()), "6"));
+      auto relu6_op = ConstructNgNode<ng::op::Minimum>(
+          op->name(), ConstructNgNode<ng::op::Relu>(op->name(), ng_add),
+          constant_6);
+      SaveNgOp(ng_op_map, op->name(), relu6_op);
+    } else {
+      return errors::Internal(
+          "Expected activation to be Relu or Relu6 but got ", fused_ops[1]);
+    }
+  } else {
+    // Adding this here to catch future changes in _FusedMatMul
+    return errors::Internal("Unsupported combination");
+  }
+
+  return Status::OK();
+}
+
 static Status TranslateGatherV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2145,7 +2322,8 @@ static Status TranslateFusedConv2DOp(
   };
 
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
-      VecStrCmp(fused_ops, {"BiasAdd", "Relu"})) {
+      VecStrCmp(fused_ops, {"BiasAdd", "Relu"}) ||
+      VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
     if (num_args != 1) {
       return errors::InvalidArgument(
           "FusedConv2DBiasAdd has incompatible num_args");
@@ -2190,6 +2368,16 @@ static Status TranslateFusedConv2DOp(
       SaveNgOp(ng_op_map, op->name(),
                ConstructNgNode<ng::op::Relu>(op->name() + "_FusedConv2D_Relu",
                                              ng_add));
+    } else if (VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
+      auto constant_6 = ConstructNgNode<ng::op::Constant>(
+          op->name(), ng_add->get_element_type(), ng_add->get_shape(),
+          std::vector<std::string>(ng::shape_size(ng_add->get_shape()), "6"));
+      auto relu6_op = ConstructNgNode<ng::op::Minimum>(
+          op->name(), ConstructNgNode<ng::op::Relu>(
+                          op->name() + "_FusedConv2D_Relu", ng_add),
+          constant_6);
+
+      SaveNgOp(ng_op_map, op->name(), relu6_op);
     } else {
       SaveNgOp(ng_op_map, op->name(), ng_add);
     }
@@ -4562,6 +4750,7 @@ const static std::map<
         {"BiasAdd", TranslateBiasAddOp},
         {"BiasAddGrad", TranslateBiasAddGradOp},
         {"Cast", TranslateCastOp},
+        {"CombinedNonMaxSuppression", TranslateCombinedNonMaxSuppressionOp},
         {"ConcatV2", TranslateConcatV2Op},
         {"Const", TranslateConstOp},
         {"Conv2D", TranslateConv2DOp},
@@ -4585,6 +4774,7 @@ const static std::map<
         {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
         {"GatherV2", TranslateGatherV2Op},
         {"_FusedConv2D", TranslateFusedConv2DOp},
+        {"_FusedMatMul", TranslateFusedMatMulOp},
         {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
         {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},
         {"HorovodAllreduce", TranslateAllreduceOp},

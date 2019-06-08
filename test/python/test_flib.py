@@ -29,9 +29,6 @@ from common import NgraphTest
 class TestFlibOperations(NgraphTest):
 
     def test_flib_1(self):
-        import os
-        cwd = os.getcwd()
-        print(cwd)
         graph = self.import_pbtxt('flib_graph_1.pbtxt')
         with graph.as_default() as g:
 
@@ -56,8 +53,6 @@ class TestFlibOperations(NgraphTest):
     @pytest.mark.skip(reason="Not passing through grappler")
     def test_flib_2(self):
         graph = self.import_pbtxt('flib_graph_2.pbtxt')
-
-        graph = self.import_pbtxt('flib_graph_1.pbtxt')
         with graph.as_default() as g:
 
             x = self.get_tensor(g, "Variable_2/peek/_2:0", True)

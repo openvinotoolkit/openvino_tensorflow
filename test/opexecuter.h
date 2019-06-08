@@ -89,8 +89,6 @@ class OpExecuter {
 
   shared_ptr<ng::Function> get_ng_function() { return ng_function; }
 
-  // TODO(malikshr) : Overload RunTest() to take in tolerance
-
  private:
   Scope tf_scope_;
   const string test_op_type_;

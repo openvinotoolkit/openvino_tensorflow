@@ -1,0 +1,91 @@
+node {
+  name: "Placeholder_3"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  } 
+  attr {
+    key: "shape"
+    value {
+      shape {
+        unknown_rank: true
+      }
+    }
+  }
+}
+node {
+  name: "Placeholder_5"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        unknown_rank: true
+      }
+    }
+  }
+}
+node {
+  name: "Placeholder_4"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        unknown_rank: true
+      }
+    }
+  }
+}
+node {
+  name: "Relu_1"
+  op: "_FusedMatMul"
+  input: "Placeholder_3"
+  input: "Placeholder_4"
+  input: "Placeholder_5"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "fused_ops"
+    value {
+      list {
+        s: "BiasAdd"
+        s: "Relu6"
+      }
+    }
+  }
+  attr {
+    key: "num_args"
+    value {
+      i: 1
+    }
+  }
+}
+library {
+}
+versions {
+  producer: 29
+}

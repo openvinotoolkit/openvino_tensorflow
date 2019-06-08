@@ -30,7 +30,7 @@ import json
 
 import ngraph_bridge
 
-print("TensorFlow version: ", tf.GIT_VERSION, tf.VERSION)
+print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)
 
 # Setup TensorBoard
 graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"

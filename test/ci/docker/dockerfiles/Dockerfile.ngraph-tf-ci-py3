@@ -70,12 +70,7 @@ RUN pip3 install futures
 # We include pytest so the Docker image can be used for daily validation
 RUN pip3 install --upgrade pytest
 
-# FROM NG-TF:
-# We need to be careful to run apt-get update in any RUN where apt-get install
-# might be run.  This is needed due to docker layer limitations.
-# RUN apt-get update && ./initial-setup-once-per-machine.ubuntu-16.04.sh
-#
-# REPLACED BY:
+# Bazel requires the OpenJDK
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 #
 # This bazel version works with current TF
