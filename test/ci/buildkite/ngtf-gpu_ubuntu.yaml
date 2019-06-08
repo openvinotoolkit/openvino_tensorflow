@@ -72,7 +72,7 @@
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
     
     label: ":python: TensorFlow Pytest"
-    timeout_in_minutes: 30
+    timeout_in_minutes: 60
     agents:
     - "queue=gpu"
 

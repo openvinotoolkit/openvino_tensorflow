@@ -78,6 +78,8 @@
     timeout_in_minutes: 30
     agents:
     - "queue=cpu_tf_1.14"
+
+  - wait
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
@@ -85,9 +87,12 @@
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
     
     label: ":python: TensorFlow Pytest"
-    timeout_in_minutes: 30
+    timeout_in_minutes: 60
     agents:
     - "queue=cpu_tf_1.14"
+
+  - wait
+
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \

@@ -15,7 +15,7 @@
       python3 build_ngtf.py --use_prebuilt_tensorflow  --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
       
     label: ":hammer_and_wrench: Build"
-    timeout_in_minutes: 40
+    timeout_in_minutes: 60
     agents:
     - "queue=cpu-centos"
     parallelism: 1
