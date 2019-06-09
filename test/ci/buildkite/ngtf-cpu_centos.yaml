@@ -86,6 +86,8 @@
     agents:
     - "queue=cpu-centos"
 
+  - wait 
+
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
@@ -96,6 +98,8 @@
     timeout_in_minutes: 60
     agents:
     - "queue=cpu-centos"
+
+  - wait 
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
