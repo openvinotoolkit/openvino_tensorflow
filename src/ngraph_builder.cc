@@ -95,8 +95,7 @@ std::shared_ptr<TOpType> ConstructNgNode(const std::string& op_name,
                                          TArg&&... Args) {
   auto ng_node = std::make_shared<TOpType>(std::forward<TArg>(Args)...);
   ng_node->set_friendly_name(op_name);
-  // Fails for now, so commenting out for now
-  // ng_node->add_provenance_tag(op_name);
+  ng_node->add_provenance_tag(op_name);
   return ng_node;
 }
 
