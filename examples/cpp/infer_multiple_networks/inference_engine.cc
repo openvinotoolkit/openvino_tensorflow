@@ -21,6 +21,7 @@
 
 #include "inference_engine.h"
 #include "ngraph/event_tracing.hpp"
+#include "ngraph_backend_manager.h"
 #include "version.h"
 
 #include "tensorflow/core/platform/macros.h"
@@ -72,11 +73,16 @@ Status InferenceEngine::Load(const string& network, const string& image_file,
 
   // Preload the image is requested
   if (m_preload_images) {
+    // Set the CPU as the backend before these ops
+    string current_backend =
+        tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName();
+    tf::ngraph_bridge::BackendManager::SetBackendName("CPU");
     std::vector<tf::Tensor> resized_tensors;
     TF_CHECK_OK(ReadTensorFromImageFile(
         m_image_file, m_input_height, m_input_width, m_input_mean, m_input_std,
         m_use_NCHW, &resized_tensors));
     m_image_to_repeat = resized_tensors[0];
+    tf::ngraph_bridge::BackendManager::SetBackendName(current_backend);
   }
   // Now compile the graph if needed
   // This would be useful to detect errors early. For a graph
@@ -119,12 +125,18 @@ void InferenceEngine::ThreadMain() {
       cout << "[" << m_name << "] " << step_count << ": Reading image\n";
       ngraph::Event read_event("Read", "", "");
 
+      string current_backend =
+          tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName();
+      tf::ngraph_bridge::BackendManager::SetBackendName("CPU");
+
       std::vector<tf::Tensor> resized_tensors;
       TF_CHECK_OK(ReadTensorFromImageFile(
           m_image_file, m_input_height, m_input_width, m_input_mean,
           m_input_std, m_use_NCHW, &resized_tensors));
 
       m_image_to_repeat = resized_tensors[0];
+      tf::ngraph_bridge::BackendManager::SetBackendName(current_backend);
+
       read_event.Stop();
       ngraph::Event::write_trace(read_event);
     }
