@@ -40,7 +40,9 @@ set_target_properties(
 )
 
 set(SRC
-    infer_single.cpp
+    main.cc
+    inference_engine.h
+    inference_engine.cc
     ../tf_label_image_utils.cc
 )
 
@@ -49,7 +51,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 
-add_executable(infer_single ${SRC})
+add_executable(infer_multiple_networks ${SRC})
 message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
 if (APPLE)
@@ -58,7 +60,7 @@ if (APPLE)
 endif()
 
 target_link_libraries(
-    infer_single
+    infer_multiple_networks
     ngraph_bridge
     ngraph_lib
     pthread

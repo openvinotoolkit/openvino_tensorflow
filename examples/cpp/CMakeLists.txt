@@ -14,4 +14,5 @@
 # limitations under the License.
 # ******************************************************************************
 message(STATUS "C++ Examples will be built")
+add_subdirectory(infer_multiple_networks)
 add_subdirectory(infer_single)

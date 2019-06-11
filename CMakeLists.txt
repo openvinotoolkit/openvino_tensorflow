@@ -321,3 +321,4 @@ if (UNIT_TEST_ENABLE)
     add_subdirectory(test)
     message(STATUS "unit tests enabled")
 endif()
+
