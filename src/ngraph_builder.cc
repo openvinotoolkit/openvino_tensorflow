@@ -2106,6 +2106,37 @@ static Status TranslateFusedBatchNormGradOp(
   return Status::OK();
 }
 
+static Status TranslateGatherNdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_params;
+  shared_ptr<ng::Node> ng_indices;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_params, &ng_indices));
+
+  auto ng_params_shape = ng_params->get_shape();
+  size_t ng_params_rank = ng_params_shape.size();
+  size_t ng_indices_rank = ng_indices->get_shape().size();
+
+  for (size_t i = 0; i < ng_params_rank; i++) {
+    if (ng_params_shape[i] == 0) {
+      return errors::InvalidArgument(
+          "Requested more than 0 entries, but params is empty.  Params shape: "
+          "[",
+          ng::join(ng_params_shape, ","), "]");
+    }
+  }
+
+  if ((ng_indices_rank - 1) > ng_params_rank) {
+    return errors::InvalidArgument(
+        "The last dimension of indices can be at most the rank of params");
+  }
+
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::op::GatherND>(
+                                      op->name(), ng_params, ng_indices));
+
+  return Status::OK();
+}
+
 static Status TranslateFusedMatMulOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3044,13 +3075,15 @@ Status QuantizeAndDequantizeV2Helper(
         GetStaticInputVector(op, 2, static_input_map, &input_max));
     if (input_min.size() != 1) {
       return errors::InvalidArgument(
-          "QuantizeAndDequantizeV2 Op: input_min must be scalar. Got a vector "
+          "QuantizeAndDequantizeV2 Op: input_min must be scalar. Got a "
+          "vector "
           "of size, ",
           input_min.size());
     }
     if (input_max.size() != 1) {
       return errors::InvalidArgument(
-          "QuantizeAndDequantizeV2 Op: input_max must be scalar. Got a vector "
+          "QuantizeAndDequantizeV2 Op: input_max must be scalar. Got a "
+          "vector "
           "of size, ",
           input_max.size());
     }
@@ -3058,7 +3091,8 @@ Status QuantizeAndDequantizeV2Helper(
     max_range = input_max[0];
     if (min_range > max_range) {
       return errors::InvalidArgument(
-          "Expected QuantizeAndDequantizeV2's input_min <= input_max but got, "
+          "Expected QuantizeAndDequantizeV2's input_min <= input_max but "
+          "got, "
           "input_min = ",
           min_range, " and input_max = ", max_range);
     }
@@ -3337,7 +3371,8 @@ static Status TranslateQuantizedConv(
 
   BatchToTensorflow(is_nhwc, ng_quant_conv_bias);
   SaveNgOp(ng_op_map, op->name(), ng_quant_conv_bias);
-  // QconvBiasAdd variants have summand and its min/max as the last input nodes
+  // QconvBiasAdd variants have summand and its min/max as the last input
+  // nodes
   auto adjust_idx = num_node_inputs == 12 ? 3 : 0;
   // Forward the min_freezed_output input to output min
   SaveNgOp(ng_op_map, op->name(), node_inps[num_node_inputs - 2 - adjust_idx]);
@@ -4190,7 +4225,8 @@ static Status TranslateStridedSliceOp(
   auto& input_shape = ng_input->get_shape();
 
   // Summary: Convert tf indexes (-inf, inf) to clamped_begin_idx [0, d] and
-  // clamped_end_idx [-1, d], which are then converted to ngraph indexes [0, d]
+  // clamped_end_idx [-1, d], which are then converted to ngraph indexes [0,
+  // d]
   // tf->ng is done through tf_to_ng, which calls clamper, which converts
   // tf->clamped
 
@@ -4244,7 +4280,8 @@ static Status TranslateStridedSliceOp(
   auto tf_to_ng = [clamper](int tf_begin_idx, int tf_end_idx, int tf_stride,
                             size_t dim, bool begin_mask, bool end_mask,
                             bool shrink_mask) {
-    // if begin mask is present, depending on stride sign use 0 (std::begin) or
+    // if begin mask is present, depending on stride sign use 0 (std::begin)
+    // or
     // dim-1 (std::rbegin)
     // clamped_end_idx could line in [-1, d]
     int tf_ignore_begin_if_needed =
@@ -4263,7 +4300,8 @@ static Status TranslateStridedSliceOp(
         clamper(shrink_mask ? clamped_begin_idx + 1 : tf_ignore_end_if_needed,
                 dim, false);
 
-    // Now we have converted semantically non-monotonic and unbounded TF indexes
+    // Now we have converted semantically non-monotonic and unbounded TF
+    // indexes
     // (-inf, inf) to bounded and monotonic clamped indexes [-1, d]
     // Now we need to convert clamped indexes [-1, d] to ngraph indexes [0, d]
     // (taking care of reversal in case of negative strides)
@@ -4276,7 +4314,8 @@ static Status TranslateStridedSliceOp(
         // Empty due to matching indexes
         ng_begin_idx = clamped_begin_idx;
         // Type safety: clamped_begin_idx == clamped_end_idx implies,
-        // clamped_end_idx!=-1 (since clamped_begin_idx cannot be -1), hence end
+        // clamped_end_idx!=-1 (since clamped_begin_idx cannot be -1), hence
+        // end
         // index assignment is type safe
         ng_end_idx = clamped_end_idx;
       } else {  // In the whole of this else: clamped_begin_idx !=
@@ -4291,14 +4330,17 @@ static Status TranslateStridedSliceOp(
           // we do not assign ng_end_idx = clamped_end_idx (which would not be
           // type safe due to the -1)
           ng_end_idx = clamped_begin_idx;
-          // Any assignment where ng_begin_idx = ng_end_idx = x (where 0 <= x <=
+          // Any assignment where ng_begin_idx = ng_end_idx = x (where 0 <= x
+          // <=
           // d-1) would have worked for the 2 empty cases above
         }
-        // Anything after this is non-empty. Anything before this has dealt with
+        // Anything after this is non-empty. Anything before this has dealt
+        // with
         // empty cases
         else {
           // in this case either (clamped_begin_idx < clamped_end_idx &&
-          // tf_stride > 0) or (clamped_begin_idx > clamped_end_idx && tf_stride
+          // tf_stride > 0) or (clamped_begin_idx > clamped_end_idx &&
+          // tf_stride
           // < 0)
           // that is clamped_begin_idx < clamped_end_idx <==> tf_stride > 0.
           // hence using only 1 of the clauses is enough
@@ -4328,10 +4370,12 @@ static Status TranslateStridedSliceOp(
             //   handles it
             //   tf_stride < 0: Then we set it to dim-1 above
             // Consider the case of dim=3, where in tf notation we have:
-            // [4:1:-1], in clampe notation, we get [3:1:-1], which really means
+            // [4:1:-1], in clampe notation, we get [3:1:-1], which really
+            // means
             // [2:1:-1]
 
-            // Type safety: Since clamped_begin_idx is [0, d-1] here, it is type
+            // Type safety: Since clamped_begin_idx is [0, d-1] here, it is
+            // type
             // safe
             ng_begin_idx = dim - 1 - clamped_begin_idx;
             needs_reverse = 1;
@@ -4443,7 +4487,8 @@ static Status TranslateStridedSliceOp(
   }
 
   // TODO: assert size in this dim was 1
-  // TODO: assert new_axis_mask and tf_shrink_axis_mask are not set at the same
+  // TODO: assert new_axis_mask and tf_shrink_axis_mask are not set at the
+  // same
   // time?
   // TODO: tf_new_axis_mask can exceed rank
 
@@ -4542,7 +4587,8 @@ static Status TranslateTopKV2Op(
   // false.
   GetNodeAttr(op->attrs(), "sorted", &sorted);
 
-  // index element type - currently only int32 or int64 are supported by ngraph
+  // index element type - currently only int32 or int64 are supported by
+  // ngraph
 
   shared_ptr<ngraph::Node> ng_result = ConstructNgNode<ngraph::op::TopK>(
       op->name(), ng_input, k_axis, ng::element::i32, k, sorted);
@@ -4692,10 +4738,12 @@ static Status TranslateSelectOp(
 
   if (length != 0) {
     // Condition tensor will be modified to align the condition tensor
-    // shape with input tensor shape index and fill the rest of the vector with
+    // shape with input tensor shape index and fill the rest of the vector
+    // with
     // 1s
     // Eg: condition tensor [7], input tensor [7, 3, 2, 1]
-    // After Reshape, condition tensor will be [7, 1 ,1 ,1] for auto broadcast.
+    // After Reshape, condition tensor will be [7, 1 ,1 ,1] for auto
+    // broadcast.
 
     std::vector<size_t> tmp_vector((ng_input2_rank), 1);
     tmp_vector[0] = ng_input1_shape[0];
@@ -4770,6 +4818,7 @@ const static std::map<
         {"FusedBatchNormV2", TranslateFusedBatchNormOp},
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
+        {"GatherNd", TranslateGatherNdOp},
         {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
         {"GatherV2", TranslateGatherV2Op},
         {"_FusedConv2D", TranslateFusedConv2DOp},

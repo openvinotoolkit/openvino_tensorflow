@@ -280,6 +280,7 @@ Status MarkForClustering(Graph* graph,
         return Status::OK();
       };
       confirmation_function_map["_FusedConv2D"] = SimpleConfirmationFunction();
+      confirmation_function_map["GatherNd"] = SimpleConfirmationFunction();
       confirmation_function_map["_FusedMatMul"] =
           SimpleConfirmationFunction();  // TODO accept under all conditions?
                                          // check?
@@ -450,6 +451,9 @@ Status MarkForClustering(Graph* graph,
       type_constraint_map["FusedBatchNormV2"]["T"] = {DT_FLOAT};
       type_constraint_map["FusedBatchNormV3"]["T"] = {DT_FLOAT};
       type_constraint_map["FusedBatchNormGrad"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["GatherNd"]["Tparams"] = {
+          DT_FLOAT};  // NGraphDTypes();
+      type_constraint_map["GatherNd"]["Tindices"] = NGraphIndexDTypes();
       type_constraint_map["FusedBatchNormGradV3"]["T"] = NGraphNumericDTypes();
       type_constraint_map["GatherV2"]["Tparams"] = NGraphDTypes();
       type_constraint_map["GatherV2"]["Tindices"] = NGraphIndexDTypes();

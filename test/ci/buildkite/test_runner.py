@@ -99,7 +99,8 @@ def main():
                     "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
                     "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
                     "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-                    "NNOps.SparseSoftmaxCrossEntropyWithLogits")
+                    "NNOps.SparseSoftmaxCrossEntropyWithLogits:"
+                    "ArrayOps.GatherNd*")
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
