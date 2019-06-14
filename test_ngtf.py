@@ -26,6 +26,7 @@ from distutils.sysconfig import get_python_lib
 
 #from tools.build_utils import load_venv, command_executor
 from tools.test_utils import *
+from tools.build_utils import download_repo
 
 
 def main():
@@ -85,6 +86,11 @@ def main():
     if (arguments.test_examples):
         # Run the C++ example build/run test
         run_cpp_example_test('build')
+
+    if (not os.path.isdir(build_dir + '/tensorflow')):
+        download_repo(build_dir + "/tensorflow",
+                      "https://github.com/tensorflow/tensorflow.git",
+                      "v1.14.0-rc0")
 
     # Next run the TensorFlow python tests
     run_tensorflow_pytests(venv_dir, build_dir, './', tf_src_dir)

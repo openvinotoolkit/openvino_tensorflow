@@ -101,4 +101,9 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
     fi
 done
 
+# Format py files at root (build_ngtf.py, build_tf.py, test_ngtf.py etc)
+for SRC_FILE in $(find . -maxdepth 1  -name '*py' -print); do
+    python3 -m yapf -i -p --style google --no-local-style "${SRC_FILE}"
+done
+
 popd

@@ -113,6 +113,13 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
     fi
 done
 
+# Check format of py files at root (build_ngtf.py, build_tf.py, test_ngtf.py etc)
+for SRC_FILE in $(find . -maxdepth 1  -name '*py' -print); do
+    if ! python3 -m yapf -d -p --style google --no-local-style "${SRC_FILE}">/dev/null; then
+        FAILED_FILES_YAPF+=( "${SRC_FILE}" )
+    fi
+done
+
 popd
 
 if [[ ${#FAILED_FILES_CLANG[@]} -eq 0 ]]; then

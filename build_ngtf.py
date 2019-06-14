@@ -113,6 +113,12 @@ def main():
         help="Use TensorFlow that's already installed" +
         "(do not build or install) \n",
         action="store_true")
+    parser.add_argument(
+        '--use_tensorflow_from_location',
+        help=
+        "Use TensorFlow from a directory where it was already built and stored. This location is expected to be populated by build_tf.py\n",
+        action="store",
+        default='')
 
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
@@ -131,6 +137,33 @@ def main():
 
     # Default directories
     build_dir = 'build_cmake'
+
+    assert not (
+        arguments.use_tensorflow_from_location != '' and
+        arguments.use_prebuilt_tensorflow
+    ), "use_tensorflow_from_location and use_prebuilt_tensorflow should not be used together"
+
+    if arguments.use_tensorflow_from_location != '':
+        # Check if the prebuilt folder has necessary files
+        assert os.path.isdir(
+            arguments.use_tensorflow_from_location
+        ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
+        loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
+        assert os.path.isdir(
+            loc), "Could not find artifacts/tensorflow directory"
+        found_whl = False
+        found_libtf_fw = False
+        found_libtf_cc = False
+        for i in os.listdir(loc):
+            if '.whl' in i:
+                found_whl = True
+            if 'libtensorflow_cc' in i:
+                found_libtf_cc = True
+            if 'libtensorflow_framework' in i:
+                found_libtf_fw = True
+        assert found_whl, "Did not find TF whl file"
+        assert found_libtf_fw, "Did not find libtensorflow_framework"
+        assert found_libtf_cc, "Did not find libtensorflow_cc"
 
     try:
         os.makedirs(build_dir)
@@ -173,39 +206,57 @@ def main():
     # flag is set to 0
     cxx_abi = "0"
 
-    if arguments.use_prebuilt_tensorflow:
-        print("Using existing TensorFlow")
-        command_executor(["pip", "install", "-U", "tensorflow==" + tf_version])
-
-        import tensorflow as tf
-        print('Version information:')
-        print('TensorFlow version: ', tf.__version__)
-        print('C Compiler version used in building TensorFlow: ',
-              tf.__compiler_version__)
-        cxx_abi = str(tf.__cxx11_abi_flag__)
+    if arguments.use_tensorflow_from_location != "":
+        # Some asserts to make sure the directory structure of use_tensorflow_from_location is correct
+        # The location should have: ./artifacts/tensorflow, which is expected to contain one TF whl file, framework.so and cc.so
+        print("Using TensorFlow from " + arguments.use_tensorflow_from_location)
+        # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
+        tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location +
+                                     '/artifacts/tensorflow')
+        possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
+        assert len(
+            possible_whl
+        ) == 1, "Expected 1 TF whl file, but found " + len(possible_whl)
+        # Make sure there is exactly 1 TF whl
+        tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
+        assert os.path.isfile(tf_whl), "Did not find " + tf_whl
+        # Install the found TF whl file
+        command_executor(["pip", "install", "-U", tf_whl])
+        cxx_abi = get_tf_cxxabi()
+        cwd = os.getcwd()
+        os.chdir(tf_whl_loc)
+        tf_in_artifacts = os.path.join(
+            os.path.abspath(artifacts_location), "tensorflow")
+        assert not os.path.isdir(
+            tf_in_artifacts), "Did not expect to find " + tf_in_artifacts
+        os.mkdir(tf_in_artifacts)
+        # This function copies the .so files from use_tensorflow_from_location/artifacts/tensorflow to artifacts/tensorflow
+        copy_tf_to_artifacts(tf_in_artifacts, tf_whl_loc)
+        os.chdir(cwd)
     else:
-        if not arguments.skip_tensorflow_build:
-            print("Building TensorFlow")
-            # Download TensorFlow
-            download_repo("tensorflow",
-                          "https://github.com/tensorflow/tensorflow.git",
-                          tf_version)
-
-            # Build TensorFlow
-            build_tensorflow(venv_dir, "tensorflow", artifacts_location,
-                             target_arch, verbosity)
-
-            # Install tensorflow
-            # Note that if gcc 4.8 is used for building TensorFlow this flag
-            # will be 0
-            cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+        if arguments.use_prebuilt_tensorflow:
+            print("Using existing TensorFlow")
+            command_executor(
+                ["pip", "install", "-U", "tensorflow==" + tf_version])
+            cxx_abi = get_tf_cxxabi()
         else:
-            import tensorflow as tf
-            print('Version information:')
-            print('TensorFlow version: ', tf.__version__)
-            print('C Compiler version used in building TensorFlow: ',
-                  tf.__compiler_version__)
-            cxx_abi = str(tf.__cxx11_abi_flag__)
+            if not arguments.skip_tensorflow_build:
+                print("Building TensorFlow")
+                # Download TensorFlow
+                download_repo("tensorflow",
+                              "https://github.com/tensorflow/tensorflow.git",
+                              tf_version)
+
+                # Build TensorFlow
+                build_tensorflow(venv_dir, "tensorflow", artifacts_location,
+                                 target_arch, verbosity)
+
+                # Install tensorflow
+                # Note that if gcc 4.8 is used for building TensorFlow this flag
+                # will be 0
+                cxx_abi = install_tensorflow(venv_dir, artifacts_location)
+            else:
+                cxx_abi = get_tf_cxxabi()
 
     # Download nGraph if required.
     ngraph_src_dir = './ngraph'
@@ -249,9 +300,8 @@ def main():
         "-DNGRAPH_TOOLS_ENABLE=" +
         flag_string_map[platform.system() != 'Darwin']
     ])
-    ngraph_cmake_flags.extend([
-        "-DNGRAPH_GPU_ENABLE=" + flag_string_map[arguments.build_gpu_backend]
-    ])
+    ngraph_cmake_flags.extend(
+        ["-DNGRAPH_GPU_ENABLE=" + flag_string_map[arguments.build_gpu_backend]])
     ngraph_cmake_flags.extend([
         "-DNGRAPH_PLAIDML_ENABLE=" +
         flag_string_map[arguments.build_plaidml_backend]
@@ -277,18 +327,25 @@ def main():
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
     ]
+
     if (arguments.debug_build):
         ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
     if not arguments.use_prebuilt_tensorflow:
-        ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
+        if arguments.use_tensorflow_from_location:
+            ngraph_tf_cmake_flags.extend([
+                "-DTF_SRC_DIR=" + os.path.abspath(
+                    arguments.use_tensorflow_from_location + '/tensorflow')
+            ])
+        else:
+            ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
         ngraph_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
         ])
 
-    if ((arguments.distributed_build == "OMPI")
-            or (arguments.distributed_build == "MLSL")):
+    if ((arguments.distributed_build == "OMPI") or
+        (arguments.distributed_build == "MLSL")):
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])
     else:
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
@@ -321,8 +378,11 @@ def main():
     # Copy the TensorFlow Python code tree to artifacts directory so that they can
     # be used for running TensorFlow Python unit tests
     if not arguments.use_prebuilt_tensorflow:
+        base_dir = build_dir_abs if (
+            arguments.use_tensorflow_from_location == ''
+        ) else arguments.use_tensorflow_from_location
         command_executor([
-            'cp', '-r', build_dir_abs + '/tensorflow/tensorflow/python',
+            'cp', '-r', base_dir + '/tensorflow/tensorflow/python',
             os.path.join(artifacts_location, "tensorflow")
         ])
 
@@ -334,8 +394,7 @@ def main():
         import ngraph_bridge
         if not ngraph_bridge.is_grappler_enabled():
             raise Exception(
-                "Build failed: 'use_grappler_optimizer' specified but not used"
-            )
+                "Build failed: 'use_grappler_optimizer' specified but not used")
 
     print('\033[1;32mBuild successful\033[0m')
     os.chdir(pwd)
