@@ -120,7 +120,7 @@ class NGraphFreshnessTracker : public ResourceBase {
   mutex mu_;
   // for each base pointer (of tensor), maintains a set of ng::Functions that
   // use it
-  // Each ng function in thus set is then a user of the base_pointer
+  // Each ng function in the set is then a user of the base_pointer
   std::map<const void*, std::set<std::shared_ptr<ngraph::runtime::Executable>>>
       freshness_map_;
 

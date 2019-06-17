@@ -31,6 +31,7 @@ Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
                                    const string replacement_node_name,
                                    const string replacement_node_type,
                                    const bool just_looking,
+                                   const bool is_tf_just_looking,
                                    const bool outputs_ng_supported,
                                    const int graph_id,
                                    const bool is_backend_set) {
@@ -63,6 +64,7 @@ Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
                          .Attr("T", dtype)
                          .Attr("use_locking", use_locking)
                          .Attr("just_looking", just_looking)
+                         .Attr("is_tf_just_looking", is_tf_just_looking)
                          .Attr("copy_to_tf", !outputs_ng_supported)
                          .Attr("ngraph_graph_id", graph_id)
                          .Input(input_var)
@@ -86,8 +88,9 @@ Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
 Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const string replacement_node_name,
                      const string replacement_node_type,
-                     const bool just_looking, const bool outputs_ng_supported,
-                     const int graph_id, const bool is_backend_set) {
+                     const bool just_looking, const bool is_tf_just_looking,
+                     const bool outputs_ng_supported, const int graph_id,
+                     const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Replacing  " << node->name();
 
   DataType dtype;
@@ -115,6 +118,7 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                          .Attr("use_locking", true)
                          .Attr("T", dtype)
                          .Attr("just_looking", just_looking)
+                         .Attr("is_tf_just_looking", is_tf_just_looking)
                          .Attr("copy_to_tf", !outputs_ng_supported)
                          .Attr("ngraph_graph_id", graph_id)
                          .Input(input_ref)
@@ -139,8 +143,9 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
 Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
                        const string replacement_node_name,
                        const string replacement_node_type,
-                       const bool just_looking, const bool outputs_ng_supported,
-                       const int graph_id, const bool is_backend_set) {
+                       const bool just_looking, const bool is_tf_just_looking,
+                       const bool outputs_ng_supported, const int graph_id,
+                       const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Replacing NGraphVariable " << node->name();
 
   TensorShape shape;
@@ -166,6 +171,7 @@ Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
           .Attr("shared_name",
                 (shared_name.empty() ? node->name() : shared_name))
           .Attr("just_looking", just_looking)
+          .Attr("is_tf_just_looking", is_tf_just_looking)
           .Attr("copy_to_tf", !outputs_ng_supported)
           .Attr("ngraph_graph_id", graph_id)
           .Device(node->assigned_device_name())

@@ -538,12 +538,13 @@ class NGraphEncapsulateOp : public OpKernel {
       bool ref_exists = NGraphCatalog::ExistsInInputVariableSharedNameMap(
           m_graph_id, def().name(), i);
 
+      // If the input is from a Variable node, we are dealing with later
+      // just add a nullptr to the ng_inputs vector.
       if (ref_exists) {
         NGRAPH_VLOG(4) << "NGraphEncapsulateOp:: Input from Variable Node";
         ng_inputs.push_back(nullptr);
         continue;
       }
-
       NGRAPH_VLOG(4) << "NGraphEncapsulateOp:: Input from non Variable Node";
 #endif
       ng::Shape ng_shape(input_shapes[i].dims());
@@ -675,6 +676,7 @@ class NGraphEncapsulateOp : public OpKernel {
     ngraph::Event event_input_check_in_catalog(
         "Get Variable Inputs from Resource Manager", name(), "");
 
+    // Dealing with the input from Variable nodes here
     for (int input_index = 0; input_index < input_shapes.size();
          input_index++) {
       bool ref_exists = NGraphCatalog::ExistsInInputVariableSharedNameMap(
@@ -699,6 +701,9 @@ class NGraphEncapsulateOp : public OpKernel {
         copy_log_str << "Var_Sync[" << input_index << "] ";
       }
 
+      void* current_tf_ptr = (void*)DMAHelper::base(&ctx->input(input_index));
+      bool is_stale = !m_freshness_tracker->IsFresh(current_tf_ptr, ng_exec);
+      var->ng_tensor()->set_stale(is_stale);
       ng_inputs[input_index] = var->ng_tensor();
 
       var->Unref();
@@ -941,7 +946,6 @@ class NGraphEncapsulateOp : public OpKernel {
                  (!tf_tensor_has_changed &&
                   !m_freshness_tracker->IsFresh(current_tf_ptr, ng_exec));
     }
-
     // create a new ng tensor or use the last one
     std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
     if (need_new_tensor_creation) {
