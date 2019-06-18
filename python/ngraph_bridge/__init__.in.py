@@ -210,6 +210,18 @@ def update_config(config):
                     name="ngraph-optimizer")
             ])
         config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewrite_options)))
+        # For reference, if we want to provide configuration support(backend parameters)
+        # in a python script using the ngraph-optimizer
+        # rewriter_options = rewriter_config_pb2.RewriterConfig()
+        # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
+        # rewriter_options.min_graph_nodes=-1
+        # ngraph_optimizer = rewriter_options.custom_optimizers.add()
+        # ngraph_optimizer.name = "ngraph-optimizer"
+        # ngraph_optimizer.parameter_map["ngraph_backend"].s = b'NNPI'
+        # ngraph_optimizer.parameter_map["_ngraph_device_id"].s = b'1'
+        # ngraph_optimizer.parameter_map["_ngraph_max_batch_size"].s = b'64'
+        # ngraph_optimizer.parameter_map["_ngraph_ice_cores"].s = b'12'
+        # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
     return config
 
 def are_variables_enabled():

@@ -21,6 +21,7 @@ cc_library(
         "src/ngraph_api.h",
         "src/ngraph_assign_clusters.h",
         "src/ngraph_builder.h",
+        "src/ngraph_backend_config.h",
         "src/ngraph_backend_manager.h",
         "src/ngraph_capture_variables.h",
         "src/ngraph_cluster_manager.h",

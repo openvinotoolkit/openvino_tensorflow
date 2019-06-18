@@ -78,7 +78,7 @@ TEST(EncapsulateClusters, PopulateLibrary) {
   g.AddEdge(node3, Graph::kControlSlot, sink, Graph::kControlSlot);
 
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&g, 0, fdeflib_new));
+  ASSERT_OK(EncapsulateClusters(&g, 0, fdeflib_new, {}));
 
   int num_encapsulates = 0;
   int num_tf_nodes = 0;

@@ -30,6 +30,7 @@
 #if defined NGRAPH_DISTRIBUTED
 #include "ngraph/distributed.hpp"
 #endif
+#include "ngraph_backend_manager.h"
 
 #include <iostream>
 
@@ -37,6 +38,29 @@ using namespace std;
 
 namespace tensorflow {
 namespace ngraph_bridge {
+
+Status NgraphOptimizer::Init(
+    const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
+  const auto params = config->parameter_map();
+  if (params.count("ngraph_backend")) {
+    config_backend_name = params.at("ngraph_backend").s();
+    NGRAPH_VLOG(3) << config_backend_name;
+    std::vector<std::string> additional_attributes =
+        BackendManager::GetBackendAdditionalAttributes(config_backend_name);
+    for (int i = 0; i < additional_attributes.size(); i++) {
+      if (params.count(additional_attributes[i])) {
+        config_map[additional_attributes[i]] =
+            params.at(additional_attributes[i]).s();
+        NGRAPH_VLOG(3) << additional_attributes[i] << " "
+                       << config_map[additional_attributes[i]];
+      }
+    }
+  } else {
+    NGRAPH_VLOG(5)
+        << "NGTF_OPTIMIZER: parameter_map does not have ngraph_backend";
+  }
+  return Status::OK();
+}
 
 Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                  const tensorflow::grappler::GrapplerItem& item,
@@ -62,15 +86,17 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   }
 
   // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
-  // we will not do anything; all subsequent
-  // passes become a no-op.
+  // we will not do anything; all subsequent passes become a no-op.
   bool ngraph_not_enabled =
       (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
   bool already_processed = IsProcessedByNgraphPass(&graph);
+  if (!already_processed && ngraph_not_enabled) {
+    NGRAPH_VLOG(0) << "NGraph is available but disabled.";
+  }
   if (ngraph_not_enabled || already_processed) {
-    NGRAPH_VLOG(0) << "Not running through nGraph. nGraph not enabled: "
-                   << ngraph_not_enabled
-                   << " Already processed: " << already_processed;
+    NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
+                          (already_processed ? "graph is already preprocessed"
+                                             : "ngraph is disabled");
     NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
@@ -166,8 +192,44 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     DumpGraphs(graph, idx, "unmarked", "Unmarked Graph");
   }
 
+  // Get backend + its configurations, to be attached to the nodes
+  // Precedence Order: RewriteConfig > Env Variable > BackendManager
+  string backend_name = BackendManager::GetCurrentlySetBackendName();
+  if (!config_backend_name.empty()) {
+    if (!BackendManager::IsSupportedBackend(backend_name)) {
+      return errors::Internal("NGRAPH_TF_BACKEND: ", config_backend_name,
+                              " is not supported");
+    }
+    backend_name = config_backend_name;
+    NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig " << backend_name;
+  } else {
+    const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
+    if (ng_backend_env_value != nullptr) {
+      string backend_env = std::string(ng_backend_env_value);
+      if (backend_env.empty() ||
+          !BackendManager::IsSupportedBackend(backend_env)) {
+        return errors::Internal("NGRAPH_TF_BACKEND: ", backend_env,
+                                " is not supported");
+      }
+      backend_name = backend_env;
+      NGRAPH_VLOG(1) << "Overriding backend using the enviornment variable "
+                        "to "
+                     << backend_name;
+    } else {
+      NGRAPH_VLOG(1) << "Setting backend from the BackendManager ";
+    }
+    // splits into {"ngraph_backend", "_ngraph_device_config"}
+    config_map = BackendManager::GetBackendAttributeValues(
+        backend_name);  // SplitBackendConfig
+    backend_name = config_map.at("ngraph_backend");
+    // config_map in EncapsulateClusters is not expected to contain
+    // ngraph_backend
+    config_map.erase("ngraph_backend");
+  }
+  NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
+
   // 1. Mark for clustering then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes));
+  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes, backend_name));
   if (DumpMarkedGraphs()) {
     DumpGraphs(graph, idx, "marked", "Graph Marked for Clustering");
   }
@@ -187,7 +249,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // 4. Encapsulate clusters then, if requested, dump the graphs.
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  TF_RETURN_IF_ERROR(EncapsulateClusters(&graph, idx, fdeflib_new));
+  TF_RETURN_IF_ERROR(EncapsulateClusters(&graph, idx, fdeflib_new, config_map));
   if (DumpEncapsulatedGraphs()) {
     DumpGraphs(graph, idx, "encapsulated", "Graph with Clusters Encapsulated");
   }

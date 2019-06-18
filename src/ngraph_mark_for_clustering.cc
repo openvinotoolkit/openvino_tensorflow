@@ -136,8 +136,8 @@ static ConfirmationFunction SimpleConfirmationFunction() {
 //
 // Main entry point for the marking pass.
 //
-Status MarkForClustering(Graph* graph,
-                         const std::set<string> skip_these_nodes) {
+Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
+                         const string& current_backend) {
   //
   // A map of op types (e.g. "Add") to type constraint maps. For (fake)
   // example:
@@ -645,22 +645,6 @@ Status MarkForClustering(Graph* graph,
     }
   }
 
-  // Set Attributes for nodes marked for clustering
-  // 1. Set Attribute "_ngraph_marked_for_clustering" as "true"
-  // 2. Set the backend for each op
-  // 3. Set any other attributes as defined in set_attribute_map
-  string current_backend = BackendManager::GetCurrentlySetBackendName();
-  const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
-  if (ng_backend_env_value != nullptr) {
-    string backend_env = std::string(ng_backend_env_value);
-    if (backend_env.empty() ||
-        !BackendManager::IsSupportedBackend(backend_env)) {
-      return errors::Internal("NGRAPH_TF_BACKEND: ", backend_env,
-                              " is not supported");
-    }
-    current_backend = backend_env;
-  }
-
   // Right now it cannot be inside the if(!initialized) block, because it is
   // backend dependent, which might change with different sess.run()s
   confirmation_function_map["GatherV2"] = [&current_backend](Node* n,
@@ -840,7 +824,7 @@ Status GetNodeBackend(const Node* node, string* backend_name) {
 // Can be extended to check the TF Device placement and/or user specified
 // backend
 // and accordingly assign backend
-void SetNodeBackend(Node* node, string& backend_name) {
+void SetNodeBackend(Node* node, const string& backend_name) {
   NGRAPH_VLOG(5) << "Setting backend " << node->name() << " " << backend_name;
   node->AddAttr("_ngraph_backend", backend_name);
 }

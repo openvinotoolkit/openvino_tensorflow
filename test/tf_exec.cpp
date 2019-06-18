@@ -204,6 +204,9 @@ TEST(tf_exec, BatchMatMul) {
   ASSERT_EQ(outputs_z2_ng[0].shape(), outputs_z2_tf[0].shape());
   Compare<float>(outputs_z1_ng[0], outputs_z1_tf[0]);
   Compare<float>(outputs_z2_ng[0], outputs_z2_tf[0]);
+
+  // Activate NGraph : Otherwise the tests dont run through NGraph
+  ActivateNGraph();
 }
 
 TEST(tf_exec, DISABLED_BatchMatMul_3D) {

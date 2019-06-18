@@ -24,8 +24,9 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 BackendManager::~BackendManager() {
-  NGRAPH_VLOG(2) << "BackendManager::~BackendManager() DONE";
+  NGRAPH_VLOG(2) << "BackendManager::~BackendManager()";
 }
+
 // initialize backend manager
 string BackendManager::ng_backend_name_ = "CPU";
 mutex BackendManager::ng_backend_name_mutex_;
@@ -36,7 +37,11 @@ vector<string> ng_supported_backends =
 unordered_set<string> BackendManager::ng_supported_backends_(
     ng_supported_backends.begin(), ng_supported_backends.end());
 
-std::map<std::string, int> BackendManager::ref_count_each_backend_;
+map<std::string, int> BackendManager::ref_count_each_backend_;
+
+mutex BackendManager::ng_backendconfig_map_mutex_;
+unordered_map<string, std::unique_ptr<BackendConfig>>
+    BackendManager::ng_backendconfig_map_;
 
 Status BackendManager::SetBackendName(const string& backend_name) {
   std::lock_guard<std::mutex> lock(BackendManager::ng_backend_name_mutex_);
@@ -108,6 +113,50 @@ bool BackendManager::IsSupportedBackend(const string& backend_name) {
   }
   return true;
 };
+
+// // Backend Config functions
+// // BackendConfig is expected to be a readonly class
+// // hence only locked at creation and not during later access
+std::unique_ptr<BackendConfig>& BackendManager::GetBackendConfig(
+    const string& backend_name) {
+  std::lock_guard<std::mutex> lock(BackendManager::ng_backend_map_mutex_);
+  auto itr = BackendManager::ng_backendconfig_map_.find(backend_name);
+  if (itr == BackendManager::ng_backendconfig_map_.end()) {
+    if (backend_name == "NNPI") {
+      BackendManager::ng_backendconfig_map_.insert(std::make_pair(
+          backend_name,
+          std::unique_ptr<BackendNNPIConfig>(new BackendNNPIConfig())));
+    } else {
+      BackendManager::ng_backendconfig_map_.insert(std::make_pair(
+          backend_name,
+          std::unique_ptr<BackendConfig>(new BackendConfig(backend_name))));
+    }
+  }
+  return BackendManager::ng_backendconfig_map_.at(backend_name);
+}
+
+vector<string> BackendManager::GetBackendAdditionalAttributes(
+    const string& backend_name) {
+  return BackendManager::GetBackendConfig(backend_name)
+      ->GetAdditionalAttributes();
+}
+
+unordered_map<string, string> BackendManager::GetBackendAttributeValues(
+    const string& backend_config) {
+  unordered_map<string, string> backend_parameters;
+
+  string backend_name = backend_config.substr(0, backend_config.find(':'));
+  NGRAPH_VLOG(3) << "Got Backend Name " << backend_name;
+
+  return BackendManager::GetBackendConfig(backend_name)->Split(backend_config);
+}
+
+string BackendManager::GetBackendCreationString(
+    const string& backend_name,
+    const unordered_map<string, string>& additional_attribute_map) {
+  return BackendManager::GetBackendConfig(backend_name)
+      ->Join(additional_attribute_map);
+}
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

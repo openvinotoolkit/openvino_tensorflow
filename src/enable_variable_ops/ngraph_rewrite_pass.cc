@@ -241,25 +241,58 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     bool ngraph_not_enabled =
         (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
     bool already_processed = IsProcessedByNgraphPass(options.graph->get());
+    if (!already_processed && ngraph_not_enabled) {
+      NGRAPH_VLOG(0) << "NGraph is available but disabled.";
+    }
     if (ngraph_not_enabled || already_processed) {
-      NGRAPH_VLOG(1) << "Not running through nGraph. nGraph not enabled: "
-                     << ngraph_not_enabled
-                     << " Already processed: " << already_processed;
+      NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
+                            (already_processed ? "graph is already preprocessed"
+                                               : "ngraph is disabled");
       NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
 
+    // Get backend + its configurations
+    // to be attached to the nodes
+    // Precedence Order: Env Variable > BackendManager
+    std::unordered_map<std::string, std::string> config_map;
+    string backend_name = BackendManager::GetCurrentlySetBackendName();
+    const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
+    if (ng_backend_env_value != nullptr) {
+      string backend_env = std::string(ng_backend_env_value);
+      if (backend_env.empty() ||
+          !BackendManager::IsSupportedBackend(backend_env)) {
+        return errors::Internal("NGRAPH_TF_BACKEND: ", backend_env,
+                                " is not supported");
+      }
+      backend_name = backend_env;
+      NGRAPH_VLOG(1) << "Overriding backend using the enviornment variable "
+                        "to "
+                     << backend_name;
+    } else {
+      NGRAPH_VLOG(1) << "Setting backend from the BackendManager ";
+    }
+
+    // splits into {"ngraph_backend", "_ngraph_device_config"}
+    config_map = BackendManager::GetBackendAttributeValues(
+        backend_name);  // SplitBackendConfig
+    backend_name = config_map.at("ngraph_backend");
+    config_map.erase("ngraph_backend");
+    NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
+
+    // Now Process the Graph
+
     // 0. Replace optimizers then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(ReplaceModifiers(options.graph->get(), idx));
-    if (DumpMarkedGraphs()) {
+    if (DumpReplacedModifiersGraphs()) {
       DumpGraphs(options, idx, "replaced_modifier",
                  "Graph with Modifiers replaced");
     }
 
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
-    TF_RETURN_IF_ERROR(
-        MarkForClustering(options.graph->get(), skip_these_nodes));
+    TF_RETURN_IF_ERROR(MarkForClustering(options.graph->get(), skip_these_nodes,
+                                         backend_name));
     if (DumpMarkedGraphs()) {
       DumpGraphs(options, idx, "marked", "Graph Marked for Clustering");
     }
@@ -279,8 +312,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // 4. Encapsulate clusters then, if requested, dump the graphs.
     FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-    TF_RETURN_IF_ERROR(
-        EncapsulateClusters(options.graph->get(), idx, fdeflib_new));
+    TF_RETURN_IF_ERROR(EncapsulateClusters(options.graph->get(), idx,
+                                           fdeflib_new, config_map));
     // TODO: not using fdeflib_new in this path. Only grappler path uses it
     free(fdeflib_new);
     if (DumpEncapsulatedGraphs()) {
@@ -309,6 +342,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   static bool DumpUnmarkedGraphs() {
     return DumpAllGraphs() ||
            std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
+  }
+  static bool DumpReplacedModifiersGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_REPLACEDMODIFIERS_GRAPHS") != nullptr;
   }
   static bool DumpMarkedGraphs() {
     return DumpAllGraphs() ||

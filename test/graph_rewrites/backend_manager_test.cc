@@ -14,16 +14,17 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "../test_utilities.h"
 #include "gtest/gtest.h"
-#include "ngraph_assign_clusters.h"
-#include "ngraph_backend_manager.h"
-#include "ngraph_mark_for_clustering.h"
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/public/session.h"
+
+#include "../test_utilities.h"
+#include "ngraph_assign_clusters.h"
+#include "ngraph_backend_manager.h"
+#include "ngraph_mark_for_clustering.h"
 #include "tf_graph_writer.h"
 
 using namespace std;
@@ -58,6 +59,8 @@ TEST(BackendManager, SetBackend) {
   ASSERT_EQ(current_backend, "INTERPRETER");
 
   ASSERT_NOT_OK(BackendManager::SetBackendName("temp"));
+  // Setting again as clean up
+  ASSERT_OK(BackendManager::SetBackendName("CPU"));
 }
 
 // Test GetSupportedBackendNames
@@ -96,7 +99,7 @@ TEST(BackendManager, BackendAssignment) {
   // Set backend 1
   string backend1 = "INTERPRETER";
   ASSERT_OK(BackendManager::SetBackendName(backend1));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, backend1));
   std::map<std::string, Node*> node_map;
   for (auto node : graph.op_nodes()) {
     node_map[node->name()] = node;
@@ -114,7 +117,7 @@ TEST(BackendManager, BackendAssignment) {
   // Set backend 2
   string backend2 = "CPU";
   ASSERT_OK(BackendManager::SetBackendName(backend2));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, backend2));
 
   ASSERT_OK(GetNodeBackend(node_map["A"], &bA));
   ASSERT_OK(GetNodeBackend(node_map["B"], &bB));
@@ -138,7 +141,7 @@ TEST(BackendManager, BackendClustering) {
 
   std::set<string> skip_these_nodes = {};
 
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
 
   string backend1 = "INTERPRETER";
 
@@ -159,29 +162,88 @@ TEST(BackendManager, BackendClustering) {
   ASSERT_NE(A_cluster, B_cluster);
 }
 
-// Test Backend Run
-TEST(BackendManager, BackendRun) {
-  ASSERT_OK(BackendManager::SetBackendName("INTERPRETER"));
-  Scope root = Scope::NewRootScope();
-  auto A = ops::Placeholder(root.WithOpName("A"), DT_FLOAT);
-  auto B = ops::Placeholder(root.WithOpName("B"), DT_FLOAT);
-  auto R = ops::Add(root.WithOpName("R"), A, B);
-  auto S = ops::Sub(root.WithOpName("S"), R, B);
+TEST(BackendManager, GetBackendAdditionalAttributes) {
+  vector<string> default_backend_optional_attrs = {"_ngraph_device_config"};
+  vector<string> nnpi_backend_optional_attrs = {
+      "_ngraph_device_id", "_ngraph_ice_cores", "_ngraph_max_batch_size"};
 
-  auto default_backend = BackendManager::GetCurrentlySetBackendName();
-  std::vector<Tensor> cpu_outputs;
-  ClientSession session_cpu(root);
-  // Run and fetch v
-  ASSERT_OK(session_cpu.Run({{A, {1.0f, 1.0f}}, {B, {1.0f, 1.0f}}}, {R, S},
-                            &cpu_outputs));
+  auto cpu_options = BackendManager::GetBackendAdditionalAttributes("CPU");
+  auto nnpi_options = BackendManager::GetBackendAdditionalAttributes("NNPI");
+  auto gpu_options = BackendManager::GetBackendAdditionalAttributes("GPU");
 
-  ASSERT_OK(BackendManager::SetBackendName("CPU"));
-  auto backend2 = BackendManager::GetCurrentlySetBackendName();
+  ASSERT_EQ(cpu_options, default_backend_optional_attrs);
+  ASSERT_EQ(nnpi_options, nnpi_backend_optional_attrs);
+  ASSERT_EQ(gpu_options, default_backend_optional_attrs);
+}
 
-  std::vector<Tensor> inter_outputs;
-  ClientSession session_inter(root);
-  ASSERT_OK(session_inter.Run({{A, {1.0f, 1.0f}}, {B, {1.0f, 1.0f}}}, {R, S},
-                              &inter_outputs));
+TEST(BackendManager, GetBackendAttributeValues) {
+  auto cpu_options = BackendManager::GetBackendAttributeValues("CPU");
+  auto nnpi_options = BackendManager::GetBackendAttributeValues("NNPI:3,5,6");
+  auto gpu_options = BackendManager::GetBackendAttributeValues("GPU:5");
+  auto plaidml_options =
+      BackendManager::GetBackendAttributeValues("PLAIDML:device:567:892_34");
+
+  ASSERT_NE(cpu_options.find("ngraph_backend"), cpu_options.end());
+  ASSERT_NE(cpu_options.find("_ngraph_device_config"), cpu_options.end());
+  ASSERT_EQ(cpu_options["ngraph_backend"], "CPU");
+  ASSERT_EQ(cpu_options["_ngraph_device_config"], "");
+
+  ASSERT_NE(nnpi_options.find("ngraph_backend"), nnpi_options.end());
+  ASSERT_NE(nnpi_options.find("_ngraph_device_config"), nnpi_options.end());
+  ASSERT_EQ(nnpi_options["ngraph_backend"], "NNPI");
+  ASSERT_EQ(nnpi_options["_ngraph_device_config"], "3,5,6");
+
+  ASSERT_NE(gpu_options.find("ngraph_backend"), gpu_options.end());
+  ASSERT_NE(gpu_options.find("_ngraph_device_config"), gpu_options.end());
+  ASSERT_EQ(gpu_options["ngraph_backend"], "GPU");
+  ASSERT_EQ(gpu_options["_ngraph_device_config"], "5");
+
+  ASSERT_NE(plaidml_options.find("ngraph_backend"), plaidml_options.end());
+  ASSERT_NE(plaidml_options.find("_ngraph_device_config"),
+            plaidml_options.end());
+  ASSERT_EQ(plaidml_options["ngraph_backend"], "PLAIDML");
+  ASSERT_EQ(plaidml_options["_ngraph_device_config"], "device:567:892_34");
+}
+
+TEST(BackendManager, GetBackendCreationString) {
+  unordered_map<string, string> cpu_map = {{"_ngraph_device_config", ""}};
+  unordered_map<string, string> nnpi_map = {{"_ngraph_device_id", "5"}};
+  unordered_map<string, string> gpu_map = {{"_ngraph_device_config", "678"}};
+
+  auto cpu_backend = BackendManager::GetBackendCreationString("CPU", cpu_map);
+  auto nnpi_backend =
+      BackendManager::GetBackendCreationString("NNPI", nnpi_map);
+  auto gpu_backend = BackendManager::GetBackendCreationString("GPU", gpu_map);
+
+  ASSERT_EQ(cpu_backend, "CPU:");
+  ASSERT_EQ(nnpi_backend, "NNPI:5");
+  ASSERT_EQ(gpu_backend, "GPU:678");
+
+  // throw errors
+  unordered_map<string, string> test_empty_map = {};
+  // "_ngraph_device_config" is not valid for NNPI
+  unordered_map<string, string> test_missing_config_nnpi = {
+      {"_ngraph_device_config", "345"}};
+  // "_ngraph_device_id" is not valid for default configs
+  unordered_map<string, string> test_missing_config_default = {
+      {"_ngraph_device_id", "45"}};
+
+  ASSERT_THROW(BackendManager::GetBackendCreationString("CPU", test_empty_map),
+               std::out_of_range);
+  ASSERT_THROW(BackendManager::GetBackendCreationString("NNPI", test_empty_map),
+               std::out_of_range);
+  ASSERT_THROW(BackendManager::GetBackendCreationString("GPU", test_empty_map),
+               std::out_of_range);
+
+  ASSERT_THROW(BackendManager::GetBackendCreationString(
+                   "CPU", test_missing_config_default),
+               std::out_of_range);
+  ASSERT_THROW(BackendManager::GetBackendCreationString(
+                   "NNPI", test_missing_config_nnpi),
+               std::out_of_range);
+  ASSERT_THROW(BackendManager::GetBackendCreationString(
+                   "GPU", test_missing_config_default),
+               std::out_of_range);
 }
 
 }  // namespace testing

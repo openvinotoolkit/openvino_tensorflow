@@ -30,6 +30,8 @@
 #include "ngraph_log.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "ngraph_backend_config.h"
+
 using namespace std;
 namespace ng = ngraph;
 
@@ -72,6 +74,47 @@ class BackendManager {
   // UnlockBackend
   static void UnlockBackend(const string& backend_name);
 
+  // Backend Config Functions
+  // These functions facilitate getting/setting
+  // of additional backend configurations by abstracting the
+  // backend specific details from the user
+  // They do not validate the backend type or the attribute values
+
+  // Returns the backend specific additional attributes
+  // For e.g.
+  // 1. GetBackendAdditionalAttributes("CPU")
+  // returns {"_ngraph_device_config"}
+  // 2. GetBackendAdditionalAttributes("TEST")
+  // returns {"_ngraph_device_config"}
+  // 3. GetBackendAdditionalAttributes("NNPI")
+  // returns {"_ngraph_device_id", "_ngraph_ice_cores","_ngraph_max_batch_size"}
+  static vector<string> GetBackendAdditionalAttributes(
+      const string& backend_name);
+
+  // Given a string, splits the string into the backend name and other
+  // attributes
+  // This does not check whether the string corresponds to a valid backend
+  // For e.g.
+  // 1. GetBackendAttributeValues("CPU")
+  // returns {{"ngraph_backend", "CPU"}, {"_ngraph_device_config", ""}}
+  // 2. GetBackendAttributeValues("GPU:2")
+  // returns {{"ngraph_backend", "GPU"}, {"_ngraph_device_config", "2"}}
+  // 3. GetBackendAttributeValues("TEST:ME")
+  // returns {{"ngraph_backend", "TEST"}, {"_ngraph_device_config", "ME"}}
+  static unordered_map<string, string>
+  GetBackendAttributeValues(  // SplitBackendConfig
+      const string& backend_config);
+
+  // Given a backend name and list of attributes
+  // joins them into a string to create ngraph backend
+  // For e.g.
+  // 1. GetBackendCreationString("GPU", {"_ngraph_device_config", "2"})
+  // returns "GPU:2"
+  // throws an error if the required attributes are not present in the map
+  static string GetBackendCreationString(
+      const string& backend_name,
+      const unordered_map<string, string>& additional_attribute_map);
+
   ~BackendManager();
 
  private:
@@ -83,8 +126,17 @@ class BackendManager {
   // set of backends supported by nGraph
   static unordered_set<string> ng_supported_backends_;
 
+  // map of cached backend config objects
+  static unordered_map<string, std::unique_ptr<BackendConfig>>
+      ng_backendconfig_map_;
+  static mutex ng_backendconfig_map_mutex_;
+
   // Map of backends and their reference counts
   static std::map<std::string, int> ref_count_each_backend_;
+
+  // utility functions
+  static std::unique_ptr<BackendConfig>& GetBackendConfig(
+      const string& backend_name);
 };
 
 }  // namespace ngraph_bridge
