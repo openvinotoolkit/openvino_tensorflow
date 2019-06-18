@@ -2351,6 +2351,18 @@ static Status TranslateFusedConv2DOp(
     return Status::OK();
   };
 
+  auto create_relu6 = [](const string& op_name,
+                         const shared_ptr<ng::Node>& ng_node) {
+    auto constant_6 = ConstructNgNode<ng::op::Constant>(
+        op_name, ng_node->get_element_type(), ng_node->get_shape(),
+        std::vector<std::string>(ng::shape_size(ng_node->get_shape()), "6"));
+    auto relu6_op = ConstructNgNode<ng::op::Minimum>(
+        op_name,
+        ConstructNgNode<ng::op::Relu>(op_name + "_FusedConv2D_Relu", ng_node),
+        constant_6);
+    return relu6_op;
+  };
+
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
@@ -2399,20 +2411,13 @@ static Status TranslateFusedConv2DOp(
                ConstructNgNode<ng::op::Relu>(op->name() + "_FusedConv2D_Relu",
                                              ng_add));
     } else if (VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
-      auto constant_6 = ConstructNgNode<ng::op::Constant>(
-          op->name(), ng_add->get_element_type(), ng_add->get_shape(),
-          std::vector<std::string>(ng::shape_size(ng_add->get_shape()), "6"));
-      auto relu6_op = ConstructNgNode<ng::op::Minimum>(
-          op->name(), ConstructNgNode<ng::op::Relu>(
-                          op->name() + "_FusedConv2D_Relu", ng_add),
-          constant_6);
-
-      SaveNgOp(ng_op_map, op->name(), relu6_op);
+      SaveNgOp(ng_op_map, op->name(), create_relu6(op->name(), ng_add));
     } else {
       SaveNgOp(ng_op_map, op->name(), ng_add);
     }
   } else if (VecStrCmp(fused_ops, {"FusedBatchNorm"}) ||
-             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"})) {
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"}) ||
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
     if (num_args != 4) {
       return errors::InvalidArgument(
           "FusedConv2D with FusedBatchNorm has incompatible num_args");
@@ -2439,6 +2444,8 @@ static Status TranslateFusedConv2DOp(
       SaveNgOp(ng_op_map, op->name(),
                ConstructNgNode<ng::op::Relu>(
                    op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm));
+    } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
+      SaveNgOp(ng_op_map, op->name(), create_relu6(op->name(), ng_batch_norm));
     } else {
       SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
     }
