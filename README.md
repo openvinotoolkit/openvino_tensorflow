@@ -32,9 +32,9 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 1. You can install TensorFlow and nGraph using `virtualenv` or in the system Python location. 
 
-2. Install TensorFlow v1.14.0rc0:
+2. Install TensorFlow v1.14.0:
 
-        pip install -U tensorflow==1.14.0rc0
+        pip install -U tensorflow==1.14.0
 
 3. Install nGraph-TensorFlow bridge:
 
@@ -125,11 +125,11 @@ Select the help option of `build_ngtf.py` script to learn more about various bui
 
    This will produce something like this:
 
-        TensorFlow version:  1.14.0-rc0
+        TensorFlow version:  1.14.0
         C Compiler version used in building TensorFlow:  7.3.0
         nGraph bridge version: b'0.14.0'
         nGraph version used for this build: b'0.20.0-rc.0+0995b71'
-        TensorFlow version used for this build: v1.14.0-rc0-0-gf5ce1c00d4
+        TensorFlow version used for this build: v1.14.0-0-g87989f6959
         CXX11_ABI flag used for this build: 1
         nGraph bridge built with Grappler: False
         nGraph bridge built with Variables and Optimizers Enablement: False
