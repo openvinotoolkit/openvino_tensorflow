@@ -16,6 +16,7 @@
 
 import sys
 import pytest
+import getpass
 import tensorflow as tf
 import ngraph_bridge
 
@@ -51,7 +52,7 @@ class TestMnistTraining(NgraphTest):
                 self.make_deterministic = make_deterministic
                 self.optimizer = optimizer
 
-        data_dir = '/tmp/tensorflow/mnist/input_data'
+        data_dir = '/tmp/' + getpass.getuser() + 'tensorflow/mnist/input_data'
         train_loop_count = 20
         batch_size = 50
         test_image_count = None

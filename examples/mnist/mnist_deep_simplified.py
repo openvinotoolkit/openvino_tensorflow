@@ -246,7 +246,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--data_dir',
         type=str,
-        default='/tmp/tensorflow/mnist/input_data',
+        default='/tmp/' + getpass.getuser() + 'tensorflow/mnist/input_data',
         help='Directory where input data is stored')
 
     parser.add_argument(

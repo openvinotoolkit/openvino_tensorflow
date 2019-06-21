@@ -239,6 +239,50 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
     tf_wheel_files = glob.glob(os.path.join(artifacts_dir, "tensorflow-*.whl"))
     print("TF Wheel: %s" % tf_wheel_files[0])
 
+    # popd
+    os.chdir(pwd)
+
+
+def build_tensorflow_cc(src_dir, artifacts_dir, target_arch, verbosity):
+
+    pwd = os.getcwd()
+
+    base = sys.prefix
+    python_lib_path = os.path.join(base, 'lib', 'python%s' % sys.version[:3],
+                                   'site-packages')
+    python_executable = os.path.join(base, "bin", "python")
+
+    print("PYTHON_BIN_PATH: " + python_executable)
+
+    src_dir = os.path.abspath(src_dir)
+    print("SOURCE DIR: " + src_dir)
+
+    # Update the artifacts directory
+    artifacts_dir = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
+    print("ARTIFACTS DIR: %s" % artifacts_dir)
+
+    os.chdir(src_dir)
+
+    # Set the TensorFlow configuration related variables
+    os.environ["PYTHON_BIN_PATH"] = python_executable
+    os.environ["PYTHON_LIB_PATH"] = python_lib_path
+    os.environ["TF_NEED_IGNITE"] = "0"
+    if (platform.system() == 'Darwin'):
+        os.environ["TF_ENABLE_XLA"] = "0"
+        os.environ["TF_CONFIGURE_IOS"] = "0"
+    else:
+        os.environ["TF_ENABLE_XLA"] = "1"
+    os.environ["TF_NEED_OPENCL_SYCL"] = "0"
+    os.environ["TF_NEED_COMPUTECPP"] = "0"
+    os.environ["TF_NEED_ROCM"] = "0"
+    os.environ["TF_NEED_MPI"] = "0"
+    os.environ["TF_NEED_CUDA"] = "0"
+    os.environ["TF_DOWNLOAD_CLANG"] = "0"
+    os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
+    os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch
+
+    command_executor("./configure")
+
     # Now build the TensorFlow C++ library
     cmd = [
         "bazel", "build", "--config=opt", "--config=noaws", "--config=nohdfs",
@@ -246,11 +290,31 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
         "//tensorflow:libtensorflow_cc.so.1"
     ]
     command_executor(cmd)
-
-    copy_tf_to_artifacts(artifacts_dir, None)
+    copy_tf_cc_lib_to_artifacts(artifacts_dir, None)
 
     # popd
     os.chdir(pwd)
+
+
+def copy_tf_cc_lib_to_artifacts(artifacts_dir, tf_prebuilt):
+    tf_cc_lib_name = 'libtensorflow_cc.so.1'
+    #if (platform.system() == 'Darwin'):
+    #tf_cc_lib_name = 'libtensorflow_cc.1.dylib'
+    try:
+        doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
+        os.unlink(doomed_file)
+    except OSError:
+        print("Cannot remove: %s" % doomed_file)
+        pass
+
+    # Now copy the TF libraries
+    if tf_prebuilt is None:
+        tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
+    else:
+        tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
+
+    print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
+    shutil.copy(tf_cc_lib_file, artifacts_dir)
 
 
 def locate_tf_whl(tf_whl_loc):
@@ -437,3 +501,49 @@ def apply_patch(patch_file):
     # will fail
     assert cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
         printed_lines[0]), "Error applying the patch."
+
+
+def get_gcc_version():
+    cmd = subprocess.Popen(
+        'gcc -dumpversion',
+        shell=True,
+        stdout=subprocess.PIPE,
+        bufsize=1,
+        universal_newlines=True)
+    output = cmd.communicate()[0].rstrip()
+    return output
+
+
+def get_cmake_version():
+    cmd = subprocess.Popen(
+        'cmake --version',
+        shell=True,
+        stdout=subprocess.PIPE,
+        bufsize=1,
+        universal_newlines=True)
+    output = cmd.communicate()[0].rstrip()
+    # The cmake version format is: "cmake version a.b.c"
+    version_tuple = output.split()[2].split('.')
+    return version_tuple
+
+
+def get_bazel_version():
+    cmd = subprocess.Popen(
+        'bazel version',
+        shell=True,
+        stdout=subprocess.PIPE,
+        bufsize=1,
+        universal_newlines=True)
+    # The bazel version format is a multi line output:
+    #
+    # Build label: 0.24.1
+    # Build target: bazel-out/k8-opt/bin/src/main/java/com/...
+    # Build time: Tue Apr 2 16:29:26 2019 (1554222566)
+    # Build timestamp: 1554222566
+    # Build timestamp as int: 1554222566
+    #
+    output = cmd.communicate()[0].splitlines()[0].strip()
+    output = output.split(':')[1].strip()
+
+    version_tuple = output.split('.')
+    return version_tuple

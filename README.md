@@ -27,8 +27,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 ## Linux instructions
 
 
-### Option 1: ~Use a pre-built nGraph-TensorFlow bridge~ 
-### :warning: Not Yet vailable for this version 
+### Option 1: Use a pre-built nGraph-TensorFlow bridge 
 
 1. You can install TensorFlow and nGraph using `virtualenv` or in the system Python location. 
 
@@ -41,29 +40,6 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
         pip install -U ngraph-tensorflow-bridge
    
 ### Option 2: Build nGraph bridge with binary TensorFlow installation
-
-To use the latest version build and install nGraph using the following steps: 
-
-1. You need to have `virtualenv` version **16.0.0** (or lower) installed on your system to be able build `ngraph-bridge` bridge. The virtualenv is configured and used by the build script but not required for running `ngraph-bridge`. 
-
-2. Please ensure that you have gcc 4.8 version installed on your system. The nGraph bridge links with the TensorFlow libraries that are build with gcc 4.8 version of the toolchain. 
-
-3. Next run the following Python script to download TensorFlow, and build nGraph and the bridge. Please use Python 3.5:
-
-        python3 build_ngtf.py --use_prebuilt_tensorflow
-
-4. Now test the build by executing the following commands:
-
-        source build_cmake/venv-tf-py3/bin/activate
-        PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
-                --backend CPU \
-                --artifacts ./build_cmake/artifacts/ \
-                --test_resnet
-
-### Option 3: Build nGraph bridge from source
-
-if you are planning to contribute or planning to run unit tests install the nGraph 
-bridge using the TensorFlow source tree as follows: 
 
 #### Prepare the build environment
 
@@ -81,8 +57,11 @@ The installation prerequisites are the same as described in the TensorFlow
         export PATH=$PATH:~/bin
         source ~/.bashrc   
 
-3. Additionally, you need to install `cmake` version 3.1 or higher and gcc 4.8 or higher. 
+3. Additionally, you need to install `cmake` version 3.4 or higher
 
+4. You need to have `virtualenv` version **16.0.0** (or lower) installed on your system to be able build `ngraph-bridge` bridge. The virtualenv is configured and used by the build script but not required for running `ngraph-bridge`. 
+
+2. Please ensure that you have gcc 4.8 version installed on your system. The nGraph bridge links with the TensorFlow libraries that are build with gcc 4.8 version of the toolchain. 
 
 #### Build 
 
@@ -95,7 +74,7 @@ The installation prerequisites are the same as described in the TensorFlow
    
 2. Run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
 
-        python3 build_ngtf.py
+        python3 build_ngtf.py --use_prebuilt_tensorflow
 
 Once the build finishes, a new virtualenv directory is created in the `build_cmake/venv-tf-py3`. The build artifacts i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl` is created in the `build_cmake/artifacts` directory. 
 
@@ -110,10 +89,6 @@ This command will run all the C++ and python unit tests from the ngraph-bridge s
         source build_cmake/venv-tf-py3/bin/activate
  
 Alternatively, you can also install the TensorFlow and nGraph bridge outside of virtualenv. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifats/tensorflow` directories, respectively. 
-
-:warning: If you build nGraph bridge from source (i.e., Option 3) then chances are you used gcc 5.4 or higher. Howver, TensorFlow available from PyPi is compiled with gcc 4.8. You cannot mix and match an nGraph bridge that is compiled and linked with TensorFlow built from source and runnng with TensorFlow installed from PyPi. This is due to mismatch of the CXX11 ABI. 
-
-So install the TensorFlow from the `artifacts/tensorflow/tensorflow-<VERSION_INFO>.whl` if you have selected option 3 to build ngraph-bridge.
 
 Select the help option of `build_ngtf.py` script to learn more about various build options and how to build other backends. 
 
