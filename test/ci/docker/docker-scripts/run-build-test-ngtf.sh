@@ -88,17 +88,29 @@ echo ' '
 echo 'g++ version is:'
 g++ --version
 
-echo ' '
-echo 'python version is:'
-python --version
+if [ -f /usr/bin/python ] ; then
+    echo ' '
+    echo 'python version is:'
+    python --version
+else
+    echo '/usr/bin/python was not found'
+fi
 
-echo ' '
-echo 'python2 version is:'
-python2 --version
+if [ -f /usr/bin/python2 ] ; then
+    echo ' '
+    echo 'python2 version is:'
+    python2 --version
+else
+    echo '/usr/bin/python2 was not found'
+fi
 
-echo ' '
-echo 'python3 version is:'
-python3 --version
+if [ -f /usr/bin/python3 ] ; then
+    echo ' '
+    echo 'python3 version is:'
+    python3 --version
+else
+    echo '/usr/bin/python3 was not found'
+fi
 
 echo ' '
 echo 'virtualenv version is:'
