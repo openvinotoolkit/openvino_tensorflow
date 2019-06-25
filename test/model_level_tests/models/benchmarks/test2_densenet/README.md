@@ -1,0 +1,1 @@
+This sub test is for densenet training
