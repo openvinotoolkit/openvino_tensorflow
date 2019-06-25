@@ -1,0 +1,1 @@
+This test is for ssdmobilenetv1 training
