@@ -532,18 +532,6 @@ static Status TranslateQuantizedPoolOp(
   return Status::OK();
 }
 
-static Status TranslateAllreduceOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
-
-  auto ng_all_reduce = ConstructNgNode<ng::op::AllReduce>(op->name(), ng_input);
-  SaveNgOp(ng_op_map, op->name(), ng_all_reduce);
-
-  return Status::OK();
-}
-
 static Status TranslateAddNOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4790,132 +4778,113 @@ const static std::map<
     const string,
     const function<Status(const Node*, const std::vector<const Tensor*>&,
                           Builder::OpMap&)>>
-    TRANSLATE_OP_MAP{
-        {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
-        {"Add", TranslateBinaryOp<ngraph::op::Add>},
-        {"AddN", TranslateAddNOp},
-        {"Any", TranslateDirectReduceOp<ng::op::Any>},
-        {"All", TranslateDirectReduceOp<ng::op::All>},
-        {"ArgMax", TranslateArgMinMaxOp<ng::op::ArgMax>},
-        {"ArgMin", TranslateArgMinMaxOp<ng::op::ArgMin>},
-        {"AvgPool", TranslateAvgPoolOp},
-        {"AvgPoolGrad", TranslateAvgPoolGradOp},
-        {"BatchMatMul", TranslateBatchMatMulOp},
-        {"BiasAdd", TranslateBiasAddOp},
-        {"BiasAddGrad", TranslateBiasAddGradOp},
-        {"Cast", TranslateCastOp},
-        {"CombinedNonMaxSuppression", TranslateCombinedNonMaxSuppressionOp},
-        {"ConcatV2", TranslateConcatV2Op},
-        {"Const", TranslateConstOp},
-        {"Conv2D", TranslateConv2DOp},
-        {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
-        {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
-        {"Conv3D", TranslateConv3DOp},
-        {"DepthToSpace", TranslateDepthToSpaceOp},
-        {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
-        {"Dequantize", TranslateDequantizeOp},
-        {"Equal", TranslateBinaryOp<ngraph::op::Equal>},
-        {"Exp", TranslateUnaryOp<ngraph::op::Exp>},
-        {"ExpandDims", TranslateExpandDimsOp},
-        {"Fill", TranslateFillOp},
-        {"Floor", TranslateUnaryOp<ngraph::op::Floor>},
-        {"FloorDiv", TranslateFloorDivOp},
-        {"FloorMod", TranslateFloorModOp},
-        {"FusedBatchNorm", TranslateFusedBatchNormOp},
-        {"FusedBatchNormV2", TranslateFusedBatchNormOp},
-        {"FusedBatchNormV3", TranslateFusedBatchNormOp},
-        {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
-        {"GatherNd", TranslateGatherNdOp},
-        {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
-        {"GatherV2", TranslateGatherV2Op},
-        {"_FusedConv2D", TranslateFusedConv2DOp},
-        {"_FusedMatMul", TranslateFusedMatMulOp},
-        {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
-        {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},
-        {"HorovodAllreduce", TranslateAllreduceOp},
-        {"Identity", TranslateIdentityOp},
-        {"L2Loss", TranslateL2LossOp},
-        {"LogSoftmax", TranslateLogSoftmaxOp},
-        {"Less", TranslateBinaryOp<ngraph::op::Less>},
-        {"LessEqual", TranslateBinaryOp<ngraph::op::LessEq>},
-        {"Log", TranslateUnaryOp<ngraph::op::Log>},
-        {"LogicalAnd", TranslateBinaryOp<ngraph::op::And>},
-        {"LogicalNot", TranslateUnaryOp<ngraph::op::Not>},
-        {"LogicalOr", TranslateBinaryOp<ngraph::op::Or>},
-        {"MatMul", TranslateMatMulOp},
-        {"Max", TranslateDirectReduceOp<ng::op::Max>},
-        {"Maximum", TranslateBinaryOp<ngraph::op::Maximum>},
-        {"MaxPool", TranslateMaxPoolOp},
-        {"MaxPool3D", TranslateMaxPool3DOp},
-        {"MaxPoolGrad", TranslateMaxPoolGradOp},
-        {"NonMaxSuppressionV4", TranslateNonMaxSuppressionV4Op},
-        {"Mean", TranslateMeanOp},
-        {"Min", TranslateDirectReduceOp<ng::op::Min>},
-        {"Minimum", TranslateBinaryOp<ngraph::op::Minimum>},
-        {"Mul", TranslateBinaryOp<ngraph::op::Multiply>},
-        {"Neg", TranslateUnaryOp<ngraph::op::Negative>},
-        // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
-        // reasons, but they have no data flow inputs or outputs.
-        {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
-                    Builder::OpMap&) { return Status::OK(); }},
-        {"OneHot", TranslateOneHotOp},
-        {"Pack", TranslatePackOp},
-        {"Pad", TranslatePadOp},
-        {"Pow", TranslateBinaryOp<ngraph::op::Power>},
-        // PreventGradient is just Identity in data-flow terms, so reuse that.
-        {"PreventGradient", TranslateIdentityOp},
-        {"Prod", TranslateDirectReduceOp<ng::op::Product>},
-        {"QuantizeAndDequantizeV2", TranslateQuantizeAndDequantizeV2Op},
-        {"QuantizedAvgPool", TranslateQuantizedAvgPoolOp},
-        {"QuantizedConcat", TranslateQuantizedConcatOp},
-        {"QuantizedConcatV2", TranslateQuantizedConcatV2Op},
-        {"QuantizedConv2DWithBiasAndReluAndRequantize",
-         TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<true>},
-        {"QuantizedConv2DWithBiasAndRequantize",
-         TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<false>},
-        {"QuantizedConv2DWithBiasSignedSumAndReluAndRequantize",
-         TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp},
-        {"QuantizedConv2DWithBiasSumAndReluAndRequantize",
-         TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp},
-        {"QuantizedMaxPool", TranslateQuantizedMaxPoolOp},
-        {"QuantizeV2", TranslateQuantizeV2Op},
-        {"Rank", TranslateRankOp},
-        {"RealDiv", TranslateBinaryOp<ngraph::op::Divide>},
-        {"Reciprocal", TranslateReciprocalOp},
-        {"Relu", TranslateUnaryOp<ngraph::op::Relu>},
-        {"Relu6", TranslateRelu6Op},
-        {"ReluGrad", TranslateReluGradOp},
-        {"Reshape", TranslateReshapeOp},
-        {"Rsqrt", TranslateRsqrtOp},
-        {"RsqrtGrad", TranslateRsqrtGradOp},
-        {"Select", TranslateSelectOp},
-        {"Shape", TranslateShapeOp},
-        {"Sigmoid", TranslateSigmoidOp},
-        {"SigmoidGrad", TranslateSigmoidGradOp},
-        {"Size", TranslateSizeOp},
-        {"Sign", TranslateUnaryOp<ngraph::op::Sign>},
-        {"Slice", TranslateSliceOp},
-        {"Snapshot", TranslateIdentityOp},
-        {"Softmax", TranslateSoftmaxOp},
-        {"SpaceToDepth", TranslateSpaceToDepthOp},
-        {"SparseSoftmaxCrossEntropyWithLogits",
-         TranslateSparseSoftmaxCrossEntropyWithLogitsOp},
-        {"Split", TranslateSplitOp},
-        {"SplitV", TranslateSplitVOp},
-        {"Sqrt", TranslateUnaryOp<ngraph::op::Sqrt>},
-        {"Square", TranslateSquareOp},
-        {"SquaredDifference", TranslateSquaredDifferenceOp},
-        {"Squeeze", TranslateSqueezeOp},
-        {"StridedSlice", TranslateStridedSliceOp},
-        {"Sub", TranslateBinaryOp<ngraph::op::Subtract>},
-        {"Sum", TranslateDirectReduceOp<ng::op::Sum>},
-        {"Tanh", TranslateUnaryOp<ngraph::op::Tanh>},
-        {"TanhGrad", TranslateTanhGradOp},
-        {"Tile", TranslateTileOp},
-        {"TopKV2", TranslateTopKV2Op},
-        {"Transpose", TranslateTransposeOp},
-        {"Unpack", TranslateUnpackOp},
-        {"ZerosLike", TranslateZerosLikeOp}};
+    TRANSLATE_OP_MAP {
+  {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
+      {"Add", TranslateBinaryOp<ngraph::op::Add>}, {"AddN", TranslateAddNOp},
+      {"Any", TranslateDirectReduceOp<ng::op::Any>},
+      {"All", TranslateDirectReduceOp<ng::op::All>},
+      {"ArgMax", TranslateArgMinMaxOp<ng::op::ArgMax>},
+      {"ArgMin", TranslateArgMinMaxOp<ng::op::ArgMin>},
+      {"AvgPool", TranslateAvgPoolOp}, {"AvgPoolGrad", TranslateAvgPoolGradOp},
+      {"BatchMatMul", TranslateBatchMatMulOp}, {"BiasAdd", TranslateBiasAddOp},
+      {"BiasAddGrad", TranslateBiasAddGradOp}, {"Cast", TranslateCastOp},
+      {"CombinedNonMaxSuppression", TranslateCombinedNonMaxSuppressionOp},
+      {"ConcatV2", TranslateConcatV2Op}, {"Const", TranslateConstOp},
+      {"Conv2D", TranslateConv2DOp},
+      {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
+      {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
+      {"Conv3D", TranslateConv3DOp}, {"DepthToSpace", TranslateDepthToSpaceOp},
+      {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
+      {"Dequantize", TranslateDequantizeOp},
+      {"Equal", TranslateBinaryOp<ngraph::op::Equal>},
+      {"Exp", TranslateUnaryOp<ngraph::op::Exp>},
+      {"ExpandDims", TranslateExpandDimsOp}, {"Fill", TranslateFillOp},
+      {"Floor", TranslateUnaryOp<ngraph::op::Floor>},
+      {"FloorDiv", TranslateFloorDivOp}, {"FloorMod", TranslateFloorModOp},
+      {"FusedBatchNorm", TranslateFusedBatchNormOp},
+      {"FusedBatchNormV2", TranslateFusedBatchNormOp},
+      {"FusedBatchNormV3", TranslateFusedBatchNormOp},
+      {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
+      {"GatherNd", TranslateGatherNdOp},
+      {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
+      {"GatherV2", TranslateGatherV2Op},
+      {"_FusedConv2D", TranslateFusedConv2DOp},
+      {"_FusedMatMul", TranslateFusedMatMulOp},
+      {"Greater", TranslateBinaryOp<ngraph::op::Greater>},
+      {"GreaterEqual", TranslateBinaryOp<ngraph::op::GreaterEq>},
+#if defined(NGRAPH_DISTRIBUTED)
+      {"HorovodAllreduce", TranslateUnaryOp<ngraph::op::AllReduce>},
+      {"HorovodBroadcast", TranslateUnaryOp<ngraph::op::BroadcastDistributed>},
+#endif
+      {"Identity", TranslateIdentityOp}, {"L2Loss", TranslateL2LossOp},
+      {"LogSoftmax", TranslateLogSoftmaxOp},
+      {"Less", TranslateBinaryOp<ngraph::op::Less>},
+      {"LessEqual", TranslateBinaryOp<ngraph::op::LessEq>},
+      {"Log", TranslateUnaryOp<ngraph::op::Log>},
+      {"LogicalAnd", TranslateBinaryOp<ngraph::op::And>},
+      {"LogicalNot", TranslateUnaryOp<ngraph::op::Not>},
+      {"LogicalOr", TranslateBinaryOp<ngraph::op::Or>},
+      {"MatMul", TranslateMatMulOp},
+      {"Max", TranslateDirectReduceOp<ng::op::Max>},
+      {"Maximum", TranslateBinaryOp<ngraph::op::Maximum>},
+      {"MaxPool", TranslateMaxPoolOp}, {"MaxPool3D", TranslateMaxPool3DOp},
+      {"MaxPoolGrad", TranslateMaxPoolGradOp},
+      {"NonMaxSuppressionV4", TranslateNonMaxSuppressionV4Op},
+      {"Mean", TranslateMeanOp}, {"Min", TranslateDirectReduceOp<ng::op::Min>},
+      {"Minimum", TranslateBinaryOp<ngraph::op::Minimum>},
+      {"Mul", TranslateBinaryOp<ngraph::op::Multiply>},
+      {"Neg", TranslateUnaryOp<ngraph::op::Negative>},
+      // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
+      // reasons, but they have no data flow inputs or outputs.
+      {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
+                  Builder::OpMap&) { return Status::OK(); }},
+      {"OneHot", TranslateOneHotOp}, {"Pack", TranslatePackOp},
+      {"Pad", TranslatePadOp}, {"Pow", TranslateBinaryOp<ngraph::op::Power>},
+      // PreventGradient is just Identity in data-flow terms, so reuse that.
+      {"PreventGradient", TranslateIdentityOp},
+      {"Prod", TranslateDirectReduceOp<ng::op::Product>},
+      {"QuantizeAndDequantizeV2", TranslateQuantizeAndDequantizeV2Op},
+      {"QuantizedAvgPool", TranslateQuantizedAvgPoolOp},
+      {"QuantizedConcat", TranslateQuantizedConcatOp},
+      {"QuantizedConcatV2", TranslateQuantizedConcatV2Op},
+      {"QuantizedConv2DWithBiasAndReluAndRequantize",
+       TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<true>},
+      {"QuantizedConv2DWithBiasAndRequantize",
+       TranslateQuantizedConv2DWithBiasMaybeReluAndRequantizeOp<false>},
+      {"QuantizedConv2DWithBiasSignedSumAndReluAndRequantize",
+       TranslateQuantizedConv2DWithBiasSignedSumAndReluAndRequantizeOp},
+      {"QuantizedConv2DWithBiasSumAndReluAndRequantize",
+       TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp},
+      {"QuantizedMaxPool", TranslateQuantizedMaxPoolOp},
+      {"QuantizeV2", TranslateQuantizeV2Op}, {"Rank", TranslateRankOp},
+      {"RealDiv", TranslateBinaryOp<ngraph::op::Divide>},
+      {"Reciprocal", TranslateReciprocalOp},
+      {"Relu", TranslateUnaryOp<ngraph::op::Relu>}, {"Relu6", TranslateRelu6Op},
+      {"ReluGrad", TranslateReluGradOp}, {"Reshape", TranslateReshapeOp},
+      {"Rsqrt", TranslateRsqrtOp}, {"RsqrtGrad", TranslateRsqrtGradOp},
+      {"Select", TranslateSelectOp}, {"Shape", TranslateShapeOp},
+      {"Sigmoid", TranslateSigmoidOp}, {"SigmoidGrad", TranslateSigmoidGradOp},
+      {"Size", TranslateSizeOp}, {"Sign", TranslateUnaryOp<ngraph::op::Sign>},
+      {"Slice", TranslateSliceOp}, {"Snapshot", TranslateIdentityOp},
+      {"Softmax", TranslateSoftmaxOp},
+      {"SpaceToDepth", TranslateSpaceToDepthOp},
+      {"SparseSoftmaxCrossEntropyWithLogits",
+       TranslateSparseSoftmaxCrossEntropyWithLogitsOp},
+      {"Split", TranslateSplitOp}, {"SplitV", TranslateSplitVOp},
+      {"Sqrt", TranslateUnaryOp<ngraph::op::Sqrt>},
+      {"Square", TranslateSquareOp},
+      {"SquaredDifference", TranslateSquaredDifferenceOp},
+      {"Squeeze", TranslateSqueezeOp},
+      {"StridedSlice", TranslateStridedSliceOp},
+      {"Sub", TranslateBinaryOp<ngraph::op::Subtract>},
+      {"Sum", TranslateDirectReduceOp<ng::op::Sum>},
+      {"Tanh", TranslateUnaryOp<ngraph::op::Tanh>},
+      {"TanhGrad", TranslateTanhGradOp}, {"Tile", TranslateTileOp},
+      {"TopKV2", TranslateTopKV2Op}, {"Transpose", TranslateTransposeOp},
+      {"Unpack", TranslateUnpackOp}, {
+    "ZerosLike", TranslateZerosLikeOp
+  }
+};
 
 Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
@@ -4957,6 +4926,8 @@ Status Builder::TranslateGraph(
       int rank_id;
       rank_id = ng::get_distributed_interface()->get_rank();
       if (n->type_string() == "HorovodAllreduce") {
+        NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << rank_id << "]: " << n->name();
+      } else if (n->type_string() == "HorovodBroadcast") {
         NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << rank_id << "]: " << n->name();
       }
 #endif
@@ -5058,7 +5029,8 @@ Status Builder::TranslateGraph(
   ng_function = make_shared<ng::Function>(ng_result_list, ng_parameter_list);
 
 #if defined NGRAPH_DISTRIBUTED
-  AllreduceOpControlOrder(ng_function);
+  OpControlOrder(ng_function, "AllReduce");
+  OpControlOrder(ng_function, "BroadcastDistributed");
 #endif
 
   //

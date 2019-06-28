@@ -321,8 +321,11 @@ bool DumpEncapsulatedGraphs();
 
 bool DumpTrackedGraphs();
 
+#if defined(NGRAPH_DISTRIBUTED)
 // Insert constrol dependency for AllReduce ops to ensure execution order
-void AllreduceOpControlOrder(const std::shared_ptr<ngraph::Function>&);
+void OpControlOrder(const std::shared_ptr<ngraph::Function>&,
+                    const std::string&);
+#endif
 
 }  // namespace ngraph_bridge
 
