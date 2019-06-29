@@ -4923,11 +4923,9 @@ Status Builder::TranslateGraph(
     } else {
       tf_ops.push_back(n);
 #if defined(NGRAPH_DISTRIBUTED)
-      int rank_id;
-      rank_id = ng::get_distributed_interface()->get_rank();
-      if (n->type_string() == "HorovodAllreduce") {
-        NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << rank_id << "]: " << n->name();
-      } else if (n->type_string() == "HorovodBroadcast") {
+      if (n->type_string().find("Horovod") == 0) {
+        int rank_id;
+        rank_id = ng::get_distributed_interface()->get_rank();
         NGRAPH_VLOG(1) << "[NGRAPH_TF RANK: " << rank_id << "]: " << n->name();
       }
 #endif
