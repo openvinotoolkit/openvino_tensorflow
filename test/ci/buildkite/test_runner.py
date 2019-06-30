@@ -101,12 +101,14 @@ def main():
                     "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
                     "NNOps.SparseSoftmaxCrossEntropyWithLogits:"
                     "ArrayOps.GatherNd*")
+        os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
     elif (arguments.test_bazel_build):
         run_bazel_build()
     elif (arguments.test_tf_python):
+        os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
             arguments.backend, './',
             arguments.artifacts_dir + '/tensorflow/python', False)

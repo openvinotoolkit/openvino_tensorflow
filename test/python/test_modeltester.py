@@ -22,6 +22,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import platform
 import os
 
 from common import NgraphTest
@@ -30,6 +31,7 @@ from tools.build_utils import command_executor
 
 class TestModelTester(NgraphTest):
 
+    @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     def test_MLP(self):
         cwd = os.getcwd()
         os.chdir('../model_level_tests/')

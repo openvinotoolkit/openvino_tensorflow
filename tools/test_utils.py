@@ -69,7 +69,7 @@ def run_ngtf_gtests(build_dir, filters):
     else:
         cmd = ['./gtest_ngtf']
 
-    command_executor(cmd, verbose=True)
+    command_executor(cmd, verbose=True, stderr=subprocess.DEVNULL)
 
     os.chdir(root_pwd)
 
@@ -97,7 +97,7 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
     else:
         cmd = ['./gtest_ngtf']
 
-    command_executor(cmd, verbose=True)
+    command_executor(cmd, verbose=True, stderr=subprocess.DEVNULL)
     os.chdir(root_pwd)
 
 
@@ -202,11 +202,17 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
     os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
+    # command_executor([
+    #     "python", test_script, "--tensorflow_path", tf_src_dir,
+    #     "--run_tests_from_file", test_manifest_file, "--xml_report",
+    #     test_xml_report
+    # ], verbose=True)
+
     command_executor([
         "python", test_script, "--tensorflow_path", tf_src_dir,
-        "--run_tests_from_file", test_manifest_file, "--xml_report",
-        test_xml_report
-    ])
+        "--run_tests_from_file", test_manifest_file
+    ],
+                     verbose=True)
 
     os.chdir(root_pwd)
 

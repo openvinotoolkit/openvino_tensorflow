@@ -44,7 +44,7 @@ def is_venv():
             (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
 
-def command_executor(cmd, verbose=False, msg=None, stdout=None):
+def command_executor(cmd, verbose=False, msg=None, stdout=None, stderr=None):
     '''
     Executes the command.
     Example: 
@@ -56,7 +56,7 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None):
     if verbose:
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd)
-    if (call(shlex.split(cmd), stdout=stdout) != 0):
+    if (call(shlex.split(cmd), stdout=stdout, stderr=stderr) != 0):
         raise Exception("Error running command: " + cmd)
 
 
@@ -346,6 +346,7 @@ def copy_tf_to_artifacts(artifacts_dir, tf_prebuilt):
     else:
         tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/libtensorflow_cc.so.1')
         tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' + tf_fmwk_lib_name)
+    print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
 

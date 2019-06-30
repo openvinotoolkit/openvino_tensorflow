@@ -45,8 +45,11 @@ def main():
 
     assert not os.path.isdir(
         arguments.output_dir), arguments.output_dir + " already exists"
-    os.mkdir(arguments.output_dir)
+    os.makedirs(arguments.output_dir)
     os.chdir(arguments.output_dir)
+    assert not is_venv(
+    ), "Please deactivate virtual environment before running this script"
+
     assert not is_venv(
     ), "Please deactivate virtual environment before running this script"
 
@@ -63,11 +66,21 @@ def main():
     # Build TensorFlow
     build_tensorflow(venv_dir, "tensorflow", 'artifacts', arguments.target_arch,
                      False)
-    shutil.copytree('./tensorflow/tensorflow/python',
-                    './artifacts/tensorflow/python')
-    print('To build ngraph-bridge using this prebuilt tensorflow, use:')
-    print('./build_ngtf.py --use_tensorflow_from_location ' +
-          os.path.abspath(arguments.output_dir))
+
+    # Build TensorFlow C++ Library
+    build_tensorflow_cc("tensorflow", 'artifacts', arguments.target_arch, False)
+
+    pwd = os.getcwd()
+    artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
+    os.chdir("tensorflow")
+
+    copy_tf_to_artifacts(artifacts_dir, None)
+
+    print('\033[1;35mTensorFlow Build finished\033[0m')
+
+    print('When building ngraph-bridge using this prebuilt tensorflow, use:')
+    print('\033[3;34mpython3 build_ngtf.py --use_tensorflow_from_location ' +
+          os.path.abspath(arguments.output_dir) + '\033[1;0m')
 
 
 if __name__ == '__main__':

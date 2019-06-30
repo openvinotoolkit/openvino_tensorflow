@@ -92,6 +92,7 @@ def main():
                       "https://github.com/tensorflow/tensorflow.git", "v1.14.0")
 
     # Next run the TensorFlow python tests
+    os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
     run_tensorflow_pytests(venv_dir, build_dir, './', tf_src_dir)
 
     # Finally run Resnet50 based training and inferences

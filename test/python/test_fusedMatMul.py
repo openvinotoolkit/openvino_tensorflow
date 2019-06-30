@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import platform
 
 import tensorflow as tf
 from tensorflow.python.framework import constant_op
@@ -42,6 +43,7 @@ class TestFusedMatMul(NgraphTest):
             ('fusedmatmul_2.pbtxt',),  # No activation
         ))
     @pytest.mark.parametrize(("dim1", "dim2", "dim3"), ((3, 2, 2), (3, 4, 5)))
+    @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     def test_fusedmatmul_bias_pbtxt(self, filename, dim1, dim2, dim3):
         graph = self.import_pbtxt(filename)
         with graph.as_default() as g:

@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import platform
 
 import tensorflow as tf
 from tensorflow.python.framework import constant_op
@@ -31,6 +32,7 @@ from common import NgraphTest
 
 class TestDepthwiseConv2dOperations(NgraphTest):
 
+    @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
     def test_depthwise_conv2d(self, padding):
         tensor_in_sizes = [1, 2, 3, 2]

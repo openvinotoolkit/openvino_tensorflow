@@ -22,7 +22,7 @@
 // nGraph-TensorFlow bridge uses semantic versioning: see http://semver.org/
 
 #define NG_TF_MAJOR_VERSION 0
-#define NG_TF_MINOR_VERSION 14
+#define NG_TF_MINOR_VERSION 16
 #define NG_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers
@@ -30,7 +30,7 @@
 // candidate such as v0.7.0-rc0
 // The code in master will always have the last released version number
 // with a suffix of '-master'
-#define NG_TF_VERSION_SUFFIX ""
+#define NG_TF_VERSION_SUFFIX "-master"
 
 #define VERSION_STR_HELPER(x) #x
 #define VERSION_STR(x) VERSION_STR_HELPER(x)

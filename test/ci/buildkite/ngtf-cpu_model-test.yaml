@@ -23,11 +23,24 @@
   - wait
 
   - command: |
-       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.14.0rc0-cp36-cp36m-linux_x86_64.whl
-       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
-       cd test/model_level_tests; python test_main.py --models benchmarks,MLP,ngraph-models,nmt,tfmodels,unet --run_basic_tests; cd ../..
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install psutil && pip install -U \
+        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.14.0rc0-cp36-cp36m-linux_x86_64.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
+      
+    label: ":gear: Install"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=cpu"
 
-    label: ":goal_net: Network tests"
+  - wait
+
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      cd test/model_level_tests
+      python test_main.py --models benchmarks,MLP,ngraph-models,nmt,tfmodels,unet --run_basic_tests; cd ../..
+
+    label: ":kafka: Model tests" 
     timeout_in_minutes: 40
     agents:
     - "queue=cpu"

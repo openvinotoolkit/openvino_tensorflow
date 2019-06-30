@@ -242,7 +242,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         backend_name);  // SplitBackendConfig
     backend_name = config_map.at("ngraph_backend");
     config_map.erase("ngraph_backend");
-    NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
+
+    if ((std::getenv("NGRAPH_TF_LOG_0_DISABLED") == nullptr)) {
+      NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
+    }
 
     // Now Process the Graph
 

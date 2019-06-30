@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import platform
 
 import tensorflow as tf
 import numpy as np
@@ -28,6 +29,7 @@ from common import NgraphTest
 
 class TestFlibOperations(NgraphTest):
 
+    @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     def test_flib_1(self):
         graph = self.import_pbtxt('flib_graph_1.pbtxt')
         with graph.as_default() as g:
