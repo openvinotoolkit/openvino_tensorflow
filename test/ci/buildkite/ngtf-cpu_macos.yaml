@@ -1,0 +1,94 @@
+  - command: |
+      rm -rf /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID
+      virtualenv -p /usr/local/miniconda3/bin/python3 /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv 
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      
+    label: ":gear: Setup"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=mac"
+    parallelism: 1
+
+  - wait
+
+  - command: |
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      python3 build_ngtf.py --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID \
+        --use_tensorflow_from_location  /usr/local/var/buildkite-agent/tf_1.14.0_install
+      
+    label: ":hammer_and_wrench: Build"
+    timeout_in_minutes: 60
+    agents:
+    - "queue=mac"
+    parallelism: 1
+
+  - wait
+
+  - command: |
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_cpp
+    
+    label: ":chrome: C++ Unit Test"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=mac"
+
+  - wait 
+
+  - command: |
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install -U \
+        /usr/local/var/buildkite-agent/tf_1.14.0_install/artifacts/tensorflow/tensorflow-1.14.0-cp37-cp37m-macosx_10_7_x86_64.whl
+      pip install psutil && \
+        pip install -U /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
+      
+    label: ":gear: Install"
+    timeout_in_minutes: 30
+    agents:
+    - "queue=mac"
+
+  - wait
+  - command: |
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install pytest
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
+        --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_python
+    
+    label: ":python: nGraph Pytest"
+    timeout_in_minutes: 60
+    soft_fail: true
+    agents:
+    - "queue=mac"
+
+  - wait
+  - command: |
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install pytest
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
+    
+    label: ":python: TensorFlow Pytest"
+    timeout_in_minutes: 90
+    soft_fail: true
+    agents:
+    - "queue=mac"
+
+  - wait
+
+  - command: |
+      source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_resnet 
+    label: ":bar_chart: ResNet50"
+    timeout_in_minutes: 30
+    soft_fail: true
+    agents:
+    - "queue=mac"
+
+  - wait
+  - command: |
+      rm -rf /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID
+    label: ":wastebasket: Cleanup"
+    agents:
+    - "queue=mac"
+
