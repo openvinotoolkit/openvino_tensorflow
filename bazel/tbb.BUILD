@@ -38,10 +38,6 @@ genrule(
 	    set -e
 	    WORK_DIR=$$PWD
 		DEST_DIR=$$PWD/$(@D)
-        export PATH=$$(dirname $(AR)):$$PATH
-		export CXXFLAGS=$(CC_FLAGS)
-		export NM=$(NM)
-		export AR=$(AR)
 		cd $$(dirname $(location :Makefile))
 
         #TBB's build needs some help to figure out what compiler it's using

@@ -69,7 +69,7 @@ The installation prerequisites are the same as described in the TensorFlow
 
         git clone https://github.com/tensorflow/ngraph-bridge.git
         cd ngraph-bridge
-        git checkout master
+        git checkout v0.16.0-rc1
 
    
 2. Run the following Python script to build TensorFlow, nGraph and the bridge. Please use Python 3.5:
@@ -103,9 +103,9 @@ Select the help option of `build_ngtf.py` script to learn more about various bui
         TensorFlow version:  1.14.0
         C Compiler version used in building TensorFlow:  7.3.0
         nGraph bridge version: b'0.14.0'
-        nGraph version used for this build: b'0.20.0-rc.0+0995b71'
-        TensorFlow version used for this build: v1.14.0-0-g87989f6959
-        CXX11_ABI flag used for this build: 1
+        nGraph version used for this build: <version-number>
+        TensorFlow version used for this build: <version-number>
+        CXX11_ABI flag used for this build: <1 or 0>
         nGraph bridge built with Grappler: False
         nGraph bridge built with Variables and Optimizers Enablement: False
 

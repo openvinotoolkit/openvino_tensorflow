@@ -65,6 +65,7 @@ cc_library(
         ],
         exclude = [
         "src/ngraph/ngraph.cpp",
+        "src/ngraph/serializer_stub.cpp"
     ]),
     deps = [
         ":ngraph_headers",

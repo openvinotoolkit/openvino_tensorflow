@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "v0.22.0"
+    ngraph_version = "v0.23.0-rc.2"
     tf_version = "v1.14.0"
 
     # Command line parser options
@@ -492,7 +492,7 @@ def main():
         link_src = os.path.join(artifacts_location,
                                 "tensorflow/tensorflow/python")
         link_dst = os.path.join(artifacts_location, "tensorflow/python")
-        command_executor(['ln', '-s', link_src, link_dst], verbose=True)
+        command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     # Run a quick test
     install_ngraph_tf(venv_dir, os.path.join(artifacts_location, ng_tf_whl))
