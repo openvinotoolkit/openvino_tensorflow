@@ -144,69 +144,80 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
 // Given an image file name, read in the data, try to decode it as an image,
 // resize it to the requested size, and then scale the values as desired.
 //-----------------------------------------------------------------------------
-Status ReadTensorFromImageFile(const string& file_name, const int input_height,
-                               const int input_width, const float input_mean,
-                               const float input_std, bool use_NCHW,
+Status ReadTensorFromImageFile(const std::vector<string>& file_names,
+                               const int input_height, const int input_width,
+                               const float input_mean, const float input_std,
+                               bool use_NCHW, const int input_channels,
                                std::vector<Tensor>* out_tensors) {
   auto root = tensorflow::Scope::NewRootScope();
   using namespace ::tensorflow::ops;  // NOLINT(build/namespaces)
 
   string input_name = "file_reader";
   string output_name = "normalized";
+  std::vector<std::pair<string, tensorflow::Tensor>> inputs;
+  std::vector<tensorflow::Output> div_tensors;
 
-  // read file_name into a tensor named input
-  Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
-  TF_RETURN_IF_ERROR(
-      ReadEntireFile(tensorflow::Env::Default(), file_name, &input));
+  for (int i = 0; i < file_names.size(); i++) {
+    // read file_name into a tensor named input
+    Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
+    TF_RETURN_IF_ERROR(
+        ReadEntireFile(tensorflow::Env::Default(), file_names[i], &input));
 
-  // use a placeholder to read input data
-  auto file_reader =
-      Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_STRING);
+    // use a placeholder to read input data
+    auto file_reader =
+        Placeholder(root.WithOpName("input_" + std::to_string(i)),
+                    tensorflow::DataType::DT_STRING);
 
-  std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
-      {"input", input},
-  };
+    inputs.push_back({"input_" + std::to_string(i), input});
 
-  // Now try to figure out what kind of file it is and decode it.
-  const int wanted_channels = 3;
-  tensorflow::Output image_reader;
-  if (tensorflow::str_util::EndsWith(file_name, ".png")) {
-    image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
-                             DecodePng::Channels(wanted_channels));
-  } else if (tensorflow::str_util::EndsWith(file_name, ".gif")) {
-    // gif decoder returns 4-D tensor, remove the first dim
-    image_reader =
-        Squeeze(root.WithOpName("squeeze_first_dim"),
-                DecodeGif(root.WithOpName("gif_reader"), file_reader));
-  } else if (tensorflow::str_util::EndsWith(file_name, ".bmp")) {
-    image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
-  } else {
-    // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
-    image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
-                              DecodeJpeg::Channels(wanted_channels));
+    // Now try to figure out what kind of file it is and decode it.
+    tensorflow::Output image_reader;
+    if (tensorflow::str_util::EndsWith(file_names[i], ".png")) {
+      image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
+                               DecodePng::Channels(input_channels));
+    } else if (tensorflow::str_util::EndsWith(file_names[i], ".gif")) {
+      // gif decoder returns 4-D tensor, remove the first dim
+      image_reader =
+          Squeeze(root.WithOpName("squeeze_first_dim"),
+                  DecodeGif(root.WithOpName("gif_reader"), file_reader));
+    } else if (tensorflow::str_util::EndsWith(file_names[i], ".bmp")) {
+      image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
+    } else {
+      // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
+      image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
+                                DecodeJpeg::Channels(input_channels));
+    }
+    // Now cast the image data to float so we can do normal math on it.
+    auto float_caster = Cast(root.WithOpName("float_caster"), image_reader,
+                             tensorflow::DT_FLOAT);
+    // The convention for image ops in TensorFlow is that all images are
+    // expected
+    // to be in batches, so that they're four-dimensional arrays with indices of
+    // [batch, height, width, channel]. Because we only have a single image, we
+    // have to add a batch dimension of 1 to the start with ExpandDims().
+    auto dims_expander = ExpandDims(root, float_caster, 0);
+    // Bilinearly resize the image to fit the required dimensions.
+    auto resized = ResizeBilinear(
+        root, dims_expander,
+        Const(root.WithOpName("size"), {input_height, input_width}));
+
+    tensorflow::Output div;
+    if (use_NCHW) {
+      auto converted_input = Transpose(root, resized, {0, 3, 1, 2});
+      // Subtract the mean and divide by the scale.
+      div = Div(root.WithOpName("output_" + std::to_string(i)),
+                Sub(root, converted_input, {input_mean}), {input_std});
+    } else {
+      // Subtract the mean and divide by the scale.
+      div = Div(root.WithOpName("output_" + std::to_string(i)),
+                Sub(root, resized, {input_mean}), {input_std});
+    }
+    div_tensors.push_back(div);
   }
-  // Now cast the image data to float so we can do normal math on it.
-  auto float_caster =
-      Cast(root.WithOpName("float_caster"), image_reader, tensorflow::DT_FLOAT);
-  // The convention for image ops in TensorFlow is that all images are expected
-  // to be in batches, so that they're four-dimensional arrays with indices of
-  // [batch, height, width, channel]. Because we only have a single image, we
-  // have to add a batch dimension of 1 to the start with ExpandDims().
-  auto dims_expander = ExpandDims(root, float_caster, 0);
-  // Bilinearly resize the image to fit the required dimensions.
-  auto resized = ResizeBilinear(
-      root, dims_expander,
-      Const(root.WithOpName("size"), {input_height, input_width}));
 
-  if (use_NCHW) {
-    auto converted_input = Transpose(root, resized, {0, 3, 1, 2});
-    // Subtract the mean and divide by the scale.
-    Div(root.WithOpName(output_name), Sub(root, converted_input, {input_mean}),
-        {input_std});
-  } else {
-    // Subtract the mean and divide by the scale.
-    Div(root.WithOpName(output_name), Sub(root, resized, {input_mean}),
-        {input_std});
+  // skipping concat for a single image
+  if (file_names.size() > 1) {
+    Concat(root.WithOpName(output_name), div_tensors, 0);
   }
 
   // This runs the GraphDef network definition that we've just constructed, and
@@ -224,7 +235,9 @@ Status ReadTensorFromImageFile(const string& file_name, const int input_height,
   std::unique_ptr<tensorflow::Session> session(
       tensorflow::NewSession(tensorflow::SessionOptions()));
   TF_RETURN_IF_ERROR(session->Create(graph));
-  TF_RETURN_IF_ERROR(session->Run({inputs}, {output_name}, {}, out_tensors));
+  TF_RETURN_IF_ERROR(
+      session->Run({inputs}, {file_names.size() > 1 ? output_name : "output_0"},
+                   {}, out_tensors));
   tensorflow::ngraph_bridge::config::ngraph_enable();
 
   return Status::OK();

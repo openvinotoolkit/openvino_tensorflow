@@ -89,7 +89,11 @@ void PrintVersion() {
 }
 
 int main(int argc, char** argv) {
+  // parameters below need to modified as per model
   string image = "grace_hopper.jpg";
+  int batch_size = 1;
+  // Vector size is same as the batch size, populating with single image
+  vector<string> images(batch_size, image);
   string graph = "inception_v3_2016_08_28_frozen.pb";
   string labels = "";
   int input_width = 299;
@@ -100,7 +104,7 @@ int main(int argc, char** argv) {
   string output_layer = "InceptionV3/Predictions/Reshape_1";
   bool use_NCHW = false;
   bool preload_images = true;
-
+  int input_channels = 3;
   int iteration_count = 10;
 
   std::vector<tf::Flag> flag_list = {
@@ -137,27 +141,27 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // const char* backend = "CPU";
-  // if (SetNGraphBackend(backend) != tf::Status::OK()) {
-  //   std::cout << "Error: Cannot set the backend: " << backend << std::endl;
-  //   return -1;
-  // }
+  const char* backend = "CPU";
+  if (SetNGraphBackend(backend) != tf::Status::OK()) {
+    std::cout << "Error: Cannot set the backend: " << backend << std::endl;
+    return -1;
+  }
 
   std::cout << "Component versions\n";
   PrintVersion();
 
   infer_multiple_networks::InferenceEngine infer_engine_1("engine_1", "CPU:0");
-  TF_CHECK_OK(infer_engine_1.Load(graph, image, input_width, input_height,
-                                  input_mean, input_std, input_layer,
-                                  output_layer, use_NCHW, preload_images));
+  TF_CHECK_OK(infer_engine_1.Load(
+      graph, images, input_width, input_height, input_mean, input_std,
+      input_layer, output_layer, use_NCHW, preload_images, input_channels));
   infer_multiple_networks::InferenceEngine infer_engine_2("engine_2", "CPU:0");
-  TF_CHECK_OK(infer_engine_2.Load(graph, image, input_width, input_height,
-                                  input_mean, input_std, input_layer,
-                                  output_layer, use_NCHW, preload_images));
+  TF_CHECK_OK(infer_engine_2.Load(
+      graph, images, input_width, input_height, input_mean, input_std,
+      input_layer, output_layer, use_NCHW, preload_images, input_channels));
   infer_multiple_networks::InferenceEngine infer_engine_3("engine_3", "CPU:0");
-  TF_CHECK_OK(infer_engine_3.Load(graph, image, input_width, input_height,
-                                  input_mean, input_std, input_layer,
-                                  output_layer, use_NCHW, preload_images));
+  TF_CHECK_OK(infer_engine_3.Load(
+      graph, images, input_width, input_height, input_mean, input_std,
+      input_layer, output_layer, use_NCHW, preload_images, input_channels));
 
   bool engine_1_running = true;
   infer_engine_1.Start([&](int step_count) {
