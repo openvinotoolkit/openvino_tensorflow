@@ -162,10 +162,11 @@ TEST(BackendManager, BackendClustering) {
   ASSERT_NE(A_cluster, B_cluster);
 }
 
+// Test GetBackendAdditionalAttributes API
 TEST(BackendManager, GetBackendAdditionalAttributes) {
-  vector<string> default_backend_optional_attrs = {"_ngraph_device_config"};
-  vector<string> nnpi_backend_optional_attrs = {
-      "_ngraph_device_id", "_ngraph_ice_cores", "_ngraph_max_batch_size"};
+  vector<string> default_backend_optional_attrs = {"device_config"};
+  vector<string> nnpi_backend_optional_attrs = {"device_id", "ice_cores",
+                                                "max_batch_size"};
 
   auto cpu_options = BackendManager::GetBackendAdditionalAttributes("CPU");
   auto nnpi_options = BackendManager::GetBackendAdditionalAttributes("NNPI");
@@ -176,6 +177,7 @@ TEST(BackendManager, GetBackendAdditionalAttributes) {
   ASSERT_EQ(gpu_options, default_backend_optional_attrs);
 }
 
+// Test GetBackendAttributeValues API
 TEST(BackendManager, GetBackendAttributeValues) {
   auto cpu_options = BackendManager::GetBackendAttributeValues("CPU");
   auto nnpi_options = BackendManager::GetBackendAttributeValues("NNPI:3,5,6");
@@ -205,10 +207,11 @@ TEST(BackendManager, GetBackendAttributeValues) {
   ASSERT_EQ(plaidml_options["_ngraph_device_config"], "device:567:892_34");
 }
 
+// Test GetBackendCreationString API
 TEST(BackendManager, GetBackendCreationString) {
-  unordered_map<string, string> cpu_map = {{"_ngraph_device_config", ""}};
-  unordered_map<string, string> nnpi_map = {{"_ngraph_device_id", "5"}};
-  unordered_map<string, string> gpu_map = {{"_ngraph_device_config", "678"}};
+  unordered_map<string, string> cpu_map = {{"device_config", ""}};
+  unordered_map<string, string> nnpi_map = {{"device_id", "5"}};
+  unordered_map<string, string> gpu_map = {{"device_config", "678"}};
 
   auto cpu_backend = BackendManager::GetBackendCreationString("CPU", cpu_map);
   auto nnpi_backend =
@@ -221,12 +224,12 @@ TEST(BackendManager, GetBackendCreationString) {
 
   // throw errors
   unordered_map<string, string> test_empty_map = {};
-  // "_ngraph_device_config" is not valid for NNPI
+  // "device_config" is not valid for NNPI
   unordered_map<string, string> test_missing_config_nnpi = {
-      {"_ngraph_device_config", "345"}};
-  // "_ngraph_device_id" is not valid for default configs
+      {"device_config", "345"}};
+  // "device_id" is not valid for default configs
   unordered_map<string, string> test_missing_config_default = {
-      {"_ngraph_device_id", "45"}};
+      {"device_id", "45"}};
 
   ASSERT_THROW(BackendManager::GetBackendCreationString("CPU", test_empty_map),
                std::out_of_range);

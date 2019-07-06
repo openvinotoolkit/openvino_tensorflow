@@ -32,9 +32,9 @@ class BackendConfig {
  public:
   BackendConfig() = delete;
   BackendConfig(const string& backend_name);
-  unordered_map<string, string> Split(const string& backend_config);
   vector<string> GetAdditionalAttributes();
 
+  virtual unordered_map<string, string> Split(const string& backend_config);
   virtual string Join(
       const unordered_map<string, string>& additional_parameters);
   virtual ~BackendConfig();
@@ -47,8 +47,18 @@ class BackendConfig {
 class BackendNNPIConfig : public BackendConfig {
  public:
   BackendNNPIConfig();
-  string Join(const unordered_map<string, string>& additional_parameters);
+  string Join(
+      const unordered_map<string, string>& additional_parameters) override;
   virtual ~BackendNNPIConfig();
+};
+
+class BackendInterpreterConfig : public BackendConfig {
+ public:
+  BackendInterpreterConfig();
+  unordered_map<string, string> Split(const string& backend_config) override;
+  string Join(
+      const unordered_map<string, string>& additional_parameters) override;
+  virtual ~BackendInterpreterConfig();
 };
 
 }  // namespace ngraph_bridge
