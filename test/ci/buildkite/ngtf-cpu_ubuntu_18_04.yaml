@@ -7,7 +7,7 @@
     label: ":gear: Setup"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
     parallelism: 1
   - wait
 
@@ -19,7 +19,7 @@
     label: ":pencil: Code Format ?"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
     parallelism: 1
   - wait
 
@@ -31,7 +31,7 @@
     label: ":hammer_and_wrench: Build"
     timeout_in_minutes: 60
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
     parallelism: 1
   - wait
 
@@ -45,7 +45,7 @@
     label: ":bazel: Bazel Build"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
   - wait
 
   - command: |
@@ -55,7 +55,7 @@
     label: ":chrome: C++ Unit Test"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
   - wait 
 
   - command: |
@@ -67,7 +67,7 @@
     label: ":gear: Install"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
   - wait
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
@@ -78,7 +78,7 @@
     label: ":python: nGraph Pytest"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
 
   - wait
   - command: |
@@ -90,7 +90,7 @@
     label: ":python: TensorFlow Pytest"
     timeout_in_minutes: 60
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
 
   - wait
 
@@ -101,11 +101,11 @@
     label: ":bar_chart: ResNet50"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
   - wait
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
     agents:
-    - "queue=cpu_tf_1.14"
+    - "queue=r0.16"
 
