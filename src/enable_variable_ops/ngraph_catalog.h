@@ -128,7 +128,7 @@ class NGraphCatalog {
                                          int input_index);
   static tuple<string, bool, bool> GetInfoFromEncapOutputInfoMap(string key);
   static string GetVariableSharedNameFromEncapOutputInfoMap(string key);
-  static bool GetCoptToTFFromEncapOutputInfoMap(string key);
+  static bool GetCopyToTFFromEncapOutputInfoMap(string key);
   static bool GetIsTFJustLookingFromEncapOutputInfoMap(string key);
 
   // Utility to create key to query the maps

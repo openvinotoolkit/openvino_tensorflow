@@ -151,7 +151,7 @@ string NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(string key) {
   return get<0>(val);
 }
 
-bool NGraphCatalog::GetCoptToTFFromEncapOutputInfoMap(string key) {
+bool NGraphCatalog::GetCopyToTFFromEncapOutputInfoMap(string key) {
   tuple<string, bool, bool> val = NGraphCatalog::encap_output_info_map_[key];
   return get<1>(val);
 }
