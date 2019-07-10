@@ -102,6 +102,10 @@ target_link_libraries(
     tensorflow_cc_lib
 )
 
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(gtest_ngtf ${PLAIDML_LIBRARIES})
+endif()
+
 add_subdirectory(python)
 add_subdirectory(model_level_tests)
 

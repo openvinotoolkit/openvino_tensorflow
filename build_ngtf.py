@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "v0.23.0-rc.3"
+    ngraph_version = "v0.23.0-rc.5"
     tf_version = "v1.14.0"
 
     # Command line parser options
@@ -85,7 +85,7 @@ def main():
     parser.add_argument(
         '--build_plaidml_backend',
         help=
-        "nGraph backends will include PlaidML bckend. Use: NGRAPH_TF_BACKEND=PLAIDML\n",
+        "nGraph backends will include PlaidML backend. Use: NGRAPH_TF_BACKEND=PLAIDML\n",
         action="store_true")
 
     parser.add_argument(
