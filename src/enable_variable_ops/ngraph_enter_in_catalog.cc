@@ -93,11 +93,13 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         }
         string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(), output_index);
         tuple<string, bool, bool> value = make_tuple(shared_name, copy_to_tf, is_tf_just_looking);
+        //NGRAPH_VLOG(4)
         cout << "Adding to EncapOutputInfoMap \n";
         cout << "Key: " << key << "\n";
         cout << "Value: "<< get<0>(value) << " " << get<1>(value) << " " << get<2>(value) << "\n";
         NGraphCatalog::AddToEncapOutputInfoMap(key, value);
-        continue;
+        // TODO: Uncomment the continue when all the tasks are integrated
+        //continue;
       }
     }
     // Update the input variable map
