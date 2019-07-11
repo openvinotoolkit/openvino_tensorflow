@@ -99,7 +99,7 @@ TEST(CatalogTest, SmallGraph1) {
 // and for testing purposes we use DeassignClusters to get rid of
 // the trivial clusters which will lead to the graph having no
 // NGraphEncapsulate nodes and hence none of the NGraphAssign's
-// wil have _ngraph_remove attribute added.
+// will have _ngraph_remove attribute added.
 TEST(CatalogTest, SmallGraph2) {
   Scope root = Scope::NewRootScope();
 

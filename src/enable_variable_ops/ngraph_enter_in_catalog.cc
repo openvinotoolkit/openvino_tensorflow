@@ -70,8 +70,8 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       Node* input_1;
       TF_RETURN_IF_ERROR(node->input_node(1, &input_1));
       if (input_1->type_string() == "NGraphEncapsulate") {
-        cout << "Input node type for NGraphAssign is NGraphEncapsulate"
-             << "\n";
+        NGRAPH_VLOG(4)
+            << "Input node type for NGraphAssign is NGraphEncapsulate";
         // attach attribute _ngraph_remove to this NGraphAssign
         node->AddAttr("_ngraph_remove", true);
         // get variable shared_name
@@ -175,8 +175,7 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
     }  // end of if node of type NGraphAssign
   }    // enter in catalog
 
-  cout << "Entered in Catalog"
-       << "\n";
+  NGRAPH_VLOG(4) << "Entered in Catalog";
   return Status::OK();
 }
 
