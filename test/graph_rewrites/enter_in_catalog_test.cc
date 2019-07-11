@@ -22,10 +22,10 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/session.h"
 
+#include "enable_variable_ops/ngraph_catalog.h"
+#include "enable_variable_ops/ngraph_enter_in_catalog.h"
 #include "enable_variable_ops/ngraph_replace_op_utilities.h"
 #include "enable_variable_ops/ngraph_replace_variable_modifiers.h"
-#include "enable_variable_ops/ngraph_enter_in_catalog.h"
-#include "enable_variable_ops/ngraph_catalog.h"
 #include "ngraph_api.h"
 #include "ngraph_assign_clusters.h"
 #include "ngraph_capture_variables.h"
@@ -78,23 +78,20 @@ TEST(CatalogTest, SmallGraph1) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
-//   GraphToPbTextFile(&graph, "1.pbtxt");
+  //   GraphToPbTextFile(&graph, "1.pbtxt");
 
   bool remove = false;
   for (auto node : graph.op_nodes()) {
     auto node_name = node->name();
     remove = false;
     if (node_name == "Assign") {
-        ASSERT_OK(
-            GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-        ASSERT_TRUE(remove);
+      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+      ASSERT_TRUE(remove);
     } else if (node_name == "Var_Assign") {
-        ASSERT_OK(
-            GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-        ASSERT_TRUE(remove);
+      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+      ASSERT_TRUE(remove);
     }
   }
-
 }
 
 // Graph with one Assign ops which should not have the attribute
@@ -137,17 +134,15 @@ TEST(CatalogTest, SmallGraph2) {
     auto node_name = node->name();
     remove = false;
     if (node_name == "Assign") {
-        ASSERT_NOT_OK(
-            GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-        ASSERT_FALSE(remove);
+      ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+      ASSERT_FALSE(remove);
     } else if (node_name == "Var_Assign") {
-        ASSERT_NOT_OK(
-            GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-        ASSERT_FALSE(remove);
+      ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+      ASSERT_FALSE(remove);
     }
   }
 }
 
-} // namespace testing
-} // namespace ngraph_bridge
-} // namespace tensorflow
+}  // namespace testing
+}  // namespace ngraph_bridge
+}  // namespace tensorflow

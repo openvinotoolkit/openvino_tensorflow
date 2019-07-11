@@ -70,7 +70,8 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       Node* input_1;
       TF_RETURN_IF_ERROR(node->input_node(1, &input_1));
       if (input_1->type_string() == "NGraphEncapsulate") {
-        cout << "Input node type for NGraphAssign is NGraphEncapsulate" << "\n";
+        cout << "Input node type for NGraphAssign is NGraphEncapsulate"
+             << "\n";
         // attach attribute _ngraph_remove to this NGraphAssign
         node->AddAttr("_ngraph_remove", true);
         // get variable shared_name
@@ -78,28 +79,32 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         TF_RETURN_IF_ERROR(GetSharedName(node, &shared_name));
         // get attribute copy_to_tf
         bool copy_to_tf;
-        TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "copy_to_tf", &copy_to_tf));
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(node->attrs(), "copy_to_tf", &copy_to_tf));
         // get attribute is_tf_just_looking
         bool is_tf_just_looking;
-        TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "is_tf_just_looking", &is_tf_just_looking));
+        TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "is_tf_just_looking",
+                                       &is_tf_just_looking));
         // populate encap_output_info_map_
         int output_index;
         for (auto edge : node->in_edges()) {
           if (edge->src()->type_string() == "NGraphEncapsulate") {
             output_index = edge->src_output();
-            cout << "output_index " << output_index << "\n";
+            NGRAPH_VLOG(4) << "output_index " << output_index;
             break;
           }
         }
-        string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(), output_index);
-        tuple<string, bool, bool> value = make_tuple(shared_name, copy_to_tf, is_tf_just_looking);
-        //NGRAPH_VLOG(4)
-        cout << "Adding to EncapOutputInfoMap \n";
-        cout << "Key: " << key << "\n";
-        cout << "Value: "<< get<0>(value) << " " << get<1>(value) << " " << get<2>(value) << "\n";
+        string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
+                                                  output_index);
+        tuple<string, bool, bool> value =
+            make_tuple(shared_name, copy_to_tf, is_tf_just_looking);
+        NGRAPH_VLOG(4) << "Adding to EncapOutputInfoMap ";
+        NGRAPH_VLOG(4) << "Key: " << key;
+        NGRAPH_VLOG(4) << "Value: " << get<0>(value) << " " << get<1>(value)
+                       << " " << get<2>(value);
         NGraphCatalog::AddToEncapOutputInfoMap(key, value);
         // TODO: Uncomment the continue when all the tasks are integrated
-        //continue;
+        // continue;
       }
     }
     // Update the input variable map
@@ -109,9 +114,9 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       TF_RETURN_IF_ERROR(GetSharedName(node, &shared_name));
       NGraphCatalog::AddToInputVariableSharedNameMap(node_key, shared_name);
 
-      cout << "Adding in InputVariableSharedNameMap " << "\n";
-      cout << "Key: " << node_key << "\n";
-      cout << "Value: " << shared_name << "\n";
+      NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
+      NGRAPH_VLOG(4) << "Key: " << node_key;
+      NGRAPH_VLOG(4) << "Value: " << shared_name;
     } else if (node->type_string() == "NGraphEncapsulate") {
       // input catalog
       for (auto edge : node->in_edges()) {
@@ -123,9 +128,9 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
           string shared_name;
           TF_RETURN_IF_ERROR(GetSharedName(src, &shared_name));
           NGraphCatalog::AddToInputVariableSharedNameMap(node_key, shared_name);
-          cout << "Adding in InputVariableSharedNameMap " << "\n";
-          cout << "Key: " << node_key << "\n";
-          cout << "Value: " << shared_name << "\n";
+          NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
+          NGRAPH_VLOG(4) << "Key: " << node_key;
+          NGRAPH_VLOG(4) << "Value: " << shared_name;
         }
       }
 
@@ -134,10 +139,10 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       for (auto edge : node->out_edges()) {
         if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
             !IsNGVariableType(edge->dst()->type_string())) {
-          cout << "Adding in OutputCopyIndexesMap " << "\n";
-          cout << "Key: " << node->name() << "\n";
-          cout << "Ouput Index: " << edge->src_output() << "\n";
-          cout << "Required by " << DebugNode(edge->dst()) << "\n";
+          NGRAPH_VLOG(4) << "Adding in OutputCopyIndexesMap ";
+          NGRAPH_VLOG(4) << "Key: " << node->name();
+          NGRAPH_VLOG(4) << "Ouput Index: " << edge->src_output();
+          NGRAPH_VLOG(4) << "Required by " << DebugNode(edge->dst());
           op_index_to_copy.insert(edge->src_output());
         }
       }
@@ -155,8 +160,8 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
           continue;
         }
 
-        cout << "Get " << node->type_string()
-                       << " and input is from NGraphEncapsulate" << "\n";
+        NGRAPH_VLOG(4) << "Get " << node->type_string()
+                       << " and input is from NGraphEncapsulate";
 
         auto src = edge->src();
         int src_output = edge->src_output();
@@ -164,13 +169,14 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
             NGraphCatalog::CreateNodeKey(graph_id, src->name(), src_output);
         // Will be updated with real tensors in Encapsulate
         NGraphCatalog::AddToEncapOutputTensorMap(node_key, nullptr);
-        cout << "Adding in Output Tensor Map" << "\n";
-        cout << "Key: " << node_key << "\n";
+        NGRAPH_VLOG(4) << "Adding in Output Tensor Map";
+        NGRAPH_VLOG(4) << "Key: " << node_key;
       }
     }  // end of if node of type NGraphAssign
   }    // enter in catalog
 
-  cout << "Entered in Catalog" << "\n";
+  cout << "Entered in Catalog"
+       << "\n";
   return Status::OK();
 }
 
