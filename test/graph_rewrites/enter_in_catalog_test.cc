@@ -78,7 +78,6 @@ TEST(CatalogTest, SmallGraph1) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
-  //   GraphToPbTextFile(&graph, "1.pbtxt");
 
   bool remove = false;
   for (auto node : graph.op_nodes()) {
@@ -94,12 +93,8 @@ TEST(CatalogTest, SmallGraph1) {
   }
 }
 
-// Graph with one Assign ops which should not have the attribute
-// _ngraph_remove added since this is a graph with trivial clusters
-// and for testing purposes we use DeassignClusters to get rid of
-// the trivial clusters which will lead to the graph having no
-// NGraphEncapsulate nodes and hence none of the NGraphAssign's
-// will have _ngraph_remove attribute added.
+// Graph with Assign ops, one of which should not
+// have the attribute _ngraph_remove added
 TEST(CatalogTest, SmallGraph2) {
   Scope root = Scope::NewRootScope();
 
@@ -108,11 +103,9 @@ TEST(CatalogTest, SmallGraph2) {
   auto init_value = ops::Const(root, {{1.f, 1.f}, {1.f, 1.f}});
   auto var_assign = ops::Assign(root.WithOpName("Var_Assign"), var, init_value);
 
-  auto c = ops::Const(root, {{1.f, 1.f}, {1.f, 1.f}});
+  auto acos = ops::Acos(root.WithOpName("Acos"), var);
 
-  auto add = ops::Add(root.WithOpName("Add"), var, c);
-
-  auto assign = ops::Assign(root.WithOpName("Assign"), var, add);
+  auto assign = ops::Assign(root.WithOpName("Assign"), var, acos);
 
   std::set<string> skip_these_nodes = {};
 
@@ -124,7 +117,6 @@ TEST(CatalogTest, SmallGraph2) {
   ASSERT_OK(ReplaceModifiers(&graph, 0));
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
   ASSERT_OK(AssignClusters(&graph));
-  ASSERT_OK(DeassignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
@@ -137,8 +129,8 @@ TEST(CatalogTest, SmallGraph2) {
       ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
       ASSERT_FALSE(remove);
     } else if (node_name == "Var_Assign") {
-      ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-      ASSERT_FALSE(remove);
+      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+      ASSERT_TRUE(remove);
     }
   }
 }
@@ -196,9 +188,7 @@ TEST(CatalogTest, SmallGraph3) {
   ASSERT_OK(AssignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
-  GraphToPbTextFile(&graph, "encap.pbtxt");
   ASSERT_OK(EnterInCatalog(&graph, 0));
-  GraphToPbTextFile(&graph, "cat.pbtxt");
 
   bool remove = false;
   for (auto node : graph.op_nodes()) {
@@ -216,6 +206,64 @@ TEST(CatalogTest, SmallGraph3) {
     } else if (node_name == "Assign_2") {
       ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
       ASSERT_FALSE(remove);
+    }
+  }
+}
+
+// Test to check if correct information is being added to the
+// encap_output_info_map_
+TEST(CatalogTest, SmallGraph4) {
+  Scope root = Scope::NewRootScope();
+
+  PartialTensorShape varShape({2, 2});
+  auto var = ops::Variable(root.WithOpName("Var"), varShape, DT_FLOAT);
+  auto init_value = ops::Const(root, {{1.f, 1.f}, {1.f, 1.f}});
+  auto var_assign = ops::Assign(root.WithOpName("Var_Assign"), var, init_value);
+
+  auto c = ops::Const(root, {{1.f, 1.f}, {1.f, 1.f}});
+
+  auto add = ops::Add(root.WithOpName("Add"), var, c);
+
+  auto assign = ops::Assign(root.WithOpName("Assign"), var, add);
+
+  std::set<string> skip_these_nodes = {};
+
+  Graph graph(OpRegistry::Global());
+  TF_CHECK_OK(root.ToGraph(&graph));
+
+  // Execute all the passes one by one
+  ASSERT_OK(CaptureVariables(&graph, skip_these_nodes));
+  ASSERT_OK(ReplaceModifiers(&graph, 0));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(AssignClusters(&graph));
+  FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
+  ASSERT_OK(EnterInCatalog(&graph, 0));
+
+  string key;
+  for (auto node : graph.op_nodes()) {
+    if (node->type_string() == "NGraphAssign") {
+      Node* input_1;
+      ASSERT_OK(node->input_node(1, &input_1));
+      if (input_1->type_string() == "NGraphEncapsulate") {
+        int output_index = 0;
+        for (auto edge : node->in_edges()) {
+          if (edge->src()->type_string() == "NGraphEncapsulate") {
+            output_index = edge->src_output();
+            break;
+          }
+        }
+        int graph_id;
+        ASSERT_OK(GetNodeAttr(node->attrs(), "ngraph_graph_id", &graph_id));
+        key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
+                                                  output_index);
+      }
+      auto node_name = node->name();
+      if (node_name == "Assign") {
+        ASSERT_TRUE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
+      } else if (node_name == "Var_Assign") {
+        ASSERT_TRUE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
+      }
     }
   }
 }
