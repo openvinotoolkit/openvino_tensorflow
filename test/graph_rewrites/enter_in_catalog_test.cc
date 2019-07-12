@@ -256,7 +256,7 @@ TEST(CatalogTest, SmallGraph4) {
         int graph_id;
         ASSERT_OK(GetNodeAttr(node->attrs(), "ngraph_graph_id", &graph_id));
         key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
-                                                  output_index);
+                                           output_index);
       }
       auto node_name = node->name();
       if (node_name == "Assign") {

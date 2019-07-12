@@ -166,7 +166,7 @@ void DeleteFromEncapOutputInfoMap(string key) {
 }
 
 void ClearEncapOutputInfoMap() {
-  NGraphCatalog::encap_output_info_map_.clear(); 
+  NGraphCatalog::encap_output_info_map_.clear();
 }
 
 }  // ngraph_bridge
