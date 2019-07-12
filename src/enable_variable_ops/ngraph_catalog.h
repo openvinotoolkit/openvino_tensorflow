@@ -130,6 +130,8 @@ class NGraphCatalog {
   static string GetVariableSharedNameFromEncapOutputInfoMap(string key);
   static bool GetCopyToTFFromEncapOutputInfoMap(string key);
   static bool GetIsTFJustLookingFromEncapOutputInfoMap(string key);
+  static void DeleteFromEncapOutputInfoMap(string key);
+  static void ClearEncapOutputInfoMap();
 
   // Utility to create key to query the maps
   static string CreateNodeKey(int graph_id, string node_name, int index);

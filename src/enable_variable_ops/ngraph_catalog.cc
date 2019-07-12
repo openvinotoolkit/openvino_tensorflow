@@ -161,5 +161,13 @@ bool NGraphCatalog::GetIsTFJustLookingFromEncapOutputInfoMap(string key) {
   return get<2>(val);
 }
 
+void DeleteFromEncapOutputInfoMap(string key) {
+  NGraphCatalog::encap_output_info_map_.erase(key);
+}
+
+void ClearEncapOutputInfoMap() {
+  NGraphCatalog::encap_output_info_map_.clear(); 
+}
+
 }  // ngraph_bridge
 }  // tensorflow
