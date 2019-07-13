@@ -125,19 +125,19 @@ class NGraphAssignOp : public OpKernel {
     // DO NOT CARE ABOUT SYNCING AS WE ARE ALWAYS SETTING THE NGTENSOR
 
     // Get input[1]
-    string valkey = to_string(ng_graph_id_) + "_" + def().input(1);
-    bool valref_exists = NGraphCatalog::ExistsInEncapOutputTensorMap(valkey);
-    if (valref_exists) {
-      // Value is from encap
-      NGRAPH_VLOG(4) << "NGraphAssign::Getting from catalog: " << valkey;
-      auto ng_val = NGraphCatalog::GetTensorFromEncapOutputTensorMap(valkey);
-      var->update_ng_tensor(ng_val);
-    } else {
-      NGRAPH_VLOG(4) << "NGraphAssign::Getting from TF : " << valkey;
-      if (var->update_ng_tensor(rhs_tensor)) {
-        number_of_copies++;
-        copy_log_str << " COPY_INP_VAL[0]";
-      }
+
+    // input[1] cannot be from NGraphEncap Op
+    // No way to get input node and check its type
+    string input_1_name = def().input(1);
+    OP_REQUIRES(
+        context, input_1_name.find("ngraph_cluster") == -1,
+        errors::Internal(
+            "Caught exception: Input to NGAssign from Encapsulate Op.\n"));
+
+    NGRAPH_VLOG(4) << "NGraphAssign:: Updating";
+    if (var->update_ng_tensor(rhs_tensor)) {
+      number_of_copies++;
+      copy_log_str << " COPY_INP_VAL[0]";
     }
 
     mutex_lock l(*context->input_ref_mutex(0));
