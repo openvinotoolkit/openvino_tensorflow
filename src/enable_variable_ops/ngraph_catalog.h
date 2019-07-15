@@ -79,6 +79,7 @@ class NGraphCatalog {
                                              unordered_set<int> val);
   static bool EncapOutputIndexNeedsCopy(string key, int index);
   static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(string key);
+  static void DeleteFromEncapOutputCopyIndexesMap(string key);
 
   // Functions for InputVariableSharedName Map
   static string GetInputVariableSharedName(int graphid, string node_name,
@@ -89,6 +90,7 @@ class NGraphCatalog {
   static bool ExistsInInputVariableSharedNameMap(string key);
   static bool ExistsInInputVariableSharedNameMap(int graphid, string node_name,
                                                  int input_index);
+  static void DeleteFromInputVariableSharedNameMap(string key);
 
   // Functions for EncapOutputTensorMap
   static void AddToEncapOutputTensorMap(string key,

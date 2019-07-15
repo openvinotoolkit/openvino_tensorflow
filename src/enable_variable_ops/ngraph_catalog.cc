@@ -54,6 +54,10 @@ bool NGraphCatalog::EncapOutputIndexNeedsCopy(string key, int index) {
   return true;
 }
 
+void NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(string key) {
+  NGraphCatalog::encap_output_copy_indexes_map_.erase(key);
+}
+
 string NGraphCatalog::CreateNodeKey(int graph_id, string node_name, int index) {
   if (index == 0) {
     return to_string(graph_id) + "_" + node_name;
@@ -109,6 +113,10 @@ bool NGraphCatalog::ExistsInInputVariableSharedNameMap(int graphid,
                                                        int input_index) {
   return NGraphCatalog::ExistsInInputVariableSharedNameMap(
       NGraphCatalog::CreateNodeKey(graphid, node_name, input_index));
+}
+
+void NGraphCatalog::DeleteFromInputVariableSharedNameMap(string key) {
+  NGraphCatalog::input_variable_sharedname_map_.erase(key);
 }
 
 }  // ngraph_bridge

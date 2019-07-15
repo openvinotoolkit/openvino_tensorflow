@@ -225,13 +225,29 @@ class NGraphEncapsulateOp : public OpKernel {
     }
 
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+    // Remove Entries from Catalog
+    // Remove entries related to outputs
     for (int i = 0; i < m_number_outputs; i++) {
       string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
       if (NGraphCatalog::ExistsInEncapOutputTensorMap(key)) {
         NGraphCatalog::DeleteFromEncapOutputTensorMap(key);
         NGRAPH_VLOG(2) << "Deleting from output tensor map " << key;
       }
+      if (NGraphCatalog::EncapOutputIndexNeedsCopy(name(), i)) {
+        NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(name());
+        NGRAPH_VLOG(2) << "Deleting from Output Copy Index map " << name();
+      }
     }
+    // Remove entries related to inputs
+    for (int i = 0; i < m_number_inputs; i++) {
+      string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
+      if (NGraphCatalog::ExistsInInputVariableSharedNameMap(key)) {
+        NGraphCatalog::DeleteFromInputVariableSharedNameMap(key);
+        NGRAPH_VLOG(2) << "Deleting from input variable shared name map "
+                       << key;
+      }
+    }
+
 #endif
 
     // Release the backend

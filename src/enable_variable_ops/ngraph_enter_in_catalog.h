@@ -49,6 +49,7 @@ namespace ngraph_bridge {
 // We add mapping of {graphId_nodename_InputIndex : Shared_Name} to the
 // InputVariableSharedNameMap
 //
+// TODO: Update the comments for EnacapOutputInfoMap
 // 2. If the output of NGraphEncapsulate Op is an input to NGraphVariableType
 // Op, we store this NG-Tensor
 // so that it can be directly accessed in compute call of NGraphVariableType.
