@@ -113,6 +113,8 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
 
 NGraphVariableOp::~NGraphVariableOp() {
   NGRAPH_VLOG(4) << "~NGraphVariableOp:: " << name() << endl;
+  string node_key = NGraphCatalog::CreateNodeKey(ng_graph_id_, name(), 0);
+  NGraphCatalog::DeleteFromInputVariableSharedNameMap(key);
   tracker_->Unref();
 }
 

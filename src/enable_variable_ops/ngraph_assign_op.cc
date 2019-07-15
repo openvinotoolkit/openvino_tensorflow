@@ -59,7 +59,13 @@ class NGraphAssignOp : public OpKernel {
   // use_exclusive_lock_, validate_shape_, relax_constraints_;
 
  public:
-  ~NGraphAssignOp() { NGRAPH_VLOG(4) << "~NGraphAssignOp::" << name() << endl; }
+  ~NGraphAssignOp() {
+    NGRAPH_VLOG(4) << "~NGraphAssignOp::" << name() << endl;
+    // Delete from Input Variable Shared Name Map
+    string key = NGraphCatalog::CreateNodeKey(ng_graph_id_, name(), 0);
+    NGraphCatalog::DeleteFromInputVariableSharedNameMap(key);
+  }
+
   explicit NGraphAssignOp(OpKernelConstruction* context)
       : OpKernel(context), is_tf_just_looking_(false), copy_to_tf_(false) {
     OP_REQUIRES_OK(
