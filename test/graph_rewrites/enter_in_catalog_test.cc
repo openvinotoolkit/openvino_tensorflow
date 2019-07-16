@@ -135,9 +135,9 @@ TEST(CatalogTest, SmallGraph2) {
   }
 }
 
-//          Var_A      Const     Var_B
-//          /|  \       /         | \
-//         / |   \     /          |  \
+//  Const   Var_A      Const     Var_B
+//   \      /|  \       /         | \
+//    \    / |   \     /          |  \
 //  Assign_A |    \   /           |  Assign_B
 //           |     Add            |
 //           |      /\            |
@@ -190,22 +190,36 @@ TEST(CatalogTest, SmallGraph3) {
   ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
-  bool remove = false;
+  // check if the _ngraph_remove attribute is added/not-added as expected
+  // check if correct information is added to the map
+  bool remove;
+  string key;
   for (auto node : graph.op_nodes()) {
-    auto node_name = node->name();
-    remove = false;
-    if (node_name == "VarA_Assign") {
-      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-      ASSERT_TRUE(remove);
-    } else if (node_name == "VarB_Assign") {
-      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-      ASSERT_TRUE(remove);
-    } else if (node_name == "Assign_1") {
-      ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-      ASSERT_TRUE(remove);
-    } else if (node_name == "Assign_2") {
-      ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
-      ASSERT_FALSE(remove);
+    if (node->type_string() == "NGraphAssign") {
+      key = "";
+      Node* input_1;
+      ASSERT_OK(node->input_node(1, &input_1));
+      if (input_1->type_string() == "NGraphEncapsulate") {
+        const Edge* edge;
+        ASSERT_OK(node->input_edge(1, &edge));
+        int output_index = edge->src_output();
+        int graph_id;
+        ASSERT_OK(GetNodeAttr(node->attrs(), "ngraph_graph_id", &graph_id));
+        key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
+                                           output_index);
+      }
+      auto node_name = node->name();
+      remove = false;
+      if (node_name == "VarA_Assign" || node_name == "VarB_Assign" ||
+          node_name == "Assign_1") {
+        ASSERT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+        ASSERT_TRUE(remove);
+        ASSERT_TRUE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
+      } else if (node_name == "Assign_2") {
+        ASSERT_NOT_OK(GetNodeAttr(node->attrs(), "_ngraph_remove", &remove));
+        ASSERT_FALSE(remove);
+        ASSERT_FALSE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
+      }
     }
   }
 }
@@ -242,26 +256,21 @@ TEST(CatalogTest, SmallGraph4) {
 
   string key;
   for (auto node : graph.op_nodes()) {
+    key = "";
     if (node->type_string() == "NGraphAssign") {
       Node* input_1;
       ASSERT_OK(node->input_node(1, &input_1));
       if (input_1->type_string() == "NGraphEncapsulate") {
-        int output_index = 0;
-        for (auto edge : node->in_edges()) {
-          if (edge->src()->type_string() == "NGraphEncapsulate") {
-            output_index = edge->src_output();
-            break;
-          }
-        }
+        const Edge* edge;
+        ASSERT_OK(node->input_edge(1, &edge));
+        int output_index = edge->src_output();
         int graph_id;
         ASSERT_OK(GetNodeAttr(node->attrs(), "ngraph_graph_id", &graph_id));
         key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
                                            output_index);
       }
       auto node_name = node->name();
-      if (node_name == "Assign") {
-        ASSERT_TRUE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
-      } else if (node_name == "Var_Assign") {
+      if (node_name == "Assign" || node_name == "Var_Assign") {
         ASSERT_TRUE(NGraphCatalog::ExistsInEncapOutputInfoMap(key));
       }
     }

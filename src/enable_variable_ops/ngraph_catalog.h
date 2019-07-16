@@ -132,6 +132,7 @@ class NGraphCatalog {
   static bool GetIsTFJustLookingFromEncapOutputInfoMap(string key);
   static void DeleteFromEncapOutputInfoMap(string key);
   static void ClearEncapOutputInfoMap();
+  static void PrintEncapOutputInfoMap();
 
   // Utility to create key to query the maps
   static string CreateNodeKey(int graph_id, string node_name, int index);

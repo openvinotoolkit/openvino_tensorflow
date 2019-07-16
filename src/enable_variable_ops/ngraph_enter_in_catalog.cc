@@ -86,14 +86,10 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "is_tf_just_looking",
                                        &is_tf_just_looking));
         // populate encap_output_info_map_
-        int output_index;
-        for (auto edge : node->in_edges()) {
-          if (edge->src()->type_string() == "NGraphEncapsulate") {
-            output_index = edge->src_output();
-            NGRAPH_VLOG(4) << "output_index " << output_index;
-            break;
-          }
-        }
+        const Edge* edge;
+        TF_RETURN_IF_ERROR(node->input_edge(1, &edge));
+        int output_index = edge->src_output();
+        NGRAPH_VLOG(4) << "output_index " << output_index;
         string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
                                                   output_index);
         tuple<string, bool, bool> value =
