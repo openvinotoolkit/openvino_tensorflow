@@ -27,6 +27,7 @@
 #include "ngraph_freshness_tracker.h"
 #include "ngraph_utils.h"
 #include "ngraph_var.h"
+#include "ngraph_catalog.h"
 
 #include "ngraph/event_tracing.hpp"
 
@@ -114,7 +115,7 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
 NGraphVariableOp::~NGraphVariableOp() {
   NGRAPH_VLOG(4) << "~NGraphVariableOp:: " << name() << endl;
   string node_key = NGraphCatalog::CreateNodeKey(ng_graph_id_, name(), 0);
-  NGraphCatalog::DeleteFromInputVariableSharedNameMap(key);
+  NGraphCatalog::DeleteFromInputVariableSharedNameMap(node_key);
   tracker_->Unref();
 }
 

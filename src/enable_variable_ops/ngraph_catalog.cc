@@ -34,17 +34,22 @@ unordered_map<string, unordered_set<int>>
     NGraphCatalog::encap_output_copy_indexes_map_;
 
 // Functions for Encapsulate Output Copy Indexes Map
-void NGraphCatalog::AddToEncapOutputCopyIndexesMap(string key,
+void NGraphCatalog::AddToEncapOutputCopyIndexesMap(int graphid,
+                                                   string node_name,
                                                    unordered_set<int> val) {
+  string key = graphid + "_" + node_name;
   NGraphCatalog::encap_output_copy_indexes_map_[key] = val;
 }
 
 unordered_set<int> NGraphCatalog::GetEncapOutputIndexesThatNeedCopy(
-    string key) {
+    int graphid, string node_name) {
+  string key = graphid + "_" + node_name;
   return NGraphCatalog::encap_output_copy_indexes_map_[key];
 }
 
-bool NGraphCatalog::EncapOutputIndexNeedsCopy(string key, int index) {
+bool NGraphCatalog::EncapOutputIndexNeedsCopy(int graphid, string node_name,
+                                              int index) {
+  string key = graphid + "_" + node_name;
   auto itr = NGraphCatalog::encap_output_copy_indexes_map_.find(key);
   if (itr != NGraphCatalog::encap_output_copy_indexes_map_.end()) {
     auto op_copy_indexes = itr->second;
@@ -54,7 +59,9 @@ bool NGraphCatalog::EncapOutputIndexNeedsCopy(string key, int index) {
   return true;
 }
 
-void NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(string key) {
+void NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(int graphid,
+                                                        string node_name) {
+  string key = graphid + "_" + node_name;
   NGraphCatalog::encap_output_copy_indexes_map_.erase(key);
 }
 

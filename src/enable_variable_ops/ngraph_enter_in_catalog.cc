@@ -106,7 +106,7 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
           op_index_to_copy.insert(edge->src_output());
         }
       }
-      NGraphCatalog::AddToEncapOutputCopyIndexesMap(node->name(),
+      NGraphCatalog::AddToEncapOutputCopyIndexesMap(graph_id, node->name(),
                                                     op_index_to_copy);
 
     }  // end of node is type NGraphEncapsulate

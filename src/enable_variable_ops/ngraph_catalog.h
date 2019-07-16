@@ -67,7 +67,7 @@ class NGraphCatalog {
   // Will be used by NGraphEncapsulateOP
   // Map of
   // Key
-  //  string : nodename (nGraphEncapsulateOp name)
+  //  string : GraphId + _ + nodename
   // Value : Set of indices
   static unordered_map<string, unordered_set<int>>
       encap_output_copy_indexes_map_;
@@ -75,11 +75,14 @@ class NGraphCatalog {
  public:
   // Utility Functions for the data structures
   // Functions for EncapsulateOutputCopyIndexes Map
-  static void AddToEncapOutputCopyIndexesMap(string key,
+  static void AddToEncapOutputCopyIndexesMap(int graphid, string node_name,
                                              unordered_set<int> val);
-  static bool EncapOutputIndexNeedsCopy(string key, int index);
-  static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(string key);
-  static void DeleteFromEncapOutputCopyIndexesMap(string key);
+  static bool EncapOutputIndexNeedsCopy(int graphid, string node_name,
+                                        int index);
+  static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(int graphid,
+                                                              string node_name);
+  static void DeleteFromEncapOutputCopyIndexesMap(int graphid,
+                                                  string node_name);
 
   // Functions for InputVariableSharedName Map
   static string GetInputVariableSharedName(int graphid, string node_name,

@@ -233,11 +233,11 @@ class NGraphEncapsulateOp : public OpKernel {
         NGraphCatalog::DeleteFromEncapOutputTensorMap(key);
         NGRAPH_VLOG(2) << "Deleting from output tensor map " << key;
       }
-      if (NGraphCatalog::EncapOutputIndexNeedsCopy(name(), i)) {
-        NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(name());
-        NGRAPH_VLOG(2) << "Deleting from Output Copy Index map " << name();
-      }
     }
+
+    NGRAPH_VLOG(2) << "Deleting from Output Copy Index map " << name();
+    NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(m_graph_id, name());
+
     // Remove entries related to inputs
     for (int i = 0; i < m_number_inputs; i++) {
       string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
@@ -817,6 +817,8 @@ class NGraphEncapsulateOp : public OpKernel {
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
         m_number_outputs = output_caches.size();
+        NGRAPH_VLOG(4) << "Settig number of inputs for " << def().name();
+        m_number_inputs = ng_inputs.size();
       }
       for (size_t i = 0; i < output_tensor_count; ++i) {
         string key = NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
@@ -831,7 +833,8 @@ class NGraphEncapsulateOp : public OpKernel {
         }
 
         if (m_op_backend_name != "CPU" &&
-            NGraphCatalog::EncapOutputIndexNeedsCopy(def().name(), i)) {
+            NGraphCatalog::EncapOutputIndexNeedsCopy(m_graph_id, def().name(),
+                                                     i)) {
           number_of_copies++;
           copy_log_str << " COPY_OP_VAL[" << i << "]";
 
@@ -1009,6 +1012,7 @@ class NGraphEncapsulateOp : public OpKernel {
   static int s_instance_count;
   int my_instance_id{0};
   int m_number_outputs = -1;
+  int m_number_inputs = -1;
 };
 
 int NGraphEncapsulateOp::s_instance_count = 0;
