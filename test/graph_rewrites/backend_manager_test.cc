@@ -218,7 +218,7 @@ TEST(BackendManager, GetBackendCreationString) {
       BackendManager::GetBackendCreationString("NNPI", nnpi_map);
   auto gpu_backend = BackendManager::GetBackendCreationString("GPU", gpu_map);
 
-  ASSERT_EQ(cpu_backend, "CPU:");
+  ASSERT_EQ(cpu_backend, "CPU");
   ASSERT_EQ(nnpi_backend, "NNPI:5");
   ASSERT_EQ(gpu_backend, "GPU:678");
 

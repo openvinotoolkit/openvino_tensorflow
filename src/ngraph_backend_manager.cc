@@ -39,7 +39,6 @@ unordered_set<string> BackendManager::ng_supported_backends_(
 
 map<std::string, int> BackendManager::ref_count_each_backend_;
 
-mutex BackendManager::ng_backendconfig_map_mutex_;
 unordered_map<string, std::unique_ptr<BackendConfig>>
     BackendManager::ng_backendconfig_map_;
 
