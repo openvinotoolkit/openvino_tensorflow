@@ -41,6 +41,58 @@ void DeactivateNGraph() {
   setenv("NGRAPH_TF_DISABLE", "1", 1);
 }
 
+// EnvVariable Utilities
+bool IsEnvVariableSet(const string& env_var_name) {
+  const char* ng_backend_env_value = std::getenv(env_var_name.c_str());
+  return (ng_backend_env_value != nullptr);
+}
+
+string GetEnvVariable(const string& env_var_name) {
+  const char* ng_backend_env_value = std::getenv(env_var_name.c_str());
+  NGRAPH_VLOG(5) << "Got Env Variable " << env_var_name << " : "
+                 << std::string(ng_backend_env_value);
+  return std::string(ng_backend_env_value);
+}
+
+void UnsetEnvVariable(const string& env_var_name) {
+  NGRAPH_VLOG(5) << "Unsetting " << env_var_name;
+  unsetenv(env_var_name.c_str());
+}
+
+void SetEnvVariable(const string& env_var_name, const string& env_var_val) {
+  setenv(env_var_name.c_str(), env_var_val.c_str(), 1);
+  NGRAPH_VLOG(5) << "Setting Env Variable " << env_var_name << " : "
+                 << env_var_val;
+}
+
+// Store/Restore Env Variables
+unordered_map<string, string> StoreEnv() {
+  unordered_map<string, string> env_map;
+  string env_name = "NGRAPH_TF_BACKEND";
+  if (IsEnvVariableSet(env_name)) {
+    env_map[env_name] = GetEnvVariable(env_name);
+    UnsetEnvVariable(env_name);
+  }
+  return env_map;
+}
+
+void RestoreEnv(const unordered_map<string, string>& map) {
+  for (auto itr : map) {
+    setenv(itr.first.c_str(), itr.second.c_str(), 1);
+  }
+}
+
+// NGRAPH_TF_BACKEND related
+bool IsNGraphTFBackendSet() { return IsEnvVariableSet("NGRAPH_TF_BACKEND"); }
+
+string GetNGraphTFBackend() { return GetEnvVariable("NGRAPH_TF_BACKEND"); }
+
+void UnsetNGraphTFBackend() { UnsetEnvVariable("NGRAPH_TF_BACKEND"); }
+
+void SetNGraphTFBackend(const string& backend_name) {
+  SetEnvVariable("NGRAPH_TF_BACKEND", backend_name);
+}
+
 // Input x will be used as an anchor
 // Actual value assigned equals to x * i
 void AssignInputValuesAnchor(Tensor& A, float x) {

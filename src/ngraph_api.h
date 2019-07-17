@@ -54,7 +54,7 @@ extern size_t BackendsLen();
 extern vector<string> ListBackends();
 extern tensorflow::Status SetBackend(const string& type);
 extern bool IsSupportedBackend(const string& type);
-extern string GetCurrentlySetBackendName();
+extern Status GetCurrentlySetBackendName(string* backend);
 
 extern void StartLoggingPlacement();
 extern void StopLoggingPlacement();
