@@ -61,6 +61,7 @@ cc_binary(
         "src/ngraph_cluster_manager.cc",
         "src/ngraph_deassign_clusters.cc",
         "src/ngraph_encapsulate_clusters.cc",
+        "src/ops/ngraph_ops.cc",
         "src/ngraph_encapsulate_op.cc",
         "src/ngraph_freshness_tracker.cc",
         "src/ngraph_mark_for_clustering.cc",

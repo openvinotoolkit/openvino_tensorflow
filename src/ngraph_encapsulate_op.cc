@@ -23,7 +23,6 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 
@@ -59,17 +58,6 @@ using NgFunctionIOCache = std::unordered_map<
     std::vector<std::pair<void*, shared_ptr<ng::runtime::Tensor>>>>;
 
 namespace ngraph_bridge {
-
-REGISTER_OP("NGraphEncapsulate")
-    .Input("args: Targuments")
-    .Attr("Targuments: list(type) >= 0")
-    .Output("results: Tresults")
-    .Attr("Tresults: list(type) >= 0")
-    .Attr("ngraph_cluster: int")
-    .Attr("ngraph_graph_id: int")
-    .Attr("ngraph_backend: string")
-    .SetIsStateful()
-    .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
 class NGraphEncapsulateOp : public OpKernel {
  public:
