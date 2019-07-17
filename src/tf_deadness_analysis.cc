@@ -96,7 +96,7 @@ bool PredicateSequenceEqual(gtl::ArraySlice<Predicate*> lhs,
   if (lhs.size() != rhs.size()) {
     return false;
   }
-  for (int64 i = 0; i < lhs.size(); i++) {
+  for (size_t i = 0; i < lhs.size(); i++) {
     if (*lhs[i] != *rhs[i]) {
       return false;
     }

@@ -1649,7 +1649,7 @@ TEST(ArrayOps, Unpack) {
   std::vector<int64> axes({0, 1, 0});
 
   vector<int> static_input_indexes = {};
-  for (auto i = 0; i < input_sizes.size(); ++i) {
+  for (size_t i = 0; i < input_sizes.size(); ++i) {
     Scope root = Scope::NewRootScope();
 
     Tensor input_data(DT_FLOAT, TensorShape(input_sizes[i]));

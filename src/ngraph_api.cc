@@ -33,7 +33,7 @@ bool ngraph_is_enabled() { return IsEnabled(); }
 
 size_t ngraph_backends_len() { return BackendsLen(); }
 
-bool ngraph_list_backends(char** backends, int backends_len) {
+bool ngraph_list_backends(char** backends, size_t backends_len) {
   const auto ngraph_backends = ListBackends();
   if (backends_len != ngraph_backends.size()) {
     return false;

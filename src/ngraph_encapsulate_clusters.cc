@@ -406,8 +406,10 @@ Status EncapsulateClusters(
       int cluster_output;
       std::tie(cluster_idx, cluster_output) = it->second;
 
-      graph->UpdateEdge(cluster_node_map[cluster_idx], cluster_output,
-                        edge->dst(), edge->dst_input());
+      Status status =
+          graph->UpdateEdge(cluster_node_map[cluster_idx], cluster_output,
+                            edge->dst(), edge->dst_input());
+      TF_RETURN_IF_ERROR(status);
     }
   }
 

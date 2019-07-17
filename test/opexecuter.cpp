@@ -155,7 +155,7 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   ClientSession session(tf_scope_);
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
       << "Failed to run opexecutor on TF";
-  for (int i = 0; i < tf_outputs.size(); i++) {
+  for (size_t i = 0; i < tf_outputs.size(); i++) {
     NGRAPH_VLOG(5) << " TF op " << i << tf_outputs[i].DebugString();
   }
 }
@@ -278,7 +278,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
     // Add edge from SOURCE to _Arg
     auto src_nodes_metadata = node_inedge_metadata[ip_node];
-    for (int j = 0; j < src_nodes_metadata.size(); j++) {
+    for (size_t j = 0; j < src_nodes_metadata.size(); j++) {
       graph.AddEdge(src_nodes_metadata[j].first, src_nodes_metadata[j].second,
                     arg_node, Graph::kControlSlot);
     }
@@ -312,7 +312,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
                                     << " of type _Retval";
 
     // Add edges from _Retval to sink
-    for (int j = 0; j < dest_nodes_metadata.size(); j++) {
+    for (size_t j = 0; j < dest_nodes_metadata.size(); j++) {
       graph.AddEdge(ret_node, Graph::kControlSlot, dest_nodes_metadata[j].first,
                     dest_nodes_metadata[j].second);
     }
@@ -357,7 +357,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
 
   NGRAPH_VLOG(5) << " Creating ng inputs ";
   NGRAPH_VLOG(5) << "No of inputs " << tf_inputs.size();
-  for (int i = 0; i < tf_inputs.size(); i++) {
+  for (size_t i = 0; i < tf_inputs.size(); i++) {
     ng::Shape ng_shape;
     ASSERT_EQ(Status::OK(),
               TFTensorShapeToNGraphShape(tf_inputs[i].shape(), &ng_shape))
@@ -426,7 +426,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   BackendManager::UnlockBackend(ng_backend_type);
 
   NGRAPH_VLOG(5) << " Writing to Tensors ";
-  for (auto i = 0; i < ng_function->get_output_size(); i++) {
+  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
     // Convert to tf tensor
     Tensor output_tensor(expected_output_datatypes_[i], tf_op_shapes[i]);
     void* dst_ptr = DMAHelper::base(&output_tensor);

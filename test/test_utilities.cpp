@@ -113,7 +113,7 @@ void Compare(Tensor& T1, Tensor& T2, float tol) {
 void Compare(const vector<Tensor>& v1, const vector<Tensor>& v2, float rtol,
              float atol) {
   ASSERT_EQ(v1.size(), v2.size()) << "Length of 2 tensor vectors do not match.";
-  for (int i = 0; i < v1.size(); i++) {
+  for (size_t i = 0; i < v1.size(); i++) {
     NGRAPH_VLOG(3) << "Comparing output at index " << i;
     auto expected_dtype = v1[i].dtype();
     switch (expected_dtype) {

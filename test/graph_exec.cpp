@@ -92,7 +92,7 @@ TEST(graph_exec, axpy) {
 
   // Allocate tensor for the result(s)
   vector<shared_ptr<ng::runtime::Tensor>> outputs;
-  for (auto i = 0; i < ng_function->get_output_size(); i++) {
+  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
     auto shape = ng_function->get_output_shape(i);
     auto elem_type = ng_function->get_output_element_type(i);
     auto t_result = backend->create_tensor(elem_type, shape);
@@ -104,7 +104,7 @@ TEST(graph_exec, axpy) {
   auto exec = backend->compile(ng_function);
   exec->call(outputs, {t_x, t_y});
 
-  for (auto i = 0; i < ng_function->get_output_size(); i++) {
+  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
     DumpNGTensor<float>(cout, ng_function->get_output_op(i)->get_name(),
                         outputs[i]);
     cout << endl;
