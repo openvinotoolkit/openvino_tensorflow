@@ -72,10 +72,10 @@ class TestConversionScript(NgraphTest):
         try:
             if commandline:
                 # In CI this test is expected to be run out of artifacts/test/python
-                command_executor('python ../../tools/tf2ngraph.py --input' +
-                                 inp_format + ' ' + inp_loc +
-                                 ' --outnodes out_node --output' + out_format +
-                                 ' ' + out_loc + ' --ngbackend ' + ng_device)
+                command_executor(
+                    'python ../../tools/tf2ngraph.py --input_' + inp_format +
+                    ' ' + inp_loc + ' --output_nodes out_node --output_' +
+                    out_format + ' ' + out_loc + ' --ngbackend ' + ng_device)
             else:
                 convert(inp_format, inp_loc, out_format, out_loc, ['out_node'],
                         ng_device)
