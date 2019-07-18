@@ -92,6 +92,8 @@ echo  ' '
 
 cd "${bridge_dir}"
 ./build_ngtf.py
+exit_code=$?
+echo "Exit status for build_ngtf.py is ${exit_code}"
 
 xtime="$(date)"
 echo  ' '
@@ -100,6 +102,8 @@ echo  ' '
 
 cd "${bridge_dir}"
 ./test_ngtf.py
+exit_code=$?
+echo "Exit status for test_ngtf.py is ${exit_code}"
 
 xtime="$(date)"
 echo ' '
