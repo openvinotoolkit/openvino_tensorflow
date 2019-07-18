@@ -161,5 +161,23 @@ bool NGraphCatalog::GetIsTFJustLookingFromEncapOutputInfoMap(string key) {
   return get<2>(val);
 }
 
+void NGraphCatalog::DeleteFromEncapOutputInfoMap(string key) {
+  NGraphCatalog::encap_output_info_map_.erase(key);
+}
+
+void NGraphCatalog::ClearEncapOutputInfoMap() {
+  NGraphCatalog::encap_output_info_map_.clear();
+}
+
+void NGraphCatalog::PrintEncapOutputInfoMap() {
+  NGRAPH_VLOG(4) << "EncapOutputInfoMap";
+  for (auto it : encap_output_info_map_) {
+    NGRAPH_VLOG(4) << "Key: (GraphId_NodeName:OutputIndex) " << it.first
+                   << " Value: (shared_name, copy_to_tf, is_tf_just_looking) "
+                   << get<0>(it.second) << " " << get<1>(it.second) << " "
+                   << get<2>(it.second);
+  }
+}
+
 }  // ngraph_bridge
 }  // tensorflow

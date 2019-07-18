@@ -201,6 +201,7 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //
 // The pass has several phases, each executed in sequence:
 //
+//   0. Replace Modifiers [ngraph_replace_variable_modifiers.cc]
 //   1. Marking [ngraph_mark_for_clustering.cc]
 //   2. Cluster Assignment [ngraph_assign_clusters.cc]
 //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]

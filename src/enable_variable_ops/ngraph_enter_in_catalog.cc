@@ -64,6 +64,43 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
   GetReversePostOrder(*graph, &ordered);
 
   for (auto node : ordered) {
+    if (node->type_string() == "NGraphAssign") {
+      Node* input_1;
+      TF_RETURN_IF_ERROR(node->input_node(1, &input_1));
+      if (input_1->type_string() == "NGraphEncapsulate") {
+        NGRAPH_VLOG(4)
+            << "Input node type for NGraphAssign is NGraphEncapsulate";
+        // attach attribute _ngraph_remove to this NGraphAssign
+        node->AddAttr("_ngraph_remove", true);
+        // get variable shared_name
+        string shared_name;
+        TF_RETURN_IF_ERROR(GetSharedName(node, &shared_name));
+        // get attribute copy_to_tf
+        bool copy_to_tf;
+        TF_RETURN_IF_ERROR(
+            GetNodeAttr(node->attrs(), "copy_to_tf", &copy_to_tf));
+        // get attribute is_tf_just_looking
+        bool is_tf_just_looking;
+        TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "is_tf_just_looking",
+                                       &is_tf_just_looking));
+        // populate encap_output_info_map_
+        const Edge* edge;
+        TF_RETURN_IF_ERROR(node->input_edge(1, &edge));
+        int output_index = edge->src_output();
+        NGRAPH_VLOG(4) << "output_index " << output_index;
+        string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
+                                                  output_index);
+        tuple<string, bool, bool> value =
+            make_tuple(shared_name, copy_to_tf, is_tf_just_looking);
+        NGRAPH_VLOG(4) << "Adding to EncapOutputInfoMap ";
+        NGRAPH_VLOG(4) << "Key: " << key;
+        NGRAPH_VLOG(4) << "Value: " << get<0>(value) << " " << get<1>(value)
+                       << " " << get<2>(value);
+        NGraphCatalog::AddToEncapOutputInfoMap(key, value);
+        // TODO: Uncomment the continue when all the tasks are integrated
+        // continue;
+      }
+    }
     // Update the input variable map
     if (IsNGVariableType(node->type_string())) {
       string node_key = NGraphCatalog::CreateNodeKey(graph_id, node->name(), 0);
@@ -74,7 +111,6 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
       NGRAPH_VLOG(4) << "Key: " << node_key;
       NGRAPH_VLOG(4) << "Value: " << shared_name;
-
     } else if (node->type_string() == "NGraphEncapsulate") {
       // input catalog
       for (auto edge : node->in_edges()) {
@@ -119,7 +155,7 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         }
 
         NGRAPH_VLOG(4) << "Get " << node->type_string()
-                       << "and input is from NGraphEncapsulate";
+                       << " and input is from NGraphEncapsulate";
 
         auto src = edge->src();
         int src_output = edge->src_output();
