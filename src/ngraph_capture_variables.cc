@@ -91,12 +91,16 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
         NGRAPH_VLOG(4) << "Replacing Node " << node->DebugString() << " with "
                        << replacement->DebugString();
 
-        // Though edges will be removed when we remove the node
-        // we specifically remove the edges to be sure
+        std::vector<const Edge*> edges_to_remove;
         for (auto edge : node->in_edges()) {
           NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
           graph->AddEdge(edge->src(), edge->src_output(), replacement,
                          edge->dst_input());
+          edges_to_remove.push_back(edge);
+        }
+        // Though edges will be removed when we remove the node
+        // we specifically remove the edges to be sure
+        for (auto edge : edges_to_remove) {
           graph->RemoveEdge(edge);
         }
 
