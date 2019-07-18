@@ -77,15 +77,17 @@ Status InferenceEngine::Load(const string& network,
   // Preload the image is requested
   if (m_preload_images) {
     // Set the CPU as the backend before these ops
-    string current_backend =
-        tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName();
-    tf::ngraph_bridge::BackendManager::SetBackendName("CPU");
+    string current_backend;
+    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName(
+        &current_backend));
+    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackendName("CPU"));
     std::vector<tf::Tensor> resized_tensors;
     TF_CHECK_OK(ReadTensorFromImageFile(
         m_image_files, m_input_height, m_input_width, m_input_mean, m_input_std,
         m_use_NCHW, m_input_channels, &resized_tensors));
     m_image_to_repeat = resized_tensors[0];
-    tf::ngraph_bridge::BackendManager::SetBackendName(current_backend);
+    TF_CHECK_OK(
+        tf::ngraph_bridge::BackendManager::SetBackendName(current_backend));
   }
   // Now compile the graph if needed
   // This would be useful to detect errors early. For a graph
@@ -128,9 +130,10 @@ void InferenceEngine::ThreadMain() {
       cout << "[" << m_name << "] " << step_count << ": Reading image\n";
       ngraph::Event read_event("Read", "", "");
 
-      string current_backend =
-          tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName();
-      tf::ngraph_bridge::BackendManager::SetBackendName("CPU");
+      string current_backend;
+      TF_CHECK_OK(tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName(
+          &current_backend));
+      TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackendName("CPU"));
 
       std::vector<tf::Tensor> resized_tensors;
       TF_CHECK_OK(ReadTensorFromImageFile(
@@ -138,7 +141,8 @@ void InferenceEngine::ThreadMain() {
           m_input_std, m_use_NCHW, m_input_channels, &resized_tensors));
 
       m_image_to_repeat = resized_tensors[0];
-      tf::ngraph_bridge::BackendManager::SetBackendName(current_backend);
+      TF_CHECK_OK(
+          tf::ngraph_bridge::BackendManager::SetBackendName(current_backend));
 
       read_event.Stop();
       ngraph::Event::write_trace(read_event);

@@ -33,7 +33,7 @@ bool ngraph_is_enabled() { return IsEnabled(); }
 
 size_t ngraph_backends_len() { return BackendsLen(); }
 
-bool ngraph_list_backends(char** backends, int backends_len) {
+bool ngraph_list_backends(char** backends, size_t backends_len) {
   const auto ngraph_backends = ListBackends();
   if (backends_len != ngraph_backends.size()) {
     return false;
@@ -57,7 +57,11 @@ extern bool ngraph_is_supported_backend(const char* backend) {
 }
 
 extern bool ngraph_get_currently_set_backend_name(char** backend) {
-  backend[0] = strdup(GetCurrentlySetBackendName().c_str());
+  string bend;
+  if (GetCurrentlySetBackendName(&bend) != tensorflow::Status::OK()) {
+    return false;
+  }
+  backend[0] = strdup(bend.c_str());
   return true;
 }
 
@@ -83,13 +87,10 @@ bool IsEnabled() { return _is_enabled; }
 size_t BackendsLen() { return BackendManager::GetNumOfSupportedBackends(); }
 
 vector<string> ListBackends() {
-  auto supported_backends = BackendManager::GetSupportedBackendNames();
-  vector<string> backend_list(supported_backends.begin(),
-                              supported_backends.end());
-  return backend_list;
+  return BackendManager::GetSupportedBackendNames();
 }
 
-tensorflow::Status SetBackend(const string& type) {
+Status SetBackend(const string& type) {
   return BackendManager::SetBackendName(type);
 }
 
@@ -97,8 +98,8 @@ bool IsSupportedBackend(const string& type) {
   return BackendManager::IsSupportedBackend(type);
 }
 
-string GetCurrentlySetBackendName() {
-  return BackendManager::GetCurrentlySetBackendName();
+Status GetCurrentlySetBackendName(string* backend_name) {
+  return BackendManager::GetCurrentlySetBackendName(backend_name);
 }
 
 void StartLoggingPlacement() { _is_logging_placement = true; }

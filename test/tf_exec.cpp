@@ -457,7 +457,7 @@ TEST(tf_exec, DISABLED_Op_Unpack) {
 
   std::vector<int64> axes({0, 1, 2});
 
-  for (auto i = 0; i < input_sizes.size(); ++i) {
+  for (size_t i = 0; i < input_sizes.size(); ++i) {
     Tensor input_data(DT_FLOAT, TensorShape(input_sizes[i]));
     AssignInputValues(input_data, 0.0);
 

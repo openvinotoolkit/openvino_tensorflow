@@ -23,7 +23,6 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 
@@ -59,17 +58,6 @@ using NgFunctionIOCache = std::unordered_map<
     std::vector<std::pair<void*, shared_ptr<ng::runtime::Tensor>>>>;
 
 namespace ngraph_bridge {
-
-REGISTER_OP("NGraphEncapsulate")
-    .Input("args: Targuments")
-    .Attr("Targuments: list(type) >= 0")
-    .Output("results: Tresults")
-    .Attr("Tresults: list(type) >= 0")
-    .Attr("ngraph_cluster: int")
-    .Attr("ngraph_graph_id: int")
-    .Attr("ngraph_backend: string")
-    .SetIsStateful()
-    .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
 class NGraphEncapsulateOp : public OpKernel {
  public:
@@ -110,7 +98,8 @@ class NGraphEncapsulateOp : public OpKernel {
       const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {
         return flib.LookUpOpDef(op, sig);
       };
-      FunctionDefToBodyHelper(*fdef, {}, &flib, get_func_sig, &fnbody);
+      OP_REQUIRES_OK(ctx, FunctionDefToBodyHelper(*fdef, {}, &flib,
+                                                  get_func_sig, &fnbody));
       CopyGraph(*fnbody->graph, &m_graph);
     } else {
       GraphConstructorOptions opts;
@@ -190,9 +179,9 @@ class NGraphEncapsulateOp : public OpKernel {
       m_op_backend_name = BackendManager::GetBackendCreationString(
           backend_name, additional_attribute_map);
     } catch (const std::exception& exp) {
-      OP_REQUIRES_OK(ctx, errors::Internal(
-                              "Caught exception while creating backend string ",
-                              exp.what(), "\n"));
+      Status status = errors::Internal(
+          "Caught exception while creating backend string ", exp.what(), "\n");
+      OP_REQUIRES_OK(ctx, status);
     }
     NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name();
     BackendManager::CreateBackend(m_op_backend_name);
@@ -245,7 +234,7 @@ class NGraphEncapsulateOp : public OpKernel {
   static void TensorDataToStream(std::ostream& ostream, int64 n_elements,
                                  const char* data) {
     const T* data_T = reinterpret_cast<const T*>(data);
-    for (size_t i = 0; i < n_elements; i++) {
+    for (int i = 0; i < n_elements; i++) {
       ostream << data_T[i] << ",";
     }
   }
@@ -559,7 +548,7 @@ class NGraphEncapsulateOp : public OpKernel {
     int number_of_copies = 0;
 #endif
 
-    for (int i = 0; i < input_shapes.size(); i++) {
+    for (size_t i = 0; i < input_shapes.size(); i++) {
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
       bool ref_exists = NGraphCatalog::ExistsInInputVariableSharedNameMap(
           m_graph_id, def().name(), i);
@@ -615,15 +604,14 @@ class NGraphEncapsulateOp : public OpKernel {
           input_copy_events.push_back(std::move(event_copy_input_next));
 
         } catch (const std::exception& exp) {
-          OP_REQUIRES(
-              ctx, false,
-              errors::Internal(
-                  "Caught exception while transferring tensor data to nGraph: ",
-                  exp.what(), "\n"));
+          Status status = errors::Internal(
+              "Caught exception while transferring tensor data to nGraph: ",
+              exp.what(), "\n");
+          OP_REQUIRES(ctx, false, status);
         } catch (...) {
-          OP_REQUIRES(ctx, false,
-                      errors::Internal(
-                          "Error in transferring tensor data to nGraph\n"));
+          Status status =
+              errors::Internal("Error in transferring tensor data to nGraph\n");
+          OP_REQUIRES(ctx, false, status);
         }
       }
       input_caches[i] = std::make_pair(current_src_ptr, current_ng_tensor);
@@ -649,7 +637,7 @@ class NGraphEncapsulateOp : public OpKernel {
     output_caches.resize(ng_exec->get_results().size());
     // ngraph executable returns get_results, using that to get the tensor shape
     // and element type.
-    for (auto i = 0; i < ng_exec->get_results().size(); i++) {
+    for (size_t i = 0; i < ng_exec->get_results().size(); i++) {
       auto ng_element = ng_exec->get_results()[i];
       auto ng_shape = ng_element->get_shape();
       auto ng_element_type = ng_element->get_element_type();
@@ -859,15 +847,14 @@ class NGraphEncapsulateOp : public OpKernel {
         ngraph::Event::write_trace(*next.get());
       }
     } catch (const std::exception& exp) {
-      OP_REQUIRES(
-          ctx, false,
-          errors::Internal(
-              "Caught exception while transferring tensor data to host: ",
-              exp.what(), "\n"));
+      Status status = errors::Internal(
+          "Caught exception while transferring tensor data to host: ",
+          exp.what(), "\n");
+      OP_REQUIRES(ctx, false, status);
     } catch (...) {
-      OP_REQUIRES(
-          ctx, false,
-          errors::Internal("Error in transferring tensor data to host\n"));
+      Status status =
+          errors::Internal("Error in transferring tensor data to host\n");
+      OP_REQUIRES(ctx, false, status);
     }
     event_copy_output.Stop();
 
@@ -881,7 +868,7 @@ class NGraphEncapsulateOp : public OpKernel {
     // Mark input tensors as fresh for the next time around.
     // Note: these ng_tensors are being marked fresh so that in the next
     // iteration if this encapsulate finds the tensor fresh, then it will use it
-    for (int i = 0; i < input_shapes.size(); i++) {
+    for (size_t i = 0; i < input_shapes.size(); i++) {
       void* src_ptr = (void*)DMAHelper::base(&ctx->input(i));
       m_freshness_tracker->MarkFresh(src_ptr, ng_exec);
     }
@@ -989,7 +976,7 @@ class NGraphEncapsulateOp : public OpKernel {
     return current_ng_tensor;
   }
   std::list<std::string> m_lru;
-  int my_function_cache_depth_in_items = 16;
+  size_t my_function_cache_depth_in_items = 16;
   static int s_instance_count;
   int my_instance_id{0};
   int m_number_outputs = -1;

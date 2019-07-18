@@ -36,7 +36,12 @@ string BackendConfig::Join(
   } catch (std::out_of_range e1) {
     throw std::out_of_range("Attribute device_config not found");
   }
-  return backend_name_ + ":" + additional_parameters.at("device_config");
+  string backend_name = backend_name_;
+  if (additional_parameters.at("device_config") != "") {
+    backend_name =
+        backend_name + ":" + additional_parameters.at("device_config");
+  }
+  return backend_name;
 }
 
 unordered_map<string, string> BackendConfig::Split(
@@ -71,6 +76,9 @@ BackendConfig::~BackendConfig() {
 };
 
 // BackendNNPIConfig
+// The NNPI backend is not supposed to specify the config parameters
+// using the ENV variable or the script. NNPI backend is expected
+// to use the RewriterConfig, hence the Split API is not implemented.
 BackendNNPIConfig::BackendNNPIConfig() : BackendConfig("NNPI") {
   additional_attributes_ = {"device_id", "ice_cores", "max_batch_size"};
 }
@@ -83,10 +91,11 @@ string BackendNNPIConfig::Join(
   } catch (std::out_of_range e1) {
     throw std::out_of_range("Attribute device_id not found");
   }
-  return backend_name_ + ":" + additional_parameters.at("device_id");
-
-  // Once the backend api for the other attributes like ice cores
-  // and max batch size is fixed we change this
+  string backend_name = backend_name_;
+  if (additional_parameters.at("device_id") != "") {
+    backend_name = backend_name + ":" + additional_parameters.at("device_id");
+  }
+  return backend_name;
 }
 
 BackendNNPIConfig::~BackendNNPIConfig() {

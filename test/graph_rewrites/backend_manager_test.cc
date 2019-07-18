@@ -40,33 +40,78 @@ namespace testing {
 #define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
 
 /*
-These tests test the Backend Handling by the bridge
-Since the backend is set globaly the setting of NGRAPH_TF_BACKEND might cause
-some tests to fail
-For e.g. "BackendCLustering" test would fail If the NGRAPH_TF_BACKEND is set to
-INTERPRETER the nodes going to CPU also go to interpreter
-putting all the nodes in the same cluster.
+These tests test the Backend Handling by the bridge.
 */
 
 // Test SetBackendAPI
 TEST(BackendManager, SetBackend) {
+  // If NGRAPH_TF_BACKEND is set, unset it
+  const unordered_map<string, string>& env_map = StoreEnv();
+
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
-  string cpu_backend = BackendManager::GetCurrentlySetBackendName();
+  string cpu_backend;
+  ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&cpu_backend));
+
   ASSERT_EQ(cpu_backend, "CPU");
 
   ASSERT_OK(BackendManager::SetBackendName("INTERPRETER"));
-  string current_backend = BackendManager::GetCurrentlySetBackendName();
+  string current_backend;
+  ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&current_backend));
+
   ASSERT_EQ(current_backend, "INTERPRETER");
 
   ASSERT_NOT_OK(BackendManager::SetBackendName("temp"));
-  // Setting again as clean up
+
+  // Clean Up
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
+  // If NGRAPH_TF_BACKEND was set, set it back
+  RestoreEnv(env_map);
+}
+
+// Test GetCurrentlySetBackendNameAPI
+// Test with env variable set
+TEST(BackendManager, GetCurrentlySetBackendName) {
+  // If NGRAPH_TF_BACKEND is set, unset it
+  const unordered_map<string, string>& env_map = StoreEnv();
+
+  string cpu_backend = "CPU";
+  string intp_backend = "INTERPRETER";
+
+  // set backend to interpreter and env variable to CPU
+  // expected CPU
+  ASSERT_OK(BackendManager::SetBackendName(intp_backend));
+  SetNGraphTFBackend(cpu_backend);
+  string backend;
+  ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&backend));
+  ASSERT_EQ(cpu_backend, backend);
+
+  // unset env variable
+  // expected interpreter
+  UnsetNGraphTFBackend();
+  ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&backend));
+  ASSERT_EQ(intp_backend, backend);
+
+  // set env variable to DUMMY
+  // expected ERROR
+  SetNGraphTFBackend("DUMMY");
+  ASSERT_NOT_OK(BackendManager::GetCurrentlySetBackendName(&backend));
+
+  // set env variable to ""
+  // expected ERROR
+  SetNGraphTFBackend("");
+  ASSERT_NOT_OK(BackendManager::GetCurrentlySetBackendName(&backend));
+
+  // Clean up
+  UnsetNGraphTFBackend();
+  ASSERT_OK(BackendManager::SetBackendName("CPU"));
+  // restore
+  // If NGRAPH_TF_BACKEND was set, set it back
+  RestoreEnv(env_map);
 }
 
 // Test GetSupportedBackendNames
 TEST(BackendManager, GetSupportedBackendNames) {
-  unordered_set<string> ng_tf_backends =
-      BackendManager::GetSupportedBackendNames();
+  vector<string> ng_tf_backends = BackendManager::GetSupportedBackendNames();
 
   NGRAPH_VLOG(5) << "Supported Backends";
   for (auto backend : ng_tf_backends) {
@@ -75,17 +120,19 @@ TEST(BackendManager, GetSupportedBackendNames) {
 
   vector<string> ng_backends =
       ng::runtime::BackendManager::get_registered_backends();
-  ASSERT_EQ(ng_tf_backends.size(), ng_backends.size());
 
+  NGRAPH_VLOG(5) << "nGraph Supported Backends";
   for (auto backend : ng_backends) {
-    auto itr = ng_tf_backends.find(backend);
-    ASSERT_NE(itr, ng_tf_backends.end());
+    NGRAPH_VLOG(5) << backend;
   }
+
+  ASSERT_EQ(ng_tf_backends.size(), ng_backends.size());
+  ASSERT_EQ(ng_tf_backends, ng_backends);
 }
 
 // Test Backend Assignment
+// The backend passed to MarkForClustering is attached to the nodes
 TEST(BackendManager, BackendAssignment) {
-  ASSERT_OK(BackendManager::SetBackendName("CPU"));
   Scope root = Scope::NewRootScope();
   auto A = ops::Const(root.WithOpName("A"), {1.0f, 1.0f});
   auto B = ops::Const(root.WithOpName("B"), {1.0f, 1.0f});
@@ -96,10 +143,8 @@ TEST(BackendManager, BackendAssignment) {
 
   std::set<string> skip_these_nodes = {};
 
-  // Set backend 1
-  string backend1 = "INTERPRETER";
-  ASSERT_OK(BackendManager::SetBackendName(backend1));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, backend1));
+  string dummy_backend = "DUMMY";
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, dummy_backend));
   std::map<std::string, Node*> node_map;
   for (auto node : graph.op_nodes()) {
     node_map[node->name()] = node;
@@ -112,25 +157,12 @@ TEST(BackendManager, BackendAssignment) {
 
   ASSERT_EQ(bA, bB);
   ASSERT_EQ(bA, bR);
-  ASSERT_EQ(bA, backend1);
-
-  // Set backend 2
-  string backend2 = "CPU";
-  ASSERT_OK(BackendManager::SetBackendName(backend2));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, backend2));
-
-  ASSERT_OK(GetNodeBackend(node_map["A"], &bA));
-  ASSERT_OK(GetNodeBackend(node_map["B"], &bB));
-  ASSERT_OK(GetNodeBackend(node_map["R"], &bR));
-
-  ASSERT_EQ(bA, bB);
-  ASSERT_EQ(bA, bR);
-  ASSERT_EQ(bA, backend2);
+  ASSERT_EQ(bA, dummy_backend);
 }
 
 // Test Backend Clustering
+// Nodes with different backends are not clustered together
 TEST(BackendManager, BackendClustering) {
-  ASSERT_OK(BackendManager::SetBackendName("CPU"));
   Scope root = Scope::NewRootScope();
   auto A = ops::Const(root.WithOpName("A"), {1.0f, 1.0f});
   auto B = ops::Const(root.WithOpName("B"), {1.0f, 1.0f});
@@ -141,16 +173,16 @@ TEST(BackendManager, BackendClustering) {
 
   std::set<string> skip_these_nodes = {};
 
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
-
-  string backend1 = "INTERPRETER";
+  string dummy_backendA = "DUMMYA";
+  string dummy_backendB = "DUMMYB";
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, dummy_backendA));
 
   std::map<std::string, Node*> node_map;
   for (auto node : graph.op_nodes()) {
     node_map[node->name()] = node;
   }
 
-  SetNodeBackend(node_map["B"], backend1);
+  SetNodeBackend(node_map["B"], dummy_backendB);
   ASSERT_OK(AssignClusters(&graph));
 
   int A_cluster, B_cluster, R_cluster;
@@ -218,7 +250,7 @@ TEST(BackendManager, GetBackendCreationString) {
       BackendManager::GetBackendCreationString("NNPI", nnpi_map);
   auto gpu_backend = BackendManager::GetBackendCreationString("GPU", gpu_map);
 
-  ASSERT_EQ(cpu_backend, "CPU:");
+  ASSERT_EQ(cpu_backend, "CPU");
   ASSERT_EQ(nnpi_backend, "NNPI:5");
   ASSERT_EQ(gpu_backend, "GPU:678");
 

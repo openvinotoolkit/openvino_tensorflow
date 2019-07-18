@@ -40,6 +40,7 @@ set(SRC
    ngraph_cluster_manager.cc
    ngraph_deassign_clusters.cc
    ngraph_encapsulate_clusters.cc
+   ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_freshness_tracker.cc
    ngraph_mark_for_clustering.cc
@@ -65,6 +66,9 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(REMOVE_ITEM SRC ngraph_rewrite_pass.cc)
     list(APPEND SRC enable_variable_ops/ngraph_rewrite_pass.cc)
 
+    list(REMOVE_ITEM SRC ops/ngraph_ops.cc)
+    list(APPEND SRC enable_variable_ops/ops/ngraph_ops.cc)
+
     list(REMOVE_ITEM SRC ngraph_tracked_variable.cc)
     list(APPEND SRC enable_variable_ops/ngraph_tracked_variable.cc)
 
@@ -72,6 +76,7 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC enable_variable_ops/ngraph_assign_op.cc)
     list(APPEND SRC enable_variable_ops/ngraph_catalog.cc)
     list(APPEND SRC enable_variable_ops/ngraph_enter_in_catalog.cc)
+    list(APPEND SRC enable_variable_ops/ngraph_remove_ngraphassigns.cc)
     list(APPEND SRC enable_variable_ops/ngraph_replace_op_utilities.cc)
     list(APPEND SRC enable_variable_ops/ngraph_replace_variable_modifiers.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_modifiers.cc)

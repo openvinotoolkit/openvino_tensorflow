@@ -194,30 +194,17 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // Get backend + its configurations, to be attached to the nodes
   // Precedence Order: RewriteConfig > Env Variable > BackendManager
-  string backend_name = BackendManager::GetCurrentlySetBackendName();
+  string backend_name;
   if (!config_backend_name.empty()) {
-    if (!BackendManager::IsSupportedBackend(backend_name)) {
+    if (!BackendManager::IsSupportedBackend(config_backend_name)) {
       return errors::Internal("NGRAPH_TF_BACKEND: ", config_backend_name,
                               " is not supported");
     }
     backend_name = config_backend_name;
     NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig " << backend_name;
   } else {
-    const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
-    if (ng_backend_env_value != nullptr) {
-      string backend_env = std::string(ng_backend_env_value);
-      if (backend_env.empty() ||
-          !BackendManager::IsSupportedBackend(backend_env)) {
-        return errors::Internal("NGRAPH_TF_BACKEND: ", backend_env,
-                                " is not supported");
-      }
-      backend_name = backend_env;
-      NGRAPH_VLOG(1) << "Overriding backend using the enviornment variable "
-                        "to "
-                     << backend_name;
-    } else {
-      NGRAPH_VLOG(1) << "Setting backend from the BackendManager ";
-    }
+    TF_RETURN_IF_ERROR(
+        BackendManager::GetCurrentlySetBackendName(&backend_name));
     // splits into {"ngraph_backend", "_ngraph_device_config"}
     config_map = BackendManager::GetBackendAttributeValues(
         backend_name);  // SplitBackendConfig
