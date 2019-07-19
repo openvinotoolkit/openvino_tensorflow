@@ -61,6 +61,8 @@ set(SRC
 
 if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC graph_rewrites/capture_variables.cc)
+    list(APPEND SRC graph_rewrites/enter_in_catalog_test.cc)
+    list(APPEND SRC graph_rewrites/remove_ngraphassigns.cc)
 endif()
 
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)

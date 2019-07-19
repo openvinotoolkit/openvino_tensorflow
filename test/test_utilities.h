@@ -36,6 +36,22 @@ namespace testing {
 void ActivateNGraph();
 void DeactivateNGraph();
 
+// Store/Restore Env Variables
+unordered_map<string, string> StoreEnv();
+void RestoreEnv(const unordered_map<string, string>& map);
+
+// EnvVariable Utilities
+bool IsEnvVariableSet(const string& env_var_name);
+string GetEnvVariable(const string& env_var_name);
+void UnsetEnvVariable(const string& env_var_name);
+void SetEnvVariable(const string& env_var_name, const string& env_var_val);
+
+// NGRAPH_TF_BACKEND related
+bool IsNGraphTFBackendSet();
+string GetNGraphTFBackend();
+void UnsetNGraphTFBackend();
+void SetNGraphTFBackend(const string& bname);
+
 // Print Functions
 void PrintTensor(const Tensor& T1);
 void PrintTensorAllValues(

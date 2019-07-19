@@ -218,9 +218,9 @@ def update_config(config):
         # ngraph_optimizer = rewriter_options.custom_optimizers.add()
         # ngraph_optimizer.name = "ngraph-optimizer"
         # ngraph_optimizer.parameter_map["ngraph_backend"].s = b'NNPI'
-        # ngraph_optimizer.parameter_map["_ngraph_device_id"].s = b'1'
-        # ngraph_optimizer.parameter_map["_ngraph_max_batch_size"].s = b'64'
-        # ngraph_optimizer.parameter_map["_ngraph_ice_cores"].s = b'12'
+        # ngraph_optimizer.parameter_map["device_id"].s = b'1'
+        # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
+        # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
         # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
     return config
 

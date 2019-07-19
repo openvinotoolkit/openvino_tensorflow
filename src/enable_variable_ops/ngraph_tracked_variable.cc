@@ -16,7 +16,6 @@
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/resource_mgr.h"
 #include "tensorflow/core/lib/strings/strcat.h"
 
@@ -62,19 +61,19 @@ class NGraphVariableOp : public OpKernel {
 
  private:
   int ng_graph_id_;
-  DataType dtype_;
   TensorShape shape_;
-  // If TF is not going to modify the variable
-  // then is_tf_just_looking = true
-  bool is_tf_just_looking_;
+  NGraphFreshnessTracker* tracker_;
   // If the variable is not going to be modified
   // then just_looking = true
   // This is added to keep it consistent with the path where
   // enable_variable_and_optimizers flag is not set and to add the
   // freshness tracking required for the CPU backend.
   bool just_looking_;
+  // If TF is not going to modify the variable
+  // then is_tf_just_looking = true
+  bool is_tf_just_looking_;
   bool copy_to_tf_;
-  NGraphFreshnessTracker* tracker_;
+  DataType dtype_;
   string ng_backend_name_;
   mutex init_mu_;
   ContainerInfo cinfo_ GUARDED_BY(init_mu_);
@@ -285,19 +284,6 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   var->Unref();
   ngraph::Event::write_trace(event_compute);
 }
-
-REGISTER_OP("NGraphVariable")
-    .Output("ref: Ref(dtype)")
-    .Attr("shape: shape")
-    .Attr("dtype: type")
-    .Attr("just_looking: bool = false")
-    .Attr("is_tf_just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
-    .Attr("container: string = ''")
-    .Attr("shared_name: string = ''")
-    .Attr("ngraph_graph_id: int")
-    .SetIsStateful()
-    .SetShapeFn(shape_inference::ExplicitShape);
 
 REGISTER_KERNEL_BUILDER(Name("NGraphVariable").Device(DEVICE_CPU),
                         NGraphVariableOp);

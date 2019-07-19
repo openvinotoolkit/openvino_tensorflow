@@ -19,54 +19,68 @@ import pytest
 import tensorflow as tf
 import ngraph_bridge
 
+from common import NgraphTest
+
 
 # Test ngraph_bridge config options
-def test_set_backend():
-    ngraph_bridge.enable()
-    backend_cpu = 'CPU'
-    backend_interpreter = 'INTERPRETER'
+class TestSetBackend(NgraphTest):
 
-    found_cpu = False
-    found_interpreter = False
-    # These will only print when running pytest with flag "-s"
-    print("Number of supported backends ", ngraph_bridge.backends_len())
-    supported_backends = ngraph_bridge.list_backends()
-    print(" ****** Supported Backends ****** ")
-    for backend_name in supported_backends:
-        print(backend_name)
-        if backend_name == backend_cpu:
-            found_cpu = True
-        if backend_name == backend_interpreter:
-            found_interpreter = True
-    print(" ******************************** ")
-    assert (found_cpu and found_interpreter) == True
+    def test_set_backend(self):
+        # store env variables
+        # when testing on backends like GPU the tests are run with NGRPAH_TF_BACKEND
+        # by storing and restoring the env_variables we run the tests independent of the backend set
+        # currently we store and restore only the NGRPAH_TF_BACKEND
+        env_var_map = self.store_env_variables()
 
-    # Create Graph
-    val = tf.placeholder(tf.float32)
-    out1 = tf.abs(val)
-    out2 = tf.abs(out1)
+        # test
+        ngraph_bridge.enable()
+        backend_cpu = 'CPU'
+        backend_interpreter = 'INTERPRETER'
 
-    # set INTERPRETER backend
-    assert ngraph_bridge.is_supported_backend(backend_interpreter) == True
-    ngraph_bridge.set_backend(backend_interpreter)
-    currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
-    assert currently_set_backend == backend_interpreter
+        found_cpu = False
+        found_interpreter = False
+        # These will only print when running pytest with flag "-s"
+        print("Number of supported backends ", ngraph_bridge.backends_len())
+        supported_backends = ngraph_bridge.list_backends()
+        print(" ****** Supported Backends ****** ")
+        for backend_name in supported_backends:
+            print(backend_name)
+            if backend_name == backend_cpu:
+                found_cpu = True
+            if backend_name == backend_interpreter:
+                found_interpreter = True
+        print(" ******************************** ")
+        assert (found_cpu and found_interpreter) == True
 
-    # create new session to execute graph
-    # If you want to re-confirm which backend the graph was executed
-    # currently the only way is to enable NGRAPH_TF_VLOG_LEVEL=5
-    with tf.Session() as sess:
-        sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
-    currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
-    assert currently_set_backend == backend_interpreter
+        # Create Graph
+        val = tf.placeholder(tf.float32)
+        out1 = tf.abs(val)
+        out2 = tf.abs(out1)
 
-    # set CPU backend
-    assert ngraph_bridge.is_supported_backend(backend_cpu) == True
-    ngraph_bridge.set_backend(backend_cpu)
-    currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
-    assert currently_set_backend == backend_cpu
-    # create new session to execute graph
-    with tf.Session() as sess:
-        sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
-    currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
-    assert currently_set_backend == backend_cpu
+        # set INTERPRETER backend
+        assert ngraph_bridge.is_supported_backend(backend_interpreter) == True
+        ngraph_bridge.set_backend(backend_interpreter)
+        currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
+        assert currently_set_backend == backend_interpreter
+
+        # create new session to execute graph
+        # If you want to re-confirm which backend the graph was executed
+        # currently the only way is to enable NGRAPH_TF_VLOG_LEVEL=5
+        with tf.Session() as sess:
+            sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
+        currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
+        assert currently_set_backend == backend_interpreter
+
+        # set CPU backend
+        assert ngraph_bridge.is_supported_backend(backend_cpu) == True
+        ngraph_bridge.set_backend(backend_cpu)
+        currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
+        assert currently_set_backend == backend_cpu
+        # create new session to execute graph
+        with tf.Session() as sess:
+            sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
+        currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
+        assert currently_set_backend == backend_cpu
+
+        # restore env_variables
+        self.restore_env_variables(env_var_map)

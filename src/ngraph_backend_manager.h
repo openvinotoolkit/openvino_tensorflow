@@ -47,21 +47,26 @@ struct Backend {
 class BackendManager {
  public:
   // Returns the backend name currently set
-  static string GetCurrentlySetBackendName() {
-    return BackendManager::ng_backend_name_;
-  };
+  // If env variable NGRAPH_TF_BACKEND is set it has precedence
+  // over the BackendManager backend ng_backend_name_
+  static Status GetCurrentlySetBackendName(string* backend);
 
   // Returns the nGraph supported backend names
-  static unordered_set<string> GetSupportedBackendNames();
+  static vector<string> GetSupportedBackendNames();
 
-  static size_t GetNumOfSupportedBackends() {
-    return ng_supported_backends_.size();
-  }
+  // Returns number of nGraph supported backends
+  static size_t GetNumOfSupportedBackends();
+
+  // Returns True if the backend is supported or not
+  // Tries to create a backend with backend_name string to determine whether
+  // supported or not
   static bool IsSupportedBackend(const string& backend_name);
 
+  // Set the BackendManager backend ng_backend_name_
   static Status SetBackendName(const string& backend_name);
 
-  static void CreateBackend(const string& backend_name);
+  // Creates backend of backend_name type
+  static Status CreateBackend(const string& backend_name);
 
   static void ReleaseBackend(const string& backend_name);
 
@@ -70,6 +75,7 @@ class BackendManager {
                             additional_attributes_map);
 
   // Returns a backend pointer of the type specified by the backend name
+  // The backend must have already been created (use CreateBackend(...))
   static ng::runtime::Backend* GetBackend(const string& backend_name);
 
   // LockBackend
@@ -124,11 +130,10 @@ class BackendManager {
  private:
   static string ng_backend_name_;  // currently set backend name
   static mutex ng_backend_name_mutex_;
+
   // map of cached backend objects
   static map<string, Backend*> ng_backend_map_;
   static mutex ng_backend_map_mutex_;
-  // set of backends supported by nGraph
-  static unordered_set<string> ng_supported_backends_;
 
   // map of cached backend config objects
   static unordered_map<string, std::unique_ptr<BackendConfig>>

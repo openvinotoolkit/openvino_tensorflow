@@ -16,11 +16,9 @@
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/resource_mgr.h"
 #include "tensorflow/core/lib/strings/strcat.h"
 
-#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/platform/default/logging.h"
 
@@ -175,18 +173,6 @@ class NGraphAssignOp : public OpKernel {
 };
 
 int NGraphAssignOp::s_instance_count = 0;
-
-REGISTER_OP("NGraphAssign")
-    .Input("ref: Ref(T)")
-    .Input("value: T")
-    .Output("output_ref: Ref(T)")
-    .Attr("T: type")
-    .Attr("validate_shape: bool = true")
-    .Attr("use_locking: bool = true")
-    .Attr("just_looking: bool = false")
-    .Attr("is_tf_just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
-    .Attr("ngraph_graph_id: int");
 
 REGISTER_KERNEL_BUILDER(Name("NGraphAssign").Device(DEVICE_CPU),
                         NGraphAssignOp);
