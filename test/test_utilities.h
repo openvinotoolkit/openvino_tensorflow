@@ -17,11 +17,12 @@
 #define NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
 
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/platform/env.h"
+
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 namespace ng = ngraph;
