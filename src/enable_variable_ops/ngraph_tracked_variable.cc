@@ -23,10 +23,10 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph_backend_manager.h"
+#include "ngraph_catalog.h"
 #include "ngraph_freshness_tracker.h"
 #include "ngraph_utils.h"
 #include "ngraph_var.h"
-#include "ngraph_catalog.h"
 
 #include "ngraph/event_tracing.hpp"
 
