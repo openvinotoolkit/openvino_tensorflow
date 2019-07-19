@@ -15,8 +15,8 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_builder.h"
-#include "ngraph_utils.h"
+#include "ngraph_bridge/ngraph_builder.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 namespace ng = ngraph;

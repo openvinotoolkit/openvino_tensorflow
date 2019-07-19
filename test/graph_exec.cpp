@@ -15,15 +15,15 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_builder.h"
-#include "ngraph_utils.h"
-
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 #include "tensorflow/core/platform/env.h"
+
+#include "ngraph_bridge/ngraph_builder.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 namespace ng = ngraph;

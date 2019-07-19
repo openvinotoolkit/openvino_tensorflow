@@ -15,11 +15,12 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_assign_clusters.h"
-#include "ngraph_utils.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
-#include "tf_graph_writer.h"
+
+#include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/ngraph_assign_clusters.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 namespace ng = ngraph;

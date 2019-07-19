@@ -15,15 +15,16 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "enable_variable_ops/ngraph_replace_op_utilities.h"
-#include "ngraph_capture_variables.h"
-#include "ngraph_utils.h"
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/session.h"
-#include "tf_graph_writer.h"
+
+#include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
+#include "ngraph_bridge/ngraph_capture_variables.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 namespace ng = ngraph;

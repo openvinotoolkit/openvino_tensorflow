@@ -14,11 +14,13 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "../test_utilities.h"
 #include "gtest/gtest.h"
-#include "ngraph_cluster_manager.h"
-#include "ngraph_encapsulate_clusters.h"
+
 #include "tensorflow/core/graph/node_builder.h"
+
+#include "ngraph_bridge/ngraph_cluster_manager.h"
+#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
