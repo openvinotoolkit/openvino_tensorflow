@@ -683,13 +683,32 @@ class NGraphEncapsulateOp : public OpKernel {
           output_caches[i].second;
 
       void* current_dst_ptr = DMAHelper::base(output_tensor);
-      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-          GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor,
-                             true, ng_exec, op_backend, ng_element_type,
-                             ng_shape);
+      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor = nullptr;
+// if the output tensor is going to be assigned to a variable
+// we ask nGraph to provide the output directly in the variable tensor
+#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+      if (NGraphCatalog::ExistsInEncapOutputInfoMap(m_graph_id, name(), i)) {
+        string output_key = NGraphCatalog::CreatNodeKey(m_graph_id, name(), i);
+        string ref_var_name =
+            NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(
+                output_key);
+        NGraphVar* var;
+        OP_REQUIRES_OK(ctx, ctx->resource_manager()->Lookup<NGraphVar>(
+                                ctx->resource_manager()->default_container(),
+                                ref_var_name, &var));
+        current_ng_tensor = var->ng_tensor();
+        var->Unref();
+        ng_outputs.push_back(current_ng_tensor);
+        continue;
+      }
+#endif
+      current_ng_tensor = GetCurrentNgTensor(
+          current_dst_ptr, last_dst_ptr, last_ng_tensor, true, ng_exec,
+          op_backend, ng_element_type, ng_shape);
 
       current_ng_tensor->set_stale(true);
       output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
+
       ng_outputs.push_back(current_ng_tensor);
     }
 
