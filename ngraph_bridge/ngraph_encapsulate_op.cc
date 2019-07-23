@@ -688,7 +688,7 @@ class NGraphEncapsulateOp : public OpKernel {
 // we ask nGraph to provide the output directly in the variable tensor
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
       if (NGraphCatalog::ExistsInEncapOutputInfoMap(m_graph_id, name(), i)) {
-        string output_key = NGraphCatalog::CreatNodeKey(m_graph_id, name(), i);
+        string output_key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
         string ref_var_name =
             NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(
                 output_key);
@@ -828,15 +828,41 @@ class NGraphEncapsulateOp : public OpKernel {
         m_number_inputs = ng_inputs.size();
       }
       for (size_t i = 0; i < output_tensor_count; ++i) {
-        string key = NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
-        bool ref_exists = NGraphCatalog::ExistsInEncapOutputTensorMap(key);
-        void* dst_ptr;
+        // Sync the Var Tensor if required
+        string output_key =
+            NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
+        bool ref_exists = NGraphCatalog::ExistsInEncapOutputInfoMap(output_key);
         std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
-        std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
-
+        void* dst_ptr;
         if (ref_exists) {
-          NGRAPH_VLOG(4) << "Adding in output tensor map " << key;
-          NGraphCatalog::AddToEncapOutputTensorMap(key, dst_ng_tensor);
+          NGRAPH_VLOG(4) << "Syncing the output var tensor " << output_key;
+
+          // Get var
+          string ref_var_name =
+              NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(
+                  output_key);
+          NGraphVar* var;
+          OP_REQUIRES_OK(ctx, ctx->resource_manager()->Lookup<NGraphVar>(
+                                  ctx->resource_manager()->default_container(),
+                                  ref_var_name, &var));
+
+          if (NGraphCatalog::GetCopyToTFFromEncapOutputInfoMap(output_key)) {
+            if (var->copy_ng_to_tf()) {
+              number_of_copies++;
+              copy_log_str << " COPY_TF ";
+            }
+            if (!NGraphCatalog::GetIsTFJustLookingFromEncapOutputInfoMap(
+                    output_key)) {
+              // Some tf op might update the ng-tensor value so mark it stale
+              copy_log_str << " SET_SYNC ";
+              var->set_sync_ng_tensor(true);
+            }
+          }
+          dst_ng_tensor = var->ng_tensor();
+          var->Unref();
+          dst_ptr = output_caches[i].first;
+        } else {
+          std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
         }
 
         if (m_op_backend_name != "CPU" &&
