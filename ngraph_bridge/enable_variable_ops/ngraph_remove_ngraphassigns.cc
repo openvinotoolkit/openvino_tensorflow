@@ -45,6 +45,11 @@ Status RemoveNGraphAssigns(Graph* graph) {
             input_1->type_string());
       }
 
+      // Handle input and output edges
+      // Only adding the new edges, edges to and from the current node will be
+      // removed when
+      // node is removed
+      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/graph/graph.h#L495
       // Handle input edges
       NGRAPH_VLOG(3) << "Handling input edges ";
       for (auto edge : node->in_edges()) {
@@ -55,7 +60,6 @@ Status RemoveNGraphAssigns(Graph* graph) {
           if (edge->src() == input_1) continue;
           graph->AddEdge(edge->src(), edge->src_output(), input_1,
                          edge->dst_input());
-          graph->RemoveEdge(edge);
         }
       }
 
@@ -80,7 +84,6 @@ Status RemoveNGraphAssigns(Graph* graph) {
           graph->AddEdge(input_1, Graph::kControlSlot, edge->dst(),
                          Graph::kControlSlot);
         }
-        graph->RemoveEdge(edge);
       }
 
       // Add the node for removal

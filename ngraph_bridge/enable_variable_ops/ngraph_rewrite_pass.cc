@@ -22,6 +22,7 @@
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_enter_in_catalog.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_remove_ngraphassigns.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_variable_modifiers.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
@@ -206,16 +207,22 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   2. Cluster Assignment [ngraph_assign_clusters.cc]
 //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
 //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc]
-//
+//   5. Rewrite Variable Type Ops for Tracking [ngraph_rewrite_for_tracking.cc]
+//   6. Enter In Catalog  [ngraph_enter_in_catalog.cc]
+//   7. Remove NGraphAssigns [ngraph_remove_ngraphassigns.cc]
 // Between phases, graph dumps (in both .dot and .pbtxt format) may be
 // requested by setting the following environment variables:
 //
-//   NGRAPH_TF_DUMP_UNMARKED_GRAPHS=1      dumps graphs before phase 1
-//   NGRAPH_TF_DUMP_MARKED_GRAPHS=1        dumps graphs after phase 1
-//   NGRAPH_TF_DUMP_CLUSTERED_GRAPHS=1     dumps graphs after phase 2
-//   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1   dumps graphs after phase 3
-//   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1  dumps graphs after phase 4
-//   NGRAPH_TF_DUMP_GRAPHS=1               all of the above
+//   NGRAPH_TF_DUMP_UNMARKED_GRAPHS=1            dumps graphs before phase 0
+//   NGRAPH_TF_DUMP_REPLACEDMODIFIERS_GRAPHS=1   dumps graphs after phase 0
+//   NGRAPH_TF_DUMP_MARKED_GRAPHS=1              dumps graphs after phase 1
+//   NGRAPH_TF_DUMP_CLUSTERED_GRAPHS=1           dumps graphs after phase 2
+//   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1         dumps graphs after phase 3
+//   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1        dumps graphs after phase 4
+//   NGRAPH_TF_DUMP_TRACKED_GRAPHS=1             dumps graphs after phase 5
+//   NGRAPH_TF_DUMP_CATALOGED_GRAPHS=1           dumps graphs after phase 6
+//   NGRAPH_TF_DUMP_REMOVENGASSIGNS_GRAPHS=1     dumps graphs after phase 7
+//   NGRAPH_TF_DUMP_GRAPHS=1                     all of the above
 //
 class NGraphEncapsulationPass : public NGraphRewritePass {
  public:
@@ -323,6 +330,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Variables Inputs Entered in Catalog");
     }
 
+    // Remove Certain NGraphAssigns then.
+    TF_RETURN_IF_ERROR(RemoveNGraphAssigns(options.graph->get()));
+    if (DumpRemoveNGraphAssignsGraphs()) {
+      DumpGraphs(options, idx, "ngraphssigns_optimized",
+                 "Graph with NGraphAssigns Optimized/Removed");
+    }
+
     return Status::OK();
   }
 
@@ -359,6 +373,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   static bool DumpCatalogedGraphs() {
     return DumpAllGraphs() ||
            std::getenv("NGRAPH_TF_DUMP_CATALOGED_GRAPHS") != nullptr;
+  }
+
+  static bool DumpRemoveNGraphAssignsGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_REMOVENGASSIGNS_GRAPHS") != nullptr;
   }
 };
 
