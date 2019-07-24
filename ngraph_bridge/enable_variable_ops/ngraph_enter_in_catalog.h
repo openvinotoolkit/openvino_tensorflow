@@ -50,12 +50,12 @@ namespace ngraph_bridge {
 // We add mapping of {graphId_nodename_InputIndex : Shared_Name} to the
 // InputVariableSharedNameMap
 //
-// TODO: Update the comments for EnacapOutputInfoMap
-// 2. If the output of NGraphEncapsulate Op is an input to NGraphVariableType
-// Op, we store this NG-Tensor
-// so that it can be directly accessed in compute call of NGraphVariableType.
-// We add mapping of {graphId_encapnodename_OutputIndex : NG-Tensor} to the
-// EncapOutputTensorMap
+// 2. If the input to NGraphAssign Op is from NGraphEncapsulate Op
+// We add mapping of
+// {graphId_encapnodename_OutputIndex : tuple:{Variable_Shared_Name, CopyToTF,
+// IsTFJustLooking}}
+// to the EncapOutputInfoMap
+// We attach "_ngraph_remove" attribute to the NGraphAssign node
 //
 // 3. If the output of NGraphEncapsulate Op is not required by a TF Op or
 // NGraphEncapsulate Op,
