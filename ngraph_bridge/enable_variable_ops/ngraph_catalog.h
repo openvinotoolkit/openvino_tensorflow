@@ -50,19 +50,6 @@ class NGraphCatalog {
   // LOCK?
   static unordered_map<string, string> input_variable_sharedname_map_;
 
-  // Map keeps track of nodes whose input is a tensor computed by NGraph
-  // For e.g. if the value to be assigned was computed by NGraphEncapsulate Op
-  // Will be used by Assign/Optimizers
-  // Map of
-  // Key
-  //   when op index ==0
-  //      string : GraphId + _ + nodename
-  //   otherwise
-  //     string : GraphId + _ + nodename + : + output_index
-  // Value : shared_ptr<ng::runtime::Tensor>
-  static unordered_map<string, shared_ptr<ng::runtime::Tensor>>
-      encap_output_tensor_map_;
-
   // Map keeps track of output indexes of NGraphEncapsulate Op
   // that will be used by TF Nodes or other NGraphEncapsulate Op
   // Will be used by NGraphEncapsulateOP
@@ -91,6 +78,9 @@ class NGraphCatalog {
       encap_output_info_map_;
 
  public:
+  // Utility to create key to query the maps
+  static string CreateNodeKey(int graph_id, string node_name, int index);
+
   // Utility Functions for the data structures
   // Functions for EncapsulateOutputCopyIndexes Map
   static void AddToEncapOutputCopyIndexesMap(int graphid, string node_name,
@@ -113,17 +103,6 @@ class NGraphCatalog {
                                                  int input_index);
   static void DeleteFromInputVariableSharedNameMap(string key);
 
-  // Functions for EncapOutputTensorMap
-  static void AddToEncapOutputTensorMap(string key,
-                                        shared_ptr<ng::runtime::Tensor> ng_val);
-  static bool ExistsInEncapOutputTensorMap(string key);
-  static bool ExistsInEncapOutputTensorMap(int graphid, string node_name,
-                                           int input_index);
-
-  static shared_ptr<ng::runtime::Tensor> GetTensorFromEncapOutputTensorMap(
-      string key);
-  static void DeleteFromEncapOutputTensorMap(string key);
-
   // Functions for EncapOutputInfo Map
   static void AddToEncapOutputInfoMap(string key,
                                       tuple<string, bool, bool> val);
@@ -139,9 +118,6 @@ class NGraphCatalog {
   static void DeleteFromEncapOutputInfoMap(string key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();
-
-  // Utility to create key to query the maps
-  static string CreateNodeKey(int graph_id, string node_name, int index);
 };
 
 }  // ngraph_bridge

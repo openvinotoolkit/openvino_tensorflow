@@ -218,9 +218,9 @@ class NGraphEncapsulateOp : public OpKernel {
     // Remove entries related to outputs
     for (int i = 0; i < m_number_outputs; i++) {
       string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
-      if (NGraphCatalog::ExistsInEncapOutputTensorMap(key)) {
-        NGraphCatalog::DeleteFromEncapOutputTensorMap(key);
-        NGRAPH_VLOG(2) << "Deleting from output tensor map " << key;
+      if (NGraphCatalog::ExistsInEncapOutputInfoMap(key)) {
+        NGraphCatalog::DeleteFromEncapOutputInfoMap(key);
+        NGRAPH_VLOG(2) << "Deleting from output info map " << key;
       }
     }
 

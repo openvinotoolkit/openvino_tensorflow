@@ -29,12 +29,18 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 unordered_map<string, string> NGraphCatalog::input_variable_sharedname_map_;
-unordered_map<string, shared_ptr<ng::runtime::Tensor>>
-    NGraphCatalog::encap_output_tensor_map_;
 unordered_map<string, unordered_set<int>>
     NGraphCatalog::encap_output_copy_indexes_map_;
 unordered_map<string, tuple<string, bool, bool>>
     NGraphCatalog::encap_output_info_map_;
+
+// Function to create the Node Key
+string NGraphCatalog::CreateNodeKey(int graph_id, string node_name, int index) {
+  if (index == 0) {
+    return to_string(graph_id) + "_" + node_name;
+  }
+  return to_string(graph_id) + "_" + node_name + ":" + to_string(index);
+}
 
 // Functions for Encapsulate Output Copy Indexes Map
 void NGraphCatalog::AddToEncapOutputCopyIndexesMap(int graphid,
@@ -66,39 +72,6 @@ void NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(int graphid,
                                                         string node_name) {
   string key = graphid + "_" + node_name;
   NGraphCatalog::encap_output_copy_indexes_map_.erase(key);
-}
-
-string NGraphCatalog::CreateNodeKey(int graph_id, string node_name, int index) {
-  if (index == 0) {
-    return to_string(graph_id) + "_" + node_name;
-  }
-  return to_string(graph_id) + "_" + node_name + ":" + to_string(index);
-}
-
-// Functions for OutputTensorMap
-void NGraphCatalog::AddToEncapOutputTensorMap(
-    string key, shared_ptr<ng::runtime::Tensor> ng_val) {
-  NGraphCatalog::encap_output_tensor_map_[key] = ng_val;
-}
-
-bool NGraphCatalog::ExistsInEncapOutputTensorMap(string key) {
-  auto itr = NGraphCatalog::encap_output_tensor_map_.find(key);
-  return itr != NGraphCatalog::encap_output_tensor_map_.end();
-}
-
-bool NGraphCatalog::ExistsInEncapOutputTensorMap(int graphid, string node_name,
-                                                 int input_index) {
-  return NGraphCatalog::ExistsInEncapOutputTensorMap(
-      NGraphCatalog::CreateNodeKey(graphid, node_name, input_index));
-}
-
-shared_ptr<ng::runtime::Tensor>
-NGraphCatalog::GetTensorFromEncapOutputTensorMap(string key) {
-  return NGraphCatalog::encap_output_tensor_map_[key];
-}
-
-void NGraphCatalog::DeleteFromEncapOutputTensorMap(string key) {
-  NGraphCatalog::encap_output_tensor_map_.erase(key);
 }
 
 // Functions relating Input Variable Shared Name Map
