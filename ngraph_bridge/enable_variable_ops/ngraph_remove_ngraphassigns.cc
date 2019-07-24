@@ -45,11 +45,6 @@ Status RemoveNGraphAssigns(Graph* graph) {
             input_1->type_string());
       }
 
-      // Handle input and output edges
-      // Only adding the new edges, edges to and from the current node will be
-      // removed when
-      // node is removed
-      // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/graph/graph.h#L495
       // Handle input edges
       NGRAPH_VLOG(3) << "Handling input edges ";
       vector<const Edge*> remove_edges;

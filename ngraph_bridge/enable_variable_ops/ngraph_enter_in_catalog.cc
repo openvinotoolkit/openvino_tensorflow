@@ -98,9 +98,12 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         NGRAPH_VLOG(4) << "Value: " << get<0>(value) << " " << get<1>(value)
                        << " " << get<2>(value);
         NGraphCatalog::AddToEncapOutputInfoMap(key, value);
+        // This NGraphAssign will be removed subsequently
+        // so we dont need to fill the rest of the catalog
         continue;
       }
     }
+
     // Update the input variable map
     if (IsNGVariableType(node->type_string())) {
       string node_key = NGraphCatalog::CreateNodeKey(graph_id, node->name(), 0);
