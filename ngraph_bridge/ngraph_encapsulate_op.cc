@@ -832,7 +832,7 @@ class NGraphEncapsulateOp : public OpKernel {
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
         m_number_outputs = ng_outputs.size();
-        NGRAPH_VLOG(4) << "Settig number of inputs for " << def().name();
+        NGRAPH_VLOG(4) << "Setting number of inputs for " << def().name();
         m_number_inputs = ng_inputs.size();
       }
       for (size_t i = 0; i < output_tensor_count; ++i) {
