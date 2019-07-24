@@ -699,13 +699,13 @@ class NGraphEncapsulateOp : public OpKernel {
         current_ng_tensor = var->ng_tensor();
 
         // There might be scenarios where the input and output tensors are the
-        // same.
-        // The staleness determined for the input tensor should be the final
-        // staleness
-        // for the given tensor. The staleness of output tensor should not
-        // matter
-        // as this tensor is meant to be overwritten with the computed value
-        // So not setting staleness here .
+        // same.The staleness determined for the input tensor should be the
+        // final
+        // staleness for the given tensor. The staleness of output tensor should
+        // not
+        // matter as this tensor is meant to be overwritten with the computed
+        // value.
+        // So not setting staleness here.
         output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
         var->Unref();
         ng_outputs.push_back(current_ng_tensor);
@@ -833,7 +833,7 @@ class NGraphEncapsulateOp : public OpKernel {
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
-        m_number_outputs = output_caches.size();
+        m_number_outputs = ng_outputs.size();
         NGRAPH_VLOG(4) << "Settig number of inputs for " << def().name();
         m_number_inputs = ng_inputs.size();
       }
@@ -1063,4 +1063,4 @@ int NGraphEncapsulateOp::s_instance_count = 0;
 REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device(DEVICE_CPU),
                         ngraph_bridge::NGraphEncapsulateOp);
 
-}  // namespace tensorflow
+}  // namespace tensorflow             
