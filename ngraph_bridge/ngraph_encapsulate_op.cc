@@ -1063,4 +1063,4 @@ int NGraphEncapsulateOp::s_instance_count = 0;
 REGISTER_KERNEL_BUILDER(Name("NGraphEncapsulate").Device(DEVICE_CPU),
                         ngraph_bridge::NGraphEncapsulateOp);
 
-}  // namespace tensorflow             
+}  // namespace tensorflow
