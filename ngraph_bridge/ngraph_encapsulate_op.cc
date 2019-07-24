@@ -697,6 +697,16 @@ class NGraphEncapsulateOp : public OpKernel {
                                 ctx->resource_manager()->default_container(),
                                 ref_var_name, &var));
         current_ng_tensor = var->ng_tensor();
+
+        // There might be scenarios where the input and output tensors are the
+        // same.
+        // The staleness determined for the input tensor should be the final
+        // staleness
+        // for the given tensor. The staleness of output tensor should not
+        // matter
+        // as this tensor is meant to be overwritten with the computed value
+        // So not setting staleness here .
+        output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
         var->Unref();
         ng_outputs.push_back(current_ng_tensor);
         continue;
@@ -832,8 +842,7 @@ class NGraphEncapsulateOp : public OpKernel {
         string output_key =
             NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
         bool ref_exists = NGraphCatalog::ExistsInEncapOutputInfoMap(output_key);
-        std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
-        void* dst_ptr;
+
         if (ref_exists) {
           NGRAPH_VLOG(4) << "Syncing the output var tensor " << output_key;
 
@@ -858,12 +867,12 @@ class NGraphEncapsulateOp : public OpKernel {
               var->set_sync_ng_tensor(true);
             }
           }
-          dst_ng_tensor = var->ng_tensor();
           var->Unref();
-          dst_ptr = output_caches[i].first;
-        } else {
-          std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
         }
+
+        std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
+        void* dst_ptr;
+        std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
 
         if (m_op_backend_name != "CPU" &&
             NGraphCatalog::EncapOutputIndexNeedsCopy(m_graph_id, def().name(),
