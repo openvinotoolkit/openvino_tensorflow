@@ -55,7 +55,7 @@ namespace ngraph_bridge {
 // {graphId_encapnodename_OutputIndex : tuple:{Variable_Shared_Name, CopyToTF,
 // IsTFJustLooking}}
 // to the EncapOutputInfoMap
-// We attach "_ngraph_remove" attribute to the NGraphAssign node
+// We attach "_ngraph_remove" attribute to this NGraphAssign node
 //
 // 3. If the output of NGraphEncapsulate Op is not required by a TF Op or
 // NGraphEncapsulate Op,
