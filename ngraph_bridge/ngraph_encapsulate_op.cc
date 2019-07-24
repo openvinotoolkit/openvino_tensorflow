@@ -700,11 +700,9 @@ class NGraphEncapsulateOp : public OpKernel {
 
         // There might be scenarios where the input and output tensors are the
         // same.The staleness determined for the input tensor should be the
-        // final
-        // staleness for the given tensor. The staleness of output tensor should
-        // not
-        // matter as this tensor is meant to be overwritten with the computed
-        // value.
+        // final staleness for the given tensor. The staleness of output
+        // tensor should not matter as this tensor is meant to be
+        // overwritten with the computed value.
         // So not setting staleness here.
         output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
         var->Unref();
