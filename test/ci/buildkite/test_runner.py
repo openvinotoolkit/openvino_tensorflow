@@ -86,6 +86,7 @@ def main():
         raise Exception("Need to specify --artifacts_dir")
 
     # Set the backend if specified
+    # NOTE: This way of backend setting will not work with grappler
     if (arguments.backend):
         os.environ['NGRAPH_TF_BACKEND'] = arguments.backend
 

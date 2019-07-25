@@ -26,13 +26,11 @@
 #include "tensorflow/core/protobuf/config.pb.h"
 #include "tensorflow/core/public/session.h"
 
+#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_backend_config.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "test/test_utilities.h"
-
-#include "logging/tf_graph_writer.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -44,6 +42,7 @@ namespace ngraph_bridge {
 namespace testing {
 
 #define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
+#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
 
 // This test can only be run when nGraph-bridge is built with grappler
 // When running with other modes, grappler's ngraph-optimizer is not
@@ -73,8 +72,8 @@ TEST(GrapplerConfig, RConfig1) {
   ConfigProto config_proto;
   auto backend_name = AttrValue();
   backend_name.set_s("CPU");
-  auto device_config = AttrValue();
-  device_config.set_s("1");
+  auto device_id = AttrValue();
+  device_id.set_s("1");
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
@@ -83,7 +82,7 @@ TEST(GrapplerConfig, RConfig1) {
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
-  (*custom_config->mutable_parameter_map())["device_config"] = device_config;
+  (*custom_config->mutable_parameter_map())["device_id"] = device_id;
 
   // Run grappler
   tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);
@@ -107,18 +106,18 @@ TEST(GrapplerConfig, RConfig1) {
     ng_encap = node;
   }
   ASSERT_NE(ng_encap, nullptr);
-  string ng_backend, ng_device_config;
+  string ng_backend, ng_device_id;
 
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_backend", &ng_backend));
-  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ngraph_device_config",
-                        &ng_device_config));
+  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_device_id", &ng_device_id));
 
   ASSERT_EQ(ng_backend, "CPU");
-  ASSERT_EQ(ng_device_config, "1");
+  ASSERT_EQ(ng_device_id, "1");
 }
 
 // Though Backend is set via BackendManager
-// The backend set via RewriterConfig takes precedence
+// The backend set via RewriterConfig takes affect
+// since that is the only way of setting backend with grappler
 TEST(GrapplerConfig, RConfig2) {
   // Create Graph
   Scope root = Scope::NewRootScope();
@@ -137,7 +136,8 @@ TEST(GrapplerConfig, RConfig2) {
   }
 
   // set backend
-  // Though we set the backend, the rewriter-config takes precedence
+  // Though we set the backend, the rewriter-config takes affect
+  // since that is the only way of setting backend with grappler
   ASSERT_OK(BackendManager::SetBackendName("INTERPRETER"));
 
   // Create GraphDef and Grappler
@@ -146,8 +146,8 @@ TEST(GrapplerConfig, RConfig2) {
   ConfigProto config_proto;
   auto backend_name = AttrValue();
   backend_name.set_s("CPU");
-  auto device_config = AttrValue();
-  device_config.set_s("1");
+  auto device_id = AttrValue();
+  device_id.set_s("1");
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
@@ -156,7 +156,7 @@ TEST(GrapplerConfig, RConfig2) {
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
-  (*custom_config->mutable_parameter_map())["device_config"] = device_config;
+  (*custom_config->mutable_parameter_map())["device_id"] = device_id;
 
   // Run grappler
   tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);
@@ -180,21 +180,21 @@ TEST(GrapplerConfig, RConfig2) {
     ng_encap = node;
   }
   ASSERT_NE(ng_encap, nullptr);
-  string ng_backend, ng_device_config;
+  string ng_backend, ng_device_id;
 
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_backend", &ng_backend));
-  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ngraph_device_config",
-                        &ng_device_config));
+  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_device_id", &ng_device_id));
 
   ASSERT_EQ(ng_backend, "CPU");
-  ASSERT_EQ(ng_device_config, "1");
+  ASSERT_EQ(ng_device_id, "1");
 
   // Clean up
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
 }
 
 // Though Backend is set via NGRAPH_TF_BACKEND
-// The backend set via RewriterConfig takes precedence
+// The backend set via RewriterConfig takes affect
+// since that is the only way of setting backend with grappler
 TEST(GrapplerConfig, RConfig3) {
   // If NGRAPH_TF_BACKEND is set, unset it
   const unordered_map<string, string>& env_map = StoreEnv();
@@ -227,7 +227,7 @@ TEST(GrapplerConfig, RConfig3) {
   ASSERT_EQ("NOP", check_backend);
 
   // Though we set the backend and NGRAPH_TF_BACKEND
-  // the rewriter-config takes precedence
+  // the rewriter-config takes affect
 
   // Create GraphDef and Grappler
   grappler::GrapplerItem item;
@@ -235,8 +235,8 @@ TEST(GrapplerConfig, RConfig3) {
   ConfigProto config_proto;
   auto backend_name = AttrValue();
   backend_name.set_s("CPU");
-  auto device_config = AttrValue();
-  device_config.set_s("1");
+  auto device_id = AttrValue();
+  device_id.set_s("1");
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
@@ -245,7 +245,7 @@ TEST(GrapplerConfig, RConfig3) {
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
-  (*custom_config->mutable_parameter_map())["device_config"] = device_config;
+  (*custom_config->mutable_parameter_map())["device_id"] = device_id;
 
   // Run grappler
   tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);
@@ -269,14 +269,13 @@ TEST(GrapplerConfig, RConfig3) {
     ng_encap = node;
   }
   ASSERT_NE(ng_encap, nullptr);
-  string ng_backend, ng_device_config;
+  string ng_backend, ng_device_id;
 
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_backend", &ng_backend));
-  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ngraph_device_config",
-                        &ng_device_config));
+  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_device_id", &ng_device_id));
 
   ASSERT_EQ(ng_backend, "CPU");
-  ASSERT_EQ(ng_device_config, "1");
+  ASSERT_EQ(ng_device_id, "1");
 
   // Clean up
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
@@ -307,8 +306,10 @@ TEST(GrapplerConfig, RConfig4) {
   ConfigProto config_proto;
   auto backend_name = AttrValue();
   backend_name.set_s("INTERPRETER");
+  auto device_id = AttrValue();
+  device_id.set_s("5");
   auto test_echo = AttrValue();
-  test_echo.set_s("5");
+  test_echo.set_s("hi");
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
@@ -317,6 +318,7 @@ TEST(GrapplerConfig, RConfig4) {
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
+  (*custom_config->mutable_parameter_map())["device_id"] = device_id;
   (*custom_config->mutable_parameter_map())["test_echo"] = test_echo;
 
   // Run grappler
@@ -340,13 +342,58 @@ TEST(GrapplerConfig, RConfig4) {
     ng_encap = node;
   }
   ASSERT_NE(ng_encap, nullptr);
-  string ng_backend, ng_test_echo;
+  string ng_backend, ng_test_echo, ng_device_id;
 
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_backend", &ng_backend));
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ngraph_test_echo", &ng_test_echo));
+  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_device_id", &ng_device_id));
 
   ASSERT_EQ(ng_backend, "INTERPRETER");
-  ASSERT_EQ(ng_test_echo, "5");
+  ASSERT_EQ(ng_test_echo, "hi");
+  ASSERT_EQ(ng_device_id, "5");
+}
+
+// Test the failure case where the compulsory attribute device_id
+// is not provided using the rewriter config
+TEST(GrapplerConfig, RConfig5) {
+  // Create Graph
+  Scope root = Scope::NewRootScope();
+  auto A = ops::Const(root.WithOpName("A"), {3.f, 2.f});
+  auto B = ops::Const(root.WithOpName("B"), {3.f, 2.f});
+  auto Add = ops::Add(root.WithOpName("Add"), A, B);
+  auto C = ops::Const(root.WithOpName("C"), {3.f, 2.f});
+  auto Mul = ops::Mul(root.WithOpName("Mul"), Add, C);
+
+  Graph graph(OpRegistry::Global());
+  TF_CHECK_OK(root.ToGraph(&graph));
+
+  // set device specification
+  for (auto node : graph.op_nodes()) {
+    node->set_requested_device("CPU");
+  }
+
+  // Create GraphDef and Grappler
+  grappler::GrapplerItem item;
+  graph.ToGraphDef(&item.graph);
+  ConfigProto config_proto;
+  auto backend_name = AttrValue();
+  backend_name.set_s("CPU");
+  auto device_id = AttrValue();
+  device_id.set_s("5");
+  auto& rewriter_config =
+      *config_proto.mutable_graph_options()->mutable_rewrite_options();
+  rewriter_config.add_optimizers("ngraph-optimizer");
+  rewriter_config.set_min_graph_nodes(-1);
+  rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
+  auto* custom_config = rewriter_config.add_custom_optimizers();
+  custom_config->set_name("ngraph-optimizer");
+  (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
+
+  // Run grappler
+  tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);
+  GraphDef output;
+
+  ASSERT_NOT_OK(optimizer.Optimize(nullptr, item, &output));
 }
 
 }  // namespace testing

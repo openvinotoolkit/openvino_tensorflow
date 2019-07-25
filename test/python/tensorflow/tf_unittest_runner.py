@@ -43,7 +43,7 @@ def main():
     required.add_argument(
         '--tensorflow_path',
         help=
-        "Specify the path to Tensorflow source code. Eg:/localdisk/skantama/tf-ngraph/tensorflow \n",
+        "Specify the path to Tensorflow source code. Eg:ngraph-bridge/build_cmake/tensorflow \n",
         required=True)
     optional.add_argument(
         '--list_tests',

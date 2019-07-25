@@ -34,9 +34,6 @@ map<string, Backend*> BackendManager::ng_backend_map_;
 mutex BackendManager::ng_backend_map_mutex_;
 map<std::string, int> BackendManager::ref_count_each_backend_;
 
-unordered_map<string, std::unique_ptr<BackendConfig>>
-    BackendManager::ng_backendconfig_map_;
-
 Status BackendManager::SetBackendName(const string& backend_name) {
   std::lock_guard<std::mutex> lock(BackendManager::ng_backend_name_mutex_);
   if (backend_name.empty() || !IsSupportedBackend(backend_name)) {
@@ -171,53 +168,37 @@ Status BackendManager::GetCurrentlySetBackendName(string* backend_name) {
   return Status::OK();
 };
 
-// Backend Config functions
-// BackendConfig is expected to be a readonly class
-// hence only locked at creation and not during later access
-std::unique_ptr<BackendConfig>& BackendManager::GetBackendConfig(
-    const string& backend_name) {
-  std::lock_guard<std::mutex> lock(BackendManager::ng_backend_map_mutex_);
-  auto itr = BackendManager::ng_backendconfig_map_.find(backend_name);
-  if (itr == BackendManager::ng_backendconfig_map_.end()) {
-    if (backend_name == "NNPI") {
-      BackendManager::ng_backendconfig_map_.insert(std::make_pair(
-          backend_name,
-          std::unique_ptr<BackendNNPIConfig>(new BackendNNPIConfig())));
-    }
-    if (backend_name == "INTERPRETER") {
-      BackendManager::ng_backendconfig_map_.insert(std::make_pair(
-          backend_name, std::unique_ptr<BackendInterpreterConfig>(
-                            new BackendInterpreterConfig())));
-    } else {
-      BackendManager::ng_backendconfig_map_.insert(std::make_pair(
-          backend_name,
-          std::unique_ptr<BackendConfig>(new BackendConfig(backend_name))));
-    }
-  }
-  return BackendManager::ng_backendconfig_map_.at(backend_name);
-}
-
-vector<string> BackendManager::GetBackendAdditionalAttributes(
-    const string& backend_name) {
-  return BackendManager::GetBackendConfig(backend_name)
-      ->GetAdditionalAttributes();
-}
-
+// Split
 unordered_map<string, string> BackendManager::GetBackendAttributeValues(
     const string& backend_config) {
   unordered_map<string, string> backend_parameters;
 
-  string backend_name = backend_config.substr(0, backend_config.find(':'));
-  NGRAPH_VLOG(3) << "Got Backend Name " << backend_name;
+  int delimiter_index = backend_config.find(':');
+  if (delimiter_index < 0) {
+    // ":" not found
+    backend_parameters["ngraph_backend"] = backend_config;
+    backend_parameters["ngraph_device_id"] = "";
+  } else {
+    backend_parameters["ngraph_backend"] =
+        backend_config.substr(0, delimiter_index);
+    backend_parameters["ngraph_device_id"] =
+        backend_config.substr(delimiter_index + 1);
+  }
 
-  return BackendManager::GetBackendConfig(backend_name)->Split(backend_config);
+  NGRAPH_VLOG(3) << "Got Backend Name " << backend_parameters["ngraph_backend"];
+  NGRAPH_VLOG(3) << "Got Device Id  " << backend_parameters["ngraph_device_id"];
+
+  return backend_parameters;
 }
 
-string BackendManager::GetBackendCreationString(
-    const string& backend_name,
-    const unordered_map<string, string>& additional_attribute_map) {
-  return BackendManager::GetBackendConfig(backend_name)
-      ->Join(additional_attribute_map);
+// Join
+string BackendManager::GetBackendCreationString(const string& backend_name,
+                                                const string& device_id) {
+  if (device_id != "") {
+    return backend_name + ":" + device_id;
+  } else {
+    return backend_name;
+  }
 }
 
 }  // namespace ngraph_bridge

@@ -80,7 +80,9 @@ TEST(EncapsulateClusters, PopulateLibrary) {
   g.AddEdge(node3, Graph::kControlSlot, sink, Graph::kControlSlot);
 
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&g, 0, fdeflib_new, {}));
+  std::unordered_map<std::string, std::string> config_map;
+  config_map["ngraph_device_id"] = "";
+  ASSERT_OK(EncapsulateClusters(&g, 0, fdeflib_new, config_map));
 
   int num_encapsulates = 0;
   int num_tf_nodes = 0;

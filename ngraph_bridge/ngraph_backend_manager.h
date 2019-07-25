@@ -31,7 +31,6 @@
 #include "ngraph/runtime/backend_manager.hpp"
 
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_backend_config.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -116,15 +115,10 @@ class BackendManager {
   GetBackendAttributeValues(  // SplitBackendConfig
       const string& backend_config);
 
-  // Given a backend name and list of attributes
+  // Given a backend name and device id
   // joins them into a string to create ngraph backend
-  // For e.g.
-  // 1. GetBackendCreationString("GPU", {"_ngraph_device_config", "2"})
-  // returns "GPU:2"
-  // throws an error if the required attributes are not present in the map
-  static string GetBackendCreationString(
-      const string& backend_name,
-      const unordered_map<string, string>& additional_attribute_map);
+  static string GetBackendCreationString(const string& backend_name,
+                                         const string& device_id);
 
   ~BackendManager();
 
@@ -136,17 +130,8 @@ class BackendManager {
   static map<string, Backend*> ng_backend_map_;
   static mutex ng_backend_map_mutex_;
 
-  // map of cached backend config objects
-  static unordered_map<string, std::unique_ptr<BackendConfig>>
-      ng_backendconfig_map_;
-  static mutex ng_backendconfig_map_mutex_;
-
   // Map of backends and their reference counts
   static std::map<std::string, int> ref_count_each_backend_;
-
-  // utility functions
-  static std::unique_ptr<BackendConfig>& GetBackendConfig(
-      const string& backend_name);
 };
 
 }  // namespace ngraph_bridge

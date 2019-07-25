@@ -103,7 +103,7 @@ node {
     }
   }
   attr {
-    key: "_ngraph_device_config"
+    key: "ngraph_device_id"
     value {
       s: ""
     }
