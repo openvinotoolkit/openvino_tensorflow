@@ -221,13 +221,29 @@ class NGraphEncapsulateOp : public OpKernel {
     }
 
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+    // Remove Entries from Catalog
+    // Remove entries related to outputs
     for (int i = 0; i < m_number_outputs; i++) {
       string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
-      if (NGraphCatalog::ExistsInEncapOutputTensorMap(key)) {
-        NGraphCatalog::DeleteFromEncapOutputTensorMap(key);
-        NGRAPH_VLOG(2) << "Deleting from output tensor map " << key;
+      if (NGraphCatalog::ExistsInEncapOutputInfoMap(key)) {
+        NGraphCatalog::DeleteFromEncapOutputInfoMap(key);
+        NGRAPH_VLOG(2) << "Deleting from output info map " << key;
       }
     }
+
+    NGRAPH_VLOG(2) << "Deleting from Output Copy Index map " << name();
+    NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(m_graph_id, name());
+
+    // Remove entries related to inputs
+    for (int i = 0; i < m_number_inputs; i++) {
+      string key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
+      if (NGraphCatalog::ExistsInInputVariableSharedNameMap(key)) {
+        NGraphCatalog::DeleteFromInputVariableSharedNameMap(key);
+        NGRAPH_VLOG(2) << "Deleting from input variable shared name map "
+                       << key;
+      }
+    }
+
 #endif
 
     // Release the backend
@@ -674,13 +690,40 @@ class NGraphEncapsulateOp : public OpKernel {
           output_caches[i].second;
 
       void* current_dst_ptr = DMAHelper::base(output_tensor);
-      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-          GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor,
-                             true, ng_exec, op_backend, ng_element_type,
-                             ng_shape);
+      std::shared_ptr<ng::runtime::Tensor> current_ng_tensor = nullptr;
+// if the output tensor is going to be assigned to a variable
+// we ask nGraph to provide the output directly in the variable tensor
+#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+      if (NGraphCatalog::ExistsInEncapOutputInfoMap(m_graph_id, name(), i)) {
+        string output_key = NGraphCatalog::CreateNodeKey(m_graph_id, name(), i);
+        string ref_var_name =
+            NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(
+                output_key);
+        NGraphVar* var;
+        OP_REQUIRES_OK(ctx, ctx->resource_manager()->Lookup<NGraphVar>(
+                                ctx->resource_manager()->default_container(),
+                                ref_var_name, &var));
+        current_ng_tensor = var->ng_tensor();
+
+        // There might be scenarios where the input and output tensors are the
+        // same.The staleness determined for the input tensor should be the
+        // final staleness for the given tensor. The staleness of output
+        // tensor should not matter as this tensor is meant to be
+        // overwritten with the computed value.
+        // So not setting staleness here.
+        output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
+        var->Unref();
+        ng_outputs.push_back(current_ng_tensor);
+        continue;
+      }
+#endif
+      current_ng_tensor = GetCurrentNgTensor(
+          current_dst_ptr, last_dst_ptr, last_ng_tensor, true, ng_exec,
+          op_backend, ng_element_type, ng_shape);
 
       current_ng_tensor->set_stale(true);
       output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
+
       ng_outputs.push_back(current_ng_tensor);
     }
 
@@ -795,22 +838,50 @@ class NGraphEncapsulateOp : public OpKernel {
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
       if (m_number_outputs == -1) {
         NGRAPH_VLOG(4) << "Settig number of outputs for " << def().name();
-        m_number_outputs = output_caches.size();
+        m_number_outputs = ng_outputs.size();
+        NGRAPH_VLOG(4) << "Setting number of inputs for " << def().name();
+        m_number_inputs = ng_inputs.size();
       }
       for (size_t i = 0; i < output_tensor_count; ++i) {
-        string key = NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
-        bool ref_exists = NGraphCatalog::ExistsInEncapOutputTensorMap(key);
-        void* dst_ptr;
-        std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
-        std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
+        // Sync the Var Tensor if required
+        string output_key =
+            NGraphCatalog::CreateNodeKey(m_graph_id, def().name(), i);
+        bool ref_exists = NGraphCatalog::ExistsInEncapOutputInfoMap(output_key);
 
         if (ref_exists) {
-          NGRAPH_VLOG(4) << "Adding in output tensor map " << key;
-          NGraphCatalog::AddToEncapOutputTensorMap(key, dst_ng_tensor);
+          NGRAPH_VLOG(4) << "Syncing the output var tensor " << output_key;
+
+          // Get var
+          string ref_var_name =
+              NGraphCatalog::GetVariableSharedNameFromEncapOutputInfoMap(
+                  output_key);
+          NGraphVar* var;
+          OP_REQUIRES_OK(ctx, ctx->resource_manager()->Lookup<NGraphVar>(
+                                  ctx->resource_manager()->default_container(),
+                                  ref_var_name, &var));
+
+          if (NGraphCatalog::GetCopyToTFFromEncapOutputInfoMap(output_key)) {
+            if (var->copy_ng_to_tf()) {
+              number_of_copies++;
+              copy_log_str << " COPY_TF ";
+            }
+            if (!NGraphCatalog::GetIsTFJustLookingFromEncapOutputInfoMap(
+                    output_key)) {
+              // Some tf op might update the ng-tensor value so mark it stale
+              copy_log_str << " SET_SYNC ";
+              var->set_sync_ng_tensor(true);
+            }
+          }
+          var->Unref();
         }
 
+        std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
+        void* dst_ptr;
+        std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
+
         if (m_op_backend_name != "CPU" &&
-            NGraphCatalog::EncapOutputIndexNeedsCopy(def().name(), i)) {
+            NGraphCatalog::EncapOutputIndexNeedsCopy(m_graph_id, def().name(),
+                                                     i)) {
           number_of_copies++;
           copy_log_str << " COPY_OP_VAL[" << i << "]";
 
@@ -987,6 +1058,7 @@ class NGraphEncapsulateOp : public OpKernel {
   static int s_instance_count;
   int my_instance_id{0};
   int m_number_outputs = -1;
+  int m_number_inputs = -1;
 };
 
 int NGraphEncapsulateOp::s_instance_count = 0;

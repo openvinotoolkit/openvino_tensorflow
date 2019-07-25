@@ -23,6 +23,7 @@
 #include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
+#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
@@ -111,6 +112,8 @@ NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
 
 NGraphVariableOp::~NGraphVariableOp() {
   NGRAPH_VLOG(4) << "~NGraphVariableOp:: " << name() << endl;
+  string node_key = NGraphCatalog::CreateNodeKey(ng_graph_id_, name(), 0);
+  NGraphCatalog::DeleteFromInputVariableSharedNameMap(node_key);
   tracker_->Unref();
 }
 

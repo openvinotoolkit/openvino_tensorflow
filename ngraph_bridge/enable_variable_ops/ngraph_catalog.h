@@ -50,25 +50,12 @@ class NGraphCatalog {
   // LOCK?
   static unordered_map<string, string> input_variable_sharedname_map_;
 
-  // Map keeps track of nodes whose input is a tensor computed by NGraph
-  // For e.g. if the value to be assigned was computed by NGraphEncapsulate Op
-  // Will be used by Assign/Optimizers
-  // Map of
-  // Key
-  //   when op index ==0
-  //      string : GraphId + _ + nodename
-  //   otherwise
-  //     string : GraphId + _ + nodename + : + output_index
-  // Value : shared_ptr<ng::runtime::Tensor>
-  static unordered_map<string, shared_ptr<ng::runtime::Tensor>>
-      encap_output_tensor_map_;
-
   // Map keeps track of output indexes of NGraphEncapsulate Op
   // that will be used by TF Nodes or other NGraphEncapsulate Op
   // Will be used by NGraphEncapsulateOP
   // Map of
   // Key
-  //  string : nodename (nGraphEncapsulateOp name)
+  //  string : GraphId + _ + nodename
   // Value : Set of indices
   static unordered_map<string, unordered_set<int>>
       encap_output_copy_indexes_map_;
@@ -91,12 +78,19 @@ class NGraphCatalog {
       encap_output_info_map_;
 
  public:
+  // Utility to create key to query the maps
+  static string CreateNodeKey(int graph_id, string node_name, int index);
+
   // Utility Functions for the data structures
   // Functions for EncapsulateOutputCopyIndexes Map
-  static void AddToEncapOutputCopyIndexesMap(string key,
+  static void AddToEncapOutputCopyIndexesMap(int graphid, string node_name,
                                              unordered_set<int> val);
-  static bool EncapOutputIndexNeedsCopy(string key, int index);
-  static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(string key);
+  static bool EncapOutputIndexNeedsCopy(int graphid, string node_name,
+                                        int index);
+  static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(int graphid,
+                                                              string node_name);
+  static void DeleteFromEncapOutputCopyIndexesMap(int graphid,
+                                                  string node_name);
 
   // Functions for InputVariableSharedName Map
   static string GetInputVariableSharedName(int graphid, string node_name,
@@ -107,17 +101,7 @@ class NGraphCatalog {
   static bool ExistsInInputVariableSharedNameMap(string key);
   static bool ExistsInInputVariableSharedNameMap(int graphid, string node_name,
                                                  int input_index);
-
-  // Functions for EncapOutputTensorMap
-  static void AddToEncapOutputTensorMap(string key,
-                                        shared_ptr<ng::runtime::Tensor> ng_val);
-  static bool ExistsInEncapOutputTensorMap(string key);
-  static bool ExistsInEncapOutputTensorMap(int graphid, string node_name,
-                                           int input_index);
-
-  static shared_ptr<ng::runtime::Tensor> GetTensorFromEncapOutputTensorMap(
-      string key);
-  static void DeleteFromEncapOutputTensorMap(string key);
+  static void DeleteFromInputVariableSharedNameMap(string key);
 
   // Functions for EncapOutputInfo Map
   static void AddToEncapOutputInfoMap(string key,
@@ -134,9 +118,6 @@ class NGraphCatalog {
   static void DeleteFromEncapOutputInfoMap(string key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();
-
-  // Utility to create key to query the maps
-  static string CreateNodeKey(int graph_id, string node_name, int index);
 };
 
 }  // ngraph_bridge
