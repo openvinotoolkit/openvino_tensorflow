@@ -20,6 +20,7 @@
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/function.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
+#include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
@@ -159,25 +160,31 @@ class NGraphEncapsulateOp : public OpKernel {
     // Set the backend type for the op
     std::string backend_name;
     OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_backend", &backend_name));
+    std::string device_id;
+    OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_device_id", &device_id));
     // Get the optional attributes
-    std::vector<std::string> additional_attributes =
-        BackendManager::GetBackendAdditionalAttributes(backend_name);
     std::unordered_map<std::string, std::string> additional_attribute_map;
-    for (size_t i = 0; i < additional_attributes.size(); i++) {
-      std::string val;
-      // Append _ngraph_ to the additional attributes since they
-      // are added as optional attributes with a `ngraph` prefix
-      // to the encapsulate node
-      std::string attr = "_ngraph_" + additional_attributes[i];
-      // If an attribute does not exist, TF will return a non-ok status
-      OP_REQUIRES_OK(ctx, ctx->GetAttr<string>(attr, &val));
-      additional_attribute_map.insert({additional_attributes[i], val});
+    auto node_def = ctx->def();
+    auto additional_attributes = node_def.attr();
+    for (auto itx : additional_attributes) {
+      // Find the optional attributes to be sent to the backend.
+      // The optional attributes have '_ngraph_' appended to the start
+      // so we need to get rid of that and only send the remaining string
+      // since the backend will only look for that.
+      // '_ngraph_' is only appended for the bridge.
+      // For e.g. _ngraph_ice_cores --> ice_cores
+      if (itx.first.find("_ngraph_") != std::string::npos) {
+        NGRAPH_VLOG(4) << "Attribute: " << itx.first.substr(strlen("_ngraph_"))
+                       << " Value: " << itx.second.s();
+        additional_attribute_map.insert(
+            {itx.first.substr(strlen("_ngraph_")), itx.second.s()});
+      }
     }
 
-    // Concatenate the backend_name:backend_config
+    // Concatenate the backend_name:device_id
     try {
-      m_op_backend_name = BackendManager::GetBackendCreationString(
-          backend_name, additional_attribute_map);
+      m_op_backend_name =
+          BackendManager::GetBackendCreationString(backend_name, device_id);
     } catch (const std::exception& exp) {
       Status status = errors::Internal(
           "Caught exception while creating backend string ", exp.what(), "\n");

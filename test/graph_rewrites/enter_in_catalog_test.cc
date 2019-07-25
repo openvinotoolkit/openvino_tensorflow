@@ -76,7 +76,9 @@ TEST(CatalogTest, SmallGraph1) {
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
   ASSERT_OK(AssignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
+  std::unordered_map<std::string, std::string> config_map;
+  config_map["ngraph_device_id"] = "";
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   bool remove = false;
@@ -118,7 +120,9 @@ TEST(CatalogTest, SmallGraph2) {
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
   ASSERT_OK(AssignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
+  std::unordered_map<std::string, std::string> config_map;
+  config_map["ngraph_device_id"] = "";
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   bool remove = false;
@@ -187,7 +191,9 @@ TEST(CatalogTest, SmallGraph3) {
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
   ASSERT_OK(AssignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
+  std::unordered_map<std::string, std::string> config_map;
+  config_map["ngraph_device_id"] = "";
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   // check if the _ngraph_remove attribute is added/not-added as expected
@@ -251,7 +257,9 @@ TEST(CatalogTest, SmallGraph4) {
   ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
   ASSERT_OK(AssignClusters(&graph));
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, {}));
+  std::unordered_map<std::string, std::string> config_map;
+  config_map["ngraph_device_id"] = "";
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   string key;

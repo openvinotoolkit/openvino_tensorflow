@@ -43,22 +43,22 @@ namespace ngraph_bridge {
 Status NgraphOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
   const auto params = config->parameter_map();
-  if (params.count("ngraph_backend")) {
-    config_backend_name = params.at("ngraph_backend").s();
-    NGRAPH_VLOG(3) << config_backend_name;
-    std::vector<std::string> additional_attributes =
-        BackendManager::GetBackendAdditionalAttributes(config_backend_name);
-    for (size_t i = 0; i < additional_attributes.size(); i++) {
-      if (params.count(additional_attributes[i])) {
-        config_map["_ngraph_" + additional_attributes[i]] =
-            params.at(additional_attributes[i]).s();
-        NGRAPH_VLOG(3) << additional_attributes[i] << " "
-                       << config_map["_ngraph_" + additional_attributes[i]];
-      }
+  for (size_t i = 0; i < compulsory_attrs.size(); i++) {
+    if (params.count(compulsory_attrs[i]) == 0) {
+      NGRAPH_VLOG(0) << "NGTF_OPTIMIZER: Compulsory attribute "
+                     << compulsory_attrs[i] << " not found.";
+      return errors::Internal("NGTF_OPTIMIZER: Missing compulsory attributes.");
     }
-  } else {
-    NGRAPH_VLOG(5)
-        << "NGTF_OPTIMIZER: parameter_map does not have ngraph_backend";
+  }
+  config_backend_name = params.at("ngraph_backend").s();
+  NGRAPH_VLOG(3) << "Backend name from config: " << config_backend_name;
+  for (auto i : params) {
+    if (i.first != "ngraph_backend") {
+      config_map[(i.first == "device_id" ? "" : "_") + std::string("ngraph_") +
+                 i.first] = i.second.s();
+      NGRAPH_VLOG(3) << "Attribute: " << i.first
+                     << " Value: " << config_map["_ngraph_" + i.first];
+    }
   }
   return Status::OK();
 }
@@ -194,7 +194,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   }
 
   // Get backend + its configurations, to be attached to the nodes
-  // Precedence Order: RewriteConfig > Env Variable > BackendManager
+  // using RewriteConfig
   string backend_name;
   if (!config_backend_name.empty()) {
     if (!BackendManager::IsSupportedBackend(config_backend_name)) {
@@ -203,16 +203,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     }
     backend_name = config_backend_name;
     NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig " << backend_name;
-  } else {
-    TF_RETURN_IF_ERROR(
-        BackendManager::GetCurrentlySetBackendName(&backend_name));
-    // splits into {"ngraph_backend", "_ngraph_device_config"}
-    config_map = BackendManager::GetBackendAttributeValues(
-        backend_name);  // SplitBackendConfig
-    backend_name = config_map.at("ngraph_backend");
-    // config_map in EncapsulateClusters is not expected to contain
-    // ngraph_backend
-    config_map.erase("ngraph_backend");
   }
   NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
 

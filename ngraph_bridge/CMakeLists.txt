@@ -35,7 +35,6 @@ set(SRC
    ngraph_assign_clusters.cc
    ngraph_builder.cc
    ngraph_backend_manager.cc
-   ngraph_backend_config.cc
    ngraph_capture_variables.cc
    ngraph_cluster_manager.cc
    ngraph_deassign_clusters.cc

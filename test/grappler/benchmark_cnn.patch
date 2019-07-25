@@ -1,15 +1,17 @@
 diff --git a/scripts/tf_cnn_benchmarks/benchmark_cnn.py b/scripts/tf_cnn_benchmarks/benchmark_cnn.py
-index d3b81d5..fd7aad1 100644
+index d3b81d5..f3620da 100644
 --- a/scripts/tf_cnn_benchmarks/benchmark_cnn.py
 +++ b/scripts/tf_cnn_benchmarks/benchmark_cnn.py
-@@ -667,6 +667,10 @@ def create_config_proto(params):
+@@ -667,9 +667,9 @@ def create_config_proto(params):
      config.gpu_options.visible_device_list = str(hvd.local_rank())
    if params.variable_update == 'collective_all_reduce':
      config.gpu_options.experimental.num_dev_to_dev_copy_streams = 2
-+  rewrite_options = rewriter_config_pb2.RewriterConfig(
-+    meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
-+    custom_optimizers=[rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(name="ngraph-optimizer")])
-+  config.graph_options.rewrite_options.MergeFrom(rewrite_options)
+-
+-  return config
+-
++  import ngraph_bridge
++  config_new = ngraph_bridge.update_config(config)
++  return config_new
  
-   return config
- 
+ def get_mode_from_params(params):
+   """Returns the mode in which this script is running.

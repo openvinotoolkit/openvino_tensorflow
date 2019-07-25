@@ -74,6 +74,7 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
  private:
   std::string config_backend_name;
   std::unordered_map<std::string, std::string> config_map;
+  std::vector<string> compulsory_attrs = {"ngraph_backend", "device_id"};
 
   void DumpGraphs(Graph&, int, std::string, std::string);
 

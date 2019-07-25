@@ -199,17 +199,17 @@ def cxx11_abi_flag():
 def is_grappler_enabled():
     return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
 
-def update_config(config):
+def update_config(config, backend_name = "CPU", device_id = ""):
     #updating session config if grappler is enabled
     if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
-        rewrite_options = rewriter_config_pb2.RewriterConfig(
-            meta_optimizer_iterations=rewriter_config_pb2.RewriterConfig.ONE,
-            min_graph_nodes=-1,
-            custom_optimizers=[
-                rewriter_config_pb2.RewriterConfig.CustomGraphOptimizer(
-                    name="ngraph-optimizer")
-            ])
-        config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewrite_options)))
+        rewriter_options = rewriter_config_pb2.RewriterConfig()
+        rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
+        rewriter_options.min_graph_nodes=-1
+        ngraph_optimizer = rewriter_options.custom_optimizers.add()
+        ngraph_optimizer.name = "ngraph-optimizer"
+        ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
+        ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
+        config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
         # For reference, if we want to provide configuration support(backend parameters)
         # in a python script using the ngraph-optimizer
         # rewriter_options = rewriter_config_pb2.RewriterConfig()
@@ -217,8 +217,8 @@ def update_config(config):
         # rewriter_options.min_graph_nodes=-1
         # ngraph_optimizer = rewriter_options.custom_optimizers.add()
         # ngraph_optimizer.name = "ngraph-optimizer"
-        # ngraph_optimizer.parameter_map["ngraph_backend"].s = b'NNPI'
-        # ngraph_optimizer.parameter_map["device_id"].s = b'1'
+        # ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
+        # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
         # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
         # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
         # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
