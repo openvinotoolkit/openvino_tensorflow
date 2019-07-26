@@ -13,6 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
+"""nGraph TensorFlow bridge test for tf2ngraph script for precompilation
+
+"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,7 +33,7 @@ from tools.tf2ngraph import convert, get_gdef
 from common import NgraphTest
 
 
-class TestConversionScript(NgraphTest):
+class Testtf2ngraph(NgraphTest):
 
     # utility function to make sure input format and location match
     @staticmethod
@@ -61,7 +64,7 @@ class TestConversionScript(NgraphTest):
         # Only run this test when grappler is enabled
         if not ngraph_bridge.is_grappler_enabled():
             return
-        assert TestConversionScript.format_and_loc_match(inp_format, inp_loc)
+        assert Testtf2ngraph.format_and_loc_match(inp_format, inp_loc)
         out_loc = inp_loc.split('.')[0] + '_modified' + (
             '' if out_format == 'savedmodel' else ('.' + out_format))
         try:
@@ -70,15 +73,20 @@ class TestConversionScript(NgraphTest):
             pass
         conversion_successful = False
         try:
+            extra_params = {
+                'CPU': '{device_config:0}',
+                'INTERPRETER': '{test_echo:1}'
+            }[ng_device]
             if commandline:
                 # In CI this test is expected to be run out of artifacts/test/python
-                command_executor(
-                    'python ../../tools/tf2ngraph.py --input_' + inp_format +
-                    ' ' + inp_loc + ' --output_nodes out_node --output_' +
-                    out_format + ' ' + out_loc + ' --ngbackend ' + ng_device)
+                command_executor('python ../../tools/tf2ngraph.py --input_' +
+                                 inp_format + ' ' + inp_loc +
+                                 ' --output_nodes out_node --output_' +
+                                 out_format + ' ' + out_loc + ' --ng_backend ' +
+                                 ng_device + ' --extra_params ' + extra_params)
             else:
                 convert(inp_format, inp_loc, out_format, out_loc, ['out_node'],
-                        ng_device)
+                        ng_device, extra_params)
             conversion_successful = True
         finally:
             if not conversion_successful:
@@ -97,6 +105,7 @@ class TestConversionScript(NgraphTest):
             assert len([
                 0 for i in g.get_operations() if i.type == 'NGraphEncapsulate'
             ]) == 1
+            # TODO: check that the encapsulate op has correct backend and extra params attached to it
             x = self.get_tensor(g, "x:0", False)
             y = self.get_tensor(g, "y:0", False)
             out = self.get_tensor(g, "out_node:0", False)
