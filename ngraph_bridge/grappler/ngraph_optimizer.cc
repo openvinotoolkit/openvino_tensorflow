@@ -51,6 +51,7 @@ Status NgraphOptimizer::Init(
     }
   }
   config_backend_name = params.at("ngraph_backend").s();
+  config_device_id = params.at("device_id").s();
   NGRAPH_VLOG(3) << "Backend name from config: " << config_backend_name;
   for (auto i : params) {
     if (i.first != "ngraph_backend") {
@@ -195,19 +196,21 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // Get backend + its configurations, to be attached to the nodes
   // using RewriteConfig
-  string backend_name;
+  string backend_creation_string = BackendManager::GetBackendCreationString(
+      config_backend_name, config_device_id);
   if (!config_backend_name.empty()) {
-    if (!BackendManager::IsSupportedBackend(config_backend_name)) {
-      return errors::Internal("NGRAPH_TF_BACKEND: ", config_backend_name,
+    if (!BackendManager::IsSupportedBackend(backend_creation_string)) {
+      return errors::Internal("NGRAPH_TF_BACKEND: ", backend_creation_string,
                               " is not supported");
     }
-    backend_name = config_backend_name;
-    NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig " << backend_name;
+    NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig "
+                   << backend_creation_string;
   }
-  NGRAPH_VLOG(0) << "NGraph using backend: " << backend_name;
+  NGRAPH_VLOG(0) << "NGraph using backend: " << backend_creation_string;
 
   // 1. Mark for clustering then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes, backend_name));
+  TF_RETURN_IF_ERROR(
+      MarkForClustering(&graph, skip_these_nodes, backend_creation_string));
   if (DumpMarkedGraphs()) {
     DumpGraphs(graph, idx, "marked", "Graph Marked for Clustering");
   }

@@ -657,19 +657,25 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
                                                              bool* result) {
     // TODO: replace current_backend ->
     // BackendManager::GetCurrentlySetBackendName()
-    *result = (current_backend == "NNPI");
+    auto config_map =
+        BackendManager::GetBackendAttributeValues(current_backend);
+    *result = (config_map.at("ngraph_backend") == "NNPI");
     return Status::OK();
   };
 
   confirmation_function_map["NonMaxSuppressionV4"] = [&current_backend](
       Node* n, bool* result) {
-    *result = (current_backend == "NNPI");
+    auto config_map =
+        BackendManager::GetBackendAttributeValues(current_backend);
+    *result = (config_map.at("ngraph_backend") == "NNPI");
     return Status::OK();
   };
 
   confirmation_function_map["CombinedNonMaxSuppression"] = [&current_backend](
       Node* n, bool* result) {
-    *result = (current_backend == "NNPI");
+    auto config_map =
+        BackendManager::GetBackendAttributeValues(current_backend);
+    *result = (config_map.at("ngraph_backend") == "NNPI");
     return Status::OK();
   };
 

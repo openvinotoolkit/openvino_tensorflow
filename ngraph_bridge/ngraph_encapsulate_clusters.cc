@@ -329,14 +329,17 @@ Status EncapsulateClusters(
     }
 
     Node* n;
-    NodeBuilder nb = NodeBuilder(ss.str(), "NGraphEncapsulate")
-                         .Attr("ngraph_cluster", cluster_idx)
-                         .Attr("ngraph_backend", cluster_backend)
-                         .Attr("Targuments", input_types)
-                         .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-                         .Attr("ngraph_graph_id", graph_id)
-                         .Device(device_name_map[cluster_idx])
-                         .Input(inputs);
+    NodeBuilder nb =
+        NodeBuilder(ss.str(), "NGraphEncapsulate")
+            .Attr("ngraph_cluster", cluster_idx)
+            .Attr("ngraph_backend",
+                  BackendManager::GetBackendAttributeValues(cluster_backend)
+                      .at("ngraph_backend"))
+            .Attr("Targuments", input_types)
+            .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+            .Attr("ngraph_graph_id", graph_id)
+            .Device(device_name_map[cluster_idx])
+            .Input(inputs);
     if (!device_config.empty()) {
       NGRAPH_VLOG(3) << "Device config is not empty";
       for (auto const& i : device_config) {

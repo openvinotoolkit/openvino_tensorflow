@@ -1090,7 +1090,8 @@ static Status TranslateCombinedNonMaxSuppressionOp(
   std::string backend_name;
   TF_RETURN_IF_ERROR(ngraph_bridge::GetNodeBackend(op, &backend_name));
 
-  if (backend_name != "NNPI") {
+  auto config_map = BackendManager::GetBackendAttributeValues(backend_name);
+  if (config_map.at("ngraph_backend") != "NNPI") {
     return errors::Internal("In translating CombinedNonMaxSuppression op ",
                             op->name(), " found requested backend ",
                             backend_name, " which is unsupported");
@@ -2230,7 +2231,10 @@ static Status TranslateGatherV2Op(
   std::string backend_name;
   TF_RETURN_IF_ERROR(ngraph_bridge::GetNodeBackend(op, &backend_name));
 
-  if (backend_name != "NNPI") {
+  // split and check the first part only, since the node attribute contains
+  // the full backend creation string
+  auto config_map = BackendManager::GetBackendAttributeValues(backend_name);
+  if (config_map.at("ngraph_backend") != "NNPI") {
     return errors::Internal("In translating GatherV2 op ", op->name(),
                             " found requested backend ", backend_name,
                             " which is unsupported");
@@ -2763,7 +2767,8 @@ static Status TranslateNonMaxSuppressionV4Op(
   std::string backend_name;
   TF_RETURN_IF_ERROR(ngraph_bridge::GetNodeBackend(op, &backend_name));
 
-  if (backend_name != "NNPI") {
+  auto config_map = BackendManager::GetBackendAttributeValues(backend_name);
+  if (config_map.at("ngraph_backend") != "NNPI") {
     return errors::Internal("In translating NonMaxSuppressionV4 op ",
                             op->name(), " found requested backend ",
                             backend_name, " which is unsupported");
