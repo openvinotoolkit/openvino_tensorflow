@@ -41,6 +41,7 @@
         /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.14.0-cp36-cp36m-linux_x86_64.whl
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_bazel
+      bazel clean --expunge
     
     label: ":bazel: Bazel Build"
     timeout_in_minutes: 30
