@@ -134,9 +134,10 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   OP_REQUIRES_OK(ctx,
                  IsNgraphTFLogTensorCopiesEnabled(ng_graph_id_, log_copies));
   std::stringstream copy_log_str;
-  copy_log_str << "KERNEL[" << type_string() << "]: " << name() << " ,Copy_TF "
-               << PrintBool(copy_to_tf_) << " ,is_tf_just_looking "
-               << PrintBool(is_tf_just_looking_) << "\n";
+  copy_log_str << "KERNEL[" << type_string() << "]: " << name()
+               << " ,copy-to-tf " << PrintBool(copy_to_tf_)
+               << " ,is_tf_just_looking " << PrintBool(is_tf_just_looking_)
+               << "\n";
   int number_of_copies = 0;
 
   mutex_lock l(init_mu_);
@@ -202,7 +203,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     if (!just_synced) {
       if (var->copy_ng_to_tf()) {
         number_of_copies++;
-        copy_log_str << " COPY_TF ";
+        copy_log_str << " COPY_TO_TF ";
       }
       NGRAPH_VLOG(4) << "Copying to TF Tensor";
     }

@@ -316,24 +316,24 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Clusters Encapsulated");
     }
 
-    // Rewrite for tracking then, if requested, dump the graphs.
+    // 5. Rewrite for tracking then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(RewriteForTracking(options.graph->get(), idx));
     if (DumpTrackedGraphs()) {
       DumpGraphs(options, idx, "tracked",
                  "Graph with Variables Rewritten for Tracking");
     }
 
-    // Enter in catalog then.
+    // 6. Enter in catalog then.
     TF_RETURN_IF_ERROR(EnterInCatalog(options.graph->get(), idx));
     if (DumpCatalogedGraphs()) {
       DumpGraphs(options, idx, "cataloged",
                  "Graph with Variables Inputs Entered in Catalog");
     }
 
-    // Remove Certain NGraphAssigns then.
+    // 7. Remove Certain NGraphAssigns then.
     TF_RETURN_IF_ERROR(RemoveNGraphAssigns(options.graph->get()));
     if (DumpRemoveNGraphAssignsGraphs()) {
-      DumpGraphs(options, idx, "ngraphssigns_optimized",
+      DumpGraphs(options, idx, "ngraphassigns_optimized",
                  "Graph with NGraphAssigns Optimized/Removed");
     }
 

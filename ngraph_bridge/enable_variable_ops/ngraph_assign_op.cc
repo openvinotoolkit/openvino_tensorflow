@@ -101,7 +101,7 @@ class NGraphAssignOp : public OpKernel {
                    IsNgraphTFLogTensorCopiesEnabled(ng_graph_id_, log_copies));
     std::stringstream copy_log_str;
     copy_log_str << "KERNEL[" << type_string() << "]: " << name()
-                 << " ,Copy_TF " << PrintBool(copy_to_tf_)
+                 << " ,copy-to-tf " << PrintBool(copy_to_tf_)
                  << ", is_tf_just_looking " << PrintBool(is_tf_just_looking_)
                  << ", just_looking " << PrintBool(just_looking_) << "\n";
     int number_of_copies = 0;
@@ -131,7 +131,9 @@ class NGraphAssignOp : public OpKernel {
 
     // Get input[1]
 
-    // input[1] cannot be from NGraphEncap Op
+    // The NGraphAssign Ops with input[1] from NGraphEncap Op are removed
+    // in the RemoveNGraphAssigns phase in rewrite pass
+    // Assert input[1] is not from NGraphEncap Op
     // No way to get input node and check its type
     string input_1_name = def().input(1);
     OP_REQUIRES(
@@ -151,7 +153,7 @@ class NGraphAssignOp : public OpKernel {
     if (copy_to_tf_) {
       if (var->copy_ng_to_tf()) {
         number_of_copies++;
-        copy_log_str << " COPY_TF ";
+        copy_log_str << " COPY_TO_TF ";
       }
 
       if (!is_tf_just_looking_) {

@@ -867,7 +867,7 @@ class NGraphEncapsulateOp : public OpKernel {
           if (NGraphCatalog::GetCopyToTFFromEncapOutputInfoMap(output_key)) {
             if (var->copy_ng_to_tf()) {
               number_of_copies++;
-              copy_log_str << " COPY_TF ";
+              copy_log_str << " COPY_TO_TF ";
             }
             if (!NGraphCatalog::GetIsTFJustLookingFromEncapOutputInfoMap(
                     output_key)) {
