@@ -159,7 +159,8 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
         "python", "-m", "pytest",
-        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
+        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir),
+        "--ignore=" + artifacts_dir + "/test/python/bfloat16"
     ])
 
     os.chdir(root_pwd)
