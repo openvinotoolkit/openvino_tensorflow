@@ -334,7 +334,7 @@ reduction_ops_test.MeanReductionTest.testEmptyGradients
 reduction_ops_test.MeanReductionTest.testFloat32
 reduction_ops_test.MeanReductionTest.testFloat64
 reduction_ops_test.MeanReductionTest.testGradient
-reduction_ops_test.MeanReductionTest.testInfinity
+#reduction_ops_test.MeanReductionTest.testInfinity
 reduction_ops_test.MeanReductionTest.testInt32
 
 reduction_ops_test.MinReductionTest.testAxesType
@@ -358,7 +358,7 @@ reduction_ops_test.SumReductionTest.testFloat32
 reduction_ops_test.SumReductionTest.testFloat64
 reduction_ops_test.SumReductionTest.testGradient
 #reduction_ops_test.SumReductionTest.testHighRank
-reduction_ops_test.SumReductionTest.testInfinity
+#reduction_ops_test.SumReductionTest.testInfinity
 reduction_ops_test.SumReductionTest.testInt32
 reduction_ops_test.SumReductionTest.testPartialShapes
 
