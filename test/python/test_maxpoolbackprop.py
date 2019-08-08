@@ -31,73 +31,69 @@ from common import NgraphTest
 NHWC_TO_NCHW = (0, 3, 1, 2)
 NCHW_TO_NHWC = (0, 2, 3, 1)
 
+np.random.seed(5)
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
+
 class TestMaxPoolBackpropInput(NgraphTest):
+
+    # NHWC
     input_nhwc = np.random.rand(128, 224, 224, 3)
-    input_nchw = np.transpose(input_nhwc, NHWC_TO_NCHW)
-    output_nhwc = np.random.rand(128, 224, 224, 3)
-    output_nchw = np.transpose(output_nhwc, NHWC_TO_NCHW)
     strides_nhwc = ksize_nhwc = [1, 2, 3, 1]
-    strides_nchw = ksize_nchw = [1, 1, 2, 3]
+    output_nhwc = {
+        "VALID": np.random.rand(128, 112, 74, 3),
+        "SAME": np.random.rand(128, 112, 75, 3)
+    }
     grad_nhwc = {
         "VALID": np.random.rand(128, 112, 74, 3),
         "SAME": np.random.rand(128, 112, 75, 3)
     }
+
+    # NCHW
+    input_nchw = np.transpose(input_nhwc, NHWC_TO_NCHW)
+    strides_nchw = ksize_nchw = [1, 1, 2, 3]
+    output_nchw = {
+        "VALID": np.random.rand(128, 3, 112, 74),
+        "SAME": np.random.rand(128, 3, 112, 75)
+    }
     grad_nchw = {
-        "VALID": np.transpose(grad_nhwc["VALID"], NHWC_TO_NCHW),
-        "SAME": np.transpose(grad_nhwc["SAME"], NHWC_TO_NCHW)
+        "VALID": np.random.rand(128, 3, 112, 74),
+        "SAME": np.random.rand(128, 3, 112, 75)
     }
 
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
     def test_nhwc(self, padding):
         strides = self.strides_nhwc
         ksize = self.ksize_nhwc
-        output = self.output_nhwc
-        np_nhwc = self.grad_nhwc[padding]
+        output = self.output_nhwc[padding]
+        g_nhwc = self.grad_nhwc[padding]
         if padding == "VALID":
             grad = tf.placeholder(tf.float32, shape=(128, 112, 74, 3))
         elif padding == "SAME":
             grad = tf.placeholder(tf.float32, shape=(128, 112, 75, 3))
-
-        with self.device:
-            a = max_pool_grad(
-                self.input_nhwc,
-                output,
-                grad,
-                ksize,
-                strides,
-                padding=padding,
-                data_format="NHWC")
-            with self.session as sess:
-                result = sess.run(a, feed_dict={grad: np_nhwc})
-
-        with tf.device('/cpu:0'):
-            b = max_pool_grad(
-                self.input_nhwc,
-                output,
-                grad,
-                ksize,
-                strides,
-                padding=padding,
-                data_format="NHWC")
-            with self.session as sess:
-                expected = sess.run(b, feed_dict={grad: np_nhwc})
-
-        np.testing.assert_allclose(result, expected, rtol=5e-7)
+        out = max_pool_grad(
+            self.input_nhwc,
+            output,
+            grad,
+            ksize,
+            strides,
+            padding=padding,
+            data_format="NHWC")
+        sess_fn = lambda sess: sess.run(out, feed_dict={grad: g_nhwc})
+        assert (np.allclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn), rtol=5e-7))
 
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
     def test_nchw(self, padding):
         strides = self.strides_nchw
         ksize = self.ksize_nchw
-        output = self.output_nchw
-        np_nchw = self.grad_nchw[padding]
+        output = self.output_nchw[padding]
+        g_nchw = self.grad_nchw[padding]
         if padding == "VALID":
             grad = tf.placeholder(tf.float32, shape=(128, 3, 112, 74))
         elif padding == "SAME":
             grad = tf.placeholder(tf.float32, shape=(128, 3, 112, 75))
 
-        with self.device:
+        def test_on_ng(sess):
             a = max_pool_grad(
                 self.input_nchw,
                 output,
@@ -106,27 +102,27 @@ class TestMaxPoolBackpropInput(NgraphTest):
                 strides,
                 padding=padding,
                 data_format="NCHW")
-            with self.session as sess:
-                result = sess.run(a, feed_dict={grad: np_nchw})
+            return sess.run(a, feed_dict={grad: g_nchw})
+
         # To validate on the CPU side we will need to run in NHWC, because the CPU
-        # implementation of avgpool backprop does not support NCHW. We will
+        # implementation of maxpool backprop does not support NCHW. We will
         # transpose on the way in and on the way out
-        with tf.device('/cpu:0'):
-            grad = tf.transpose(grad, NCHW_TO_NHWC)
-            np_nhwc = self.grad_nhwc[padding]
-            output = self.output_nhwc
+        def test_on_tf(sess):
+            grad_t = tf.transpose(grad, NCHW_TO_NHWC)
             ksize = self.ksize_nhwc
             strides = self.strides_nhwc
+            input_t = np.transpose(self.input_nchw, NCHW_TO_NHWC)
+            output_t = np.transpose(output, NCHW_TO_NHWC)
             b = max_pool_grad(
-                self.input_nhwc,
-                output,
-                grad,
+                input_t,
+                output_t,
+                grad_t,
                 ksize,
                 strides,
                 padding=padding,
                 data_format="NHWC")
             b = tf.transpose(b, NHWC_TO_NCHW)
-            with self.session as sess:
-                expected = sess.run(b, feed_dict={grad: np_nhwc})
+            return sess.run(b, feed_dict={grad: g_nchw})
 
-        np.testing.assert_allclose(result, expected, rtol=5e-7)
+        assert np.allclose(
+            self.with_ngraph(test_on_ng), self.without_ngraph(test_on_tf))
