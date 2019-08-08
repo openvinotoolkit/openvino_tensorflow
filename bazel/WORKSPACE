@@ -25,11 +25,11 @@ tf_configure(
 http_archive(
     name = "ngraph",
     build_file = "//:bazel/ngraph.BUILD",
-    sha256 = "6ddba183d354cd70d714423dd6ebaedda0a14021b471a77f2c28d43ab67be46b",
-    strip_prefix = "ngraph-0.25.0-rc.1",
+    sha256 = "54bffb90bb6ed8081d549958368b4eb95b8544ff59bc38a0783e6e8b3e623d48",
+    strip_prefix = "ngraph-0.25.0-rc.2",
     urls = [
-        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.25.0-rc.1.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.25.0-rc.1.tar.gz"
+        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.25.0-rc.2.tar.gz",
+        "https://github.com/NervanaSystems/ngraph/archive/v0.25.0-rc.2.tar.gz"
     ],
 )
 
