@@ -1575,6 +1575,30 @@ TEST(NNOps, SoftmaxZeroDimTest2) {
   opexecuter.RunTest();
 }
 
+// Test Op :"Softplus"
+TEST(NNOps, Softplus) {
+  std::vector<std::vector<int64>> input_sizes = {
+      {3}, {3, 2}, {5, 6}, {3, 4, 5}, {2, 3, 4, 5}};
+
+  vector<int> static_input_indexes = {};
+
+  for (auto const& input_size : input_sizes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(input_size));
+    AssignInputValuesRandom<float>(input_data, -2, 2);
+
+    auto R = ops::Softplus(root, input_data);
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    std::vector<Output> sess_run_fetchoutputs = {R};
+
+    OpExecuter opexecuter(root, "Softplus", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+}
+
 // Computes softmax cross entropy cost and gradients to backpropagate.
 TEST(NNOps, SparseSoftmaxCrossEntropyWithLogits) {
   Scope root = Scope::NewRootScope();
