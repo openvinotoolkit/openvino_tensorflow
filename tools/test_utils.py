@@ -126,7 +126,7 @@ def run_ngtf_pytests(venv_dir, build_dir):
 
     cmd = 'python -m pytest ' + (
         '--junitxml=%s/xunit_pytest.xml' %
-        build_dir) + + "--ignore=" + build_dir + "/test/python/bfloat16"
+        build_dir) + " --ignore=" + build_dir + "/test/python/bfloat16"
     env = os.environ.copy()
     new_paths = venv_dir + '/bin/python3:' + os.path.abspath(
         build_dir) + ":" + os.path.abspath(mnist_dir)
