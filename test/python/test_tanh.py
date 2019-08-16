@@ -28,7 +28,6 @@ import tensorflow as tf
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestTanhOp(NgraphTest):
 
     @pytest.mark.parametrize(("test_input", "expected"),
@@ -37,12 +36,11 @@ class TestTanhOp(NgraphTest):
     def test_tanh_1d(self, test_input, expected):
         val = tf.placeholder(tf.float32, shape=(1,))
         atol = 1e-5
-        with self.device:
-            out = tf.tanh(val)
+        out = tf.tanh(val)
 
-            with self.session as sess:
-                result = sess.run((out,), feed_dict={val: (test_input,)})
-                assert np.amax(np.absolute(result[0] - expected)) < atol
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})
+        result = self.with_ngraph(sess_fn)
+        assert np.amax(np.absolute(result[0] - expected)) < atol
 
     def test_tanh_2d(self):
         test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
@@ -50,9 +48,8 @@ class TestTanhOp(NgraphTest):
 
         val = tf.placeholder(tf.float32, shape=(2, 3))
         atol = 1e-5
-        with self.device:
-            out = tf.tanh(val)
 
-            with self.session as sess:
-                (result,) = sess.run((out,), feed_dict={val: test_input})
-                assert np.amax(np.absolute(result == expected)) < atol
+        out = tf.tanh(val)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})
+        (result,) = self.with_ngraph(sess_fn)
+        assert np.amax(np.absolute(result == expected)) < atol
