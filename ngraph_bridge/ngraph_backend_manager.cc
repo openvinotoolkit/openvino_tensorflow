@@ -30,7 +30,7 @@ BackendManager::~BackendManager() {
 // initialize backend manager
 string BackendManager::ng_backend_name_ = "CPU";
 mutex BackendManager::ng_backend_name_mutex_;
-map<string, Backend*> BackendManager::ng_backend_map_;
+map<string, std::unique_ptr<Backend>> BackendManager::ng_backend_map_;
 mutex BackendManager::ng_backend_map_mutex_;
 map<std::string, int> BackendManager::ref_count_each_backend_;
 
@@ -49,7 +49,6 @@ Status BackendManager::CreateBackend(const string& backend_name) {
   auto itr = BackendManager::ng_backend_map_.find(backend_name);
   // if backend does not exist create it
   if (itr == BackendManager::ng_backend_map_.end()) {
-    Backend* bend = new Backend;
     std::shared_ptr<ng::runtime::Backend> bend_ptr;
     try {
       bend_ptr = ng::runtime::Backend::create(backend_name);
@@ -62,8 +61,9 @@ Status BackendManager::CreateBackend(const string& backend_name) {
       return errors::Internal("Could not create backend of type ",
                               backend_name);
     }
+    std::unique_ptr<Backend> bend = std::unique_ptr<Backend>(new Backend);
     bend->backend_ptr = std::move(bend_ptr);
-    BackendManager::ng_backend_map_[backend_name] = bend;
+    BackendManager::ng_backend_map_[backend_name] = std::move(bend);
     BackendManager::ref_count_each_backend_[backend_name] = 0;
   }
   BackendManager::ref_count_each_backend_[backend_name]++;
