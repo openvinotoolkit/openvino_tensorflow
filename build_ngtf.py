@@ -145,6 +145,11 @@ def main():
         action="store",
         default='')
 
+    parser.add_argument(
+        '--use_ngraph_staticlibs',
+        help="Builds and links ngraph statically\n",
+        action="store_true")
+
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -353,13 +358,17 @@ def main():
     # Now build nGraph
     ngraph_cmake_flags = [
         "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-        "-DNGRAPH_DEX_ONLY=TRUE",
-        "-DNGRAPH_DEBUG_ENABLE=NO",
-        "-DNGRAPH_UNIT_TEST_ENABLE=NO",
+        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DNGRAPH_DEX_ONLY=TRUE",
+        "-DNGRAPH_DEBUG_ENABLE=NO", "-DNGRAPH_UNIT_TEST_ENABLE=NO",
         "-DNGRAPH_TARGET_ARCH=" + target_arch,
-        "-DNGRAPH_TUNE_ARCH=" + target_arch,
+        "-DNGRAPH_TUNE_ARCH=" + target_arch
     ]
+
+    if arguments.use_ngraph_staticlibs:
+        ngraph_cmake_flags.extend(["-DNGRAPH_STATIC_LIB_ENABLE=TRUE"])
+        ngraph_cmake_flags.extend(["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
+        ngraph_cmake_flags.extend(
+            ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
 
     if arguments.debug_build:
         ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
@@ -401,6 +410,8 @@ def main():
         "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
     ]
 
+    if (arguments.use_ngraph_staticlibs):
+        ngraph_tf_cmake_flags.extend(["-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE=TRUE"])
     if (arguments.debug_build):
         ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 

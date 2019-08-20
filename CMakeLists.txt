@@ -127,10 +127,20 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_TF_CXX11_ABI}")
 endif()
 
-if(APPLE)
-    set(LIBNGRAPH_SO "libngraph.dylib")
+if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+    set(LIBNGRAPH "libngraph.a")
+    set(LIBCPU_BACKEND_A "libcpu_backend.a")
+    set(LIBINTERPRETER_BACKEND_A "libinterpreter_backend.a")
 else()
-    set(LIBNGRAPH_SO "libngraph.so")
+    set(LIBNGRAPH "libngraph.so")
+endif()
+
+# TODO[Sindhu]
+# Should make static library changes for APPLE 
+# after Ngraph makes required changes for Mac build
+
+if(APPLE)
+    set(LIBNGRAPH "libngraph.dylib")
 endif(APPLE)
 
 # Build options
@@ -139,7 +149,7 @@ option(NGRAPH_ARTIFACTS_DIR "Where would nGraph be installed after build" FALSE)
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
-
+option(NGRAPH_BRIDGE_STATIC_LIB_ENABLE "Enable build nGraph bridge static library" FALSE)
 
 find_package(PlaidML CONFIG)
 option(NGRAPH_PLAIDML_ENABLE "Build PlaidML backend" ${PLAIDML_FOUND})
@@ -263,17 +273,74 @@ set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
 
 
 if(OS_VERSION STREQUAL "\"centos\"")
-	set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/lib64/${LIBNGRAPH_SO})
+    set(LIB "lib64")
 else()
-	set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/lib/${LIBNGRAPH_SO})
+    set(LIB "lib")
 endif()
 
-add_library(ngraph_lib SHARED IMPORTED)
-set_target_properties(
-    ngraph_lib
-    PROPERTIES IMPORTED_LOCATION
-    ${NGRAPH_IMPORTED_LOCATION}
-)
+set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
+
+if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+    set(CPU_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBCPU_BACKEND_A})
+    set(INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBINTERPRETER_BACKEND_A})
+    set(LIB_MKLDNN_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libmkldnn.so)
+    set(LIB_MKLML_INTEL_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libmklml_intel.so)
+    set(LIB_IOMP5_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libiomp5.so)
+
+    add_library(ngraph_lib STATIC IMPORTED)
+    set_target_properties(
+        ngraph_lib
+        PROPERTIES IMPORTED_LOCATION
+        ${NGRAPH_IMPORTED_LOCATION}
+    )   
+
+    add_library(lib_cpu_backend_static STATIC IMPORTED)
+    set_target_properties(
+        lib_cpu_backend_static
+        PROPERTIES IMPORTED_LOCATION
+        ${CPU_BACKEND_IMPORTED_LOCATION_STATIC}
+    )
+
+    add_library(lib_interpreter_backend_static STATIC IMPORTED)
+    set_target_properties(
+        lib_interpreter_backend_static
+        PROPERTIES IMPORTED_LOCATION
+        ${INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC}
+    )
+
+    add_library(lib_mkldnn SHARED IMPORTED)
+    set_target_properties(
+        lib_mkldnn
+        PROPERTIES IMPORTED_LOCATION
+        ${LIB_MKLDNN_IMPORTED_LOCATION}
+    )
+
+    add_library(lib_mklml_intel SHARED IMPORTED)
+    set_target_properties(
+        lib_mklml_intel
+        PROPERTIES IMPORTED_LOCATION
+        ${LIB_MKLML_INTEL_IMPORTED_LOCATION}
+    )
+
+    add_library(lib_tbb INTERFACE)
+    target_link_libraries(lib_tbb INTERFACE
+        ${NGRAPH_INSTALL_DIR}/${LIB}/libtbb.so)
+
+    add_library(lib_iomp5 SHARED IMPORTED)
+    set_target_properties(
+        lib_iomp5
+        PROPERTIES IMPORTED_LOCATION
+        ${LIB_IOMP5_IMPORTED_LOCATION}
+    )
+
+else()
+    add_library(ngraph_lib SHARED IMPORTED)
+    set_target_properties(
+        ngraph_lib
+        PROPERTIES IMPORTED_LOCATION
+        ${NGRAPH_IMPORTED_LOCATION}
+    )
+endif()
 
 add_dependencies(ngraph_lib ext_ngraph)
 
