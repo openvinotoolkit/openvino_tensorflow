@@ -115,6 +115,61 @@ void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
   out << "\n";
 }
 
+//---------------------------------------------------------------------------
+//  TensorToStream
+//---------------------------------------------------------------------------
+Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
+  const char* data = tensor.tensor_data().data();
+  int64 n_elements = tensor.NumElements();
+  switch (tensor.dtype()) {
+    case DT_HALF:
+      TensorDataToStream<Eigen::half>(ostream, n_elements, data);
+      break;
+    case DT_FLOAT:
+      TensorDataToStream<float>(ostream, n_elements, data);
+      break;
+    case DT_DOUBLE:
+      TensorDataToStream<double>(ostream, n_elements, data);
+      break;
+    case DT_UINT32:
+      TensorDataToStream<uint32>(ostream, n_elements, data);
+      break;
+    case DT_INT32:
+      TensorDataToStream<int32>(ostream, n_elements, data);
+      break;
+    case DT_UINT8:
+    case DT_QUINT8:
+      TensorDataToStream<uint8>(ostream, n_elements, data);
+      break;
+    case DT_UINT16:
+    case DT_QUINT16:
+      TensorDataToStream<uint16>(ostream, n_elements, data);
+      break;
+    case DT_INT8:
+    case DT_QINT8:
+      TensorDataToStream<int8>(ostream, n_elements, data);
+      break;
+    case DT_INT16:
+    case DT_QINT16:
+      TensorDataToStream<int16>(ostream, n_elements, data);
+      break;
+    case DT_UINT64:
+      TensorDataToStream<uint64>(ostream, n_elements, data);
+      break;
+    case DT_INT64:
+      TensorDataToStream<int64>(ostream, n_elements, data);
+      break;
+    case DT_BOOL:
+      TensorDataToStream<bool>(ostream, n_elements, data);
+      break;
+    default:
+      return errors::Internal("TensorToStream got unsupported data type ",
+                              DataType_Name(tensor.dtype()));
+      break;
+  }
+  return Status::OK();
+}
+
 Status TFDataTypeToNGraphElementType(DataType tf_dt,
                                      ngraph::element::Type* ng_et) {
   switch (tf_dt) {

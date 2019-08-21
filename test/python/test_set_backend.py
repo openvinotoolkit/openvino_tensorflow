@@ -29,7 +29,7 @@ class TestSetBackend(NgraphTest):
         # store env variables
         # when testing on backends like GPU the tests are run with NGRPAH_TF_BACKEND
         # by storing and restoring the env_variables we run the tests independent of the backend set
-        # currently we store and restore only the NGRPAH_TF_BACKEND
+        # currently we store and restore only the NGRAPH_TF_BACKEND
         env_var_map = self.store_env_variables()
 
         # test

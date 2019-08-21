@@ -42,6 +42,7 @@ set(SRC
    ngraph_conversions.cc
    ngraph_deassign_clusters.cc
    ngraph_encapsulate_clusters.cc
+   ngraph_encapsulate_impl.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_freshness_tracker.cc
