@@ -127,7 +127,7 @@ class BackendManager {
   static mutex ng_backend_name_mutex_;
 
   // map of cached backend objects
-  static map<string, Backend*> ng_backend_map_;
+  static map<string, std::unique_ptr<Backend>> ng_backend_map_;
   static mutex ng_backend_map_mutex_;
 
   // Map of backends and their reference counts

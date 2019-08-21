@@ -61,7 +61,7 @@ environment.
 
 The requirements for building nGraph bridge are identical to the requirements for building TensorFlow from source. For more information, review the [TensorFlow configuration] details. 
 
-##### Prepare you build environment
+##### Prepare your build environment
 
 Install the following requirements before building
  `nGraph-bridge`. 
@@ -88,7 +88,7 @@ Once TensorFlow's dependencies are installed, clone the `ngraph-bridge` repo:
 
         git clone https://github.com/tensorflow/ngraph-bridge.git
         cd ngraph-bridge
-        git checkout v0.17.0-rc2
+        git checkout v0.18.0-rc4
 
 Run the following Python script to build TensorFlow, nGraph, and the bridge. Use Python 3.5:
 
@@ -115,7 +115,7 @@ To use the `ngraph-tensorflow-bridge`, activate the following `virtualenv` to st
 
         source build_cmake/venv-tf-py3/bin/activate
  
-Alternatively, you can also install the TensorFlow and nGraph bridge outside of a `virtualenv`. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifats/tensorflow` directories, respectively. 
+Alternatively, you can also install the TensorFlow and nGraph bridge outside of a `virtualenv`. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifacts/tensorflow` directories, respectively.
 
 Select the help option of `build_ngtf.py` script to learn more about various build options and how to build other backends. 
 
@@ -219,7 +219,7 @@ results = sess.run(output_operation.outputs[0], {
 elapsed = time.time() - start
 print('Time elapsed: %f seconds' % elapsed)
 ```
-Observe that the ouput time runs faster than TensorFlow native (i.e., without nGraph).
+Observe that the output time runs faster than TensorFlow native (i.e., without nGraph).
 
 #### Add additional backends
 

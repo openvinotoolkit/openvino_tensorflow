@@ -95,12 +95,12 @@ class NGraphFreshnessTracker : public ResourceBase {
   // If freshness_map_ has the base_pointer, then inserts the user function into
   // its set of user functions
   void MarkFresh(const void* base_pointer,
-                 std::shared_ptr<ngraph::runtime::Executable> user);
+                 const std::shared_ptr<ngraph::runtime::Executable>& user);
 
   // Checks if the freshness_map_ has the user function for base_pointer, else
   // returns false
   bool IsFresh(const void* base_pointer,
-               std::shared_ptr<ngraph::runtime::Executable> user);
+               const std::shared_ptr<ngraph::runtime::Executable>& user);
 
   // Removes all the functions for the base_pointer in the freshness_map_, i.e.
   // sets the set<ng::Function> for base_pointer to empty
@@ -114,7 +114,7 @@ class NGraphFreshnessTracker : public ResourceBase {
   void RemoveTensor(const void* base_pointer);
 
   // Removes the user function from the freshness_map_
-  void RemoveUser(std::shared_ptr<ngraph::runtime::Executable> user);
+  void RemoveUser(const std::shared_ptr<ngraph::runtime::Executable>& user);
 
  private:
   // mutex protecting the freshness_map_

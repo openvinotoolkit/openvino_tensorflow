@@ -13,37 +13,36 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-"""nGraph TensorFlow L2loss test
+"""nGraph TensorFlow bridge pad operation test
 
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-import numpy as np
 import pytest
+import numpy as np
+
+import tensorflow as tf
 
 from common import NgraphTest
 
 np.random.seed(5)
 
 
-class TestL2Loss(NgraphTest):
+class TestCastOperations(NgraphTest):
 
-    @pytest.mark.parametrize(("xshape"), ((3, 4, 5), (1,)))
-    def test_l2loss(self, xshape):
-        x = tf.placeholder(tf.float32, shape=xshape)
-        out = tf.nn.l2_loss(x)
-        values = np.random.rand(*xshape)
-        sess_fn = lambda sess: sess.run((out), feed_dict={x: values})
-        assert np.allclose(
-            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
+    def test_pad(self):
+        input_data = tf.placeholder(tf.int32, shape=(2, 3))
+        paddings = tf.placeholder(tf.int32, shape=(2, 2))
 
-    def test_l2loss_empty(self):
-        x = tf.placeholder(tf.float32, shape=())
-        out = tf.nn.l2_loss(x)
-        sess_fn = lambda sess: sess.run((out), feed_dict={x: None})
+        out = tf.pad(input_data, paddings)
 
-        # expect to be nan
-        assert (self.with_ngraph(sess_fn) != self.without_ngraph(sess_fn))
+        inp = ((4, 2, 4), (4, 4, 1))
+        pad = ((5, 3), (5, 5))
+
+        def run_test(sess):
+            return sess.run(out, feed_dict={input_data: inp, paddings: pad})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

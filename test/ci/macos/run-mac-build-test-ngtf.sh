@@ -16,6 +16,12 @@
 #  limitations under the License.
 # ==============================================================================
 
+# Optional parameters, passed in environment variables:
+#
+# NG_TF_BUILD_OPTIONS  Command-line options for build_ngtf.py
+# NG_TF_TEST_OPTIONS   Command-line options for test_ngtf.py (CPU-backend)
+# NG_TF_TEST_PLAIDML   If defined and non-zero, also run PlaidML-CPU unit-tests
+
 # NOTES ABOUT THE MAC BUILD:
 #
 # - This script was developed for and has been tested with MacOS High
@@ -38,6 +44,27 @@
 set -e  # Make sure we exit on any command that returns non-zero
 set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 
+if [ -z "${NG_TF_BUILD_OPTIONS}" ] ; then
+    export NG_TF_BUILD_OPTIONS=''
+fi
+if [ -z "${NG_TF_TEST_OPTIONS}" ] ; then
+    export NG_TF_TEST_OPTIONS=''
+fi
+if [ -z "${NG_TF_TEST_PLAIDML}" ] ; then
+    export NG_TF_TEST_PLAIDML=''
+fi
+
+# Report on any recognized environment variables
+if [ ! -z "${NGRAPH_TF_BACKEND}" ] ; then
+    echo "NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+fi
+if [ ! -z "${PLAIDML_EXPERIMENTAL}" ] ;  then
+    echo "PLAIDML_EXPERIMENTAL=${PLAIDML_EXPERIMENTAL}"
+fi
+if [ ! -z "${PLAIDML_DEVICES_IDS}" ; then
+    echo "PLAIDML_DEVICE_IDS=${PLAIDML_DEVICE_IDS}"
+fi
+
 # Set up some important known directories
 mac_build_dir="${PWD}"
 bridge_dir="${PWD}/../../.."  # Relative to ngraph-tf/test/ci/macos
@@ -50,6 +77,10 @@ echo "  bridge_dir=${bridge_dir}"
 echo "  bbuild_dir=${bbuild_dir}"
 echo ''
 echo "  HOME=${HOME}"
+echo ''
+echo "  NG_TF_BUILD_OPTIONS=${NG_TF_BUILD_OPTIONS}"
+echo "  NG_TF_TEST_OPTIONS=${NG_TF_TEST_OPTIONS}"
+echo "  NG_TF_TEST_PLAIDML=${NG_TF_TEST_PLAIDML}"
 
 # Do some up-front checks, to make sure necessary directories are in-place and
 # build directories are not-in-place
@@ -91,7 +122,8 @@ echo  "===== Run MacOS Build Using build_ngtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-./build_ngtf.py
+echo "Running: ./build_ngtf.py ${NG_TF_BUILD_OPTIONS}"
+./build_ngtf.py ${NG_TF_BUILD_OPTIONS}
 exit_code=$?
 echo "Exit status for build_ngtf.py is ${exit_code}"
 
@@ -101,9 +133,27 @@ echo  "===== Run MacOS Unit-Tests Using test_ngtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-./test_ngtf.py
+echo "Running: ./test_ngtf.py ${NG_TF_TEST_OPTIONS}"
+./test_ngtf.py ${NG_TF_TEST_OPTIONS}
 exit_code=$?
 echo "Exit status for test_ngtf.py is ${exit_code}"
+
+if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
+    xtime="$(date)"
+    echo  ' '
+    echo  "===== Run test_ngtf.py with PlaidML at ${xtime} ====="
+    echo  ' '
+
+    NGRAPH_TF_BACKEND=PLAIDML
+
+    echo "NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+
+    cd "${bridge_dir}"
+    echo "Running: ./test_ngtf.py --plaidml_unit_tests_enable"
+    ./test_ngtf.py --plaidml_unit_tests_enable
+    exit_code=$?
+    echo "Exit status for test_ngtf.py --plaidml_unit_tests_enable is ${exit_code}"
+fi
 
 xtime="$(date)"
 echo ' '

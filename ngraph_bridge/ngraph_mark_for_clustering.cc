@@ -375,6 +375,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       confirmation_function_map["Slice"] = SimpleConfirmationFunction();
       confirmation_function_map["Snapshot"] = SimpleConfirmationFunction();
       confirmation_function_map["Softmax"] = SimpleConfirmationFunction();
+      confirmation_function_map["Softplus"] = SimpleConfirmationFunction();
       confirmation_function_map["SpaceToDepth"] =
           confirmation_function_map["DepthToSpace"];
       confirmation_function_map["SparseSoftmaxCrossEntropyWithLogits"] =
@@ -569,6 +570,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
       type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
       type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
+      type_constraint_map["Softplus"]["T"] = NGraphRealDTypes();
       type_constraint_map["SpaceToDepth"]["T"] = NGraphDTypes();
       type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
           NGraphNumericDTypes();

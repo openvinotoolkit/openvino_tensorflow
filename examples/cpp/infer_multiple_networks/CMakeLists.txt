@@ -59,14 +59,29 @@ if (APPLE)
     add_definitions(-DTEST_SINGLE_INSTANCE)
 endif()
 
-target_link_libraries(
-    infer_multiple_networks
-    ngraph_bridge
-    ngraph_lib
-    pthread
-    ${TensorFlow_FRAMEWORK_LIBRARY}
-    tensorflow_cc_lib
-)
+if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+    target_link_libraries(
+        infer_multiple_networks 
+        ngraph_bridge_static
+        ngraph_lib
+        lib_cpu_backend_static
+        lib_interpreter_backend_static 
+        ngraph_lib
+        dl
+        pthread
+        ${TensorFlow_FRAMEWORK_LIBRARY}
+        tensorflow_cc_lib
+    )
+else()
+    target_link_libraries(
+        infer_multiple_networks
+        ngraph_bridge
+        ngraph_lib
+        pthread
+        ${TensorFlow_FRAMEWORK_LIBRARY}
+        tensorflow_cc_lib
+    )
+endif()
 
 if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})

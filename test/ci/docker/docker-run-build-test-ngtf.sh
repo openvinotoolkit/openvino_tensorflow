@@ -19,6 +19,18 @@
 # Script parameters:
 #
 # $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+#
+# Script environment variable parameters:
+#
+# NG_TF_BUILD_OPTIONS  Optional: additional build options for build_ngtf.py
+# NG_TF_TEST_OPTIONS   Optional: additional test options for test_ngtf.py
+# NG_TF_TEST_PLAIDML   Optional: run additional testing on PlaidML backend
+#
+# General environment variables that are passed through to the docker container:
+#
+# NGRAPH_TF_BACKEND
+# PLAIDML_EXPERIMENTAL
+# PLAIDML_DEVICE_IDS
 
 set -e  # Fail on any command with non-zero exit
 
@@ -52,6 +64,29 @@ tf_mountpoint='/home/dockuser/tensorflow'
 # Set up a bunch of volume mounts
 volume_mounts="-v ${bridge_dir}:${bridge_mountpoint}"
 
+# Set up optional environment variables
+optional_env=''
+if [ ! -z "${NG_TF_BUILD_OPTIONS}" ] ; then
+  optional_env="${optional_env} --env NG_TF_BUILD_OPTIONS=${NG_TF_BUILD_OPTIONS}"
+fi
+if [ ! -z "${NG_TF_TEST_OPTIONS}" ] ; then
+  optional_env="${optional_env} --env NG_TF_TEST_OPTIONS=${NG_TF_TEST_OPTIONS}"
+fi
+if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
+  optional_env="${optional_env} --env NG_TF_TEST_PLAIDML=${NG_TF_TEST_PLAIDML}"
+fi
+
+# Set up passthrough environment variables
+if [ ! -z "${NGRAPH_TF_BACKEND}" ] ; then
+  optional_env="${optional_env} --env NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+fi
+if [ ! -z "${PLAIDML_EXPERIMENTAL}" ] ; then
+  optional_env="${optional_env} --env PLAIDML_EXPERIMENTAL=${PLAIDML_EXPERIMENTAL}"
+fi
+if [ ! -z "${PLAIDML_DEVICE_IDS}" ] ; then
+  optional_env="${optional_env} --env PLAIDML_DEVICE_IDS=${PLAIDML_DEVICE_IDS}"
+fi
+
 set -u  # No unset variables after this point
 
 RUNASUSER_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-as-user.sh"
@@ -76,6 +111,7 @@ fi
 drun_cmd="docker run --rm \
     --env RUN_UID=$(id -u) \
     --env RUN_CMD=${BUILD_SCRIPT} \
+    ${optional_env} \
     ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
     ${volume_mounts} \
     ${IMAGE_CLASS}:${IMAGE_ID} ${RUNASUSER_SCRIPT}"
