@@ -65,6 +65,10 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC graph_rewrites/remove_ngraphassigns.cc)
 endif()
 
+if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)	
+    list(APPEND SRC graph_rewrites/config_for_grappler_test.cc)	
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
