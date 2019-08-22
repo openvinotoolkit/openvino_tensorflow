@@ -245,6 +245,7 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
 Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     const std::vector<Tensor>& tf_input_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+    const PipelinedTensorVector& inp_group_from_pipeline,
     ng::runtime::Backend* const op_backend,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs) {
   std::vector<std::unique_ptr<ngraph::Event>> input_copy_events;
@@ -291,9 +292,10 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     std::shared_ptr<ng::runtime::Tensor> last_ng_tensor =
         input_caches[i].second;
     void* current_src_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
-    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-        GetCurrentNgTensor(current_src_ptr, last_src_ptr, last_ng_tensor, false,
-                           ng_exec, op_backend, ng_element_type, ng_shape);
+    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor = GetCurrentNgTensor(
+        current_src_ptr, last_src_ptr, last_ng_tensor, false, ng_exec,
+        op_backend, ng_element_type, ng_shape,
+        m_executable_can_create_tensor ? inp_group_from_pipeline[i] : nullptr);
     bool is_cpu = m_op_backend_name == "CPU";
 
     if (!is_cpu && current_ng_tensor->get_stale()) {
@@ -340,6 +342,7 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
 Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
     const std::vector<Tensor*>& output_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+    const PipelinedTensorVector& out_group_from_pipeline,
     ng::runtime::Backend* const op_backend,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
   std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
@@ -374,9 +377,10 @@ Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
     NGRAPH_VLOG(4) << "NGraphEncapsulateImpl:: Output from non Variable Node";
 #endif
 
-    current_ng_tensor =
-        GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor, true,
-                           ng_exec, op_backend, ng_element_type, ng_shape);
+    current_ng_tensor = GetCurrentNgTensor(
+        current_dst_ptr, last_dst_ptr, last_ng_tensor, true, ng_exec,
+        op_backend, ng_element_type, ng_shape,
+        m_executable_can_create_tensor ? out_group_from_pipeline[i] : nullptr);
 
     current_ng_tensor->set_stale(true);
     output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
@@ -393,7 +397,8 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
     const bool& output_tensor,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
     ng::runtime::Backend* const op_backend,
-    const ng::element::Type& ng_element_type, const ng::Shape& ng_shape) {
+    const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
+    std::shared_ptr<ng::runtime::Tensor> tensor_from_pipeline) {
   // NOTE: we assume that TF's pointers WILL change if it actually changes
   // values. ie, it will not reuse the same space if its rewritten it
   bool tf_tensor_has_changed = current_tf_ptr != last_tf_ptr;
@@ -426,18 +431,70 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
   }
   // create a new ng tensor or use the last one
   std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
-  if (need_new_tensor_creation) {
-    if (is_cpu) {
-      current_ng_tensor =
-          op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
-    } else {
-      current_ng_tensor = op_backend->create_tensor(ng_element_type, ng_shape);
-    }
+  if (m_executable_can_create_tensor) {
+    current_ng_tensor = tensor_from_pipeline;
   } else {
-    current_ng_tensor = last_ng_tensor;
+    if (need_new_tensor_creation) {
+      if (is_cpu) {
+        current_ng_tensor = op_backend->create_tensor(ng_element_type, ng_shape,
+                                                      current_tf_ptr);
+      } else {
+        current_ng_tensor =
+            op_backend->create_tensor(ng_element_type, ng_shape);
+      }
+    } else {
+      current_ng_tensor = last_ng_tensor;
+    }
   }
   current_ng_tensor->set_stale(is_stale);
   return current_ng_tensor;
+}
+
+Status NGraphEncapsulateImpl::CachePipelinedTensorIfNeeded(
+    std::shared_ptr<ngraph::runtime::Executable> ng_exec) {
+  if (!m_executable_can_create_tensor) {
+    return errors::Internal(
+        "CachePipelinedTensorIfNeeded called, but executable cannot create "
+        "tensors");
+  }
+  auto itr = m_executable_pipelined_tensors_map.find(ng_exec);
+  if (itr == m_executable_pipelined_tensors_map.end()) {
+    // Create these pipelined ng tensors only if needed, else reuse from cache
+    size_t num_inputs = ng_exec->get_parameters().size();
+    size_t num_outputs = ng_exec->get_results().size();
+    PipelinedTensorMatrix pipelined_input_tensors(num_inputs);
+    PipelinedTensorMatrix pipelined_output_tensors(num_outputs);
+    for (size_t i = 0; i < num_inputs; i++) {
+      pipelined_input_tensors[i] = ng_exec->create_input_tensor(i, m_depth);
+    }
+    for (size_t i = 0; i < num_outputs; i++) {
+      pipelined_output_tensors[i] = ng_exec->create_output_tensor(i, m_depth);
+    }
+    m_executable_pipelined_tensors_map.insert(
+        {ng_exec, PipelinedTensorsStore(pipelined_input_tensors,
+                                        pipelined_output_tensors)});
+  }
+  return Status::OK();
+}
+
+std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
+NGraphEncapsulateImpl::GetTensorsFromPipeline(
+    std::shared_ptr<ngraph::runtime::Executable> ng_exec) {
+  PipelinedTensorsStore pts = m_executable_pipelined_tensors_map.at(ng_exec);
+
+  // TODO: do something about this spin lock
+  // get_tensors returns an index integer, that can be -1, 0, ... depth-1
+  // If it returns -1, then it indicates there are no free groups of tensors
+  // or the pipeline is full. In that case, we need to wait, hence the while
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> out_tpl;
+  while (true) {
+    out_tpl = pts.get_tensors();
+
+    if (std::get<0>(out_tpl) >= 0) {
+      break;
+    }
+  }
+  return out_tpl;
 }
 
 }  // namespace ngraph_bridge
