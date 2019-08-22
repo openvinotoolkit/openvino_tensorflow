@@ -18,15 +18,27 @@
 #define NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
 #pragma once
 
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+#include <iostream>
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
 
 namespace ngraph_bridge {
 
+typedef std::map<std::string, std::vector<int>> ShapeHintMap;
+
+// the integer represent AOT level requested.
+typedef std::pair<bool, std::set<ShapeHintMap>> AOTInfo;
+
 Status EncapsulateClusters(
     Graph* graph, int graph_id, FunctionDefLibrary* fdeflib,
-    std::unordered_map<std::string, std::string> device_config);
+    std::unordered_map<std::string, std::string> device_config,
+    AOTInfo aot_info);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

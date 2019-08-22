@@ -83,6 +83,7 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
 
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
   static mutex s_serial_counter_mutex;
+  AOTInfo aot_info;
 };
 
 int NgraphOptimizer::s_serial_counter = 0;

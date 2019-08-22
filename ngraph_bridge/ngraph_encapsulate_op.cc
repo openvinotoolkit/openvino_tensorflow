@@ -172,21 +172,8 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   // Get the optional attributes
   std::unordered_map<std::string, std::string> additional_attribute_map;
   auto node_def = ctx->def();
-  auto additional_attributes = node_def.attr();
-  for (auto itx : additional_attributes) {
-    // Find the optional attributes to be sent to the backend.
-    // The optional attributes have '_ngraph_' appended to the start
-    // so we need to get rid of that and only send the remaining string
-    // since the backend will only look for that.
-    // '_ngraph_' is only appended for the bridge.
-    // For e.g. _ngraph_ice_cores --> ice_cores
-    if (itx.first.find("_ngraph_") != std::string::npos) {
-      NGRAPH_VLOG(4) << "Attribute: " << itx.first.substr(strlen("_ngraph_"))
-                     << " Value: " << itx.second.s();
-      additional_attribute_map.insert(
-          {itx.first.substr(strlen("_ngraph_")), itx.second.s()});
-    }
-  }
+  OP_REQUIRES_OK(ctx, ng_encap_impl.ParseNodeAttributes(
+                          node_def.attr(), &additional_attribute_map));
 
   // Concatenate the backend_name:device_id
   try {

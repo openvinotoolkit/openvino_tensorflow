@@ -261,7 +261,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // 4. Encapsulate clusters then, if requested, dump the graphs.
     FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
     TF_RETURN_IF_ERROR(EncapsulateClusters(options.graph->get(), idx,
-                                           fdeflib_new, config_map));
+                                           fdeflib_new, config_map, {0, {}}));
     // TODO: not using fdeflib_new in this path. Only grappler path uses it
     free(fdeflib_new);
     if (DumpEncapsulatedGraphs()) {

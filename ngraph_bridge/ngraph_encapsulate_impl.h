@@ -189,6 +189,9 @@ class NGraphEncapsulateImpl {
 
   void SetName(string name) { m_name = name; }
 
+  Status ParseNodeAttributes(
+      const google::protobuf::Map<string, AttrValue>& additional_attributes,
+      std::unordered_map<std::string, std::string>* additional_attribute_map);
   void SetExecCanCreateTensor(bool b) { m_executable_can_create_tensor = b; }
 
   bool GetExecCanCreateTensor() { return m_executable_can_create_tensor; }
@@ -226,6 +229,9 @@ class NGraphEncapsulateImpl {
   std::vector<bool> m_input_is_static;
   std::list<std::string> m_lru;
   static int s_instance_count;
+  bool m_do_aot = false;
+  map<string, string> m_aot_functions;
+  map<string, string> m_aot_execs;
 
   // ng_function, ng_executable, Output and Input Cache maps
   std::unordered_map<std::string, std::shared_ptr<ngraph::runtime::Executable>>

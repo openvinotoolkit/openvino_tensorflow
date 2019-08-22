@@ -72,7 +72,7 @@ TEST(RemoveNGraphAssigns, Graph1) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;
@@ -130,7 +130,7 @@ TEST(RemoveNGraphAssigns, Graph2) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // clean up
   config::ngraph_set_disabled_ops("");
@@ -231,7 +231,7 @@ TEST(RemoveNGraphAssigns, Graph3) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;
@@ -337,7 +337,7 @@ TEST(RemoveNGraphAssigns, Graph4) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // clean up
   config::ngraph_set_disabled_ops("");
@@ -442,7 +442,7 @@ TEST(RemoveNGraphAssigns, Graph5) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;
