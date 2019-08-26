@@ -434,7 +434,8 @@ if __name__ == '__main__':
     failed_tests = {}
     skipped_tests = {}
     for test_suite in requested_test_suites:
-        print('Testing model/test-suite: ' + test_suite)
+        print('\n' + '=' * 20 + 'Testing model/test-suite: ' + test_suite +
+              '=' * 20)
         if test_suite not in disabled_test_suite:
             if args.run_basic_tests:
                 passed_tests_in_suite, failed_tests_in_suite, skipped_tests_in_suite = run_test_suite(
@@ -450,6 +451,8 @@ if __name__ == '__main__':
     print('Passed:\n' + '\033[92m' + print_format(passed_tests) + '\033[0m')
     print('Skipped:\n' + '\033[93m' + print_format(skipped_tests) + '\033[0m')
     print('Failed:\n' + '\033[91m' + print_format(failed_tests) + '\033[0m')
+    all_tests_passed = all([len(failed_tests[k]) == 0 for k in failed_tests])
+    exit(0 if all_tests_passed else 1)
 
 # TODO add a test comparing with TF run?
 # TODO verbose or quiet?
@@ -464,21 +467,4 @@ if __name__ == '__main__':
 # Level3: parse prints we put. These tests are run without "NGRAPH_TF_LOG_PLACEMENT=1". the framework can provide some default parsers, but users are free to add pyscripts that provide functions for custom script parsers
 # These tests can be long
 # So we can offer options to do: {1}, {1,2}, {1,2,3}, {3}  (or do we allow options for any combination of tests?)
-# NOTE: Level3 and Level1 test are same (mechanics wise). Merge them. Then we have only 2 types of tests
-
-# Each model dir represents 1 repo to download. A model dir can have multiple sub tests (each sub-test could represent a different model, or the same model tested under different settings)
-
-# Structure of "expected json"
-# dictionary of expected values. key is a config, value is the expected values json. there is a "default" config, but one can add other configs (for example for other backends etc)
-
-# Sample run script:
-# python test_main.py --run_logparse_tests --models MLP
-
-# feature 1: dumps shell script at the end. dumps shell script even when the framework crashes
-# feature 2: prints list of tests and their descriptions (--list)
-# feature 3: "expected" values can be varied by different configs
-# feature 4: cleanup script
-# feature 5: sub tests folders must start with 'test' (else ignored). Can have 'disabled' in their names to disable
-# feature 6: default and user-specified log parsers (named custom_log_parser.py, which is expected to contain a function custom_parse_logs)
-# feature 7: filename is supposed to be expected.json
-# feature 8: enable_ngraph can be placed in each test dir or in the model dir for all subtests to share. test folder's patch overrides global model folder patch
+# NOTE: Level3 and Level1 test are same (mechanics wise). We have only 2 types of tests, though Level2 is unimplemented for now
