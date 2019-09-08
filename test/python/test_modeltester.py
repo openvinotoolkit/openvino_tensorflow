@@ -47,7 +47,7 @@ class TestModelTester(NgraphTest):
             config = "varopts" if varopts else "default"
         try:
             command_executor(
-                "python test_main.py --run_basic_tests --models MLP --configuration "
+                "python test_main.py --run_basic_tests --models MLP --ignore_test time --configuration "
                 + config)
         finally:
             os.chdir(cwd)

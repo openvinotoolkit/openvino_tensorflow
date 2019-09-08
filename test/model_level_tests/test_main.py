@@ -127,10 +127,21 @@ def ready_repo(model_dir, repo_dl_loc):
         command_executor(model_dir + '/getting_repo_ready.sh', verbose=True)
 
 
+# Currently there are 2 types of tests. parsing the logs and timing the run
+def valid_test_types():
+    return set(['time', 'logparse'])
+
+
+# Check if the contents of this iterable contains only valid test types
+def check_test_types(iterable):
+    return all(map(lambda i: i in valid_test_types(), iterable))
+
+
 # TODO: this function needs to accept "do-i-dump-pbtxt"? and if so, a cleanup needs to happen later.
 # Also this function could return the list of pbtxts it generated (but does it need to? we can infer it)
 # TODO: this function should also take the level/intensity of test to run
-def run_test_suite(model_dir, configuration, disabled, print_parsed):
+def run_test_suite(model_dir, configuration, disabled, print_parsed,
+                   ignore_test):
     try:
         # TODO: assert TF version. Some models may not run on TF1.12 etc
         model_dir = os.path.abspath(model_dir)
@@ -239,14 +250,21 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed):
                                 not custom_parser_present)
                         except:
                             assert False, 'Failed to parse ' + expected_json_file
-                        passed, fail_help_string = compare_parsed_values(
-                            parsed_vals, expected.get('logparse', {}))
-                        if not passed:
-                            print('Failed in test ' + flname +
-                                  '. Help message: ' + fail_help_string)
-                            failed_tests.append(flname)
-                            continue
-                        if 'time' in expected:
+                        assert check_test_types(expected.keys(
+                        )), "Got unexpected key in " + expected.keys(
+                        ) + ". Should have been " + ','.join(valid_test_types)
+                        # We run the test if 'logparse' is present in the expected values to check
+                        # for and it is not in the ignore list
+                        if ('logparse' in expected) and (
+                                'logparse' not in ignore_test):
+                            passed, fail_help_string = compare_parsed_values(
+                                parsed_vals, expected['logparse'])
+                            if not passed:
+                                print('Failed in test ' + flname +
+                                      '. Help message: ' + fail_help_string)
+                                failed_tests.append(flname)
+                                continue
+                        if ('time' in expected) and ('time' not in ignore_test):
                             actual_runtime = tend - tstart
                             # TODO: decide this criteria. time can be pretty variable
                             # TODO: the percentage (0.1) for the time bound might be passed through `expected.json`
@@ -372,7 +390,7 @@ if __name__ == '__main__':
         action='store',
         type=str,
         help='Comma separated list of model names',
-        default='')
+    )
     parser.add_argument(
         '--list',
         action='store_true',
@@ -399,6 +417,13 @@ if __name__ == '__main__':
         help=
         'Print the parsed values from log parsing. Useful when checking in a new model and we want to know its expected values'
     )
+    parser.add_argument(
+        '--ignore_test',
+        type=str,
+        default=None,
+        help=
+        'Comma separated string. Given an expected json file, ignore these tests. Can take values "", "logparse", "time", "logparse,time", "time,logparse"'
+    )
 
     # This script must be run from this location
     assert cwd.split('/')[-1] == 'model_level_tests'
@@ -418,6 +443,12 @@ if __name__ == '__main__':
     assert (
         args.run_basic_tests or args.run_functional_tests
     ), 'No type of test enabled. Please choose --run_basic_tests, --run_functional_tests or both'
+
+    ignore_test = [] if (
+        args.ignore_test is None) else args.ignore_test.split(',')
+    assert ((ignore_test=='') or check_test_types(ignore_test)
+           ), "Types of possible tests: " + ','.join(valid_test_types()) + \
+    ", but requested to skip " + args.ignore_test
 
     requested_test_suites = os.listdir(
         'models') if args.models == '' else args.models.split(',')
@@ -440,7 +471,8 @@ if __name__ == '__main__':
             if args.run_basic_tests:
                 passed_tests_in_suite, failed_tests_in_suite, skipped_tests_in_suite = run_test_suite(
                     './models/' + test_suite, args.configuration,
-                    disabled_sub_test.get(test_suite, []), args.print_parsed)
+                    disabled_sub_test.get(test_suite, []), args.print_parsed,
+                    ignore_test)
                 passed_tests[test_suite] = passed_tests_in_suite
                 failed_tests[test_suite] = failed_tests_in_suite
                 skipped_tests[test_suite] = skipped_tests_in_suite
