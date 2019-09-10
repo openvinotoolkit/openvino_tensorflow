@@ -197,10 +197,13 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
   // The following is related to Grappler - which we are turning off
   // Until we get a library fully running
   if (tf::ngraph_bridge::ngraph_tf_is_grappler_enabled()) {
-    options.config.mutable_graph_options()
-        ->mutable_rewrite_options()
-        ->add_custom_optimizers()
-        ->set_name("ngraph-optimizer");
+    auto* custom_config = options.config.mutable_graph_options()
+                              ->mutable_rewrite_options()
+                              ->add_custom_optimizers();
+
+    custom_config->set_name("ngraph-optimizer");
+    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s("CPU");
+    (*custom_config->mutable_parameter_map())["device_id"].set_s("1");
 
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
@@ -208,7 +211,7 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
 
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
-        ->set_meta_optimizer_iterations(RewriterConfig::ONE);
+        ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
   }
 
   // Load the network

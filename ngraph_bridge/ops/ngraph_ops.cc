@@ -16,8 +16,6 @@
 
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 
-#include "ngraph_bridge/ngraph_bridge_registry.h"
-
 namespace tensorflow {
 
 namespace ngraph_bridge {
@@ -45,10 +43,6 @@ REGISTER_OP("NGraphVariable")
     .Attr("shared_name: string = ''")
     .SetIsStateful()
     .SetShapeFn(shape_inference::ExplicitShape);
-
-#ifdef NGRAPH_BRIDGE_STATIC_LIB_ENABLE
-void register_ngraph_ops() {}
-#endif
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

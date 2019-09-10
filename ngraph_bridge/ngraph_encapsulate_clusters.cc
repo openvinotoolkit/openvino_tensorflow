@@ -39,7 +39,6 @@
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_bridge_registry.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
@@ -99,11 +98,6 @@ Status EncapsulateClusters(
 
   // A map from cluster indices to corresponding NGraphEncapsulate nodes.
   std::map<int, Node*> cluster_node_map;
-
-// reference all the bridge ops for static library
-#ifdef NGRAPH_BRIDGE_STATIC_LIB_ENABLE
-  register_ngraph_bridge();
-#endif
 
   // Pass 1: Populate the cluster-index-to-device name map for each existing
   // cluster. PIGGYBACKING BACKEND TEST HERE, THEY WILL GET COMBINED INTO ONE

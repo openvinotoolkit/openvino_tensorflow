@@ -58,8 +58,10 @@ if (APPLE)
 endif()
 
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    target_link_libraries(
-        infer_single ngraph_bridge_static
+    target_link_libraries(infer_single 
+        -Wl,--whole-archive
+            ngraph_bridge_static
+        -Wl,--no-whole-archive
         ngraph_lib
         lib_cpu_backend_static
         lib_interpreter_backend_static 

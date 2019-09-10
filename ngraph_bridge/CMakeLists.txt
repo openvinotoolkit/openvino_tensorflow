@@ -36,7 +36,6 @@ set(SRC
    ngraph_assign_clusters.cc
    ngraph_builder.cc
    ngraph_backend_manager.cc
-   ngraph_bridge_registry.cc
    ngraph_capture_variables.cc
    ngraph_cluster_manager.cc
    ngraph_conversions.cc
@@ -147,7 +146,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
 
     target_link_libraries(
         ${LIB_NAME_STATIC}
-        ngraph_logger
         ngraph_logger 
         ${TensorFlow_FRAMEWORK_LIBRARY} 
         ngraph_lib

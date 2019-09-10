@@ -98,9 +98,10 @@ if (APPLE)
 endif()
 
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    target_link_libraries(
-        gtest_ngtf
-        ngraph_bridge_static
+    target_link_libraries(gtest_ngtf
+        -Wl,--whole-archive
+            ngraph_bridge_static
+        -Wl,--no-whole-archive
         ngraph_lib
         lib_cpu_backend_static
         lib_interpreter_backend_static 
