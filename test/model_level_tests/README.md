@@ -88,7 +88,7 @@ On CPU:
 | a3c | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark: | ngraph-models
 | dcgan | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark: | ngraph-models
 | unet | ?? | :heavy_multiplication_x: | ?? | :heavy_check_mark: | unet
-| ssd mobilenet v1 | ?? | :heavy_multiplication_x: | ?? | :heavy_check_mark: | tfmodels
+| ssd mobilenet v1 | ?? | :heavy_multiplication_x: | ?? | ?? | tfmodels
 | nmt |  :heavy_check_mark: | :heavy_multiplication_x: |  :heavy_check_mark: | :heavy_multiplication_x: | nmt
 | bert |  :heavy_check_mark: | :heavy_multiplication_x: |  :heavy_check_mark: | :heavy_multiplication_x: | bert
 | minigo |  :heavy_check_mark: | :heavy_multiplication_x: |  :heavy_check_mark: | :heavy_multiplication_x: | minigo
