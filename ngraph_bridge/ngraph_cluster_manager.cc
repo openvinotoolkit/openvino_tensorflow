@@ -24,15 +24,15 @@ namespace ngraph_bridge {
 std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
 std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
 
-int NGraphClusterManager::NewCluster() {
+size_t NGraphClusterManager::NewCluster() {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
 
-  int new_idx = s_cluster_graphs.size();
+  size_t new_idx = s_cluster_graphs.size();
   s_cluster_graphs.push_back(new GraphDef());
   return new_idx;
 }
 
-GraphDef* NGraphClusterManager::GetClusterGraph(int idx) {
+GraphDef* NGraphClusterManager::GetClusterGraph(size_t idx) {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
   return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
 }

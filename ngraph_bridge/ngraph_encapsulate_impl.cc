@@ -344,7 +344,9 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
 
       } catch (const std::exception& exp) {
         errors::Internal(
-            "Caught exception while transferring tensor data to nGraph\n");
+            "Caught exception while transferring tensor data to nGraph. "
+            "Exception: ",
+            exp.what());
       } catch (...) {
         errors::Internal("Error in transferring tensor data to nGraph\n");
       }

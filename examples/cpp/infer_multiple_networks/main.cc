@@ -150,15 +150,15 @@ int main(int argc, char** argv) {
   std::cout << "Component versions\n";
   PrintVersion();
 
-  infer_multiple_networks::InferenceEngine infer_engine_1("engine_1", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_1("engine_1");
   TF_CHECK_OK(infer_engine_1.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
-  infer_multiple_networks::InferenceEngine infer_engine_2("engine_2", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_2("engine_2");
   TF_CHECK_OK(infer_engine_2.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
-  infer_multiple_networks::InferenceEngine infer_engine_3("engine_3", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_3("engine_3");
   TF_CHECK_OK(infer_engine_3.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));

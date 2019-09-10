@@ -816,6 +816,7 @@ Status EncapsulateClusters(
           try {
             op_backend = BackendManager::GetBackend(op_backend_name);
           } catch (const std::out_of_range& e) {
+            NGRAPH_VLOG(5) << "Exception: " << e.what();
             BackendManager::ReleaseBackend(op_backend_name);
             throw;
           }

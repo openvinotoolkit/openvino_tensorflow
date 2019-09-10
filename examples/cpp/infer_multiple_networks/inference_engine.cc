@@ -50,8 +50,8 @@ extern tf::Status ReadTensorFromImageFile(const std::vector<string>& file_names,
 
 namespace infer_multiple_networks {
 
-InferenceEngine::InferenceEngine(const string& name, const string& backend)
-    : m_name(name) {}
+InferenceEngine::InferenceEngine(const string& name) : m_name(name) {}
+
 Status InferenceEngine::Load(const string& network,
                              const std::vector<string>& image_files,
                              int input_width, int input_height,
