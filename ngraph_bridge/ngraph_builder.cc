@@ -4915,7 +4915,7 @@ Status Builder::TranslateGraph(
   // ought to be `const Node*`, but GetReversePostOrder doesn't use `const`
 
   vector<Node*> ordered;
-  GetReversePostOrder(*input_graph, &ordered);
+  GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
   //
   // Split ops into params, retvals, and all others.
