@@ -17,10 +17,10 @@
 #include "gtest/gtest.h"
 
 #include "tensorflow/core/graph/node_builder.h"
-#include "version.h"
 
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/version.h"
 #include "test/test_utilities.h"
 
 using namespace std;
