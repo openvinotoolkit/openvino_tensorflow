@@ -56,7 +56,7 @@ class NGraphVar : public ResourceBase {
 
     // Create Backend
     NGRAPH_VLOG(4) << "NGraphVar::Create Backend ";
-    BackendManager::CreateBackend(ng_backend_name_);
+    TF_RETURN_IF_ERROR(BackendManager::CreateBackend(ng_backend_name_));
     ng::runtime::Backend* op_backend =
         BackendManager::GetBackend(ng_backend_name_);
 

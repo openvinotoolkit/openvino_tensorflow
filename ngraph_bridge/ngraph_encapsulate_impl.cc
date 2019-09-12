@@ -343,12 +343,13 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
         input_copy_events.push_back(std::move(event_copy_input_next));
 
       } catch (const std::exception& exp) {
-        errors::Internal(
+        return errors::Internal(
             "Caught exception while transferring tensor data to nGraph. "
             "Exception: ",
             exp.what());
       } catch (...) {
-        errors::Internal("Error in transferring tensor data to nGraph\n");
+        return errors::Internal(
+            "Error in transferring tensor data to nGraph\n");
       }
     }
     input_caches[i] = std::make_pair(current_src_ptr, current_ng_tensor);

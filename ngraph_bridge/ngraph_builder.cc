@@ -2442,7 +2442,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     }
   } else {
     return errors::Unimplemented("Unsupported _FusedConv2D " +
-                                 str_util::Join(fused_ops, ","));
+                                 absl::StrJoin(fused_ops, ","));
   }
   return Status::OK();
 }

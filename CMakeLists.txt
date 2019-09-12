@@ -23,7 +23,7 @@ include(ExternalProject)
 include(CMakeDependentOption)
 include(cmake/sdl.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare -Wbackslash-newline-escape")
 
 # In order to compile ngraph-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.
 # N.B.: This *will* crash python unit tests because ngraph-tf will be loaded "too late" via `dlopen`,

@@ -99,7 +99,11 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {
       return flib.LookUpOpDef(op, sig);
     };
-    FunctionDefToBodyHelper(*fdef, {}, &flib, get_func_sig, &fnbody);
+    Status status =
+        FunctionDefToBodyHelper(*fdef, {}, &flib, get_func_sig, &fnbody);
+    if (!status.ok()) {
+      NGRAPH_VLOG(2) << "FunctionDefToBodyHelper returned a not ok status.";
+    }
     CopyGraph(*fnbody->graph, &ng_encap_impl.m_graph);
   } else {
     GraphConstructorOptions opts;
@@ -186,7 +190,10 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OP_REQUIRES_OK(ctx, status);
   }
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name();
-  BackendManager::CreateBackend(ng_encap_impl.GetOpBackend());
+  Status status = BackendManager::CreateBackend(ng_encap_impl.GetOpBackend());
+  if (!status.ok()) {
+    NGRAPH_VLOG(2) << "Cannot create backend " << ng_encap_impl.GetOpBackend();
+  }
   // SetConfig will be called for each EncapsulateOp
   BackendManager::SetConfig(ng_encap_impl.GetOpBackend(),
                             additional_attribute_map);
