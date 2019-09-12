@@ -80,7 +80,7 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "ngraph_api.h"
+#include "ngraph_bridge/ngraph_api.h"
 
 // These are all common classes it's handy to reference with no namespace.
 // using tensorflow::Flag;
