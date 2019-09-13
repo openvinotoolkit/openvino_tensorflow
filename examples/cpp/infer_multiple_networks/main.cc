@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include <thread>
+
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/core/framework/graph.pb.h"
@@ -31,12 +33,11 @@
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include <thread>
 #include "ngraph/event_tracing.hpp"
-#include "ngraph_backend_manager.h"
-#include "version.h"
 
-#include "inference_engine.h"
+#include "examples/cpp/infer_multiple_networks/inference_engine.h"
+#include "ngraph_bridge/ngraph_backend_manager.h"
+#include "ngraph_bridge/version.h"
 
 using namespace std;
 namespace tf = tensorflow;

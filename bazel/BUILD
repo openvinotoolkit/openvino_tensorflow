@@ -14,6 +14,9 @@
 #  limitations under the License.
 # ==============================================================================
 load("//:cxx_abi_option.bzl", "CXX_ABI")
+load(
+    "@org_tensorflow//tensorflow:tensorflow.bzl", 
+    "tf_cc_binary")
 
 cc_library(
     name = "ngraph_bridge_headers",
@@ -47,22 +50,22 @@ cc_library(
         "logging/tf_graph_writer.h",
     ]),
     copts = [
-        "-I external/ngraph_bridge/src",
-        "-I external/ngraph_bridge/logging",
+        "-I external/ngraph/src",
+        "-I logging",
     ],
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
-    name = 'libngraph_bridge.so',
+cc_library(
+    name = 'ngraph_bridge_lib',
     srcs = [
         "ngraph_bridge/ngraph_api.cc",
         "ngraph_bridge/ngraph_assign_clusters.cc",
-        "ngraph_bridge/ngraph_assign_clusters.h",
         "ngraph_bridge/ngraph_builder.cc",
         "ngraph_bridge/ngraph_backend_manager.cc",
         "ngraph_bridge/ngraph_capture_variables.cc",
         "ngraph_bridge/ngraph_cluster_manager.cc",
+        "ngraph_bridge/ngraph_conversions.cc",
         "ngraph_bridge/ngraph_deassign_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_impl.cc",
@@ -76,17 +79,20 @@ cc_binary(
         "ngraph_bridge/ngraph_utils.cc",
         "ngraph_bridge/tf_deadness_analysis.cc",
         "ngraph_bridge/tf_graphcycles.cc",
+        "ngraph_bridge/ops/ngraph_ops.cc",
         "ngraph_bridge/version.cc",
         "ngraph_bridge/grappler/ngraph_optimizer.cc",
         "ngraph_bridge/grappler/ngraph_add_identityn.cc",
         "logging/ngraph_log.cc",
         "logging/tf_graph_writer.cc",
     ],
-    linkshared = 1,
     deps = [
         ":ngraph_bridge_headers",
-        "@local_config_tf//:libtensorflow_framework",
-        "@local_config_tf//:tf_header_lib",
+        "@org_tensorflow//tensorflow/core:core_cpu_headers_lib",
+        "@org_tensorflow//tensorflow/core/grappler/clusters:cluster",
+        "@org_tensorflow//tensorflow/core/grappler/optimizers:custom_graph_optimizer_registry",
+        "@org_tensorflow//tensorflow/core:framework_headers_lib",
+        "@org_tensorflow//tensorflow/core:protos_all_cc",
         "@ngraph//:ngraph_headers",
         "@ngraph//:ngraph_core",
         "@ngraph//:ngraph_version",
@@ -102,16 +108,45 @@ cc_binary(
         "-Wformat",
         "-Wformat-security",
         "-fstack-protector-all",
-        "-D NDEBUG",
-        '-D SHARED_LIB_PREFIX=\\"lib\\"',
-        '-D SHARED_LIB_SUFFIX=\\".so\\"',
+        '-D NGRAPH_BRIDGE_STATIC_LIB_ENABLE',
         '-D NGRAPH_TF_USE_GRAPPLER_OPTIMIZER',
+        "-I ngraph_bridge",
+        "-I logging",
         "-I external/ngraph/src",
     ] + CXX_ABI,
+    linkstatic = True,
     linkopts = [
         "-Wl,-z,noexecstack",
         "-Wl,-z,relro",
         "-Wl,-z,now",
     ],
+    visibility = ["//visibility:public"],
+    alwayslink = 1,
+)
+
+tf_cc_binary(
+    name = 'hello_tf',
+    srcs = [
+        "examples/cpp/hello_tf.cpp",
+    ],
+    deps = [
+        "@org_tensorflow//tensorflow/cc:client_session",
+        "@org_tensorflow//tensorflow/cc:ops",
+        "@org_tensorflow//tensorflow/core:tensorflow",
+        ":ngraph_bridge_lib",
+        "@ngraph//:cpu_backend",
+    ],
+    copts = [
+        "-pthread",
+        "-std=c++11",
+        "-D_FORTIFY_SOURCE=2",
+        "-Wformat",
+        "-Wformat-security",
+        "-fstack-protector-all",
+        "-I ngraph_bridge",
+        "-I external/ngraph/src",
+        "-I logging",
+    ] + CXX_ABI,
+    linkstatic=True,
     visibility = ["//visibility:public"],
 )

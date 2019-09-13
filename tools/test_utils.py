@@ -592,12 +592,16 @@ def run_bazel_build_test(venv_dir, build_dir):
     # Now run the configure
     command_executor(['bash', 'configure_bazel.sh'])
 
-    # Build the bridge
-    command_executor(['bazel', 'build', 'libngraph_bridge.so'])
+    # Build the cpp app - hello_tf
+    command_executor(['bazel', 'build', 'hello_tf'])
 
-    # Build the backends
-    command_executor(['bazel', 'build', '@ngraph//:libinterpreter_backend.so'])
-    command_executor(['bazel', 'build', '@ngraph//:libcpu_backend.so'])
+    # Run the cpp app - hello_tf
+    command_executor(['bazel-bin/hello_tf'])
+
+    # Now built the bigger app
+    command_executor([
+        'bazel', 'build', '//examples/cpp/infer_multiple_networks:infer_multi'
+    ])
 
     # Return to the original directory
     os.chdir(root_pwd)
@@ -610,12 +614,11 @@ def run_bazel_build():
     # Now run the configure
     command_executor(['bash', 'configure_bazel.sh'])
 
-    # Build the bridge
-    command_executor(['bazel', 'build', 'libngraph_bridge.so'])
+    # Build the cpp app - hello_tf
+    command_executor(['bazel', 'build', 'hello_tf'])
 
-    # Build the backend
-    command_executor(['bazel', 'build', '@ngraph//:libinterpreter_backend.so'])
-    command_executor(['bazel', 'build', '@ngraph//:libcpu_backend.so'])
+    # Run the cpp app - hello_tf
+    command_executor(['bazel-bin/hello_tf'])
 
     # Return to the original directory
     os.chdir(root_pwd)

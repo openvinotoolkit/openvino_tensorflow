@@ -19,13 +19,14 @@
 #include <sstream>
 #include <vector>
 
-#include "inference_engine.h"
-#include "ngraph/event_tracing.hpp"
-#include "ngraph_backend_manager.h"
-#include "version.h"
-
 #include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/protobuf/rewriter_config.pb.h"
+
+#include "ngraph/event_tracing.hpp"
+
+#include "examples/cpp/infer_multiple_networks/inference_engine.h"
+#include "ngraph_bridge/ngraph_backend_manager.h"
+#include "ngraph_bridge/version.h"
 
 using tensorflow::SessionOptions;
 using tensorflow::RewriterConfig;
