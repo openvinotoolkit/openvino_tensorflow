@@ -55,7 +55,8 @@ Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
     test_graph_id = stoi(string(copy_env_var));
   } catch (const std::invalid_argument& ia) {
     return errors::InvalidArgument(
-        "Invalid argument for NGRAPH_TF_LOG_TENSOR_COPIES");
+        "Invalid argument for NGRAPH_TF_LOG_TENSOR_COPIES. Exception: ",
+        ia.what());
   }
   // if -1 copies are logged for all graphs
   is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);

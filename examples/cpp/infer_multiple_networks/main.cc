@@ -151,42 +151,42 @@ int main(int argc, char** argv) {
   std::cout << "Component versions\n";
   PrintVersion();
 
-  infer_multiple_networks::InferenceEngine infer_engine_1("engine_1", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_1("engine_1");
   TF_CHECK_OK(infer_engine_1.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
-  infer_multiple_networks::InferenceEngine infer_engine_2("engine_2", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_2("engine_2");
   TF_CHECK_OK(infer_engine_2.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
-  infer_multiple_networks::InferenceEngine infer_engine_3("engine_3", "CPU:0");
+  infer_multiple_networks::InferenceEngine infer_engine_3("engine_3");
   TF_CHECK_OK(infer_engine_3.Load(
       graph, images, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
 
   bool engine_1_running = true;
-  infer_engine_1.Start([&](int step_count) {
+  TF_CHECK_OK(infer_engine_1.Start([&](int step_count) {
     if (step_count == (iteration_count - 1)) {
-      infer_engine_1.Stop();
+      TF_CHECK_OK(infer_engine_1.Stop());
       engine_1_running = false;
     }
-  });
+  }));
 
   bool engine_2_running = true;
-  infer_engine_2.Start([&](int step_count) {
+  TF_CHECK_OK(infer_engine_2.Start([&](int step_count) {
     if (step_count == (iteration_count - 1)) {
-      infer_engine_2.Stop();
+      TF_CHECK_OK(infer_engine_2.Stop());
       engine_2_running = false;
     }
-  });
+  }));
 
   bool engine_3_running = true;
-  infer_engine_3.Start([&](int step_count) {
+  TF_CHECK_OK(infer_engine_3.Start([&](int step_count) {
     if (step_count == (iteration_count - 1)) {
-      infer_engine_3.Stop();
+      TF_CHECK_OK(infer_engine_3.Stop());
       engine_3_running = false;
     }
-  });
+  }));
 
   while (engine_1_running || engine_2_running || engine_3_running) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

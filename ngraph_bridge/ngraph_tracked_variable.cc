@@ -133,7 +133,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   // conditional on whether any reader is taking in a reference. More
   // conservative condition that would work for now: invalidate if any
   // reader is not NGraphEncapsulateOp.
-  auto t_creator = [this](NGraphFreshnessTracker** tracker) {
+  auto t_creator = [](NGraphFreshnessTracker** tracker) {
     *tracker = new NGraphFreshnessTracker();
     return Status::OK();
   };

@@ -166,7 +166,7 @@ TEST(VariableTest, SmallGraph2) {
     ASSERT_OK(tf_session.Run({assign_sub}, &tf_outputs2));
   }
 
-  tf_session.Run({var}, &tf_outputs3);
+  ASSERT_OK(tf_session.Run({var}, &tf_outputs3));
 
   Compare(tf_outputs1, ng_outputs1);
   Compare(tf_outputs2, ng_outputs2);

@@ -791,8 +791,8 @@ Status EncapsulateClusters(
                 "Caught exception while creating backend string ", exp.what(),
                 "\n");
           }
-          BackendManager::CreateBackend(
-              op_backend_name);  // Created a backend here. must free it
+          TF_RETURN_IF_ERROR(BackendManager::CreateBackend(
+              op_backend_name));  // Created a backend here. must free it
           std::unordered_map<std::string, std::string> additional_attribute_map;
           for (auto itr : node->attrs()) {
             // Find the optional attributes to be sent to the backend.
@@ -816,6 +816,7 @@ Status EncapsulateClusters(
           try {
             op_backend = BackendManager::GetBackend(op_backend_name);
           } catch (const std::out_of_range& e) {
+            NGRAPH_VLOG(5) << "Exception: " << e.what();
             BackendManager::ReleaseBackend(op_backend_name);
             throw;
           }
