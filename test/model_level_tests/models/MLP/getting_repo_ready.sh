@@ -1,1 +1,1 @@
-pip install -U keras
+pip install -U keras==2.2.5
