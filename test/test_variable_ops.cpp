@@ -92,6 +92,7 @@ TEST(VariableTest, SmallGraph1) {
           var_assign,
       },
       &tf_outputs1));
+
   for (int i = 0; i < 20; i++) {
     ASSERT_OK(tf_session.Run({assign}, &tf_outputs2));
   }

@@ -34,6 +34,22 @@ REGISTER_OP("NGraphApplyGradientDescent")
     .Attr("ngraph_graph_id: int");
 
 // ------------------------------------------------------------------
+
+REGISTER_OP("NGraphApplyMomentum")
+    .Input("var: Ref(T)")
+    .Input("accum: Ref(T)")
+    .Input("lr: T")
+    .Input("grad: T")
+    .Input("momentum: T")
+    .Output("out: Ref(T)")
+    .Attr("T: numbertype")
+    .Attr("use_locking: bool = false")
+    .Attr("use_nesterov: bool = false")
+    .Attr("just_looking: bool = false")
+    .Attr("is_tf_just_looking: bool = false")
+    .Attr("copy_to_tf: bool = false")
+    .Attr("ngraph_graph_id: int");
+// ------------------------------------------------------------------
 REGISTER_OP("NGraphAssign")
     .Input("ref: Ref(T)")
     .Input("value: T")
