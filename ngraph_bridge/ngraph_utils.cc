@@ -312,12 +312,16 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
 void NgraphSerialize(const std::string& file_name,
                      const std::shared_ptr<ngraph::Function>& ng_function) {
   NGRAPH_VLOG(0) << "Serializing graph to: " << file_name << std::endl;
-  std::string js = ngraph::serialize(ng_function, 4);
+  int json_indentation = 4;
+  StringToFile(file_name, ngraph::serialize(ng_function, json_indentation));
+}
+
+void StringToFile(const std::string& file_name, const std::string& contents) {
   std::ofstream f;
   f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   try {
     f.open(file_name);
-    f << js;
+    f << contents;
     f.close();
   } catch (std::ofstream::failure& e) {
     NGRAPH_VLOG(0) << "Exception opening/closing file " << file_name

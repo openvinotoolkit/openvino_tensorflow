@@ -85,6 +85,9 @@ class NGraphEncapsulateImpl {
       const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
       std::shared_ptr<ng::runtime::Tensor> tensor_from_pipeline);
 
+  void DumpNgFunction(const string&,
+                      std::shared_ptr<ngraph::runtime::Executable>);
+
   // Accessors(getters and setters) for the private data members of
   // NgraphEncapsulateImpl class
   // needed by
@@ -148,19 +151,6 @@ class NGraphEncapsulateImpl {
 
   void ClearNgExecMap() { m_ng_exec_map.clear(); }
 
-  std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>,
-                     std::shared_ptr<ngraph::Function>>
-  GetNgFunctionMap() {
-    return m_ng_function_map;
-  }
-
-  void SetNgFunctionMap(
-      const std::shared_ptr<ngraph::runtime::Executable>& exec,
-      const std::shared_ptr<ngraph::Function>& function) {
-    m_ng_function_map[exec] = function;
-  }
-
-  void ClearNgFunctionMap() { m_ng_function_map.clear(); }
   // TODO:sindhu have another get function for output_cache which is only
   // readable
   std::vector<std::pair<void*, shared_ptr<ng::runtime::Tensor>>>&
@@ -178,6 +168,10 @@ class NGraphEncapsulateImpl {
   void ClearNgExecInputCache() { m_ng_exec_input_cache_map.clear(); }
 
   void ClearNgExecOutputCache() { m_ng_exec_output_cache_map.clear(); }
+
+  void ClearNgExecSerializedFunctionCache() {
+    m_serialized_ng_function_map.clear();
+  }
 
   NGraphFreshnessTracker* GetNgraphFreshnessTracker() {
     return m_freshness_tracker;
@@ -236,9 +230,8 @@ class NGraphEncapsulateImpl {
   // ng_function, ng_executable, Output and Input Cache maps
   std::unordered_map<std::string, std::shared_ptr<ngraph::runtime::Executable>>
       m_ng_exec_map;
-  std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>,
-                     std::shared_ptr<ngraph::Function>>
-      m_ng_function_map;
+  std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>, std::string>
+      m_serialized_ng_function_map;
 
   NgFunctionIOCache m_ng_exec_input_cache_map;
   NgFunctionIOCache m_ng_exec_output_cache_map;
