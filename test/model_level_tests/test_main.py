@@ -63,7 +63,8 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None, stderr=None):
         ps = Popen(cmd, stdin=PIPE, stdout=stdout, stderr=stderr, shell=True)
         so, se = ps.communicate()
         errcode = ps.returncode
-        assert errcode == 0, "Error in running command: " + cmd
+        assert errcode == 0, "Error in running command: " + cmd + ". Error message: " + se.decode(
+        )
         return so, se, errcode
 
 
@@ -168,6 +169,8 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed,
                 repo_dl_loc
             ), "Did not expect " + repo_dl_loc + " to be present. Maybe a leftover from the last run that was not deleted?"
             download_repo(repo_dl_loc, repo_name, repo_version)
+            assert os.path.isdir(
+                repo_dl_loc), "Did not manage to download the repo " + repo_name
             ready_repo(model_dir, repo_dl_loc)
 
         # Iterate through each sub-test
