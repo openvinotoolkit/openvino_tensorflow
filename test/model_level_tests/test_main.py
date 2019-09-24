@@ -63,7 +63,8 @@ def command_executor(cmd, verbose=False, msg=None, stdout=None, stderr=None):
         ps = Popen(cmd, stdin=PIPE, stdout=stdout, stderr=stderr, shell=True)
         so, se = ps.communicate()
         errcode = ps.returncode
-        assert errcode == 0, "Error in running command: " + cmd
+        assert errcode == 0, "Error in running command: " + cmd + ". Error message: " + se.decode(
+        )
         return so, se, errcode
 
 
@@ -127,10 +128,21 @@ def ready_repo(model_dir, repo_dl_loc):
         command_executor(model_dir + '/getting_repo_ready.sh', verbose=True)
 
 
+# Currently there are 2 types of tests. parsing the logs and timing the run
+def valid_test_types():
+    return set(['time', 'logparse'])
+
+
+# Check if the contents of this iterable contains only valid test types
+def check_test_types(iterable):
+    return all(map(lambda i: i in valid_test_types(), iterable))
+
+
 # TODO: this function needs to accept "do-i-dump-pbtxt"? and if so, a cleanup needs to happen later.
 # Also this function could return the list of pbtxts it generated (but does it need to? we can infer it)
 # TODO: this function should also take the level/intensity of test to run
-def run_test_suite(model_dir, configuration, disabled, print_parsed):
+def run_test_suite(model_dir, configuration, disabled, print_parsed,
+                   ignore_test):
     try:
         # TODO: assert TF version. Some models may not run on TF1.12 etc
         model_dir = os.path.abspath(model_dir)
@@ -157,6 +169,8 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed):
                 repo_dl_loc
             ), "Did not expect " + repo_dl_loc + " to be present. Maybe a leftover from the last run that was not deleted?"
             download_repo(repo_dl_loc, repo_name, repo_version)
+            assert os.path.isdir(
+                repo_dl_loc), "Did not manage to download the repo " + repo_name
             ready_repo(model_dir, repo_dl_loc)
 
         # Iterate through each sub-test
@@ -239,14 +253,21 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed):
                                 not custom_parser_present)
                         except:
                             assert False, 'Failed to parse ' + expected_json_file
-                        passed, fail_help_string = compare_parsed_values(
-                            parsed_vals, expected.get('logparse', {}))
-                        if not passed:
-                            print('Failed in test ' + flname +
-                                  '. Help message: ' + fail_help_string)
-                            failed_tests.append(flname)
-                            continue
-                        if 'time' in expected:
+                        assert check_test_types(expected.keys(
+                        )), "Got unexpected key in " + expected.keys(
+                        ) + ". Should have been " + ','.join(valid_test_types)
+                        # We run the test if 'logparse' is present in the expected values to check
+                        # for and it is not in the ignore list
+                        if ('logparse' in expected) and (
+                                'logparse' not in ignore_test):
+                            passed, fail_help_string = compare_parsed_values(
+                                parsed_vals, expected['logparse'])
+                            if not passed:
+                                print('Failed in test ' + flname +
+                                      '. Help message: ' + fail_help_string)
+                                failed_tests.append(flname)
+                                continue
+                        if ('time' in expected) and ('time' not in ignore_test):
                             actual_runtime = tend - tstart
                             # TODO: decide this criteria. time can be pretty variable
                             # TODO: the percentage (0.1) for the time bound might be passed through `expected.json`
@@ -372,7 +393,7 @@ if __name__ == '__main__':
         action='store',
         type=str,
         help='Comma separated list of model names',
-        default='')
+    )
     parser.add_argument(
         '--list',
         action='store_true',
@@ -399,6 +420,13 @@ if __name__ == '__main__':
         help=
         'Print the parsed values from log parsing. Useful when checking in a new model and we want to know its expected values'
     )
+    parser.add_argument(
+        '--ignore_test',
+        type=str,
+        default=None,
+        help=
+        'Comma separated string. Given an expected json file, ignore these tests. Can take values "", "logparse", "time", "logparse,time", "time,logparse"'
+    )
 
     # This script must be run from this location
     assert cwd.split('/')[-1] == 'model_level_tests'
@@ -419,6 +447,12 @@ if __name__ == '__main__':
         args.run_basic_tests or args.run_functional_tests
     ), 'No type of test enabled. Please choose --run_basic_tests, --run_functional_tests or both'
 
+    ignore_test = [] if (
+        args.ignore_test is None) else args.ignore_test.split(',')
+    assert ((ignore_test=='') or check_test_types(ignore_test)
+           ), "Types of possible tests: " + ','.join(valid_test_types()) + \
+    ", but requested to skip " + args.ignore_test
+
     requested_test_suites = os.listdir(
         'models') if args.models == '' else args.models.split(',')
 
@@ -434,12 +468,14 @@ if __name__ == '__main__':
     failed_tests = {}
     skipped_tests = {}
     for test_suite in requested_test_suites:
-        print('Testing model/test-suite: ' + test_suite)
+        print('\n' + '=' * 20 + 'Testing model/test-suite: ' + test_suite +
+              '=' * 20)
         if test_suite not in disabled_test_suite:
             if args.run_basic_tests:
                 passed_tests_in_suite, failed_tests_in_suite, skipped_tests_in_suite = run_test_suite(
                     './models/' + test_suite, args.configuration,
-                    disabled_sub_test.get(test_suite, []), args.print_parsed)
+                    disabled_sub_test.get(test_suite, []), args.print_parsed,
+                    ignore_test)
                 passed_tests[test_suite] = passed_tests_in_suite
                 failed_tests[test_suite] = failed_tests_in_suite
                 skipped_tests[test_suite] = skipped_tests_in_suite
@@ -450,6 +486,8 @@ if __name__ == '__main__':
     print('Passed:\n' + '\033[92m' + print_format(passed_tests) + '\033[0m')
     print('Skipped:\n' + '\033[93m' + print_format(skipped_tests) + '\033[0m')
     print('Failed:\n' + '\033[91m' + print_format(failed_tests) + '\033[0m')
+    all_tests_passed = all([len(failed_tests[k]) == 0 for k in failed_tests])
+    exit(0 if all_tests_passed else 1)
 
 # TODO add a test comparing with TF run?
 # TODO verbose or quiet?
@@ -464,21 +502,4 @@ if __name__ == '__main__':
 # Level3: parse prints we put. These tests are run without "NGRAPH_TF_LOG_PLACEMENT=1". the framework can provide some default parsers, but users are free to add pyscripts that provide functions for custom script parsers
 # These tests can be long
 # So we can offer options to do: {1}, {1,2}, {1,2,3}, {3}  (or do we allow options for any combination of tests?)
-# NOTE: Level3 and Level1 test are same (mechanics wise). Merge them. Then we have only 2 types of tests
-
-# Each model dir represents 1 repo to download. A model dir can have multiple sub tests (each sub-test could represent a different model, or the same model tested under different settings)
-
-# Structure of "expected json"
-# dictionary of expected values. key is a config, value is the expected values json. there is a "default" config, but one can add other configs (for example for other backends etc)
-
-# Sample run script:
-# python test_main.py --run_logparse_tests --models MLP
-
-# feature 1: dumps shell script at the end. dumps shell script even when the framework crashes
-# feature 2: prints list of tests and their descriptions (--list)
-# feature 3: "expected" values can be varied by different configs
-# feature 4: cleanup script
-# feature 5: sub tests folders must start with 'test' (else ignored). Can have 'disabled' in their names to disable
-# feature 6: default and user-specified log parsers (named custom_log_parser.py, which is expected to contain a function custom_parse_logs)
-# feature 7: filename is supposed to be expected.json
-# feature 8: enable_ngraph can be placed in each test dir or in the model dir for all subtests to share. test folder's patch overrides global model folder patch
+# NOTE: Level3 and Level1 test are same (mechanics wise). We have only 2 types of tests, though Level2 is unimplemented for now

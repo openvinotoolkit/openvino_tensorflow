@@ -61,9 +61,7 @@ void NhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[1] = src[2];
 }
 
-void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Reshape<0, 3, 1, 2>(ng_node);
-}
+void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node);
 
 template <typename T>
 void NdhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
@@ -72,9 +70,7 @@ void NdhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[2] = src[3];
 }
 
-void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Reshape3D<0, 4, 1, 2, 3>(ng_node);
-}
+void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node);
 
 template <typename T>
 void NchwToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
@@ -107,17 +103,9 @@ void NdhwcToNcdhw(const std::vector<T>& src, std::vector<size_t>& dst) {
 }
 }
 
-void BatchToNGraph(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_input) {
-  if (is_nhwc) {
-    detail::NhwcToNGraph(ng_input);
-  }
-}
+void BatchToNGraph(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_input);
 
-void BatchToNGraph3D(bool is_ndhwc, std::shared_ptr<ngraph::Node>& ng_input) {
-  if (is_ndhwc) {
-    detail::NdhwcToNGraph(ng_input);
-  }
-}
+void BatchToNGraph3D(bool is_ndhwc, std::shared_ptr<ngraph::Node>& ng_input);
 
 template <typename T>
 void BatchedOpParamToNGraph(bool is_nhwc, const std::vector<T>& src,
@@ -159,20 +147,9 @@ void BatchedOpParamReshape3D(bool is_ndhwc, const std::vector<T>& src,
   }
 }
 
-void BatchToTensorflow(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_node) {
-  if (!is_nhwc) {
-    return;
-  }
-  Reshape<0, 2, 3, 1>(ng_node);
-}
+void BatchToTensorflow(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_node);
 
-void BatchToTensorflow3D(bool is_ndhwc,
-                         std::shared_ptr<ngraph::Node>& ng_node) {
-  if (!is_ndhwc) {
-    return;
-  }
-  Reshape3D<0, 2, 3, 4, 1>(ng_node);
-}
+void BatchToTensorflow3D(bool is_ndhwc, std::shared_ptr<ngraph::Node>& ng_node);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

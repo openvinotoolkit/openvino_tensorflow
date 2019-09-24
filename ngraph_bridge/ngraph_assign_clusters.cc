@@ -653,7 +653,7 @@ Status AssignClusters(Graph* graph) {
       continue;
     }
 
-    int cluster_idx = NGraphClusterManager::NewCluster();
+    size_t cluster_idx = NGraphClusterManager::NewCluster();
 
     for (auto node : cluster->nodes) {
       if (NGRAPH_VLOG_IS_ON(5)) {
@@ -669,7 +669,7 @@ Status AssignClusters(Graph* graph) {
       }
 
       // TODO(amprocte): move attr name to a constant
-      node->AddAttr("_ngraph_cluster", cluster_idx);
+      node->AddAttr("_ngraph_cluster", (int)cluster_idx);
 
       if (config::IsLoggingPlacement()) {
         // map from cluster id to ngraph_cluster id
@@ -798,7 +798,10 @@ Status AssignClusters(Graph* graph) {
     std::cout << "NGTF_SUMMARY: Summary of reasons why a pair of edge "
                  "connected clusters did not merge\n";
     print_reason_summary(reason_count_clusters,
-                         [](EdgeNonContractionReasons x) { return false; });
+                         [](EdgeNonContractionReasons x) {
+                           NGRAPH_VLOG(5) << "EdgeNonContractionReasons: " << x;
+                           return false;
+                         });
   }
 
   return Status::OK();

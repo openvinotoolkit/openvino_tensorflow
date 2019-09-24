@@ -146,7 +146,7 @@ def train_mnist_cnn(FLAGS):
         tf.random.set_random_seed(seed)
         shuffle_batch = False
 
-    supported_optimizers = ["adam", "sgd"]
+    supported_optimizers = ["adam", "sgd", "momentum"]
 
     assert (FLAGS.optimizer in supported_optimizers), "Optimizer not supported"
 
@@ -174,6 +174,9 @@ def train_mnist_cnn(FLAGS):
         elif FLAGS.optimizer == "sgd":
             train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(
                 cross_entropy)
+        elif FLAGS.optimizer == "momentum":
+            train_step = tf.train.MomentumOptimizer(1e-4,
+                                                    0.9).minimize(cross_entropy)
 
     with tf.name_scope('accuracy'):
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))

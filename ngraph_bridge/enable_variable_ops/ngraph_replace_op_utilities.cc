@@ -27,52 +27,50 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
-                                   const string replacement_node_name,
-                                   const string replacement_node_type,
-                                   const bool just_looking,
-                                   const bool is_tf_just_looking,
-                                   const bool outputs_ng_supported,
-                                   const int graph_id,
-                                   const bool is_backend_set) {
-  NGRAPH_VLOG(1) << "Start replacing NGraphApplyGradientDescent "
+Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
+                        const string replacement_node_name,
+                        const string replacement_node_type,
+                        const bool just_looking, const bool is_tf_just_looking,
+                        const bool outputs_ng_supported, const int graph_id,
+                        const bool is_backend_set) {
+  NGRAPH_VLOG(1) << "Start replacing " << node->type_string() << " "
                  << node->name();
 
-  DataType dtype;
-  TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "T", &dtype));
-  bool use_locking;
-  TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "use_locking", &use_locking));
-
-  NodeBuilder::NodeOut input_var;
-  NodeBuilder::NodeOut input_alpha;
-  NodeBuilder::NodeOut input_delta;
-
+  std::vector<NodeBuilder::NodeOut> op_inputs;
   std::vector<const Edge*> input_edges;
   TF_RETURN_IF_ERROR(node->input_edges(&input_edges));
 
-  NGRAPH_VLOG(1) << "No of input edges to ApplyGradientDescent "
-                 << input_edges.size();
+  NGRAPH_VLOG(1) << "No of input edges to Optimizer " << node->type_string()
+                 << ": " << input_edges.size();
 
-  input_var =
-      NodeBuilder::NodeOut(input_edges[0]->src(), input_edges[0]->src_output());
-  input_alpha =
-      NodeBuilder::NodeOut(input_edges[1]->src(), input_edges[1]->src_output());
-  input_delta =
-      NodeBuilder::NodeOut(input_edges[2]->src(), input_edges[2]->src_output());
+  int num_inputs = node->num_inputs();
+  for (int i = 0; i < num_inputs; i++) {
+    op_inputs.push_back(NodeBuilder::NodeOut(input_edges[i]->src(),
+                                             input_edges[i]->src_output()));
+  }
 
-  TF_RETURN_IF_ERROR(NodeBuilder(replacement_node_name, replacement_node_type)
-                         .Attr("T", dtype)
-                         .Attr("use_locking", use_locking)
-                         .Attr("just_looking", just_looking)
-                         .Attr("is_tf_just_looking", is_tf_just_looking)
-                         .Attr("copy_to_tf", !outputs_ng_supported)
-                         .Attr("ngraph_graph_id", graph_id)
-                         .Input(input_var)
-                         .Input(input_alpha)
-                         .Input(input_delta)
-                         .Device(node->assigned_device_name())
-                         .Finalize(graph, &(*replacement)));
+  NodeBuilder nb = NodeBuilder(replacement_node_name, replacement_node_type)
+                       .Attr("just_looking", just_looking)
+                       .Attr("is_tf_just_looking", is_tf_just_looking)
+                       .Attr("copy_to_tf", !outputs_ng_supported)
+                       .Attr("ngraph_graph_id", graph_id)
+                       .Device(node->assigned_device_name());
+  // Threre can be varying no of attributes for  different Op ex. Momentum or
+  // SGD or Adam
+  // for loop below generalizes this
+  for (auto it = node->attrs().begin(); it != node->attrs().end(); it++) {
+    nb.Attr(it->first, it->second);
+  }
+  // Threre can be varying no of inputs for different Op ex. Momentum or SGD or
+  // Adam
+  // for loop below generalizes this
+  for (auto const i : op_inputs) {
+    // Adding the all inputs
+    nb.Input(i);
+  }
 
+  Status status = nb.Finalize(graph, replacement);
+  TF_RETURN_IF_ERROR(status);
   (*replacement)->set_assigned_device_name(node->assigned_device_name());
 
   if (is_backend_set) {
@@ -81,9 +79,8 @@ Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
         GetNodeAttr(node->attrs(), "_ngraph_backend", &backend_name));
     SetNodeBackend(*replacement, backend_name);
   }
-
   return Status::OK();
-}  // end of ReplaceApplyGradientDescent
+}  // end of ReplaceOptimizer
 
 Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const string replacement_node_name,
@@ -124,7 +121,7 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                          .Input(input_ref)
                          .Input(input_val)
                          .Device(node->assigned_device_name())
-                         .Finalize(graph, &(*replacement)));
+                         .Finalize(graph, replacement));
 
   (*replacement)->set_assigned_device_name(node->assigned_device_name());
 
@@ -194,11 +191,15 @@ Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
 // Though edges will be removed when we remove the node
 // we specifically remove the edges to be sure
 Status ReplaceInputControlEdges(Graph* graph, Node* node, Node* replacement) {
+  std::vector<const Edge*> edges_to_remove;
   for (auto edge : node->in_edges()) {
     NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
     if (!edge->IsControlEdge()) continue;
     graph->AddEdge(edge->src(), edge->src_output(), replacement,
                    edge->dst_input());
+    edges_to_remove.push_back(edge);
+  }
+  for (auto edge : edges_to_remove) {
     graph->RemoveEdge(edge);
   }
   return Status::OK();
@@ -208,6 +209,7 @@ Status ReplaceInputControlEdges(Graph* graph, Node* node, Node* replacement) {
 // we specifically remove the edges to be sure
 Status ReplaceOutputEdges(Graph* graph, Node* node, Node* replacement) {
   std::vector<const Edge*> edges;
+  std::vector<const Edge*> edges_to_remove;
   for (auto edge : node->out_edges()) {
     edges.push_back(edge);
   }
@@ -216,9 +218,11 @@ Status ReplaceOutputEdges(Graph* graph, Node* node, Node* replacement) {
     NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
     graph->AddEdge(replacement, edge->src_output(), edge->dst(),
                    edge->dst_input());
+    edges_to_remove.push_back(edge);
+  }
+  for (auto edge : edges_to_remove) {
     graph->RemoveEdge(edge);
   }
-
   return Status::OK();
 }
 

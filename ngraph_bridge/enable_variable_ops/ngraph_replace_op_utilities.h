@@ -25,14 +25,12 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status ReplaceApplyGradientDescent(Graph* graph, Node* node, Node** replacement,
-                                   const string replacement_node_name,
-                                   const string replacement_op_type,
-                                   const bool just_looking,
-                                   const bool is_tf_just_looking,
-                                   const bool outputs_ng_supported,
-                                   const int graph_id,
-                                   const bool is_backend_set);
+Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
+                        const string replacement_node_name,
+                        const string replacement_op_type,
+                        const bool just_looking, const bool is_tf_just_looking,
+                        const bool outputs_ng_supported, const int graph_id,
+                        const bool is_backend_set);
 
 Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const string replacement_node_name,

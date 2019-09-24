@@ -19,13 +19,14 @@
 #include <sstream>
 #include <vector>
 
-#include "inference_engine.h"
-#include "ngraph/event_tracing.hpp"
-#include "ngraph_backend_manager.h"
-#include "version.h"
-
 #include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/protobuf/rewriter_config.pb.h"
+
+#include "ngraph/event_tracing.hpp"
+
+#include "examples/cpp/infer_multiple_networks/inference_engine.h"
+#include "ngraph_bridge/ngraph_backend_manager.h"
+#include "ngraph_bridge/version.h"
 
 using tensorflow::SessionOptions;
 using tensorflow::RewriterConfig;
@@ -50,8 +51,8 @@ extern tf::Status ReadTensorFromImageFile(const std::vector<string>& file_names,
 
 namespace infer_multiple_networks {
 
-InferenceEngine::InferenceEngine(const string& name, const string& backend)
-    : m_name(name) {}
+InferenceEngine::InferenceEngine(const string& name) : m_name(name) {}
+
 Status InferenceEngine::Load(const string& network,
                              const std::vector<string>& image_files,
                              int input_width, int input_height,
@@ -197,10 +198,13 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
   // The following is related to Grappler - which we are turning off
   // Until we get a library fully running
   if (tf::ngraph_bridge::ngraph_tf_is_grappler_enabled()) {
-    options.config.mutable_graph_options()
-        ->mutable_rewrite_options()
-        ->add_custom_optimizers()
-        ->set_name("ngraph-optimizer");
+    auto* custom_config = options.config.mutable_graph_options()
+                              ->mutable_rewrite_options()
+                              ->add_custom_optimizers();
+
+    custom_config->set_name("ngraph-optimizer");
+    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s("CPU");
+    (*custom_config->mutable_parameter_map())["device_id"].set_s("1");
 
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
@@ -208,7 +212,7 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
 
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
-        ->set_meta_optimizer_iterations(RewriterConfig::ONE);
+        ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
   }
 
   // Load the network

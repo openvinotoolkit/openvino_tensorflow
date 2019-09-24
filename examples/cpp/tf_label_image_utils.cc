@@ -80,7 +80,7 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "ngraph_api.h"
+#include "ngraph_bridge/ngraph_api.h"
 
 // These are all common classes it's handy to reference with no namespace.
 // using tensorflow::Flag;
@@ -172,15 +172,15 @@ Status ReadTensorFromImageFile(const std::vector<string>& file_names,
 
     // Now try to figure out what kind of file it is and decode it.
     tensorflow::Output image_reader;
-    if (tensorflow::str_util::EndsWith(file_names[i], ".png")) {
+    if (absl::EndsWith(file_names[i], ".png")) {
       image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
                                DecodePng::Channels(input_channels));
-    } else if (tensorflow::str_util::EndsWith(file_names[i], ".gif")) {
+    } else if (absl::EndsWith(file_names[i], ".gif")) {
       // gif decoder returns 4-D tensor, remove the first dim
       image_reader =
           Squeeze(root.WithOpName("squeeze_first_dim"),
                   DecodeGif(root.WithOpName("gif_reader"), file_reader));
-    } else if (tensorflow::str_util::EndsWith(file_names[i], ".bmp")) {
+    } else if (absl::EndsWith(file_names[i], ".bmp")) {
       image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
     } else {
       // Assume if it's neither a PNG nor a GIF then it must be a JPEG.

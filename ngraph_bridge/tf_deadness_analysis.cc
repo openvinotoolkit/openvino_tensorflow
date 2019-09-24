@@ -118,7 +118,7 @@ class AndPredicate : public Predicate {
     std::transform(operands().begin(), operands().end(),
                    std::back_inserter(operands_str),
                    [](Predicate* pred) { return pred->ToString(); });
-    return strings::StrCat("(", str_util::Join(operands_str, " & "), ")");
+    return strings::StrCat("(", absl::StrJoin(operands_str, " & "), ")");
   }
   bool operator==(const Predicate& other) const override {
     return other.kind() == Kind::kAnd &&
@@ -147,7 +147,7 @@ class OrPredicate : public Predicate {
     std::transform(operands().begin(), operands().end(),
                    std::back_inserter(operands_str),
                    [](Predicate* pred) { return pred->ToString(); });
-    return strings::StrCat("(", str_util::Join(operands_str, " | "), ")");
+    return strings::StrCat("(", absl::StrJoin(operands_str, " | "), ")");
   }
   bool operator==(const Predicate& other) const override {
     return other.kind() == Kind::kOr &&
@@ -312,7 +312,7 @@ class DeadnessAnalysisImpl : public DeadnessAnalysis {
   Status Populate();
   bool HasInputsWithMismatchingDeadness(const Node& node) override;
   void Print() const override;
-  Status GetNodePredicate(const Node& node, string& pred_string);
+  Status GetNodePredicate(const Node& node, string& pred_string) override;
 
  private:
   enum class EdgeKind { kDataAndControl, kDataOnly, kControlOnly };

@@ -19,39 +19,84 @@ import tensorflow as tf
 from google.protobuf import text_format
 from tensorflow.core.protobuf import meta_graph_pb2
 from tensorflow.core.protobuf import rewriter_config_pb2
+from tensorflow.core.framework import attr_value_pb2
+from tensorflow.core.framework import tensor_pb2
 from tensorflow.python.grappler import tf_optimizer
 import ngraph_bridge
 import os
 import sys
+import json
 from functools import partial
 
 
-def parse_extra_params_string(raw_extra_params):
-    raw_extra_params = raw_extra_params.strip(' ')
-    assert raw_extra_params[0] == '{' and raw_extra_params[
-        -1] == '}', "Expected extra_params string to be a dictionary beginning with { and ending with }"
-    raw_extra_params_contents = raw_extra_params[1:-1].strip(' ')
-    extra_params_dict = {}
-    if len(raw_extra_params_contents) == 0:
-        return extra_params_dict
-    # could have used eval(extra_params_string), but then the string would have to be the cumbersome {\"abc\":1}
-    # and not {"abc":1} or {abc:1}. Hence explicity parsing the string without using eval
-    for key_val in raw_extra_params_contents.split(','):
-        key_val = key_val.strip(' ')
-        try:
-            key, val = key_val.split(':')
-            extra_params_dict[key.strip(' ')] = val.strip(' ')
-        except Exception as e:
-            raise type(
-                e
-            )(e.message +
-              'Got an entry in extra_params, that is an invalid entry for a python dictionary: '
-              + key_val)
-    return extra_params_dict
+class Tf2ngraphJson(object):
+
+    @staticmethod
+    def allowed_fields():
+        return set(["shape_hints", "backend_optional_params"])
+
+    @staticmethod
+    def assert_type(obj, expected_type, tag):
+        assert type(obj) == expected_type, "Expected " + tag + " to be " + str(
+            expected_type) + " but got " + str(type(obj))
+
+    @staticmethod
+    def check_shape_hints(shape_hints):
+        Tf2ngraphJson.assert_type(shape_hints, type([]), 'shape_hints')
+        for item in shape_hints:
+            Tf2ngraphJson.assert_type(item, type({}),
+                                      'each element of the shape_hints list')
+            for k in item:
+                Tf2ngraphJson.assert_type(
+                    k, type(""), 'the keys of dictionaries in shape_hints list')
+                Tf2ngraphJson.assert_type(
+                    item[k], type([]),
+                    'the values of dictionaries in shape_hints list')
+
+    @staticmethod
+    def check_optional_params(opt_params):
+        for optional_attr in opt_params:
+            Tf2ngraphJson.assert_type(opt_params[optional_attr], type(""),
+                                      'keys of backend_optional_params')
+            Tf2ngraphJson.assert_type(optional_attr, type(""),
+                                      'values of backend_optional_params')
+
+    @staticmethod
+    def parse_json(json_name):
+        if json_name == '':
+            return {}, []
+        optional_backend_params = {}
+        shape_hints = []
+        with open(json_name) as f:
+            dct = json.load(f)
+            for k in dct:
+                if k == 'shape_hints':
+                    Tf2ngraphJson.check_shape_hints(dct[k])
+                    shape_hints = dct[k]
+                elif k == 'backend_optional_params':
+                    Tf2ngraphJson.check_optional_params(dct[k])
+                    optional_backend_params = dct[k]
+                else:
+                    assert False, "Expected keys to be only in " + str(
+                        allowed_fields())
+        return optional_backend_params, shape_hints
+
+    @staticmethod
+    def dump_json(json_name, optional_params=None, shape_hints=None):
+        optional_params = {} if optional_params is None else optional_params
+        shape_hints = [] if shape_hints is None else shape_hints
+        Tf2ngraphJson.check_optional_params(optional_params)
+        Tf2ngraphJson.check_shape_hints(shape_hints)
+        dict_to_dump = {"backend_optional_params": optional_params}
+        if len(shape_hints) > 0:
+            dict_to_dump["shape_hints"] = shape_hints
+        with open(json_name, 'w') as fp:
+            json.dump(dict_to_dump, fp)
 
 
 def update_config_to_include_custom_config(config, backend, device_id,
-                                           extra_params):
+                                           backend_optional_params, shape_hints,
+                                           do_aot):
     rewriter_options = rewriter_config_pb2.RewriterConfig()
     rewriter_options.meta_optimizer_iterations = (
         rewriter_config_pb2.RewriterConfig.ONE)
@@ -60,8 +105,24 @@ def update_config_to_include_custom_config(config, backend, device_id,
     ngraph_optimizer.name = "ngraph-optimizer"
     ngraph_optimizer.parameter_map["ngraph_backend"].s = backend.encode()
     ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
-    for k in extra_params:
-        ngraph_optimizer.parameter_map[k].s = extra_params[k].encode()
+    for k in backend_optional_params:
+        ngraph_optimizer.parameter_map[k].s = backend_optional_params[k].encode(
+        )
+    # Attach shape hints
+    for hint_id, shape_hint in enumerate(shape_hints):
+        shape_hint_name = "shape_hint_" + str(hint_id)
+        ngraph_optimizer.parameter_map[
+            shape_hint_name].func.name = shape_hint_name.encode()
+        ngraph_optimizer.parameter_map[shape_hint_name].func.attr.get_or_create(
+            'hint_body').func.name = b'hint_body'
+        for node_name in shape_hint:  # TODO: verify that node names passed in shape hints are valid node names present in the graph
+            ngraph_optimizer.parameter_map[
+                shape_hint_name].func.attr.get_or_create(
+                    'hint_body').func.attr.get_or_create(
+                        node_name).tensor.int_val.extend(shape_hint[node_name])
+    # Attach aot request
+    ngraph_optimizer.parameter_map["aot_requested"].s = str(
+        ("0", "1")[do_aot]).encode()
     config.MergeFrom(
         tf.ConfigProto(
             graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
@@ -69,7 +130,8 @@ def update_config_to_include_custom_config(config, backend, device_id,
 
 
 def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
-                                  device_id, extra_params):
+                                  device_id, backend_optional_params,
+                                  shape_hints, do_aot):
     graph = tf.Graph()
     with graph.as_default():
         tf.import_graph_def(input_gdef, name="")
@@ -89,10 +151,11 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
         output_collection)
 
     session_config = tf.ConfigProto()
-    # Pass backend and extra backend params to grappler through rewriter config by updating the config
+    # Pass backend and backend_optional_params to grappler through rewriter config by updating the config
     # TODO: move update_config_to_include_custom_config to ngraph_bridge
     session_config = update_config_to_include_custom_config(
-        session_config, ng_backend, device_id, extra_params)
+        session_config, ng_backend, device_id, backend_optional_params,
+        shape_hints, do_aot)
     output_gdef = tf_optimizer.OptimizeGraph(
         session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
     return output_gdef
@@ -147,6 +210,7 @@ def prepare_argparser(formats):
     python tf2ngraph.py --input_pbtxt mobilenet.pbtxt --output_nodes out_node --output_pbtxt mobilenet_ngraph.pbtxt
     python tf2ngraph.py --input_pb inception_v3_2016_08_28_frozen.pb --output_nodes InceptionV3/Predictions/Reshape_1 --output_pb inception_v3_2016_08_28_frozen_ngraph.pb
     python tf2ngraph.py --input_pbtxt ../test/test_axpy.pbtxt --output_nodes add --output_pbtxt axpy_ngraph.pbtxt --ng_backend CPU
+    python tf2ngraph.py --input_pbtxt ../test/test_axpy.pbtxt --output_nodes add --output_pbtxt axpy_ngraph.pbtxt --ng_backend INTERPRETER --config_file sample_optional_params_and_shape_hints.json --precompile
     ''')
     in_out_groups = [
         parser.add_argument_group(i, j) for i, j in zip(
@@ -170,10 +234,16 @@ def prepare_argparser(formats):
         "--ng_backend", default='CPU', help="Ngraph backend. Eg, NNPI")
     parser.add_argument("--device_id", default='', help="Device id. Eg, 0")
     parser.add_argument(
-        "--extra_params",
-        default='{}',
+        "--config_file",
+        default='',
         help=
-        "Other params that the backend needs in the form of a dictionary. Eg, {max_cores: 4}."
+        "Json file that contains optional backend configuration settings and shape hints"
+    )
+    parser.add_argument(
+        "--precompile",
+        action='store_true',
+        help=
+        "Perform precompilation to embed the ngraph executable in the dumped TF graph"
     )
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -237,7 +307,7 @@ allowed_formats = {
 
 
 def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
-            device_id, extra_params):
+            device_id, backend_optional_params, shape_hints, do_aot):
     """Functional api for converting TF models by inserting ngraph nodes.
     Sample usage:
     from tf2ngraph import convert
@@ -259,7 +329,8 @@ def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
     input_gdef = get_gdef(inp_format, inp_loc)
     attach_device(input_gdef)
     output_gdef = run_ngraph_grappler_optimizer(
-        input_gdef, output_nodes, ng_backend, device_id, extra_params)
+        input_gdef, output_nodes, ng_backend, device_id,
+        backend_optional_params, shape_hints, do_aot)
     save_model(output_gdef, out_format, out_loc)
 
 
@@ -273,11 +344,19 @@ def main():
     inp_format, inp_loc = filter_dict("input", args.__dict__)
     out_format, out_loc = filter_dict("output", args.__dict__)
     output_nodes = args.output_nodes.split(',')
-    extra_params = parse_extra_params_string(args.extra_params)
+    backend_optional_params, shape_hints = Tf2ngraphJson.parse_json(
+        args.config_file)
     convert(inp_format, inp_loc, out_format, out_loc, output_nodes,
-            args.ng_backend, args.device_id, extra_params)
+            args.ng_backend, args.device_id, backend_optional_params,
+            shape_hints, args.precompile)
     print('Converted the model. Exiting now')
 
 
 if __name__ == '__main__':
     main()
+
+    # TODO remove these lines
+    # python tf2ngraph.py --input_pbtxt ../test/test_axpy.pbtxt --output_nodes add --output_pbtxt axpy_ngraph.pbtxt --ng_backend INTERPRETER --config_file sample_optional_params_and_shape_hints.json --precompile
+    # python run_tf2ngraph_model.py
+
+    # TODO what happens if same shape is passed twice

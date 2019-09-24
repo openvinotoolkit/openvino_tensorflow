@@ -42,7 +42,7 @@ namespace infer_multiple_networks {
 
 class InferenceEngine {
  public:
-  InferenceEngine(const string& name, const string& backend);
+  InferenceEngine(const string& name);
   ~InferenceEngine();
 
   Status Load(const string& network, const std::vector<string>& image_files,

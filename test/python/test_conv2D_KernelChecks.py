@@ -63,7 +63,11 @@ class TestConv2DBackpropInput(NgraphTest):
 
         return x1, x2
 
-    def test_conv2d_stride_in_batch_not_supported(self):
+    @pytest.mark.parametrize(("strides",), (
+        ([2, 1, 1, 1],),
+        ([1, 1, 1, 2],),
+    ))
+    def test_conv2d_stride_in_batch_not_supported(self, strides):
         inp_values, filt_values = self.make_filter_and_backprop_args()
 
         def run_test(sess):
@@ -80,19 +84,6 @@ class TestConv2DBackpropInput(NgraphTest):
             self.with_ngraph(run_test)
         assert "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message
 
-    def test_conv2d_stride_in_depth_not_supported(self):
-        inp_values, filt_values = self.make_filter_and_backprop_args()
-
-        def run_test(sess):
-            inp = array_ops.placeholder(dtypes.float32)
-            filt = array_ops.placeholder(dtypes.float32)
-            return sess.run(
-                nn_ops.conv2d(inp, filt, strides=[1, 1, 1, 2], padding="SAME"),
-                {
-                    inp: inp_values,
-                    filt: filt_values
-                })
-
-        with pytest.raises(Exception) as excinfo:
-            self.with_ngraph(run_test)
-        assert "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message
+        # TF also fails
+        with pytest.raises(Exception) as excinfo1:
+            self.without_ngraph(run_test)

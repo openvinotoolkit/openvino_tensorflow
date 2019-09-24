@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import numpy as np
 
 import tensorflow as tf
 from tensorflow.python.framework import constant_op
@@ -28,46 +29,35 @@ from tensorflow.python.ops.gen_nn_ops import relu_grad
 
 from common import NgraphTest
 
+np.random.seed(5)
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
+
 class TestReluGradOperations(NgraphTest):
 
     def test_relugrad_2d(self):
-        gradients = constant_op.constant(
-            self.generate_random_numbers(6, 1.0, 10.0), shape=[2, 3])
-        features = constant_op.constant(
-            self.generate_random_numbers(6, 0.0, 100.0), shape=[2, 3])
-
-        # Run on nGraph
-        with self.device:
-            out = relu_grad(gradients, features)
-            with self.session as sess:
-                result = sess.run(out)
-
-        # Run on CPU
-        with self.cpu_device:
-            out = relu_grad(gradients, features)
-            with self.session as sess:
-                expected = sess.run(out)
-
-        assert (result == expected).all()
+        gradients = tf.placeholder(tf.float32, [2, 3])
+        features = tf.placeholder(tf.float32, [2, 3])
+        out = relu_grad(gradients, features)
+        g = np.random.rand(2, 3)
+        f = np.random.rand(2, 3)
+        sess_fn = lambda sess: sess.run(
+            out, feed_dict={
+                gradients: g,
+                features: f
+            })
+        assert (np.allclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)))
 
     def test_relugrad_1d(self):
-        gradients = constant_op.constant(
-            self.generate_random_numbers(100, 123.0, 345.0), shape=[100])
-        features = constant_op.constant(
-            self.generate_random_numbers(100, 567.0, 789.0), shape=[100])
-
-        # Run on nGraph
-        with self.device:
-            out = relu_grad(gradients, features)
-            with self.session as sess:
-                result = sess.run(out)
-
-        # Run on CPU
-        with self.cpu_device:
-            out = relu_grad(gradients, features)
-            with self.session as sess:
-                expected = sess.run(out)
-
-        assert (result == expected).all()
+        gradients = tf.placeholder(tf.float32, [100])
+        features = tf.placeholder(tf.float32, [100])
+        out = relu_grad(gradients, features)
+        g = np.random.rand(100)
+        f = np.random.rand(100)
+        sess_fn = lambda sess: sess.run(
+            out, feed_dict={
+                gradients: g,
+                features: f
+            })
+        assert (np.allclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)))

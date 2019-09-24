@@ -56,7 +56,10 @@ class NGraphVar : public ResourceBase {
 
     // Create Backend
     NGRAPH_VLOG(4) << "NGraphVar::Create Backend ";
-    BackendManager::CreateBackend(ng_backend_name_);
+    Status status = BackendManager::CreateBackend(ng_backend_name_);
+    if (!status.ok()) {
+      NGRAPH_VLOG(2) << "Cannot create backend " << ng_backend_name_;
+    }
     ng::runtime::Backend* op_backend =
         BackendManager::GetBackend(ng_backend_name_);
 

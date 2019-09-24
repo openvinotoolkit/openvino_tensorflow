@@ -27,7 +27,6 @@ import pytest
 from common import NgraphTest
 
 
-@pytest.mark.skip(reason="new deviceless mode WIP")
 class TestSqueezeOperations(NgraphTest):
 
     @pytest.mark.parametrize(("shape", "axis"),
@@ -37,19 +36,19 @@ class TestSqueezeOperations(NgraphTest):
     def test_squeeze(self, shape, axis):
         a = tf.placeholder(tf.float32, shape=shape)
 
-        with self.device:
-            a1 = tf.squeeze(a, axis)
-            a_val = np.random.random_sample(shape)
-            a_sq = np.squeeze(a_val, axis=axis)
+        a1 = tf.squeeze(a, axis)
+        a_val = np.random.random_sample(shape)
+        a_sq = np.squeeze(a_val, axis=axis)
 
-            with self.session as sess:
-                (result_a,) = sess.run((a1,), feed_dict={a: a_val})
-                assert result_a.shape == a_sq.shape
-                assert np.allclose(result_a, a_sq)
+        sess_fn = lambda sess: sess.run((a1,), feed_dict={a: a_val})
+        (result_a,) = self.with_ngraph(sess_fn)
+        assert result_a.shape == a_sq.shape
+        assert np.allclose(result_a, a_sq)
 
     def test_incorrect_squeeze(self):
         shape1 = (1, 2, 3, 1)
         a = tf.placeholder(tf.float32, shape=shape1)
-        with self.device:
-            with pytest.raises(ValueError):
-                tf.squeeze(a, [0, 1])
+        with pytest.raises(ValueError):
+            a1 = tf.squeeze(a, [0, 1])
+            sess_fn = lambda sess: sess.run((a1,))
+            (result_a,) = self.with_ngraph(sess_fn)

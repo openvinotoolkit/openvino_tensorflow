@@ -46,8 +46,8 @@ template_rule(
     out = "include/mkldnn_version.h",
     substitutions = {
         "@MKLDNN_VERSION_MAJOR@": "0",
-        "@MKLDNN_VERSION_MINOR@": "18",
-        "@MKLDNN_VERSION_PATCH@": "0",
+        "@MKLDNN_VERSION_MINOR@": "20",
+        "@MKLDNN_VERSION_PATCH@": "2",
         "@MKLDNN_VERSION_HASH@": "N/A",
     },
 )
@@ -61,6 +61,8 @@ cc_library(
         "src/cpu/*.hpp",
         "src/cpu/gemm/*.cpp",
         "src/cpu/gemm/*.hpp",
+        "src/cpu/gemm/bf16/*.hpp",
+        "src/cpu/gemm/bf16/*.cpp",
         "src/cpu/gemm/f32/*.cpp",
         "src/cpu/gemm/f32/*.hpp",
         "src/cpu/gemm/s8x8s32/*.cpp",
@@ -111,6 +113,8 @@ cc_library(
         "src/cpu/*.hpp",
         "src/cpu/gemm/*.cpp",
         "src/cpu/gemm/*.hpp",
+        "src/cpu/gemm/bf16/*.hpp",
+        "src/cpu/gemm/bf16/*.cpp",
         "src/cpu/gemm/f32/*.cpp",
         "src/cpu/gemm/f32/*.hpp",
         "src/cpu/gemm/s8x8s32/*.cpp",

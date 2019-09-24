@@ -55,7 +55,8 @@ Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
     test_graph_id = stoi(string(copy_env_var));
   } catch (const std::invalid_argument& ia) {
     return errors::InvalidArgument(
-        "Invalid argument for NGRAPH_TF_LOG_TENSOR_COPIES");
+        "Invalid argument for NGRAPH_TF_LOG_TENSOR_COPIES. Exception: ",
+        ia.what());
   }
   // if -1 copies are logged for all graphs
   is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);
@@ -113,6 +114,61 @@ void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
     out << input << "\n    ";
   }
   out << "\n";
+}
+
+//---------------------------------------------------------------------------
+//  TensorToStream
+//---------------------------------------------------------------------------
+Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
+  const char* data = tensor.tensor_data().data();
+  int64 n_elements = tensor.NumElements();
+  switch (tensor.dtype()) {
+    case DT_HALF:
+      TensorDataToStream<Eigen::half>(ostream, n_elements, data);
+      break;
+    case DT_FLOAT:
+      TensorDataToStream<float>(ostream, n_elements, data);
+      break;
+    case DT_DOUBLE:
+      TensorDataToStream<double>(ostream, n_elements, data);
+      break;
+    case DT_UINT32:
+      TensorDataToStream<uint32>(ostream, n_elements, data);
+      break;
+    case DT_INT32:
+      TensorDataToStream<int32>(ostream, n_elements, data);
+      break;
+    case DT_UINT8:
+    case DT_QUINT8:
+      TensorDataToStream<uint8>(ostream, n_elements, data);
+      break;
+    case DT_UINT16:
+    case DT_QUINT16:
+      TensorDataToStream<uint16>(ostream, n_elements, data);
+      break;
+    case DT_INT8:
+    case DT_QINT8:
+      TensorDataToStream<int8>(ostream, n_elements, data);
+      break;
+    case DT_INT16:
+    case DT_QINT16:
+      TensorDataToStream<int16>(ostream, n_elements, data);
+      break;
+    case DT_UINT64:
+      TensorDataToStream<uint64>(ostream, n_elements, data);
+      break;
+    case DT_INT64:
+      TensorDataToStream<int64>(ostream, n_elements, data);
+      break;
+    case DT_BOOL:
+      TensorDataToStream<bool>(ostream, n_elements, data);
+      break;
+    default:
+      return errors::Internal("TensorToStream got unsupported data type ",
+                              DataType_Name(tensor.dtype()));
+      break;
+  }
+  return Status::OK();
 }
 
 Status TFDataTypeToNGraphElementType(DataType tf_dt,
@@ -256,12 +312,16 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
 void NgraphSerialize(const std::string& file_name,
                      const std::shared_ptr<ngraph::Function>& ng_function) {
   NGRAPH_VLOG(0) << "Serializing graph to: " << file_name << std::endl;
-  std::string js = ngraph::serialize(ng_function, 4);
+  int json_indentation = 4;
+  StringToFile(file_name, ngraph::serialize(ng_function, json_indentation));
+}
+
+void StringToFile(const std::string& file_name, const std::string& contents) {
   std::ofstream f;
   f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   try {
     f.open(file_name);
-    f << js;
+    f << contents;
     f.close();
   } catch (std::ofstream::failure& e) {
     NGRAPH_VLOG(0) << "Exception opening/closing file " << file_name

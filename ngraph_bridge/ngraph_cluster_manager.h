@@ -27,8 +27,8 @@ namespace ngraph_bridge {
 
 class NGraphClusterManager {
  public:
-  static int NewCluster();
-  static tensorflow::GraphDef* GetClusterGraph(int idx);
+  static size_t NewCluster();
+  static tensorflow::GraphDef* GetClusterGraph(size_t idx);
   static void EvictAllClusters();
 
  private:

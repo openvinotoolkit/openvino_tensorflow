@@ -124,7 +124,9 @@ def run_ngtf_pytests(venv_dir, build_dir):
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
 
-    cmd = 'python -m pytest ' + ('--junitxml=%s/xunit_pytest.xml' % build_dir)
+    cmd = 'python -m pytest ' + (
+        '--junitxml=%s/xunit_pytest.xml' %
+        build_dir) + " --ignore=" + build_dir + "/test/python/bfloat16"
     env = os.environ.copy()
     new_paths = venv_dir + '/bin/python3:' + os.path.abspath(
         build_dir) + ":" + os.path.abspath(mnist_dir)
@@ -159,7 +161,8 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
         "python", "-m", "pytest",
-        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
+        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir),
+        "--ignore=" + artifacts_dir + "/test/python/bfloat16"
     ])
 
     os.chdir(root_pwd)
@@ -589,11 +592,14 @@ def run_bazel_build_test(venv_dir, build_dir):
     # Now run the configure
     command_executor(['bash', 'configure_bazel.sh'])
 
-    # Build the bridge
-    command_executor(['bazel', 'build', 'libngraph_bridge.so'])
+    # Build the cpp app - hello_tf
+    command_executor(['bazel', 'build', 'hello_tf'])
 
-    # Build the backend
-    command_executor(['bazel', 'build', '@ngraph//:libinterpreter_backend.so'])
+    # Run the cpp app - hello_tf
+    command_executor(['bazel-bin/hello_tf'])
+
+    # Now built the bigger app
+    command_executor(['bazel', 'build', 'infer_multi'])
 
     # Return to the original directory
     os.chdir(root_pwd)
@@ -606,11 +612,14 @@ def run_bazel_build():
     # Now run the configure
     command_executor(['bash', 'configure_bazel.sh'])
 
-    # Build the bridge
-    command_executor(['bazel', 'build', 'libngraph_bridge.so'])
+    # Build the cpp app - hello_tf
+    command_executor(['bazel', 'build', 'hello_tf'])
 
-    # Build the backend
-    command_executor(['bazel', 'build', '@ngraph//:libinterpreter_backend.so'])
+    # Run the cpp app - hello_tf
+    command_executor(['bazel-bin/hello_tf'])
+
+    # Now built the bigger app
+    command_executor(['bazel', 'build', 'infer_multi'])
 
     # Return to the original directory
     os.chdir(root_pwd)

@@ -22,20 +22,20 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/session.h"
 
-#include "enable_variable_ops/ngraph_catalog.h"
-#include "enable_variable_ops/ngraph_enter_in_catalog.h"
-#include "enable_variable_ops/ngraph_replace_op_utilities.h"
-#include "enable_variable_ops/ngraph_replace_variable_modifiers.h"
-#include "ngraph_api.h"
-#include "ngraph_assign_clusters.h"
-#include "ngraph_capture_variables.h"
-#include "ngraph_cluster_manager.h"
-#include "ngraph_deassign_clusters.h"
-#include "ngraph_encapsulate_clusters.h"
-#include "ngraph_mark_for_clustering.h"
-#include "ngraph_rewrite_for_tracking.h"
-#include "ngraph_utils.h"
-#include "tf_graph_writer.h"
+#include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_enter_in_catalog.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_replace_variable_modifiers.h"
+#include "ngraph_bridge/ngraph_api.h"
+#include "ngraph_bridge/ngraph_assign_clusters.h"
+#include "ngraph_bridge/ngraph_capture_variables.h"
+#include "ngraph_bridge/ngraph_cluster_manager.h"
+#include "ngraph_bridge/ngraph_deassign_clusters.h"
+#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -78,7 +78,7 @@ TEST(CatalogTest, SmallGraph1) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   bool remove = false;
@@ -122,7 +122,7 @@ TEST(CatalogTest, SmallGraph2) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   bool remove = false;
@@ -193,7 +193,7 @@ TEST(CatalogTest, SmallGraph3) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   // check if the _ngraph_remove attribute is added/not-added as expected
@@ -259,7 +259,7 @@ TEST(CatalogTest, SmallGraph4) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
   ASSERT_OK(EnterInCatalog(&graph, 0));
 
   string key;

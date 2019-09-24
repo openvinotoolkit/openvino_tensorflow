@@ -72,7 +72,7 @@ TEST(RemoveNGraphAssigns, Graph1) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;
@@ -130,7 +130,7 @@ TEST(RemoveNGraphAssigns, Graph2) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // clean up
   config::ngraph_set_disabled_ops("");
@@ -184,10 +184,18 @@ TEST(RemoveNGraphAssigns, Graph2) {
     edge_count++;
   }
 
+  // Assert on edges connected to add
   ASSERT_EQ(edge_count, 3);
   ASSERT_EQ(add_in_0, node_map.at("Var"));
   ASSERT_EQ(add_in_1, node_map.at(encap_op_name));
   ASSERT_EQ(add_in_ctrl, node_map.at(encap_op_name));
+
+  // Assert on control edge between Var and Encap
+  for (auto edge : add_in_0->out_edges()) {
+    if ((edge != nullptr) && (edge->IsControlEdge())) {
+      ASSERT_EQ(add_in_1, edge->dst());
+    }
+  }
 }
 
 // Var       Const
@@ -223,7 +231,7 @@ TEST(RemoveNGraphAssigns, Graph3) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;
@@ -280,6 +288,13 @@ TEST(RemoveNGraphAssigns, Graph3) {
   ASSERT_EQ(assign_in_0, node_map.at("Var"));
   ASSERT_EQ(assign_in_1, node_map.at(encap_op_name));
   ASSERT_EQ(assign_in_ctrl, node_map.at(encap_op_name));
+
+  // Assert on control edge between Var and Encap
+  for (auto edge : assign_in_0->out_edges()) {
+    if ((edge != nullptr) && (edge->IsControlEdge())) {
+      ASSERT_EQ(assign_in_1, edge->dst());
+    }
+  }
 }
 
 // Var       Const
@@ -322,7 +337,7 @@ TEST(RemoveNGraphAssigns, Graph4) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // clean up
   config::ngraph_set_disabled_ops("");
@@ -385,6 +400,13 @@ TEST(RemoveNGraphAssigns, Graph4) {
   ASSERT_EQ(add_in_0, node_map.at("Var"));
   ASSERT_EQ(add_in_1, node_map.at(encap_op_name));
   ASSERT_EQ(add_in_ctrl, node_map.at(encap_op_name));
+
+  // Assert on control edge between Var and Encap
+  for (auto edge : add_in_0->out_edges()) {
+    if ((edge != nullptr) && (edge->IsControlEdge())) {
+      ASSERT_EQ(add_in_1, edge->dst());
+    }
+  }
 }
 
 // Var       Const
@@ -420,7 +442,7 @@ TEST(RemoveNGraphAssigns, Graph5) {
   FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
   std::unordered_map<std::string, std::string> config_map;
   config_map["ngraph_device_id"] = "";
-  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map));
+  ASSERT_OK(EncapsulateClusters(&graph, 0, fdeflib_new, config_map, {0, {}}));
 
   // Get all the nodes in map [utility]
   map<string, Node*> node_map;

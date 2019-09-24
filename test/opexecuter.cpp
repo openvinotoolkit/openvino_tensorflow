@@ -217,7 +217,10 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   }
 
   NGRAPH_VLOG(5) << " Creating NG Backend " << ng_backend_type;
-  BackendManager::CreateBackend(ng_backend_type);
+  Status status = BackendManager::CreateBackend(ng_backend_type);
+  if (!status.ok()) {
+    NGRAPH_VLOG(5) << "Cannot create backend " << ng_backend_type;
+  }
   auto backend = BackendManager::GetBackend(ng_backend_type);
 
   // Add the _ngraph_backend attr to the node

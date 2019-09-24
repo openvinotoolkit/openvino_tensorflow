@@ -245,6 +245,17 @@ std::ostream& DumpNGTensor(std::ostream& s, const string& name,
   return s;
 }
 
+template <typename T>
+static void TensorDataToStream(std::ostream& ostream, int64 n_elements,
+                               const char* data) {
+  const T* data_T = reinterpret_cast<const T*>(data);
+  for (size_t i = 0; i < n_elements; i++) {
+    ostream << data_T[i] << ",";
+  }
+}
+
+Status TensorToStream(std::ostream& ostream, const Tensor& tensor);
+
 // Converts a TensorFlow DataType to an nGraph element::Type. Returns
 // errors::Unimplemented if the element type is not supported by nGraph
 // Core. Otherwise returns Status::OK().
@@ -288,6 +299,8 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
 // Serialize a ngraph function into a file
 void NgraphSerialize(const std::string&,
                      const std::shared_ptr<ngraph::Function>&);
+
+void StringToFile(const std::string&, const std::string&);
 
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);

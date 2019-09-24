@@ -36,6 +36,7 @@ TF_CXX_ABI=( $(python -c 'import tensorflow as tf; print(" ".join(str(tf.__cxx11
 
 write_action_env_to_bazelrc "TF_HEADER_DIR" ${TF_CFLAGS:2}
 write_action_env_to_bazelrc "TF_SHARED_LIBRARY_DIR" ${TF_LFLAGS:2}
+write_to_bazelrc "build --define=grpc_no_ares=true"
 
 # Write the CXX ABI to the file 
 echo "CXX_ABI = ['-D_GLIBCXX_USE_CXX11_ABI=$TF_CXX_ABI']" > cxx_abi_option.bzl
