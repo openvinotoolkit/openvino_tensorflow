@@ -5,7 +5,7 @@
     label: ":gear: Setup"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu-centos"
+    - "queue=cpu"
     parallelism: 1
 
   - wait
@@ -17,7 +17,7 @@
     label: ":hammer_and_wrench: Build"
     timeout_in_minutes: 60
     agents:
-    - "queue=cpu-centos"
+    - "queue=cpu"
     parallelism: 1
 
   - wait
@@ -31,7 +31,7 @@
     label: ":bazel: Bazel Build"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu-centos"
+    - "queue=cpu"
 
   - wait
 
@@ -44,7 +44,7 @@
     label: ":bar_chart: ResNet50"
     timeout_in_minutes: 30
     agents:
-    - "queue=cpu-centos"
+    - "queue=cpu"
 
   - wait: ~
     continue_on_failure: true
@@ -52,5 +52,5 @@
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
     agents:
-    - "queue=cpu-centos"
+    - "queue=cpu"
 
