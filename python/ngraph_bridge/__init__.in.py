@@ -202,11 +202,19 @@ def is_grappler_enabled():
 def update_config(config, backend_name = "CPU", device_id = ""):
     #updating session config if grappler is enabled
     if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
+        opt_name = 'ngraph-optimizer'
+        # If the config already has ngraph-optimizer, then do not update it
+        if config.HasField('graph_options'):
+            if config.graph_options.HasField('rewrite_options'):
+                custom_opts = config.graph_options.rewrite_options.custom_optimizers
+                for i in range(len(custom_opts)):
+                    if custom_opts[i].name == opt_name:
+                        return config
         rewriter_options = rewriter_config_pb2.RewriterConfig()
         rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
         rewriter_options.min_graph_nodes=-1
         ngraph_optimizer = rewriter_options.custom_optimizers.add()
-        ngraph_optimizer.name = "ngraph-optimizer"
+        ngraph_optimizer.name = opt_name
         ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
         ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
         config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))

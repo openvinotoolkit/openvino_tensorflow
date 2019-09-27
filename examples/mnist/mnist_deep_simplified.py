@@ -172,7 +172,7 @@ def train_mnist_cnn(FLAGS):
         if FLAGS.optimizer == "adam":
             train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
         elif FLAGS.optimizer == "sgd":
-            train_step = tf.train.GradientDescentOptimizer(1e-4).minimize(
+            train_step = tf.train.GradientDescentOptimizer(5e-2).minimize(
                 cross_entropy)
         elif FLAGS.optimizer == "momentum":
             train_step = tf.train.MomentumOptimizer(1e-4,
