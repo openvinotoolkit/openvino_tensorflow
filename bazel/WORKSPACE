@@ -55,11 +55,11 @@ tf_workspace(path_prefix = "", tf_repo_name = "org_tensorflow")
 http_archive(
     name = "ngraph",
     build_file = "//:bazel/ngraph.BUILD",
-    sha256 = "d3e0ebf807dd4179c91a41c80639b75f5ea8ca39cdfe3a5697da56a7df894f11",
-    strip_prefix = "ngraph-0.25.1-rc.2",
+    sha256 = "345f0566c3ae4a968daea116c26ce9a90a94305148d6b8b56b6309448432492e",
+    strip_prefix = "ngraph-0.25.1-rc.7",
     urls = [
-        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.2.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.2.tar.gz"
+        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.7.tar.gz",
+        "https://github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.7.tar.gz"
     ],
 )
 
@@ -73,17 +73,6 @@ http_archive(
         "https://github.com/nlohmann/json/archive/v3.5.0.tar.gz",
     ],
 )
-
-http_archive(
-        name = "tbb",
-        build_file = "//:bazel/tbb.BUILD",
-        sha256 = "c3245012296f09f1418b78a8c2f17df5188b3bd0db620f7fd5fabe363320805a",
-        strip_prefix = "tbb-2019_U1",
-        urls = [
-            "http://mirror.tensorflow.org/github.com/01org/tbb/archive/2019_U1.zip",
-            "https://github.com/01org/tbb/archive/2019_U1.zip",
-        ],
-    )
 
 http_archive(
         name = "eigen",
