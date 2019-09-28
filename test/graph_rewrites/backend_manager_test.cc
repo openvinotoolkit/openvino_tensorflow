@@ -109,6 +109,14 @@ TEST(BackendManager, GetCurrentlySetBackendName) {
   RestoreEnv(env_map);
 }
 
+// Test CanCreateBackend
+TEST(BackendManager, CanCreateBackend) {
+  ASSERT_OK(BackendManager::CanCreateBackend("CPU"));
+  ASSERT_OK(BackendManager::CanCreateBackend("CPU:0"));
+  ASSERT_NOT_OK(BackendManager::CanCreateBackend("temp"));
+  ASSERT_NOT_OK(BackendManager::CanCreateBackend(""));
+}
+
 // Test GetSupportedBackendNames
 TEST(BackendManager, GetSupportedBackendNames) {
   vector<string> ng_tf_backends = BackendManager::GetSupportedBackendNames();

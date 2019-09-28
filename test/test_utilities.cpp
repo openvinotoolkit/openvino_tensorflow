@@ -66,7 +66,7 @@ void SetEnvVariable(const string& env_var_name, const string& env_var_val) {
 }
 
 // Store/Restore Env Variables
-unordered_map<string, string> StoreEnv() {
+const unordered_map<string, string> StoreEnv() {
   unordered_map<string, string> env_map;
   string env_name = "NGRAPH_TF_BACKEND";
   if (IsEnvVariableSet(env_name)) {
@@ -85,12 +85,39 @@ void RestoreEnv(const unordered_map<string, string>& map) {
 // NGRAPH_TF_BACKEND related
 bool IsNGraphTFBackendSet() { return IsEnvVariableSet("NGRAPH_TF_BACKEND"); }
 
-string GetNGraphTFBackend() { return GetEnvVariable("NGRAPH_TF_BACKEND"); }
+const string GetNGraphTFBackend() {
+  return GetEnvVariable("NGRAPH_TF_BACKEND");
+}
 
 void UnsetNGraphTFBackend() { UnsetEnvVariable("NGRAPH_TF_BACKEND"); }
 
 void SetNGraphTFBackend(const string& backend_name) {
   SetEnvVariable("NGRAPH_TF_BACKEND", backend_name);
+}
+
+// Generating Seed for PseudoRandomNumberGenerator
+const unsigned int GetSeedForRandomFunctions() {
+  const string& env_name = "NGRAPH_TF_SEED";
+  unsigned int seed = static_cast<unsigned>(time(0));
+  if (!IsEnvVariableSet(env_name)) {
+    NGRAPH_VLOG(5) << "Got seed " << seed;
+    return seed;
+  }
+
+  string seedstr = GetEnvVariable(env_name);
+  try {
+    int temp_seed = stoi(seedstr);
+    if (temp_seed < 0) {
+      throw std::invalid_argument{"Cannot set negative seed"};
+    }
+    seed = static_cast<unsigned>(temp_seed);
+  } catch (const std::exception& exp) {
+    throw std::invalid_argument{"Cannot set " + env_name + " with value " +
+                                seedstr + ", got exception " + exp.what()};
+  }
+
+  NGRAPH_VLOG(5) << "Got seed from " << env_name << " : " << seed;
+  return seed;
 }
 
 // Input x will be used as an anchor
@@ -107,7 +134,7 @@ void AssignInputValuesAnchor(Tensor& A, float x) {
 void AssignInputValuesRandom(Tensor& A) {
   auto A_flat = A.flat<float>();
   auto A_flat_data = A_flat.data();
-  srand(static_cast<unsigned>(time(0)));
+  srand(GetSeedForRandomFunctions());
   for (int i = 0; i < A_flat.size(); i++) {
     // give a number between 0 and 20
     float value =

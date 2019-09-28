@@ -38,7 +38,7 @@ void ActivateNGraph();
 void DeactivateNGraph();
 
 // Store/Restore Env Variables
-unordered_map<string, string> StoreEnv();
+const unordered_map<string, string> StoreEnv();
 void RestoreEnv(const unordered_map<string, string>& map);
 
 // EnvVariable Utilities
@@ -49,7 +49,7 @@ void SetEnvVariable(const string& env_var_name, const string& env_var_val);
 
 // NGRAPH_TF_BACKEND related
 bool IsNGraphTFBackendSet();
-string GetNGraphTFBackend();
+const string GetNGraphTFBackend();
 void UnsetNGraphTFBackend();
 void SetNGraphTFBackend(const string& bname);
 
@@ -58,6 +58,9 @@ void PrintTensor(const Tensor& T1);
 void PrintTensorAllValues(
     const Tensor& T1,
     int64 max_entries);  // print max_entries of elements in the Tensor
+
+// Generating Random Seed
+const unsigned int GetSeedForRandomFunctions();
 
 // Assignment Functions
 // TODO : Retire AssignInputValuesAnchor and AssignInputValuesRandom
@@ -92,7 +95,7 @@ template <typename T>
 void AssignInputValuesRandom(Tensor& A, T min, T max) {
   auto A_flat = A.flat<T>();
   auto A_flat_data = A_flat.data();
-  srand(static_cast<unsigned>(time(0)));
+  srand(GetSeedForRandomFunctions());
   for (int i = 0; i < A_flat.size(); i++) {
     T value =
         // randomly generate a number between 0 and (max-min) inclusive

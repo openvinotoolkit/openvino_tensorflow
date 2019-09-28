@@ -40,7 +40,7 @@ import ctypes
 
 __all__ = [
     'enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
-    'set_backend', 'is_supported_backend', 'get_currently_set_backend_name',
+    'set_backend', 'get_currently_set_backend_name',
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config', 'are_variables_enabled', 'set_disabled_ops', 'get_disabled_ops'
@@ -113,8 +113,6 @@ ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_list_backends.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_set_backend.argtypes = [ctypes.c_char_p]
 ngraph_bridge_lib.ngraph_set_backend.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_is_supported_backend.argtypes = [ctypes.c_char_p]
-ngraph_bridge_lib.ngraph_is_supported_backend.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
 ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
@@ -167,11 +165,6 @@ def list_backends():
 def set_backend(backend):
     if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
         raise Exception("Backend " + backend + " unavailable.")
-
-
-def is_supported_backend(backend):
-    return ngraph_bridge_lib.ngraph_is_supported_backend(
-        backend.encode("utf-8"))
 
 
 def get_currently_set_backend_name():

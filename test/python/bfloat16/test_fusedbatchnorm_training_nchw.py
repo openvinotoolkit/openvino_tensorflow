@@ -25,9 +25,10 @@ import pytest
 np.random.seed(5)
 
 # Inputs
-scale = [1.0, 0.9, 1.1]
-offset = [0.1, 0.2, -.3]
-input_shape_nchw = [4, 3, 1, 2]
+channels = 32
+scale = np.random.rand(channels).astype('f')
+offset = np.random.rand(channels).astype('f')
+input_shape_nchw = [4, channels, 1, 2]
 
 
 def tf_model():
@@ -57,7 +58,7 @@ config = tf.ConfigProto(
     log_device_placement=False,
     inter_op_parallelism_threads=1)
 
-k_np = np.random.rand(4, 3, 1, 2).astype('f')  # NCHW
+k_np = np.random.rand(*input_shape_nchw).astype('f')  # NCHW
 
 
 def test_fusedbatchnorm_nchw():

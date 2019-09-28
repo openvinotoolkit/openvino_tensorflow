@@ -52,10 +52,6 @@ bool ngraph_set_backend(const char* backend) {
   return true;
 }
 
-extern bool ngraph_is_supported_backend(const char* backend) {
-  return IsSupportedBackend(string(backend));
-}
-
 extern bool ngraph_get_currently_set_backend_name(char** backend) {
   string bend;
   if (GetCurrentlySetBackendName(&bend) != tensorflow::Status::OK()) {
@@ -92,10 +88,6 @@ vector<string> ListBackends() {
 
 Status SetBackend(const string& type) {
   return BackendManager::SetBackendName(type);
-}
-
-bool IsSupportedBackend(const string& type) {
-  return BackendManager::IsSupportedBackend(type);
 }
 
 Status GetCurrentlySetBackendName(string* backend_name) {

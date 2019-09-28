@@ -58,7 +58,6 @@ class TestSetBackend(NgraphTest):
         out2 = tf.abs(out1)
 
         # set INTERPRETER backend
-        assert ngraph_bridge.is_supported_backend(backend_interpreter) == True
         ngraph_bridge.set_backend(backend_interpreter)
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_interpreter
@@ -72,7 +71,6 @@ class TestSetBackend(NgraphTest):
         assert currently_set_backend == backend_interpreter
 
         # set CPU backend
-        assert ngraph_bridge.is_supported_backend(backend_cpu) == True
         ngraph_bridge.set_backend(backend_cpu)
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_cpu
