@@ -2460,6 +2460,40 @@ static Status TranslateIdentityOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateIsFiniteOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  // Implemented tf.is_finite by checking:
+  // (in != inf) && (in != -inf) && (in == in)
+  //                                 ^^^^^^^^ checks for NaN's
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  auto const_inf = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng_input->get_element_type(), ng::Shape{},
+      std::vector<float>{std::numeric_limits<float>::infinity()});
+
+  auto const_neg_inf = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng_input->get_element_type(), ng::Shape{},
+      std::vector<float>{-std::numeric_limits<float>::infinity()});
+
+  auto neq_inf = ConstructNgNode<ng::op::NotEqual>(
+      op->name(), ng_input, const_inf,
+      ng::op::AutoBroadcastSpec(ng::op::AutoBroadcastType::NUMPY));
+  auto neq_neg_inf = ConstructNgNode<ng::op::NotEqual>(
+      op->name(), ng_input, const_neg_inf,
+      ng::op::AutoBroadcastSpec(ng::op::AutoBroadcastType::NUMPY));
+  auto eq_nan = ConstructNgNode<ng::op::Equal>(op->name(), ng_input, ng_input);
+
+  auto neq_inf_and_neq_neg_inf =
+      ConstructNgNode<ng::op::And>(op->name(), neq_inf, neq_neg_inf);
+  auto is_finite =
+      ConstructNgNode<ng::op::And>(op->name(), neq_inf_and_neq_neg_inf, eq_nan);
+
+  SaveNgOp(ng_op_map, op->name(), is_finite);
+  return Status::OK();
+}
+
 static Status TranslateL2LossOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -4834,8 +4868,8 @@ const static std::map<
       {"HorovodAllreduce", TranslateUnaryOp<ngraph::op::AllReduce>},
       {"HorovodBroadcast", TranslateUnaryOp<ngraph::op::BroadcastDistributed>},
 #endif
-      {"Identity", TranslateIdentityOp}, {"L2Loss", TranslateL2LossOp},
-      {"LogSoftmax", TranslateLogSoftmaxOp},
+      {"Identity", TranslateIdentityOp}, {"IsFinite", TranslateIsFiniteOp},
+      {"L2Loss", TranslateL2LossOp}, {"LogSoftmax", TranslateLogSoftmaxOp},
       {"Less", TranslateBinaryOp<ngraph::op::Less>},
       {"LessEqual", TranslateBinaryOp<ngraph::op::LessEq>},
       {"Log", TranslateUnaryOp<ngraph::op::Log>},
