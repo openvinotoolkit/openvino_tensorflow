@@ -154,12 +154,14 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     // Serialize to nGraph if needed
     if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
       std::string file_name = "tf_function_" + m_name + ".json";
-      StringToFile("tf_function_" + m_name + ".json", serialized_ng_func);
+      TF_RETURN_IF_ERROR(
+          StringToFile("tf_function_" + m_name + ".json", serialized_ng_func));
 #if defined NGRAPH_DISTRIBUTED
       int rank_id;
       rank_id = ng::get_distributed_interface()->get_rank();
-      StringToFile("tf_function_" + m_name + "_" + to_string(rank_id) + ".json",
-                   serialized_ng_func);
+      TF_RETURN_IF_ERROR(StringToFile(
+          "tf_function_" + m_name + "_" + to_string(rank_id) + ".json",
+          serialized_ng_func));
 #endif
     }
     // Evict the cache if the number of elements exceeds the limit
@@ -222,13 +224,22 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
       }
     } catch (const std::exception& exp) {
       BackendManager::UnlockBackend(m_op_backend_name);
-      StringToFile("tf_function_error_" + m_name + ".json", serialized_ng_func);
-      return errors::Internal("Caught exception while compiling op_backend: ",
-                              exp.what(), "\n");
+      Status st = StringToFile("tf_function_error_" + m_name + ".json",
+                               serialized_ng_func);
+      string status_string =
+          "Caught exception while compiling op_backend: " + string(exp.what()) +
+          (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                           st.error_message()));
+      return errors::Internal(status_string);
     } catch (...) {
       BackendManager::UnlockBackend(m_op_backend_name);
-      StringToFile("tf_function_error_" + m_name + ".json", serialized_ng_func);
-      return errors::Internal("Error in compiling op_backend\n");
+      Status st = StringToFile("tf_function_error_" + m_name + ".json",
+                               serialized_ng_func);
+      string status_string =
+          "Error in compiling op_backend." +
+          (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                           st.error_message()));
+      return errors::Internal(status_string);
     }
     BackendManager::UnlockBackend(m_op_backend_name);
     event_compile.Stop();
@@ -582,10 +593,16 @@ NGraphEncapsulateImpl::GetTensorsFromPipeline(
   return out_tpl;
 }
 
-void NGraphEncapsulateImpl::DumpNgFunction(
+Status NGraphEncapsulateImpl::DumpNgFunction(
     const string& file_name,
     std::shared_ptr<ngraph::runtime::Executable> ng_exec) {
-  StringToFile(file_name, m_serialized_ng_function_map[ng_exec]);
+  auto itr = m_serialized_ng_function_map.find(ng_exec);
+  if (itr == m_serialized_ng_function_map.end()) {
+    return errors::Internal(
+        "Did not find requested executable in map for exec->serialized ngraph "
+        "function when dumping ngraph function");
+  }
+  return StringToFile(file_name, itr->second);
 }
 
 }  // namespace ngraph_bridge

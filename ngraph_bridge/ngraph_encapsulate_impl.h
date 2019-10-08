@@ -85,8 +85,8 @@ class NGraphEncapsulateImpl {
       const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
       std::shared_ptr<ng::runtime::Tensor> tensor_from_pipeline);
 
-  void DumpNgFunction(const string&,
-                      std::shared_ptr<ngraph::runtime::Executable>);
+  Status DumpNgFunction(const string&,
+                        std::shared_ptr<ngraph::runtime::Executable>);
 
   // Accessors(getters and setters) for the private data members of
   // NgraphEncapsulateImpl class

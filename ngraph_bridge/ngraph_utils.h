@@ -297,10 +297,15 @@ const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
 Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
 
 // Serialize a ngraph function into a file
-void NgraphSerialize(const std::string&,
-                     const std::shared_ptr<ngraph::Function>&);
+Status NgraphSerialize(const std::string&,
+                       const std::shared_ptr<ngraph::Function>&);
 
-void StringToFile(const std::string&, const std::string&);
+// Dump given string to file
+Status StringToFile(const std::string&, const std::string&,
+                    bool sanitize_name = true);
+
+// Remove '/' from file name (which might appear due to say, tf scopes)
+string SanitizeFileName(const string file_name);
 
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);

@@ -343,7 +343,9 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   // For debug
   // Serialize to nGraph if needed
   if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-    NgraphSerialize("unit_test_" + test_op_type_ + ".json", ng_function);
+    ASSERT_EQ(
+        Status::OK(),
+        NgraphSerialize("unit_test_" + test_op_type_ + ".json", ng_function));
   }
 
   // Allocate tensors for inputs
@@ -411,11 +413,15 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     exec->call(ng_op_tensors, ng_ip_tensors);
   } catch (const std::exception& exp) {
     BackendManager::UnlockBackend(ng_backend_type);
-    NgraphSerialize("unit_test_error_" + test_op_type_ + ".json", ng_function);
+    ASSERT_EQ(Status::OK(),
+              NgraphSerialize("unit_test_error_" + test_op_type_ + ".json",
+                              ng_function));
     FAIL() << "Exception while executing on nGraph " << exp.what();
   } catch (...) {
     BackendManager::UnlockBackend(ng_backend_type);
-    NgraphSerialize("unit_test_error_" + test_op_type_ + ".json", ng_function);
+    ASSERT_EQ(Status::OK(),
+              NgraphSerialize("unit_test_error_" + test_op_type_ + ".json",
+                              ng_function));
     FAIL() << "Exception while executing on nGraph";
   }
   BackendManager::UnlockBackend(ng_backend_type);
