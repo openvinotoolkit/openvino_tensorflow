@@ -90,7 +90,6 @@
     - "queue=gpu"
 
   - wait: ~
-    continue_on_failure: true
 
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID

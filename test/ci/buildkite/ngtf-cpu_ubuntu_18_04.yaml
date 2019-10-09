@@ -105,7 +105,6 @@
     - "queue=r0.16"
 
   - wait: ~
-    continue_on_failure: true
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"
