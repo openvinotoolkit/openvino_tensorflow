@@ -453,6 +453,7 @@ def main():
         "-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=" +
         flag_string_map[arguments.enable_variables_and_optimizers]
     ])
+
     ngraph_tf_cmake_flags.extend([
         "-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=" +
         flag_string_map[arguments.use_grappler_optimizer]

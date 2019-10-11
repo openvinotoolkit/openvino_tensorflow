@@ -41,9 +41,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
-
 // This test can only be run when nGraph-bridge is built with grappler
 // When running with other modes, grappler's ngraph-optimizer is not
 // run, none of the nodes are encapsulated, no attributes are attached
@@ -150,9 +147,11 @@ TEST(GrapplerConfig, RConfig2) {
   device_id.set_s("1");
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
+
   rewriter_config.add_optimizers("ngraph-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
+
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
@@ -192,13 +191,10 @@ TEST(GrapplerConfig, RConfig2) {
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
 }
 
-// Though Backend is set via NGRAPH_TF_BACKEND
-// The backend set via RewriterConfig takes affect
+// When Backend is set via NGRAPH_TF_BACKEND it takes effect
+// The backend set via RewriterConfig is ignored
 // since that is the only way of setting backend with grappler
 TEST(GrapplerConfig, RConfig3) {
-  // If NGRAPH_TF_BACKEND is set, unset it
-  const unordered_map<string, string>& env_map = StoreEnv();
-
   // Create Graph
   Scope root = Scope::NewRootScope();
   auto A = ops::Const(root.WithOpName("A"), {3.f, 2.f});
@@ -216,7 +212,8 @@ TEST(GrapplerConfig, RConfig3) {
   }
 
   // Set NGRAPH_TF_BACKEND
-  SetNGraphTFBackend("NOP");
+  SetBackendUsingEnvVar("NOP");
+
   // Set Backend Manager Backend
   ASSERT_OK(BackendManager::SetBackendName("INTERPRETER"));
 
@@ -237,11 +234,13 @@ TEST(GrapplerConfig, RConfig3) {
   backend_name.set_s("CPU");
   auto device_id = AttrValue();
   device_id.set_s("1");
+
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
+
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
@@ -274,13 +273,17 @@ TEST(GrapplerConfig, RConfig3) {
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_backend", &ng_backend));
   ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "ngraph_device_id", &ng_device_id));
 
-  ASSERT_EQ(ng_backend, "CPU");
+  // Even though the backend is set via config-writer, the one specified
+  // by the env. var takes effect. So though we set this to CPU
+  // the backend should point to NOP as set via env. var
+  ASSERT_EQ(ng_backend, "NOP");
   ASSERT_EQ(ng_device_id, "1");
 
   // Clean up
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
-  // If NGRAPH_TF_BACKEND was set, set it back
-  RestoreEnv(env_map);
+
+  // Since NGRAPH_TF_BACKEND was set, set it back
+  UnsetBackendUsingEnvVar();
 }
 
 TEST(GrapplerConfig, RConfig4) {
@@ -304,17 +307,20 @@ TEST(GrapplerConfig, RConfig4) {
   grappler::GrapplerItem item;
   graph.ToGraphDef(&item.graph);
   ConfigProto config_proto;
+
   auto backend_name = AttrValue();
   backend_name.set_s("INTERPRETER");
   auto device_id = AttrValue();
   device_id.set_s("5");
   auto test_echo = AttrValue();
   test_echo.set_s("hi");
+
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
+
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;
@@ -376,15 +382,19 @@ TEST(GrapplerConfig, RConfig5) {
   grappler::GrapplerItem item;
   graph.ToGraphDef(&item.graph);
   ConfigProto config_proto;
+
   auto backend_name = AttrValue();
   backend_name.set_s("CPU");
+
   auto device_id = AttrValue();
   device_id.set_s("5");
+
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
   rewriter_config.add_optimizers("ngraph-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
+
   auto* custom_config = rewriter_config.add_custom_optimizers();
   custom_config->set_name("ngraph-optimizer");
   (*custom_config->mutable_parameter_map())["ngraph_backend"] = backend_name;

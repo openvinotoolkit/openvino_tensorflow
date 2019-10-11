@@ -32,9 +32,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
-
 TEST(EncapsulateClusters, PopulateLibrary) {
   NGraphClusterManager::EvictAllClusters();
   Graph g(OpRegistry::Global());

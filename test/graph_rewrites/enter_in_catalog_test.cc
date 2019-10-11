@@ -36,6 +36,7 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -45,9 +46,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 namespace testing {
-
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
 
 // Graph with Assign ops which should have the attribute
 // _ngraph_remove added and set to true.

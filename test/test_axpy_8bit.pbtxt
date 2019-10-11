@@ -1,0 +1,135 @@
+node {
+  name: "y"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2
+        }
+        dim {
+          size: 2
+        }
+      }
+    }
+  }
+}
+node {
+  name: "x"
+  op: "Placeholder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 2
+        }
+      }
+    }
+  }
+}
+node {
+  name: "alpha"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT8
+        tensor_shape {
+          dim {
+            size: 2
+          }
+          dim {
+            size: 2
+          }
+        }
+        tensor_content: "\005\005\005\005"
+      }
+    }
+  }
+}
+node {
+  name: "mul_ngraph/_0"
+  op: "Mul"
+  input: "alpha"
+  input: "x"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+}
+node {
+  name: "add_ngraph/_1"
+  op: "Add"
+  input: "mul_ngraph/_0"
+  input: "y"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+}
+node {
+  name: "mul"
+  op: "IdentityN"
+  input: "mul_ngraph/_0"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_INT8
+      }
+    }
+  }
+}
+node {
+  name: "add"
+  op: "IdentityN"
+  input: "add_ngraph/_1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_INT8
+      }
+    }
+  }
+}
+library {
+}
+versions {
+  producer: 38
+}

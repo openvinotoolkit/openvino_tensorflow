@@ -43,6 +43,7 @@ set(SRC
    ngraph_encapsulate_clusters.cc
    ngraph_pipelined_tensors.cc
    ngraph_encapsulate_impl.cc
+   ngraph_executor.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_freshness_tracker.cc

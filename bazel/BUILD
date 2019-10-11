@@ -32,6 +32,7 @@ cc_library(
         "ngraph_bridge/ngraph_deassign_clusters.h",
         "ngraph_bridge/ngraph_encapsulate_clusters.h",
         "ngraph_bridge/ngraph_encapsulate_impl.h",
+        "ngraph_bridge/ngraph_executor.h",
         "ngraph_bridge/ngraph_encapsulate_op.h",
         "ngraph_bridge/ngraph_freshness_tracker.h",
         "ngraph_bridge/ngraph_mark_for_clustering.h",
@@ -43,6 +44,7 @@ cc_library(
         "ngraph_bridge/ngraph_version_utils.h",
         "ngraph_bridge/tf_deadness_analysis.h",
         "ngraph_bridge/tf_graphcycles.h",
+        "ngraph_bridge/thread_safe_queue.h",
         "ngraph_bridge/version.h",
         "ngraph_bridge/grappler/ngraph_optimizer.h",
         "ngraph_bridge/grappler/ngraph_add_identityn.h",
@@ -69,6 +71,7 @@ cc_library(
         "ngraph_bridge/ngraph_deassign_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_impl.cc",
+        "ngraph_bridge/ngraph_executor.cc",
         "ngraph_bridge/ngraph_encapsulate_op.cc",
         "ngraph_bridge/ngraph_freshness_tracker.cc",
         "ngraph_bridge/ngraph_mark_for_clustering.cc",
@@ -152,12 +155,12 @@ tf_cc_binary(
 )
 
 tf_cc_binary(
-    name = 'infer_multi',
+    name = 'infer_multiple_networks',
     srcs = [
-        "examples/cpp/infer_multiple_networks/main.cc",
-        "examples/cpp/infer_multiple_networks/inference_engine.h",
-        "examples/cpp/infer_multiple_networks/inference_engine.cc",
-        "examples/cpp/tf_label_image_utils.cc",
+        "examples/cpp/inference/infer_multiple_networks.cc",
+        "examples/cpp/inference/inference_engine.h",
+        "examples/cpp/inference/inference_engine.cc",
+        "examples/cpp/inference/tf_label_image_utils.cc",
     ],
     deps = [
         "@org_tensorflow//tensorflow/cc:cc_ops",

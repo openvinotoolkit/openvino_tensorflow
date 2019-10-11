@@ -38,9 +38,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
-
 // Assigns are removed when the new value is computed by the
 // Encapsulate Op.
 // These tests check that NGraphAssign is removed and the rest of the graph

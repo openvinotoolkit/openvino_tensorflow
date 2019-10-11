@@ -25,6 +25,7 @@
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
 #include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -34,8 +35,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 namespace testing {
-
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
 
 // Test that an Assign attached to a Temporary Variable is not
 // captured and replaced by NGraphAssign

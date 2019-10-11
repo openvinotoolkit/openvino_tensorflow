@@ -28,9 +28,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
-
 // The result of concretize would be {2, 3}
 TEST(PartialShapes, ValidConcretize1) {
   PartialShape p1({2, -1});

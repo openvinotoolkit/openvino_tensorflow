@@ -43,8 +43,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-
 // Test(TestCaseName, TestName)
 // Please ensure
 // Neither TestCaseName nor TestName should contain underscore

@@ -21,6 +21,7 @@
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -30,8 +31,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 namespace testing {
-
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
 
 // Test that a "Const" fed to a static input is still coalesced with the
 // reader.
