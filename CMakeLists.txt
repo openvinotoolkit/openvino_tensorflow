@@ -326,10 +326,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         ${LIB_MKLML_INTEL_IMPORTED_LOCATION}
     )
 
-    add_library(lib_tbb INTERFACE)
-    target_link_libraries(lib_tbb INTERFACE
-        ${NGRAPH_INSTALL_DIR}/${LIB}/libtbb.so)
-
     add_library(lib_iomp5 SHARED IMPORTED)
     set_target_properties(
         lib_iomp5
