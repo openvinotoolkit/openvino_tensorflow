@@ -62,6 +62,32 @@ Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
   is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);
   return Status::OK();
 }
+
+Status GetNgraphVarBufferSharingState(int& buffer_sharing_state) {
+  const char* ngvar_buffer_env_var =
+      std::getenv("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
+  if (ngvar_buffer_env_var == nullptr) {
+    buffer_sharing_state = -1;
+    return Status::OK();
+  }
+  int env_var_val;
+  try {
+    env_var_val = stoi(string(ngvar_buffer_env_var));
+  } catch (const std::invalid_argument& ia) {
+    return errors::InvalidArgument(
+        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Exception: ",
+        ia.what());
+  }
+  if (env_var_val != 0 && env_var_val != 1) {
+    return errors::InvalidArgument(
+        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Pass 1 to "
+        "enable, 0 to disable");
+  }
+
+  buffer_sharing_state = env_var_val;
+  return Status::OK();
+}
+
 void PrintTFTensor(Tensor& T1) {
   NGRAPH_VLOG(4) << "all tensor values" << (T1).SummarizeValue(64) << endl;
 }

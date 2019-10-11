@@ -213,7 +213,14 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
   if ((std::getenv("NGRAPH_TF_LOG_0_DISABLED") == nullptr)) {
     NGRAPH_VLOG(0) << "NGraph using backend: " << ng_backend_type;
   }
-  auto backend = BackendManager::GetBackend(ng_backend_type);
+
+  ng::runtime::Backend* backend;
+  try {
+    backend = BackendManager::GetBackend(ng_backend_type);
+  } catch (...) {
+    throw std::runtime_error("No backend available :" + ng_backend_type +
+                             ". Cannot execute graph");
+  }
 
   // Add the _ngraph_backend attr to the node
   test_op->AddAttr("_ngraph_backend", ng_backend_type);

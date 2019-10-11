@@ -56,15 +56,36 @@ class NGraphVar : public ResourceBase {
 
     // Create Backend
     NGRAPH_VLOG(4) << "NGraphVar::Create Backend ";
-    Status status = BackendManager::CreateBackend(ng_backend_name_);
+    Status status;
+    ng::runtime::Backend* op_backend;
+    status = BackendManager::CreateBackend(ng_backend_name_);
     if (!status.ok()) {
-      NGRAPH_VLOG(2) << "Cannot create backend " << ng_backend_name_;
+      throw std::runtime_error("Cannot create backend " + ng_backend_name_ +
+                               ". Got Exception " + status.error_message());
     }
-    ng::runtime::Backend* op_backend =
-        BackendManager::GetBackend(ng_backend_name_);
+
+    try {
+      op_backend = BackendManager::GetBackend(ng_backend_name_);
+    } catch (...) {
+      throw std::runtime_error("No backend available :" + ng_backend_name_ +
+                               ". Cannot execute graph");
+    }
 
     // Create nGTensor
-    ng_tf_share_buffer_ = (ng_backend_name_ == "CPU");
+
+    // Check buffer sharing
+    // -1 implies env var is not set
+    int buffer_sharing_state_env = -1;
+    // 0 implies buffer sharing is disabled
+    // 1 implies buffer sharing is enabled
+    status = GetNgraphVarBufferSharingState(buffer_sharing_state_env);
+    if (!status.ok()) {
+      throw std::runtime_error({"Got Exception " + status.error_message()});
+    }
+
+    ng_tf_share_buffer_ = (buffer_sharing_state_env == -1)
+                              ? (ng_backend_name_ == "CPU")
+                              : buffer_sharing_state_env;
 
     if (ng_tf_share_buffer_) {
       void* tf_src_ptr = (void*)DMAHelper::base(&tf_tensor_);
