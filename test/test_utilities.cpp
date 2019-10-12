@@ -66,7 +66,7 @@ void SetEnvVariable(const string& env_var_name, const string& env_var_val) {
 }
 
 // Store/Restore Env Variables
-const unordered_map<string, string> StoreEnv() {
+unordered_map<string, string> StoreEnv() {
   unordered_map<string, string> env_map;
   string env_name = "NGRAPH_TF_BACKEND";
   if (IsEnvVariableSet(env_name)) {
@@ -94,7 +94,7 @@ void SetBackendUsingEnvVar(const string& backend_name) {
 }
 
 // Generating Seed for PseudoRandomNumberGenerator
-const unsigned int GetSeedForRandomFunctions() {
+unsigned int GetSeedForRandomFunctions() {
   const string& env_name = "NGRAPH_TF_SEED";
   unsigned int seed = static_cast<unsigned>(time(0));
   if (!IsEnvVariableSet(env_name)) {

@@ -79,43 +79,62 @@ class NGraphCatalog {
 
  public:
   // Utility to create key to query the maps
-  static string CreateNodeKey(int graph_id, string node_name, int index);
+  static string CreateNodeKey(const int& graph_id, const string& node_name,
+                              const int& index);
+  // Clear all the maps
+  static void ClearCatalog();
 
   // Utility Functions for the data structures
   // Functions for EncapsulateOutputCopyIndexes Map
-  static void AddToEncapOutputCopyIndexesMap(int graphid, string node_name,
-                                             unordered_set<int> val);
-  static bool EncapOutputIndexNeedsCopy(int graphid, string node_name,
-                                        int index);
-  static unordered_set<int> GetEncapOutputIndexesThatNeedCopy(int graphid,
-                                                              string node_name);
-  static void DeleteFromEncapOutputCopyIndexesMap(int graphid,
-                                                  string node_name);
+  static void AddToEncapOutputCopyIndexesMap(const int& graphid,
+                                             const string& node_name,
+                                             const unordered_set<int>& val);
+
+  static void ClearEncapOutputCopyIndexesMap();
+
+  static bool EncapOutputNeedsCopy(const int& graphid, const string& node_name);
+
+  static bool EncapOutputIndexNeedsCopy(const int& graphid,
+                                        const string& node_name,
+                                        const int& index);
+  static const unordered_set<int>& GetEncapOutputIndexesThatNeedCopy(
+      const int& graphid, const string& node_name);
+  static void DeleteFromEncapOutputCopyIndexesMap(const int& graphid,
+                                                  const string& node_name);
 
   // Functions for InputVariableSharedName Map
-  static string GetInputVariableSharedName(int graphid, string node_name,
-                                           int input_index);
+  static void AddToInputVariableSharedNameMap(const string& key,
+                                              const string& val);
 
-  static void AddToInputVariableSharedNameMap(string key, string val);
-
-  static bool ExistsInInputVariableSharedNameMap(string key);
-  static bool ExistsInInputVariableSharedNameMap(int graphid, string node_name,
-                                                 int input_index);
-  static void DeleteFromInputVariableSharedNameMap(string key);
+  static void ClearInputVariableSharedNameMap();
+  static const string& GetInputVariableSharedName(const int& graphid,
+                                                  const string& node_name,
+                                                  const int& input_index);
+  static bool ExistsInInputVariableSharedNameMap(const string& key);
+  static bool ExistsInInputVariableSharedNameMap(const int& graphid,
+                                                 const string& node_name,
+                                                 const int& input_index);
+  static void DeleteFromInputVariableSharedNameMap(const string& key);
 
   // Functions for EncapOutputInfo Map
-  static void AddToEncapOutputInfoMap(string key,
-                                      tuple<string, bool, bool> val);
-  static void AddToEncapOutputInfoMap(string key, string shared_name,
-                                      bool copy_to_tf, bool is_tf_just_looking);
-  static bool ExistsInEncapOutputInfoMap(string key);
-  static bool ExistsInEncapOutputInfoMap(int graphid, string node_name,
-                                         int input_index);
-  static tuple<string, bool, bool> GetInfoFromEncapOutputInfoMap(string key);
-  static string GetVariableSharedNameFromEncapOutputInfoMap(string key);
-  static bool GetCopyToTFFromEncapOutputInfoMap(string key);
-  static bool GetIsTFJustLookingFromEncapOutputInfoMap(string key);
-  static void DeleteFromEncapOutputInfoMap(string key);
+  static void AddToEncapOutputInfoMap(const string& key,
+                                      const tuple<string, bool, bool>& val);
+  static void AddToEncapOutputInfoMap(const string& key,
+                                      const string& shared_name,
+                                      const bool& copy_to_tf,
+                                      const bool& is_tf_just_looking);
+  static bool ExistsInEncapOutputInfoMap(const string& key);
+  static bool ExistsInEncapOutputInfoMap(const int& graphid,
+                                         const string& node_name,
+                                         const int& input_index);
+  static const tuple<string, bool, bool>& GetInfoFromEncapOutputInfoMap(
+      const string& key);
+  static const string& GetVariableSharedNameFromEncapOutputInfoMap(
+      const string& key);
+  static const bool& GetCopyToTFFromEncapOutputInfoMap(const string& key);
+  static const bool& GetIsTFJustLookingFromEncapOutputInfoMap(
+      const string& key);
+  static void DeleteFromEncapOutputInfoMap(const string& key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();
 };

@@ -98,7 +98,12 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         NGRAPH_VLOG(4) << "Key: " << key;
         NGRAPH_VLOG(4) << "Value: " << get<0>(value) << " " << get<1>(value)
                        << " " << get<2>(value);
-        NGraphCatalog::AddToEncapOutputInfoMap(key, value);
+        try {
+          NGraphCatalog::AddToEncapOutputInfoMap(key, value);
+        } catch (const std::exception& exp) {
+          return errors::Internal(
+              "Caught exception while entering in catalog: ", exp.what(), "\n");
+        }
         // This NGraphAssign will be removed subsequently
         // so we dont need to fill the rest of the catalog
         continue;
@@ -110,8 +115,12 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
       string node_key = NGraphCatalog::CreateNodeKey(graph_id, node->name(), 0);
       string shared_name;
       TF_RETURN_IF_ERROR(GetSharedName(node, &shared_name));
-      NGraphCatalog::AddToInputVariableSharedNameMap(node_key, shared_name);
-
+      try {
+        NGraphCatalog::AddToInputVariableSharedNameMap(node_key, shared_name);
+      } catch (const std::exception& exp) {
+        return errors::Internal("Caught exception while entering in catalog: ",
+                                exp.what(), "\n");
+      }
       NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
       NGRAPH_VLOG(4) << "Key: " << node_key;
       NGRAPH_VLOG(4) << "Value: " << shared_name;
@@ -125,10 +134,17 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
                                                          edge->dst_input());
           string shared_name;
           TF_RETURN_IF_ERROR(GetSharedName(src, &shared_name));
-          NGraphCatalog::AddToInputVariableSharedNameMap(node_key, shared_name);
-          NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
-          NGRAPH_VLOG(4) << "Key: " << node_key;
-          NGRAPH_VLOG(4) << "Value: " << shared_name;
+          try {
+            NGraphCatalog::AddToInputVariableSharedNameMap(node_key,
+                                                           shared_name);
+            NGRAPH_VLOG(4) << "Adding in InputVariableSharedNameMap ";
+            NGRAPH_VLOG(4) << "Key: " << node_key;
+            NGRAPH_VLOG(4) << "Value: " << shared_name;
+          } catch (const std::exception& exp) {
+            return errors::Internal(
+                "Caught exception while entering in catalog: ", exp.what(),
+                "\n");
+          }
         }
       }
 
@@ -144,8 +160,17 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
           op_index_to_copy.insert(edge->src_output());
         }
       }
-      NGraphCatalog::AddToEncapOutputCopyIndexesMap(graph_id, node->name(),
-                                                    op_index_to_copy);
+
+      // are there indexes that need copy
+      if (op_index_to_copy.size() > 0) {
+        try {
+          NGraphCatalog::AddToEncapOutputCopyIndexesMap(graph_id, node->name(),
+                                                        op_index_to_copy);
+        } catch (const std::exception& exp) {
+          return errors::Internal(
+              "Caught exception while entering in catalog: ", exp.what(), "\n");
+        }
+      }
 
     }  // end of node is type NGraphEncapsulate
   }    // enter in catalog

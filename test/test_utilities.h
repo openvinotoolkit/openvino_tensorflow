@@ -50,7 +50,7 @@ void ActivateNGraph();
 void DeactivateNGraph();
 
 // Store/Restore Env Variables
-const unordered_map<string, string> StoreEnv();
+unordered_map<string, string> StoreEnv();
 void RestoreEnv(const unordered_map<string, string>& map);
 
 // EnvVariable Utilities
@@ -72,7 +72,7 @@ void PrintTensorAllValues(
     int64 max_entries);  // print max_entries of elements in the Tensor
 
 // Generating Random Seed
-const unsigned int GetSeedForRandomFunctions();
+unsigned int GetSeedForRandomFunctions();
 
 // Assignment Functions
 // TODO : Retire AssignInputValuesAnchor and AssignInputValuesRandom
