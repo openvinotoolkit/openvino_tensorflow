@@ -492,6 +492,7 @@ Status EncapsulateClusters(
   }
 
   // Pass 6: Remove clustered nodes from the graph.
+  std::vector<Node*> nodes_to_remove;
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
 
@@ -499,7 +500,11 @@ Status EncapsulateClusters(
         Status::OK()) {
       continue;
     }
+    nodes_to_remove.push_back(node);
+  }
 
+  for (auto node : nodes_to_remove) {
+    NGRAPH_VLOG(4) << "Removing: " << node->name();
     graph->RemoveNode(node);
   }
 

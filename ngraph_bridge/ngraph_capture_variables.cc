@@ -92,18 +92,25 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
                        << replacement->DebugString();
 
         std::vector<const Edge*> edges_to_remove;
+        std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
         for (auto edge : node->in_edges()) {
-          NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-          graph->AddEdge(edge->src(), edge->src_output(), replacement,
-                         edge->dst_input());
+          NGRAPH_VLOG(4) << "Replacing: In Edge " << edge->DebugString();
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              edge->src(), edge->src_output(), replacement, edge->dst_input()));
           edges_to_remove.push_back(edge);
         }
 
         for (auto edge : node->out_edges()) {
-          NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-          graph->AddEdge(replacement, edge->src_output(), edge->dst(),
-                         edge->dst_input());
+          NGRAPH_VLOG(4) << "Replacing: OutEdge " << edge->DebugString();
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              replacement, edge->src_output(), edge->dst(), edge->dst_input()));
           edges_to_remove.push_back(edge);
+        }
+
+        for (const auto& i : edges_to_add) {
+          NGRAPH_VLOG(4) << "Adding: " << get<0>(i) << "  " << get<1>(i) << "  "
+                         << get<2>(i) << " " << get<3>(i);
+          graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
         }
 
         // Though edges will be removed when we remove the node
