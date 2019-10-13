@@ -47,9 +47,9 @@
                 "num_nodes_marked_for_clustering": 7
             },
             "17": {
-                "num_ng_clusters": 29,
+                "num_ng_clusters": 28,
                 "num_nodes_in_graph": 995,
-                "num_nodes_marked_for_clustering": 439
+                "num_nodes_marked_for_clustering": 440
             },
             "18": {
                 "num_ng_clusters": 0,
