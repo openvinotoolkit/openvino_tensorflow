@@ -137,12 +137,27 @@ class Builder {
     NGRAPH_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
   }
 
+  static std::pair<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>
+  PerformNgBroadcast(const string&, std::shared_ptr<ngraph::Node>,
+                     std::shared_ptr<ngraph::Node>);
+
   static const std::map<
       DataType,
       std::pair<std::function<Status(const Node*, ngraph::element::Type,
                                      std::shared_ptr<ngraph::Node>*)>,
                 const ngraph::element::Type>>&
   TF_NGRAPH_CONST_MAP();
+
+  // This function is used to trace which ng node came from which tf node
+  // It does 3 things:
+  // 1. Attaches provenance tags. This is guaranteed to propagate the tag info
+  // to all nodes.
+  // The next 2 are not guaranteed to be present for all nodes.
+  // But when present they are correct and agree with provenance tags
+  // 2. Attaches friendly names.
+  // 3. Prints a log if NGRAPH_TF_LOG_PLACEMENT=1
+  static void SetTracingInfo(const std::string& op_name,
+                             const std::shared_ptr<ngraph::Node> ng_node);
 
  private:
   static void ComputeScaleOffsetFolded(const uint& num_bits,
