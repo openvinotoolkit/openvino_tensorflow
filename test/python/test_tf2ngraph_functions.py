@@ -28,7 +28,8 @@ import tensorflow as tf
 import ngraph_bridge
 
 from tools.build_utils import command_executor
-from tools.tf2ngraph import update_config_to_include_custom_config
+from tools.tf2ngraph import update_config_to_include_custom_config,\
+get_possible_output_node_names, get_gdef_from_protobuf, sanitize_node_name
 
 from common import NgraphTest
 
@@ -65,3 +66,19 @@ class Testtf2ngraphHelperFunctions(NgraphTest):
             'device_id': '0',
             'aot_requested': '1'
         }
+
+    @pytest.mark.parametrize(('filename'),
+                             ('sample_graph.pbtxt', 'sample_graph.pb'))
+    def test_get_possible_output_node_names(self, filename):
+        assert get_possible_output_node_names(
+            get_gdef_from_protobuf(filename)) == {
+                'out_node': 'Sigmoid'
+            }
+
+    @pytest.mark.parametrize(('node_name,sanitized_name'),
+                             (('a', 'a'), ('b:3', 'b'), ('c:35', 'c'),
+                              ('^d', 'd'), ('^e:4', 'e')))
+    def test_sanitize_node_name(self, node_name, sanitized_name):
+        # test to find node names by stripping away
+        # the control edge markers (^) and output slot numbers (:0)
+        assert sanitize_node_name(node_name) == sanitized_name
