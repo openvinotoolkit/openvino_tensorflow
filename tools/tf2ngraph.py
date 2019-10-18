@@ -27,6 +27,7 @@ import os
 import sys
 import json
 from functools import partial
+from tensorflow.python.framework.function_def_to_graph import function_def_to_graph
 
 
 class Tf2ngraphJson(object):
@@ -102,10 +103,10 @@ class Tf2ngraphJson(object):
 def exit_on_error(success, error_message, assert_on_failure=False):
     if not success:
         if assert_on_failure:
+            assert success, error_message
+        else:
             sys.stderr.write("\n" + error_message + "\n")
             sys.exit(1)
-        else:
-            assert success, error_message
 
 
 def update_config_to_include_custom_config(config, backend, device_id,
@@ -115,6 +116,7 @@ def update_config_to_include_custom_config(config, backend, device_id,
     rewriter_options.meta_optimizer_iterations = (
         rewriter_config_pb2.RewriterConfig.ONE)
     rewriter_options.min_graph_nodes = -1
+    rewriter_options.fail_on_optimizer_errors = True
     ngraph_optimizer = rewriter_options.custom_optimizers.add()
     ngraph_optimizer.name = "ngraph-optimizer"
     ngraph_optimizer.parameter_map["ngraph_backend"].s = backend.encode()
@@ -170,8 +172,11 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
     session_config = update_config_to_include_custom_config(
         session_config, ng_backend, device_id, backend_optional_params,
         shape_hints, do_aot)
-    output_gdef = tf_optimizer.OptimizeGraph(
-        session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
+    try:
+        output_gdef = tf_optimizer.OptimizeGraph(
+            session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
+    except Exception as e:
+        exit_on_error(False, e.message)
     return output_gdef
 
 
@@ -270,6 +275,10 @@ def prepare_argparser(formats):
         help=
         "Perform precompilation to embed the ngraph executable in the dumped TF graph"
     )
+    parser.add_argument(
+        "--save_ng_clusters",
+        action='store_true',
+        help="Saves the TF subgraphs that each ngraph encapsulate replaces")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -335,7 +344,8 @@ allowed_formats = {
 
 
 def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
-            device_id, backend_optional_params, shape_hints, do_aot):
+            device_id, backend_optional_params, shape_hints, do_aot,
+            save_ng_clusters):
     """Functional api for converting TF models by inserting ngraph nodes.
     Sample usage:
     from tf2ngraph import convert
@@ -366,6 +376,13 @@ def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
     output_gdef = run_ngraph_grappler_optimizer(
         input_gdef, output_nodes, ng_backend, device_id,
         backend_optional_params, shape_hints, do_aot)
+    if save_ng_clusters:
+        for fn in output_gdef.library.function:
+            tf.io.write_graph(
+                function_def_to_graph(fn).as_graph_def(),
+                '.',
+                fn.signature.name + '.pbtxt',
+                as_text=True)
     save_model(output_gdef, out_format, out_loc)
 
 
@@ -474,7 +491,7 @@ def main():
         args.config_file)
     convert(inp_format, inp_loc, out_format, out_loc, output_nodes,
             args.ng_backend, args.device_id, backend_optional_params,
-            shape_hints, args.precompile)
+            shape_hints, args.precompile, args.save_ng_clusters)
     print('Converted the model. Exiting now')
 
 

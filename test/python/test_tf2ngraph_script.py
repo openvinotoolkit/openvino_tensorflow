@@ -49,13 +49,13 @@ class Testtf2ngraph(NgraphTest):
     @pytest.mark.parametrize(('commandline'),
                              (True,))  #TODO: add False for functional api test
     @pytest.mark.parametrize(
-        ('inp_format', 'inp_loc', 'out_node_name'),
+        ('inp_format', 'inp_loc', 'out_node_name', 'save_ng_clusters'),
         (
-            ('pbtxt', 'sample_graph.pbtxt', 'out_node'),
-            ('savedmodel', 'sample_graph', 'out_node'),
-            ('pb', 'sample_graph.pb', 'out_node'),
-            ('pbtxt', 'sample_graph_nodevice.pbtxt', 'out_node'),
-            ('pbtxt', 'sample_graph_nodevice.pbtxt', None),
+            ('pbtxt', 'sample_graph.pbtxt', 'out_node', True),
+            ('savedmodel', 'sample_graph', 'out_node', True),
+            ('pb', 'sample_graph.pb', 'out_node', False),
+            ('pbtxt', 'sample_graph_nodevice.pbtxt', 'out_node', False),
+            ('pbtxt', 'sample_graph_nodevice.pbtxt', None, False),
             # this test does not pass an output node
             # and tf2ngraph is supposed to fail
         ))
@@ -70,8 +70,8 @@ class Testtf2ngraph(NgraphTest):
     # In sample_graph.pbtxt, the input shape is fully specified,
     # so we don't need to pass shape hints for precompile
     def test_command_line_api(self, inp_format, inp_loc, out_node_name,
-                              out_format, commandline, ng_device, shape_hints,
-                              precompile):
+                              save_ng_clusters, out_format, commandline,
+                              ng_device, shape_hints, precompile):
         # Only run this test when grappler is enabled
         if not ngraph_bridge.is_grappler_enabled():
             return
@@ -100,25 +100,30 @@ class Testtf2ngraph(NgraphTest):
                 # out_node_str is empty if out_node_name is None.
                 # Automatic output node inference display diagnostic logs
                 # But the tf2ngraph call will still fail
+                command = [
+                    'python', '../../tools/tf2ngraph.py',
+                    '--input_' + inp_format, inp_loc, '--output_' + out_format,
+                    out_loc, '--ng_backend', ng_device, '--config_file',
+                    config_file_name
+                ]
+                if out_node_name is not None:
+                    command.extend(['--output_nodes', out_node_name])
+                if precompile:
+                    command.append('--precompile')
+                if save_ng_clusters:
+                    command.append('--save_ng_clusters')
+                p = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                output, err = p.communicate()
+                rc = p.returncode
                 if out_node_name is None:
-                    out_node_str = ' '
-                else:
-                    out_node_str = ' --output_nodes ' + out_node_name + ' '
-                try:
-                    command_executor(
-                        'python ../../tools/tf2ngraph.py --input_' +
-                        inp_format + ' ' + inp_loc + out_node_str +
-                        ' --output_' + out_format + ' ' + out_loc +
-                        ' --ng_backend ' + ng_device + ' --config_file ' +
-                        config_file_name + ("", " --precompile ")[precompile])
-                except:
-                    assert out_node_name is None, "Call to tf2ngraph should fail" + \
-                    " when no output name is provided"
+                    assert rc != 0, "Call to tf2ngraph should fail when no output name is provided"
                     return
             else:
                 convert(inp_format, inp_loc, out_format, out_loc, ['out_node'],
                         ng_device, optional_backend_params, shape_hints,
-                        precompile)
+                        precompile, save_ng_clusters)
+            file_present = 'ngraph_cluster_0.pbtxt' in os.listdir()
+            assert save_ng_clusters == file_present
             conversion_successful = True
         finally:
             if not conversion_successful:
@@ -127,6 +132,8 @@ class Testtf2ngraph(NgraphTest):
                     os.remove(config_file_name)
                 except:
                     pass
+            if save_ng_clusters and 'ngraph_cluster_0.pbtxt' in os.listdir():
+                os.remove('ngraph_cluster_0.pbtxt')
         assert conversion_successful
 
         gdef = get_gdef(out_format, out_loc)
@@ -234,3 +241,13 @@ class Testtf2ngraph(NgraphTest):
         assert rc != 0
 
         os.remove(export_pbtxt)
+
+    def test_grappler_failure(self):
+        bad_command = "python tf2ngraph.py --input_pbtxt ../test/test_axpy.pbtxt" + \
+        " --output_nodes add --output_pbtxt axpy_ngraph.pbtxt --ng_backend BADBACKEND"
+        p = Popen(bad_command.split(' '))
+
+        output, err = p.communicate()
+        rc = p.returncode
+        assert rc != 0, "Ran tf2ngraph with non-existent backend," + \
+        " hence expecting non-zero status"
