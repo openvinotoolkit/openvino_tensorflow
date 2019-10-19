@@ -34,6 +34,7 @@ message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 set(SRC 
    ngraph_device.cc
    ngraph_ops.cc
+   ngraph_send_recv_ops.cc
    version.cc
 )
 

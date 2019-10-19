@@ -97,19 +97,19 @@ class XPUDevice : public LocalDevice {
      devices->emplace_back(new XPUDevice(
          options,
          Device::BuildDeviceAttributes(
-             name_prefix + "/device:XPU:0", "XPU", static_cast<Bytes>(2<<30),
+             name_prefix + "/device:NGRAPH:0", "NGRAPH", static_cast<Bytes>(2<<30),
              DeviceLocality{},
-             "this is my xpu")));
+             "NGRAPH Device")));
      return Status::OK();
    }
   // For a specific device factory list all possible physical devices.
   Status ListPhysicalDevices(std::vector<string>* devices) override{
-    std::cout << "ListPhysicalDevices(): NOT IMPLEMENTED\n";
+    devices->push_back("/physical_device:NGRAPH:0");
     return Status::OK();
   }
 
  };
   
-REGISTER_LOCAL_DEVICE_FACTORY("XPU", XPUDeviceFactory, 210);
+REGISTER_LOCAL_DEVICE_FACTORY("NGRAPH", XPUDeviceFactory, 210);
 
 }  // namespace tensorflow

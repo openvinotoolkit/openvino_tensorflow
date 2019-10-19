@@ -18,7 +18,6 @@
 #include <string>
 
 #include "tensorflow/core/framework/op_kernel.h"
-#include "tensorflow/core/kernels/sendrecv_ops.h"
 
 namespace tensorflow{
 
@@ -32,7 +31,7 @@ class XPUAddOp : public OpKernel {
     output->flat<float>().data()[0] = 12345;
   }
 };
-REGISTER_KERNEL_BUILDER(Name("Add").Device("XPU"), XPUAddOp);
+REGISTER_KERNEL_BUILDER(Name("Add").Device("NGRAPH"), XPUAddOp);
 
 class XPUNoOp : public OpKernel {
  public:
@@ -41,6 +40,6 @@ class XPUNoOp : public OpKernel {
     LOG(ERROR) << "-------> XPUNoOp::Compute()";
   }
 };
-REGISTER_KERNEL_BUILDER(Name("NoOp").Device("XPU"), XPUNoOp);
+REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), XPUNoOp);
 
 }  // namespace tensorflow
