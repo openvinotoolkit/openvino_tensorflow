@@ -96,6 +96,14 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
     full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
     _ = load_library.load_op_library(full_lib_path)
     ngraph_bridge_lib = ctypes.cdll.LoadLibrary(full_lib_path)
+
+    # Now try to load the experimental bridge if the library exists
+    try:
+        full_lib_path = os.path.join(libpath, 'libngraph_bridge_device.' + ext)
+        _ = load_library.load_op_library(full_lib_path)
+        ngraph_bridge_device_lib = ctypes.cdll.LoadLibrary(full_lib_path)
+    except:
+        pass
 else:
     raise ValueError(
         "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
