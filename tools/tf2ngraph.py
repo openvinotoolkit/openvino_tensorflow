@@ -27,6 +27,7 @@ import os
 import sys
 import json
 from functools import partial
+from tensorflow.python.framework.function_def_to_graph import function_def_to_graph
 
 
 class Tf2ngraphJson(object):
@@ -37,8 +38,9 @@ class Tf2ngraphJson(object):
 
     @staticmethod
     def assert_type(obj, expected_type, tag):
-        assert type(obj) == expected_type, "Expected " + tag + " to be " + str(
-            expected_type) + " but got " + str(type(obj))
+        exit_on_error(
+            type(obj) == expected_type, "Expected " + tag + " to be " +
+            str(expected_type) + " but got " + str(type(obj)))
 
     @staticmethod
     def check_shape_hints(shape_hints):
@@ -77,8 +79,10 @@ class Tf2ngraphJson(object):
                     Tf2ngraphJson.check_optional_params(dct[k])
                     optional_backend_params = dct[k]
                 else:
-                    assert False, "Expected keys to be only in " + str(
-                        allowed_fields())
+                    exit_on_error(
+                        False,
+                        "Expected keys of config json file to be: " + \
+                        str(allowed_fields())) + ", but got " + str(k)
         return optional_backend_params, shape_hints
 
     @staticmethod
@@ -94,6 +98,17 @@ class Tf2ngraphJson(object):
             json.dump(dict_to_dump, fp)
 
 
+# This function controls how errors are handled.
+# For developers/debugging set assert_on_failure to True
+def exit_on_error(success, error_message, assert_on_failure=False):
+    if not success:
+        if assert_on_failure:
+            assert success, error_message
+        else:
+            sys.stderr.write("\n" + error_message + "\n")
+            sys.exit(1)
+
+
 def update_config_to_include_custom_config(config, backend, device_id,
                                            backend_optional_params, shape_hints,
                                            do_aot):
@@ -101,6 +116,7 @@ def update_config_to_include_custom_config(config, backend, device_id,
     rewriter_options.meta_optimizer_iterations = (
         rewriter_config_pb2.RewriterConfig.ONE)
     rewriter_options.min_graph_nodes = -1
+    rewriter_options.fail_on_optimizer_errors = True
     ngraph_optimizer = rewriter_options.custom_optimizers.add()
     ngraph_optimizer.name = "ngraph-optimizer"
     ngraph_optimizer.parameter_map["ngraph_backend"].s = backend.encode()
@@ -156,8 +172,11 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
     session_config = update_config_to_include_custom_config(
         session_config, ng_backend, device_id, backend_optional_params,
         shape_hints, do_aot)
-    output_gdef = tf_optimizer.OptimizeGraph(
-        session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
+    try:
+        output_gdef = tf_optimizer.OptimizeGraph(
+            session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
+    except Exception as e:
+        exit_on_error(False, e.message)
     return output_gdef
 
 
@@ -182,11 +201,10 @@ def get_gdef_from_protobuf(pb_filename):
 def check_graph_validity(gdef):
     # Assuming that the input graph has not already been processed by ngraph
     # TODO: add other checks for other types on NG ops
-    not_already_processed = all(
-        [i.op is not 'NGraphEncapsulate' for i in gdef.node])
+    already_processed = any([i.op is 'NGraphEncapsulate' for i in gdef.node])
     # Assume it is an inference ready graph
-    no_variables = all(['Variable' not in i.op for i in gdef.node])
-    return not_already_processed and no_variables
+    has_variables = any(['Variable' in i.op for i in gdef.node])
+    return already_processed, has_variables
 
 
 def get_gdef(format, location):
@@ -195,7 +213,18 @@ def get_gdef(format, location):
         'pbtxt': get_gdef_from_protobuf,
         'pb': get_gdef_from_protobuf
     }[format](location)
-    assert check_graph_validity(gdef)
+    already_processed, has_variables = check_graph_validity(gdef)
+    if already_processed or has_variables:
+        err_string = ["Graph at " + location + " is not acceptable because:"]
+        if already_processed:
+            err_string.append(
+                "It already contains encapsulate ops (and migth not need running through tf2ngraph again)"
+            )
+        if no_variables:
+            err_string.apend(
+                "It contains Variables (please freeze the graph to convert variables to constant)"
+            )
+        exit_on_error(False, '\n'.join(err_string))
     return gdef
 
 
@@ -229,7 +258,8 @@ def prepare_argparser(formats):
         "Comma separated list of output nodes. Output nodes can be found " \
         "by manual inspection of the graph, prior knowledge or running the " \
         "summarize_graph tool provided by Tensorflow",
-        required=True)
+        required=False,
+        default=None)
     parser.add_argument(
         "--ng_backend", default='CPU', help="Ngraph backend. Eg, NNPI")
     parser.add_argument("--device_id", default='', help="Device id. Eg, 0")
@@ -245,6 +275,10 @@ def prepare_argparser(formats):
         help=
         "Perform precompilation to embed the ngraph executable in the dumped TF graph"
     )
+    parser.add_argument(
+        "--save_ng_clusters",
+        action='store_true',
+        help="Saves the TF subgraphs that each ngraph encapsulate replaces")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -252,18 +286,21 @@ def prepare_argparser(formats):
 
 
 def filter_dict(prefix, dictionary):
-    assert prefix in ['input', 'output']
+    exit_on_error(prefix in ['input', 'output'],
+                  "Expected prefix to be 'input' or 'output' but got " + prefix)
     current_format = list(
         filter(
             lambda x: x.startswith(prefix + '_') and dictionary[x] is not None
             and 'nodes' not in x, dictionary))
-    assert len(current_format) == 1, "Got " + str(
-        len(current_format)) + " " + prefix + " formats, expected only 1"
+    exit_on_error(len(current_format) == 1, "Got " + str(len(current_format)) + \
+    " " + prefix + " formats, expected exactly 1 " + prefix + \
+    " format. Please add one of --" + prefix + "_pb or --" + prefix + \
+    "_pbtxt or --" + prefix + "_savedmodel and pass the " + prefix + " model location")
     # [len(prefix):] deletes the initial "input" in the string
     stripped = current_format[0][len(prefix):].lstrip('_')
-    assert stripped in allowed_formats[
-        prefix], "Got " + prefix + " format = " + stripped + " but only support " + str(
-            allowed_formats[prefix])
+    exit_on_error(
+        stripped in allowed_formats[prefix], "Got " + prefix + " format = " +
+        stripped + " but only support " + str(allowed_formats[prefix]))
     return (stripped, dictionary[prefix + '_' + stripped])
 
 
@@ -307,7 +344,8 @@ allowed_formats = {
 
 
 def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
-            device_id, backend_optional_params, shape_hints, do_aot):
+            device_id, backend_optional_params, shape_hints, do_aot,
+            save_ng_clusters):
     """Functional api for converting TF models by inserting ngraph nodes.
     Sample usage:
     from tf2ngraph import convert
@@ -323,15 +361,108 @@ def convert(inp_format, inp_loc, out_format, out_loc, output_nodes, ng_backend,
 
     Returns: void
    """
-    assert inp_format in allowed_formats['input']
-    assert out_format in allowed_formats['output']
-    assert ngraph_bridge.is_grappler_enabled()
+    exit_on_error(
+        inp_format in allowed_formats['input'], 'Unsupported input format ' +
+        inp_format + ". Supported formats: " + str(allowed_formats['input']))
+    exit_on_error(
+        out_format in allowed_formats['output'], 'Unsupported output format ' +
+        out_format + ". Supported formats: " + str(allowed_formats['output']))
+    exit_on_error(
+        ngraph_bridge.is_grappler_enabled(),
+        "ngraph-bridge is not built with grappler enabled, hence tf2ngraph is not supported."
+    )
     input_gdef = get_gdef(inp_format, inp_loc)
     attach_device(input_gdef)
     output_gdef = run_ngraph_grappler_optimizer(
         input_gdef, output_nodes, ng_backend, device_id,
         backend_optional_params, shape_hints, do_aot)
+    if save_ng_clusters:
+        for fn in output_gdef.library.function:
+            tf.io.write_graph(
+                function_def_to_graph(fn).as_graph_def(),
+                '.',
+                fn.signature.name + '.pbtxt',
+                as_text=True)
     save_model(output_gdef, out_format, out_loc)
+
+
+def sanitize_node_name(node_name):
+    '''
+    Given an input to a node in the graph def clean it to find the node name
+    '''
+    # get rid of caret indicating control edge (^name -> name)
+    if node_name.startswith('^'):
+        node_name = node_name[1:]
+
+    # get rid of output slot (name:0 -> name)
+    split_colon = node_name.split(':')
+    if len(split_colon) == 1 or len(split_colon) == 2:
+        return split_colon[0]
+    else:
+        exit_on_error(False, "Expected node name to have <= 1 colons. " + \
+        "TODO: Handle case with > 1 colons")
+
+
+def get_possible_output_node_names(graph_def):
+    '''
+    Nodes which do not appear in the inputs of other nodes
+    are returned as possible output nodes.
+    '''
+    nodes_which_appear_at_inputs = set()
+    for n in graph_def.node:
+        # the list comprehension converts a
+        # google.protobuf.pyext._message.RepeatedScalarContainer to a list of strings
+        nodes_which_appear_at_inputs.update(
+            [sanitize_node_name(i) for i in n.input])
+
+    all_node_names = {n.name for n in graph_def.node}
+    possible_outputs = all_node_names.difference(nodes_which_appear_at_inputs)
+    name_type_map = get_name_type_map(graph_def)
+    return {k: name_type_map[k] for k in possible_outputs}
+
+
+def get_name_type_map(graph_def):
+    return {n.name: n.op for n in graph_def.node}
+
+
+def infer_output_nodes(inp_format, inp_loc):
+    '''
+    Try to read output names from savedmodel's signature_def
+    or try to guess the outputs from the graphdef
+    '''
+    if inp_format == 'savedmodel':
+        with tf.Session(graph=tf.Graph()) as sess:
+            # load the saved model
+            imported = tf.saved_model.load(
+                sess,
+                tags=[tf.saved_model.tag_constants.SERVING],
+                export_dir=inp_loc)
+            try:
+                # Check if the saved model has outputs specified
+                output_info = imported.signature_def[
+                    'serving_default'].outputs.values()
+                saved_model_has_out_name = True
+            except:
+                saved_model_has_out_name = False
+            if saved_model_has_out_name:
+                # the list comprehension gets the names
+                # from the output_info of type collections.abc.ValuesView
+                possible_outputs = [
+                    sanitize_node_name(i.name) for i in output_info
+                ]
+                node_name_type_dict = get_name_type_map(imported.graph_def)
+                return {k: node_name_type_dict[k] for k in possible_outputs}
+            else:
+                # Outputs not specified in the saved model
+                # Hence using get_possible_output_node_names
+                return get_possible_output_node_names(sess.graph_def)
+    elif inp_format == 'pbtxt' or inp_format == 'pb':
+        return get_possible_output_node_names(get_gdef_from_protobuf(inp_loc))
+    else:
+        exit_on_error(
+            False,
+            "inp_format expected to be pb, pbtxt or savedmodel, but found ",
+            inp_format)
 
 
 def main():
@@ -343,20 +474,28 @@ def main():
     args = prepare_argparser(allowed_formats)
     inp_format, inp_loc = filter_dict("input", args.__dict__)
     out_format, out_loc = filter_dict("output", args.__dict__)
-    output_nodes = args.output_nodes.split(',')
+    if args.output_nodes is None:
+        possible_out_nodes = infer_output_nodes(inp_format, inp_loc)
+        print(
+            "\nAnalyzed graph for possible list of output nodes. " + \
+            "Please supply one or more output node in --output_nodes"
+        )
+        for out_node in possible_out_nodes:
+            print("Name: `" + out_node + "` Type: `" +
+                  possible_out_nodes[out_node] + "`")
+        print()
+        exit_on_error(False, "No output node name provided in --output_nodes")
+    else:
+        output_nodes = args.output_nodes.split(',')
     backend_optional_params, shape_hints = Tf2ngraphJson.parse_json(
         args.config_file)
     convert(inp_format, inp_loc, out_format, out_loc, output_nodes,
             args.ng_backend, args.device_id, backend_optional_params,
-            shape_hints, args.precompile)
+            shape_hints, args.precompile, args.save_ng_clusters)
     print('Converted the model. Exiting now')
 
 
 if __name__ == '__main__':
     main()
-
-    # TODO remove these lines
-    # python tf2ngraph.py --input_pbtxt ../test/test_axpy.pbtxt --output_nodes add --output_pbtxt axpy_ngraph.pbtxt --ng_backend INTERPRETER --config_file sample_optional_params_and_shape_hints.json --precompile
-    # python run_tf2ngraph_model.py
 
     # TODO what happens if same shape is passed twice

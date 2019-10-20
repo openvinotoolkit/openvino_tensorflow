@@ -27,10 +27,10 @@ class TestSetBackend(NgraphTest):
 
     def test_set_backend(self):
         # store env variables
-        # when testing on backends like GPU the tests are run with NGRPAH_TF_BACKEND
+        # when testing on backends like GPU the tests are run with NGRAPH_TF_BACKEND
         # by storing and restoring the env_variables we run the tests independent of the backend set
         # currently we store and restore only the NGRAPH_TF_BACKEND
-        env_var_map = self.store_env_variables(["NGRPAH_TF_BACKEND"])
+        env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
 
         # test
         ngraph_bridge.enable()
