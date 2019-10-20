@@ -26,10 +26,10 @@
 
 namespace tensorflow{
 
-class XPUDeviceContext : public DeviceContext {
+class NGraphDeviceContext : public DeviceContext {
  public:
   // Does not take ownership of streams.
-  ~XPUDeviceContext() override {}
+  ~NGraphDeviceContext() override {}
 
   void CopyCPUTensorToDevice(const Tensor* cpu_tensor, Device* device,
                              Tensor* device_tensor,
@@ -63,12 +63,12 @@ class XPUDeviceContext : public DeviceContext {
 
 
 
-class XPUDevice : public LocalDevice {
+class NGraphDevice : public LocalDevice {
   public:
-   XPUDevice(const SessionOptions& options,
+   NGraphDevice(const SessionOptions& options,
              const DeviceAttributes& attributes)
        : LocalDevice(options, attributes) {
-         std::cout << "XPUDevice::ctor CALLED" << std::endl;
+         std::cout << "NGraphDevice::ctor CALLED" << std::endl;
        }
 
    Status Sync() override { return Status::OK(); }
@@ -80,7 +80,7 @@ class XPUDevice : public LocalDevice {
 
    Status FillContextMap(const Graph* graph,
                          DeviceContextMap* device_context_map) override {
-     static XPUDeviceContext* ctx = new XPUDeviceContext;
+     static NGraphDeviceContext* ctx = new NGraphDeviceContext;
      device_context_map->resize(graph->num_node_ids());
      for (Node* n : graph->nodes()) {
        ctx->Ref();
@@ -90,11 +90,11 @@ class XPUDevice : public LocalDevice {
    }
  };
 
- class XPUDeviceFactory : public DeviceFactory {
+ class NGraphDeviceFactory : public DeviceFactory {
   private:
    Status CreateDevices(const SessionOptions& options, const string& name_prefix,
                         std::vector<std::unique_ptr<Device>>* devices) override {
-     devices->emplace_back(new XPUDevice(
+     devices->emplace_back(new NGraphDevice(
          options,
          Device::BuildDeviceAttributes(
              name_prefix + "/device:NGRAPH:0", "NGRAPH", static_cast<Bytes>(2<<30),
@@ -110,6 +110,6 @@ class XPUDevice : public LocalDevice {
 
  };
   
-REGISTER_LOCAL_DEVICE_FACTORY("NGRAPH", XPUDeviceFactory, 210);
+REGISTER_LOCAL_DEVICE_FACTORY("NGRAPH", NGraphDeviceFactory, 210);
 
 }  // namespace tensorflow

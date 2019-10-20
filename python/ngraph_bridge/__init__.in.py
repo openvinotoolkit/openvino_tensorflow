@@ -88,22 +88,22 @@ except TypeError:
 TF_INSTALLED_VER = TF_VERSION.split('.')
 TF_NEEDED_VER = TF_VERSION_NEEDED.split('.')
 
+ngraph_classic_loaded = True
 ngraph_bridge_lib = None
 if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
-    full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
-    _ = load_library.load_op_library(full_lib_path)
-    ngraph_bridge_lib = ctypes.cdll.LoadLibrary(full_lib_path)
 
-    # Now try to load the experimental bridge if the library exists
-    try:
+    if "NGTF_USE_DEVICE" not in os.environ:
+        full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
+        _ = load_library.load_op_library(full_lib_path)
+        ngraph_bridge_lib = ctypes.cdll.LoadLibrary(full_lib_path)
+    else:
         full_lib_path = os.path.join(libpath, 'libngraph_bridge_device.' + ext)
         _ = load_library.load_op_library(full_lib_path)
         ngraph_bridge_device_lib = ctypes.cdll.LoadLibrary(full_lib_path)
-    except:
-        pass
+        ngraph_classic_loaded = False
 else:
     raise ValueError(
         "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
@@ -116,28 +116,28 @@ def requested():
         attr_value_pb2.AttrValue(b=True)
     })
 
+if ngraph_classic_loaded:
+    ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_list_backends.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_set_backend.argtypes = [ctypes.c_char_p]
+    ngraph_bridge_lib.ngraph_set_backend.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
+    ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
+    ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
+    ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
+    ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
 
-ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_list_backends.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_set_backend.argtypes = [ctypes.c_char_p]
-ngraph_bridge_lib.ngraph_set_backend.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
-ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
-ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
-ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
-ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
-ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
-
-try:
-    importlib.import_module('plaidml.settings')
-    # Importing plaidml.settings -- if it exists -- will have read the
-    # user's settings and configured the runtime environment
-    # appropriately.
-except ImportError:
-    pass
+    try:
+        importlib.import_module('plaidml.settings')
+        # Importing plaidml.settings -- if it exists -- will have read the
+        # user's settings and configured the runtime environment
+        # appropriately.
+    except ImportError:
+        pass
 
 
 def enable():
@@ -242,11 +242,12 @@ def set_disabled_ops(unsupported_ops):
 def get_disabled_ops():
     return ngraph_bridge_lib.ngraph_get_disabled_ops()
 
-__version__ = \
-  "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
-  "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
-  "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
-  "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
-  "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
-  "nGraph bridge built with Variables and Optimizers Enablement: " \
-      + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())
+if ngraph_classic_loaded:
+    __version__ = \
+    "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
+    "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
+    "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
+    "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
+    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
+    "nGraph bridge built with Variables and Optimizers Enablement: " \
+        + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())

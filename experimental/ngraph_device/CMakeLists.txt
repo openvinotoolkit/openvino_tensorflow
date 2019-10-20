@@ -35,6 +35,7 @@ set(SRC
    ngraph_device.cc
    ngraph_ops.cc
    ngraph_send_recv_ops.cc
+   ngraph_optimization_pass.cc
    version.cc
 )
 

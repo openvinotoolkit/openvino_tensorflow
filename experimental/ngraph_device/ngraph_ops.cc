@@ -21,25 +21,66 @@
 
 namespace tensorflow{
 
-class XPUAddOp : public OpKernel {
+class NGraphAddOp : public OpKernel {
  public:
-  explicit XPUAddOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+  explicit NGraphAddOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> XPUAddOp::Compute()";
+    LOG(ERROR) << "-------> NGraphAddOp::Compute()";
     Tensor* output = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
     output->flat<float>().data()[0] = 12345;
   }
 };
-REGISTER_KERNEL_BUILDER(Name("Add").Device("NGRAPH"), XPUAddOp);
+REGISTER_KERNEL_BUILDER(Name("Add").Device("NGRAPH"), NGraphAddOp);
 
-class XPUNoOp : public OpKernel {
+class NGraphMulOp : public OpKernel {
  public:
-  explicit XPUNoOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+  explicit NGraphMulOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> XPUNoOp::Compute()";
+    LOG(ERROR) << "-------> NGraphMulOp::Compute()";
+    Tensor* output = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
+    //output->flat<float>().data()[0] = 9999;
   }
 };
-REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), XPUNoOp);
+REGISTER_KERNEL_BUILDER(Name("Mul").Device("NGRAPH"), NGraphMulOp);
+
+class NGraphConstOp : public OpKernel {
+ public:
+  explicit NGraphConstOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+  void Compute(OpKernelContext* ctx) override {
+    LOG(ERROR) << "-------> NGraphConstOp::Compute()";
+    Tensor* output = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
+    //output->flat<float>().data()[0] = 21212121;
+  }
+};
+REGISTER_KERNEL_BUILDER(Name("Const").Device("NGRAPH"), NGraphConstOp);
+
+class NGraphNoOp : public OpKernel {
+ public:
+  explicit NGraphNoOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+  void Compute(OpKernelContext* ctx) override {
+    LOG(ERROR) << "-------> NGraphNoOp::Compute()";
+  }
+};
+REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), NGraphNoOp);
+
+class NGraphIdentityOp : public OpKernel {
+ public:
+  explicit NGraphIdentityOp(OpKernelConstruction* context) : OpKernel(context) {}
+
+  void Compute(OpKernelContext* context) override {
+    if (IsRefType(context->input_dtype(0))) {
+      context->forward_ref_input_to_ref_output(0, 0);
+    } else {
+      context->set_output(0, context->input(0));
+    }
+  }
+
+  bool IsExpensive() override { return false; }
+};
+
+REGISTER_KERNEL_BUILDER(Name("Identity").Device("NGRAPH"), NGraphIdentityOp);
 
 }  // namespace tensorflow
