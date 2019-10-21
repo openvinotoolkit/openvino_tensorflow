@@ -14,8 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/op.h"
@@ -43,10 +43,10 @@ void GraphToPbFile(Graph* graph, const string& filename) {
   GraphDef g_def;
   graph->ToGraphDef(&g_def);
 
-  //string graph_pb_str;
-  //protobuf::TextFormat::PrintToString(g_def, &graph_pb_str);
+  // string graph_pb_str;
+  // protobuf::TextFormat::PrintToString(g_def, &graph_pb_str);
   std::ofstream ostrm_out(filename, std::ios_base::trunc);
-  //ostrm_out << graph_pb_str;
+  // ostrm_out << graph_pb_str;
   g_def.SerializeToOstream(&ostrm_out);
 }
 
@@ -64,7 +64,7 @@ class NGraphOptimizationPass : public GraphOptimizationPass {
   std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
     std::stringstream ss;
     ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
-      << std::setw(4) << sub_idx;
+       << std::setw(4) << sub_idx;
     return ss.str();
   }
 
@@ -82,9 +82,9 @@ class NGraphOptimizationPass : public GraphOptimizationPass {
       int sub_idx = 0;
 
       for (auto& kv : *options.partition_graphs) {
-        auto pbtxt_filename = GraphFilenamePrefix(filename_prefix, idx, sub_idx) + ".pb";
-        VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                       << pbtxt_filename;
+        auto pbtxt_filename =
+            GraphFilenamePrefix(filename_prefix, idx, sub_idx) + ".pb";
+        VLOG(0) << "Dumping subgraph " << sub_idx << " to " << pbtxt_filename;
 
         Graph* pg = kv.second.get();
         GraphToPbFile(pg, pbtxt_filename);
@@ -109,32 +109,32 @@ int NGraphOptimizationPass::s_serial_counter = 0;
 mutex NGraphOptimizationPass::s_serial_counter_mutex;
 
 class NGraphPrePlacementPass : public NGraphOptimizationPass {
-  public:
-  Status Run(const GraphOptimizationPassOptions& options) override{
+ public:
+  Status Run(const GraphOptimizationPassOptions& options) override {
     DumpGraphs(options, 0, "pre_placement");
     return Status::OK();
   }
 };
 
 class NGraphPostPlacementPass : public NGraphOptimizationPass {
-  public:
-  Status Run(const GraphOptimizationPassOptions& options) override{
+ public:
+  Status Run(const GraphOptimizationPassOptions& options) override {
     DumpGraphs(options, 0, "post_placement");
     return Status::OK();
   }
 };
 
 class NGraphPostRewritePass : public NGraphOptimizationPass {
-  public:
-  Status Run(const GraphOptimizationPassOptions& options) override{
+ public:
+  Status Run(const GraphOptimizationPassOptions& options) override {
     DumpGraphs(options, 0, "post_rewrite");
     return Status::OK();
   }
 };
 
 class NGraphPostPartitionPass : public NGraphOptimizationPass {
-  public:
-  Status Run(const GraphOptimizationPassOptions& options) override{
+ public:
+  Status Run(const GraphOptimizationPassOptions& options) override {
     DumpGraphs(options, 0, "post_partition");
     return Status::OK();
   }

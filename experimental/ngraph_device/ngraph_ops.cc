@@ -19,7 +19,7 @@
 
 #include "tensorflow/core/framework/op_kernel.h"
 
-namespace tensorflow{
+namespace tensorflow {
 
 class NGraphAddOp : public OpKernel {
  public:
@@ -27,7 +27,8 @@ class NGraphAddOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override {
     LOG(ERROR) << "-------> NGraphAddOp::Compute()";
     Tensor* output = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
+    OP_REQUIRES_OK(ctx,
+                   ctx->allocate_output(0, ctx->input(0).shape(), &output));
     output->flat<float>().data()[0] = 12345;
   }
 };
@@ -39,8 +40,9 @@ class NGraphMulOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override {
     LOG(ERROR) << "-------> NGraphMulOp::Compute()";
     Tensor* output = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
-    //output->flat<float>().data()[0] = 9999;
+    OP_REQUIRES_OK(ctx,
+                   ctx->allocate_output(0, ctx->input(0).shape(), &output));
+    // output->flat<float>().data()[0] = 9999;
   }
 };
 REGISTER_KERNEL_BUILDER(Name("Mul").Device("NGRAPH"), NGraphMulOp);
@@ -51,8 +53,9 @@ class NGraphConstOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override {
     LOG(ERROR) << "-------> NGraphConstOp::Compute()";
     Tensor* output = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, ctx->input(0).shape(), &output));
-    //output->flat<float>().data()[0] = 21212121;
+    OP_REQUIRES_OK(ctx,
+                   ctx->allocate_output(0, ctx->input(0).shape(), &output));
+    // output->flat<float>().data()[0] = 21212121;
   }
 };
 REGISTER_KERNEL_BUILDER(Name("Const").Device("NGRAPH"), NGraphConstOp);
@@ -68,7 +71,8 @@ REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), NGraphNoOp);
 
 class NGraphIdentityOp : public OpKernel {
  public:
-  explicit NGraphIdentityOp(OpKernelConstruction* context) : OpKernel(context) {}
+  explicit NGraphIdentityOp(OpKernelConstruction* context)
+      : OpKernel(context) {}
 
   void Compute(OpKernelContext* context) override {
     if (IsRefType(context->input_dtype(0))) {

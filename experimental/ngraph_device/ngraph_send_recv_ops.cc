@@ -20,22 +20,20 @@
 
 #include "tensorflow/core/platform/default/logging.h"
 
-namespace ngraph_bridge
-{
-  const char *const DEVICE_NGRAPH_CPU = "NGRAPH";
+namespace ngraph_bridge {
+const char* const DEVICE_NGRAPH_CPU = "NGRAPH";
 }
 
-namespace tf=tensorflow;
+namespace tf = tensorflow;
 using namespace tensorflow;
 
 //-----------------------------------------------------------------------------
 //  GetRendezvousKeyPrefix
 //-----------------------------------------------------------------------------
-static string GetRendezvousKeyPrefix(const string &send_device,
-                                     const string &recv_device,
+static string GetRendezvousKeyPrefix(const string& send_device,
+                                     const string& recv_device,
                                      const uint64 send_device_incarnation,
-                                     const string &tensor_name)
-{
+                                     const string& tensor_name) {
   return strings::StrCat(send_device, ";",
                          strings::FpToString(send_device_incarnation), ";",
                          recv_device, ";", tensor_name);
@@ -44,9 +42,8 @@ static string GetRendezvousKeyPrefix(const string &send_device,
 //-----------------------------------------------------------------------------
 //  GetRendezvousKey
 //-----------------------------------------------------------------------------
-static void GetRendezvousKey(const string &key_prefix,
-                             const tf::FrameAndIter &frame_iter, string *key)
-{
+static void GetRendezvousKey(const string& key_prefix,
+                             const tf::FrameAndIter& frame_iter, string* key) {
   key->clear();
   strings::StrAppend(key, key_prefix, ";", frame_iter.frame_id, ":",
                      frame_iter.iter_id);
@@ -55,46 +52,38 @@ static void GetRendezvousKey(const string &key_prefix,
 //-----------------------------------------------------------------------------
 //  GetFrameAndIter
 //-----------------------------------------------------------------------------
-static tf::FrameAndIter GetFrameAndIter(OpKernelContext *ctx,
-                                        bool hostmem_sendrecv)
-{
-  if (hostmem_sendrecv && ctx->call_frame() != nullptr)
-  {
+static tf::FrameAndIter GetFrameAndIter(OpKernelContext* ctx,
+                                        bool hostmem_sendrecv) {
+  if (hostmem_sendrecv && ctx->call_frame() != nullptr) {
     // Host memory send/recv pairs are added by
     // common_runtime/memory_types.cc.  When the pair of nodes are
     // added inside a function, we need to use the function call frame
     // to formulate the unique rendezvous key.
     return FrameAndIter(reinterpret_cast<uint64>(ctx->call_frame()), 0);
-  }
-  else
-  {
+  } else {
     return ctx->frame_iter();
   }
 }
 
-namespace
-{
+namespace {
 //-----------------------------------------------------------------------------
 //  make_recv_callback
 //-----------------------------------------------------------------------------
 tf::Rendezvous::DoneCallback make_recv_callback(
-    tf::OpKernelContext *ctx, tf::AsyncOpKernel::DoneCallback done)
-{
+    tf::OpKernelContext* ctx, tf::AsyncOpKernel::DoneCallback done) {
   using namespace std::placeholders;
   return std::bind(
       [ctx](tf::AsyncOpKernel::DoneCallback done,
             // Begin unbound arguments.
-            const tf::Status &s, const tf::Rendezvous::Args &send_args,
-            const tf::Rendezvous::Args &recv_args, const tf::Tensor &val,
+            const tf::Status& s, const tf::Rendezvous::Args& send_args,
+            const tf::Rendezvous::Args& recv_args, const tf::Tensor& val,
             bool is_dead) {
         ctx->SetStatus(s);
-        if (s.ok())
-        {
+        if (s.ok()) {
           // 'ctx' allocates the output tensor of the expected type.
           // The runtime checks whether the tensor received here is
           // the same type.
-          if (!is_dead)
-          {
+          if (!is_dead) {
             ctx->set_output(0, val);
           }
           //*ctx->is_output_dead() = is_dead;
@@ -103,16 +92,14 @@ tf::Rendezvous::DoneCallback make_recv_callback(
       },
       std::move(done), _1, _2, _3, _4, _5);
 }
-} // namespace
+}  // namespace
 
 //-----------------------------------------------------------------------------
 //  NGraphSend
 //-----------------------------------------------------------------------------
-class NGraphRecv : public AsyncOpKernel
-{
-public:
-  explicit NGraphRecv(OpKernelConstruction *ctx) : AsyncOpKernel(ctx)
-  {
+class NGraphRecv : public AsyncOpKernel {
+ public:
+  explicit NGraphRecv(OpKernelConstruction* ctx) : AsyncOpKernel(ctx) {
     auto node_def = ctx->def();
     VLOG(99) << "NGraphRecv::ctor(): Node: " << node_def.name()
              << " Op: " << node_def.op();
@@ -125,7 +112,7 @@ public:
     uint64 send_device_incarnation;
     OP_REQUIRES_OK(
         ctx, ctx->GetAttr("send_device_incarnation",
-                          reinterpret_cast<int64 *>(&send_device_incarnation)));
+                          reinterpret_cast<int64*>(&send_device_incarnation)));
     string tensor_name;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name));
 
@@ -145,8 +132,7 @@ public:
 
     OP_REQUIRES_OK(ctx, Rendezvous::ParseKey(key, &parsed_key_));
 
-    if (!ctx->GetAttr("_hostmem_sendrecv", &hostmem_sendrecv_).ok())
-    {
+    if (!ctx->GetAttr("_hostmem_sendrecv", &hostmem_sendrecv_).ok()) {
       hostmem_sendrecv_ = false;
     }
   }
@@ -154,8 +140,7 @@ public:
   //-----------------------------------------------------------------------------
   //  ComputeAsync
   //-----------------------------------------------------------------------------
-  void ComputeAsync(OpKernelContext *ctx, DoneCallback done) override
-  {
+  void ComputeAsync(OpKernelContext* ctx, DoneCallback done) override {
     VLOG(99) << "NGraphRecv: Step: " << ctx->step_id()
              << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES_ASYNC(
@@ -170,14 +155,11 @@ public:
     VLOG(99) << "ComputeAsync: DEV-CTX: " << args.device_context;
 
     tf::FrameAndIter frame_iter = GetFrameAndIter(ctx, hostmem_sendrecv_);
-    if (frame_iter == FrameAndIter(0, 0))
-    {
+    if (frame_iter == FrameAndIter(0, 0)) {
       VLOG(99) << "ComputeAsync::Recv " << parsed_key_.FullKey();
       ctx->rendezvous()->RecvAsync(parsed_key_, args,
                                    make_recv_callback(ctx, std::move(done)));
-    }
-    else
-    {
+    } else {
       Rendezvous::ParsedKey in_loop_parsed;
       string key;
       GetRendezvousKey(key_prefix_, frame_iter, &key);
@@ -189,7 +171,7 @@ public:
     }
   }
 
-private:
+ private:
   string key_prefix_;
   tf::Rendezvous::ParsedKey parsed_key_;
   bool hostmem_sendrecv_;
@@ -198,11 +180,9 @@ private:
 //-----------------------------------------------------------------------------
 //  NGraphSend
 //-----------------------------------------------------------------------------
-class NGraphSend : public OpKernel
-{
-public:
-  explicit NGraphSend(OpKernelConstruction *ctx) : OpKernel(ctx)
-  {
+class NGraphSend : public OpKernel {
+ public:
+  explicit NGraphSend(OpKernelConstruction* ctx) : OpKernel(ctx) {
     auto node_def = ctx->def();
     VLOG(99) << "NGraphSend::ctor(): Node: " << node_def.name()
              << " Op: " << node_def.op();
@@ -213,7 +193,7 @@ public:
     uint64 send_device_incarnation;
     OP_REQUIRES_OK(
         ctx, ctx->GetAttr("send_device_incarnation",
-                          reinterpret_cast<int64 *>(&send_device_incarnation)));
+                          reinterpret_cast<int64*>(&send_device_incarnation)));
     string tensor_name;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("tensor_name", &tensor_name));
     key_prefix_ = GetRendezvousKeyPrefix(send_device, recv_device,
@@ -223,16 +203,14 @@ public:
     string key;
     GetRendezvousKey(key_prefix_, {0, 0}, &key);
     OP_REQUIRES_OK(ctx, Rendezvous::ParseKey(key, &parsed_key_));
-    if (!ctx->GetAttr("_hostmem_sendrecv", &hostmem_sendrecv_).ok())
-    {
+    if (!ctx->GetAttr("_hostmem_sendrecv", &hostmem_sendrecv_).ok()) {
       hostmem_sendrecv_ = false;
     }
   }
   //-----------------------------------------------------------------------------
   //  NGraphSend::Compute
   //-----------------------------------------------------------------------------
-  void Compute(OpKernelContext *ctx) override
-  {
+  void Compute(OpKernelContext* ctx) override {
     VLOG(99) << "NGraphSend: Step: " << ctx->step_id()
              << " Op: " << ctx->op_kernel().name();
     OP_REQUIRES(ctx, ctx->rendezvous() != nullptr,
@@ -248,16 +226,13 @@ public:
     args.alloc_attrs = ctx->input_alloc_attr(0);
 
     FrameAndIter frame_iter = GetFrameAndIter(ctx, hostmem_sendrecv_);
-    if (frame_iter == FrameAndIter(0, 0))
-    {
+    if (frame_iter == FrameAndIter(0, 0)) {
       // Use the cached rendezvous key.
       VLOG(99) << "Send " << parsed_key_.FullKey();
       ctx->SetStatus(ctx->rendezvous()->Send(parsed_key_, args, ctx->input(0),
                                              ctx->is_input_dead()));
       return;
-    }
-    else
-    {
+    } else {
       Rendezvous::ParsedKey in_loop_parsed;
       string key;
       GetRendezvousKey(key_prefix_, frame_iter, &key);
@@ -270,7 +245,7 @@ public:
     }
   }
 
-private:
+ private:
   string key_prefix_;
   tf::Rendezvous::ParsedKey parsed_key_;
   bool hostmem_sendrecv_;

@@ -24,7 +24,7 @@ import getpass
 import ctypes
 
 import warnings
-warnings.filterwarnings('ignore',category=FutureWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 import numpy as np
 import tensorflow as tf
