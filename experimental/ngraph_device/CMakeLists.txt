@@ -158,24 +158,19 @@ endif()
 #------------------------------------------------------------------------------
 #installation 
 #------------------------------------------------------------------------------
-# if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
-#     set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
-# else()
-#     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
-# endif()
+if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+else()
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
+endif()
 
-# if(OS_VERSION STREQUAL "\"centos\"")
-# 	set(NGTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib64)
-# else()
-# 	set(NGTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-# endif()
+if(OS_VERSION STREQUAL "\"centos\"")
+	set(NGTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib64)
+else()
+	set(NGTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
 
-# message(STATUS "NGTF_INSTALL_LIB_DIR: ${NGTF_INSTALL_LIB_DIR}")
-
-# if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-#     # First install the libngraph_bridge_static.a and headers
-#     install(TARGETS ${LIB_NAME_STATIC} DESTINATION "${NGTF_INSTALL_LIB_DIR}")
-# endif()
+message(STATUS "NGTF_INSTALL_LIB_DIR: ${NGTF_INSTALL_LIB_DIR}")
 
 # First install the libngraph_bridge.so and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${NGTF_INSTALL_LIB_DIR}")  
@@ -188,30 +183,3 @@ foreach(file ${test_files})
         ${CMAKE_CURRENT_BINARY_DIR}/${file}
 )
 endforeach()
-
-# install(FILES ngraph_backend_manager.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-
-# # Next install all the other prerequisites
-# if(OS_VERSION STREQUAL "\"centos\"")
-# 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib64/ DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
-# else()
-# 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
-# endif()
-
-# #Install nbench if we built
-# if(DEFINED NGRAPH_TOOLS_ENABLE)
-# 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/bin/ DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
-# endif()
-
-# # Now create the Python pip package. The following variables are passed to the 
-# # CreatePipWhl.cmake
-# # CMake "install" target "CODE" will propagate these variables to the 
-# # target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
-# # So any variable that we need to propagate needs to be added here
-# install(CODE "set(OS_VERSION ${OS_VERSION})")
-# install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
-# install(CODE "set(NGTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
-# install(CODE "set(NGTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
-# install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
-# install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
-# install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")

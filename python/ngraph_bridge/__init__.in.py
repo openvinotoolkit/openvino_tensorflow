@@ -140,109 +140,108 @@ if ngraph_classic_loaded:
         pass
 
 
-def enable():
-    ngraph_bridge_lib.ngraph_enable()
+    def enable():
+        ngraph_bridge_lib.ngraph_enable()
 
 
-def disable():
-    ngraph_bridge_lib.ngraph_disable()
+    def disable():
+        ngraph_bridge_lib.ngraph_disable()
 
 
-def is_enabled():
-    return ngraph_bridge_lib.ngraph_is_enabled()
+    def is_enabled():
+        return ngraph_bridge_lib.ngraph_is_enabled()
 
 
-def backends_len():
-    return ngraph_bridge_lib.ngraph_backends_len()
+    def backends_len():
+        return ngraph_bridge_lib.ngraph_backends_len()
 
 
-def list_backends():
-    len_backends = backends_len()
-    result = (ctypes.c_char_p * len_backends)()
-    if not ngraph_bridge_lib.ngraph_list_backends(result, len_backends):
-        raise Exception("Expected " + str(len_backends) +
-                        " backends, but got some  other number of backends")
-    list_result = list(result)
-    # convert bytes to string required for py3 (encode/decode bytes)
-    backend_list = []
-    for backend in list_result:
-        backend_list.append(backend.decode("utf-8"))
-    return backend_list
+    def list_backends():
+        len_backends = backends_len()
+        result = (ctypes.c_char_p * len_backends)()
+        if not ngraph_bridge_lib.ngraph_list_backends(result, len_backends):
+            raise Exception("Expected " + str(len_backends) +
+                            " backends, but got some  other number of backends")
+        list_result = list(result)
+        # convert bytes to string required for py3 (encode/decode bytes)
+        backend_list = []
+        for backend in list_result:
+            backend_list.append(backend.decode("utf-8"))
+        return backend_list
 
 
-def set_backend(backend):
-    if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
-        raise Exception("Backend " + backend + " unavailable.")
+    def set_backend(backend):
+        if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
+            raise Exception("Backend " + backend + " unavailable.")
 
 
-def get_currently_set_backend_name():
-    result = (ctypes.c_char_p * 1)()
-    if not ngraph_bridge_lib.ngraph_get_currently_set_backend_name(result):
-        raise Exception("Cannot get currently set backend")
-    list_result = list(result)
-    return list_result[0].decode("utf-8")
+    def get_currently_set_backend_name():
+        result = (ctypes.c_char_p * 1)()
+        if not ngraph_bridge_lib.ngraph_get_currently_set_backend_name(result):
+            raise Exception("Cannot get currently set backend")
+        list_result = list(result)
+        return list_result[0].decode("utf-8")
 
 
-def start_logging_placement():
-    ngraph_bridge_lib.ngraph_start_logging_placement()
+    def start_logging_placement():
+        ngraph_bridge_lib.ngraph_start_logging_placement()
 
 
-def stop_logging_placement():
-    ngraph_bridge_lib.ngraph_stop_logging_placement()
+    def stop_logging_placement():
+        ngraph_bridge_lib.ngraph_stop_logging_placement()
 
 
-def is_logging_placement():
-    return ngraph_bridge_lib.ngraph_is_logging_placement()
+    def is_logging_placement():
+        return ngraph_bridge_lib.ngraph_is_logging_placement()
 
-def cxx11_abi_flag():
-    return ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()
+    def cxx11_abi_flag():
+        return ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()
 
-def is_grappler_enabled():
-    return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+    def is_grappler_enabled():
+        return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
 
-def update_config(config, backend_name = "CPU", device_id = ""):
-    #updating session config if grappler is enabled
-    if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
-        opt_name = 'ngraph-optimizer'
-        # If the config already has ngraph-optimizer, then do not update it
-        if config.HasField('graph_options'):
-            if config.graph_options.HasField('rewrite_options'):
-                custom_opts = config.graph_options.rewrite_options.custom_optimizers
-                for i in range(len(custom_opts)):
-                    if custom_opts[i].name == opt_name:
-                        return config
-        rewriter_options = rewriter_config_pb2.RewriterConfig()
-        rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-        rewriter_options.min_graph_nodes=-1
-        ngraph_optimizer = rewriter_options.custom_optimizers.add()
-        ngraph_optimizer.name = opt_name
-        ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
-        ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
-        config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
-        # For reference, if we want to provide configuration support(backend parameters)
-        # in a python script using the ngraph-optimizer
-        # rewriter_options = rewriter_config_pb2.RewriterConfig()
-        # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-        # rewriter_options.min_graph_nodes=-1
-        # ngraph_optimizer = rewriter_options.custom_optimizers.add()
-        # ngraph_optimizer.name = "ngraph-optimizer"
-        # ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
-        # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
-        # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
-        # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
-        # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
-    return config
+    def update_config(config, backend_name = "CPU", device_id = ""):
+        #updating session config if grappler is enabled
+        if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
+            opt_name = 'ngraph-optimizer'
+            # If the config already has ngraph-optimizer, then do not update it
+            if config.HasField('graph_options'):
+                if config.graph_options.HasField('rewrite_options'):
+                    custom_opts = config.graph_options.rewrite_options.custom_optimizers
+                    for i in range(len(custom_opts)):
+                        if custom_opts[i].name == opt_name:
+                            return config
+            rewriter_options = rewriter_config_pb2.RewriterConfig()
+            rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
+            rewriter_options.min_graph_nodes=-1
+            ngraph_optimizer = rewriter_options.custom_optimizers.add()
+            ngraph_optimizer.name = opt_name
+            ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
+            ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
+            config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
+            # For reference, if we want to provide configuration support(backend parameters)
+            # in a python script using the ngraph-optimizer
+            # rewriter_options = rewriter_config_pb2.RewriterConfig()
+            # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
+            # rewriter_options.min_graph_nodes=-1
+            # ngraph_optimizer = rewriter_options.custom_optimizers.add()
+            # ngraph_optimizer.name = "ngraph-optimizer"
+            # ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
+            # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
+            # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
+            # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
+            # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
+        return config
 
-def are_variables_enabled():
-    return ngraph_bridge_lib.ngraph_tf_are_variables_enabled()
+    def are_variables_enabled():
+        return ngraph_bridge_lib.ngraph_tf_are_variables_enabled()
 
-def set_disabled_ops(unsupported_ops):
-    ngraph_bridge_lib.ngraph_set_disabled_ops(unsupported_ops.encode("utf-8"))
+    def set_disabled_ops(unsupported_ops):
+        ngraph_bridge_lib.ngraph_set_disabled_ops(unsupported_ops.encode("utf-8"))
 
-def get_disabled_ops():
-    return ngraph_bridge_lib.ngraph_get_disabled_ops()
+    def get_disabled_ops():
+        return ngraph_bridge_lib.ngraph_get_disabled_ops()
 
-if ngraph_classic_loaded:
     __version__ = \
     "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
     "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
