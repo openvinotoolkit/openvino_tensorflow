@@ -22,8 +22,18 @@ def new_device():
             mul = add * inp
             outp = tf.identity(mul, name="out")
 
-        config = tf.ConfigProto()
-        config.allow_soft_placement = False
+        config = tf.ConfigProto(
+            allow_soft_placement=True,
+            log_device_placement=False,
+            inter_op_parallelism_threads=1,
+            graph_options=tf.GraphOptions(
+                optimizer_options=tf.OptimizerOptions(
+                    opt_level=tf.OptimizerOptions.L0,
+                    do_common_subexpression_elimination=False,
+                    do_constant_folding=False,
+                    do_function_inlining=False,
+                )))
+
 
         with tf.Session(config=config) as sess:
             print(sess.run(outp, feed_dict={inp: [[[1.0]]]}))
