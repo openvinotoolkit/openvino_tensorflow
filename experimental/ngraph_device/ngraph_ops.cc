@@ -25,64 +25,60 @@ class NGraphAddOp : public OpKernel {
  public:
   explicit NGraphAddOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> NGraphAddOp::Compute()";
+    std::cout << "NGraphAddOp::Compute()\n";
     Tensor* output = nullptr;
     OP_REQUIRES_OK(ctx,
                    ctx->allocate_output(0, ctx->input(0).shape(), &output));
     output->flat<float>().data()[0] = 12345;
   }
 };
-REGISTER_KERNEL_BUILDER(Name("Add").Device("NGRAPH"), NGraphAddOp);
 
 class NGraphMulOp : public OpKernel {
  public:
   explicit NGraphMulOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> NGraphMulOp::Compute()";
+    std::cout << "NGraphMulOp::Compute()\n";
     Tensor* output = nullptr;
     OP_REQUIRES_OK(ctx,
                    ctx->allocate_output(0, ctx->input(0).shape(), &output));
     // output->flat<float>().data()[0] = 9999;
   }
 };
-REGISTER_KERNEL_BUILDER(Name("Mul").Device("NGRAPH"), NGraphMulOp);
 
 class NGraphConstOp : public OpKernel {
  public:
-  explicit NGraphConstOp(OpKernelConstruction* ctx) : OpKernel(ctx) ,
-  tensor_(ctx->output_type(0)) {
+  explicit NGraphConstOp(OpKernelConstruction* ctx)
+      : OpKernel(ctx), tensor_(ctx->output_type(0)) {
     const TensorProto* proto = nullptr;
     OP_REQUIRES_OK(ctx, ctx->GetAttr("value", &proto));
     OP_REQUIRES_OK(ctx, ctx->device()->MakeTensorFromProto(
                             *proto, AllocatorAttributes(), &tensor_));
     OP_REQUIRES(
         ctx, ctx->output_type(0) == tensor_.dtype(),
-        errors::InvalidArgument("Type mismatch between value (",
-                                DataTypeString(tensor_.dtype()), ") and dtype (",
-                                DataTypeString(ctx->output_type(0)), ")"));
-
+        errors::InvalidArgument(
+            "Type mismatch between value (", DataTypeString(tensor_.dtype()),
+            ") and dtype (", DataTypeString(ctx->output_type(0)), ")"));
   }
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> NGraphConstOp::Compute()";
+    std::cout << "NGraphConstOp::Compute()\n";
 
     ctx->set_output(0, tensor_);
-    //OP_REQUIRES_OK(ctx,
+    // OP_REQUIRES_OK(ctx,
     //               ctx->allocate_output(0, ctx->input(0).shape(), &output));
     // output->flat<float>().data()[0] = 21212121;
   }
-private:
+
+ private:
   Tensor tensor_;
 };
-REGISTER_KERNEL_BUILDER(Name("Const").Device("NGRAPH"), NGraphConstOp);
 
 class NGraphNoOp : public OpKernel {
  public:
   explicit NGraphNoOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
-    LOG(ERROR) << "-------> NGraphNoOp::Compute()";
+    std::cout << "NGraphNoOp::Compute()\n";
   }
 };
-REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), NGraphNoOp);
 
 class NGraphIdentityOp : public OpKernel {
  public:
@@ -90,6 +86,7 @@ class NGraphIdentityOp : public OpKernel {
       : OpKernel(context) {}
 
   void Compute(OpKernelContext* context) override {
+    std::cout << "NGraphIdentityOp::Compute()\n";
     if (IsRefType(context->input_dtype(0))) {
       context->forward_ref_input_to_ref_output(0, 0);
     } else {
@@ -100,6 +97,10 @@ class NGraphIdentityOp : public OpKernel {
   bool IsExpensive() override { return false; }
 };
 
+REGISTER_KERNEL_BUILDER(Name("Const").Device("NGRAPH"), NGraphConstOp);
+REGISTER_KERNEL_BUILDER(Name("Mul").Device("NGRAPH"), NGraphMulOp);
+REGISTER_KERNEL_BUILDER(Name("Add").Device("NGRAPH"), NGraphAddOp);
 REGISTER_KERNEL_BUILDER(Name("Identity").Device("NGRAPH"), NGraphIdentityOp);
+REGISTER_KERNEL_BUILDER(Name("NoOp").Device("NGRAPH"), NGraphNoOp);
 
 }  // namespace tensorflow

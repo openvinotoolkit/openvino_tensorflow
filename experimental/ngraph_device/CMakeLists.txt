@@ -36,7 +36,6 @@ set(SRC
    ngraph_ops.cc
    ngraph_send_recv_ops.cc
    ngraph_optimization_pass.cc
-   version.cc
 )
 
 # message(STATUS "NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS: ${NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS}")

@@ -37,6 +37,7 @@ import ngraph_bridge
 
 print("TensorFlow version: ", tf.VERSION)
 
+
 @tf.function
 def run():
     # Setup TensorBoard
@@ -81,8 +82,8 @@ def run():
         sess.run(tf.global_variables_initializer())
         for i in range(10):
             (result_axpy) = sess.run((train_op),
-                                    options=options,
-                                    run_metadata=run_metadata),
+                                     options=options,
+                                     run_metadata=run_metadata),
             print(i)
             event_times.append(timeline.Timeline(run_metadata.step_stats))
 
@@ -98,4 +99,6 @@ def run():
                     f.write(json.dumps(tr) + ',\n')
 
     train_writer.add_graph(tf.get_default_graph())
+
+
 run()

@@ -34,8 +34,8 @@ class NGraphDeviceContext : public DeviceContext {
   void CopyCPUTensorToDevice(const Tensor* cpu_tensor, Device* device,
                              Tensor* device_tensor, StatusCallback done,
                              bool sync_dst_compute) const override {
-
-    std::cout << "CopyCPUTensorToDevice: DEVICE: " << device->name() << std::endl;
+    std::cout << "CopyCPUTensorToDevice: DEVICE: " << device->name()
+              << std::endl;
 
     *device_tensor = *cpu_tensor;
     done(Status::OK());
@@ -44,9 +44,8 @@ class NGraphDeviceContext : public DeviceContext {
   void CopyDeviceTensorToCPU(const Tensor* device_tensor, StringPiece edge_name,
                              Device* device, Tensor* cpu_tensor,
                              StatusCallback done) override {
-    std::cout << "CopyDeviceTensorToCPU: DEVICE: " << device->name() 
-      << " Edge: " << edge_name
-      << std::endl;
+    std::cout << "CopyDeviceTensorToCPU: DEVICE: " << device->name()
+              << " Edge: " << edge_name << std::endl;
 
     *cpu_tensor = *device_tensor;
     done(Status::OK());
@@ -55,7 +54,8 @@ class NGraphDeviceContext : public DeviceContext {
   void CopyTensorInSameDevice(const Tensor* input_tensor, Device* device,
                               Tensor* output_tensor,
                               StatusCallback done) const override {
-    std::cout << "CopyTensorInSameDevice: DEVICE: " << device->name() << std::endl;
+    std::cout << "CopyTensorInSameDevice: DEVICE: " << device->name()
+              << std::endl;
     *output_tensor = *input_tensor;
     done(Status::OK());
   }
@@ -103,7 +103,6 @@ class NGraphDevice : public LocalDevice {
     *tensor = parsed;
     return Status::OK();
   }
-
 };
 
 class NGraphDeviceFactory : public DeviceFactory {

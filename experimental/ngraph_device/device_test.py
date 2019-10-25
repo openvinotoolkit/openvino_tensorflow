@@ -34,7 +34,6 @@ def new_device():
                     do_function_inlining=False,
                 )))
 
-
         with tf.Session(config=config) as sess:
             print(sess.run(outp, feed_dict={inp: [[[1.0]]]}))
 
