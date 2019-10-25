@@ -185,7 +185,7 @@ NGraphExecutor::~NGraphExecutor() {
   }
 
   m_executable_pipelined_tensors_map.clear();
-  m_ng_function_map.clear();
+  m_serialized_ng_function_map.clear();
   m_ng_exec_map.clear();
 }
 
@@ -263,13 +263,15 @@ Status NGraphExecutor::GetNgExecutable(
 
     NGRAPH_VLOG(1) << "Compilation cache miss: " << m_node_name;
 
-    std::shared_ptr<ngraph::Function> ng_function;
     std::shared_ptr<ngraph::runtime::Executable> evicted_ng_exec;
-
+    string serialized_ng_func;
+    std::shared_ptr<ngraph::Function> ng_function;
     if (!m_do_aot) {
       TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
                                                  m_graph.get(), ng_function));
       ng_function->set_friendly_name(m_node_name);
+      int json_indentation = 4;
+      serialized_ng_func = ngraph::serialize(ng_function, json_indentation);
     } else {
       auto itr = m_aot_functions.find(signature);
       if (itr == m_aot_functions.end()) {
@@ -277,21 +279,20 @@ Status NGraphExecutor::GetNgExecutable(
             "Expected to find AOT precompiled ng function of signature: ",
             signature);
       }
-      ng_function = ng::deserialize(itr->second);
+      serialized_ng_func = itr->second;
     }
-
-    auto function_size = ng_function->get_graph_size() / 1024;  // kb unit
 
     // Serialize to nGraph if needed
     if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
       std::string file_name = "tf_function_" + m_node_name + ".json";
-      NgraphSerialize("tf_function_" + m_node_name + ".json", ng_function);
+      TF_RETURN_IF_ERROR(StringToFile("tf_function_" + m_node_name + ".json",
+                                      serialized_ng_func));
 #if defined NGRAPH_DISTRIBUTED
       int rank_id;
       rank_id = ng::get_distributed_interface()->get_rank();
-      NgraphSerialize(
+      TF_RETURN_IF_ERROR(StringToFile(
           "tf_function_" + m_node_name + "_" + to_string(rank_id) + ".json",
-          ng_function);
+          serialized_ng_func));
 #endif
     }
     // Evict the cache if the number of elements exceeds the limit
@@ -304,7 +305,7 @@ Status NGraphExecutor::GetNgExecutable(
       int input_tensors_bytes_free = 0;
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
       m_ng_exec_map.erase(m_lru.back());
-      m_ng_function_map.erase(evicted_ng_exec);
+      m_serialized_ng_function_map.erase(evicted_ng_exec);
 
       // Call delete function here for the erased func
       op_backend->remove_compiled_function(evicted_ng_exec);
@@ -354,15 +355,22 @@ Status NGraphExecutor::GetNgExecutable(
       }
     } catch (const std::exception& exp) {
       BackendManager::UnlockBackend(m_op_backend_name);
-      NgraphSerialize("tf_function_error_" + m_node_name + ".json",
-                      ng_function);
-      return errors::Internal("Caught exception while compiling op_backend: ",
-                              exp.what(), "\n");
+      Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
+                               serialized_ng_func);
+      string status_string =
+          "Caught exception while compiling op_backend: " + string(exp.what()) +
+          (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                           st.error_message()));
+      return errors::Internal(status_string);
     } catch (...) {
       BackendManager::UnlockBackend(m_op_backend_name);
-      NgraphSerialize("tf_function_error_" + m_node_name + ".json",
-                      ng_function);
-      return errors::Internal("Error in compiling op_backend\n");
+      Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
+                               serialized_ng_func);
+      string status_string =
+          "Error in compiling op_backend." +
+          (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                           st.error_message()));
+      return errors::Internal(status_string);
     }
     BackendManager::UnlockBackend(m_op_backend_name);
     event_compile.Stop();
@@ -370,7 +378,7 @@ Status NGraphExecutor::GetNgExecutable(
     m_ng_exec_map[signature] = ng_exec;
 
     // caching ng_function to serialize to ngraph if needed
-    m_ng_function_map[ng_exec] = ng_function;
+    m_serialized_ng_function_map[ng_exec] = serialized_ng_func;
 
     m_lru.push_front(signature);
     // Memory after
@@ -382,7 +390,6 @@ Status NGraphExecutor::GetNgExecutable(
                    << "  Cluster: " << m_node_name
                    << " Delta VM: " << delta_vm_mem
                    << "  Delta RSS: " << delta_res_mem
-                   << "  Function size: " << function_size
                    << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
                    << " VM: " << vm / (1024 * 1024) << " GB" << endl;
   }  // end of input signature not found in m_ng_exec_map
@@ -407,11 +414,15 @@ Status NGraphExecutor::GetNgFunction(
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
     std::shared_ptr<ngraph::Function>& ng_function) {
   // Lookup the function from the Map
-  auto it = m_ng_function_map.find(ng_exec);
-  if (it == m_ng_function_map.end()) {
-    errors::Internal("Function not found for this executable");
+  auto it = m_serialized_ng_function_map.find(ng_exec);
+  if (it == m_serialized_ng_function_map.end()) {
+    return errors::Internal("Function not found for this executable");
   }
-  ng_function = it->second;
+  try {
+    ng_function = ngraph::deserialize(it->second);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Failed to deserialize ngraph function");
+  }
   return Status::OK();
 }
 
