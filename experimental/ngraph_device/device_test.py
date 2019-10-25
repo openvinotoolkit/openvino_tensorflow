@@ -17,13 +17,13 @@ def new_device():
     with g.as_default():
         inp = tf.placeholder(dtype=tf.float32, shape=[None, 1, 1], name="in")
         with g.device("/device:NGRAPH:0"):
-            add = inp + inp
+            add = inp + 10
         with g.device("/device:CPU:0"):
             mul = add * inp
             outp = tf.identity(mul, name="out")
 
         config = tf.ConfigProto(
-            allow_soft_placement=True,
+            allow_soft_placement=False,
             log_device_placement=False,
             inter_op_parallelism_threads=1,
             graph_options=tf.GraphOptions(

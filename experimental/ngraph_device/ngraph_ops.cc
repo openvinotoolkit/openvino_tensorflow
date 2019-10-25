@@ -49,14 +49,29 @@ REGISTER_KERNEL_BUILDER(Name("Mul").Device("NGRAPH"), NGraphMulOp);
 
 class NGraphConstOp : public OpKernel {
  public:
-  explicit NGraphConstOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
+  explicit NGraphConstOp(OpKernelConstruction* ctx) : OpKernel(ctx) ,
+  tensor_(ctx->output_type(0)) {
+    const TensorProto* proto = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("value", &proto));
+    OP_REQUIRES_OK(ctx, ctx->device()->MakeTensorFromProto(
+                            *proto, AllocatorAttributes(), &tensor_));
+    OP_REQUIRES(
+        ctx, ctx->output_type(0) == tensor_.dtype(),
+        errors::InvalidArgument("Type mismatch between value (",
+                                DataTypeString(tensor_.dtype()), ") and dtype (",
+                                DataTypeString(ctx->output_type(0)), ")"));
+
+  }
   void Compute(OpKernelContext* ctx) override {
     LOG(ERROR) << "-------> NGraphConstOp::Compute()";
-    Tensor* output = nullptr;
-    OP_REQUIRES_OK(ctx,
-                   ctx->allocate_output(0, ctx->input(0).shape(), &output));
+
+    ctx->set_output(0, tensor_);
+    //OP_REQUIRES_OK(ctx,
+    //               ctx->allocate_output(0, ctx->input(0).shape(), &output));
     // output->flat<float>().data()[0] = 21212121;
   }
+private:
+  Tensor tensor_;
 };
 REGISTER_KERNEL_BUILDER(Name("Const").Device("NGRAPH"), NGraphConstOp);
 

@@ -28,6 +28,9 @@ import tensorflow as tf
 from tensorflow.python.client import timeline
 import json
 
+import os
+os.environ['NGTF_USE_DEVICE'] = "1"
+
 import ngraph_bridge
 
 print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)
@@ -50,10 +53,10 @@ config = tf.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
-config_ngraph_enabled = ngraph_bridge.update_config(config)
+#config_ngraph_enabled = ngraph_bridge.update_config(config)
 
 # Create session and run
-with tf.Session(config=config_ngraph_enabled) as sess:
+with tf.Session(config=config) as sess:
     print("Python: Running with Session")
     options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
     run_metadata = tf.RunMetadata()

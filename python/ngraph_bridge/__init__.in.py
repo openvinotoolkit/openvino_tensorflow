@@ -36,6 +36,9 @@ from tensorflow.python.framework import ops
 from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.framework import load_library
 
+# This will turn off V1 API related warnings 
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 import ctypes
 
 __all__ = [
