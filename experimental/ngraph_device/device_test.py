@@ -4,7 +4,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 import tensorflow as tf
 import os
-os.environ['NGTF_USE_DEVICE'] = "1"
+os.environ['NGRAPH_TF_USE_DEVICE_MODE'] = "1"
 import ngraph_bridge
 import sys
 import os

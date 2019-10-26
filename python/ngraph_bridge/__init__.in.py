@@ -98,7 +98,7 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
 
-    if "NGTF_USE_DEVICE" not in os.environ:
+    if "NGRAPH_TF_USE_DEVICE_MODE" not in os.environ:
         full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
         _ = load_library.load_op_library(full_lib_path)
         ngraph_bridge_lib = ctypes.cdll.LoadLibrary(full_lib_path)

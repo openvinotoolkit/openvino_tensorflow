@@ -32,7 +32,7 @@ from tensorflow.python.client import timeline
 import json
 
 import os
-os.environ['NGTF_USE_DEVICE'] = "1"
+os.environ['NGRAPH_TF_USE_DEVICE_MODE'] = "1"
 import ngraph_bridge
 
 print("TensorFlow version: ", tf.VERSION)
