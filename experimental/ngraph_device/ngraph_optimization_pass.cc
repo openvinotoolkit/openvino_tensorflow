@@ -101,6 +101,7 @@ class NGraphPrePlacementPass : public NGraphOptimizationPass {
     DumpGraphs(options, FreshIndex(), "pre_placement");
     return Status::OK();
   }
+
  private:
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
@@ -119,6 +120,7 @@ class NGraphPostPlacementPass : public NGraphOptimizationPass {
     DumpGraphs(options, FreshIndex(), "post_placement");
     return Status::OK();
   }
+
  private:
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
@@ -137,6 +139,7 @@ class NGraphPostRewritePass : public NGraphOptimizationPass {
     DumpGraphs(options, FreshIndex(), "post_rewrite");
     return Status::OK();
   }
+
  private:
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
@@ -155,6 +158,7 @@ class NGraphPostPartitionPass : public NGraphOptimizationPass {
     DumpGraphs(options, FreshIndex(), "post_partition");
     return Status::OK();
   }
+
  private:
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
