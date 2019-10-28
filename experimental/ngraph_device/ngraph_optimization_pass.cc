@@ -93,7 +93,15 @@ class NGraphOptimizationPass : public GraphOptimizationPass {
       }
     }
   }
+};
 
+class NGraphPrePlacementPass : public NGraphOptimizationPass {
+ public:
+  Status Run(const GraphOptimizationPassOptions& options) override {
+    DumpGraphs(options, FreshIndex(), "pre_placement");
+    return Status::OK();
+  }
+ private:
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
   static int FreshIndex() {
@@ -105,40 +113,72 @@ class NGraphOptimizationPass : public GraphOptimizationPass {
   static mutex s_serial_counter_mutex;
 };
 
-int NGraphOptimizationPass::s_serial_counter = 0;
-mutex NGraphOptimizationPass::s_serial_counter_mutex;
-
-class NGraphPrePlacementPass : public NGraphOptimizationPass {
- public:
-  Status Run(const GraphOptimizationPassOptions& options) override {
-    DumpGraphs(options, 0, "pre_placement");
-    return Status::OK();
-  }
-};
-
 class NGraphPostPlacementPass : public NGraphOptimizationPass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
-    DumpGraphs(options, 0, "post_placement");
+    DumpGraphs(options, FreshIndex(), "post_placement");
     return Status::OK();
   }
+ private:
+  // Returns a fresh "serial number" to avoid filename collisions in the graph
+  // dumps.
+  static int FreshIndex() {
+    mutex_lock l(s_serial_counter_mutex);
+    return s_serial_counter++;
+  }
+
+  static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
+  static mutex s_serial_counter_mutex;
 };
 
 class NGraphPostRewritePass : public NGraphOptimizationPass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
-    DumpGraphs(options, 0, "post_rewrite");
+    DumpGraphs(options, FreshIndex(), "post_rewrite");
     return Status::OK();
   }
+ private:
+  // Returns a fresh "serial number" to avoid filename collisions in the graph
+  // dumps.
+  static int FreshIndex() {
+    mutex_lock l(s_serial_counter_mutex);
+    return s_serial_counter++;
+  }
+
+  static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
+  static mutex s_serial_counter_mutex;
 };
 
 class NGraphPostPartitionPass : public NGraphOptimizationPass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
-    DumpGraphs(options, 0, "post_partition");
+    DumpGraphs(options, FreshIndex(), "post_partition");
     return Status::OK();
   }
+ private:
+  // Returns a fresh "serial number" to avoid filename collisions in the graph
+  // dumps.
+  static int FreshIndex() {
+    mutex_lock l(s_serial_counter_mutex);
+    return s_serial_counter++;
+  }
+
+  static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
+  static mutex s_serial_counter_mutex;
 };
+
+int NGraphPrePlacementPass::s_serial_counter = 0;
+mutex NGraphPrePlacementPass::s_serial_counter_mutex;
+
+int NGraphPostPlacementPass::s_serial_counter = 0;
+mutex NGraphPostPlacementPass::s_serial_counter_mutex;
+
+int NGraphPostRewritePass::s_serial_counter = 0;
+mutex NGraphPostRewritePass::s_serial_counter_mutex;
+
+int NGraphPostPartitionPass::s_serial_counter = 0;
+mutex NGraphPostPartitionPass::s_serial_counter_mutex;
+
 }  // namespace ngraph_bridge
 
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::PRE_PLACEMENT, 0,
