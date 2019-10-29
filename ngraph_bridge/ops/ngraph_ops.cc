@@ -44,5 +44,15 @@ REGISTER_OP("NGraphVariable")
     .SetIsStateful()
     .SetShapeFn(shape_inference::ExplicitShape);
 
+REGISTER_OP("NGraphWriteToDevice")
+    .Input("input_dataset: variant")
+    .Output("handle: variant")
+    // .SetShapeFn([](shape_inference::InferenceContext* c) {
+    //   shape_inference::ShapeHandle count_shape;
+    //   TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &count_shape));
+    //   return shape_inference::ScalarShape(c);
+    //})
+    ;
+
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

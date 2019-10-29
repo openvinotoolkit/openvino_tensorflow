@@ -40,6 +40,74 @@ static bool IsOutputNode(const Node* node,
   return found;
 }
 
+// Status AddWriteToDeviceOp(Graph* input_graph, std::set<string> skip_these_nodes) {
+//   for (auto node : input_graph->op_nodes()) {
+//     bool fetch_node = false;
+//     bool ref_type = false;
+//     fetch_node = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
+//     if (fetch_node) {
+//       NGRAPH_VLOG(0) << "AddWriteToDeviceOp: Fetch Node " << node->name();
+//       // Check the number of outputs of the 'fetch_node'
+//       // Only move further to create an IdentityN node
+//       // if it is greater than 0
+//       // Also, make sure that none of the output types is
+//       // a ref type because IdentityN does not support
+//       // an input of type ref type
+//       if (node->num_outputs()) {
+//         std::vector<NodeBuilder::NodeOut> inputs;
+//         std::vector<DataType> input_types;
+//         for (int i = 0; i < node->num_outputs(); i++) {
+//           if (IsRefType(node->output_type(i))) {
+//             NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: "
+//                            << "Datatype for the node output"
+//                            << " at index " << i << " is ref type";
+//             ref_type = true;
+//             break;
+//           }
+//           input_types.push_back(node->output_type(i));
+//           inputs.push_back(NodeBuilder::NodeOut(node, i));
+//         }
+
+//         if (ref_type) {
+//           NGRAPH_VLOG(5)
+//               << "NGTF_OPTIMIZER: Cannot construct an IdentityN node";
+//           continue;
+//         }
+
+//       //------------------------------------------
+//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Creating an IdentityN node";
+//         Node* write_to_device_node;
+//         TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "IdentityN")
+//                                .Attr("T", input_types)
+//                                .Input(inputs)
+//                                .Device(node->assigned_device_name())
+//                                .Finalize(input_graph, &write_to_device_node));
+
+//         TF_RETURN_IF_ERROR(NodeBuilder("ng_write_to_device", "NGraphWriteToDevice")
+//                                 .Input(input_node)
+//                                 .Device(prefetch_node->assigned_device_name())
+//                                 .Finalize(graph, &write_to_device_node));
+
+
+//         write_to_device_node->set_assigned_device_name(node->assigned_device_name());
+
+//         // Rename the skip node
+//         // Get a new name for the node with the given prefix
+//         // We will use the 'original-node-name_ngraph' as the prefix
+//         string new_name = input_graph->NewName(node->name() + "_ngraph");
+//         // TODO: Use (guaranteed) unique name here
+//         node->set_name(new_name);
+//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: New name for fetch node "
+//                        << node->name();
+//       } else {
+//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: num outputs " << node->num_outputs();
+//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Cannot construct an IdentityN node";
+//       }
+//     }
+//   }
+//   return Status::OK();
+// }
+
 //
 // Main entry point for the variable-capture.
 //
@@ -49,6 +117,8 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
   }
 
   std::vector<Node*> replaced_nodes;
+
+  Node* prefetch_node = nullptr;
 
   for (auto node : graph->op_nodes()) {
     if (!IsOutputNode(node, skip_these_nodes)) {
@@ -122,6 +192,11 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
 
         replaced_nodes.push_back(node);
       }
+      else if (node->type_string() == "PrefetchDataset"){
+        // Collect the prefetch_node so that we can add
+        // the NGraphWriteToDevice Op after this one
+        prefetch_node = node;
+      }
     }
   }
 
@@ -130,6 +205,52 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
     graph->RemoveNode(node);
   }
 
+  // Now add the NGraphWriteToDevice node
+  if (prefetch_node != nullptr){
+    std::vector<const Edge*> edges;
+
+    // PrefetchDataset should have only one outgoing edge
+    // Assert otherwise?
+    
+    std::vector<const Edge*> edges_to_remove;
+    std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
+
+    // Get the target nide of this prefetch node
+    Node* prefetch_target = nullptr;
+    for (auto edge: prefetch_node->out_edges()){
+      prefetch_target = edge->dst();
+      std::cout << "Out Edge: " << edge->DebugString() << std::endl;
+      std::cout << "Target: " << prefetch_target->name() << std::endl;
+      edges_to_remove.push_back(edge);
+    }
+
+    // First remove the existing edgex
+    for (auto edge : edges_to_remove) {
+      NGRAPH_VLOG(0) << "Removing: " << edge->DebugString();
+      graph->RemoveEdge(edge);
+    }
+
+    Node* write_to_device_node = nullptr;
+    auto input_node = NodeBuilder::NodeOut(prefetch_node,0);
+    TF_RETURN_IF_ERROR(NodeBuilder("ng_write_to_device", "NGraphWriteToDevice")
+                            .Input(input_node)
+                            .Device(prefetch_node->assigned_device_name())
+                            .Finalize(graph, &write_to_device_node));
+    write_to_device_node->set_assigned_device_name(prefetch_node->assigned_device_name());
+
+    // Add edge from the input nodes (to the variable node (VariableV2))
+    // to the replacement node (NGraphVariable)
+    std::cout << "Inserting Node " << write_to_device_node->DebugString() << " after "
+                    << prefetch_node->DebugString() << std::endl << std::endl;
+    
+    // for (auto edge:edges_to_remove){
+      // graph->AddEdge(prefetch_node, edge->src_output(), write_to_device_node, edge->dst_input());
+      // graph->AddEdge(write_to_device_node, edge->src_output(), prefetch_target, edge->dst_input());
+      //graph->AddEdge(prefetch_node, 0, write_to_device_node, 0);
+      graph->AddEdge(write_to_device_node, 0, prefetch_target, 0);
+    // }
+
+  }
   return Status::OK();
 }
 

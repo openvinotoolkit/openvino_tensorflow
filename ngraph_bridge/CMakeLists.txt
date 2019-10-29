@@ -55,6 +55,7 @@ set(SRC
    ngraph_utils.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
+   ngraph_copy_to_device_op.cc
    version.cc
 )
 
