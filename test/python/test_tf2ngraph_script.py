@@ -253,6 +253,9 @@ class Testtf2ngraph(NgraphTest):
         " hence expecting non-zero status"
 
     def test_contains_variables(self):
+        # This test creates a saved model that contains variables
+        # tf2ngraph is expected to fail,
+        # since it does not support graphs with variables
         export_dir = 'saved_model'
         x = tf.placeholder(tf.float32, [None, 784], name='x')
         W = tf.Variable(tf.zeros([784, 10]))
