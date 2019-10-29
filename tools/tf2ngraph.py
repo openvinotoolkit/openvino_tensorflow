@@ -220,8 +220,8 @@ def get_gdef(format, location):
             err_string.append(
                 "It already contains encapsulate ops (and migth not need running through tf2ngraph again)"
             )
-        if no_variables:
-            err_string.apend(
+        if has_variables:
+            err_string.append(
                 "It contains Variables (please freeze the graph to convert variables to constant)"
             )
         exit_on_error(False, '\n'.join(err_string))
