@@ -8,21 +8,24 @@ This directory contains scripts necessary to build the nGraph TensorFlow bridge 
 
 Please ensure that bazel and Python is installed on your system and you are able to build TensorFlow from source (though not needed for building the bridge). Please see the [build preperation] for details.
 
-## Build C++ library
+## Build C++ library and application
 
-Go to the ngraph-tf directory and execute these commands to build the C++ library for nGraph-TensorFlow bridge:
+Go to the ngraph-bridge directory and execute these commands to build the C++ library for nGraph-TensorFlow bridge:
 
         ./configure_bazel.sh
-        bazel build libngraph_bridge.so
-        bazel build @ngraph//:libinterpreter_backend.so
-        bazel build @ngraph//:libcpu_backend.so
+        bazel build ngraph_bridge_lib
+        bazel build @ngraph//:cpu_backend
+
+To build C++ application `infer_multiple_networks` 
+
+        bazel build --cxxopt='-march=native' --cxxopt='-mtune=native' --cxxopt='-O3' infer_multiple_networks
 
 This will produce the following binary files:
 
 ```
-    bazel-bin/libngraph_bridge.so
-    bazel-bin/external/ngraph/libinterpreter_backend.so
-    bazel-bin/external/ngraph/libcpu_backend.so
+    bazel-bin/ngraph_bridge_lib.a
+    bazel-bin/external/ngraph/cpu_backend.a
+    bazel-bin/infer_multiple_networks
 ```
 
 ### How to use the C++ library

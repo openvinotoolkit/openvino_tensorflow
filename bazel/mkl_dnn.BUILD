@@ -74,10 +74,28 @@ cc_library(
     hdrs = glob(["include/*"]),
     copts = [
         "-fexceptions",
+        "-fstack-protector-all",
+        "-march=native",
+        "-mtune=native",
+        "-Wall",
+        "-Wno-unknown-pragmas",
+        "-fvisibility=internal",
+        "-Wformat", 
+        "-Wformat-security",
+        "-Wmissing-field-initializers",
+        "-Wno-strict-overflow", 
+        "-std=c++11",
+        "-D_FORTIFY_SOURCE=2",
+        "-fopenmp",
         "-DUSE_MKL",
         "-DUSE_CBLAS",
         "-UUSE_MKL",
         "-UUSE_CBLAS",
+        "-DMKLDNN_ENABLE_CONCURRENT_EXEC",
+        "-DMKLDNN_THR=MKLDNN_THR_OMP",
+        "-DMKLDNN_DLL",
+        "-DMKLDNN_DLL_EXPORTS",
+        "-O3",
     #] + select({
     #   "@org_tensorflow//tensorflow:linux_x86_64": [
             "-fopenmp",  # only works with gcc
@@ -136,7 +154,6 @@ cc_library(
         "src/cpu/gemm",
         "src/cpu/xbyak",
     ],
-    nocopts = "-fno-exceptions",
     visibility = ["//visibility:public"],
 )
 
