@@ -1,0 +1,178 @@
+node {
+  name: "ngraph_input_0"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "ngraph_input_1"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "alpha"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "INTERPRETER"
+    }
+  }
+  attr {
+    key: "_ngraph_cluster"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "_ngraph_marked_for_clustering"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT8
+        tensor_shape {
+          dim {
+            size: 2
+          }
+          dim {
+            size: 2
+          }
+        }
+        tensor_content: "\005\005\005\005"
+      }
+    }
+  }
+}
+node {
+  name: "mul_ngraph/_0"
+  op: "Mul"
+  input: "alpha"
+  input: "ngraph_input_0"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "INTERPRETER"
+    }
+  }
+  attr {
+    key: "_ngraph_cluster"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "_ngraph_marked_for_clustering"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "ngraph_output_0"
+  op: "_Retval"
+  input: "mul_ngraph/_0"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "add_ngraph/_1"
+  op: "Add"
+  input: "mul_ngraph/_0"
+  input: "ngraph_input_1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "INTERPRETER"
+    }
+  }
+  attr {
+    key: "_ngraph_cluster"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "_ngraph_marked_for_clustering"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "ngraph_output_1"
+  op: "_Retval"
+  input: "add_ngraph/_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT8
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
+library {
+}
+versions {
+}

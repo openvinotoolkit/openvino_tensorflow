@@ -296,6 +296,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
           SimpleConfirmationFunction();
 #endif
       confirmation_function_map["Identity"] = SimpleConfirmationFunction();
+      confirmation_function_map["IsFinite"] = SimpleConfirmationFunction();
       confirmation_function_map["L2Loss"] = SimpleConfirmationFunction();
       confirmation_function_map["LogSoftmax"] = SimpleConfirmationFunction();
       confirmation_function_map["Less"] = SimpleConfirmationFunction();
@@ -473,6 +474,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       type_constraint_map["HorovodBroadcast"]["T"] = NGraphNumericDTypes();
 #endif
       type_constraint_map["Identity"]["T"] = NGraphDTypes();
+      type_constraint_map["IsFinite"]["T"] = NGraphRealDTypes();
       type_constraint_map["L2Loss"]["T"] = NGraphNumericDTypes();
       type_constraint_map["LogSoftmax"]["T"] = NGraphRealDTypes();
       type_constraint_map["Less"]["T"] = NGraphDTypes();

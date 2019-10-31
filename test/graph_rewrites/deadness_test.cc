@@ -45,8 +45,6 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-
 /*******************************************************************************
 This test is inspired from the deadness test, mentioned in the commit message of
 the deadness analysis found in the below revision

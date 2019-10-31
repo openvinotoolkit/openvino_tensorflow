@@ -57,16 +57,18 @@ class BackendManager {
   // Returns number of nGraph supported backends
   static size_t GetNumOfSupportedBackends();
 
-  // Returns True if the backend is supported or not
-  // Tries to create a backend with backend_name string to determine whether
-  // supported or not
-  static bool IsSupportedBackend(const string& backend_name);
-
   // Set the BackendManager backend ng_backend_name_
   static Status SetBackendName(const string& backend_name);
 
   // Creates backend of backend_name type
   static Status CreateBackend(const string& backend_name);
+
+  // Tries to create a backend using the backend_string
+  // which is a combination of backend_name:device_id
+  // Meant to check whether a backend (with or without device id)
+  // can be created or not
+  // For e.g CanCreateBackend("GPU") and CanCreateBackend("GPU:0")
+  static Status CanCreateBackend(const string& backend_string);
 
   static void ReleaseBackend(const string& backend_name);
 

@@ -51,4 +51,18 @@ cc_library(
     hdrs = EIGEN_MPL2_HEADER_FILES,
     includes = ["."],
     visibility = ["//visibility:public"],
+    copts = [ 
+    "-D_FORTIFY_SOURCE=2",
+    "-Wformat",
+    "-Wformat-security",
+    "-fstack-protector-all",
+    "-march=native",
+    "-mtune=native",
+    "-Wall",
+    "-Wno-unknown-pragmas",
+    "-fvisibility=internal",
+    "-Wmissing-field-initializers",
+    "-Wno-strict-overflow",
+    "-O3",
+    ],
 )

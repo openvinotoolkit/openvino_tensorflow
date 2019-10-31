@@ -14,7 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_conversions.h"
+#include "ngraph_bridge/ngraph_conversions.h"
+#include "ngraph_bridge/ngraph_api.h"
 
 namespace tensorflow {
 
@@ -31,31 +32,38 @@ void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
 }
 }  // namespace detail
 
-void BatchToNGraph(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_input) {
+void BatchToNGraph(const string& op_name, bool is_nhwc,
+                   std::shared_ptr<ngraph::Node>& ng_input) {
   if (is_nhwc) {
     detail::NhwcToNGraph(ng_input);
+    Builder::SetTracingInfo(op_name, ng_input);
   }
 }
 
-void BatchToNGraph3D(bool is_ndhwc, std::shared_ptr<ngraph::Node>& ng_input) {
+void BatchToNGraph3D(const string& op_name, bool is_ndhwc,
+                     std::shared_ptr<ngraph::Node>& ng_input) {
   if (is_ndhwc) {
     detail::NdhwcToNGraph(ng_input);
+    Builder::SetTracingInfo(op_name, ng_input);
   }
 }
 
-void BatchToTensorflow(bool is_nhwc, std::shared_ptr<ngraph::Node>& ng_node) {
+void BatchToTensorflow(const string& op_name, bool is_nhwc,
+                       std::shared_ptr<ngraph::Node>& ng_node) {
   if (!is_nhwc) {
     return;
   }
   Reshape<0, 2, 3, 1>(ng_node);
+  Builder::SetTracingInfo(op_name, ng_node);
 }
 
-void BatchToTensorflow3D(bool is_ndhwc,
+void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
                          std::shared_ptr<ngraph::Node>& ng_node) {
   if (!is_ndhwc) {
     return;
   }
   Reshape3D<0, 2, 3, 4, 1>(ng_node);
+  Builder::SetTracingInfo(op_name, ng_node);
 }
 }  // namespace ngraph_bridge
 

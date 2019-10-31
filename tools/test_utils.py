@@ -599,7 +599,7 @@ def run_bazel_build_test(venv_dir, build_dir):
     command_executor(['bazel-bin/hello_tf'])
 
     # Now built the bigger app
-    command_executor(['bazel', 'build', 'infer_multi'])
+    command_executor(['bazel', 'build', 'infer_multiple_networks'])
 
     # Return to the original directory
     os.chdir(root_pwd)
@@ -619,7 +619,7 @@ def run_bazel_build():
     command_executor(['bazel-bin/hello_tf'])
 
     # Now built the bigger app
-    command_executor(['bazel', 'build', 'infer_multi'])
+    command_executor(['bazel', 'build', 'infer_multiple_networks'])
 
     # Return to the original directory
     os.chdir(root_pwd)

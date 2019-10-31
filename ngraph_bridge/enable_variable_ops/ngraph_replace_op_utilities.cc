@@ -89,26 +89,21 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const bool outputs_ng_supported, const int graph_id,
                      const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Replacing  " << node->name();
-
   DataType dtype;
   TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "T", &dtype));
 
+  std::vector<const Edge*> input_edges;
+  TF_RETURN_IF_ERROR(node->input_edges(&input_edges));
+
+  NGRAPH_VLOG(1) << "No of input edges to Assign " << input_edges.size();
+
   NodeBuilder::NodeOut input_ref;
   NodeBuilder::NodeOut input_val;
+  input_ref =
+      NodeBuilder::NodeOut(input_edges[0]->src(), input_edges[0]->src_output());
 
-  for (auto edge : node->in_edges()) {
-    if (edge == NULL) {
-      NGRAPH_VLOG(1) << "Replacing " << replacement_node_type
-                     << ", found null edge: ";
-      continue;
-    }
-    if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
-        IsRefType(edge->dst()->input_type(edge->dst_input()))) {
-      input_ref = NodeBuilder::NodeOut(edge->src(), edge->src_output());
-    } else {
-      input_val = NodeBuilder::NodeOut(edge->src(), edge->src_output());
-    }
-  }
+  input_val =
+      NodeBuilder::NodeOut(input_edges[1]->src(), input_edges[1]->src_output());
 
   TF_RETURN_IF_ERROR(NodeBuilder(replacement_node_name, replacement_node_type)
                          .Attr("validate_shape", true)
@@ -134,6 +129,7 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
 
   NGRAPH_VLOG(4) << "Replacing Node " << node->DebugString() << " with "
                  << (*replacement)->DebugString();
+
   return Status::OK();
 }
 
@@ -192,12 +188,18 @@ Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
 // we specifically remove the edges to be sure
 Status ReplaceInputControlEdges(Graph* graph, Node* node, Node* replacement) {
   std::vector<const Edge*> edges_to_remove;
+  std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
   for (auto edge : node->in_edges()) {
     NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
     if (!edge->IsControlEdge()) continue;
-    graph->AddEdge(edge->src(), edge->src_output(), replacement,
-                   edge->dst_input());
+    edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+        edge->src(), edge->src_output(), replacement, edge->dst_input()));
     edges_to_remove.push_back(edge);
+  }
+  for (const auto& i : edges_to_add) {
+    NGRAPH_VLOG(4) << "Adding: " << get<0>(i) << "  " << get<1>(i) << "  "
+                   << get<2>(i) << " " << get<3>(i);
+    graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
   }
   for (auto edge : edges_to_remove) {
     graph->RemoveEdge(edge);
@@ -210,15 +212,21 @@ Status ReplaceInputControlEdges(Graph* graph, Node* node, Node* replacement) {
 Status ReplaceOutputEdges(Graph* graph, Node* node, Node* replacement) {
   std::vector<const Edge*> edges;
   std::vector<const Edge*> edges_to_remove;
+  std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
   for (auto edge : node->out_edges()) {
     edges.push_back(edge);
   }
 
   for (auto edge : edges) {
     NGRAPH_VLOG(4) << "Replacing: " << edge->DebugString();
-    graph->AddEdge(replacement, edge->src_output(), edge->dst(),
-                   edge->dst_input());
+    edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+        replacement, edge->src_output(), edge->dst(), edge->dst_input()));
     edges_to_remove.push_back(edge);
+  }
+  for (const auto& i : edges_to_add) {
+    NGRAPH_VLOG(4) << "Adding: " << get<0>(i) << "  " << get<1>(i) << "  "
+                   << get<2>(i) << " " << get<3>(i);
+    graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
   }
   for (auto edge : edges_to_remove) {
     graph->RemoveEdge(edge);

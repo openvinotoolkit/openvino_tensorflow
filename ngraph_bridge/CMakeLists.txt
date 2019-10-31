@@ -43,6 +43,7 @@ set(SRC
    ngraph_encapsulate_clusters.cc
    ngraph_pipelined_tensors.cc
    ngraph_encapsulate_impl.cc
+   ngraph_executor.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_freshness_tracker.cc
@@ -113,7 +114,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
             absl_algorithm
             absl_container
             absl_strings
-            lib_tbb
             lib_mkldnn
             lib_iomp5
         )
@@ -156,7 +156,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         absl_algorithm
         absl_container
         absl_strings
-        lib_tbb
         lib_mkldnn
         lib_mklml_intel
         lib_iomp5

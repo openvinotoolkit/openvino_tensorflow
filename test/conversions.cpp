@@ -37,7 +37,7 @@ TEST(conversions, batch_to_tensorflow_nchw) {
   auto shape = ng::Shape{2, 3, 4, 5};
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToTensorflow(false, ng_node);
+  BatchToTensorflow("tag", false, ng_node);
   ASSERT_EQ(ng_node->get_shape(), shape);
 }
 
@@ -45,7 +45,7 @@ TEST(conversions, batch_to_tensorflow_nhwc) {
   auto shape = ng::Shape{2, 3, 4, 5};
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToTensorflow(true, ng_node);
+  BatchToTensorflow("tag", true, ng_node);
   ASSERT_EQ(ng_node->get_shape(), (ng::Shape{2, 4, 5, 3}));
 }
 
@@ -53,7 +53,7 @@ TEST(conversions, batch_to_ngraph_nchw) {
   auto shape = ng::Shape{2, 3, 4, 5};
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToNGraph(false, ng_node);
+  BatchToNGraph("tag", false, ng_node);
   ASSERT_EQ(ng_node->get_shape(), shape);
 }
 
@@ -69,7 +69,7 @@ TEST(conversions, batch_to_ngraph_nhwc) {
   auto shape = ng::Shape{2, 3, 4, 5};
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToNGraph(true, ng_node);
+  BatchToNGraph("tag", true, ng_node);
   ASSERT_EQ(ng_node->get_shape(), (ng::Shape{2, 5, 3, 4}));
 }
 

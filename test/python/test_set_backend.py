@@ -27,10 +27,10 @@ class TestSetBackend(NgraphTest):
 
     def test_set_backend(self):
         # store env variables
-        # when testing on backends like GPU the tests are run with NGRPAH_TF_BACKEND
+        # when testing on backends like GPU the tests are run with NGRAPH_TF_BACKEND
         # by storing and restoring the env_variables we run the tests independent of the backend set
         # currently we store and restore only the NGRAPH_TF_BACKEND
-        env_var_map = self.store_env_variables()
+        env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
 
         # test
         ngraph_bridge.enable()
@@ -58,7 +58,6 @@ class TestSetBackend(NgraphTest):
         out2 = tf.abs(out1)
 
         # set INTERPRETER backend
-        assert ngraph_bridge.is_supported_backend(backend_interpreter) == True
         ngraph_bridge.set_backend(backend_interpreter)
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_interpreter
@@ -72,7 +71,6 @@ class TestSetBackend(NgraphTest):
         assert currently_set_backend == backend_interpreter
 
         # set CPU backend
-        assert ngraph_bridge.is_supported_backend(backend_cpu) == True
         ngraph_bridge.set_backend(backend_cpu)
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_cpu

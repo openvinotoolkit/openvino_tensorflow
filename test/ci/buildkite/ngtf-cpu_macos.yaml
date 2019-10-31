@@ -86,7 +86,6 @@
     - "queue=mac"
 
   - wait: ~
-    continue_on_failure: true
   - command: |
       rm -rf /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID
     label: ":wastebasket: Cleanup"

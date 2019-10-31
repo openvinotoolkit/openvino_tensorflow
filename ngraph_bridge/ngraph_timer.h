@@ -33,10 +33,19 @@ class Timer {
     m_stop = m_start;
   }
   int ElapsedInMS() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::chrono::high_resolution_clock::now() - m_start)
+    Stop();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(m_stop -
+                                                                 m_start)
         .count();
   }
+  int ElapsedInMicroSec() {
+    Stop();
+    return std::chrono::duration_cast<std::chrono::microseconds>(m_stop -
+                                                                 m_start)
+        .count();
+  }
+  void Reset() { m_start = std::chrono::high_resolution_clock::now(); }
+
   void Stop() {
     if (m_stopped) return;
     m_stopped = true;
@@ -44,7 +53,7 @@ class Timer {
   }
 
  private:
-  const std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+  std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
   std::chrono::time_point<std::chrono::high_resolution_clock> m_stop;
   bool m_stopped{false};
 };

@@ -36,6 +36,7 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -45,9 +46,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 namespace testing {
-
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK());
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
 
 // Graph with Assign ops which should have the attribute
 // _ngraph_remove added and set to true.
@@ -93,6 +91,9 @@ TEST(CatalogTest, SmallGraph1) {
       ASSERT_TRUE(remove);
     }
   }
+
+  // Clean up
+  NGraphCatalog::ClearCatalog();
 }
 
 // Graph with Assign ops, one of which should not
@@ -137,6 +138,9 @@ TEST(CatalogTest, SmallGraph2) {
       ASSERT_TRUE(remove);
     }
   }
+
+  // Clean up
+  NGraphCatalog::ClearCatalog();
 }
 
 //  Const   Var_A      Const     Var_B
@@ -228,6 +232,9 @@ TEST(CatalogTest, SmallGraph3) {
       }
     }
   }
+
+  // Clean up
+  NGraphCatalog::ClearCatalog();
 }
 
 // Test to check if correct information is being added to the
@@ -283,6 +290,8 @@ TEST(CatalogTest, SmallGraph4) {
       }
     }
   }
+  // Clean up
+  NGraphCatalog::ClearCatalog();
 }
 
 }  // namespace testing

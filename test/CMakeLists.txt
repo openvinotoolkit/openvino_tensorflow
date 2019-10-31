@@ -53,13 +53,16 @@ set(SRC
     graph_rewrites/disable_ops_test.cc
     graph_rewrites/mark_for_clustering_test.cc
     test_index_library.cpp
+    test_ngraph_data_cache.cpp
     test_utilities.cpp
     test_math_ops.cpp
     test_nn_ops.cpp
     test_array_ops.cpp
     test_variable_ops.cpp
+    test_parallel_executor.cpp
     test_momentum_op.cpp
     opexecuter.cpp
+    test_thread_safe_queue.cc
 )
 
 if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
@@ -93,6 +96,12 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_int8_launchop.pbtxt
+        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_int8_launchop.pbtxt
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt
+        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_8bit.pbtxt
 )
 
 if (APPLE)
@@ -113,6 +122,7 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         pthread
         ${TensorFlow_FRAMEWORK_LIBRARY}
         tensorflow_cc_lib
+        absl_synchronization
     )
 else()
     target_link_libraries(
@@ -123,6 +133,7 @@ else()
         pthread
         ${TensorFlow_FRAMEWORK_LIBRARY}
         tensorflow_cc_lib
+        absl_synchronization
     )
 endif()
 
@@ -144,6 +155,8 @@ endif()
 install(TARGETS gtest_ngtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_int8_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(
     DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python 
     DESTINATION ${CMAKE_INSTALL_PREFIX}/test

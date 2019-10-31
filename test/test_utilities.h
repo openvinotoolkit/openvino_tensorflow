@@ -21,11 +21,23 @@
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/platform/env.h"
+#include "tensorflow/core/public/session.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph_bridge/version.h"
+
+// Define useful macros used by others
+#if !defined(ASSERT_OK)
+#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK())
+#endif
+
+#if !defined(ASSERT_NOT_OK)
+#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
+#endif
 
 using namespace std;
 namespace ng = ngraph;
+namespace tf = tensorflow;
 
 namespace tensorflow {
 
@@ -49,15 +61,18 @@ void SetEnvVariable(const string& env_var_name, const string& env_var_val);
 
 // NGRAPH_TF_BACKEND related
 bool IsNGraphTFBackendSet();
-string GetNGraphTFBackend();
-void UnsetNGraphTFBackend();
-void SetNGraphTFBackend(const string& bname);
+string GetBackendFromEnvVar();
+void UnsetBackendUsingEnvVar();
+void SetBackendUsingEnvVar(const string& bname);
 
 // Print Functions
 void PrintTensor(const Tensor& T1);
 void PrintTensorAllValues(
     const Tensor& T1,
     int64 max_entries);  // print max_entries of elements in the Tensor
+
+// Generating Random Seed
+unsigned int GetSeedForRandomFunctions();
 
 // Assignment Functions
 // TODO : Retire AssignInputValuesAnchor and AssignInputValuesRandom
@@ -73,6 +88,9 @@ void AssignInputValues(Tensor& A, T x) {
     A_flat_data[i] = x;
   }
 }
+
+template <>
+void AssignInputValues(Tensor& A, int8 x);
 
 // Assigns values from the vector x to the Tensor
 template <typename T>
@@ -92,7 +110,7 @@ template <typename T>
 void AssignInputValuesRandom(Tensor& A, T min, T max) {
   auto A_flat = A.flat<T>();
   auto A_flat_data = A_flat.data();
-  srand(static_cast<unsigned>(time(0)));
+  srand(GetSeedForRandomFunctions());
   for (int i = 0; i < A_flat.size(); i++) {
     T value =
         // randomly generate a number between 0 and (max-min) inclusive
@@ -154,6 +172,13 @@ void Compare(const Tensor& T1, const Tensor& T2,
 
 // Compares Tensors considering tolerance
 void Compare(Tensor& T1, Tensor& T2, float tol);
+
+Status CreateSession(const string& graph_filename, const string& backend_name,
+                     unique_ptr<tf::Session>& session);
+
+Status LoadGraph(const string& graph_file_name,
+                 std::unique_ptr<tensorflow::Session>* session,
+                 const tensorflow::SessionOptions& options);
 
 }  // namespace testing
 

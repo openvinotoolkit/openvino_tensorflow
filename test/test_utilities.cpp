@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "test_utilities.h"
+#include "test/test_utilities.h"
 #include <assert.h>
 #include <cassert>
 #include <cstdlib>
@@ -85,12 +85,37 @@ void RestoreEnv(const unordered_map<string, string>& map) {
 // NGRAPH_TF_BACKEND related
 bool IsNGraphTFBackendSet() { return IsEnvVariableSet("NGRAPH_TF_BACKEND"); }
 
-string GetNGraphTFBackend() { return GetEnvVariable("NGRAPH_TF_BACKEND"); }
+string GetBackendFromEnvVar() { return GetEnvVariable("NGRAPH_TF_BACKEND"); }
 
-void UnsetNGraphTFBackend() { UnsetEnvVariable("NGRAPH_TF_BACKEND"); }
+void UnsetBackendUsingEnvVar() { UnsetEnvVariable("NGRAPH_TF_BACKEND"); }
 
-void SetNGraphTFBackend(const string& backend_name) {
+void SetBackendUsingEnvVar(const string& backend_name) {
   SetEnvVariable("NGRAPH_TF_BACKEND", backend_name);
+}
+
+// Generating Seed for PseudoRandomNumberGenerator
+unsigned int GetSeedForRandomFunctions() {
+  const string& env_name = "NGRAPH_TF_SEED";
+  unsigned int seed = static_cast<unsigned>(time(0));
+  if (!IsEnvVariableSet(env_name)) {
+    NGRAPH_VLOG(5) << "Got seed " << seed;
+    return seed;
+  }
+
+  string seedstr = GetEnvVariable(env_name);
+  try {
+    int temp_seed = stoi(seedstr);
+    if (temp_seed < 0) {
+      throw std::invalid_argument{"Cannot set negative seed"};
+    }
+    seed = static_cast<unsigned>(temp_seed);
+  } catch (const std::exception& exp) {
+    throw std::invalid_argument{"Cannot set " + env_name + " with value " +
+                                seedstr + ", got exception " + exp.what()};
+  }
+
+  NGRAPH_VLOG(5) << "Got seed from " << env_name << " : " << seed;
+  return seed;
 }
 
 // Input x will be used as an anchor
@@ -107,7 +132,7 @@ void AssignInputValuesAnchor(Tensor& A, float x) {
 void AssignInputValuesRandom(Tensor& A) {
   auto A_flat = A.flat<float>();
   auto A_flat_data = A_flat.data();
-  srand(static_cast<unsigned>(time(0)));
+  srand(GetSeedForRandomFunctions());
   for (int i = 0; i < A_flat.size(); i++) {
     // give a number between 0 and 20
     float value =
@@ -156,7 +181,7 @@ void Compare(Tensor& T1, Tensor& T2, float tol) {
     } else {
       auto rel = a - b;
       auto rel_div = std::abs(rel / a);
-      EXPECT_TRUE(rel_div < tol);
+      EXPECT_TRUE(rel_div <= tol);
     }
   }
 }
@@ -211,6 +236,64 @@ bool Compare(float desired, float actual, float rtol, float atol) {
     // same as numpy.testing.assert_allclose
     return std::abs(desired - actual) <= (atol + rtol * std::abs(desired));
   }
+}
+
+Status CreateSession(const string& graph_filename, const string& backend_name,
+                     unique_ptr<tf::Session>& session) {
+  tf::SessionOptions options;
+  options.config.mutable_graph_options()
+      ->mutable_optimizer_options()
+      ->set_opt_level(tf::OptimizerOptions_Level_L0);
+  options.config.mutable_graph_options()
+      ->mutable_rewrite_options()
+      ->set_constant_folding(tf::RewriterConfig::OFF);
+
+  if (ngraph_tf_is_grappler_enabled()) {
+    auto* custom_config = options.config.mutable_graph_options()
+                              ->mutable_rewrite_options()
+                              ->add_custom_optimizers();
+
+    custom_config->set_name("ngraph-optimizer");
+    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s(
+        backend_name);
+    (*custom_config->mutable_parameter_map())["device_id"].set_s("0");
+
+    options.config.mutable_graph_options()
+        ->mutable_rewrite_options()
+        ->set_min_graph_nodes(-1);
+
+    options.config.mutable_graph_options()
+        ->mutable_rewrite_options()
+        ->set_meta_optimizer_iterations(tf::RewriterConfig::ONE);
+  }
+
+  // Load the network
+  Status load_graph_status = LoadGraph(graph_filename, &session, options);
+  return load_graph_status;
+}
+
+Status LoadGraph(const string& graph_file_name,
+                 std::unique_ptr<tensorflow::Session>* session,
+                 const tensorflow::SessionOptions& options) {
+  tensorflow::GraphDef graph_def;
+  auto load_graph_status =
+      ReadTextProto(Env::Default(), graph_file_name, &graph_def);
+  if (!load_graph_status.ok()) {
+    return tensorflow::errors::NotFound("Failed to load compute graph at '",
+                                        graph_file_name, "'");
+  }
+  session->reset(tensorflow::NewSession(options));
+  return (*session)->Create(graph_def);
+}
+
+template <>
+void AssignInputValues(Tensor& A, int8 x) {
+  auto A_flat = A.flat<int8>();
+  auto A_flat_data = A_flat.data();
+  for (int i = 0; i < A_flat.size(); i++) {
+    A_flat_data[i] = x;
+  }
+  cout << endl;
 }
 
 }  // namespace testing

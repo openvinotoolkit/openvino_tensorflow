@@ -47,7 +47,11 @@ class NgraphTest(object):
             tf.import_graph_def(graph_def)
         return graph
 
-    def with_ngraph(self, l, config=tf.ConfigProto()):
+    def with_ngraph(self, l, config=None):
+        # Passing config as None and then initializing it inside
+        # because mutable objects should not be used as defaults in python
+        if config is None:
+            config = tf.ConfigProto()
         # TODO: Stop grappler on failure (Add fail_on_optimizer_errors=True)
         config = ngraph_bridge.update_config(config)
 
@@ -67,7 +71,9 @@ class NgraphTest(object):
 
         return retval
 
-    def without_ngraph(self, l, config=tf.ConfigProto()):
+    def without_ngraph(self, l, config=None):
+        if config is None:
+            config = tf.ConfigProto()
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
@@ -101,16 +107,27 @@ class NgraphTest(object):
         os.putenv(env_var, env_var_val)
         print("Setting env variable ", env_var, " to ", env_var_val)
 
+    # unset the env variable
+    def unset_env_variable(self, env_var):
+        os.environ.pop(env_var, None)
+        print("Unset env variable ", env_var)
+
+    # get the env variable
+    def get_env_variable(self, env_var):
+        env_var_val = os.getenv(env_var)
+        print("Got env variable ", env_var, " set to ", env_var_val)
+        return env_var_val
+
     # store env variables
-    def store_env_variables(self):
+    def store_env_variables(self, list_of_env_names):
         # store the env variables in map
         env_var_map = {}
-        backend_env_var = "NGRAPH_TF_BACKEND"
-        if self.is_env_variable_set(backend_env_var):
-            env_backend = os.getenv(backend_env_var)
-            env_var_map[backend_env_var] = env_backend
-            print("Got env backend", env_backend)
-            os.environ.pop(backend_env_var)
+        for env_var in list_of_env_names:
+            if self.is_env_variable_set(env_var):
+                env_backend_val = self.get_env_variable(env_var)
+                env_var_map[env_var] = env_backend_val
+                print("Got env backend", env_backend_val)
+                os.environ.pop(env_var)
         return env_var_map
 
     # restore env variables

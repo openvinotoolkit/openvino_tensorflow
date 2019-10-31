@@ -263,7 +263,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     TF_RETURN_IF_ERROR(EncapsulateClusters(options.graph->get(), idx,
                                            fdeflib_new, config_map, {0, {}}));
     // TODO: not using fdeflib_new in this path. Only grappler path uses it
-    free(fdeflib_new);
+    delete (fdeflib_new);
     if (DumpEncapsulatedGraphs()) {
       DumpGraphs(options, idx, "encapsulated",
                  "Graph with Clusters Encapsulated");

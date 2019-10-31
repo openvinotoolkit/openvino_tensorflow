@@ -52,17 +52,18 @@ Status RemoveNGraphAssigns(Graph* graph) {
 
       // Handle input edges
       NGRAPH_VLOG(3) << "Handling input edges ";
-      vector<const Edge*> remove_edges;
+      vector<const Edge*> edges_to_remove;
+      std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
       for (auto edge : node->in_edges()) {
         // attach incoming control edge to input_1, as that's where update
         // will happen
         if (edge->IsControlEdge()) {
           // avoid cycles
           if (edge->src() == input_1) continue;
-          graph->AddEdge(edge->src(), edge->src_output(), input_1,
-                         edge->dst_input());
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              edge->src(), edge->src_output(), input_1, edge->dst_input()));
         }
-        remove_edges.push_back(edge);
+        edges_to_remove.push_back(edge);
       }
 
       // Handle output edges
@@ -70,8 +71,8 @@ Status RemoveNGraphAssigns(Graph* graph) {
       for (auto edge : node->out_edges()) {
         if (edge->IsControlEdge()) {
           // Add control edge from Encap to the dst node
-          graph->AddEdge(input_1, edge->src_output(), edge->dst(),
-                         edge->dst_input());
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              input_1, edge->src_output(), edge->dst(), edge->dst_input()));
         } else {
           // Note: TF takes care whether the edge to be added is ref-type or not
           // For e.g. if we add edge Var -> Add/Encap (Add's input is
@@ -79,17 +80,22 @@ Status RemoveNGraphAssigns(Graph* graph) {
           // if we add edge Var -> Assign (Assign's input is ref-type)
 
           // Add edge from Variable to the dst node
-          graph->AddEdge(input_0, edge->src_output(), edge->dst(),
-                         edge->dst_input());
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              input_0, edge->src_output(), edge->dst(), edge->dst_input()));
           // Add control edge from Encap to the dst node, the variable should be
           // used only after the update is completed by Encapsulate op
-          graph->AddEdge(input_1, Graph::kControlSlot, edge->dst(),
-                         Graph::kControlSlot);
+          edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+              input_1, Graph::kControlSlot, edge->dst(), Graph::kControlSlot));
         }
-        remove_edges.push_back(edge);
+        edges_to_remove.push_back(edge);
+      }
+      for (const auto& i : edges_to_add) {
+        NGRAPH_VLOG(4) << "Adding: " << get<0>(i) << "  " << get<1>(i) << "  "
+                       << get<2>(i) << " " << get<3>(i);
+        graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
       }
 
-      for (auto edge : remove_edges) {
+      for (auto edge : edges_to_remove) {
         graph->RemoveEdge(edge);
       }
 

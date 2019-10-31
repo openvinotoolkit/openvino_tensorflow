@@ -62,6 +62,32 @@ Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
   is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);
   return Status::OK();
 }
+
+Status GetNgraphVarBufferSharingState(int& buffer_sharing_state) {
+  const char* ngvar_buffer_env_var =
+      std::getenv("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
+  if (ngvar_buffer_env_var == nullptr) {
+    buffer_sharing_state = -1;
+    return Status::OK();
+  }
+  int env_var_val;
+  try {
+    env_var_val = stoi(string(ngvar_buffer_env_var));
+  } catch (const std::invalid_argument& ia) {
+    return errors::InvalidArgument(
+        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Exception: ",
+        ia.what());
+  }
+  if (env_var_val != 0 && env_var_val != 1) {
+    return errors::InvalidArgument(
+        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Pass 1 to "
+        "enable, 0 to disable");
+  }
+
+  buffer_sharing_state = env_var_val;
+  return Status::OK();
+}
+
 void PrintTFTensor(Tensor& T1) {
   NGRAPH_VLOG(4) << "all tensor values" << (T1).SummarizeValue(64) << endl;
 }
@@ -186,6 +212,9 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
     case DataType::DT_UINT8:
       *ng_et = ng::element::u8;
       break;
+    case DataType::DT_INT8:
+      *ng_et = ng::element::i8;
+      break;
     case DataType::DT_UINT16:
       *ng_et = ng::element::u16;
       break;
@@ -309,25 +338,54 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
   return Status::OK();
 }
 
-void NgraphSerialize(const std::string& file_name,
-                     const std::shared_ptr<ngraph::Function>& ng_function) {
-  NGRAPH_VLOG(0) << "Serializing graph to: " << file_name << std::endl;
+Status NgraphSerialize(const std::string& file_name,
+                       const std::shared_ptr<ngraph::Function>& ng_function) {
   int json_indentation = 4;
-  StringToFile(file_name, ngraph::serialize(ng_function, json_indentation));
+  string serialized;
+  if (ng_function == nullptr) {
+    return errors::Internal(
+        "Passed a null pointer as ng function to serialize");
+  }
+  try {
+    serialized = ngraph::serialize(ng_function, json_indentation);
+  } catch (...) {
+    return errors::Internal("Failed to serialize ngraph function");
+  }
+  return StringToFile(file_name, serialized, true);
 }
 
-void StringToFile(const std::string& file_name, const std::string& contents) {
+string SanitizeFileName(const string file_name) {
+  // Sanitizing file name to take care of '/' that might be present in TF node
+  // names
+  string new_file_name;
+  // The valid TF node names seem to be: [A-Za-z0-9.][A-Za-z0-9_.\\-/]*
+  // . is another non-alphanumeric char, but once / are replaced by --, . is
+  // fine in a file name.
+  for (const auto& itr : file_name) {
+    new_file_name += ((itr == '/') ? string("--") : string({itr}));
+  }
+  return new_file_name;
+}
+
+Status StringToFile(const std::string& file_name, const std::string& contents,
+                    bool sanitize_name) {
+  string new_file_name =
+      sanitize_name ? SanitizeFileName(file_name) : file_name;
+  NGRAPH_VLOG(0) << "Serializing graph to: " << new_file_name << std::endl;
   std::ofstream f;
   f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   try {
-    f.open(file_name);
+    f.open(new_file_name);
     f << contents;
     f.close();
   } catch (std::ofstream::failure& e) {
-    NGRAPH_VLOG(0) << "Exception opening/closing file " << file_name
+    NGRAPH_VLOG(0) << "Exception opening/closing file " << new_file_name
                    << std::endl;
     NGRAPH_VLOG(0) << e.what() << std::endl;
+    return errors::Internal("Failed to dump string to file. Filename: ",
+                            new_file_name, ". Exception: ", e.what());
   }
+  return Status::OK();
 }
 
 void MemoryProfile(long& vm_usage, long& resident_set) {
