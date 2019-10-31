@@ -52,7 +52,7 @@ def parse_logs(log_lines):
 
     # add the last subgraph to all_results
     all_results[str(ctr)] = curr_result
-    
+
     return all_results
 
 
