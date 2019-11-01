@@ -44,15 +44,19 @@ REGISTER_OP("NGraphVariable")
     .SetIsStateful()
     .SetShapeFn(shape_inference::ExplicitShape);
 
-REGISTER_OP("NGraphWriteToDevice")
+REGISTER_OP("NGraphPrefetchDataset")
     .Input("input_dataset: variant")
+    .Input("buffer_size: int64")
     .Output("handle: variant")
-    // .SetShapeFn([](shape_inference::InferenceContext* c) {
-    //   shape_inference::ShapeHandle count_shape;
-    //   TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &count_shape));
-    //   return shape_inference::ScalarShape(c);
-    //})
-    ;
+    .Attr("output_types: list(type) >= 1")
+    .Attr("output_shapes: list(shape) >= 1")
+    .Attr("slack_period: int = 0")
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+      shape_inference::ShapeHandle unused;
+      // buffer_size should be a scalar.
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &unused));
+      return shape_inference::ScalarShape(c);
+    });
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

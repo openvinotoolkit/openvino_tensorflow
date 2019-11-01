@@ -20,6 +20,7 @@
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 
 using namespace std;
 
@@ -40,73 +41,82 @@ static bool IsOutputNode(const Node* node,
   return found;
 }
 
-// Status AddWriteToDeviceOp(Graph* input_graph, std::set<string> skip_these_nodes) {
-//   for (auto node : input_graph->op_nodes()) {
-//     bool fetch_node = false;
-//     bool ref_type = false;
-//     fetch_node = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
-//     if (fetch_node) {
-//       NGRAPH_VLOG(0) << "AddWriteToDeviceOp: Fetch Node " << node->name();
-//       // Check the number of outputs of the 'fetch_node'
-//       // Only move further to create an IdentityN node
-//       // if it is greater than 0
-//       // Also, make sure that none of the output types is
-//       // a ref type because IdentityN does not support
-//       // an input of type ref type
-//       if (node->num_outputs()) {
-//         std::vector<NodeBuilder::NodeOut> inputs;
-//         std::vector<DataType> input_types;
-//         for (int i = 0; i < node->num_outputs(); i++) {
-//           if (IsRefType(node->output_type(i))) {
-//             NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: "
-//                            << "Datatype for the node output"
-//                            << " at index " << i << " is ref type";
-//             ref_type = true;
-//             break;
-//           }
-//           input_types.push_back(node->output_type(i));
-//           inputs.push_back(NodeBuilder::NodeOut(node, i));
-//         }
+Status ReplacePrefetch(Graph* graph, Node* prefetch_node) {
+  NodeBuilder::NodeOut input_dataset;
+  NodeBuilder::NodeOut buffer_size;
 
-//         if (ref_type) {
-//           NGRAPH_VLOG(5)
-//               << "NGTF_OPTIMIZER: Cannot construct an IdentityN node";
-//           continue;
-//         }
+  std::vector<const Edge*> input_edges;
+  TF_RETURN_IF_ERROR(prefetch_node->input_edges(&input_edges));
 
-//       //------------------------------------------
-//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Creating an IdentityN node";
-//         Node* write_to_device_node;
-//         TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "IdentityN")
-//                                .Attr("T", input_types)
-//                                .Input(inputs)
-//                                .Device(node->assigned_device_name())
-//                                .Finalize(input_graph, &write_to_device_node));
+  input_dataset =
+      NodeBuilder::NodeOut(input_edges[0]->src(), input_edges[0]->src_output());
+  buffer_size =
+      NodeBuilder::NodeOut(input_edges[1]->src(), input_edges[1]->src_output());
 
-//         TF_RETURN_IF_ERROR(NodeBuilder("ng_write_to_device", "NGraphWriteToDevice")
-//                                 .Input(input_node)
-//                                 .Device(prefetch_node->assigned_device_name())
-//                                 .Finalize(graph, &write_to_device_node));
+  std::vector<DataType> output_types;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(prefetch_node->attrs(), "output_types", &output_types));
 
+  std::vector<PartialTensorShape> output_shapes;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(prefetch_node->attrs(), "output_shapes", &output_shapes));
 
-//         write_to_device_node->set_assigned_device_name(node->assigned_device_name());
+  int slack_period = 0;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(prefetch_node->attrs(), "slack_period", &slack_period));
 
-//         // Rename the skip node
-//         // Get a new name for the node with the given prefix
-//         // We will use the 'original-node-name_ngraph' as the prefix
-//         string new_name = input_graph->NewName(node->name() + "_ngraph");
-//         // TODO: Use (guaranteed) unique name here
-//         node->set_name(new_name);
-//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: New name for fetch node "
-//                        << node->name();
-//       } else {
-//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: num outputs " << node->num_outputs();
-//         NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Cannot construct an IdentityN node";
-//       }
-//     }
-//   }
-//   return Status::OK();
-// }
+  Node* replacement;
+  TF_RETURN_IF_ERROR(NodeBuilder("NGraphPrefetchNode", "NGraphPrefetchDataset")
+                         .Input(input_dataset)
+                         .Input(buffer_size)
+                         .Attr("output_types", output_types)
+                         .Attr("output_shapes", output_shapes)
+                         .Attr("slack_period", slack_period)
+                         .Device(prefetch_node->assigned_device_name())
+                         .Finalize(graph, &replacement));
+  replacement->set_assigned_device_name(prefetch_node->assigned_device_name());
+
+  string new_name = graph->NewName("NGraph" + prefetch_node->name());
+  replacement->set_name(new_name);
+
+  std::vector<const Edge*> edges;
+
+  // Remove all the input edges of the existing prefetch node
+  std::vector<const Edge*> edges_to_remove;
+  std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
+  for (auto edge : prefetch_node->in_edges()) {
+    edges_to_remove.push_back(edge);
+  }
+
+  for (auto edge : prefetch_node->out_edges()) {
+    NGRAPH_VLOG(0) << "Replacing: OutEdge " << edge->DebugString();
+    // Collect new output edges between the new prefetch node and the next node
+    edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
+        replacement, edge->src_output(), edge->dst(), edge->dst_input()));
+    // Remove the output edge from the current prefetch node
+    edges_to_remove.push_back(edge);
+  }
+
+  // Now add the new output edges
+  // The input edges to the new node is added during the node creation
+  for (const auto& i : edges_to_add) {
+    NGRAPH_VLOG(0) << "Adding: " << get<0>(i)->name() << "  " << get<1>(i)
+                   << "  " << get<2>(i)->name() << " " << get<3>(i);
+    graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
+  }
+
+  // Though edges will be removed when we remove the prefetch_node
+  // we specifically remove the edges to be sure
+  for (auto edge : edges_to_remove) {
+    NGRAPH_VLOG(0) << "Removing: " << edge->DebugString();
+    graph->RemoveEdge(edge);
+  }
+
+  // FInally remove the current preftetch node
+  graph->RemoveNode(prefetch_node);
+
+  return Status::OK();
+}
 
 //
 // Main entry point for the variable-capture.
@@ -191,8 +201,7 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
         }
 
         replaced_nodes.push_back(node);
-      }
-      else if (node->type_string() == "PrefetchDataset"){
+      } else if (node->type_string() == "PrefetchDataset") {
         // Collect the prefetch_node so that we can add
         // the NGraphWriteToDevice Op after this one
         prefetch_node = node;
@@ -205,51 +214,11 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
     graph->RemoveNode(node);
   }
 
-  // Now add the NGraphWriteToDevice node
-  if (prefetch_node != nullptr){
-    std::vector<const Edge*> edges;
-
-    // PrefetchDataset should have only one outgoing edge
-    // Assert otherwise?
-    
-    std::vector<const Edge*> edges_to_remove;
-    std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
-
-    // Get the target nide of this prefetch node
-    Node* prefetch_target = nullptr;
-    for (auto edge: prefetch_node->out_edges()){
-      prefetch_target = edge->dst();
-      std::cout << "Out Edge: " << edge->DebugString() << std::endl;
-      std::cout << "Target: " << prefetch_target->name() << std::endl;
-      edges_to_remove.push_back(edge);
+  if ( std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) != nullptr ){
+    // // Now add the NGraphWriteToDevice node
+    if (prefetch_node != nullptr) {
+      return ReplacePrefetch(graph, prefetch_node);
     }
-
-    // First remove the existing edgex
-    for (auto edge : edges_to_remove) {
-      NGRAPH_VLOG(0) << "Removing: " << edge->DebugString();
-      graph->RemoveEdge(edge);
-    }
-
-    Node* write_to_device_node = nullptr;
-    auto input_node = NodeBuilder::NodeOut(prefetch_node,0);
-    TF_RETURN_IF_ERROR(NodeBuilder("ng_write_to_device", "NGraphWriteToDevice")
-                            .Input(input_node)
-                            .Device(prefetch_node->assigned_device_name())
-                            .Finalize(graph, &write_to_device_node));
-    write_to_device_node->set_assigned_device_name(prefetch_node->assigned_device_name());
-
-    // Add edge from the input nodes (to the variable node (VariableV2))
-    // to the replacement node (NGraphVariable)
-    std::cout << "Inserting Node " << write_to_device_node->DebugString() << " after "
-                    << prefetch_node->DebugString() << std::endl << std::endl;
-    
-    // for (auto edge:edges_to_remove){
-      // graph->AddEdge(prefetch_node, edge->src_output(), write_to_device_node, edge->dst_input());
-      // graph->AddEdge(write_to_device_node, edge->src_output(), prefetch_target, edge->dst_input());
-      //graph->AddEdge(prefetch_node, 0, write_to_device_node, 0);
-      graph->AddEdge(write_to_device_node, 0, prefetch_target, 0);
-    // }
-
   }
   return Status::OK();
 }

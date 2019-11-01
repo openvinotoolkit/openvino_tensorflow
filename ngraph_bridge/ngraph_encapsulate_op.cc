@@ -45,6 +45,7 @@
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
+#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
@@ -421,6 +422,7 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_compile.Stop();
   ngraph::Event::write_trace(event_compile);
 
+
   // Get the pipelned tensors
   ngraph::Event event_get_tensor("Get Tensor", "", "");
 
@@ -431,6 +433,29 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_get_tensor.Stop();
   ngraph::Event::write_trace(event_get_tensor);
 
+  if ( std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) != nullptr ){
+    // Set the prefetch shared obj if applicable
+    NGraphPrefetchSharedResouce* shared_data = nullptr;
+    Status s = ctx->resource_manager()->Lookup(
+        NGraphPrefetchSharedResouce::CONTAINER_NAME,
+        NGraphPrefetchSharedResouce::RESOURCE_NAME, &shared_data);
+
+    if (!s.ok()) {
+      shared_data = new NGraphPrefetchSharedResouce(
+          name(), m_parallel_executor->GetOpBackendName(),
+          m_parallel_executor->GetGraphId(),
+          m_parallel_executor->GetNgraphClusterId());
+      // my_var->val = Tensor(DT_FLOAT, my_shape);
+      // my_var->val.flat<float>().setZeros();   // 0 initialized.
+      ctx->SetStatus(ctx->resource_manager()->Create(
+          NGraphPrefetchSharedResouce::CONTAINER_NAME,
+          NGraphPrefetchSharedResouce::RESOURCE_NAME, shared_data));
+    }
+  }
+
+  // TODO: Add the input tensors if needed
+  // No need to unref
+  
   // Allocate the input/
   ngraph::Event event_copy_input_tensor("Copy Input Tensor", "", "");
 

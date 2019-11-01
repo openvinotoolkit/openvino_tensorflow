@@ -28,13 +28,15 @@ namespace ngraph_bridge {
 
 class NGraphWriteToDeviceOp : public OpKernel {
  public:
-  explicit NGraphWriteToDeviceOp(OpKernelConstruction* context) : OpKernel(context) {}
+  explicit NGraphWriteToDeviceOp(OpKernelConstruction* context)
+      : OpKernel(context) {}
 
   void Compute(OpKernelContext* context) override {
     if (IsRefType(context->input_dtype(0))) {
       context->forward_ref_input_to_ref_output(0, 0);
     } else {
-      std::cout << "INPUT TENSOR " << context->input(0).DebugString() << std::endl;
+      std::cout << "INPUT TENSOR " << context->input(0).DebugString()
+                << std::endl;
       context->set_output(0, context->input(0));
     }
   }
