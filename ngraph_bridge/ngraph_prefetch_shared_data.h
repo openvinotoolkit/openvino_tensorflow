@@ -51,7 +51,8 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
 
   static constexpr const char* RESOURCE_NAME = "NG_PREFETCH_DATA";
   static constexpr const char* CONTAINER_NAME = "NG_PREFETCH_DATA_CONTAINER";
-  static constexpr const char* NGRAPH_TF_USE_PREFETCH = "NGRAPH_TF_USE_PREFETCH";
+  static constexpr const char* NGRAPH_TF_USE_PREFETCH =
+      "NGRAPH_TF_USE_PREFETCH";
 
  private:
   const std::string m_ng_enc_op_name;

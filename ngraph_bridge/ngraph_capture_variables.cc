@@ -19,8 +19,8 @@
 
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_capture_variables.h"
-#include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 
@@ -214,7 +214,8 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
     graph->RemoveNode(node);
   }
 
-  if ( std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) != nullptr ){
+  if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
+      nullptr) {
     // // Now add the NGraphWriteToDevice node
     if (prefetch_node != nullptr) {
       return ReplacePrefetch(graph, prefetch_node);

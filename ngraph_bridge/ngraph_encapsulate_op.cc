@@ -422,7 +422,6 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_compile.Stop();
   ngraph::Event::write_trace(event_compile);
 
-
   // Get the pipelned tensors
   ngraph::Event event_get_tensor("Get Tensor", "", "");
 
@@ -433,7 +432,8 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_get_tensor.Stop();
   ngraph::Event::write_trace(event_get_tensor);
 
-  if ( std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) != nullptr ){
+  if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
+      nullptr) {
     // Set the prefetch shared obj if applicable
     NGraphPrefetchSharedResouce* shared_data = nullptr;
     Status s = ctx->resource_manager()->Lookup(
@@ -455,7 +455,7 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
 
   // TODO: Add the input tensors if needed
   // No need to unref
-  
+
   // Allocate the input/
   ngraph::Event event_copy_input_tensor("Copy Input Tensor", "", "");
 

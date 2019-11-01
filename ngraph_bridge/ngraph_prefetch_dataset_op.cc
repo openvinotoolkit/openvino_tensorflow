@@ -404,7 +404,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           std::cout << "Prefetch Data:    " << next.DebugString() << std::endl;
         }
 
-        if ( std::getenv(ngraph_bridge::NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) != nullptr ){
+        if (std::getenv(ngraph_bridge::NGraphPrefetchSharedResouce::
+                            NGRAPH_TF_USE_PREFETCH) != nullptr) {
           // Check o if the shared data exist
           ngraph_bridge::NGraphPrefetchSharedResouce* shared_data = nullptr;
           Status s = m_resource_mgr->Lookup(
@@ -417,7 +418,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
             std::cout << "Name: " << shared_data->GetName()
                       << " Backend: " << shared_data->GetBackendName()
                       << " Graph: " << shared_data->GetGraphId()
-                      << " Cluster: " << shared_data->GetClusterId() << std::endl;
+                      << " Cluster: " << shared_data->GetClusterId()
+                      << std::endl;
 
             shared_data->Unref();
           }
