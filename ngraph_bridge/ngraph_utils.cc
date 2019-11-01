@@ -347,7 +347,7 @@ Status NgraphSerialize(const std::string& file_name,
         "Passed a null pointer as ng function to serialize");
   }
   try {
-    ngraph::serialize(ng_function, json_indentation);
+    serialized = ngraph::serialize(ng_function, json_indentation);
   } catch (...) {
     return errors::Internal("Failed to serialize ngraph function");
   }
