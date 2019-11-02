@@ -29,8 +29,8 @@
 
 #include "ngraph_bridge/thread_safe_queue.h"
 
-namespace ng=ngraph;
-namespace tf=tensorflow;
+namespace ng = ngraph;
+namespace tf = tensorflow;
 
 namespace tensorflow {
 
@@ -61,26 +61,29 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   static constexpr const char* NGRAPH_TF_USE_PREFETCH =
       "NGRAPH_TF_USE_PREFETCH";
 
-  void AddNextIoTensors(std::unique_ptr<std::pair<
-    std::vector<shared_ptr<ng::runtime::Tensor>>, 
-    std::vector<shared_ptr<ng::runtime::Tensor>>>> next){
-      m_ng_io_tensors.Add(std::move(next));
-    }
+  void AddNextIoTensors(
+      std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                                std::vector<shared_ptr<ng::runtime::Tensor>>>>
+          next) {
+    m_ng_io_tensors.Add(std::move(next));
+  }
 
-  std::unique_ptr<std::pair<
-    std::vector<shared_ptr<ng::runtime::Tensor>>, 
-    std::vector<shared_ptr<ng::runtime::Tensor>>>> GetNextIoTensors(){
-      return std::move(m_ng_io_tensors.GetNextAvailable());
-    }
+  std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
+  GetNextIoTensors() {
+    return std::move(m_ng_io_tensors.GetNextAvailable());
+  }
+
  private:
   const std::string m_ng_enc_op_name;
   const std::string m_backend_name;
   const int m_graph_id;
   const int m_cluster_id;
   int m_current_ng_tensor_index{0};
-  ThreadSafeQueue<std::unique_ptr<std::pair<
-    std::vector<shared_ptr<ng::runtime::Tensor>>, 
-    std::vector<shared_ptr<ng::runtime::Tensor>>>>> m_ng_io_tensors;
+  ThreadSafeQueue<
+      std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                                std::vector<shared_ptr<ng::runtime::Tensor>>>>>
+      m_ng_io_tensors;
 };
 
 }  // namespace ngraph_bridge

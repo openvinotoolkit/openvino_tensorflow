@@ -293,8 +293,7 @@ int main(int argc, char** argv) {
       //
       // Update the stats
       //
-      local_stats[next_session_ptr].first +=
-          get_image_timer.ElapsedInMS();
+      local_stats[next_session_ptr].first += get_image_timer.ElapsedInMS();
       local_stats[next_session_ptr].second +=
           execute_inference_timer.ElapsedInMS();
       num_items[next_session_ptr]++;
