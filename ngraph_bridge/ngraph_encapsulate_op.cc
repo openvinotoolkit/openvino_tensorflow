@@ -441,6 +441,12 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
         NGraphPrefetchSharedResouce::RESOURCE_NAME, &shared_data);
 
     if (!s.ok()) {
+      // We are using this for the first time i.e., we need to do the following
+      // 1. Create the shared data object
+      // 2. save the input/output nG tensor set to the shared data object
+      // 3. Get another pipelined tensor pair for the current iteration and 
+      //    copy the TF tensor to this set and continue with the execution for
+      //    for this iteration.
       shared_data = new NGraphPrefetchSharedResouce(
           name(), m_parallel_executor->GetOpBackendName(),
           m_parallel_executor->GetGraphId(),
@@ -451,10 +457,17 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
           NGraphPrefetchSharedResouce::CONTAINER_NAME,
           NGraphPrefetchSharedResouce::RESOURCE_NAME, shared_data));
     }
+    else
+    {
+      // We have been using the pipelined tensors - therefore do the following:
+      // 1. Get the next set of IO tensors from the pipelined store 
+      // 2. Save that to the shared data object so that the prefetcher 
+      //    can continue with copying the next set of inout tensor to the
+      //    device
+      // 3. Execute the nGraph call for this iteration using the 
+      //    nG tensors we got from the shared data 
+    }
   }
-
-  // TODO: Add the input tensors if needed
-  // No need to unref
 
   // Allocate the input/
   ngraph::Event event_copy_input_tensor("Copy Input Tensor", "", "");

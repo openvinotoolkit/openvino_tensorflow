@@ -44,6 +44,11 @@ REGISTER_OP("NGraphVariable")
     .SetIsStateful()
     .SetShapeFn(shape_inference::ExplicitShape);
 
+// The NGraphPrefetchDataset below is defined exactly the same as 
+// TesorFlow PrefetchDataset but the implementation is changed in the sense
+// that the tensors are copied to the device if needed and possible
+// Since the TensorFlow op doesn't hav any way to override this behavior,
+// we have taken the "editor inheritence" approach i.e., copy->paste->modify
 REGISTER_OP("NGraphPrefetchDataset")
     .Input("input_dataset: variant")
     .Input("buffer_size: int64")

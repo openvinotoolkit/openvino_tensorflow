@@ -216,7 +216,6 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
 
   if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
       nullptr) {
-    // // Now add the NGraphWriteToDevice node
     if (prefetch_node != nullptr) {
       return ReplacePrefetch(graph, prefetch_node);
     }
