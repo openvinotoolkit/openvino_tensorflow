@@ -24,6 +24,7 @@ os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
 os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
 import ngraph_bridge
 
+
 def build_model(input_array):
     labels = tf.cast(input_array, tf.int64)
 
@@ -33,17 +34,17 @@ def build_model(input_array):
     output = add
     return output
 
+
 def build_data_pipeline(input_array, map_function, batch_size):
-    dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(input_array)))
-        .map(map_function)
-        .batch(batch_size)
-        .prefetch(1) 
-    )
+    dataset = (tf.data.Dataset.from_tensor_slices(
+        (tf.constant(input_array)
+        )).map(map_function).batch(batch_size).prefetch(1))
 
     iterator = dataset.make_initializable_iterator()
     data_to_be_prefetched_and_used = iterator.get_next()
 
     return data_to_be_prefetched_and_used, iterator
+
 
 if __name__ == '__main__':
     input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -56,16 +57,13 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
         sess.run(iterator.initializer)
 
-        for i in range(1,10):
+        for i in range(1, 10):
             # Expected value is:
-            expected_output = ((input_array[i-1] * 10) * 5) + 10
-            
+            expected_output = ((input_array[i - 1] * 10) * 5) + 10
+
             # Run one iteration
             output = sess.run(model)
-            
+
             # Results?
-            print("Iteration:", i, 
-                " Input: ", input_array[i-1],
-                " Output: ", output[0],
-                " Expected: ", expected_output
-            )
+            print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
+                  output[0], " Expected: ", expected_output)
