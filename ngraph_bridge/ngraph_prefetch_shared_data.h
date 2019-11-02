@@ -61,17 +61,39 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   static constexpr const char* NGRAPH_TF_USE_PREFETCH =
       "NGRAPH_TF_USE_PREFETCH";
 
-  void AddNextIoTensors(
-      std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                                std::vector<shared_ptr<ng::runtime::Tensor>>>>
+  // Adds the given nGraph tensor pair to write to
+  // This is called by the NGraphEncapOp
+  void AddNextIoTensorsForDeviceTransfer(
+      std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                std::vector<shared_ptr<ng::runtime::Tensor>>>
           next) {
-    m_ng_io_tensors.Add(std::move(next));
+    m_tf_2_ng.Add(std::move(next));
   }
 
-  std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
-  GetNextIoTensors() {
-    return std::move(m_ng_io_tensors.GetNextAvailable());
+  // Returns the IO tensors to be used top copy TF tensors to NG device
+  // This will be called by the prefetcher
+  std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+            std::vector<shared_ptr<ng::runtime::Tensor>>>
+  GetNextIoTensorsForDeviceTransfer() {
+    return std::move(m_tf_2_ng.GetNextAvailable());
+  }
+
+  // Adds the given nGraph tensor pair to write to
+  // This is called by the prefetcher to add Tensors that are copied
+  // from TF tensor and are now ready for the next iteration
+  void AddNextIoTensorsReadyForDeviceExecution(
+      std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                std::vector<shared_ptr<ng::runtime::Tensor>>>
+          next) {
+    m_ng_2_tf.Add(std::move(next));
+  }
+
+  // Returns the IO tensors to be ready to be executed by NG device
+  // This will be called by the NGEncOp
+  std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+            std::vector<shared_ptr<ng::runtime::Tensor>>>
+  GetNextIoTensorsReadyForDeviceExecution() {
+    return std::move(m_ng_2_tf.GetNextAvailable());
   }
 
  private:
@@ -79,11 +101,35 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   const std::string m_backend_name;
   const int m_graph_id;
   const int m_cluster_id;
-  int m_current_ng_tensor_index{0};
-  ThreadSafeQueue<
-      std::unique_ptr<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                                std::vector<shared_ptr<ng::runtime::Tensor>>>>>
-      m_ng_io_tensors;
+
+  // We need to maintain two queues as follows:
+  // ----------+------------+------------+------------------------------------+
+  // Queue     | Writer     | Reader     | Comments                           |
+  // ----------+------------+------------+------------------------------------+
+  // m_tf_2_ng | Prefetcher | NgEncOp    | TF tensors copied to the nG tensor |
+  // ----------+------------+------------+------------------------------------+
+  // m_ng_2_tf | NgEncOp    | Prefetcher | NGEnc enqueus empty nGTensors here |
+  // ----------+------------+------------+------------------------------------+
+  //
+  // The interaction is as follows:
+  // Iteration  Action
+  // 1          NGEncOp pushes the IO tensors to m_ng_2_tf queue
+  // 2
+  //            Prefetcher pulls IO tensors out of m_ng_2_tf queue and copies TF
+  //            data
+  //            Prefetcher pushes this item to the m_tf_2_ng queue
+  //            NGEncOp pushes the IO tensors to m_ng_2_tf queue
+  //            NGEncOp pulls IO tensors from m_tf_2_ng (from previous
+  //            iteration) and executes
+  // 3          Repeat
+
+  ThreadSafeQueue<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
+      m_tf_2_ng;
+
+  ThreadSafeQueue<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
+                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
+      m_ng_2_tf;
 };
 
 }  // namespace ngraph_bridge

@@ -420,6 +420,15 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
                       << " Graph: " << shared_data->GetGraphId()
                       << " Cluster: " << shared_data->GetClusterId()
                       << std::endl;
+            auto ng_io_tensors =
+                shared_data->GetNextIoTensorsForDeviceTransfer();
+            std::cout << "Writing to nGra[h tensors\n" << std::endl;
+
+            // TODO
+            // Write to these tensors
+
+            // Now add them back to the other queue
+            shared_data->AddNextIoTensorsReadyForDeviceExecution(ng_io_tensors);
 
             shared_data->Unref();
           }

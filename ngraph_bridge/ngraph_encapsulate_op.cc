@@ -451,11 +451,26 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
           name(), m_parallel_executor->GetOpBackendName(),
           m_parallel_executor->GetGraphId(),
           m_parallel_executor->GetNgraphClusterId());
-      // my_var->val = Tensor(DT_FLOAT, my_shape);
-      // my_var->val.flat<float>().setZeros();   // 0 initialized.
+
+      // Get the set of IO tensors for the next iteration
+      std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
+          io_tensors_next_iter;
+      OP_REQUIRES_OK(ctx, m_parallel_executor->GetTensorsFromPipeline(
+                              ng_exec, io_tensors_next_iter));
+
+      // Save the ngTensors for the next iteration
+      auto io_tensor_pair =
+          make_pair(get<1>(io_tensors_next_iter), get<2>(io_tensors_next_iter));
+      shared_data->AddNextIoTensorsForDeviceTransfer(io_tensor_pair);
+
       ctx->SetStatus(ctx->resource_manager()->Create(
           NGraphPrefetchSharedResouce::CONTAINER_NAME,
           NGraphPrefetchSharedResouce::RESOURCE_NAME, shared_data));
+
+      // Continue the execution with the currently supplied TF tensor for the
+      // last time
+      // TODO
+
     } else {
       // We have been using the pipelined tensors - therefore do the following:
       // 1. Get the next set of IO tensors from the pipelined store
@@ -464,6 +479,11 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
       //    device
       // 3. Execute the nGraph call for this iteration using the
       //    nG tensors we got from the shared data
+      auto ng_io_tensors_ready =
+          shared_data->GetNextIoTensorsReadyForDeviceExecution();
+
+      auto io_tensor_pair = make_pair(get<1>(io_tensors), get<2>(io_tensors));
+      shared_data->AddNextIoTensorsForDeviceTransfer(io_tensor_pair);
     }
   }
 

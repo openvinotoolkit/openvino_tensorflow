@@ -29,14 +29,16 @@ namespace ngraph_bridge {
 template <typename T>
 class ThreadSafeQueue {
  public:
+  // Return T and a status thing so that in case or termination,
+  // caller can check
+  // TODO
   T GetNextAvailable() {
-    T next = nullptr;
     m_mutex.Lock();
     while (m_queue.empty()) {
       m_cv.Wait(&m_mutex);
     }
 
-    next = std::move(m_queue.front());
+    T next = std::move(m_queue.front());
     m_queue.pop();
     m_mutex.Unlock();
     return next;
@@ -47,6 +49,11 @@ class ThreadSafeQueue {
     m_queue.push(std::move(item));
     m_cv.SignalAll();
     m_mutex.Unlock();
+  }
+
+  void Terminate() {
+    // TODO
+    //
   }
 
  private:
