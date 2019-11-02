@@ -251,3 +251,32 @@ class Testtf2ngraph(NgraphTest):
         rc = p.returncode
         assert rc != 0, "Ran tf2ngraph with non-existent backend," + \
         " hence expecting non-zero status"
+
+    def test_contains_variables(self):
+        # This test creates a saved model that contains variables
+        # tf2ngraph is expected to fail,
+        # since it does not support graphs with variables
+        export_dir = 'saved_model'
+        x = tf.placeholder(tf.float32, [None, 784], name='x')
+        W = tf.Variable(tf.zeros([784, 10]))
+        matmul = tf.matmul(x, W, name='mm')
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            builder = tf.saved_model.builder.SavedModelBuilder(export_dir)
+            builder.add_meta_graph_and_variables(
+                sess, [tf.saved_model.tag_constants.TRAINING])
+            builder.add_meta_graph([tf.saved_model.tag_constants.SERVING],
+                                   strip_default_attrs=True)
+            builder.save()
+
+        expected_to_fail = "python tf2ngraph.py --input_savedmodel saved_model" + \
+        " --output_nodes mm --output_savedmodel out_saved_model"
+
+        p = Popen(expected_to_fail.split(' '))
+
+        output, err = p.communicate()
+        rc = p.returncode
+        assert rc != 0, "Ran tf2ngraph with saved model with variables," + \
+        " hence expecting non-zero status"
+
+        shutil.rmtree(export_dir)
