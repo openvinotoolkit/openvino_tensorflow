@@ -402,15 +402,16 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   std::vector<Tensor> tf_input_tensors;
 
   // Note: Even though when we are using prefetching to device, the input
-  // tensors much come from the context as their shape determines the cache hit/miss
-  // This results in duplicate Tensors but ok as we are not memory limited 
+  // tensors much come from the context as their shape determines the cache
+  // hit/miss
+  // This results in duplicate Tensors but ok as we are not memory limited
   // (The prefetching applies for inputs)
   for (int i = 0; i < ctx->num_inputs(); i++) {
     tf_input_tensors.push_back(ctx->input(i));
   }
 
-  LOG(ERROR) << "COMPUTE: Input: " << ctx->num_inputs() << " Values: " 
-    << tf_input_tensors[0].DebugString();
+  LOG(ERROR) << "COMPUTE: Input: " << ctx->num_inputs()
+             << " Values: " << tf_input_tensors[0].DebugString();
   int step_id = ctx->step_id();
   ngraph::Event event_compile("Compile", "", "");
 
@@ -485,9 +486,11 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
     } else {
       int prefetch_buffer_depth = shared_data->GetBufferDepth();
       int skip_count = shared_data->GetSkipCount();
-      LOG(ERROR) << "COMPUTE: DEPTH: " << prefetch_buffer_depth << " skip count; " << skip_count;
+      LOG(ERROR) << "COMPUTE: DEPTH: " << prefetch_buffer_depth
+                 << " skip count; " << skip_count;
       if (skip_count >= prefetch_buffer_depth) {
-        // We have been using the pipelined tensors - therefore do the following:
+        // We have been using the pipelined tensors - therefore do the
+        // following:
         // 1. Get the next set of IO tensors from the pipelined store
         // 2. Save that to the shared data object so that the prefetcher
         //    can continue with copying the next set of inout tensor to the
@@ -522,14 +525,17 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
       try {
         io_tensor_bundle.Inputs[i]->write(
             current_src_ptr, 0,
-            io_tensor_bundle.Inputs[i]->get_element_count() * ng_element_type.size());
+            io_tensor_bundle.Inputs[i]->get_element_count() *
+                ng_element_type.size());
       } catch (const std::exception& exp) {
-        OP_REQUIRES(ctx, false,
-                    errors::Internal("Error copying TF tensor to device tensor: ",
-                                    exp.what()));
+        OP_REQUIRES(
+            ctx, false,
+            errors::Internal("Error copying TF tensor to device tensor: ",
+                             exp.what()));
       } catch (...) {
-        OP_REQUIRES(ctx, false,
-                    errors::Internal("Error copying TF tensor to device tensor"));
+        OP_REQUIRES(
+            ctx, false,
+            errors::Internal("Error copying TF tensor to device tensor"));
       }
     }
   }

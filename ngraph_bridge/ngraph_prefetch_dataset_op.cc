@@ -408,8 +408,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
             &shared_data);
         if (s.ok()) {
           shared_data->SetBufferDepth(m_buffer_size);
-          auto ng_io_tensors =
-              shared_data->GetNextIoTensorsForDeviceTransfer();
+          auto ng_io_tensors = shared_data->GetNextIoTensorsForDeviceTransfer();
 
           // Write to these tensors
           for (auto i = 0; i < buffer_element.value.size(); i++) {
@@ -421,7 +420,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
                 (void*)DMAHelper::base(&buffer_element.value[i]);
             try {
               LOG(ERROR) << "INPUT tensor being written by Prefetch: "
-                        << " Value: " << buffer_element.value[i].DebugString();
+                         << " Value: " << buffer_element.value[i].DebugString();
               ng_io_tensors.Inputs[i]->write(
                   current_src_ptr, 0,
                   ng_io_tensors.Inputs[i]->get_element_count() *

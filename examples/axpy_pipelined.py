@@ -26,6 +26,7 @@ import ngraph_bridge
 
 import sys
 
+
 def build_model(input_array):
     labels = tf.cast(input_array, tf.int64)
 

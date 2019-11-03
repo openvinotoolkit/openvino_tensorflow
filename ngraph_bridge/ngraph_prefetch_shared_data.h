@@ -92,19 +92,11 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
     return std::move(m_ng_2_tf.GetNextAvailable());
   }
 
-  void SetBufferDepth(int depth) {
-    m_prefetch_buffer_depth = depth;
-  }
-  int GetBufferDepth() {
-    return m_prefetch_buffer_depth;
-  }
+  void SetBufferDepth(int depth) { m_prefetch_buffer_depth = depth; }
+  int GetBufferDepth() { return m_prefetch_buffer_depth; }
 
-  void IncrSkipCount() {
-    m_skip_count++;
-  }
-  int GetSkipCount() {
-    return m_skip_count;
-  }
+  void IncrSkipCount() { m_skip_count++; }
+  int GetSkipCount() { return m_skip_count; }
 
  private:
   const std::string m_ng_enc_op_name;
