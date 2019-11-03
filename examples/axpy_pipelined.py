@@ -21,9 +21,10 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import os
 os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
-os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
+#os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
 import ngraph_bridge
 
+import sys
 
 def build_model(input_array):
     labels = tf.cast(input_array, tf.int64)
@@ -67,3 +68,4 @@ if __name__ == '__main__':
             # Results?
             print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
                   output[0], " Expected: ", expected_output)
+            sys.stdout.flush()

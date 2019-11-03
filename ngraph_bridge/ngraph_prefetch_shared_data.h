@@ -61,39 +61,49 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   static constexpr const char* NGRAPH_TF_USE_PREFETCH =
       "NGRAPH_TF_USE_PREFETCH";
 
+  struct IoTensorBundle {
+    int Id;
+    std::vector<shared_ptr<ng::runtime::Tensor>> Inputs;
+    std::vector<shared_ptr<ng::runtime::Tensor>> Outputs;
+  };
+
   // Adds the given nGraph tensor pair to write to
   // This is called by the NGraphEncapOp
-  void AddNextIoTensorsForDeviceTransfer(
-      std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                std::vector<shared_ptr<ng::runtime::Tensor>>>
-          next) {
+  void AddNextIoTensorsForDeviceTransfer(IoTensorBundle next) {
     m_tf_2_ng.Add(std::move(next));
   }
 
   // Returns the IO tensors to be used top copy TF tensors to NG device
   // This will be called by the prefetcher
-  std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-            std::vector<shared_ptr<ng::runtime::Tensor>>>
-  GetNextIoTensorsForDeviceTransfer() {
+  IoTensorBundle GetNextIoTensorsForDeviceTransfer() {
     return std::move(m_tf_2_ng.GetNextAvailable());
   }
 
   // Adds the given nGraph tensor pair to write to
   // This is called by the prefetcher to add Tensors that are copied
   // from TF tensor and are now ready for the next iteration
-  void AddNextIoTensorsReadyForDeviceExecution(
-      std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                std::vector<shared_ptr<ng::runtime::Tensor>>>
-          next) {
+  void AddNextIoTensorsReadyForDeviceExecution(IoTensorBundle next) {
     m_ng_2_tf.Add(std::move(next));
   }
 
   // Returns the IO tensors to be ready to be executed by NG device
   // This will be called by the NGEncOp
-  std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-            std::vector<shared_ptr<ng::runtime::Tensor>>>
-  GetNextIoTensorsReadyForDeviceExecution() {
+  IoTensorBundle GetNextIoTensorsReadyForDeviceExecution() {
     return std::move(m_ng_2_tf.GetNextAvailable());
+  }
+
+  void SetBufferDepth(int depth) {
+    m_prefetch_buffer_depth = depth;
+  }
+  int GetBufferDepth() {
+    return m_prefetch_buffer_depth;
+  }
+
+  void IncrSkipCount() {
+    m_skip_count++;
+  }
+  int GetSkipCount() {
+    return m_skip_count;
   }
 
  private:
@@ -123,13 +133,11 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   //            iteration) and executes
   // 3          Repeat
 
-  ThreadSafeQueue<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
-      m_tf_2_ng;
+  ThreadSafeQueue<IoTensorBundle> m_tf_2_ng;
+  ThreadSafeQueue<IoTensorBundle> m_ng_2_tf;
 
-  ThreadSafeQueue<std::pair<std::vector<shared_ptr<ng::runtime::Tensor>>,
-                            std::vector<shared_ptr<ng::runtime::Tensor>>>>
-      m_ng_2_tf;
+  int m_prefetch_buffer_depth{0};
+  int m_skip_count{0};
 };
 
 }  // namespace ngraph_bridge

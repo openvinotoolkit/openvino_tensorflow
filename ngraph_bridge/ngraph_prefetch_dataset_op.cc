@@ -51,6 +51,7 @@ File: tensorflow/core/kernels/data/prefetch_dataset_op.cc
 #include "tensorflow/core/lib/strings/stringprintf.h"
 
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
+#include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/stats_utils.h"
 
 namespace tensorflow {
@@ -120,7 +121,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
     explicit Iterator(const Params& params, ResourceMgr* rm)
         : DatasetIterator<Dataset>(params),
           auto_tuner_(params.dataset->buffer_size_),
-          m_resource_mgr(rm) {
+          m_resource_mgr(rm),
+          m_buffer_size(params.dataset->buffer_size_) {
       slack_us_ = 0;
     }
 
@@ -271,6 +273,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
 
    private:
     ResourceMgr* m_resource_mgr{nullptr};
+    const int m_buffer_size{0};
 
     // A buffer element comprises a status and (if that status is
     // OK) a vector of tensors, representing an element of the input dataset.
@@ -317,9 +320,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           VLOG(2) << "Setting slack_us_: " << slack_us_;
         }
         *out_tensors = std::move(buffer_.front().value);
-        std::cout << "GetNext-->Consume: " << out_tensors->size() << std::endl;
         for (auto& next : *out_tensors) {
-          std::cout << "Next Tensor: " << next.DebugString() << std::endl;
+          LOG(ERROR) << "CONSUME: Next Tensor: " << next.DebugString();
         }
         RecordBufferDequeue(ctx, *out_tensors);
       }
@@ -398,41 +400,45 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           return;
         }
 
-        std::cout << "Prefetching next data: Length: "
-                  << buffer_element.value.size() << std::endl;
-        for (auto& next : buffer_element.value) {
-          std::cout << "Prefetch Data:    " << next.DebugString() << std::endl;
-        }
+        // Check if the shared data exist
+        ngraph_bridge::NGraphPrefetchSharedResouce* shared_data = nullptr;
+        Status s = m_resource_mgr->Lookup(
+            ngraph_bridge::NGraphPrefetchSharedResouce::CONTAINER_NAME,
+            ngraph_bridge::NGraphPrefetchSharedResouce::RESOURCE_NAME,
+            &shared_data);
+        if (s.ok()) {
+          shared_data->SetBufferDepth(m_buffer_size);
+          auto ng_io_tensors =
+              shared_data->GetNextIoTensorsForDeviceTransfer();
 
-        if (std::getenv(ngraph_bridge::NGraphPrefetchSharedResouce::
-                            NGRAPH_TF_USE_PREFETCH) != nullptr) {
-          // Check o if the shared data exist
-          ngraph_bridge::NGraphPrefetchSharedResouce* shared_data = nullptr;
-          Status s = m_resource_mgr->Lookup(
-              ngraph_bridge::NGraphPrefetchSharedResouce::CONTAINER_NAME,
-              ngraph_bridge::NGraphPrefetchSharedResouce::RESOURCE_NAME,
-              &shared_data);
-          if (s.ok()) {
-            std::cout << "GOT shared RESOURCE: " << shared_data->DebugString()
-                      << std::endl;
-            std::cout << "Name: " << shared_data->GetName()
-                      << " Backend: " << shared_data->GetBackendName()
-                      << " Graph: " << shared_data->GetGraphId()
-                      << " Cluster: " << shared_data->GetClusterId()
-                      << std::endl;
-            auto ng_io_tensors =
-                shared_data->GetNextIoTensorsForDeviceTransfer();
-            std::cout << "Writing to nGra[h tensors\n" << std::endl;
+          // Write to these tensors
+          for (auto i = 0; i < buffer_element.value.size(); i++) {
+            ng::element::Type ng_element_type;
+            auto status = ngraph_bridge::TFDataTypeToNGraphElementType(
+                buffer_element.value[i].dtype(), &ng_element_type);
 
-            // TODO
-            // Write to these tensors
-
-            // Now add them back to the other queue
-            shared_data->AddNextIoTensorsReadyForDeviceExecution(ng_io_tensors);
-
-            shared_data->Unref();
+            void* current_src_ptr =
+                (void*)DMAHelper::base(&buffer_element.value[i]);
+            try {
+              LOG(ERROR) << "INPUT tensor being written by Prefetch: "
+                        << " Value: " << buffer_element.value[i].DebugString();
+              ng_io_tensors.Inputs[i]->write(
+                  current_src_ptr, 0,
+                  ng_io_tensors.Inputs[i]->get_element_count() *
+                      ng_element_type.size());
+            } catch (const std::exception& exp) {
+              throw exp;
+            } catch (...) {
+              throw std::runtime_error(
+                  "Error copying TF tensor to device tensor");
+            }
           }
+
+          // Now add them back to the other queue
+          shared_data->AddNextIoTensorsReadyForDeviceExecution(ng_io_tensors);
+          shared_data->Unref();
         }
+
         // 3. Signal that the element has been produced.
         {
           mutex_lock l(mu_);
