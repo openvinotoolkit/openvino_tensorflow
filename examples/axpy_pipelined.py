@@ -15,6 +15,7 @@
 # ==============================================================================
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
+import numpy as np
 
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -27,12 +28,13 @@ import ngraph_bridge
 import sys
 
 
-def build_model(input_array):
-    labels = tf.cast(input_array, tf.int64)
+def build_simple_model(input_array):
+    # Convert the numpy array to TF Tensor
+    input = tf.cast(input_array, tf.float32)
 
-    mul = tf.compat.v1.math.multiply(labels, 5)
+    # Define the Ops
+    mul = tf.compat.v1.math.multiply(input_array, 5)
     add = tf.compat.v1.math.add(mul, 10)
-
     output = add
     return output
 
@@ -49,10 +51,14 @@ def build_data_pipeline(input_array, map_function, batch_size):
 
 
 if __name__ == '__main__':
-    input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    map_function = lambda x: x * 10
+    #input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    multiplier = 100000000
+    input_array = np.ones([9, 1], dtype=np.float32)
+    for i in range(1, 10):
+        input_array[i - 1] = input_array[i - 1] * i * multiplier
+    map_function = lambda x: x * multiplier
     pipeline, iterator = build_data_pipeline(input_array, map_function, 1)
-    model = build_model(pipeline)
+    model = build_simple_model(pipeline)
 
     with tf.Session() as sess:
         # Initialize the globals and the dataset
@@ -61,7 +67,7 @@ if __name__ == '__main__':
 
         for i in range(1, 10):
             # Expected value is:
-            expected_output = ((input_array[i - 1] * 10) * 5) + 10
+            expected_output = ((input_array[i - 1] * multiplier) * 5) + 10
 
             # Run one iteration
             output = sess.run(model)

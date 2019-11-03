@@ -50,6 +50,8 @@ File: tensorflow/core/kernels/data/prefetch_dataset_op.cc
 #include "tensorflow/core/lib/strings/str_util.h"
 #include "tensorflow/core/lib/strings/stringprintf.h"
 
+#include "ngraph/event_tracing.hpp"
+
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/stats_utils.h"
@@ -272,9 +274,6 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
     }
 
    private:
-    ResourceMgr* m_resource_mgr{nullptr};
-    const int m_buffer_size{0};
-
     // A buffer element comprises a status and (if that status is
     // OK) a vector of tensors, representing an element of the input dataset.
     struct BufferElement {
@@ -287,6 +286,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
 
     Status Consume(IteratorContext* ctx, std::vector<Tensor>* out_tensors,
                    bool* end_of_sequence) EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+      ngraph::Event evt_consume("Prefetch_Consume", "Prefetch_Consume", "");
+
       const auto& stats_aggregator = ctx->stats_aggregator();
       if (stats_aggregator) {
         stats_aggregator->AddToHistogram(
@@ -321,7 +322,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
         }
         *out_tensors = std::move(buffer_.front().value);
         for (auto& next : *out_tensors) {
-          LOG(ERROR) << "CONSUME: Next Tensor: " << next.DebugString();
+          NGRAPH_VLOG(2) << "[PREFETCH] CONSUME: Next Tensor: "
+                         << next.DebugString();
         }
         RecordBufferDequeue(ctx, *out_tensors);
       }
@@ -335,6 +337,10 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
       // TODO(mrry): Consider using different condition variables for
       // GetNext and Prefetch.
       cond_var_.notify_all();
+
+      evt_consume.Stop();
+      ngraph::Event::write_trace(evt_consume);
+
       return s;
     }
 
@@ -359,6 +365,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
       // Keep track of where we are in an iteration "burst"
       int num_produced = 0;
       while (true) {
+        ngraph::Event evt_prefetch("Prefetch_Produce", "Prefetch_Produce", "");
+
         // 1. Wait for a slot in the buffer.
         {
           mutex_lock l(mu_);
@@ -395,7 +403,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
         if (buffer_element.status.ok() && end_of_sequence) {
           mutex_lock l(mu_);
           prefetch_thread_finished_ = true;
-          LOG(ERROR) << "Prefetch thread finished";
+          NGRAPH_VLOG(2) << "[PREFETCH] Prefetch thread finished";
           cond_var_.notify_all();
           return;
         }
@@ -407,6 +415,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
             ngraph_bridge::NGraphPrefetchSharedResouce::RESOURCE_NAME,
             &shared_data);
         if (s.ok()) {
+          ngraph::Event evt_dev_cp("Prf Dev Copy", "Copy", "");
           shared_data->SetBufferDepth(m_buffer_size);
           auto ng_io_tensors = shared_data->GetNextIoTensorsForDeviceTransfer();
 
@@ -419,8 +428,9 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
             void* current_src_ptr =
                 (void*)DMAHelper::base(&buffer_element.value[i]);
             try {
-              LOG(ERROR) << "INPUT tensor being written by Prefetch: "
-                         << " Value: " << buffer_element.value[i].DebugString();
+              NGRAPH_VLOG(2)
+                  << "[PREFETCH] INPUT tensor being written by Prefetch: "
+                  << " Value: " << buffer_element.value[i].DebugString();
               ng_io_tensors.Inputs[i]->write(
                   current_src_ptr, 0,
                   ng_io_tensors.Inputs[i]->get_element_count() *
@@ -436,6 +446,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           // Now add them back to the other queue
           shared_data->AddNextIoTensorsReadyForDeviceExecution(ng_io_tensors);
           shared_data->Unref();
+          evt_dev_cp.Stop();
+          ngraph::Event::write_trace(evt_dev_cp);
         }
 
         // 3. Signal that the element has been produced.
@@ -447,6 +459,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           cond_var_.notify_all();
         }
         ++num_produced;
+        evt_prefetch.Stop();
+        ngraph::Event::write_trace(evt_prefetch);
       }
     }
 
@@ -502,6 +516,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
     bool prefetch_thread_finished_ GUARDED_BY(mu_) = false;
 
     std::atomic<int64> slack_us_;
+    ResourceMgr* m_resource_mgr{nullptr};
+    const int m_buffer_size{0};
   };
   const DatasetBase* const input_;
   const int64 buffer_size_;

@@ -410,8 +410,8 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
     tf_input_tensors.push_back(ctx->input(i));
   }
 
-  LOG(ERROR) << "COMPUTE: Input: " << ctx->num_inputs()
-             << " Values: " << tf_input_tensors[0].DebugString();
+  NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Input: " << ctx->num_inputs()
+                 << " Values: " << tf_input_tensors[0].DebugString();
   int step_id = ctx->step_id();
   ngraph::Event event_compile("Compile", "", "");
 
@@ -482,12 +482,13 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
 
       // Continue the execution with the currently supplied TF tensor for the
       // last time
-      LOG(ERROR) << "COMPUTE: Creating the shared object to signal prefetching";
+      NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Creating the shared object to "
+                        "signal prefetching";
     } else {
       int prefetch_buffer_depth = shared_data->GetBufferDepth();
       int skip_count = shared_data->GetSkipCount();
-      LOG(ERROR) << "COMPUTE: DEPTH: " << prefetch_buffer_depth
-                 << " skip count; " << skip_count;
+      NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: DEPTH: " << prefetch_buffer_depth
+                     << " skip count; " << skip_count;
       if (skip_count >= prefetch_buffer_depth) {
         // We have been using the pipelined tensors - therefore do the
         // following:
@@ -506,7 +507,7 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
         // Update the io_tenspr_bundle with the one ready for exdcution
         io_tensor_bundle = ng_io_tensors_ready;
         skip_tf2ng_copy = true;
-        LOG(ERROR) << "COMPUTE: Using device tensors";
+        NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Using device tensors";
       }
       shared_data->IncrSkipCount();
     }
@@ -606,7 +607,7 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_return_tensor.Stop();
   ngraph::Event::write_trace(event_return_tensor);
 
-  LOG(ERROR) << "COMPUTE: Done";
+  NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Done";
 }
 
 //---------------------------------------------------------------------------
