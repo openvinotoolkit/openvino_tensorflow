@@ -51,13 +51,14 @@ def build_data_pipeline(input_array, map_function, batch_size):
 
 
 if __name__ == '__main__':
-    #input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    multiplier = 100000000
-    input_array = np.ones([9, 1], dtype=np.float32)
+    input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    multiplier = 10
     for i in range(1, 10):
         input_array[i - 1] = input_array[i - 1] * i * multiplier
     map_function = lambda x: x * multiplier
-    pipeline, iterator = build_data_pipeline(input_array, map_function, 1)
+    batch_size = 1
+    pipeline, iterator = build_data_pipeline(input_array, map_function,
+                                             batch_size)
     model = build_simple_model(pipeline)
 
     with tf.Session() as sess:
