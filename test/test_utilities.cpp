@@ -65,17 +65,20 @@ void SetEnvVariable(const string& env_var_name, const string& env_var_val) {
                  << env_var_val;
 }
 
-// Store/Restore Env Variables
-unordered_map<string, string> StoreEnv() {
+// Store Env Variables
+unordered_map<string, string> StoreEnv(list<string> env_vars) {
   unordered_map<string, string> env_map;
-  string env_name = "NGRAPH_TF_BACKEND";
-  if (IsEnvVariableSet(env_name)) {
-    env_map[env_name] = GetEnvVariable(env_name);
-    UnsetEnvVariable(env_name);
+  for (auto it = env_vars.begin(); it != env_vars.end(); ++it) {
+    string env_name = *it;
+    if (IsEnvVariableSet(env_name)) {
+      env_map[env_name] = GetEnvVariable(env_name);
+      UnsetEnvVariable(env_name);
+    }
   }
   return env_map;
 }
 
+// Restore
 void RestoreEnv(const unordered_map<string, string>& map) {
   for (auto itr : map) {
     setenv(itr.first.c_str(), itr.second.c_str(), 1);

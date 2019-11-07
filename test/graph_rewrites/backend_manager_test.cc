@@ -45,7 +45,8 @@ These tests test the Backend Handling by the bridge.
 // Test SetBackendAPI
 TEST(BackendManager, SetBackend) {
   // If NGRAPH_TF_BACKEND is set, unset it
-  const unordered_map<string, string>& env_map = StoreEnv();
+  list<string> env_vars{"NGRAPH_TF_BACKEND"};
+  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
 
   ASSERT_OK(BackendManager::SetBackendName("CPU"));
   string cpu_backend;
@@ -71,7 +72,8 @@ TEST(BackendManager, SetBackend) {
 // Test with env variable set
 TEST(BackendManager, GetCurrentlySetBackendName) {
   // If NGRAPH_TF_BACKEND is set, unset it
-  const unordered_map<string, string>& env_map = StoreEnv();
+  list<string> env_vars{"NGRAPH_TF_BACKEND"};
+  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
 
   string cpu_backend = "CPU";
   string intp_backend = "INTERPRETER";

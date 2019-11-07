@@ -49,8 +49,16 @@ namespace testing {
 void ActivateNGraph();
 void DeactivateNGraph();
 
-// Store/Restore Env Variables
-unordered_map<string, string> StoreEnv();
+// Store Env Variables
+// This function takes a list of env var that the user would
+// want to change for his particular test scenario and hence
+// save the current value for if it is set/unset
+unordered_map<string, string> StoreEnv(list<string> env_vars);
+
+// Restore Env Variables
+// This function takes the map of <env var, val> created using
+// StoreEnv and restores the env variables to their
+// previous state
 void RestoreEnv(const unordered_map<string, string>& map);
 
 // EnvVariable Utilities

@@ -88,6 +88,7 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC enable_variable_ops/ngraph_replace_op_utilities.cc)
     list(APPEND SRC enable_variable_ops/ngraph_replace_variable_modifiers.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_modifiers.cc)
+    list(APPEND SRC enable_variable_ops/ngraph_variable_update_ng_tensor_op.cc)
     
     add_definitions(-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
 endif()
