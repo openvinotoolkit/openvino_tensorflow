@@ -234,10 +234,10 @@ int main(int argc, char** argv) {
   //
   // Add these sessions to the queue
   //
-  tf::ngraph_bridge::ThreadSafeQueue<Session> session_queue;
-  session_queue.Add(session_one.get());
-  session_queue.Add(session_two.get());
-  session_queue.Add(session_three.get());
+  tf::ngraph_bridge::ThreadSafeQueue<unique_ptr<Session>> session_queue;
+  session_queue.Add(move(session_one));
+  session_queue.Add(move(session_two));
+  session_queue.Add(move(session_three));
 
   cout << "Session: " << session_db[session_one.get()] << "\n";
   unordered_map<Session*, pair<float, float>> session_stats;
@@ -273,7 +273,8 @@ int main(int argc, char** argv) {
       tf::ngraph_bridge::Timer execute_inference_timer;
       ngraph::Event evt_get_session("Get Session",
                                     string("Iteration") + to_string(i), "");
-      tf::Session* next_available_session = session_queue.GetNextAvailable();
+      auto next_available_session = session_queue.GetNextAvailable();
+
       evt_get_session.Stop();
 
       //
@@ -285,17 +286,17 @@ int main(int argc, char** argv) {
                                               {output_layer}, {},
                                               &output_each_thread));
       evt_run.Stop();
-      session_queue.Add(next_available_session);
+      Session* next_session_ptr = next_available_session.get();
+      session_queue.Add(move(next_available_session));
       execute_inference_timer.Stop();
 
       //
       // Update the stats
       //
-      local_stats[next_available_session].first +=
-          get_image_timer.ElapsedInMS();
-      local_stats[next_available_session].second +=
+      local_stats[next_session_ptr].first += get_image_timer.ElapsedInMS();
+      local_stats[next_session_ptr].second +=
           execute_inference_timer.ElapsedInMS();
-      num_items[next_available_session]++;
+      num_items[next_session_ptr]++;
 
       //
       // Update the Events

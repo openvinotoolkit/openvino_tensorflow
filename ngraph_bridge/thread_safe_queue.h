@@ -29,28 +29,35 @@ namespace ngraph_bridge {
 template <typename T>
 class ThreadSafeQueue {
  public:
-  T* GetNextAvailable() {
-    T* next = nullptr;
+  // Return T and a status thing so that in case or termination,
+  // caller can check
+  // TODO
+  T GetNextAvailable() {
     m_mutex.Lock();
     while (m_queue.empty()) {
       m_cv.Wait(&m_mutex);
     }
 
-    next = m_queue.front();
+    T next = std::move(m_queue.front());
     m_queue.pop();
     m_mutex.Unlock();
     return next;
   }
 
-  void Add(T* item) {
+  void Add(T item) {
     m_mutex.Lock();
-    m_queue.push(item);
+    m_queue.push(std::move(item));
     m_cv.SignalAll();
     m_mutex.Unlock();
   }
 
+  void Terminate() {
+    // TODO
+    //
+  }
+
  private:
-  queue<T*> m_queue;
+  queue<T> m_queue;
   absl::CondVar m_cv;
   absl::Mutex m_mutex;
 };

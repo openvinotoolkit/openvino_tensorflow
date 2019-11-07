@@ -55,6 +55,9 @@ set(SRC
    ngraph_utils.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
+   prefetch_autotuner.cc
+   ngraph_prefetch_dataset_op.cc
+   stats_utils.cc
    version.cc
 )
 

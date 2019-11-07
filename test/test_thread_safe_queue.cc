@@ -32,7 +32,7 @@ namespace ngraph_bridge {
 
 namespace testing {
 TEST(ThreadSafeQueue, Simple) {
-  ThreadSafeQueue<Session> queue;
+  ThreadSafeQueue<unique_ptr<Session>> queue;
   typedef enum {
     INIT = 0,
     WAITING_FOR_ITEM,
