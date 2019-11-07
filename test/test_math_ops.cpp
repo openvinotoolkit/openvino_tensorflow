@@ -30,6 +30,7 @@
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
+#include <cmath>
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "test/opexecuter.h"
@@ -855,6 +856,28 @@ TEST(MathOps, Cast2D) {
   opexecuter.RunTest();
 }  // end of test op Cast
 
+// Test op: Cos
+TEST(MathOps, Cos) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 5;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues<float>(
+      A, {0, -0, M_PI / 2, M_PI, 1.0, 3.8, 4.2, -3.9, -4.2, -1.0});
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Cos(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Cos", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Cos
+
 // Test op: Exp
 TEST(MathOps, Exp1D) {
   Scope root = Scope::NewRootScope();
@@ -1480,6 +1503,28 @@ TEST(MathOps, Rsqrt) {
                         sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Rsqrt
+
+// Test op: Sin
+TEST(MathOps, Sin) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 5;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues<float>(
+      A, {0, -0, M_PI / 2, M_PI, 1.0, 3.8, 4.2, -3.9, -4.2, -1.0});
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Sin(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Sin", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Sin
 
 // Test op: Square
 TEST(MathOps, Square) {
