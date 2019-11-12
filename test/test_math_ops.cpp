@@ -815,6 +815,334 @@ TEST(MathOps, BatchMatMul4DAdjXY) {
   opexecuter.RunTest();
 }  // end of test op BatchMatMul
 
+// Test op: BatchMatMulV2
+// BatchMatMulV22D
+// AdjX = false
+// AdjY = false
+TEST(MathOps, BatchMatMulV22D) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3}));
+  Tensor B(DT_FLOAT, TensorShape({3, 4}));
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::BatchMatMulV2(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV22D
+// AdjX = true
+// AdjY = false
+TEST(MathOps, BatchMatMulV22DAdjX) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3}));
+  Tensor B(DT_FLOAT, TensorShape({2, 4}));
+
+  auto attrs_x = ops::BatchMatMulV2::Attrs();
+  attrs_x = attrs_x.AdjX(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV22D
+// AdjX = false
+// AdjY = true
+TEST(MathOps, BatchMatMulV22DAdjY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 4}));
+  Tensor B(DT_FLOAT, TensorShape({3, 4}));
+
+  auto attrs_y = ops::BatchMatMulV2::Attrs();
+  attrs_y = attrs_y.AdjY(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV22D
+// AdjX = true
+// AdjY = true
+TEST(MathOps, BatchMatMulV22DAdjXY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 4}));
+  Tensor B(DT_FLOAT, TensorShape({3, 2}));
+
+  auto attrs_xy = ops::BatchMatMulV2::Attrs();
+  attrs_xy = attrs_xy.AdjY(true);
+  attrs_xy = attrs_xy.AdjX(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV23D
+// AdjX = false
+// AdjY = false
+TEST(MathOps, BatchMatMulV23D) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4}));
+  Tensor B(DT_FLOAT, TensorShape({2, 4, 5}));
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV23D
+// AdjX = true
+// AdjY = false
+TEST(MathOps, BatchMatMulV23DAdjX) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 5}));
+
+  auto attrs_x = ops::BatchMatMulV2::Attrs();
+  attrs_x = attrs_x.AdjX(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV23D
+// AdjX = false
+// AdjY = true
+TEST(MathOps, BatchMatMulV23DAdjY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 4, 3}));
+  Tensor B(DT_FLOAT, TensorShape({2, 5, 3}));
+
+  auto attrs_y = ops::BatchMatMulV2::Attrs();
+  attrs_y = attrs_y.AdjY(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV2 3D
+// AdjX = true
+// AdjY = true
+TEST(MathOps, BatchMatMulV23DAdjXY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 4, 5}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 4}));
+
+  auto attrs_xy = ops::BatchMatMulV2::Attrs();
+  attrs_xy = attrs_xy.AdjX(true);
+  attrs_xy = attrs_xy.AdjY(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV2 4D
+// AdjX = false
+// AdjY = false
+TEST(MathOps, BatchMatMulV24D) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4, 5}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 5, 1}));
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV2 4D
+// AdjX = true
+// AdjY = false
+TEST(MathOps, BatchMatMulV24DAdjX) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4, 5}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 4, 1}));
+
+  auto attrs_x = ops::BatchMatMulV2::Attrs();
+  attrs_x = attrs_x.AdjX(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV2 4D
+// AdjX = false
+// AdjY = true
+TEST(MathOps, BatchMatMulV24DAdjY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4, 5}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 5, 5}));
+
+  auto attrs_y = ops::BatchMatMulV2::Attrs();
+  attrs_y = attrs_y.AdjY(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+// BatchMatMulV2 4D
+// AdjX = true
+// AdjY = true
+TEST(MathOps, BatchMatMulV24DAdjXY) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 4, 5}));
+  Tensor B(DT_FLOAT, TensorShape({2, 3, 1, 4}));
+
+  auto attrs_xy = ops::BatchMatMulV2::Attrs();
+  attrs_xy = attrs_xy.AdjX(true);
+  attrs_xy = attrs_xy.AdjY(true);
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op BatchMatMulV2
+
 // Test op: Cast : float to int
 TEST(MathOps, Cast1D) {
   Scope root = Scope::NewRootScope();
