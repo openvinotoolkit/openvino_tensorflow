@@ -2005,6 +2005,122 @@ TEST(MathOps, SquaredDifferenceBroadcasting) {
   opexecuter.RunTest();
 }  // end of test op SquaredDifferenceBroadcasting
 
+// Test op: UnsortedSegmentSum
+TEST(MathOps, UnsortedSegmentSum) {
+  Scope root = Scope::NewRootScope();
+  Tensor A(DT_FLOAT, TensorShape({3, 4}));
+  Tensor B(DT_INT32, TensorShape({3}));
+  Tensor C(DT_INT32, TensorShape({}));
+
+  AssignInputValues(A, std::vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f,
+                                          8.f, 4.f, 3.f, 2.f, 1.f});
+  AssignInputValues(B, std::vector<int>{0, 1, 0});
+  AssignInputValues(C, 2);
+
+  vector<int> static_input_indexes = {2};
+  auto R = ops::UnsortedSegmentSum(root, A, B, C);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op UnsortedSegmentSum
+
+// Test op: UnsortedSegmentSum
+TEST(MathOps, UnsortedSegmentSumIdxRange) {
+  Scope root = Scope::NewRootScope();
+  Tensor A(DT_FLOAT, TensorShape({4, 4, 3}));
+  Tensor B(DT_INT32, TensorShape({4}));
+  Tensor C(DT_INT32, TensorShape({}));
+
+  AssignInputValuesRandom(A);
+  AssignInputValues(B, std::vector<int>{0, 1, 2, 3});
+  AssignInputValues(C, 4);
+
+  vector<int> static_input_indexes = {2};
+  auto R = ops::UnsortedSegmentSum(root, A, B, C);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op UnsortedSegmentSum
+
+// Test op: UnsortedSegmentSum
+TEST(MathOps, UnsortedSegmentSumMissingIndices) {
+  Scope root = Scope::NewRootScope();
+  Tensor A(DT_FLOAT, TensorShape({5, 4, 3}));
+  Tensor B(DT_INT32, TensorShape({5}));
+  Tensor C(DT_INT32, TensorShape({}));
+
+  AssignInputValuesRandom(A);
+  AssignInputValues(B, std::vector<int>{0, 1, 3, 4, 0});
+  AssignInputValues(C, 5);
+
+  vector<int> static_input_indexes = {2};
+  auto R = ops::UnsortedSegmentSum(root, A, B, C);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op UnsortedSegmentSum
+
+// Test op: UnsortedSegmentSum
+TEST(MathOps, UnsortedSegmentSumSingleIndex) {
+  Scope root = Scope::NewRootScope();
+  Tensor A(DT_FLOAT, TensorShape({5, 4, 3}));
+  Tensor B(DT_INT32, TensorShape({5}));
+  Tensor C(DT_INT32, TensorShape({}));
+
+  AssignInputValuesRandom(A);
+  AssignInputValues(B, std::vector<int>{0, 0, 0, 0, 0});
+  AssignInputValues(C, 1);
+
+  vector<int> static_input_indexes = {2};
+  auto R = ops::UnsortedSegmentSum(root, A, B, C);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op UnsortedSegmentSum
+
+// Test op: UnsortedSegmentSum
+TEST(MathOps, UnsortedSegmentSumTwoDims) {
+  Scope root = Scope::NewRootScope();
+  Tensor A(DT_FLOAT, TensorShape({2, 3, 3}));
+  Tensor B(DT_INT32, TensorShape({2, 3}));
+  Tensor C(DT_INT32, TensorShape({}));
+
+  AssignInputValuesRandom(A);
+  AssignInputValues(B, std::vector<int>{0, 1, 0, 1, 0, 1});
+  AssignInputValues(C, 2);
+
+  vector<int> static_input_indexes = {2};
+  auto R = ops::UnsortedSegmentSum(root, A, B, C);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op UnsortedSegmentSum
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }
