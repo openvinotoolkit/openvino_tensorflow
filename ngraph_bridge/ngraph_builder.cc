@@ -2317,17 +2317,6 @@ static Status TranslateGatherV2Op(
   std::string backend_name;
   TF_RETURN_IF_ERROR(ngraph_bridge::GetNodeBackend(op, &backend_name));
 
-  // split and check the first part only, since the node attribute contains
-  // the full backend creation string
-  auto config_map = BackendManager::GetBackendAttributeValues(backend_name);
-  if (config_map.at("ngraph_backend") != "NNPI") {
-    return errors::Internal("In translating GatherV2 op ", op->name(),
-                            " found requested backend ", backend_name,
-                            " which is unsupported");
-  }
-
-  ng::runtime::Backend* backend = BackendManager::GetBackend(backend_name);
-
   // Negative axis is supported. Accounting for that
   auto ng_input_shape = ng_input->get_shape();
   size_t ng_input_rank = ng_input_shape.size();
@@ -2343,14 +2332,24 @@ static Status TranslateGatherV2Op(
                                    "), but got ", tf_axis[0]);
   }
 
-  shared_ptr<ng::Node> ng_gather =
-      backend->get_backend_op("Gather", &ng_input, &ng_input_coords, &axis);
-  if (ng_gather == nullptr) {
-    return errors::Internal("In translating GatherV2 op ", op->name(),
-                            " backend could not return valid ngraph node");
+  auto config_map = BackendManager::GetBackendAttributeValues(backend_name);
+  if (config_map.at("ngraph_backend") != "NNPI") {
+    auto gather_op = ConstructNgNode<ng::op::Gather>(
+        op->name(), ng_input, ng_input_coords, tf_axis[0]);
+
+    SaveNgOp(ng_op_map, op->name(), gather_op);
+  } else {
+    ng::runtime::Backend* backend = BackendManager::GetBackend(backend_name);
+
+    shared_ptr<ng::Node> ng_gather =
+        backend->get_backend_op("Gather", &ng_input, &ng_input_coords, &axis);
+    if (ng_gather == nullptr) {
+      return errors::Internal("In translating GatherV2 op ", op->name(),
+                              " backend could not return valid ngraph node");
+    }
+    Builder::SetTracingInfo(op->name(), ng_gather);
+    SaveNgOp(ng_op_map, op->name(), ng_gather);
   }
-  Builder::SetTracingInfo(op->name(), ng_gather);
-  SaveNgOp(ng_op_map, op->name(), ng_gather);
 
   return Status::OK();
 }

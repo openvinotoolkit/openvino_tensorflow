@@ -286,6 +286,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       };
       confirmation_function_map["_FusedConv2D"] = SimpleConfirmationFunction();
       confirmation_function_map["GatherNd"] = SimpleConfirmationFunction();
+      confirmation_function_map["GatherV2"] = SimpleConfirmationFunction();
       confirmation_function_map["_FusedMatMul"] =
           SimpleConfirmationFunction();  // TODO accept under all conditions?
                                          // check?
@@ -663,16 +664,6 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
 
   // Right now it cannot be inside the if(!initialized) block, because it is
   // backend dependent, which might change with different sess.run()s
-  confirmation_function_map["GatherV2"] = [&current_backend](Node*,
-                                                             bool* result) {
-    // TODO: replace current_backend ->
-    // BackendManager::GetCurrentlySetBackendName()
-    auto config_map =
-        BackendManager::GetBackendAttributeValues(current_backend);
-    *result = (config_map.at("ngraph_backend") == "NNPI");
-    return Status::OK();
-  };
-
   confirmation_function_map["NonMaxSuppressionV4"] = [&current_backend](
       Node*, bool* result) {
     auto config_map =
