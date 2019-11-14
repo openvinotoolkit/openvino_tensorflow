@@ -73,5 +73,13 @@ bool ngraph_tf_are_variables_enabled() {
 #endif
 }
 
+bool ngraph_tf_is_distributed_enabled() {
+#if defined(NGRAPH_DISTRIBUTED)
+  return true;
+#else
+  return false;
+#endif
+}
+
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
