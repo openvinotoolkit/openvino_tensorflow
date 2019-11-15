@@ -1,0 +1,207 @@
+node {
+  name: "x"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "y"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "z"
+  op: "_Arg"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 2
+    }
+  }
+}
+
+node {
+  name: "A1"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 2
+          }
+          dim {
+            size: 3
+          }
+        }
+        tensor_content: "\000\000\240@\000\000\240@\000\000\240@\000\000\240@\000\000\240@\000\000\240@"
+      }
+    }
+  }
+}
+node {
+  name: "B1"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 2
+          }
+          dim {
+            size: 3
+          }
+        }
+        tensor_content: "\000\000\240@\000\000\240@\000\000\240@\000\000\240@\000\000\240@\000\000\240@"
+      }
+    }
+  }
+}
+node {
+  name: "N1_Add"
+  op: "Add"
+  input: "A1"
+  input: "B1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "N2_Add"
+  op: "Add"
+  input: "N1_Add"
+  input: "x"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "N3_Mul"
+  op: "Mul"
+  input: "N1_Add"
+  input: "y"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "N4_Sub"
+  op: "Sub"
+  input: "A1"
+  input: "z"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "N3_Mul_retval"
+  op: "_Retval"
+  input: "N3_Mul"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "N2_Add_retval"
+  op: "_Retval"
+  input: "N2_Add"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "N4_Sub_retval"
+  op: "_Retval"
+  input: "N4_Sub"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 2
+    }
+  }
+}
+library {
+}
+versions {
+  producer: 38
+}
