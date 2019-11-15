@@ -156,6 +156,18 @@ void PrintTensorAllValues(const Tensor& T1, int64 max_entries) {
   LOG(INFO) << "all tensor values" << T1.SummarizeValue(max_entries) << endl;
 }
 
+std::vector<string> ConvertToString(const std::vector<tensorflow::Tensor> T1) {
+  std::vector<string> out;
+  for (auto i = 0; i < T1.size(); i++) {
+    int total_enteries = 1;
+    for (int j = 0; j < T1[i].dims(); j++) {
+      total_enteries = total_enteries * T1[i].dim_size(j);
+    }
+    out.push_back(T1[i].SummarizeValue(total_enteries));
+  }
+  return out;
+}
+
 // Compares Tensors considering tolerance
 void Compare(Tensor& T1, Tensor& T2, float tol) {
   // Assert rank
@@ -239,6 +251,18 @@ bool Compare(float desired, float actual, float rtol, float atol) {
     // same as numpy.testing.assert_allclose
     return std::abs(desired - actual) <= (atol + rtol * std::abs(desired));
   }
+}
+
+bool Compare(std::vector<string> desired, std::vector<string> actual) {
+  if (desired.size() != actual.size()) {
+    return false;
+  }
+  for (auto i = 0; i < desired.size(); i++) {
+    if (desired[i] != actual[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 Status CreateSession(const string& graph_filename, const string& backend_name,

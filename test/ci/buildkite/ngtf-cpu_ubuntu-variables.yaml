@@ -40,7 +40,7 @@
   - wait
 
   - command: |
-      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
     
     label: ":chrome: C++ Unit Test"
@@ -66,7 +66,8 @@
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
+      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples/mnist \
+        python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
     
     label: ":python: nGraph Pytest"
@@ -91,7 +92,7 @@
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet
     label: ":bar_chart: ResNet50"
     timeout_in_minutes: 30

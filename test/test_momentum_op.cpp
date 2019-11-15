@@ -78,9 +78,10 @@ TEST(ReplaceModifier, Momentum1) {
   std::vector<tensorflow::Tensor> ng_outputs1;
   std::vector<tensorflow::Tensor> ng_outputs2;
   std::vector<tensorflow::Tensor> ng_outputs3;
-  ASSERT_OK(ng_session.Run({{var_assign, accum_assign}}, &ng_outputs1));
 
-  // Run on TF
+  ASSERT_OK(ng_session.Run({{var_assign, accum_assign}}, &ng_outputs1));
+  std::vector<string> ng_outputs1_s = ConvertToString(ng_outputs1);
+
   for (int i = 0; i < 10; i++) {
     ASSERT_OK(ng_session.Run({applymomentum_f}, &ng_outputs2));
   }
@@ -96,7 +97,9 @@ TEST(ReplaceModifier, Momentum1) {
   std::vector<tensorflow::Tensor> tf_outputs1;
   std::vector<tensorflow::Tensor> tf_outputs2;
   std::vector<tensorflow::Tensor> tf_outputs3;
+
   ASSERT_OK(tf_session.Run({{var_assign, accum_assign}}, &tf_outputs1));
+  std::vector<string> tf_outputs1_s = ConvertToString(tf_outputs1);
 
   for (int i = 0; i < 10; i++) {
     ASSERT_OK(tf_session.Run({applymomentum_f}, &tf_outputs2));
@@ -106,7 +109,7 @@ TEST(ReplaceModifier, Momentum1) {
     ASSERT_OK(tf_session.Run({applymomentum_t}, &tf_outputs3));
   }
 
-  Compare(tf_outputs1, ng_outputs1);
+  Compare(tf_outputs1_s, ng_outputs1_s);
   Compare(tf_outputs2, ng_outputs2);
   Compare(tf_outputs3, ng_outputs3);
 

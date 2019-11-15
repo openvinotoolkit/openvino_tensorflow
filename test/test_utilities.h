@@ -79,6 +79,8 @@ void PrintTensorAllValues(
     const Tensor& T1,
     int64 max_entries);  // print max_entries of elements in the Tensor
 
+std::vector<string> ConvertToString(const std::vector<tensorflow::Tensor>);
+
 // Generating Random Seed
 unsigned int GetSeedForRandomFunctions();
 
@@ -145,6 +147,8 @@ bool Compare(T arg0, T arg1, T rtol, T atol) {
 
 template <>
 bool Compare(float arg0, float arg1, float rtol, float atol);
+
+bool Compare(std::vector<string> arg0, std::vector<string> arg1);
 
 // Compares two Tensors
 // Right now only tensors contain float values will modify the tolerance

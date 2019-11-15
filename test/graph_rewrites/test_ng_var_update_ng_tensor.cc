@@ -115,7 +115,6 @@ TEST_F(NGVarUpdateNGTensorOpTest, KernelTest) {
   ng_t->read(dst_ptr, 0, output_tensor.TotalBytes());
 
   Compare(output_tensor, input_tf_tensor, 0);
-
   UnsetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
   RestoreEnv(env_map);
 }
