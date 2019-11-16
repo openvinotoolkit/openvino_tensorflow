@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-licenses(["notice"])  
+licenses(["notice"])
 exports_files(["LICENSE"])
 
 load("@ngraph_bridge//:cxx_abi_option.bzl", "CXX_ABI")
@@ -22,7 +22,8 @@ cc_library(
     name = "ngraph_headers",
     hdrs = glob([
         "src/ngraph/**/*.hpp",
-        "src/ngraph/*.hpp"
+        "src/ngraph/*.hpp",
+        "src/ngraph/**/*.h"
     ]),
     visibility = ["//visibility:public"],
 )
@@ -37,26 +38,7 @@ cc_library(
         "src/ngraph/descriptor/layout/*.cpp",
         "src/ngraph/op/*.cpp",
         "src/ngraph/op/fused/*.cpp",
-        "src/ngraph/op/experimental/batch_mat_mul.cpp",
-        "src/ngraph/op/experimental/compiled_kernel.cpp",
-        "src/ngraph/op/experimental/dyn_broadcast.cpp",
-        "src/ngraph/op/experimental/dyn_replace_slice.cpp",
-        "src/ngraph/op/experimental/dyn_pad.cpp",
-        "src/ngraph/op/experimental/dyn_reshape.cpp",
-        "src/ngraph/op/experimental/dyn_slice.cpp",
-        "src/ngraph/op/experimental/generate_mask.cpp",
-        "src/ngraph/op/experimental/quantized_avg_pool.cpp",
-        "src/ngraph/op/experimental/quantized_concat.cpp",
-        "src/ngraph/op/experimental/quantized_conv.cpp",
-        "src/ngraph/op/experimental/quantized_conv_bias.cpp",
-        "src/ngraph/op/experimental/quantized_conv_relu.cpp",
-        "src/ngraph/op/experimental/quantized_max_pool.cpp",
-        "src/ngraph/op/experimental/shape_of.cpp",
-        "src/ngraph/op/experimental/range.cpp",
-        "src/ngraph/op/experimental/quantized_dot.cpp",
-        "src/ngraph/op/experimental/quantized_dot_bias.cpp",
-        "src/ngraph/op/experimental/tile.cpp",
-        "src/ngraph/op/experimental/transpose.cpp",
+        "src/ngraph/op/experimental/*.cpp",
         "src/ngraph/op/util/*.cpp",
         "src/ngraph/pattern/*.cpp",
         "src/ngraph/pattern/*.hpp",
@@ -84,7 +66,7 @@ cc_library(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"v0.25.1-rc.8\\"',
+        '-D NGRAPH_VERSION=\\"v0.27.0-rc.0\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
         '-D NGRAPH_STATIC_LIB_ENABLE',
@@ -127,7 +109,7 @@ cc_library(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"v0.25.1-rc.8\\"',
+        '-D NGRAPH_VERSION=\\"v0.27.0-rc.0\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
     ] + CXX_ABI,
@@ -139,6 +121,9 @@ cc_library(
     visibility = ["//visibility:public"],
     alwayslink = 1,
 )
+# TODO: If we update to mkl_dnn v1.0 in future, we should include
+# the source file "src/ngraph/runtime/cpu/pass/cpu_mkldnn_primitive_build.cpp"
+# Currently we use legacy mkl_dnn, NGRAPH_USE_LEGACY_MKLDNN is set to TRUE by default
 
 cc_library(
     name = 'cpu_backend',
@@ -198,12 +183,10 @@ cc_library(
         "src/ngraph/runtime/cpu/builder/reduce_function.cpp",
         "src/ngraph/runtime/cpu/builder/replace_slice.cpp",
         "src/ngraph/runtime/cpu/builder/quantization.cpp",
-        "src/ngraph/runtime/cpu/builder/quantized_avg_pool.cpp",
         "src/ngraph/runtime/cpu/builder/quantized_conv.cpp",
         "src/ngraph/runtime/cpu/builder/quantized_concat.cpp",
         "src/ngraph/runtime/cpu/builder/quantized_dot.cpp",
         "src/ngraph/runtime/cpu/builder/quantized_matmul.cpp",
-        "src/ngraph/runtime/cpu/builder/quantized_max_pool.cpp",
         "src/ngraph/runtime/cpu/builder/reshape.cpp",
         "src/ngraph/runtime/cpu/builder/reverse.cpp",
         "src/ngraph/runtime/cpu/builder/reverse_sequence.cpp",
@@ -220,6 +203,8 @@ cc_library(
         "src/ngraph/runtime/cpu/builder/topk.cpp",
         "src/ngraph/runtime/cpu/builder/tile.cpp",
         "src/ngraph/runtime/cpu/builder/update_slice.cpp",
+        "src/ngraph/runtime/cpu/builder/random_uniform.cpp",
+        "src/ngraph/runtime/cpu/builder/gelu.cpp",
         "src/ngraph/runtime/cpu/kernel/pad.cpp",
         "src/ngraph/runtime/cpu/kernel/reduce_max.cpp",
         "src/ngraph/runtime/cpu/kernel/reduce_sum.cpp",
@@ -245,6 +230,7 @@ cc_library(
         "src/ngraph/runtime/cpu/op/quantized_matmul.cpp",
         "src/ngraph/runtime/cpu/op/rnn.cpp",
         "src/ngraph/runtime/cpu/op/sigmoid_mul.cpp",
+        "src/ngraph/runtime/cpu/op/gelu_backprop.cpp",
         "src/ngraph/runtime/cpu/op/update_slice.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_assignment.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_collapse_dims.cpp",
@@ -255,12 +241,13 @@ cc_library(
         "src/ngraph/runtime/cpu/pass/cpu_mat_fusion.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_memory_assignment.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_memory_optimization.cpp",
-        "src/ngraph/runtime/cpu/pass/cpu_mkldnn_primitive_build.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_rnn_fusion.cpp",
         "src/ngraph/runtime/cpu/pass/cpu_workspace_insertion.cpp",
         "src/ngraph/runtime/cpu/ngraph_version.cpp",
-        "src/ngraph/state/rng_state.cpp", 
+        "src/ngraph/state/rng_state.cpp",
+        "src/ngraph/state/bernoulli_rng_state.cpp",
+        "src/ngraph/state/uniform_rng_state.cpp",
     ]),
     deps = [
         ":ngraph_headers",
@@ -278,7 +265,7 @@ cc_library(
         "-fstack-protector-all",
         '-D SHARED_LIB_PREFIX=\\"lib\\"',
         '-D SHARED_LIB_SUFFIX=\\".so\\"',
-        '-D NGRAPH_VERSION=\\"0.25.1-rc.7\\"',
+        '-D NGRAPH_VERSION=\\"v0.27.0-rc.0\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
         '-D NGRAPH_CPU_STATIC_LIB_ENABLE',

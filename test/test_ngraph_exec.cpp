@@ -202,10 +202,10 @@ TEST_F(NGraphExecTest, Axpy) {
 
   auto t_x = backend->create_tensor(ng::element::f32, ng_shape_x);
   float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
-  t_x->write(&v_x, 0, sizeof(v_x));
+  t_x->write(&v_x, sizeof(v_x));
 
   auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
-  t_y->write(&v_x, 0, sizeof(v_x));
+  t_y->write(&v_x, sizeof(v_x));
 
   // Allocate tensor for the result(s)
   vector<shared_ptr<ng::runtime::Tensor>> outputs;
@@ -261,10 +261,10 @@ TEST_F(NGraphExecTest, Axpy8bit) {
 
   auto t_x = backend->create_tensor(ng::element::i8, ng_shape_x);
   int8 v_x[2][2] = {{1, 1}, {1, 1}};
-  t_x->write(&v_x, 0, sizeof(v_x));
+  t_x->write(&v_x, sizeof(v_x));
 
   auto t_y = backend->create_tensor(ng::element::i8, ng_shape_y);
-  t_y->write(&v_x, 0, sizeof(v_x));
+  t_y->write(&v_x, sizeof(v_x));
 
   // Allocate tensor for the result(s)
   vector<shared_ptr<ng::runtime::Tensor>> outputs;
@@ -369,7 +369,7 @@ TEST_F(NGraphExecTest, MixedTensors) {
     // Convert to tf tensor
     Tensor output_tensor(tf_dt, tf_shape);
     void* dst_ptr = DMAHelper::base(&output_tensor);
-    ng_outputs[i]->read(dst_ptr, 0, output_tensor.TotalBytes());
+    ng_outputs[i]->read(dst_ptr, output_tensor.TotalBytes());
     actual_outputs.push_back(output_tensor);
   }
 
@@ -484,7 +484,7 @@ TEST_F(NGraphExecTest, MixedTensorsPipelined) {
       // Convert to tf tensor
       Tensor output_tensor(tf_dt, tf_shape);
       void* dst_ptr = DMAHelper::base(&output_tensor);
-      ng_outputs[i]->read(dst_ptr, 0, output_tensor.TotalBytes());
+      ng_outputs[i]->read(dst_ptr, output_tensor.TotalBytes());
       actual_outputs.push_back(output_tensor);
     }
 

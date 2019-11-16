@@ -55,11 +55,11 @@ tf_workspace(path_prefix = "", tf_repo_name = "org_tensorflow")
 http_archive(
     name = "ngraph",
     build_file = "//:bazel/ngraph.BUILD",
-    sha256 = "4cd939dcf07544dc71f46f422d82a175b210fe7b21417fa67436168d5c40c9dc",
-    strip_prefix = "ngraph-0.25.1-rc.8",
+    sha256 = "f1abe7662a1f60f99ad3b96d608c14ffdabb2aa24c1a14114243ba6aa68018d0",
+    strip_prefix = "ngraph-0.27.0-rc.0",
     urls = [
-        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.8.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.25.1-rc.8.tar.gz"
+        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.27.0-rc.0.tar.gz",
+        "https://github.com/NervanaSystems/ngraph/archive/v0.27.0-rc.0.tar.gz"
     ],
 )
 
@@ -88,11 +88,11 @@ http_archive(
 http_archive(
         name = "mkl_dnn",
         build_file = "//:bazel/mkl_dnn.BUILD",
-        sha256 = "1ae0e8a1a3df58deadc08ca0a01f8d3720600b26ca9e53685493e8e8250243b2",
-        strip_prefix = "mkl-dnn-0.20.2",
+        sha256 = "ed56652dd237deb86ee9bf102c18de5f2625c059e5ab1d7512c8dc01e316b694",
+        strip_prefix = "mkl-dnn-0.21.2",
         urls = [
-            "http://mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.20.2.tar.gz",
-            "https://github.com/intel/mkl-dnn/archive/v0.20.2.tar.gz",
+            "http://mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.21.2.tar.gz",
+            "https://github.com/intel/mkl-dnn/archive/v0.21.2.tar.gz",
         ],
     )
 

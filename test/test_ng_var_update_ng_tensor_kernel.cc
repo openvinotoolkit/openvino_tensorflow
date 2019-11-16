@@ -112,7 +112,7 @@ TEST_F(NGVarUpdateNGTensorKernelTest, KernelTest) {
   shared_ptr<ngraph::runtime::Tensor> ng_t = var->ng_tensor();
   Tensor output_tensor(DT_FLOAT, TensorShape({2}));
   void* dst_ptr = DMAHelper::base(&output_tensor);
-  ng_t->read(dst_ptr, 0, output_tensor.TotalBytes());
+  ng_t->read(dst_ptr, output_tensor.TotalBytes());
 
   Compare(output_tensor, input_tf_tensor, 0);
 

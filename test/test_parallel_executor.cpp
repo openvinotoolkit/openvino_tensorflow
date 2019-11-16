@@ -216,7 +216,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
   ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
 
   get<1>(io_tensors)[0]->write(
-      &x_flat.data()[0], 0,
+      &x_flat.data()[0],
       get<1>(io_tensors)[0]->get_element_count() * ng_element_type.size());
 
   // Now Fill in the tensor - Y
@@ -228,7 +228,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
   ASSERT_OK(TFDataTypeToNGraphElementType(y.dtype(), &ng_element_type));
 
   get<1>(io_tensors)[1]->write(
-      &y_flat.data()[0], 0,
+      &y_flat.data()[0],
       get<1>(io_tensors)[1]->get_element_count() * ng_element_type.size());
 
   // Output
@@ -245,7 +245,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
   // Convert to tf tensor
   Tensor tf_output_tensor(DT_FLOAT, TensorShape({2, 3}));
   void* dst_ptr = DMAHelper::base(&tf_output_tensor);
-  ng_outputs[0]->read(dst_ptr, 0, tf_output_tensor.TotalBytes());
+  ng_outputs[0]->read(dst_ptr, tf_output_tensor.TotalBytes());
 
   // And validate
   // z = a * x + y
@@ -300,7 +300,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
   ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
 
   get<1>(io_tensors)[0]->write(
-      &x_flat.data()[0], 0,
+      &x_flat.data()[0],
       get<1>(io_tensors)[0]->get_element_count() * ng_element_type.size());
 
   // Now Fill in the tensor - Y
@@ -312,7 +312,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
   ASSERT_OK(TFDataTypeToNGraphElementType(y.dtype(), &ng_element_type));
 
   get<1>(io_tensors)[1]->write(
-      &y_flat.data()[0], 0,
+      &y_flat.data()[0],
       get<1>(io_tensors)[1]->get_element_count() * ng_element_type.size());
 
   // Output
@@ -329,7 +329,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
   // Convert to tf tensor
   Tensor tf_output_tensor(DT_INT8, TensorShape({2, 2}));
   void* dst_ptr = DMAHelper::base(&tf_output_tensor);
-  ng_outputs[0]->read(dst_ptr, 0, tf_output_tensor.TotalBytes());
+  ng_outputs[0]->read(dst_ptr, tf_output_tensor.TotalBytes());
 
   // And validate
   // z = a * x + y
@@ -387,7 +387,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
     ng::element::Type ng_element_type;
     ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
     get<1>(io_tensors)[0]->write(
-        &x_flat.data()[0], 0,
+        &x_flat.data()[0],
         get<1>(io_tensors)[0]->get_element_count() * ng_element_type.size());
 
     // Now Fill in the tensor - Y
@@ -400,7 +400,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
     ASSERT_OK(
         TFDataTypeToNGraphElementType(y_thread.dtype(), &ng_element_type));
     get<1>(io_tensors)[1]->write(
-        &y_flat.data()[0], 0,
+        &y_flat.data()[0],
         get<1>(io_tensors)[1]->get_element_count() * ng_element_type.size());
 
     // Output
@@ -415,7 +415,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
     // Convert to tf tensor
     Tensor tf_output_tensor(DT_INT8, TensorShape({2, 2}));
     void* dst_ptr = DMAHelper::base(&tf_output_tensor);
-    ng_outputs[0]->read(dst_ptr, 0, tf_output_tensor.TotalBytes());
+    ng_outputs[0]->read(dst_ptr, tf_output_tensor.TotalBytes());
 
     // And validate
     // z = a * x + y
@@ -476,7 +476,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
     // Copy the tensors from TensorFlow Tensor to nGraph Tensor
     // First X
     get<1>(io_tensors)[0]->write(
-        &x_flat.data()[0], 0,
+        &x_flat.data()[0],
         get<1>(io_tensors)[0]->get_element_count() * ng_element_type.size());
 
     // Fill in the tensor - Y
@@ -489,7 +489,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
     // Copy the tensors from TensorFlow Tensor to nGraph Tensor
     // Next Y
     get<1>(io_tensors)[1]->write(
-        &y_flat.data()[0], 0,
+        &y_flat.data()[0],
         get<1>(io_tensors)[1]->get_element_count() * ng_element_type.size());
 
     // Output
@@ -506,7 +506,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
     // Convert to tf tensor
     Tensor tf_output_tensor(DT_FLOAT, TensorShape({2, 3}));
     void* dst_ptr = DMAHelper::base(&tf_output_tensor);
-    ng_outputs[0]->read(dst_ptr, 0, tf_output_tensor.TotalBytes());
+    ng_outputs[0]->read(dst_ptr, tf_output_tensor.TotalBytes());
 
     // And validate
     // z = a * x + y

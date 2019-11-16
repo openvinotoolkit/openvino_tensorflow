@@ -377,7 +377,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     std::shared_ptr<ngraph::runtime::Tensor> result;
     if (ng_backend_type != "CPU") {
       result = backend->create_tensor(ng_et, ng_shape);
-      result->write(src_ptr, 0, result->get_element_count() * ng_et.size());
+      result->write(src_ptr, result->get_element_count() * ng_et.size());
     } else {
       result = backend->create_tensor(ng_et, ng_shape, src_ptr);
     }
@@ -438,7 +438,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     // Convert to tf tensor
     Tensor output_tensor(expected_output_datatypes_[i], tf_op_shapes[i]);
     void* dst_ptr = DMAHelper::base(&output_tensor);
-    ng_op_tensors[i]->read(dst_ptr, 0, output_tensor.TotalBytes());
+    ng_op_tensors[i]->read(dst_ptr, output_tensor.TotalBytes());
     ngraph_outputs.push_back(output_tensor);
     NGRAPH_VLOG(5) << " NGRAPH op " << i << ngraph_outputs[i].DebugString();
   }

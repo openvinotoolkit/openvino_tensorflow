@@ -432,7 +432,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
                   << "[PREFETCH] INPUT tensor being written by Prefetch: "
                   << " Value: " << buffer_element.value[i].DebugString();
               ng_io_tensors.Inputs[i]->write(
-                  current_src_ptr, 0,
+                  current_src_ptr,
                   ng_io_tensors.Inputs[i]->get_element_count() *
                       ng_element_type.size());
             } catch (const std::exception& exp) {

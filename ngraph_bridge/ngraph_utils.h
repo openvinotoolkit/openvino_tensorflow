@@ -180,7 +180,7 @@ template <typename T>
 T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
                       size_t element_offset = 0) {
   T result;
-  t->read(&result, element_offset * sizeof(T), sizeof(T));
+  t->read(&result, sizeof(T));
   return result;
 }
 

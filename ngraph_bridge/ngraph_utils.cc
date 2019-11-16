@@ -115,8 +115,8 @@ void ReadNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
                   Tensor* tf_tensor) {
   ngraph::Event event_sync_ng_tf_tensors("Tensor Read D2H", "", "");
   void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
-  ng_tensor->read(tf_src_ptr, 0, ng_tensor->get_element_count() *
-                                     ng_tensor->get_element_type().size());
+  ng_tensor->read(tf_src_ptr, ng_tensor->get_element_count() *
+                                  ng_tensor->get_element_type().size());
   event_sync_ng_tf_tensors.Stop();
   ngraph::Event::write_trace(event_sync_ng_tf_tensors);
 }
@@ -126,8 +126,8 @@ void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
                    Tensor* tf_tensor) {
   ngraph::Event event_sync_ng_tf_tensors("Tensor Write H2D", "", "");
   void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
-  ng_tensor->write(tf_src_ptr, 0, ng_tensor->get_element_count() *
-                                      ng_tensor->get_element_type().size());
+  ng_tensor->write(tf_src_ptr, ng_tensor->get_element_count() *
+                                   ng_tensor->get_element_type().size());
   event_sync_ng_tf_tensors.Stop();
   ngraph::Event::write_trace(event_sync_ng_tf_tensors);
 }

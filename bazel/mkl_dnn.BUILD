@@ -46,7 +46,7 @@ template_rule(
     out = "include/mkldnn_version.h",
     substitutions = {
         "@MKLDNN_VERSION_MAJOR@": "0",
-        "@MKLDNN_VERSION_MINOR@": "20",
+        "@MKLDNN_VERSION_MINOR@": "21",
         "@MKLDNN_VERSION_PATCH@": "2",
         "@MKLDNN_VERSION_HASH@": "N/A",
     },
@@ -80,10 +80,10 @@ cc_library(
         "-Wall",
         "-Wno-unknown-pragmas",
         "-fvisibility=internal",
-        "-Wformat", 
+        "-Wformat",
         "-Wformat-security",
         "-Wmissing-field-initializers",
-        "-Wno-strict-overflow", 
+        "-Wno-strict-overflow",
         "-std=c++11",
         "-D_FORTIFY_SOURCE=2",
         "-fopenmp",
@@ -156,4 +156,3 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
 )
-
