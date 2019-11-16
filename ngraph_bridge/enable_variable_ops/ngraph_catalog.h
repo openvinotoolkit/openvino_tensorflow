@@ -73,9 +73,7 @@ class NGraphCatalog {
   // Value : 3 element tuple
   //  string : NGraphAssign‘s variable shared_name
   //  bool : NGraphAssign‘s copy_to_tf attribute ‘s value
-  //  bool : NGraphAssign‘s is_tf_just_looking_
-  static unordered_map<string, tuple<string, bool, bool>>
-      encap_output_info_map_;
+  static unordered_map<string, tuple<string, bool>> encap_output_info_map_;
 
  public:
   // Utility to create key to query the maps
@@ -118,22 +116,19 @@ class NGraphCatalog {
 
   // Functions for EncapOutputInfo Map
   static void AddToEncapOutputInfoMap(const string& key,
-                                      const tuple<string, bool, bool>& val);
+                                      const tuple<string, bool>& val);
   static void AddToEncapOutputInfoMap(const string& key,
                                       const string& shared_name,
-                                      const bool& copy_to_tf,
-                                      const bool& is_tf_just_looking);
+                                      const bool& copy_to_tf);
   static bool ExistsInEncapOutputInfoMap(const string& key);
   static bool ExistsInEncapOutputInfoMap(const int& graphid,
                                          const string& node_name,
                                          const int& input_index);
-  static const tuple<string, bool, bool>& GetInfoFromEncapOutputInfoMap(
+  static const tuple<string, bool>& GetInfoFromEncapOutputInfoMap(
       const string& key);
   static const string& GetVariableSharedNameFromEncapOutputInfoMap(
       const string& key);
   static const bool& GetCopyToTFFromEncapOutputInfoMap(const string& key);
-  static const bool& GetIsTFJustLookingFromEncapOutputInfoMap(
-      const string& key);
   static void DeleteFromEncapOutputInfoMap(const string& key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();

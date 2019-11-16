@@ -107,7 +107,7 @@ class NGraphExecTest : public ::testing::Test {
       }
     }
 
-    io_tensors = {inputs, outputs};
+    io_tensors = std::make_tuple(inputs, outputs);
     return Status::OK();
   }
 

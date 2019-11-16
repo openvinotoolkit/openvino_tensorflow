@@ -1,5 +1,5 @@
 node {
-  name: "Variable_2/peek/tf_just_looking/_2"
+  name: "Variable_2/peek/_2"
   op: "NGraphVariable"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
@@ -16,12 +16,6 @@ node {
   }
   attr {
     key: "just_looking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "is_tf_just_looking"
     value {
       b: true
     }
@@ -47,7 +41,7 @@ node {
   }
 }
 node {
-  name: "Variable_1/peek/tf_just_looking/_3"
+  name: "Variable_1/peek/_3"
   op: "NGraphVariable"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
@@ -64,12 +58,6 @@ node {
   }
   attr {
     key: "just_looking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "is_tf_just_looking"
     value {
       b: true
     }
@@ -95,7 +83,7 @@ node {
   }
 }
 node {
-  name: "Variable/peek/tf_just_looking/_4"
+  name: "Variable/peek/_4"
   op: "NGraphVariable"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
@@ -112,12 +100,6 @@ node {
   }
   attr {
     key: "just_looking"
-    value {
-      b: true
-    }
-  }
-  attr {
-    key: "is_tf_just_looking"
     value {
       b: true
     }
@@ -145,9 +127,9 @@ node {
 node {
   name: "ngraph_cluster_1"
   op: "NGraphEncapsulate"
-  input: "Variable_2/peek/tf_just_looking/_2"
-  input: "Variable_1/peek/tf_just_looking/_3"
-  input: "Variable/peek/tf_just_looking/_4"
+  input: "Variable_2/peek/_2"
+  input: "Variable_1/peek/_3"
+  input: "Variable/peek/_4"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
     key: "Targuments"

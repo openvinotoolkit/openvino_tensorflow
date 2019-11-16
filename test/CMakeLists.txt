@@ -71,6 +71,7 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC graph_rewrites/remove_ngraphassigns.cc)
     list(APPEND SRC graph_rewrites/test_replace_optimizer.cpp)
     list(APPEND SRC tf_fake_input.cc)
+    list(APPEND SRC test_ng_var_update_ng_tensor_kernel.cc)
     list(APPEND SRC graph_rewrites/test_ng_var_update_ng_tensor.cc)
 endif()
 

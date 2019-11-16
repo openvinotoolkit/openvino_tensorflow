@@ -41,9 +41,7 @@ namespace ngraph_bridge {
 class NGraphVar : public ResourceBase {
  public:
   explicit NGraphVar(DataType dtype, TensorShape shape, string BackendName)
-      : tf_tensor_(dtype, shape),
-        ng_backend_name_(BackendName),
-        sync_ng_tensor_(false) {
+      : tf_tensor_(dtype, shape), ng_backend_name_(BackendName) {
     // TF datatype to nGraph element type
     ng::element::Type ng_element_type;
     TFDataTypeToNGraphElementType(dtype, &ng_element_type);
@@ -108,11 +106,6 @@ class NGraphVar : public ResourceBase {
                            tf_tensor_.shape().DebugString());
   }
 
-  bool need_sync_ng_tensor() { return sync_ng_tensor_; }
-  void set_sync_ng_tensor(bool sync_ng_tensor) {
-    sync_ng_tensor_ = sync_ng_tensor;
-  }
-
   // Copies the NG Tensor to TF Tensor for this variable
   // Involves a copy from device to host
   // Returns the number of tensor copies made (0 or 1)
@@ -133,16 +126,6 @@ class NGraphVar : public ResourceBase {
     }
     WriteNGTensor(ng_tensor_, &tf_tensor_);
     return 1;
-  }
-
-  // If the NGTensor is behind TF Tensor (ie if NGTensor is out-of-date)
-  // It updates ng_tensor by copy_tf_to_ng
-  // Returns the number of tensor copies made (0 or 1)
-  int sync_ng_tensor() {
-    if (sync_ng_tensor_) {
-      return copy_tf_to_ng();
-    }
-    return 0;
   }
 
   // updates the NGTensor with the new value
@@ -173,8 +156,6 @@ class NGraphVar : public ResourceBase {
   shared_ptr<ngraph::runtime::Tensor> ng_tensor_;
   string ng_backend_name_;
   bool ng_tf_share_buffer_;
-  // sync from tf to ng
-  bool sync_ng_tensor_;
   ~NGraphVar() override {
     // Release the backend
     NGRAPH_VLOG(2) << "~NGraphVar::ReleaseBackend";
