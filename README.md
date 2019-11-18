@@ -88,7 +88,7 @@ Once TensorFlow's dependencies are installed, clone the `ngraph-bridge` repo:
 
         git clone https://github.com/tensorflow/ngraph-bridge.git
         cd ngraph-bridge
-        git checkout v0.21.0
+        git checkout v0.21.0-rc0
 
 Run the following Python script to build TensorFlow, nGraph, and the bridge. Use Python 3.5:
 
