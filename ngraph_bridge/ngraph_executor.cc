@@ -421,7 +421,8 @@ Status NGraphExecutor::GetNgFunction(
   try {
     ng_function = ngraph::deserialize(it->second);
   } catch (const std::exception& exp) {
-    return errors::Internal("Failed to deserialize ngraph function");
+    return errors::Internal("Failed to deserialize ngraph function", exp.what(),
+                            "\n");
   }
   return Status::OK();
 }
