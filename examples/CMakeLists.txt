@@ -21,3 +21,9 @@ execute_process(
         ${CMAKE_CURRENT_SOURCE_DIR}/mnist/mnist_deep_simplified.py
         ${CMAKE_CURRENT_BINARY_DIR}/mnist/mnist_deep_simplified.py
 )
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/axpy_pipelined.py
+        ${CMAKE_CURRENT_BINARY_DIR}/axpy_pipelined.py
+)
