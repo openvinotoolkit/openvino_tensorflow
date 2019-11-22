@@ -78,7 +78,7 @@ class NGraphVar : public ResourceBase {
     // 1 implies buffer sharing is enabled
     status = GetNgraphVarBufferSharingState(buffer_sharing_state_env);
     if (!status.ok()) {
-      throw std::runtime_error({"Got Exception " + status.error_message()});
+      throw std::runtime_error("Got Exception " + status.error_message());
     }
 
     ng_tf_share_buffer_ = (buffer_sharing_state_env == -1)

@@ -151,6 +151,15 @@ void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
   // Create the Executor object
   m_parallel_executor = move(unique_ptr<NGraphExecutor>(new NGraphExecutor(
       s_instance_id, cluster_id, graph_id, encap_subgraph, backend_name)));
+
+  auto tensor_manager = m_parallel_executor->GetTensorManager();
+  OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
+              errors::Internal(
+                  "Num of inputs from TensorManager and Ctx do not match"));
+  OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() == ctx->num_outputs(),
+              errors::Internal(
+                  "Num of outputs from TensorManager and Ctx do not match"));
+
   s_instance_id++;
 
   // Get the optional attributes
@@ -419,6 +428,32 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   bool cache_hit;
   OP_REQUIRES_OK(ctx, m_parallel_executor->GetNgExecutable(tf_input_tensors,
                                                            ng_exec, cache_hit));
+
+  auto tensor_manager = m_parallel_executor->GetTensorManager();
+  OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
+              errors::Internal("Num of inputs from TensorManager ",
+                               tensor_manager->GetNumberOfInputs(),
+                               " and Ctx->num_inputs() ", ctx->num_inputs(),
+                               " do not match"));
+  OP_REQUIRES(ctx,
+              tensor_manager->GetNumberOfInputs() == tf_input_tensors.size(),
+              errors::Internal("Num of inputs from TensorManager ",
+                               tensor_manager->GetNumberOfInputs(),
+                               " and num of "
+                               "input tensors from ctxt ",
+                               tf_input_tensors.size(), " do not match"));
+
+  OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() == ctx->num_outputs(),
+              errors::Internal("Num of outputs from TensorManager ",
+                               tensor_manager->GetNumberOfOutputs(),
+                               " and Ctx->num_outputs()", ctx->num_outputs(),
+                               " do not match"));
+  OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() ==
+                       ng_exec->get_results().size(),
+              errors::Internal("Num of outputs from TensorManager ",
+                               tensor_manager->GetNumberOfOutputs(),
+                               "and number of exec outputs ",
+                               ng_exec->get_results().size(), " do not match"));
 
   NGRAPH_VLOG(2) << "CACHE HIT: " << PrintBool(cache_hit) << endl;
   NGRAPH_VLOG(2) << " Step_ID: " << step_id;

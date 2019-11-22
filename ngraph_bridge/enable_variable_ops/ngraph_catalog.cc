@@ -87,8 +87,7 @@ bool NGraphCatalog::EncapOutputIndexNeedsCopy(const int& graphid,
     auto op_copy_indexes = itr->second;
     return (op_copy_indexes.find(index) != op_copy_indexes.end());
   }
-  // Should not reach here
-  return true;
+  return false;
 }
 
 void NGraphCatalog::DeleteFromEncapOutputCopyIndexesMap(

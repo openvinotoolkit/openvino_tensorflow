@@ -123,7 +123,7 @@ class NGraphCatalog {
   static bool ExistsInEncapOutputInfoMap(const string& key);
   static bool ExistsInEncapOutputInfoMap(const int& graphid,
                                          const string& node_name,
-                                         const int& input_index);
+                                         const int& output_index);
   static const tuple<string, bool>& GetInfoFromEncapOutputInfoMap(
       const string& key);
   static const string& GetVariableSharedNameFromEncapOutputInfoMap(

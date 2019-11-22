@@ -120,5 +120,25 @@ REGISTER_OP("NGraphVariableUpdateNGTensor")
         "nGraph variable update NG tensor op. For updating the NG Tensor when "
         "TF tensor is modified by a TF variable modifier op");
 
+// // ------------------------------------------------------------------
+// // The NGraphPrefetchDataset below is defined exactly the same as
+// // TesorFlow PrefetchDataset but the implementation is changed in the sense
+// // that the tensors are copied to the device if needed and possible
+// // Since the TensorFlow op doesn't hav any way to override this behavior,
+// // we have taken the "editor inheritence" approach i.e., copy->paste->modify
+REGISTER_OP("NGraphPrefetchDataset")
+    .Input("input_dataset: variant")
+    .Input("buffer_size: int64")
+    .Output("handle: variant")
+    .Attr("output_types: list(type) >= 1")
+    .Attr("output_shapes: list(shape) >= 1")
+    .Attr("slack_period: int = 0")
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+      shape_inference::ShapeHandle unused;
+      // buffer_size should be a scalar.
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &unused));
+      return shape_inference::ScalarShape(c);
+    });
+
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
