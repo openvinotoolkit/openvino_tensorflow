@@ -7,8 +7,8 @@ import ngraph_bridge
 import numpy as np
 from common import NgraphTest
 
-# This test needs access to mnist_deep_simplified.py script
-# present in ngraph-bridge/examples/mnist
+# This test needs access to axpy_pipelined.py script
+# present in ngraph-bridge/examples
 # so this path needs to be added to python path when running this
 
 # For eg. when running the test from ngraph-bridge/build_cmake/test/python
