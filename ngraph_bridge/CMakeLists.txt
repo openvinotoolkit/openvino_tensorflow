@@ -51,6 +51,7 @@ set(SRC
    ngraph_partial_shapes.cc
    ngraph_rewrite_for_tracking.cc
    ngraph_rewrite_pass.cc
+   ngraph_tensor_manager.cc
    ngraph_tracked_variable.cc
    ngraph_utils.cc
    tf_graphcycles.cc
