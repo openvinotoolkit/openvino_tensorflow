@@ -30,4 +30,3 @@ class TestAxpyPipelined(NgraphTest):
             assert np.allclose(
                 output_array[i - 1], expected_output_array[i - 1],
                 atol=1e-3), "Output  and expected output values don't match"
-                
