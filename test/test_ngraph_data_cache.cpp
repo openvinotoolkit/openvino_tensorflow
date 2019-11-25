@@ -45,7 +45,7 @@ class NGraphDataCacheTest : public ::testing::Test {
   int destroy_count = 0;
   bool item_evicted = false;
 
-  std::pair<Status, int> CreateItem() {
+  std::pair<Status, int> CreateItem(std::string abc) {
     create_count++;
     if (barrier_->Block()) {
       delete barrier_;
@@ -53,11 +53,11 @@ class NGraphDataCacheTest : public ::testing::Test {
     return std::make_pair(Status::OK(), 3);
   }
 
-  std::pair<Status, int> CreateItemNoBarrier() {
+  std::pair<Status, int> CreateItemNoBarrier(std::string abc) {
     return std::make_pair(Status::OK(), 3);
   }
 
-  std::pair<Status, int> CreateItemReturnError() {
+  std::pair<Status, int> CreateItemReturnError(std::string abc) {
     return std::make_pair(errors::Internal("Failed to create item"), 0);
   }
   void DestroyItem(int i) {
@@ -69,18 +69,24 @@ class NGraphDataCacheTest : public ::testing::Test {
 // Tests LooUpOrCreate(), in multithreading environment
 TEST_F(NGraphDataCacheTest, SameKeyMultiThread) {
   auto worker = [&](size_t thread_id) {
-    auto create_item = std::bind(
-        &NGraphDataCacheTest_SameKeyMultiThread_Test::CreateItem, this);
+    auto create_item =
+        std::bind(&NGraphDataCacheTest_SameKeyMultiThread_Test::CreateItem,
+                  this, std::placeholders::_1);
     auto create_item_ret_err = std::bind(
         &NGraphDataCacheTest_SameKeyMultiThread_Test::CreateItemReturnError,
-        this);
-    ASSERT_OK((m_ng_data_cache.LookUpOrCreate("abc", create_item)).first);
-    ASSERT_OK(m_ng_data_cache.LookUpOrCreate("abc", create_item).first);
+        this, std::placeholders::_1);
+    bool cache_hit;
+    ASSERT_OK(
+        (m_ng_data_cache.LookUpOrCreate("abc", create_item, cache_hit)).first);
+    ASSERT_OK(
+        m_ng_data_cache.LookUpOrCreate("abc", create_item, cache_hit).first);
     ASSERT_NOT_OK(
-        m_ng_data_cache.LookUpOrCreate("def", create_item_ret_err).first);
-    ASSERT_EQ(m_ng_data_cache.LookUpOrCreate("def", create_item_ret_err)
-                  .first.error_message(),
-              "Failed to create item");
+        m_ng_data_cache.LookUpOrCreate("def", create_item_ret_err, cache_hit)
+            .first);
+    ASSERT_EQ(
+        m_ng_data_cache.LookUpOrCreate("def", create_item_ret_err, cache_hit)
+            .first.error_message(),
+        "Failed to create item");
 
   };
 
@@ -98,34 +104,43 @@ TEST_F(NGraphDataCacheTest, SameKeyMultiThread) {
 
 // Testing to ensure destoy called back is called, when cache is full.
 TEST_F(NGraphDataCacheTest, TestItemEviction) {
-  auto create_item = std::bind(
-      &NGraphDataCacheTest_TestItemEviction_Test::CreateItemNoBarrier, this);
+  auto create_item =
+      std::bind(&NGraphDataCacheTest_TestItemEviction_Test::CreateItemNoBarrier,
+                this, std::placeholders::_1);
   auto destroy_item =
       std::bind(&NGraphDataCacheTest_TestItemEviction_Test::DestroyItem, this,
                 std::placeholders::_1);
-
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("abc", create_item).first);
+  bool cache_hit;
   ASSERT_OK(
-      m_ng_data_cache.LookUpOrCreate("def", create_item, destroy_item).first);
-  ASSERT_OK(
-      m_ng_data_cache.LookUpOrCreate("efg", create_item, destroy_item).first);
+      m_ng_data_cache.LookUpOrCreate("abc", create_item, cache_hit).first);
+  ASSERT_OK(m_ng_data_cache
+                .LookUpOrCreate("def", create_item, destroy_item, cache_hit)
+                .first);
+  ASSERT_OK(m_ng_data_cache
+                .LookUpOrCreate("efg", create_item, destroy_item, cache_hit)
+                .first);
   ASSERT_EQ(item_evicted, false);
-  ASSERT_OK(
-      m_ng_data_cache.LookUpOrCreate("hij", create_item, destroy_item).first);
+  ASSERT_OK(m_ng_data_cache
+                .LookUpOrCreate("hij", create_item, destroy_item, cache_hit)
+                .first);
   ASSERT_EQ(item_evicted, true);
 }
 
 // Testing all variations of RemoveItem/All functionality
 TEST_F(NGraphDataCacheTest, RemoveItemTest) {
-  auto create_item = std::bind(
-      &NGraphDataCacheTest_RemoveItemTest_Test::CreateItemNoBarrier, this);
+  auto create_item =
+      std::bind(&NGraphDataCacheTest_RemoveItemTest_Test::CreateItemNoBarrier,
+                this, std::placeholders::_1);
   auto destroy_item =
       std::bind(&NGraphDataCacheTest_RemoveItemTest_Test::DestroyItem, this,
                 std::placeholders::_1);
-
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("abc", create_item).first);
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("def", create_item).first);
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("efg", create_item).first);
+  bool cache_hit;
+  ASSERT_OK(
+      m_ng_data_cache.LookUpOrCreate("abc", create_item, cache_hit).first);
+  ASSERT_OK(
+      m_ng_data_cache.LookUpOrCreate("def", create_item, cache_hit).first);
+  ASSERT_OK(
+      m_ng_data_cache.LookUpOrCreate("efg", create_item, cache_hit).first);
   ASSERT_EQ(item_evicted, false);
   m_ng_data_cache.RemoveAll(destroy_item);
   ASSERT_EQ(item_evicted, true);
@@ -133,8 +148,10 @@ TEST_F(NGraphDataCacheTest, RemoveItemTest) {
   destroy_count = 0;
   m_ng_data_cache.RemoveAll(destroy_item);
   ASSERT_EQ(destroy_count, 0);
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("abc", create_item).first);
-  ASSERT_OK(m_ng_data_cache.LookUpOrCreate("def", create_item).first);
+  ASSERT_OK(
+      m_ng_data_cache.LookUpOrCreate("abc", create_item, cache_hit).first);
+  ASSERT_OK(
+      m_ng_data_cache.LookUpOrCreate("def", create_item, cache_hit).first);
   ASSERT_EQ(m_ng_data_cache.m_ng_items_map.size(), 2);
   m_ng_data_cache.RemoveItem("def");
   m_ng_data_cache.RemoveItem("def", destroy_item);

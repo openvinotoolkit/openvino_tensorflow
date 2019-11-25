@@ -38,6 +38,7 @@
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
+#include "ngraph_bridge/ngraph_data_cache.h"
 #include "ngraph_bridge/ngraph_executor.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_timer.h"
@@ -60,12 +61,14 @@ namespace ngraph_bridge {
 //---------------------------------------------------------------------------
 NGraphExecutor::NGraphExecutor(int instance_id, int cluster_id, int graph_id,
                                unique_ptr<tensorflow::Graph>& graph,
-                               const string& backend_name)
+                               const string& backend_name,
+                               const int cache_depth)
     : m_instance_id(instance_id),
       m_ngraph_cluster_id(cluster_id),
       m_graph_id(graph_id),
       m_graph(std::move(graph)),
-      m_op_backend_name(backend_name) {
+      m_op_backend_name(backend_name),
+      m_ng_data_cache(cache_depth) {
   // Sanity checks
   if (m_graph == nullptr) {
     throw std::runtime_error("Graph is nullptr!");
@@ -165,42 +168,10 @@ NGraphExecutor::NGraphExecutor(int instance_id, int cluster_id, int graph_id,
 //---------------------------------------------------------------------------
 NGraphExecutor::~NGraphExecutor() {
   auto backend = BackendManager::GetBackend(m_op_backend_name);
-  for (auto& next : m_ng_exec_map) {
-    // First remove the pipelined tensors
-    auto ng_exec = next.second;
-    auto tensor_store = m_executable_pipelined_tensors_map.find(ng_exec);
-    if (tensor_store == m_executable_pipelined_tensors_map.end()) {
-      // There should have been an entry in this Map
-      NGRAPH_VLOG(0)
-          << "The Pipelied Tensor map is empty for the current executor";
-      continue;
-    }
 
-    auto io_tensor_tuple = tensor_store->second->get_tensors();
-    while (std::get<0>(io_tensor_tuple) > 0) {
-      // At this stage everyone must have returned the tensors back to store.
-      // So the id must be non negative
-      for (auto& input_tensor : std::get<1>(io_tensor_tuple)) {
-        input_tensor.reset();
-      }
-      for (auto& output_tensor : std::get<2>(io_tensor_tuple)) {
-        output_tensor.reset();
-      }
-
-      io_tensor_tuple = tensor_store->second->get_tensors();
-    }
-
-    // Now remove the entry from the function cache
-    backend->remove_compiled_function(ng_exec);
-
-    // Finally reset the shared_ptr so that this is deleted by the
-    // backend when needed
-    ng_exec.reset();
-  }
-
-  m_executable_pipelined_tensors_map.clear();
-  m_serialized_ng_function_map.clear();
-  m_ng_exec_map.clear();
+  auto destroy_ng_item_callback = std::bind(
+      &NGraphExecutor::DestroyCallback, this, std::placeholders::_1, backend);
+  m_ng_data_cache.RemoveAll(destroy_ng_item_callback);
   m_tensor_manager.reset();
 }
 
@@ -238,25 +209,13 @@ Status NGraphExecutor::ComputeSignature(
 }
 
 //---------------------------------------------------------------------------
-//  NGraphExecutor::GetNgExecutable
+//  NGraphExecutor::GetExecutableFunctionAndTensors
 //---------------------------------------------------------------------------
-Status NGraphExecutor::GetNgExecutable(
+Status NGraphExecutor::GetExecutableFunctionAndTensors(
     const std::vector<Tensor>& tf_input_tensors,
-    std::shared_ptr<ngraph::runtime::Executable>& ng_exec, bool& cache_hit) {
-  NGRAPH_VLOG(4) << "GetNgExecutable: Got backend of type: "
-                 << m_op_backend_name;
-
-  // Get the backend. Note that the backend may not be available
-  // so that's a programmng error.
-  ng::runtime::Backend* op_backend;
-  try {
-    op_backend = BackendManager::GetBackend(m_op_backend_name);
-  } catch (...) {
-    return errors::Internal("Backend not available: ", m_op_backend_name);
-  }
-
-  lock_guard<mutex> lock(m_mutex);
-
+    std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+    std::string& serialized_ng_func, shared_ptr<PipelinedTensorsStore>& pts,
+    bool& cache_hit) {
   std::stringstream signature_ss;
   std::vector<TensorShape> input_shapes;
   std::vector<const Tensor*> static_input_map;
@@ -267,179 +226,173 @@ Status NGraphExecutor::GetNgExecutable(
 
   NGRAPH_VLOG(5) << "Computed signature: " << signature;
 
-  cache_hit = false;
-  auto it = m_ng_exec_map.find(signature);
-
-  // Translate the TensorFlow graph to nGraph.
-  if (it == m_ng_exec_map.end()) {
-    // Measure the current total memory usage
-    long vm, rss, vm0, rss0;
-    MemoryProfile(vm0, rss0);
-
-    NGRAPH_VLOG(1) << "Compilation cache miss: " << m_node_name;
-
-    std::shared_ptr<ngraph::runtime::Executable> evicted_ng_exec;
-    string serialized_ng_func;
-    std::shared_ptr<ngraph::Function> ng_function;
-    if (!m_do_aot) {
-      TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
-                                                 m_graph.get(), ng_function));
-      ng_function->set_friendly_name(m_node_name);
-      int json_indentation = 4;
-      serialized_ng_func = ngraph::serialize(ng_function, json_indentation);
-    } else {
-      auto itr = m_aot_functions.find(signature);
-      if (itr == m_aot_functions.end()) {
-        return errors::Internal(
-            "Expected to find AOT precompiled ng function of signature: ",
-            signature);
-      }
-      serialized_ng_func = itr->second;
-    }
-
-    // Serialize to nGraph if needed
-    if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-      std::string file_name = "tf_function_" + m_node_name + ".json";
-      TF_RETURN_IF_ERROR(StringToFile("tf_function_" + m_node_name + ".json",
-                                      serialized_ng_func));
-#if defined NGRAPH_DISTRIBUTED
-      int rank_id;
-      rank_id = ng::get_distributed_interface()->get_rank();
-      TF_RETURN_IF_ERROR(StringToFile(
-          "tf_function_" + m_node_name + "_" + to_string(rank_id) + ".json",
-          serialized_ng_func));
-#endif
-    }
-    // Evict the cache if the number of elements exceeds the limit
-    const char* cache_depth_specified =
-        std::getenv("NGRAPH_TF_FUNCTION_CACHE_ITEM_DEPTH");
-    if (cache_depth_specified != nullptr) {
-      my_function_cache_depth_in_items = atoi(cache_depth_specified);
-    }
-    if (m_ng_exec_map.size() >= my_function_cache_depth_in_items) {
-      int input_tensors_bytes_free = 0;
-      evicted_ng_exec = m_ng_exec_map[m_lru.back()];
-      m_ng_exec_map.erase(m_lru.back());
-      m_serialized_ng_function_map.erase(evicted_ng_exec);
-
-      // Call delete function here for the erased func
-      op_backend->remove_compiled_function(evicted_ng_exec);
-      // Now clean the input cache
-      std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-          input_caches = m_ng_exec_input_cache_map[evicted_ng_exec];
-      for (auto& next_input : input_caches) {
-        input_tensors_bytes_free += next_input.second->get_size_in_bytes();
-        next_input.second.reset();
-      }
-      m_ng_exec_input_cache_map.erase(evicted_ng_exec);
-
-      // Clean the output cache
-      std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-          output_caches = m_ng_exec_output_cache_map[evicted_ng_exec];
-      int output_tensors_bytes_free = 0;
-      for (auto& next_output : output_caches) {
-        output_tensors_bytes_free += next_output.second->get_size_in_bytes();
-        next_output.second.reset();
-      }
-      m_ng_exec_output_cache_map.erase(evicted_ng_exec);
-      m_lru.pop_back();
-      NGRAPH_VLOG(1) << "NGRAPH_TF_MEM_PROFILE:  OP_ID: " << m_instance_id
-                     << " Cluster: " << m_node_name << " Input Tensors freed: "
-                     << input_tensors_bytes_free / (1024 * 1024) << " MB"
-                     << " Output Tensors freed: "
-                     << output_tensors_bytes_free / (1024 * 1024) << " MB";
-    }  // cache eviction if cache size greater than cache depth
-
-    ngraph::Event event_compile("Compile nGraph", m_node_name, "");
-    BackendManager::LockBackend(m_op_backend_name);
-    try {
-      if (m_do_aot) {
-        auto itr = m_aot_execs.find(signature);
-        if (itr == m_aot_execs.end()) {
-          BackendManager::UnlockBackend(m_op_backend_name);
-          return errors::Internal(
-              "Requested AOT, but could not find string with the "
-              "signature: ",
-              signature);
-        }
-        stringstream serialized_exec_read;
-        serialized_exec_read << (itr->second);
-        ng_exec = op_backend->load(serialized_exec_read);
-      } else {
-        ng_exec = op_backend->compile(ng_function);
-      }
-    } catch (const std::exception& exp) {
-      BackendManager::UnlockBackend(m_op_backend_name);
-      Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
-                               serialized_ng_func);
-      string status_string =
-          "Caught exception while compiling op_backend: " + string(exp.what()) +
-          (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                           st.error_message()));
-      return errors::Internal(status_string);
-    } catch (...) {
-      BackendManager::UnlockBackend(m_op_backend_name);
-      Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
-                               serialized_ng_func);
-      string status_string =
-          "Error in compiling op_backend." +
-          (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                           st.error_message()));
-      return errors::Internal(status_string);
-    }
-    BackendManager::UnlockBackend(m_op_backend_name);
-    event_compile.Stop();
-    ngraph::Event::write_trace(event_compile);
-    m_ng_exec_map[signature] = ng_exec;
-
-    // caching ng_function to serialize to ngraph if needed
-    m_serialized_ng_function_map[ng_exec] = serialized_ng_func;
-
-    m_lru.push_front(signature);
-    // Memory after
-    MemoryProfile(vm, rss);
-    auto delta_vm_mem = vm - vm0;
-    auto delta_res_mem = rss - rss0;
-    NGRAPH_VLOG(1) << "NGRAPH_TF_CACHE_PROFILE: OP_ID: " << m_instance_id
-                   << " Cache length: " << m_ng_exec_map.size()
-                   << "  Cluster: " << m_node_name
-                   << " Delta VM: " << delta_vm_mem
-                   << "  Delta RSS: " << delta_res_mem
-                   << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
-                   << " VM: " << vm / (1024 * 1024) << " GB" << endl;
-  }  // end of input signature not found in m_ng_exec_map
-  else {
-    // Found the input signature in m_ng_exec_map, use the cached executable
-    // Update the m_lru
-    if (signature != m_lru.front()) {
-      m_lru.remove(signature);
-      m_lru.push_front(signature);
-    }
-    ng_exec = it->second;
-    cache_hit = true;
-    NGRAPH_VLOG(1) << "Compilation cache hit: " << m_node_name;
+  NGRAPH_VLOG(4) << "GetNgExecutable: Got backend of type: "
+                 << m_op_backend_name;
+  // Get the backend. Note that the backend may not be available
+  // so that's a programmng error.
+  ng::runtime::Backend* op_backend;
+  try {
+    op_backend = BackendManager::GetBackend(m_op_backend_name);
+  } catch (...) {
+    return errors::Internal("Backend not available: ", m_op_backend_name);
   }
-  return Status::OK();
+
+  // Generate forwarding call to Callback functions
+  // CreateCallback and DestroyCallback
+  auto create_ng_items_callback =
+      std::bind(&NGraphExecutor::CreateCallback, this, std::placeholders::_1,
+                input_shapes, static_input_map, op_backend);
+  auto destroy_ng_items_callback =
+      std::bind(&NGraphExecutor::DestroyCallback, this, std::placeholders::_1,
+                op_backend);
+  // Get NgItems i.e. ng_executable, serialized ng_functions from Data Cache
+  auto status_ng_item_pair =
+      m_ng_data_cache.LookUpOrCreate(signature, create_ng_items_callback,
+                                     destroy_ng_items_callback, cache_hit);
+
+  if (status_ng_item_pair.first == Status::OK()) {
+    std::tie(ng_exec, serialized_ng_func, pts) = status_ng_item_pair.second;
+  }
+  return status_ng_item_pair.first;
 }
 
 //---------------------------------------------------------------------------
-//  GetNgFunction
+//  NGraphExecutor::CallbackCreateItem
 //---------------------------------------------------------------------------
-Status NGraphExecutor::GetNgFunction(
-    const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    std::shared_ptr<ngraph::Function>& ng_function) {
-  // Lookup the function from the Map
-  auto it = m_serialized_ng_function_map.find(ng_exec);
-  if (it == m_serialized_ng_function_map.end()) {
-    return errors::Internal("Function not found for this executable");
+std::pair<Status, std::tuple<std::shared_ptr<ngraph::runtime::Executable>,
+                             std::string, shared_ptr<PipelinedTensorsStore>>>
+NGraphExecutor::CreateCallback(const std::string signature,
+                               std::vector<TensorShape> input_shapes,
+                               std::vector<const Tensor*> static_input_map,
+                               ng::runtime::Backend*& op_backend) {
+  std::string serialized_ng_func;
+  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  std::shared_ptr<ngraph::Function> ng_function;
+  shared_ptr<PipelinedTensorsStore> pts;
+  NGRAPH_VLOG(1) << "Compilation cache miss: " << m_node_name;
+  if (!m_do_aot) {
+    auto status = Builder::TranslateGraph(input_shapes, static_input_map,
+                                          m_graph.get(), ng_function);
+    if (status != Status::OK()) {
+      return std::make_pair(status,
+                            std::make_tuple(ng_exec, serialized_ng_func, pts));
+    }
+    ng_function->set_friendly_name(m_node_name);
+    int json_indentation = 4;
+    serialized_ng_func = ngraph::serialize(ng_function, json_indentation);
+  } else {
+    auto itr = m_aot_functions.find(signature);
+    if (itr == m_aot_functions.end()) {
+      return std::make_pair(
+          errors::Internal(
+              "Expected to find AOT precompiled ng function of signature: ",
+              signature),
+          std::make_tuple(ng_exec, serialized_ng_func, pts));
+    }
+    serialized_ng_func = itr->second;
   }
+
+  // Serialize to nGraph if needed
+  if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
+    std::string file_name = "tf_function_" + m_node_name + ".json";
+    auto status_ser = StringToFile("tf_function_" + m_node_name + ".json",
+                                   serialized_ng_func);
+    if (status_ser != Status::OK()) {
+      return std::make_pair(status_ser,
+                            std::make_tuple(ng_exec, serialized_ng_func, pts));
+    }
+#if defined NGRAPH_DISTRIBUTED
+    int rank_id;
+    rank_id = ng::get_distributed_interface()->get_rank();
+    auto status = StringToFile(
+        "tf_function_" + m_node_name + "_" + to_string(rank_id) + ".json",
+        serialized_ng_func);
+    if (status != Status::OK()) {
+      return std::make_pair(status, std::make_pair(ng_exec, ng_function));
+    }
+#endif
+  }
+  // Get NgExecutable
+  auto status_ng_exec_pair =
+      GetNgExecutable(signature, ng_function, op_backend);
+  // Create PipelinedTensorStore
+  if (status_ng_exec_pair.first == Status::OK()) {
+    ng_exec = status_ng_exec_pair.second;
+    auto status_ng_pts_pair = InitializeIOTensorPipeline(ng_exec);
+    pts = status_ng_pts_pair.second;
+    return std::make_pair(status_ng_pts_pair.first,
+                          std::make_tuple(ng_exec, serialized_ng_func, pts));
+  } else {
+    Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
+                             serialized_ng_func);
+    string status_string =
+        "Error in compiling op_backend." +
+        (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                         st.error_message()));
+    return std::make_pair(errors::Internal(status_string),
+                          std::make_tuple(ng_exec, serialized_ng_func, pts));
+  }
+}
+
+//---------------------------------------------------------------------------
+//  NGraphExecutor::GetNgExecutable
+//---------------------------------------------------------------------------
+std::pair<Status, std::shared_ptr<ngraph::runtime::Executable>>
+NGraphExecutor::GetNgExecutable(std::string signature,
+                                std::shared_ptr<ngraph::Function>& ng_function,
+                                ng::runtime::Backend*& op_backend) {
+  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+
+  ngraph::Event event_compile("Compile nGraph", m_node_name, "");
+  BackendManager::LockBackend(m_op_backend_name);
   try {
-    ng_function = ngraph::deserialize(it->second);
+    if (m_do_aot) {
+      auto itr = m_aot_execs.find(signature);
+      if (itr == m_aot_execs.end()) {
+        BackendManager::UnlockBackend(m_op_backend_name);
+        return std::make_pair(
+            errors::Internal(
+                "Requested AOT, but could not find string with the "
+                "signature: ",
+                signature),
+            nullptr);
+      }
+      stringstream serialized_exec_read;
+      serialized_exec_read << (itr->second);
+      ng_exec = op_backend->load(serialized_exec_read);
+    } else {
+      ng_exec = op_backend->compile(ng_function);
+    }
   } catch (const std::exception& exp) {
-    return errors::Internal("Failed to deserialize ngraph function", exp.what(),
-                            "\n");
+    BackendManager::UnlockBackend(m_op_backend_name);
+    string status_string =
+        "Caught exception while compiling op_backend: " + string(exp.what());
+    return std::make_pair(errors::Internal(status_string), nullptr);
+  } catch (...) {
+    BackendManager::UnlockBackend(m_op_backend_name);
+    string status_string = "Error in compiling op_backend.";
+    return std::make_pair(errors::Internal(status_string), nullptr);
   }
-  return Status::OK();
+  BackendManager::UnlockBackend(m_op_backend_name);
+  event_compile.Stop();
+  ngraph::Event::write_trace(event_compile);
+
+  return std::make_pair(Status::OK(), ng_exec);
+}
+
+//---------------------------------------------------------------------------
+//  NGraphExecutor::DestroyCallback
+//---------------------------------------------------------------------------
+void NGraphExecutor::DestroyCallback(
+    std::tuple<std::shared_ptr<ngraph::runtime::Executable>, std::string,
+               shared_ptr<PipelinedTensorsStore>>
+        evicted_ng_item,
+    ng::runtime::Backend*& op_backend) {
+  std::shared_ptr<ngraph::runtime::Executable> evicted_ng_exec;
+  std::tie(evicted_ng_exec, std::ignore, std::ignore) = evicted_ng_item;
+  // Call delete function here for the erased func
+  op_backend->remove_compiled_function(evicted_ng_exec);
+  evicted_ng_exec.reset();
 }
 
 //---------------------------------------------------------------------------
@@ -507,74 +460,44 @@ Status NGraphExecutor::ParseNodeAttributes(
 //---------------------------------------------------------------------------
 //  InitializeIOTensorPipeline
 //---------------------------------------------------------------------------
-Status NGraphExecutor::InitializeIOTensorPipeline(
+
+std::pair<Status, shared_ptr<PipelinedTensorsStore>>
+NGraphExecutor::InitializeIOTensorPipeline(
     std::shared_ptr<ngraph::runtime::Executable> ng_exec) {
   if (!m_executable_can_create_tensor) {
-    return errors::Internal(
-        "InitializeIOTensorPipeline called, but executable cannot create "
-        "tensors");
+    return std::make_pair(
+        errors::Internal(
+            "InitializeIOTensorPipeline called, but executable cannot create "
+            "tensors"),
+        nullptr);
+  }
+  // Create these pipelined ng tensors only if needed, else reuse from cache
+  size_t num_inputs = ng_exec->get_parameters().size();
+  size_t num_outputs = ng_exec->get_results().size();
+
+  if (num_outputs == 0) {
+    return std::make_pair(
+        errors::Internal("Bad input/output length. Input size: ", num_inputs,
+                         " Output size: ", num_outputs),
+        nullptr);
   }
 
-  lock_guard<mutex> lock(m_mutex);
-  auto itr = m_executable_pipelined_tensors_map.find(ng_exec);
-  if (itr == m_executable_pipelined_tensors_map.end()) {
-    // Create these pipelined ng tensors only if needed, else reuse from cache
-    size_t num_inputs = ng_exec->get_parameters().size();
-    size_t num_outputs = ng_exec->get_results().size();
-
-    if (num_inputs == 0 || num_outputs == 0) {
-      return errors::Internal("Bad input/output length. Input size: ",
-                              num_inputs, " Output size: ", num_outputs);
-    }
-
-    // If the input or the output size if 0 then???
-    NGRAPH_VLOG(5) << "InitializeIOTensorPipeline: In: " << num_inputs
-                   << " Out: " << num_outputs;
-    PipelinedTensorMatrix pipelined_input_tensors(num_inputs);
-    PipelinedTensorMatrix pipelined_output_tensors(num_outputs);
-    for (size_t i = 0; i < num_inputs; i++) {
-      pipelined_input_tensors[i] = ng_exec->create_input_tensor(i, m_depth);
-    }
-    for (size_t i = 0; i < num_outputs; i++) {
-      pipelined_output_tensors[i] = ng_exec->create_output_tensor(i, m_depth);
-    }
-    shared_ptr<PipelinedTensorsStore> pts(new PipelinedTensorsStore(
-        pipelined_input_tensors, pipelined_output_tensors));
-    m_executable_pipelined_tensors_map.insert({ng_exec, pts});
+  // If the input or the output size if 0 then???
+  NGRAPH_VLOG(5) << "InitializeIOTensorPipeline: In: " << num_inputs
+                 << " Out: " << num_outputs;
+  PipelinedTensorMatrix pipelined_input_tensors(num_inputs);
+  PipelinedTensorMatrix pipelined_output_tensors(num_outputs);
+  for (size_t i = 0; i < num_inputs; i++) {
+    pipelined_input_tensors[i] = ng_exec->create_input_tensor(i, m_depth);
   }
-  return Status::OK();
+  for (size_t i = 0; i < num_outputs; i++) {
+    pipelined_output_tensors[i] = ng_exec->create_output_tensor(i, m_depth);
+  }
+  shared_ptr<PipelinedTensorsStore> pts(new PipelinedTensorsStore(
+      pipelined_input_tensors, pipelined_output_tensors));
+
+  return std::make_pair(Status::OK(), pts);
 }
 
-//---------------------------------------------------------------------------
-//  GetTensorsFromPipeline
-//---------------------------------------------------------------------------
-Status NGraphExecutor::GetTensorsFromPipeline(
-    const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>& io_tensors) {
-  auto status = InitializeIOTensorPipeline(ng_exec);
-  if (status != Status::OK()) {
-    return status;
-  }
-
-  // Lookup the executable
-  lock_guard<mutex> lock(m_mutex);
-  PipelinedTensorsStore* pts(nullptr);
-  try {
-    const auto& item = m_executable_pipelined_tensors_map.at(ng_exec);
-    pts = item.get();
-  } catch (...) {
-    return errors::Internal("Executable not found in the cache");
-  }
-
-  // get_tensors returns an index integer, that can be -1, 0, ... depth-1
-  // If it returns -1, then it indicates there are no free groups of tensors
-  // or the pipeline is full.
-  io_tensors = pts->get_tensors();
-  if (std::get<0>(io_tensors) < 0) {
-    return errors::Internal("No free tensor available");
-  }
-
-  return Status::OK();
-}
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

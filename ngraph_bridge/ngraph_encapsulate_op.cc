@@ -148,9 +148,18 @@ void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
   int graph_id{-1};
   OP_REQUIRES_OK(ctx, ctx->GetAttr("ngraph_graph_id", &graph_id));
 
+  const int cache_depth = 16;
+  int my_function_cache_depth_in_items = cache_depth;
+  const char* cache_depth_specified =
+      std::getenv("NGRAPH_TF_FUNCTION_CACHE_ITEM_DEPTH");
+  if (cache_depth_specified != nullptr) {
+    my_function_cache_depth_in_items = atoi(cache_depth_specified);
+  }
+
   // Create the Executor object
-  m_parallel_executor = move(unique_ptr<NGraphExecutor>(new NGraphExecutor(
-      s_instance_id, cluster_id, graph_id, encap_subgraph, backend_name)));
+  m_parallel_executor = move(unique_ptr<NGraphExecutor>(
+      new NGraphExecutor(s_instance_id, cluster_id, graph_id, encap_subgraph,
+                         backend_name, my_function_cache_depth_in_items)));
 
   auto tensor_manager = m_parallel_executor->GetTensorManager();
   OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
@@ -159,7 +168,6 @@ void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
   OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() == ctx->num_outputs(),
               errors::Internal(
                   "Num of outputs from TensorManager and Ctx do not match"));
-
   s_instance_id++;
 
   // Get the optional attributes
@@ -422,12 +430,19 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Input: " << ctx->num_inputs()
                  << " Values: " << tf_input_tensors[0].DebugString();
   int step_id = ctx->step_id();
-  ngraph::Event event_compile("Compile", "", "");
+  ngraph::Event event_get_ng_item("GetExecutableAndTensors", "", "");
+  shared_ptr<PipelinedTensorsStore> pipelined_tensor_store;
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
 
-  // Get ngraph executable and inputs information
+  // Get ngraph executable and inputs information and Pipelined tensors
   bool cache_hit;
-  OP_REQUIRES_OK(ctx, m_parallel_executor->GetNgExecutable(tf_input_tensors,
-                                                           ng_exec, cache_hit));
+  std::string serialized_ng_function;
+  OP_REQUIRES_OK(ctx, m_parallel_executor->GetExecutableFunctionAndTensors(
+                          tf_input_tensors, ng_exec, serialized_ng_function,
+                          pipelined_tensor_store, cache_hit));
+  io_tensors = pipelined_tensor_store->get_tensors();
+  OP_REQUIRES(ctx, !(std::get<0>(io_tensors) < 0),
+              errors::Internal("No free tensor available"));
 
   auto tensor_manager = m_parallel_executor->GetTensorManager();
   OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
@@ -461,18 +476,8 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
       << "NGraphEncapsulateOp::Compute got ngraph executable for cluster id: "
       << m_parallel_executor->GetNgraphClusterId();
 
-  event_compile.Stop();
-  ngraph::Event::write_trace(event_compile);
-
-  // Get the pipelned tensors
-  ngraph::Event event_get_tensor("Get Tensor", "", "");
-
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-  OP_REQUIRES_OK(
-      ctx, m_parallel_executor->GetTensorsFromPipeline(ng_exec, io_tensors));
-
-  event_get_tensor.Stop();
-  ngraph::Event::write_trace(event_get_tensor);
+  event_get_ng_item.Stop();
+  ngraph::Event::write_trace(event_get_ng_item);
 
   NGraphPrefetchSharedResouce::IoTensorBundle io_tensor_bundle{
       get<0>(io_tensors), get<1>(io_tensors), get<2>(io_tensors)};
@@ -501,9 +506,7 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
       // Get the set of IO tensors for the next iteration
       std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
           io_tensors_next_iter;
-      OP_REQUIRES_OK(ctx, m_parallel_executor->GetTensorsFromPipeline(
-                              ng_exec, io_tensors_next_iter));
-
+      io_tensors_next_iter = pipelined_tensor_store->get_tensors();
       // Save the ngTensors for the next iteration
       NGraphPrefetchSharedResouce::IoTensorBundle next_io_tensor_bundle{
           get<0>(io_tensors_next_iter), get<1>(io_tensors_next_iter),
@@ -579,7 +582,35 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
 
   // And execute
   ngraph::Event event_execute_graph("Execute Graph", "", "");
-  ng_exec->call(io_tensor_bundle.Outputs, io_tensor_bundle.Inputs);
+
+  BackendManager::LockBackend(m_parallel_executor->GetOpBackendName());
+  NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
+                 << m_parallel_executor->GetNgraphClusterId();
+  try {
+    ng_exec->call(get<2>(io_tensors), get<1>(io_tensors));
+  } catch (const std::exception& exp) {
+    BackendManager::UnlockBackend(m_parallel_executor->GetOpBackendName());
+    Status st =
+        StringToFile("tf_function_error" + ctx->op_kernel().name() + ".json",
+                     serialized_ng_function);
+    string status_string =
+        "Caught exception while executing nGraph computation: " +
+        string(exp.what()) +
+        (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                         st.error_message()));
+    OP_REQUIRES(ctx, false, errors::Internal(status_string));
+  } catch (...) {
+    BackendManager::UnlockBackend(m_parallel_executor->GetOpBackendName());
+    Status st =
+        StringToFile("tf_function_error" + ctx->op_kernel().name() + ".json",
+                     serialized_ng_function);
+    string status_string =
+        "Error in executing the nGraph computation." +
+        (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                         st.error_message()));
+    OP_REQUIRES(ctx, false, errors::Internal(status_string));
+  }
+  BackendManager::UnlockBackend(m_parallel_executor->GetOpBackendName());
   event_execute_graph.Stop();
   ngraph::Event::write_trace(event_execute_graph);
 
@@ -637,7 +668,8 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
 
   // Now return them to the cache
   ngraph::Event event_return_tensor("Return Tensor", "", "");
-  m_parallel_executor->ReturnPipelinedTensors(ng_exec, io_tensor_bundle.Id);
+  pipelined_tensor_store->return_tensors(get<0>(io_tensors));
+
   event_return_tensor.Stop();
   ngraph::Event::write_trace(event_return_tensor);
 
