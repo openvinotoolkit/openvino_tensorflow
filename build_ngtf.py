@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "v0.27.0-rc.0"
+    ngraph_version = "effcc47d39de1d5e662d6b78a8d42675ecf7815d"  # Scott Cyphers CropAndResize op
     tf_version = "v1.14.0"
 
     # Command line parser options
