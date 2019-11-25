@@ -30,6 +30,7 @@
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
+#include "ngraph_bridge/ngraph_tensor_manager.h"
 
 namespace tensorflow {
 
@@ -77,6 +78,8 @@ class NGraphExecutor {
 
   const int& GetNgraphClusterId() { return m_ngraph_cluster_id; }
 
+  const string& GetNgraphClusterName() { return m_node_name; }
+
   int GetGraphId() { return m_graph_id; }
 
   const string& GetOpBackendName() { return m_op_backend_name; }
@@ -85,6 +88,10 @@ class NGraphExecutor {
 
   int GetTensorPipelineDepth() {
     return m_executable_can_create_tensor ? m_depth : 1;
+  }
+
+  const shared_ptr<NGraphTensorManager>& GetTensorManager() {
+    return m_tensor_manager;
   }
 
  private:
@@ -140,6 +147,9 @@ class NGraphExecutor {
 
   mutex m_mutex;
   int m_depth{2};  // TODO make this settable
+
+  // NGraphTensorManager
+  shared_ptr<NGraphTensorManager> m_tensor_manager;
 };
 
 }  // namespace ngraph_bridge

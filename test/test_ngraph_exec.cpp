@@ -494,6 +494,36 @@ TEST_F(NGraphExecTest, MixedTensorsPipelined) {
   }
 }
 
+TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {
+  Graph input_graph(OpRegistry::Global());
+  ASSERT_OK(LoadGraph("test_axpy_launchop.pbtxt", &input_graph));
+
+  int number_of_args = FindNumberOfNodes(&input_graph, "_Arg");
+  int number_of_retvals = FindNumberOfNodes(&input_graph, "_Retval");
+  int number_of_const = FindNumberOfNodes(&input_graph, "Const");
+  int number_of_xyz = FindNumberOfNodes(&input_graph, "XYZ");
+
+  ASSERT_EQ(number_of_args, 2);
+  ASSERT_EQ(number_of_retvals, 2);
+  ASSERT_EQ(number_of_const, 1);
+  ASSERT_EQ(number_of_xyz, 0);
+}
+
+TEST_F(NGraphExecTest, FindNumberOfNodesUtil2) {
+  Graph input_graph(OpRegistry::Global());
+  ASSERT_OK(LoadGraph("test_graph_1.pbtxt", &input_graph));
+
+  int number_of_args = FindNumberOfNodes(&input_graph, "_Arg");
+  int number_of_retvals = FindNumberOfNodes(&input_graph, "_Retval");
+  int number_of_add = FindNumberOfNodes(&input_graph, "Add");
+  int number_of_sub = FindNumberOfNodes(&input_graph, "Sub");
+
+  ASSERT_EQ(number_of_args, 3);
+  ASSERT_EQ(number_of_retvals, 3);
+  ASSERT_EQ(number_of_add, 2);
+  ASSERT_EQ(number_of_sub, 1);
+}
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

@@ -38,11 +38,14 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-/* -------------------------------------------------
-//
-// NGraphVariableMap : Map of Variable names and their backend tensors
-//
----------------------------------------------------*/
+// Finds the complement of element_set
+// Given the max_element
+// Finds: {0,1,...,max_element-1} - element_set
+// Assumes element_set is sorted
+vector<int> FindComplement(const int& max_element,
+                           const vector<int>& element_set);
+
+int FindNumberOfNodes(const Graph* graph, const string op_type);
 
 Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
                                         bool& is_copy_log_enabled);
