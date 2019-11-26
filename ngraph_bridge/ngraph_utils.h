@@ -345,6 +345,8 @@ bool DumpEncapsulatedGraphs();
 
 bool DumpTrackedGraphs();
 
+bool DumpCatalogedGraphs();
+
 #if defined(NGRAPH_DISTRIBUTED)
 // Insert constrol dependency for AllReduce ops to ensure execution order
 void OpControlOrder(const std::shared_ptr<ngraph::Function>&,

@@ -29,6 +29,7 @@
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
@@ -170,6 +171,8 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   2. Cluster Assignment [ngraph_assign_clusters.cc]
 //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
 //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc]
+//   5. Rewrite Variable Type Ops for Tracking [ngraph_rewrite_for_tracking.cc]
+//   6. Enter In Catalog  [ngraph_enter_in_catalog.cc]
 //
 // Between phases, graph dumps (in both .dot and .pbtxt format) may be
 // requested by setting the following environment variables:
@@ -179,6 +182,8 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   NGRAPH_TF_DUMP_CLUSTERED_GRAPHS=1     dumps graphs after phase 2
 //   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1   dumps graphs after phase 3
 //   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1  dumps graphs after phase 4
+//   NGRAPH_TF_DUMP_TRACKED_GRAPHS=1       dumps graphs after phase 5
+//   NGRAPH_TF_DUMP_CATALOGED_GRAPHS=1     dumps graphs after phase 6
 //   NGRAPH_TF_DUMP_GRAPHS=1               all of the above
 //
 class NGraphEncapsulationPass : public NGraphRewritePass {
@@ -269,11 +274,18 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Clusters Encapsulated");
     }
 
-    // Rewrite for tracking then, if requested, dump the graphs.
+    // 5. Rewrite for tracking then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(RewriteForTracking(options.graph->get(), idx));
     if (DumpTrackedGraphs()) {
       DumpGraphs(options, idx, "tracked",
                  "Graph with Variables Rewritten for Tracking");
+    }
+
+    // 6. Enter in catalog then.
+    TF_RETURN_IF_ERROR(EnterPrefetchInCatalog(options.graph->get(), idx));
+    if (DumpCatalogedGraphs()) {
+      DumpGraphs(options, idx, "prefetch-cataloged",
+                 "Graph with Prefetched Inputs Entered in Catalog");
     }
 
     return Status::OK();

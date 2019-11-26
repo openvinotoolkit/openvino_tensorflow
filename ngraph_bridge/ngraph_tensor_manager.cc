@@ -14,11 +14,9 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_bridge/ngraph_utils.h"
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
-#endif
 #include "ngraph_bridge/ngraph_tensor_manager.h"
+#include "ngraph_bridge/ngraph_catalog.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 

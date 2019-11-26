@@ -15,12 +15,14 @@
  *******************************************************************************/
 
 #ifndef NGRAPH_TF_TENSOR_MANAGER_H_
-#define NGRAPH_TF_TENSOR_MANAGER_CC_
+#define NGRAPH_TF_TENSOR_MANAGER_H_
 #pragma once
 
 #include <mutex>
 #include <ostream>
 #include <vector>
+
+#include "tensorflow/core/common_runtime/dma_helper.h"
 
 using namespace std;
 namespace tensorflow {

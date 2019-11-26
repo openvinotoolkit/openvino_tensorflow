@@ -379,7 +379,7 @@ TEST_F(NGraphExecTest, MixedTensors) {
 
 TEST_F(NGraphExecTest, MixedTensorsPipelined) {
   Graph input_graph(OpRegistry::Global());
-  ASSERT_OK(LoadGraph("test_graph_1.pbtxt", &input_graph));
+  ASSERT_OK(LoadGraph("test_general_graph.pbtxt", &input_graph));
 
   // Create the inputs for this graph
   int num_inputs = 3;
@@ -511,7 +511,7 @@ TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {
 
 TEST_F(NGraphExecTest, FindNumberOfNodesUtil2) {
   Graph input_graph(OpRegistry::Global());
-  ASSERT_OK(LoadGraph("test_graph_1.pbtxt", &input_graph));
+  ASSERT_OK(LoadGraph("test_general_graph.pbtxt", &input_graph));
 
   int number_of_args = FindNumberOfNodes(&input_graph, "_Arg");
   int number_of_retvals = FindNumberOfNodes(&input_graph, "_Retval");

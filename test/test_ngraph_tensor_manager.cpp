@@ -17,14 +17,10 @@
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
 
+#include "ngraph_bridge/ngraph_catalog.h"
 #include "ngraph_bridge/ngraph_tensor_manager.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/version.h"
-
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
-#endif
-
 #include "test/test_utilities.h"
 
 using namespace std;

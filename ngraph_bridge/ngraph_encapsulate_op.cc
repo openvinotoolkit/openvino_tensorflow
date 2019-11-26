@@ -50,8 +50,8 @@
 #include "ngraph_bridge/ngraph_utils.h"
 
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
+#include "ngraph_bridge/ngraph_catalog.h"
 #endif
 
 using namespace std;
