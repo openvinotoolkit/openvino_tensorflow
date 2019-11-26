@@ -22,8 +22,10 @@ class TestAxpyPipelined(NgraphTest):
 
     def test_axpy_pipelined(self):
         prefetch_env = "NGRAPH_TF_USE_PREFETCH"
+        ngraph_backend_i = "NGRAPH_TF_BACKEND"
         env_var_map = self.store_env_variables([prefetch_env])
         self.set_env_variable(prefetch_env, "1")
+        self.set_env_variable(ngraph_backend_i, "INTERPRETER")
         input_array, output_array, expected_output_array = run_axpy_pipeline()
         for i in range(1, 10):
             print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
@@ -34,4 +36,5 @@ class TestAxpyPipelined(NgraphTest):
                 output_array[i - 1], expected_output_array[i - 1],
                 atol=1e-3), "Output  and expected output values don't match"
         self.unset_env_variable(prefetch_env)
+        self.unset_env_variable(ngraph_backend_i)
         self.restore_env_variables(env_var_map)

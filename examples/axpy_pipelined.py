@@ -21,8 +21,6 @@ import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import os
-os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
-#os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
 import ngraph_bridge
 
 import sys
@@ -89,4 +87,6 @@ def main(_):
 
 
 if __name__ == '__main__':
+    os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
+    #os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
     tf.app.run(main=main)
