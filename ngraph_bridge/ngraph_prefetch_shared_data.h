@@ -61,34 +61,33 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   static constexpr const char* NGRAPH_TF_USE_PREFETCH =
       "NGRAPH_TF_USE_PREFETCH";
 
-  struct IoTensorBundle {
+  struct InputTensorBundle {
     int Id;
     std::vector<shared_ptr<ng::runtime::Tensor>> Inputs;
-    std::vector<shared_ptr<ng::runtime::Tensor>> Outputs;
   };
 
-  // Adds the given nGraph tensor pair to write to
+  // Adds the given nGraph input tensors to write to
   // This is called by the NGraphEncapOp
-  void AddNextIoTensorsForDeviceTransfer(IoTensorBundle next) {
+  void AddNextInputTensorBundleForDeviceTransfer(InputTensorBundle next) {
     m_tf_2_ng.Add(std::move(next));
   }
 
-  // Returns the IO tensors to be used top copy TF tensors to NG device
+  // Returns the Input tensors to be used to copy TF tensors to NG device
   // This will be called by the prefetcher
-  IoTensorBundle GetNextIoTensorsForDeviceTransfer() {
+  InputTensorBundle GetNextInputTensorBundleForDeviceTransfer() {
     return std::move(m_tf_2_ng.GetNextAvailable());
   }
 
-  // Adds the given nGraph tensor pair to write to
+  // Adds the given nGraph input tensors to write to
   // This is called by the prefetcher to add Tensors that are copied
   // from TF tensor and are now ready for the next iteration
-  void AddNextIoTensorsReadyForDeviceExecution(IoTensorBundle next) {
+  void AddNextInputTensorBundleReadyForDeviceExecution(InputTensorBundle next) {
     m_ng_2_tf.Add(std::move(next));
   }
 
-  // Returns the IO tensors to be ready to be executed by NG device
+  // Returns the Input tensors to be ready to be executed by NG device
   // This will be called by the NGEncOp
-  IoTensorBundle GetNextIoTensorsReadyForDeviceExecution() {
+  InputTensorBundle GetNextInputTensorBundleReadyForDeviceExecution() {
     return std::move(m_ng_2_tf.GetNextAvailable());
   }
 
@@ -133,18 +132,19 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   //
   // The interaction is as follows:
   // Iteration  Action
-  // 1          NGEncOp pushes the IO tensors to m_ng_2_tf queue
+  // 1          NGEncOp pushes the Input tensors to m_ng_2_tf queue
   // 2
-  //            Prefetcher pulls IO tensors out of m_ng_2_tf queue and copies TF
+  //            Prefetcher pulls Input tensors out of m_ng_2_tf queue and copies
+  //            TF
   //            data
   //            Prefetcher pushes this item to the m_tf_2_ng queue
-  //            NGEncOp pushes the IO tensors to m_ng_2_tf queue
-  //            NGEncOp pulls IO tensors from m_tf_2_ng (from previous
+  //            NGEncOp pushes the Input tensors to m_ng_2_tf queue
+  //            NGEncOp pulls Input tensors from m_tf_2_ng (from previous
   //            iteration) and executes
   // 3          Repeat
 
-  ThreadSafeQueue<IoTensorBundle> m_tf_2_ng;
-  ThreadSafeQueue<IoTensorBundle> m_ng_2_tf;
+  ThreadSafeQueue<InputTensorBundle> m_tf_2_ng;
+  ThreadSafeQueue<InputTensorBundle> m_ng_2_tf;
 
   int m_prefetch_buffer_depth{-1};
   int m_skip_count{0};
