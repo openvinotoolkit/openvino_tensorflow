@@ -67,6 +67,10 @@ class NGraphTensorManager {
     return m_prefetched_input_indexes;
   }
 
+  const vector<int>& GetPipelinedInputIndexesThatArePrefetched() {
+    return m_pipelined_input_indexes_prefetched;
+  }
+
  private:
   void Initialize();
   string m_ng_encap_node_name;
@@ -83,6 +87,7 @@ class NGraphTensorManager {
   // All indexes that are not for from/to variables
   vector<int> m_pipelined_input_indexes;
   vector<int> m_pipelined_output_indexes;
+  vector<int> m_pipelined_input_indexes_prefetched;
 
   //[TODO] Book-keeping for prefetched inputs
   vector<int> m_prefetched_input_indexes;
