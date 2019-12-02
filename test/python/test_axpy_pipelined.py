@@ -17,6 +17,7 @@ from common import NgraphTest
 
 from axpy_pipelined import *
 
+
 class TestAxpyPipelined(NgraphTest):
 
     def test_axpy_pipelined(self):
