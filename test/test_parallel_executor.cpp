@@ -61,12 +61,12 @@ TEST(ParallelExecutor, Construction) {
   // First test with a backend not yet created
   unique_ptr<NGraphExecutor> executor;
   ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(
-                   new NGraphExecutor(100, 500, 600, input_graph, "bogus")),
+                   new NGraphExecutor(100, 500, 600, input_graph, "bogus", 5)),
                std::runtime_error);
 
   // Next test with a null graph not yet created
   ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(
-                   new NGraphExecutor(100, 500, 600, input_graph, "bogus")),
+                   new NGraphExecutor(100, 500, 600, input_graph, "bogus", 12)),
                std::runtime_error);
 
   // Now read the graph
@@ -75,7 +75,7 @@ TEST(ParallelExecutor, Construction) {
   // Next test with a backend after creating
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
   ASSERT_NO_THROW(executor = unique_ptr<NGraphExecutor>(new NGraphExecutor(
-                      100, 500, 600, input_graph, "INTERPRETER")));
+                      100, 500, 600, input_graph, "INTERPRETER", 16)));
 
   // Now that the object has been cobstructed, test various internal parts
   // TODO: Create a Test Class and mark that as a friend of the Executor class
@@ -93,7 +93,7 @@ TEST(ParallelExecutor, CompilerTest) {
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
 
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER");
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 10);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
@@ -110,72 +110,18 @@ TEST(ParallelExecutor, CompilerTest) {
 
   std::vector<Tensor> tf_input_tensors{x, y};
   shared_ptr<ngraph::runtime::Executable> ng_exec;
-
+  shared_ptr<PipelinedTensorsStore> pts;
+  std::string ser_ng_function;
   // Call the Executor to compile the funcion
   bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
+  ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+      tf_input_tensors, ng_exec, ser_ng_function, pts, cache_hit));
   ASSERT_FALSE(cache_hit);
 
   // Now call again to test that the cache works
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
-
-  // If the cache doesn't work then the following will fire
+  ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+      tf_input_tensors, ng_exec, ser_ng_function, pts, cache_hit));
   ASSERT_TRUE(cache_hit);
-
-  // Now validate that the nGraph function is available
-  std::shared_ptr<ngraph::Function> ng_function;
-  ASSERT_EQ(executor.GetNgFunction(ng_exec, ng_function),
-            tensorflow::Status::OK());
-
-  // Validate the nGraph Function
-  const auto& parameters = ng_function->get_parameters();
-  ASSERT_EQ(2, parameters.size());
-}
-
-TEST(ParallelExecutor, PipelinedTensorCreate) {
-  // Read the graph
-  // We are using a graph with _Arg and _Retval
-  // addded i.e., a PB that is saved after the initial processing of the
-  // TF graph transformation.
-  unique_ptr<tf::Graph> input_graph;
-  ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
-  tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER");
-
-  // Create the inputs for this graph
-  Tensor x(DT_FLOAT, TensorShape({2, 3}));
-  auto x_flat = x.flat<float>();
-  for (int i = 0; i < x_flat.size(); i++) {
-    x_flat.data()[i] = 1.0;
-  }
-
-  Tensor y(DT_FLOAT, TensorShape({2, 3}));
-  auto y_flat = y.flat<float>();
-  for (int i = 0; i < y_flat.size(); i++) {
-    y_flat.data()[i] = 1.0;
-  }
-
-  std::vector<Tensor> tf_input_tensors{x, y};
-  shared_ptr<ngraph::runtime::Executable> ng_exec;
-
-  // Call the Executor to compile the funcion
-  bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
-  ASSERT_FALSE(cache_hit);
-  ASSERT_EQ(2, executor.GetTensorPipelineDepth());
-
-  // Get the pipelned tensors
-  int pipeline_idx = -1;
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-  for (int i = 0; i < executor.GetTensorPipelineDepth(); i++) {
-    ASSERT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
-    pipeline_idx = get<0>(io_tensors);
-    ASSERT_EQ(i, pipeline_idx) << "GetTensorsFromPipeline() Returned: "
-                               << pipeline_idx;
-  }
-
-  // Now we have exhausted all the tensors. So the next call fails
-  ASSERT_NOT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
 }
 
 TEST(ParallelExecutor, ExecuteOnSingleThread) {
@@ -186,7 +132,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
   unique_ptr<tf::Graph> input_graph;
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER");
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 12);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
@@ -194,17 +140,15 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
 
   std::vector<Tensor> tf_input_tensors{x, y};
   shared_ptr<ngraph::runtime::Executable> ng_exec;
-
+  shared_ptr<PipelinedTensorsStore> pts;
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
   // Call the Executor to compile the funcion
   bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
+  std::string ser_ng_func;
+  ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+      tf_input_tensors, ng_exec, ser_ng_func, pts, cache_hit));
+  io_tensors = pts.get()->get_tensors();
   ASSERT_FALSE(cache_hit);
-
-  ASSERT_EQ(2, executor.GetTensorPipelineDepth());
-
-  // Get the pipelned tensors
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-  ASSERT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
 
   // Now Fill in the tensor - X
   auto x_flat = x.flat<float>();
@@ -270,7 +214,7 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
   }
 
   tf::ngraph_bridge::BackendManager::CreateBackend(backend_name);
-  NGraphExecutor executor(100, 500, 600, input_graph, backend_name);
+  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, 5);
 
   // Create the inputs for this graph
   Tensor x(DT_INT8, TensorShape({2, 2}));
@@ -278,17 +222,15 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
 
   std::vector<Tensor> tf_input_tensors{x, y};
   shared_ptr<ngraph::runtime::Executable> ng_exec;
-
+  shared_ptr<PipelinedTensorsStore> pts;
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
   // Call the Executor to compile the funcion
   bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
+  std::string ser_ng_func;
+  ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+      tf_input_tensors, ng_exec, ser_ng_func, pts, cache_hit));
+  io_tensors = pts.get()->get_tensors();
   ASSERT_FALSE(cache_hit);
-
-  ASSERT_EQ(2, executor.GetTensorPipelineDepth());
-
-  // Get the pipelned tensors
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-  ASSERT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
 
   // Now Fill in the tensor - X
   auto x_flat = x.flat<int8>();
@@ -354,7 +296,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
   }
 
   tf::ngraph_bridge::BackendManager::CreateBackend(backend_name);
-  NGraphExecutor executor(100, 500, 600, input_graph, backend_name);
+  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, 16);
 
   // Create the inputs for this graph
   Tensor x(DT_INT8, TensorShape({2, 2}));
@@ -368,21 +310,18 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
 
   std::vector<Tensor> tf_input_tensors{x, y};
   shared_ptr<ngraph::runtime::Executable> ng_exec;
+  shared_ptr<PipelinedTensorsStore> pts;
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
 
-  // Call the Executor to compile the funcion
   bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
-  // ASSERT_FALSE(cache_hit);
+  std::string ser_ng_func;
+  ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+      tf_input_tensors, ng_exec, ser_ng_func, pts, cache_hit));
+  io_tensors = pts.get()->get_tensors();
+  ASSERT_FALSE(cache_hit);
+  ;
 
   auto worker = [&](int8 worker_id) {
-
-    ASSERT_EQ(2, executor.GetTensorPipelineDepth());
-
-    // Get the pipelned tensors
-    std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-    ASSERT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
-
-    cout << "PTS Index: " << get<0>(io_tensors) << endl;
 
     ng::element::Type ng_element_type;
     ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
@@ -444,7 +383,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
   unique_ptr<tf::Graph> input_graph;
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER");
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 16);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
@@ -452,12 +391,11 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
 
   std::vector<Tensor> tf_input_tensors{x, y};
   shared_ptr<ngraph::runtime::Executable> ng_exec;
+  shared_ptr<PipelinedTensorsStore> pts;
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
 
-  // Call the Executor to compile the funcion
   bool cache_hit = false;
-  ASSERT_OK(executor.GetNgExecutable(tf_input_tensors, ng_exec, cache_hit));
-  ASSERT_FALSE(cache_hit);
-  ASSERT_EQ(2, executor.GetTensorPipelineDepth());
+  std::string ser_ng_func;
 
   // Now Fill in the tensor - X
   auto x_flat = x.flat<float>();
@@ -469,9 +407,11 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
   ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
 
   auto worker = [&](size_t worker_id) {
-    // Get the pipelned tensors
-    std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-    ASSERT_OK(executor.GetTensorsFromPipeline(ng_exec, io_tensors));
+
+    ASSERT_OK(executor.GetExecutableFunctionAndTensors(
+        tf_input_tensors, ng_exec, ser_ng_func, pts, cache_hit));
+    io_tensors = pts.get()->get_tensors();
+    ASSERT_FALSE(cache_hit);
 
     // Copy the tensors from TensorFlow Tensor to nGraph Tensor
     // First X

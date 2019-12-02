@@ -19,7 +19,7 @@
 
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_capture_variables.h"
-#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
+#include "ngraph_bridge/ngraph_find_replace_prefetchdataset.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
@@ -41,83 +41,6 @@ static bool IsOutputNode(const Node* node,
   return found;
 }
 
-Status ReplacePrefetch(Graph* graph, Node* prefetch_node) {
-  NodeBuilder::NodeOut input_dataset;
-  NodeBuilder::NodeOut buffer_size;
-
-  std::vector<const Edge*> input_edges;
-  TF_RETURN_IF_ERROR(prefetch_node->input_edges(&input_edges));
-
-  input_dataset =
-      NodeBuilder::NodeOut(input_edges[0]->src(), input_edges[0]->src_output());
-  buffer_size =
-      NodeBuilder::NodeOut(input_edges[1]->src(), input_edges[1]->src_output());
-
-  std::vector<DataType> output_types;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(prefetch_node->attrs(), "output_types", &output_types));
-
-  std::vector<PartialTensorShape> output_shapes;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(prefetch_node->attrs(), "output_shapes", &output_shapes));
-
-  int slack_period = 0;
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(prefetch_node->attrs(), "slack_period", &slack_period));
-
-  Node* replacement;
-  TF_RETURN_IF_ERROR(NodeBuilder("NGraphPrefetchNode", "NGraphPrefetchDataset")
-                         .Input(input_dataset)
-                         .Input(buffer_size)
-                         .Attr("output_types", output_types)
-                         .Attr("output_shapes", output_shapes)
-                         .Attr("slack_period", slack_period)
-                         .Device(prefetch_node->assigned_device_name())
-                         .Finalize(graph, &replacement));
-  replacement->set_assigned_device_name(prefetch_node->assigned_device_name());
-
-  string new_name = graph->NewName("NGraph" + prefetch_node->name());
-  replacement->set_name(new_name);
-
-  std::vector<const Edge*> edges;
-
-  // Remove all the input edges of the existing prefetch node
-  std::vector<const Edge*> edges_to_remove;
-  std::vector<std::tuple<Node*, int, Node*, int>> edges_to_add;
-  for (auto edge : prefetch_node->in_edges()) {
-    edges_to_remove.push_back(edge);
-  }
-
-  for (auto edge : prefetch_node->out_edges()) {
-    NGRAPH_VLOG(0) << "Replacing: OutEdge " << edge->DebugString();
-    // Collect new output edges between the new prefetch node and the next node
-    edges_to_add.push_back(std::tuple<Node*, int, Node*, int>(
-        replacement, edge->src_output(), edge->dst(), edge->dst_input()));
-    // Remove the output edge from the current prefetch node
-    edges_to_remove.push_back(edge);
-  }
-
-  // Now add the new output edges
-  // The input edges to the new node is added during the node creation
-  for (const auto& i : edges_to_add) {
-    NGRAPH_VLOG(0) << "Adding: " << get<0>(i)->name() << "  " << get<1>(i)
-                   << "  " << get<2>(i)->name() << " " << get<3>(i);
-    graph->AddEdge(get<0>(i), get<1>(i), get<2>(i), get<3>(i));
-  }
-
-  // Though edges will be removed when we remove the prefetch_node
-  // we specifically remove the edges to be sure
-  for (auto edge : edges_to_remove) {
-    NGRAPH_VLOG(0) << "Removing: " << edge->DebugString();
-    graph->RemoveEdge(edge);
-  }
-
-  // FInally remove the current preftetch node
-  graph->RemoveNode(prefetch_node);
-
-  return Status::OK();
-}
-
 //
 // Main entry point for the variable-capture.
 //
@@ -127,9 +50,7 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
   }
 
   std::vector<Node*> replaced_nodes;
-
-  Node* prefetch_node = nullptr;
-
+  std::vector<Node*> make_iterator_nodes;
   for (auto node : graph->op_nodes()) {
     if (!IsOutputNode(node, skip_these_nodes)) {
       if (node->type_string() == "VariableV2") {
@@ -201,10 +122,8 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
         }
 
         replaced_nodes.push_back(node);
-      } else if (node->type_string() == "PrefetchDataset") {
-        // Collect the prefetch_node so that we can add
-        // the NGraphWriteToDevice Op after this one
-        prefetch_node = node;
+      } else if (node->type_string() == "MakeIterator") {
+        make_iterator_nodes.push_back(node);
       }
     }
   }
@@ -214,12 +133,32 @@ Status CaptureVariables(Graph* graph, const std::set<string> skip_these_nodes) {
     graph->RemoveNode(node);
   }
 
+  // If Prefetch is requested
   if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
       nullptr) {
+    if (make_iterator_nodes.size() > 1) {
+      return errors::Internal(
+          "Found more than 1 MakeIterator nodes. This case is not supported.");
+    }
+    // Else try to capture it
+    Node* make_iterator_node = make_iterator_nodes[0];
+    // We expect the MakeIterator to have 1 input thats
+    // an iterator and the other one can be either a
+    // PrefetchDataset node or a ModelDataset node
+    // Other cases are not handled at the moment.
+    Node* prefetch_node = FindPrefetch(make_iterator_node);
     if (prefetch_node != nullptr) {
       return ReplacePrefetch(graph, prefetch_node);
+    } else {
+      return errors::Internal(
+          "Did not find PrefetchDataset or "
+          "ModelDataset+OptimizeDataset+PrefetchDataset as MakeIterator "
+          "nodes' inputs. Only those 2 cases are handled for now.");
     }
   }
+
+  make_iterator_nodes.clear();
+  replaced_nodes.clear();
   return Status::OK();
 }
 

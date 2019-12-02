@@ -53,13 +53,14 @@ class NgraphDataCache {
   // it will create item, put it in the cache and returns item and status
   std::pair<Status, ValueType> LookUpOrCreate(
       KeyType key,
-      std::function<std::pair<Status, ValueType>()> callback_create_item,
-      std::function<void(ValueType)> callback_destroy_item);
+      std::function<std::pair<Status, ValueType>(KeyType)> callback_create_item,
+      std::function<void(ValueType)> callback_destroy_item, bool& cache_hit);
 
   // Overload for above function, which doesn't take callback for destroy item
   std::pair<Status, ValueType> LookUpOrCreate(
       KeyType key,
-      std::function<std::pair<Status, ValueType>()> callback_create_item);
+      std::function<std::pair<Status, ValueType>(KeyType)> callback_create_item,
+      bool& cache_hit);
   Status RemoveItem(KeyType key);
   Status RemoveItem(KeyType key,
                     std::function<void(ValueType)> callback_destroy_item);
@@ -139,9 +140,9 @@ template <typename KeyType, typename ValueType>
 std::pair<Status, ValueType>
 NgraphDataCache<KeyType, ValueType>::LookUpOrCreate(
     KeyType key,
-    std::function<std::pair<Status, ValueType>()> callback_create_item,
-    std::function<void(ValueType)> callback_destroy_item) {
-  bool found_in_cache;
+    std::function<std::pair<Status, ValueType>(KeyType)> callback_create_item,
+    std::function<void(ValueType)> callback_destroy_item,
+    bool& found_in_cache) {
   // look up in the cache
   {
     absl::MutexLock lock(&m_mutex);
@@ -155,7 +156,7 @@ NgraphDataCache<KeyType, ValueType>::LookUpOrCreate(
   ValueType item;
   pair<Status, ValueType> status_item_pair;
   try {
-    status_item_pair = callback_create_item();
+    status_item_pair = callback_create_item(key);
   } catch (std::bad_function_call& exception) {
     return std::make_pair(
         errors::Internal(
@@ -209,8 +210,10 @@ template <typename KeyType, typename ValueType>
 std::pair<Status, ValueType>
 NgraphDataCache<KeyType, ValueType>::LookUpOrCreate(
     KeyType key,
-    std::function<std::pair<Status, ValueType>()> callback_create_item) {
-  return LookUpOrCreate(key, callback_create_item, [](ValueType) {});
+    std::function<std::pair<Status, ValueType>(KeyType)> callback_create_item,
+    bool& found_in_cache) {
+  return LookUpOrCreate(key, callback_create_item, [](ValueType) {},
+                        found_in_cache);
 }
 }
 }

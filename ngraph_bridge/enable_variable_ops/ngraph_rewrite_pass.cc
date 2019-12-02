@@ -49,41 +49,6 @@ class NGraphRewritePass : public GraphOptimizationPass {
   virtual Status Run(const GraphOptimizationPassOptions& options) = 0;
 
  protected:
-  void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
-                  std::string filename_prefix, std::string title) {
-    // If we have a "main" graph, dump that.
-    if (options.graph != nullptr) {
-      auto dot_filename = DotFilename(filename_prefix, idx);
-      auto pbtxt_filename = PbtxtFilename(filename_prefix, idx);
-      NGRAPH_VLOG(0) << "Dumping main graph to " << dot_filename;
-      NGRAPH_VLOG(0) << "Dumping main graph to " << pbtxt_filename;
-
-      GraphToDotFile(options.graph->get(), dot_filename, title);
-      GraphToPbTextFile(options.graph->get(), pbtxt_filename);
-    }
-
-    // If we have partition graphs (we shouldn't), dump those.
-    if (options.partition_graphs != nullptr) {
-      int sub_idx = 0;
-
-      for (auto& kv : *options.partition_graphs) {
-        auto dot_filename = DotFilename(filename_prefix, idx, sub_idx);
-        auto pbtxt_filename = PbtxtFilename(filename_prefix, idx, sub_idx);
-        NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                       << dot_filename;
-        NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                       << pbtxt_filename;
-
-        Graph* pg = kv.second.get();
-
-        GraphToDotFile(pg, dot_filename, title);
-        GraphToPbTextFile(pg, pbtxt_filename);
-
-        sub_idx++;
-      }
-    }
-  }
-
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
   static int FreshIndex() {
@@ -91,44 +56,7 @@ class NGraphRewritePass : public GraphOptimizationPass {
     return s_serial_counter++;
   }
 
-  static bool DumpAllGraphs() {
-    return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr;
-  }
-
  private:
-  static std::string DotFilename(std::string kind, int idx) {
-    return GraphFilenamePrefix(kind, idx) + ".dot";
-  }
-  static std::string PbtxtFilename(std::string kind, int idx) {
-    return GraphFilenamePrefix(kind, idx) + ".pbtxt";
-  }
-  static std::string DotFilename(std::string kind, int idx, int sub_idx) {
-    return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
-  }
-  static std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
-    return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
-  }
-  static std::string GraphFilenamePrefix(std::string kind, int idx) {
-    std::stringstream ss;
-    ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
-#if defined NGRAPH_DISTRIBUTED
-    int rank_id = ngraph::get_distributed_interface()->get_rank();
-    ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
-#endif
-    return ss.str();
-  }
-  static std::string GraphFilenamePrefix(std::string kind, int idx,
-                                         int sub_idx) {
-    std::stringstream ss;
-    ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
-       << std::setw(4) << sub_idx;
-#if defined NGRAPH_DISTRIBUTED
-    int rank_id = ngraph::get_distributed_interface()->get_rank();
-    ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
-#endif
-    return ss.str();
-  }
-
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
   static mutex s_serial_counter_mutex;
 };
@@ -179,22 +107,11 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
     std::set<string> skip_these_nodes = {};
     TF_RETURN_IF_ERROR(
         CaptureVariables(options.graph->get(), skip_these_nodes));
-
     if (DumpCapturedGraphs()) {
       DumpGraphs(options, idx, "captured", "Graph With Variables Captured");
     }
 
     return Status::OK();
-  }
-
- private:
-  static bool DumpPrecaptureGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
-  }
-  static bool DumpCapturedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
   }
 };
 
@@ -342,38 +259,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   }
 
  private:
-  static bool DumpUnmarkedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
-  }
   static bool DumpReplacedModifiersGraphs() {
     return DumpAllGraphs() ||
            std::getenv("NGRAPH_TF_DUMP_REPLACEDMODIFIERS_GRAPHS") != nullptr;
-  }
-  static bool DumpMarkedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
-  }
-  static bool DumpClusteredGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
-  }
-  static bool DumpDeclusteredGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
-  }
-  static bool DumpEncapsulatedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
-  }
-  static bool DumpTrackedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
-  }
-
-  static bool DumpCatalogedGraphs() {
-    return DumpAllGraphs() ||
-           std::getenv("NGRAPH_TF_DUMP_CATALOGED_GRAPHS") != nullptr;
   }
 
   static bool DumpRemoveNGraphAssignsGraphs() {

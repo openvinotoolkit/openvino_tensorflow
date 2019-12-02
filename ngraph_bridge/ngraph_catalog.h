@@ -75,10 +75,22 @@ class NGraphCatalog {
   //  bool : NGraphAssign‘s copy_to_tf attribute ‘s value
   static unordered_map<string, tuple<string, bool>> encap_output_info_map_;
 
+  // Map keeps track of encap nodes whose input is an IteratorGenNext.
+  // This is map from the node to the input indexs of the
+  // encapsulate node that are prefetched.
+  // Will be used by NGraphEncapsulate Op.
+  // Map of
+  // Key
+  //      string : GraphId + _ + nodename
+  // Value : Set of indices
+  static unordered_map<string, unordered_set<int>> prefetched_input_index_map_;
+
  public:
   // Utility to create key to query the maps
   static string CreateNodeKey(const int& graph_id, const string& node_name,
                               const int& index);
+  static string CreateNodeKey(const int& graph_id, const string& node_name);
+
   // Clear all the maps
   static void ClearCatalog();
 
@@ -132,6 +144,19 @@ class NGraphCatalog {
   static void DeleteFromEncapOutputInfoMap(const string& key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();
+
+  // Functions for PrefetedInputs Map
+  static void AddToPrefetchedInputIndexMap(const int& graphid,
+                                           const string& node_name,
+                                           const unordered_set<int>& val);
+  static bool ExistsInPrefetchedInputIndexMap(const int& graphid,
+                                              const string& node_name);
+  static bool ExistsInPrefetchedInputIndexMap(const string& key);
+  static const unordered_set<int>& GetIndexesFromPrefetchedInputIndexMap(
+      const int& graphid, const string& node_name);
+
+  static void ClearPrefetchedInputIndexMap();
+  static void PrintPrefetchedInputIndexMap();
 };
 
 }  // ngraph_bridge

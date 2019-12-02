@@ -212,7 +212,7 @@ TEST(GrapplerConfig, RConfig3) {
   }
 
   // Set NGRAPH_TF_BACKEND
-  SetBackendUsingEnvVar("NOP");
+  SetBackendUsingEnvVar("CPU");
 
   // Set Backend Manager Backend
   ASSERT_OK(BackendManager::SetBackendName("INTERPRETER"));
@@ -221,7 +221,7 @@ TEST(GrapplerConfig, RConfig3) {
   // env variable NGRAPH_TF_BACKEND takes precedence
   string check_backend;
   ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&check_backend));
-  ASSERT_EQ("NOP", check_backend);
+  ASSERT_EQ("CPU", check_backend);
 
   // Though we set the backend and NGRAPH_TF_BACKEND
   // the rewriter-config takes affect
@@ -231,7 +231,7 @@ TEST(GrapplerConfig, RConfig3) {
   graph.ToGraphDef(&item.graph);
   ConfigProto config_proto;
   auto backend_name = AttrValue();
-  backend_name.set_s("CPU");
+  backend_name.set_s("INTERPRETER");
   auto device_id = AttrValue();
   device_id.set_s("1");
 
@@ -276,7 +276,7 @@ TEST(GrapplerConfig, RConfig3) {
   // Even though the backend is set via config-writer, the one specified
   // by the env. var takes effect. So though we set this to CPU
   // the backend should point to NOP as set via env. var
-  ASSERT_EQ(ng_backend, "NOP");
+  ASSERT_EQ(ng_backend, "CPU");
   ASSERT_EQ(ng_device_id, "1");
 
   // Clean up

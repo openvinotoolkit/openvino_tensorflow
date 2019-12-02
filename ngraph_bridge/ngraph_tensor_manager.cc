@@ -14,11 +14,9 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_bridge/ngraph_utils.h"
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
-#endif
 #include "ngraph_bridge/ngraph_tensor_manager.h"
+#include "ngraph_bridge/ngraph_catalog.h"
+#include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
 
@@ -65,6 +63,31 @@ void NGraphTensorManager::Initialize() {
       FindComplement(m_number_of_inputs, m_input_indexes_from_variables);
   m_pipelined_output_indexes =
       FindComplement(m_number_of_outputs, m_output_indexes_assigning_variable);
+
+  if (NGraphCatalog::ExistsInPrefetchedInputIndexMap(m_ng_encap_graph_id,
+                                                     m_ng_encap_node_name)) {
+    auto prefetch_indexes =
+        NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
+            m_ng_encap_graph_id, m_ng_encap_node_name);
+    m_prefetched_input_indexes.insert(m_prefetched_input_indexes.begin(),
+                                      prefetch_indexes.begin(),
+                                      prefetch_indexes.end());
+    // keeping the indexes sorted, is helpful in general testing
+    sort(m_prefetched_input_indexes.begin(), m_prefetched_input_indexes.end());
+  }
+
+  // the prefetched input indexes will also be pipelined
+  for (int pref_index : m_prefetched_input_indexes) {
+    auto position = std::find(m_pipelined_input_indexes.begin(),
+                              m_pipelined_input_indexes.end(), pref_index);
+    if (position == m_pipelined_input_indexes.end()) {
+      throw std::runtime_error("Prefetched input index " +
+                               to_string(pref_index) +
+                               " not found in pipelined inputs.");
+    }
+    m_pipelined_input_indexes_prefetched.push_back(
+        position - m_pipelined_input_indexes.begin());
+  }
 }
 
 //---------------------------------------------------------------------------

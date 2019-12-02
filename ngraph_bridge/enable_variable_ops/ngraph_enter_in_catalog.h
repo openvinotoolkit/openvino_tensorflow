@@ -21,7 +21,7 @@
 
 #include "ngraph/ngraph.hpp"
 
-#include "ngraph_bridge/enable_variable_ops/ngraph_catalog.h"
+#include "ngraph_bridge/ngraph_catalog.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -30,7 +30,7 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-// 1. Populate the NGraphCatalog
+// 1. Populate the input_variable_map
 // 2. Attach Graph Ids to the node
 
 // Some terms:
@@ -62,7 +62,6 @@ namespace ngraph_bridge {
 // We add mapping of {encapnodename : set of OutputIndexes that need a copy} to
 // the EncapsulateOutputCopyIndexesMap
 //
-
 Status EnterInCatalog(Graph* graph, int graph_id);
 
 }  // ngraph_bridge

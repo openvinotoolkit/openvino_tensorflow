@@ -29,6 +29,7 @@
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
@@ -48,41 +49,6 @@ class NGraphRewritePass : public GraphOptimizationPass {
   virtual Status Run(const GraphOptimizationPassOptions& options) = 0;
 
  protected:
-  void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
-                  std::string filename_prefix, std::string title) {
-    // If we have a "main" graph, dump that.
-    if (options.graph != nullptr) {
-      auto dot_filename = DotFilename(filename_prefix, idx);
-      auto pbtxt_filename = PbtxtFilename(filename_prefix, idx);
-      NGRAPH_VLOG(0) << "Dumping main graph to " << dot_filename;
-      NGRAPH_VLOG(0) << "Dumping main graph to " << pbtxt_filename;
-
-      GraphToDotFile(options.graph->get(), dot_filename, title);
-      GraphToPbTextFile(options.graph->get(), pbtxt_filename);
-    }
-
-    // If we have partition graphs (we shouldn't), dump those.
-    if (options.partition_graphs != nullptr) {
-      int sub_idx = 0;
-
-      for (auto& kv : *options.partition_graphs) {
-        auto dot_filename = DotFilename(filename_prefix, idx, sub_idx);
-        auto pbtxt_filename = PbtxtFilename(filename_prefix, idx, sub_idx);
-        NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                       << dot_filename;
-        NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                       << pbtxt_filename;
-
-        Graph* pg = kv.second.get();
-
-        GraphToDotFile(pg, dot_filename, title);
-        GraphToPbTextFile(pg, pbtxt_filename);
-
-        sub_idx++;
-      }
-    }
-  }
-
   // Returns a fresh "serial number" to avoid filename collisions in the graph
   // dumps.
   static int FreshIndex() {
@@ -170,6 +136,8 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   2. Cluster Assignment [ngraph_assign_clusters.cc]
 //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
 //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc]
+//   5. Rewrite Variable Type Ops for Tracking [ngraph_rewrite_for_tracking.cc]
+//   6. Enter In Catalog  [ngraph_enter_in_catalog.cc]
 //
 // Between phases, graph dumps (in both .dot and .pbtxt format) may be
 // requested by setting the following environment variables:
@@ -179,6 +147,8 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   NGRAPH_TF_DUMP_CLUSTERED_GRAPHS=1     dumps graphs after phase 2
 //   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1   dumps graphs after phase 3
 //   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1  dumps graphs after phase 4
+//   NGRAPH_TF_DUMP_TRACKED_GRAPHS=1       dumps graphs after phase 5
+//   NGRAPH_TF_DUMP_CATALOGED_GRAPHS=1     dumps graphs after phase 6
 //   NGRAPH_TF_DUMP_GRAPHS=1               all of the above
 //
 class NGraphEncapsulationPass : public NGraphRewritePass {
@@ -269,11 +239,18 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Clusters Encapsulated");
     }
 
-    // Rewrite for tracking then, if requested, dump the graphs.
+    // 5. Rewrite for tracking then, if requested, dump the graphs.
     TF_RETURN_IF_ERROR(RewriteForTracking(options.graph->get(), idx));
     if (DumpTrackedGraphs()) {
       DumpGraphs(options, idx, "tracked",
                  "Graph with Variables Rewritten for Tracking");
+    }
+
+    // 6. Enter in catalog then.
+    TF_RETURN_IF_ERROR(EnterPrefetchInCatalog(options.graph->get(), idx));
+    if (DumpCatalogedGraphs()) {
+      DumpGraphs(options, idx, "prefetch-cataloged",
+                 "Graph with Prefetched Inputs Entered in Catalog");
     }
 
     return Status::OK();

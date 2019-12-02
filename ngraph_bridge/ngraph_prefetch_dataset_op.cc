@@ -417,7 +417,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
         if (s.ok()) {
           ngraph::Event evt_dev_cp("Prf Dev Copy", "Copy", "");
           shared_data->SetBufferDepth(m_buffer_size);
-          auto ng_io_tensors = shared_data->GetNextIoTensorsForDeviceTransfer();
+          auto ng_input_tensor_bundle =
+              shared_data->GetNextInputTensorBundleForDeviceTransfer();
 
           // Write to these tensors
           for (auto i = 0; i < buffer_element.value.size(); i++) {
@@ -431,9 +432,9 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
               NGRAPH_VLOG(2)
                   << "[PREFETCH] INPUT tensor being written by Prefetch: "
                   << " Value: " << buffer_element.value[i].DebugString();
-              ng_io_tensors.Inputs[i]->write(
+              ng_input_tensor_bundle.Inputs[i]->write(
                   current_src_ptr,
-                  ng_io_tensors.Inputs[i]->get_element_count() *
+                  ng_input_tensor_bundle.Inputs[i]->get_element_count() *
                       ng_element_type.size());
             } catch (const std::exception& exp) {
               throw exp;
@@ -444,7 +445,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           }
 
           // Now add them back to the other queue
-          shared_data->AddNextIoTensorsReadyForDeviceExecution(ng_io_tensors);
+          shared_data->AddNextInputTensorBundleReadyForDeviceExecution(
+              ng_input_tensor_bundle);
           shared_data->Unref();
           evt_dev_cp.Stop();
           ngraph::Event::write_trace(evt_dev_cp);

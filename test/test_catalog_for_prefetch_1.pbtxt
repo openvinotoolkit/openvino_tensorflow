@@ -1,0 +1,281 @@
+node {
+  name: "v/cg/affine0/biases"
+  op: "NGraphVariable"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@append_apply_gradient_ops/GradientDescent/update_v/cg/affine0/biases/ApplyGradientDescent"
+      }
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "just_looking"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 1001
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "v/cg/affine0/weights"
+  op: "NGraphVariable"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@append_apply_gradient_ops/GradientDescent/update_v/cg/affine0/weights/ApplyGradientDescent"
+      }
+    }
+  }
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "just_looking"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 2048
+        }
+        dim {
+          size: 1001
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/IteratorV2"
+  op: "IteratorV2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "input_processing/IteratorGetNext"
+  op: "IteratorGetNext"
+  input: "input_processing/batch_processing/IteratorV2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+}
+node {
+  name: "_retval_Add_0_0"
+  op: "_Retval"
+  input: "ngraph_cluster_340"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "ngraph_cluster_340"
+  op: "NGraphEncapsulate"
+  input: "v/cg/affine0/biases"
+  input: "v/cg/affine0/weights"
+  input: "input_processing/IteratorGetNext:1"
+  input: "input_processing/IteratorGetNext"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_FLOAT
+        type: DT_INT32
+        type: DT_FLOAT
+      }
+    }
+  }
+  attr {
+    key: "Tresults"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_FLOAT
+        type: DT_INT32
+        type: DT_FLOAT
+      }
+    }
+  }
+  attr {
+    key: "ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "ngraph_cluster"
+    value {
+      i: 340
+    }
+  }
+  attr {
+    key: "ngraph_device_id"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "ngraph_graph_id"
+    value {
+      i: 5
+    }
+  }
+}

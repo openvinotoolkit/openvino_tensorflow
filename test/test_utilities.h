@@ -18,8 +18,10 @@
 
 #include "gtest/gtest.h"
 
+#include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
@@ -191,6 +193,8 @@ Status CreateSession(const string& graph_filename, const string& backend_name,
 Status LoadGraph(const string& graph_file_name,
                  std::unique_ptr<tensorflow::Session>* session,
                  const tensorflow::SessionOptions& options);
+
+Status LoadGraphFromPbTxt(const string& pb_file, Graph* input_graph);
 
 }  // namespace testing
 

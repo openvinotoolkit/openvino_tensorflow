@@ -1,0 +1,4870 @@
+node {
+  name: "input_processing/batch_processing/IteratorV2"
+  op: "IteratorV2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@input_processing/batch_processing/MakeIterator"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/Const"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_STRING
+        tensor_shape {
+        }
+        string_val: "/cpu:0"
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/MultiDeviceIterator"
+  op: "MultiDeviceIterator"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "devices"
+    value {
+      list {
+        s: "/gpu:0"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/optimizations"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_STRING
+        tensor_shape {
+          dim {
+            size: 3
+          }
+        }
+        string_val: "map_and_batch_fusion"
+        string_val: "noop_elimination"
+        string_val: "shuffle_and_repeat_fusion"
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ExperimentalThreadPoolHandle"
+  op: "ExperimentalThreadPoolHandle"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "display_name"
+    value {
+      s: "input_pipeline_thread_pool"
+    }
+  }
+  attr {
+    key: "max_intra_op_parallelism"
+    value {
+      i: 1
+    }
+  }
+  attr {
+    key: "num_threads"
+    value {
+      i: 108
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/drop_remainder"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_BOOL
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_BOOL
+        tensor_shape {
+        }
+        bool_val: false
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/num_parallel_calls"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 128
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/count_1"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: -1
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/seed2"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        tensor_content: "6\000\000\000\000\000\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/seed"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 1234
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/buffer_size_1"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 10000
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/start"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 0
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/prefetch_input_elements"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 20
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/buffer_output_elements"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 2
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/cycle_length"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        int64_val: 10
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/seed2"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT64
+        tensor_shape {
+        }
+        tensor_content: "\033\000\000\000\000\000\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/file_pattern"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_STRING
+        tensor_shape {
+          dim {
+            size: 1024
+          }
+        }
+        string_val: "/dataset/TF_ImageNet_latest/train-00714-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00419-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00023-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00321-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00416-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00975-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00849-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00110-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00627-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00846-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00525-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00993-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00628-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00212-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00092-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00670-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00147-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00811-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00390-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00245-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00148-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00572-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00074-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00379-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00743-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00696-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00441-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00376-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00699-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00922-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00594-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00965-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00331-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00406-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00704-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00409-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00033-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00535-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00983-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00638-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00202-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00856-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00100-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00637-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00859-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00255-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00158-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00562-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00801-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00380-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00660-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00157-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00082-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00689-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00932-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00584-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00451-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00366-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00686-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00064-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00369-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00753-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00866-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00232-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00608-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00505-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00869-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00607-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00130-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00436-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00301-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00880-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00955-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01008-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00003-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00439-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00734-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01007-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00356-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00461-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00283-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00902-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00763-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00359-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00054-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00181-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00831-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00487-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00552-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00168-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00265-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00785-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00488-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00167-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00650-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00617-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00120-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00879-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00222-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00618-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00515-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00876-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01017-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00013-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00429-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00724-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00945-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01018-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00426-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00311-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00890-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00191-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00773-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00349-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00044-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00293-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00912-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00346-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00471-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00177-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00640-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00795-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00498-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00542-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00178-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00275-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00821-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00497-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00034-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00339-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00703-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00962-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00401-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00336-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00630-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00107-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00984-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00205-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00108-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00532-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00851-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00150-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00667-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00388-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00809-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00085-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00565-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00668-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00252-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00806-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00387-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00681-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00754-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00459-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00063-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00583-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00935-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00361-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00456-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00411-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00326-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00972-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00024-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00329-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00713-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01020-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00841-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00994-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00215-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00118-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00522-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00620-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00117-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00816-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00397-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00575-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00678-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00242-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00398-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00819-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00095-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00140-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00677-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00371-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00446-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00593-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00925-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00744-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00449-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00073-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00691-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00512-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00128-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00225-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00871-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00127-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00610-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00942-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00316-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00897-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00421-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01010-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00723-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00898-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00319-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00014-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00294-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00915-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00199-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00476-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00341-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00196-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00043-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00479-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00774-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00272-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00648-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00545-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00490-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00826-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00647-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00170-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00829-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00792-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00137-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00600-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00861-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00502-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00138-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00235-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00733-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00888-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00309-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00004-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01000-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00306-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00887-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00431-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00952-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00053-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00469-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00764-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00186-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00466-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00351-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00284-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00905-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00189-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00839-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00782-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00657-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00160-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00480-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00836-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00262-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00658-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00555-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01006-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00735-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00002-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00438-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01009-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00954-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00300-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00881-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00437-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00131-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00606-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00868-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00504-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00233-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00609-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00867-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00651-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00166-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00489-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00784-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00264-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00553-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00169-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00486-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00830-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00180-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00055-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00762-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00358-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00282-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00903-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00460-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00357-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00310-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00891-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00427-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01019-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00944-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00725-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00012-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00428-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01016-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00877-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00514-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00223-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00619-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00878-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00121-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00616-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00496-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00820-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00274-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00543-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00179-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00499-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00794-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00641-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00176-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00470-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00347-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00292-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00913-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00045-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00772-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00348-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00190-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00629-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00992-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00213-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00524-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00847-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00626-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00111-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00848-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00974-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00417-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00320-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00418-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00022-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00715-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00595-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00923-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00698-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00377-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00440-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00697-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00378-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00742-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00075-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00149-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00573-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00244-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00810-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00391-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00146-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00671-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00093-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00858-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00636-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00101-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00857-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00639-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00982-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00203-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00534-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00408-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00032-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00705-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00407-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00330-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00964-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00368-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00752-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00065-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00687-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00367-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00450-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00585-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00933-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00688-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00083-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00156-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00661-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00800-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00381-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00159-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00563-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00254-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00015-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00899-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00722-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00318-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01011-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00420-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00317-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00896-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00943-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00611-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00126-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00870-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00224-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00513-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00129-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00793-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00828-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00171-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00646-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00827-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00491-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00544-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00273-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00649-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00775-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00042-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00478-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00197-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00340-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00477-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00198-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00295-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00914-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00953-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00430-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00307-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00886-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01001-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00005-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00889-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00732-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00308-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00234-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00503-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00139-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00860-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00601-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00136-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00554-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00263-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00659-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00837-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00481-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00161-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00656-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00783-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00838-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00188-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00285-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00904-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00350-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00467-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00187-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00765-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00052-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00468-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00850-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00109-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00533-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00985-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00204-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00106-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00631-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00337-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00400-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00963-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00338-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00702-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00035-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00457-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00360-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00934-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00582-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00458-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00062-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00755-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00680-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00807-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00386-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00669-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00253-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00564-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00084-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00389-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00808-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00666-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00151-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00116-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00621-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00119-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00523-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00995-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00214-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00840-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01021-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00328-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00712-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00025-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00973-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00327-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00410-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00690-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00448-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00072-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00745-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00924-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00592-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00447-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00370-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00676-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00141-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00094-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00399-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00818-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00679-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00243-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00574-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00817-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00396-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00454-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00759-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00363-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00937-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00581-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00061-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00756-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00683-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00938-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00088-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00804-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00385-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00250-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00567-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00087-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00665-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00568-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00152-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00853-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00530-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00986-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00207-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00105-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00208-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00989-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00632-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00334-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00039-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00403-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00960-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00701-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00036-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00693-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00928-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00071-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00746-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00927-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00591-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00444-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00749-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00373-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00675-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00578-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00142-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00097-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00240-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00577-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00098-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00814-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00395-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00115-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00218-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00999-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00622-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00520-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00996-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00217-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00843-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01022-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00711-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00026-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00970-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00324-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00029-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00413-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00790-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00172-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00548-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00645-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00824-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00492-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00547-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00270-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00776-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00041-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00194-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00918-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00299-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00343-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00779-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00474-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00296-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00917-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00016-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00721-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01012-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00423-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00019-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00314-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00895-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00940-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00612-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00228-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00125-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00873-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00227-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00510-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00557-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00260-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00834-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00482-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00162-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00558-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00655-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00780-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00286-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00907-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00353-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00769-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00464-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00184-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00908-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00289-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00766-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00051-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00950-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00433-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00009-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00304-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00885-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01002-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00006-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00731-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00237-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00500-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00863-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00602-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00238-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00135-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00596-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00920-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00374-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00079-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00443-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00599-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00694-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00741-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00076-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00570-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00247-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00813-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00392-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00145-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00248-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00672-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00090-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00991-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00210-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00527-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00844-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00625-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00528-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00112-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00977-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00414-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00719-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00323-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00978-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00021-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00716-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00751-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00066-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00589-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00684-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00364-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00069-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00453-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00586-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00930-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00080-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00155-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00258-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00662-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00803-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00382-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00560-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00257-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00635-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00538-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00102-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00854-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00981-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00200-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00537-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00031-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00706-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00968-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00404-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00709-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00333-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00967-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00652-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00268-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00165-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00787-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00267-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00550-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00485-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00833-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00788-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00183-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00056-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00761-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00281-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00900-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00463-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00059-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00354-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01005-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00958-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00736-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00001-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00957-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00303-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00739-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00882-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00434-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00132-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00508-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00605-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00507-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00230-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00864-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00495-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00823-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00798-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00277-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00540-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00797-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00642-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00278-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00175-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00473-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00049-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00344-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00291-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00910-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00046-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00771-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00193-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00313-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00729-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00892-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00424-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00947-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00726-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00011-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01015-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00948-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00874-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00517-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00220-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00122-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00518-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00615-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00297-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00916-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00475-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00342-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00778-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00919-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00298-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00195-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00040-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00777-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00271-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00546-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00493-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00825-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00644-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00173-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00549-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00791-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00511-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00226-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00872-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00124-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00613-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00229-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00941-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00315-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00894-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00422-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00018-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01013-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00720-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00017-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00050-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00767-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00909-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00288-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00185-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00465-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00352-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00768-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00287-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00906-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00781-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00654-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00163-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00559-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00483-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00835-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00261-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00556-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00134-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00603-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00239-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00862-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00501-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00236-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00730-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00007-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01003-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00305-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00884-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00432-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00008-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00951-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00569-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00153-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00664-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00086-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00566-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00251-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00805-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00384-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00089-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00939-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00682-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00757-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00060-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00580-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00936-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00758-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00362-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00455-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00037-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00700-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00961-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00038-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00402-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00335-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00209-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00633-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00988-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00104-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00987-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00206-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00531-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00852-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00815-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00394-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00099-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00576-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00241-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00096-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00579-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00143-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00674-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00748-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00372-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00445-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00590-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00926-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00747-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00070-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00929-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00692-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00028-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00412-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00325-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00971-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00027-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00710-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01023-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00842-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00997-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00216-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00521-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00219-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00623-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00998-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00114-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00355-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00462-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00058-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00280-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00901-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00760-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00057-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00182-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00789-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00832-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00484-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00551-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00266-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00786-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00164-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00653-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00269-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00865-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00231-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00506-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00604-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00133-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00509-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00435-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00302-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00883-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00738-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00956-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00000-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00737-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00959-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01004-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00192-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00770-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00047-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00290-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00911-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00345-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00472-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00048-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00174-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00643-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00279-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00796-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00541-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00276-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00799-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00822-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00494-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00614-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00123-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00519-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00221-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00516-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00875-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00949-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-01014-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00010-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00727-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00946-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00425-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00312-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00893-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00728-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00091-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00249-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00673-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00144-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00812-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00393-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00246-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00571-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00077-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00740-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00695-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00598-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00078-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00442-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00375-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00921-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00597-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00717-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00020-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00979-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00718-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00322-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00415-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00976-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00529-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00113-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00624-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00845-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00526-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00990-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00211-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00256-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00561-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00802-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00383-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00259-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00663-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00154-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00081-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00931-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00587-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00068-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00452-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00365-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00685-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00588-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00067-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00750-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00966-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00708-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00332-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00405-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00969-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00707-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00030-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00536-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00980-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00201-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00855-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00539-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00103-of-01024"
+        string_val: "/dataset/TF_ImageNet_latest/train-00634-of-01024"
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/message/x"
+  op: "Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_STRING
+        tensor_shape {
+        }
+        string_val: "No files matched pattern: "
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/MultiDeviceIteratorToStringHandle"
+  op: "MultiDeviceIteratorToStringHandle"
+  input: "input_processing/batch_processing/MultiDeviceIterator"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+}
+node {
+  name: "input_processing/batch_processing/RangeDataset"
+  op: "RangeDataset"
+  input: "input_processing/batch_processing/start"
+  input: "input_processing/batch_processing/num_parallel_calls"
+  input: "ngraph_cluster_324"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_INT64
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/ReduceJoin"
+  op: "ReduceJoin"
+  input: "input_processing/batch_processing/list_files/file_pattern"
+  input: "ngraph_cluster_336"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "keep_dims"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "separator"
+    value {
+      s: ", "
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/MatchingFiles"
+  op: "MatchingFiles"
+  input: "input_processing/batch_processing/list_files/file_pattern"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+}
+node {
+  name: "input_processing/batch_processing/RepeatDataset"
+  op: "RepeatDataset"
+  input: "input_processing/batch_processing/RangeDataset"
+  input: "input_processing/batch_processing/count_1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_INT64
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/message"
+  op: "Add"
+  input: "input_processing/batch_processing/list_files/message/x"
+  input: "input_processing/batch_processing/list_files/ReduceJoin"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_STRING
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/Shape"
+  op: "Shape"
+  input: "input_processing/batch_processing/list_files/MatchingFiles"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/assert_not_empty/Assert"
+  op: "Assert"
+  input: "ngraph_cluster_336:1"
+  input: "input_processing/batch_processing/list_files/message"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      list {
+        type: DT_STRING
+      }
+    }
+  }
+  attr {
+    key: "summarize"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/Shape_1"
+  op: "Shape"
+  input: "input_processing/batch_processing/list_files/MatchingFiles"
+  input: "^input_processing/batch_processing/list_files/assert_not_empty/Assert"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "T"
+    value {
+      type: DT_STRING
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT64
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/TensorSliceDataset"
+  op: "TensorSliceDataset"
+  input: "input_processing/batch_processing/list_files/MatchingFiles"
+  input: "^input_processing/batch_processing/list_files/assert_not_empty/Assert"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Toutput_types"
+    value {
+      list {
+        type: DT_STRING
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/list_files/ShuffleDataset"
+  op: "ShuffleDataset"
+  input: "input_processing/batch_processing/list_files/TensorSliceDataset"
+  input: "ngraph_cluster_324:1"
+  input: "input_processing/batch_processing/seed"
+  input: "input_processing/batch_processing/list_files/seed2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_STRING
+      }
+    }
+  }
+  attr {
+    key: "reshuffle_each_iteration"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ExperimentalParallelInterleaveDataset"
+  op: "ExperimentalParallelInterleaveDataset"
+  input: "input_processing/batch_processing/list_files/ShuffleDataset"
+  input: "input_processing/batch_processing/cycle_length"
+  input: "ngraph_cluster_324"
+  input: "input_processing/batch_processing/drop_remainder"
+  input: "input_processing/batch_processing/buffer_output_elements"
+  input: "input_processing/batch_processing/prefetch_input_elements"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+      }
+    }
+  }
+  attr {
+    key: "f"
+    value {
+      func {
+        name: "__inference_tf_data_experimental_parallel_interleave_<class \'abc.ABCMeta\'>_52"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_STRING
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ZipDataset"
+  op: "ZipDataset"
+  input: "input_processing/batch_processing/ExperimentalParallelInterleaveDataset"
+  input: "input_processing/batch_processing/RepeatDataset"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "N"
+    value {
+      i: 2
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_STRING
+        type: DT_INT64
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/PrefetchDataset"
+  op: "PrefetchDataset"
+  input: "input_processing/batch_processing/ZipDataset"
+  input: "input_processing/batch_processing/num_parallel_calls"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_STRING
+        type: DT_INT64
+      }
+    }
+  }
+  attr {
+    key: "slack_period"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ShuffleAndRepeatDataset"
+  op: "ShuffleAndRepeatDataset"
+  input: "input_processing/batch_processing/PrefetchDataset"
+  input: "input_processing/batch_processing/buffer_size_1"
+  input: "input_processing/batch_processing/seed"
+  input: "input_processing/batch_processing/seed2"
+  input: "input_processing/batch_processing/count_1"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+        }
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_STRING
+        type: DT_INT64
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ExperimentalMapAndBatchDataset"
+  op: "ExperimentalMapAndBatchDataset"
+  input: "input_processing/batch_processing/ShuffleAndRepeatDataset"
+  input: "input_processing/batch_processing/num_parallel_calls"
+  input: "input_processing/batch_processing/num_parallel_calls"
+  input: "input_processing/batch_processing/drop_remainder"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+      }
+    }
+  }
+  attr {
+    key: "f"
+    value {
+      func {
+        name: "__inference_tf_data_experimental_map_and_batch_RecordInputImagePreprocessor.parse_and_preprocess_232"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "preserve_cardinality"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/PrefetchDataset_1"
+  op: "PrefetchDataset"
+  input: "input_processing/batch_processing/ExperimentalMapAndBatchDataset"
+  input: "ngraph_cluster_324"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "slack_period"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ExperimentalThreadPoolDataset"
+  op: "ExperimentalThreadPoolDataset"
+  input: "input_processing/batch_processing/PrefetchDataset_1"
+  input: "input_processing/batch_processing/ExperimentalThreadPoolHandle"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/OptimizeDataset"
+  op: "OptimizeDataset"
+  input: "input_processing/batch_processing/ExperimentalThreadPoolDataset"
+  input: "input_processing/batch_processing/optimizations"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "optimization_configs"
+    value {
+      list {
+        s: "map_vectorization:use_choose_fastest:false"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/ModelDataset"
+  op: "ModelDataset"
+  input: "input_processing/batch_processing/OptimizeDataset"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "cpu_budget"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/MultiDeviceIteratorInit"
+  op: "MultiDeviceIteratorInit"
+  input: "input_processing/batch_processing/ModelDataset"
+  input: "input_processing/batch_processing/MultiDeviceIterator"
+  input: "ngraph_cluster_324"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+}
+node {
+  name: "input_processing/batch_processing/GeneratorDataset_1"
+  op: "GeneratorDataset"
+  input: "input_processing/batch_processing/Const"
+  input: "input_processing/batch_processing/MultiDeviceIteratorToStringHandle"
+  input: "input_processing/batch_processing/Const"
+  input: "input_processing/batch_processing/MultiDeviceIteratorInit"
+  input: "input_processing/batch_processing/Const"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Tfinalize_func_args"
+    value {
+      list {
+        type: DT_STRING
+      }
+    }
+  }
+  attr {
+    key: "Tinit_func_args"
+    value {
+      list {
+        type: DT_STRING
+        type: DT_STRING
+      }
+    }
+  }
+  attr {
+    key: "Tnext_func_args"
+    value {
+      list {
+        type: DT_STRING
+        type: DT_INT64
+      }
+    }
+  }
+  attr {
+    key: "finalize_func"
+    value {
+      func {
+        name: "__inference__remote_finalize_func_288"
+      }
+    }
+  }
+  attr {
+    key: "init_func"
+    value {
+      func {
+        name: "__inference__remote_init_func_258"
+      }
+    }
+  }
+  attr {
+    key: "next_func"
+    value {
+      func {
+        name: "__inference__remote_next_func_277"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/PrefetchDataset_2"
+  op: "PrefetchDataset"
+  input: "input_processing/batch_processing/GeneratorDataset_1"
+  input: "ngraph_cluster_324"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 224
+          }
+          dim {
+            size: 3
+          }
+        }
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 1
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "slack_period"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "input_processing/batch_processing/MakeIterator"
+  op: "MakeIterator"
+  input: "input_processing/batch_processing/PrefetchDataset_2"
+  input: "input_processing/batch_processing/IteratorV2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+}
+node {
+  name: "local_var_init_op_group"
+  op: "NoOp"
+  input: "^input_processing/batch_processing/MakeIterator"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "_ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+}
+node {
+  name: "ngraph_cluster_324"
+  op: "NGraphEncapsulate"
+  input: "input_processing/batch_processing/list_files/Shape_1"
+  input: "ngraph_cluster_336"
+  input: "ngraph_cluster_336:2"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+        type: DT_INT64
+        type: DT_INT32
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "Tresults"
+    value {
+      list {
+        type: DT_INT64
+        type: DT_INT64
+      }
+    }
+  }
+  attr {
+    key: "ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "ngraph_cluster"
+    value {
+      i: 324
+    }
+  }
+  attr {
+    key: "ngraph_device_id"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "ngraph_graph_id"
+    value {
+      i: 2
+    }
+  }
+}
+node {
+  name: "ngraph_cluster_336"
+  op: "NGraphEncapsulate"
+  input: "input_processing/batch_processing/list_files/Shape"
+  device: "/job:localhost/replica:0/task:0/device:CPU:0"
+  attr {
+    key: "Targuments"
+    value {
+      list {
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "Tresults"
+    value {
+      list {
+        type: DT_INT32
+        type: DT_BOOL
+        type: DT_INT32
+      }
+    }
+  }
+  attr {
+    key: "ngraph_backend"
+    value {
+      s: "CPU"
+    }
+  }
+  attr {
+    key: "ngraph_cluster"
+    value {
+      i: 336
+    }
+  }
+  attr {
+    key: "ngraph_device_id"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "ngraph_graph_id"
+    value {
+      i: 2
+    }
+  }
+}
+library {
+  function {
+    signature {
+      name: "distort_image_random_flip_left_right_false_164"
+      input_arg {
+        name: "identity_distort_image_random_flip_left_right_control_dependency"
+        type: DT_UINT8
+      }
+      output_arg {
+        name: "identity"
+        type: DT_UINT8
+      }
+    }
+    node_def {
+      name: "Identity"
+      op: "Identity"
+      input: "identity_distort_image_random_flip_left_right_control_dependency"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "Identity:output:0"
+    }
+  }
+  function {
+    signature {
+      name: "__inference_tf_data_experimental_map_and_batch_RecordInputImagePreprocessor.parse_and_preprocess_232"
+      input_arg {
+        name: "args_0"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "args_1"
+        type: DT_INT64
+      }
+      output_arg {
+        name: "identity"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "identity_1"
+        type: DT_INT32
+      }
+      is_stateful: true
+      control_output: "distort_image/random_flip_left_right"
+      control_output: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert"
+      control_output: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2"
+      control_output: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert/data_0"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: "all dims of \'image.shape\' must be > 0."
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_positive/assert_less/Const"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 1
+              }
+            }
+            int_val: 0
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2/min_object_covered"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 0.1
+          }
+        }
+      }
+    }
+    node_def {
+      name: "transpose/perm"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 3
+              }
+            }
+            tensor_content: "\000\000\000\000\002\000\000\000\001\000\000\000"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims_4/dim"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+            }
+            int_val: 0
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ParseSingleExample/key_image/encoded"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: ""
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ParseSingleExample/Reshape"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT64
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT64
+            tensor_shape {
+              dim {
+                size: 1
+              }
+            }
+            tensor_content: "\377\377\377\377\377\377\377\377"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/y"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+            }
+            int_val: 3
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_3"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: "y (distort_image/random_flip_left_right/assert_greater_equal/y:0) = "
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_1"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: "Condition x >= y did not hold element-wise:x (distort_image/random_flip_left_right/Rank:0) = "
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_0"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: "\'image\' must be at least three-dimensional."
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/All"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_BOOL
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_BOOL
+            tensor_shape {
+            }
+            tensor_content: "\001"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/Less/y"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 0.5
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ParseSingleExample/Reshape_2/shape"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+              }
+            }
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/random_uniform/sub"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            tensor_content: "\000\000\200?"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/mul"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            tensor_content: "\000\000\000@"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/random_uniform/min"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 0
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_2/sub"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            tensor_content: "|\331\240?"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_2/min"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: -0.628318548
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/resize/size"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 2
+              }
+            }
+            tensor_content: "\340\000\000\000\340\000\000\000"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ConstantFolding/distort_image/truediv_recip"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            tensor_content: "\201\200\200;"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform/sub"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            tensor_content: "\201\200\200>"
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform/min"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: -0.125490203
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ParseSingleExample/ParseSingleExample"
+      op: "ParseSingleExample"
+      input: "args_0"
+      input: "ParseSingleExample/Reshape:output:0"
+      input: "ParseSingleExample/key_image/encoded:output:0"
+      input: "ParseSingleExample/key_image/encoded:output:0"
+      attr {
+        key: "Tdense"
+        value {
+          list {
+            type: DT_INT64
+            type: DT_STRING
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "dense_keys"
+        value {
+          list {
+            s: "image/class/label"
+            s: "image/class/text"
+            s: "image/encoded"
+          }
+        }
+      }
+      attr {
+        key: "dense_shapes"
+        value {
+          list {
+            shape {
+              dim {
+                size: 1
+              }
+            }
+            shape {
+            }
+            shape {
+            }
+          }
+        }
+      }
+      attr {
+        key: "num_sparse"
+        value {
+          i: 4
+        }
+      }
+      attr {
+        key: "sparse_keys"
+        value {
+          list {
+            s: "image/object/bbox/xmax"
+            s: "image/object/bbox/xmin"
+            s: "image/object/bbox/ymax"
+            s: "image/object/bbox/ymin"
+          }
+        }
+      }
+      attr {
+        key: "sparse_types"
+        value {
+          list {
+            type: DT_FLOAT
+            type: DT_FLOAT
+            type: DT_FLOAT
+            type: DT_FLOAT
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/random_uniform/RandomUniform"
+      op: "RandomUniform"
+      input: "ParseSingleExample/Reshape_2/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 1234
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 58
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_3/RandomUniform"
+      op: "RandomUniform"
+      input: "ParseSingleExample/Reshape_2/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 1234
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 103
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_2/RandomUniform"
+      op: "RandomUniform"
+      input: "ParseSingleExample/Reshape_2/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 1234
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 96
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_1/RandomUniform"
+      op: "RandomUniform"
+      input: "ParseSingleExample/Reshape_2/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 1234
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 87
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform/RandomUniform"
+      op: "RandomUniform"
+      input: "ParseSingleExample/Reshape_2/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 1234
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 78
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims_2"
+      op: "ExpandDims"
+      input: "ParseSingleExample/ParseSingleExample:sparse_values:0"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims_3"
+      op: "ExpandDims"
+      input: "ParseSingleExample/ParseSingleExample:sparse_values:2"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims"
+      op: "ExpandDims"
+      input: "ParseSingleExample/ParseSingleExample:sparse_values:1"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims_1"
+      op: "ExpandDims"
+      input: "ParseSingleExample/ParseSingleExample:sparse_values:3"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/ExtractJpegShape"
+      op: "ExtractJpegShape"
+      input: "ParseSingleExample/ParseSingleExample:dense_values:2"
+      attr {
+        key: "output_type"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "Cast"
+      op: "Cast"
+      input: "ParseSingleExample/ParseSingleExample:dense_values:0"
+      attr {
+        key: "DstT"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "SrcT"
+        value {
+          type: DT_INT64
+        }
+      }
+      attr {
+        key: "Truncate"
+        value {
+          b: false
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/Less"
+      op: "Less"
+      input: "distort_image/random_flip_left_right/random_uniform/RandomUniform:output:0"
+      input: "distort_image/random_flip_left_right/Less/y:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_3"
+      op: "Add"
+      input: "distort_image/distort_color/random_uniform_3/RandomUniform:output:0"
+      input: "distort_image/random_flip_left_right/Less/y:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_2/mul"
+      op: "Mul"
+      input: "distort_image/distort_color/random_uniform_2/RandomUniform:output:0"
+      input: "distort_image/distort_color/random_uniform_2/sub:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_1"
+      op: "Add"
+      input: "distort_image/distort_color/random_uniform_1/RandomUniform:output:0"
+      input: "distort_image/random_flip_left_right/Less/y:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform/mul"
+      op: "Mul"
+      input: "distort_image/distort_color/random_uniform/RandomUniform:output:0"
+      input: "distort_image/distort_color/random_uniform/sub:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "concat"
+      op: "ConcatV2"
+      input: "ExpandDims_1:output:0"
+      input: "ExpandDims:output:0"
+      input: "ExpandDims_3:output:0"
+      input: "ExpandDims_2:output:0"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "N"
+        value {
+          i: 4
+        }
+      }
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tidx"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/random_uniform_2"
+      op: "Add"
+      input: "distort_image/distort_color/random_uniform_2/min:output:0"
+      input: "distort_image/distort_color/random_uniform_2/mul:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/ArithmeticOptimizer/AddOpsRewrite_Leaf_0_adjust_brightness"
+      op: "AddN"
+      input: "distort_image/distort_color/random_uniform/min:output:0"
+      input: "distort_image/distort_color/random_uniform/mul:z:0"
+      attr {
+        key: "N"
+        value {
+          i: 2
+        }
+      }
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "_grappler:ArithmeticOptimizer:AddOpsRewriteStage"
+        value {
+          b: true
+        }
+      }
+    }
+    node_def {
+      name: "ExpandDims_4"
+      op: "ExpandDims"
+      input: "concat:output:0"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "transpose"
+      op: "Transpose"
+      input: "ExpandDims_4:output:0"
+      input: "transpose/perm:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "Tperm"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2"
+      op: "SampleDistortedBoundingBoxV2"
+      input: "distort_image/ExtractJpegShape:image_shape:0"
+      input: "transpose:y:0"
+      input: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2/min_object_covered:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "area_range"
+        value {
+          list {
+            f: 0.05
+            f: 1
+          }
+        }
+      }
+      attr {
+        key: "aspect_ratio_range"
+        value {
+          list {
+            f: 0.75
+            f: 1.33
+          }
+        }
+      }
+      attr {
+        key: "max_attempts"
+        value {
+          i: 100
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "use_image_if_no_bounding_boxes"
+        value {
+          b: true
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/unstack_1"
+      op: "Unpack"
+      input: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2:size:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "axis"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "num"
+        value {
+          i: 3
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/unstack"
+      op: "Unpack"
+      input: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2:begin:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "axis"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "num"
+        value {
+          i: 3
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/stack"
+      op: "Pack"
+      input: "distort_image/unstack:output:0"
+      input: "distort_image/unstack:output:1"
+      input: "distort_image/unstack_1:output:0"
+      input: "distort_image/unstack_1:output:1"
+      attr {
+        key: "N"
+        value {
+          i: 4
+        }
+      }
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "axis"
+        value {
+          i: 0
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/DecodeAndCropJpeg"
+      op: "DecodeAndCropJpeg"
+      input: "ParseSingleExample/ParseSingleExample:dense_values:2"
+      input: "distort_image/stack:output:0"
+      attr {
+        key: "acceptable_fraction"
+        value {
+          f: 1
+        }
+      }
+      attr {
+        key: "channels"
+        value {
+          i: 3
+        }
+      }
+      attr {
+        key: "dct_method"
+        value {
+          s: ""
+        }
+      }
+      attr {
+        key: "fancy_upscaling"
+        value {
+          b: true
+        }
+      }
+      attr {
+        key: "ratio"
+        value {
+          i: 1
+        }
+      }
+      attr {
+        key: "try_recover_truncated"
+        value {
+          b: false
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/Shape"
+      op: "Shape"
+      input: "distort_image/DecodeAndCropJpeg:image:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "out_type"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_positive/assert_less/Less"
+      op: "Less"
+      input: "ExpandDims_4/dim:output:0"
+      input: "distort_image/random_flip_left_right/Shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_positive/assert_less/All"
+      op: "All"
+      input: "distort_image/random_flip_left_right/assert_positive/assert_less/Less:z:0"
+      input: "distort_image/random_flip_left_right/assert_positive/assert_less/Const:output:0"
+      attr {
+        key: "Tidx"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "keep_dims"
+        value {
+          b: false
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert"
+      op: "Assert"
+      input: "distort_image/random_flip_left_right/assert_positive/assert_less/All:output:0"
+      input: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert/data_0:output:0"
+      attr {
+        key: "T"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "summarize"
+        value {
+          i: 3
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      op: "Assert"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/All:output:0"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_0:output:0"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_1:output:0"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/y:output:0"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert/data_3:output:0"
+      input: "distort_image/random_flip_left_right/assert_greater_equal/y:output:0"
+      input: "^distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert"
+      attr {
+        key: "T"
+        value {
+          list {
+            type: DT_STRING
+            type: DT_STRING
+            type: DT_INT32
+            type: DT_STRING
+            type: DT_INT32
+          }
+        }
+      }
+      attr {
+        key: "summarize"
+        value {
+          i: 3
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/switch_pred/_2"
+      op: "Switch"
+      input: "distort_image/random_flip_left_right/Less:z:0"
+      input: "distort_image/random_flip_left_right/Less:z:0"
+      input: "^distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      attr {
+        key: "T"
+        value {
+          type: DT_BOOL
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right"
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/distort_image/random_flip_left_right/control_dependency/_5"
+      op: "Switch"
+      input: "distort_image/DecodeAndCropJpeg:image:0"
+      input: "distort_image/random_flip_left_right/Less:z:0"
+      input: "^distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "_class"
+        value {
+          list {
+            s: "distort_image/random_flip_left_right/control_dependency"
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right/control_dependency"
+      }
+    }
+    node_def {
+      name: "ConstantFoldingCtrl/distort_image/random_flip_left_right/switch_pred/_2_0"
+      op: "Identity"
+      input: "distort_image/random_flip_left_right/switch_pred/_2:output_false:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_BOOL
+        }
+      }
+    }
+    node_def {
+      name: "ConstantFoldingCtrl/distort_image/random_flip_left_right/switch_pred/_2_1"
+      op: "Identity"
+      input: "distort_image/random_flip_left_right/switch_pred/_2:output_true:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_BOOL
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/pivot_f/_3"
+      op: "Const"
+      input: "^ConstantFoldingCtrl/distort_image/random_flip_left_right/switch_pred/_2_0"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_BOOL
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_BOOL
+            tensor_shape {
+            }
+            tensor_content: "\000"
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right"
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/pivot_t/_4"
+      op: "Const"
+      input: "^ConstantFoldingCtrl/distort_image/random_flip_left_right/switch_pred/_2_1"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_BOOL
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_BOOL
+            tensor_shape {
+            }
+            tensor_content: "\001"
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right"
+      }
+    }
+    node_def {
+      name: "Func/distort_image/random_flip_left_right/else/_1/input/_13"
+      op: "Identity"
+      input: "distort_image/random_flip_left_right/distort_image/random_flip_left_right/control_dependency/_5:output_false:0"
+      input: "^distort_image/random_flip_left_right/pivot_f/_3"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/branch_executed/_7"
+      op: "Merge"
+      input: "distort_image/random_flip_left_right/pivot_t/_4:output:0"
+      input: "distort_image/random_flip_left_right/pivot_f/_3:output:0"
+      attr {
+        key: "N"
+        value {
+          i: 2
+        }
+      }
+      attr {
+        key: "T"
+        value {
+          type: DT_BOOL
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right"
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/then/_0/ReverseV2/axis"
+      op: "Const"
+      input: "^distort_image/random_flip_left_right/pivot_t/_4"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 1
+              }
+            }
+            int_val: 1
+          }
+        }
+      }
+    }
+    node_def {
+      name: "Identity_1"
+      op: "Identity"
+      input: "Cast:y:0"
+      input: "^distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      input: "^distort_image/random_flip_left_right/branch_executed/_7"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right"
+      op: "NoOp"
+      input: "^distort_image/random_flip_left_right/branch_executed/_7"
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/then/_0/ReverseV2"
+      op: "ReverseV2"
+      input: "distort_image/random_flip_left_right/distort_image/random_flip_left_right/control_dependency/_5:output_true:0"
+      input: "distort_image/random_flip_left_right/then/_0/ReverseV2/axis:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "Tidx"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/random_flip_left_right/output/_6"
+      op: "Merge"
+      input: "distort_image/random_flip_left_right/then/_0/ReverseV2:output:0"
+      input: "Func/distort_image/random_flip_left_right/else/_1/input/_13:output:0"
+      attr {
+        key: "N"
+        value {
+          i: 2
+        }
+      }
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "distort_image/random_flip_left_right"
+      }
+    }
+    node_def {
+      name: "distort_image/resize/ExpandDims"
+      op: "ExpandDims"
+      input: "distort_image/random_flip_left_right/output/_6:output:0"
+      input: "ExpandDims_4/dim:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "Tdim"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/resize/ResizeBilinear"
+      op: "ResizeBilinear"
+      input: "distort_image/resize/ExpandDims:output:0"
+      input: "distort_image/resize/size:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "align_corners"
+        value {
+          b: false
+        }
+      }
+      attr {
+        key: "half_pixel_centers"
+        value {
+          b: false
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/resize/Squeeze"
+      op: "Squeeze"
+      input: "distort_image/resize/ResizeBilinear:resized_images:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "squeeze_dims"
+        value {
+          list {
+            i: 0
+          }
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/truediv"
+      op: "Mul"
+      input: "ConstantFolding/distort_image/truediv_recip:output:0"
+      input: "distort_image/resize/Squeeze:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/ArithmeticOptimizer/AddOpsRewrite_adjust_brightness"
+      op: "Add"
+      input: "distort_image/distort_color/ArithmeticOptimizer/AddOpsRewrite_Leaf_0_adjust_brightness:sum:0"
+      input: "distort_image/truediv:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "_grappler:ArithmeticOptimizer:AddOpsRewriteStage"
+        value {
+          b: true
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/adjust_contrast"
+      op: "AdjustContrastv2"
+      input: "distort_image/distort_color/ArithmeticOptimizer/AddOpsRewrite_adjust_brightness:z:0"
+      input: "distort_image/distort_color/random_uniform_1:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/adjust_hsv_in_yiq/AdjustHsvInYiq"
+      op: "AdjustHsvInYiq"
+      input: "distort_image/distort_color/adjust_contrast:output:0"
+      input: "distort_image/distort_color/random_uniform_2:z:0"
+      input: "distort_image/distort_color/random_uniform_3:z:0"
+      input: "distort_image/random_flip_left_right/random_uniform/sub:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/clip_by_value/Minimum"
+      op: "Minimum"
+      input: "distort_image/distort_color/adjust_hsv_in_yiq/AdjustHsvInYiq:output:0"
+      input: "distort_image/random_flip_left_right/random_uniform/sub:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "distort_image/distort_color/clip_by_value"
+      op: "Maximum"
+      input: "distort_image/distort_color/clip_by_value/Minimum:z:0"
+      input: "distort_image/random_flip_left_right/random_uniform/min:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "Mul"
+      op: "Mul"
+      input: "distort_image/distort_color/clip_by_value:z:0"
+      input: "distort_image/mul:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "Sub"
+      op: "Sub"
+      input: "Mul:z:0"
+      input: "distort_image/random_flip_left_right/random_uniform/sub:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    node_def {
+      name: "Identity"
+      op: "Identity"
+      input: "Sub:z:0"
+      input: "^distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      input: "^distort_image/random_flip_left_right/branch_executed/_7"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "Identity:output:0"
+    }
+    ret {
+      key: "identity_1"
+      value: "Identity_1:output:0"
+    }
+    control_ret {
+      key: "distort_image/random_flip_left_right"
+      value: "distort_image/random_flip_left_right"
+    }
+    control_ret {
+      key: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+      value: "distort_image/random_flip_left_right/assert_greater_equal/Assert/Assert"
+    }
+    control_ret {
+      key: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert"
+      value: "distort_image/random_flip_left_right/assert_positive/assert_less/Assert/Assert"
+    }
+    control_ret {
+      key: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2"
+      value: "distort_image/sample_distorted_bounding_box/SampleDistortedBoundingBoxV2"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__remote_next_func_277"
+      input_arg {
+        name: "string_handle"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "remotecall_input_processing_batch_processing_const"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "remotecall_input_processing_batch_processing_multideviceiteratorinit"
+        type: DT_INT64
+      }
+      output_arg {
+        name: "identity"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "identity_1"
+        type: DT_INT32
+      }
+      is_stateful: true
+      control_output: "RemoteCall"
+    }
+    node_def {
+      name: "RemoteCall"
+      op: "RemoteCall"
+      input: "remotecall_input_processing_batch_processing_const"
+      input: "string_handle"
+      input: "remotecall_input_processing_batch_processing_multideviceiteratorinit"
+      attr {
+        key: "Tin"
+        value {
+          list {
+            type: DT_STRING
+            type: DT_INT64
+          }
+        }
+      }
+      attr {
+        key: "Tout"
+        value {
+          list {
+            type: DT_FLOAT
+            type: DT_INT32
+          }
+        }
+      }
+      attr {
+        key: "f"
+        value {
+          func {
+            name: "__inference__next_func_268"
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "RemoteCall:output:0"
+    }
+    ret {
+      key: "identity_1"
+      value: "RemoteCall:output:1"
+    }
+    attr {
+      key: "experimental_ints_on_device"
+      value {
+        b: true
+      }
+    }
+    control_ret {
+      key: "RemoteCall"
+      value: "RemoteCall"
+    }
+  }
+  function {
+    signature {
+      name: "__inference_Dataset_flat_map_read_one_file_49"
+      input_arg {
+        name: "args_0"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_VARIANT
+      }
+      is_stateful: true
+      control_output: "TFRecordDataset"
+    }
+    node_def {
+      name: "buffer_size"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT64
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT64
+            tensor_shape {
+            }
+            int64_val: 262144
+          }
+        }
+      }
+    }
+    node_def {
+      name: "compression_type"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_STRING
+            tensor_shape {
+            }
+            string_val: ""
+          }
+        }
+      }
+    }
+    node_def {
+      name: "TFRecordDataset"
+      op: "TFRecordDataset"
+      input: "args_0"
+      input: "compression_type:output:0"
+      input: "buffer_size:output:0"
+    }
+    ret {
+      key: "identity"
+      value: "TFRecordDataset:handle:0"
+    }
+    control_ret {
+      key: "TFRecordDataset"
+      value: "TFRecordDataset"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__finalize_func_282"
+      input_arg {
+        name: "unused_string_handle"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_INT64
+      }
+    }
+    node_def {
+      name: "Const"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT64
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT64
+            tensor_shape {
+            }
+            int64_val: 0
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "Const:output:0"
+    }
+  }
+  function {
+    signature {
+      name: "distort_image_random_flip_left_right_true_163"
+      input_arg {
+        name: "reversev2_distort_image_random_flip_left_right_control_dependency"
+        type: DT_UINT8
+      }
+      output_arg {
+        name: "identity"
+        type: DT_UINT8
+      }
+    }
+    node_def {
+      name: "ReverseV2/axis"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 1
+              }
+            }
+            int_val: 1
+          }
+        }
+      }
+    }
+    node_def {
+      name: "ReverseV2"
+      op: "ReverseV2"
+      input: "reversev2_distort_image_random_flip_left_right_control_dependency"
+      input: "ReverseV2/axis:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_UINT8
+        }
+      }
+      attr {
+        key: "Tidx"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "ReverseV2:output:0"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__init_func_252"
+      input_arg {
+        name: "identity_input_processing_batch_processing_multideviceiteratortostringhandle"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_STRING
+      }
+    }
+    node_def {
+      name: "Identity"
+      op: "Identity"
+      input: "identity_input_processing_batch_processing_multideviceiteratortostringhandle"
+      attr {
+        key: "T"
+        value {
+          type: DT_STRING
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "Identity:output:0"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__remote_init_func_258"
+      input_arg {
+        name: "remotecall_input_processing_batch_processing_const"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "remotecall_input_processing_batch_processing_multideviceiteratortostringhandle"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_STRING
+      }
+      is_stateful: true
+      control_output: "RemoteCall"
+    }
+    node_def {
+      name: "RemoteCall"
+      op: "RemoteCall"
+      input: "remotecall_input_processing_batch_processing_const"
+      input: "remotecall_input_processing_batch_processing_multideviceiteratortostringhandle"
+      attr {
+        key: "Tin"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "Tout"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "f"
+        value {
+          func {
+            name: "__inference__init_func_252"
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "RemoteCall:output:0"
+    }
+    control_ret {
+      key: "RemoteCall"
+      value: "RemoteCall"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__remote_finalize_func_288"
+      input_arg {
+        name: "string_handle"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "remotecall_input_processing_batch_processing_const"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_INT64
+      }
+      is_stateful: true
+      control_output: "RemoteCall"
+    }
+    node_def {
+      name: "RemoteCall"
+      op: "RemoteCall"
+      input: "remotecall_input_processing_batch_processing_const"
+      input: "string_handle"
+      attr {
+        key: "Tin"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "Tout"
+        value {
+          list {
+            type: DT_INT64
+          }
+        }
+      }
+      attr {
+        key: "f"
+        value {
+          func {
+            name: "__inference__finalize_func_282"
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "RemoteCall:output:0"
+    }
+    control_ret {
+      key: "RemoteCall"
+      value: "RemoteCall"
+    }
+  }
+  function {
+    signature {
+      name: "__inference_tf_data_experimental_parallel_interleave_<class \'abc.ABCMeta\'>_52"
+      input_arg {
+        name: "args_0"
+        type: DT_STRING
+      }
+      output_arg {
+        name: "identity"
+        type: DT_VARIANT
+      }
+      is_stateful: true
+      control_output: "TensorSliceDataset"
+    }
+    node_def {
+      name: "flat_filenames/shape"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+              dim {
+                size: 1
+              }
+            }
+            int_val: -1
+          }
+        }
+      }
+    }
+    node_def {
+      name: "flat_filenames"
+      op: "Reshape"
+      input: "args_0"
+      input: "flat_filenames/shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_STRING
+        }
+      }
+      attr {
+        key: "Tshape"
+        value {
+          type: DT_INT32
+        }
+      }
+    }
+    node_def {
+      name: "TensorSliceDataset"
+      op: "TensorSliceDataset"
+      input: "flat_filenames:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+      attr {
+        key: "output_shapes"
+        value {
+          list {
+            shape {
+            }
+          }
+        }
+      }
+    }
+    node_def {
+      name: "FlatMapDataset"
+      op: "FlatMapDataset"
+      input: "TensorSliceDataset:handle:0"
+      attr {
+        key: "Targuments"
+        value {
+          list {
+          }
+        }
+      }
+      attr {
+        key: "f"
+        value {
+          func {
+            name: "__inference_Dataset_flat_map_read_one_file_49"
+          }
+        }
+      }
+      attr {
+        key: "output_shapes"
+        value {
+          list {
+            shape {
+            }
+          }
+        }
+      }
+      attr {
+        key: "output_types"
+        value {
+          list {
+            type: DT_STRING
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "FlatMapDataset:handle:0"
+    }
+    control_ret {
+      key: "TensorSliceDataset"
+      value: "TensorSliceDataset"
+    }
+  }
+  function {
+    signature {
+      name: "__inference__next_func_268"
+      input_arg {
+        name: "string_handle"
+        type: DT_STRING
+      }
+      input_arg {
+        name: "multideviceiteratorgetnextfromshard_input_processing_batch_processing_multideviceiteratorinit"
+        type: DT_INT64
+      }
+      output_arg {
+        name: "identity"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "identity_1"
+        type: DT_INT32
+      }
+      is_stateful: true
+      control_output: "MultiDeviceIteratorFromStringHandle"
+      control_output: "MultiDeviceIteratorGetNextFromShard"
+    }
+    node_def {
+      name: "MultiDeviceIteratorGetNextFromShard/shard_num"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_INT32
+            tensor_shape {
+            }
+            int_val: 0
+          }
+        }
+      }
+    }
+    node_def {
+      name: "MultiDeviceIteratorFromStringHandle"
+      op: "MultiDeviceIteratorFromStringHandle"
+      input: "string_handle"
+      attr {
+        key: "output_shapes"
+        value {
+          list {
+            shape {
+              dim {
+                size: -1
+              }
+              dim {
+                size: 224
+              }
+              dim {
+                size: 224
+              }
+              dim {
+                size: 3
+              }
+            }
+            shape {
+              dim {
+                size: -1
+              }
+              dim {
+                size: 1
+              }
+            }
+          }
+        }
+      }
+      attr {
+        key: "output_types"
+        value {
+          list {
+            type: DT_FLOAT
+            type: DT_INT32
+          }
+        }
+      }
+    }
+    node_def {
+      name: "MultiDeviceIteratorGetNextFromShard"
+      op: "MultiDeviceIteratorGetNextFromShard"
+      input: "MultiDeviceIteratorFromStringHandle:multi_device_iterator:0"
+      input: "MultiDeviceIteratorGetNextFromShard/shard_num:output:0"
+      input: "multideviceiteratorgetnextfromshard_input_processing_batch_processing_multideviceiteratorinit"
+      attr {
+        key: "output_shapes"
+        value {
+          list {
+            shape {
+              dim {
+                size: -1
+              }
+              dim {
+                size: 224
+              }
+              dim {
+                size: 224
+              }
+              dim {
+                size: 3
+              }
+            }
+            shape {
+              dim {
+                size: -1
+              }
+              dim {
+                size: 1
+              }
+            }
+          }
+        }
+      }
+      attr {
+        key: "output_types"
+        value {
+          list {
+            type: DT_FLOAT
+            type: DT_INT32
+          }
+        }
+      }
+    }
+    ret {
+      key: "identity"
+      value: "MultiDeviceIteratorGetNextFromShard:components:0"
+    }
+    ret {
+      key: "identity_1"
+      value: "MultiDeviceIteratorGetNextFromShard:components:1"
+    }
+    control_ret {
+      key: "MultiDeviceIteratorFromStringHandle"
+      value: "MultiDeviceIteratorFromStringHandle"
+    }
+    control_ret {
+      key: "MultiDeviceIteratorGetNextFromShard"
+      value: "MultiDeviceIteratorGetNextFromShard"
+    }
+  }
+}
+versions {
+  producer: 38
+  min_consumer: 12
+}
