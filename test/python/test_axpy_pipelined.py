@@ -17,13 +17,12 @@ from common import NgraphTest
 
 from axpy_pipelined import *
 
-
 class TestAxpyPipelined(NgraphTest):
 
     def test_axpy_pipelined(self):
         prefetch_env = "NGRAPH_TF_USE_PREFETCH"
         ngraph_backend_i = "NGRAPH_TF_BACKEND"
-        env_var_map = self.store_env_variables([prefetch_env])
+        env_var_map = self.store_env_variables([prefetch_env, ngraph_backend_i])
         self.set_env_variable(prefetch_env, "1")
         self.set_env_variable(ngraph_backend_i, "INTERPRETER")
         input_array, output_array, expected_output_array = run_axpy_pipeline()
