@@ -45,20 +45,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 namespace testing {
-Status LoadGraphFromPbTxt(const string& pb_file, Graph* input_graph) {
-  // Read the graph
-  tensorflow::GraphDef graph_def;
-  auto load_graph_status = ReadTextProto(Env::Default(), pb_file, &graph_def);
-  if (!load_graph_status.ok()) {
-    return load_graph_status;
-  }
-
-  GraphConstructorOptions opts;
-  opts.allow_internal_ops = true;
-  auto status = ConvertGraphDefToGraph(opts, graph_def, input_graph);
-  return status;
-}
-
 TEST(PrefetchCatalogTest, SmallGraph1) {
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;

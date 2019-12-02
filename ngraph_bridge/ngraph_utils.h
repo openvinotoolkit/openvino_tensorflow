@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
+#include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/platform/tensor_coding.h"
@@ -31,6 +32,7 @@
 #include "ngraph/serializer.hpp"
 
 #include "logging/ngraph_log.h"
+#include "logging/tf_graph_writer.h"
 
 namespace ng = ngraph;
 using namespace std;
@@ -326,6 +328,9 @@ std::string PbtxtFilename(std::string kind, int idx, int sub_idx);
 std::string GraphFilenamePrefix(std::string, int);
 
 std::string GraphFilenamePrefix(std::string, int, int);
+
+void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
+                std::string filename_prefix, std::string title);
 
 bool DumpAllGraphs();
 
