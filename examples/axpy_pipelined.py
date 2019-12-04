@@ -21,8 +21,6 @@ import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import os
-os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
-#os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
 import ngraph_bridge
 
 import sys
@@ -50,9 +48,12 @@ def build_data_pipeline(input_array, map_function, batch_size):
     return data_to_be_prefetched_and_used, iterator
 
 
-if __name__ == '__main__':
+def run_axpy_pipeline():
     input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    expected_output_array = [-1, -1, 1, -1, -1, -1, -1, -1, -1]
+    output_array = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     multiplier = 10
+
     for i in range(1, 10):
         input_array[i - 1] = input_array[i - 1] * i * multiplier
     map_function = lambda x: x * multiplier
@@ -68,12 +69,24 @@ if __name__ == '__main__':
 
         for i in range(1, 10):
             # Expected value is:
-            expected_output = ((input_array[i - 1] * multiplier) * 5) + 10
+            expected_output_array[i - 1] = (
+                (input_array[i - 1] * multiplier) * 5) + 10
 
             # Run one iteration
             output = sess.run(model)
+            output_array[i - 1] = output[0]
+    return input_array, output_array, expected_output_array
 
-            # Results?
-            print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
-                  output[0], " Expected: ", expected_output)
-            sys.stdout.flush()
+
+def main(_):
+    input_array, output_array, expected_output_array = run_axpy_pipeline()
+    for i in range(1, 10):
+        print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
+              output_array[i - 1], " Expected: ", expected_output_array[i - 1])
+        sys.stdout.flush()
+
+
+if __name__ == '__main__':
+    os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
+    #os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
+    tf.app.run(main=main)

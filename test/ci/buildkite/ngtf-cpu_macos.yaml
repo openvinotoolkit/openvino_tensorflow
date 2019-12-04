@@ -51,7 +51,7 @@
   - command: |
       source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
+      PYTHONPATH=`pwd`:`pwd`/examples:`pwd`/tools:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
         --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_python
     
     label: ":python: nGraph Pytest"
