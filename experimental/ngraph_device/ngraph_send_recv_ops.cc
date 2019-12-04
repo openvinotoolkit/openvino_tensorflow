@@ -174,7 +174,7 @@ class NGraphRecv : public AsyncOpKernel {
  private:
   string key_prefix_;
   tf::Rendezvous::ParsedKey parsed_key_;
-  bool hostmem_sendrecv_;
+  bool hostmem_sendrecv_ = false;
 };
 
 //-----------------------------------------------------------------------------
@@ -248,7 +248,7 @@ class NGraphSend : public OpKernel {
  private:
   string key_prefix_;
   tf::Rendezvous::ParsedKey parsed_key_;
-  bool hostmem_sendrecv_;
+  bool hostmem_sendrecv_ = false;
 };
 
 REGISTER_KERNEL_BUILDER(Name("_Recv").Device(ngraph_bridge::DEVICE_NGRAPH_CPU),

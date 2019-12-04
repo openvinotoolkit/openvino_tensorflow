@@ -50,7 +50,7 @@ class NGraphEncapsulateOp : public OpKernel {
 
   static int s_instance_id;
   NGraphEncapsulateImpl ng_encap_impl_;
-  bool m_use_parallel_executor;
+  bool m_use_parallel_executor = false;
   std::mutex m_compute_lock_;
   unique_ptr<NGraphExecutor> m_parallel_executor;
 };
