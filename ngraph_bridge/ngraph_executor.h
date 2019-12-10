@@ -42,7 +42,8 @@ class NGraphExecutor {
   // Transforms, compiles and executes TesnorFlow computation graph using nGraph
   explicit NGraphExecutor(int instance_id, int cluster_id, int graph_id,
                           unique_ptr<tensorflow::Graph>& graph,
-                          const string& backend_name, const int cache_depth);
+                          const string& backend_name, const string& node_name,
+                          const int cache_depth);
 
   ~NGraphExecutor();
 

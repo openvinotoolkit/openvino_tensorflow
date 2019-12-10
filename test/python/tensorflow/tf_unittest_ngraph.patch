@@ -1,12 +1,14 @@
 diff --git a/tensorflow/python/framework/test_util.py b/tensorflow/python/framework/test_util.py
-index aa8ecf8161..b8d2266132 100644
+index 544190e23d..9b652bd49e 100644
 --- a/tensorflow/python/framework/test_util.py
 +++ b/tensorflow/python/framework/test_util.py
-@@ -971,6 +971,7 @@ class TensorFlowTestCase(googletest.TestCase):
+@@ -1662,6 +1662,9 @@ class TensorFlowTestCase(googletest.TestCase):
      self._threads = []
      self._tempdir = None
      self._cached_session = None
 +    import ngraph_bridge
++
++    ngraph_bridge.set_disabled_ops('NoOp')
  
    def setUp(self):
      self._ClearCachedSession()

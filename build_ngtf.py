@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "effcc47d39de1d5e662d6b78a8d42675ecf7815d"  # Scott Cyphers CropAndResize op
+    ngraph_version = "e543688981ea2083a260929a70420f5ba6984d95"  # Nagy Mostafa [MLIR] Fused Ops dialect declaration (#3860)
     tf_version = "v1.14.0"
 
     # Command line parser options

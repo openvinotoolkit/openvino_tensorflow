@@ -41,6 +41,7 @@ def install_ngraph_bridge(artifacts_dir):
     # Determine the ngraph whl
     ngtf_wheel_files = glob.glob(artifacts_dir +
                                  "/ngraph_tensorflow_bridge-*.whl")
+
     if (len(ngtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
         for whl in ngtf_wheel_files:
@@ -124,7 +125,7 @@ def run_ngtf_pytests(venv_dir, build_dir):
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
 
-    cmd = 'python -m pytest ' + (
+    cmd = 'python -m pytest' + (
         '--junitxml=%s/xunit_pytest.xml' %
         build_dir) + " --ignore=" + build_dir + "/test/python/bfloat16"
     env = os.environ.copy()

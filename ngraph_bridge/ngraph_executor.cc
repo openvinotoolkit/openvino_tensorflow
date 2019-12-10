@@ -62,12 +62,13 @@ namespace ngraph_bridge {
 NGraphExecutor::NGraphExecutor(int instance_id, int cluster_id, int graph_id,
                                unique_ptr<tensorflow::Graph>& graph,
                                const string& backend_name,
-                               const int cache_depth)
+                               const string& node_name, const int cache_depth)
     : m_instance_id(instance_id),
       m_ngraph_cluster_id(cluster_id),
       m_graph_id(graph_id),
       m_graph(std::move(graph)),
       m_op_backend_name(backend_name),
+      m_node_name(node_name),
       m_ng_data_cache(cache_depth) {
   // Sanity checks
   if (m_graph == nullptr) {
@@ -85,7 +86,6 @@ NGraphExecutor::NGraphExecutor(int instance_id, int cluster_id, int graph_id,
     throw std::runtime_error(string("Requested backend: '") +
                              m_op_backend_name + string("' not available."));
   }
-
   // Initialize the "m_input_is_static" vector as follows:
   // (1) create m_input_is_static with n+1 elements, where n is the max arg
   //     index

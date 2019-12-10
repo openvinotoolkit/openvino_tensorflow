@@ -157,9 +157,9 @@ void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
   }
 
   // Create the Executor object
-  m_parallel_executor = move(unique_ptr<NGraphExecutor>(
-      new NGraphExecutor(s_instance_id, cluster_id, graph_id, encap_subgraph,
-                         backend_name, my_function_cache_depth_in_items)));
+  m_parallel_executor = move(unique_ptr<NGraphExecutor>(new NGraphExecutor(
+      s_instance_id, cluster_id, graph_id, encap_subgraph, backend_name, name(),
+      my_function_cache_depth_in_items)));
 
   auto tensor_manager = m_parallel_executor->GetTensorManager();
   OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
@@ -302,7 +302,11 @@ void NGraphEncapsulateOp::CreateLegacyExecutor(OpKernelConstruction* ctx,
   bool exec_can_create_tensor =
       BackendManager::GetBackend(ng_encap_impl_.GetOpBackend())
           ->executable_can_create_tensors();
-  ng_encap_impl_.SetExecCanCreateTensor(exec_can_create_tensor);
+  if (ng_encap_impl_.GetOpBackend() == "CPU") {
+    ng_encap_impl_.SetExecCanCreateTensor(false);
+  } else {
+    ng_encap_impl_.SetExecCanCreateTensor(exec_can_create_tensor);
+  }
   NGRAPH_VLOG(5) << "Executable can " << (exec_can_create_tensor ? "" : "not")
                  << " create tensors";
 

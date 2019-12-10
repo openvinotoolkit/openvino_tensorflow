@@ -60,13 +60,13 @@ TEST(ParallelExecutor, Construction) {
 
   // First test with a backend not yet created
   unique_ptr<NGraphExecutor> executor;
-  ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(
-                   new NGraphExecutor(100, 500, 600, input_graph, "bogus", 5)),
+  ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(new NGraphExecutor(
+                   100, 500, 600, input_graph, "bogus", "xyz_500", 5)),
                std::runtime_error);
 
   // Next test with a null graph not yet created
-  ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(
-                   new NGraphExecutor(100, 500, 600, input_graph, "bogus", 12)),
+  ASSERT_THROW(executor = unique_ptr<NGraphExecutor>(new NGraphExecutor(
+                   100, 500, 600, input_graph, "bogus", "xyz_500", 12)),
                std::runtime_error);
 
   // Now read the graph
@@ -74,8 +74,9 @@ TEST(ParallelExecutor, Construction) {
 
   // Next test with a backend after creating
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  ASSERT_NO_THROW(executor = unique_ptr<NGraphExecutor>(new NGraphExecutor(
-                      100, 500, 600, input_graph, "INTERPRETER", 16)));
+  ASSERT_NO_THROW(
+      executor = unique_ptr<NGraphExecutor>(new NGraphExecutor(
+          100, 500, 600, input_graph, "INTERPRETER", "xyz_500", 16)));
 
   // Now that the object has been cobstructed, test various internal parts
   // TODO: Create a Test Class and mark that as a friend of the Executor class
@@ -93,7 +94,8 @@ TEST(ParallelExecutor, CompilerTest) {
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
 
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 10);
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", "xyz_500",
+                          10);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
@@ -132,7 +134,8 @@ TEST(ParallelExecutor, ExecuteOnSingleThread) {
   unique_ptr<tf::Graph> input_graph;
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 12);
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", "xyz_500",
+                          12);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
@@ -214,7 +217,8 @@ TEST(ParallelExecutor, ExecuteOnSingleThread8Bit) {
   }
 
   tf::ngraph_bridge::BackendManager::CreateBackend(backend_name);
-  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, 5);
+  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, "xyz_500",
+                          5);
 
   // Create the inputs for this graph
   Tensor x(DT_INT8, TensorShape({2, 2}));
@@ -296,7 +300,8 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads8Bit) {
   }
 
   tf::ngraph_bridge::BackendManager::CreateBackend(backend_name);
-  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, 16);
+  NGraphExecutor executor(100, 500, 600, input_graph, backend_name, "xyz_500",
+                          16);
 
   // Create the inputs for this graph
   Tensor x(DT_INT8, TensorShape({2, 2}));
@@ -383,7 +388,8 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
   unique_ptr<tf::Graph> input_graph;
   ASSERT_OK(LoadGraphFromPbTxt("test_axpy_launchop.pbtxt", input_graph));
   tf::ngraph_bridge::BackendManager::CreateBackend("INTERPRETER");
-  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", 16);
+  NGraphExecutor executor(100, 500, 600, input_graph, "INTERPRETER", "xyz_500",
+                          16);
 
   // Create the inputs for this graph
   Tensor x(DT_FLOAT, TensorShape({2, 3}));
