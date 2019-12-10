@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "e543688981ea2083a260929a70420f5ba6984d95"  # Nagy Mostafa [MLIR] Fused Ops dialect declaration (#3860)
+    ngraph_version = "v0.27.1-rc.0"
     tf_version = "v1.14.0"
 
     # Command line parser options
