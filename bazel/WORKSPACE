@@ -55,11 +55,11 @@ tf_workspace(path_prefix = "", tf_repo_name = "org_tensorflow")
 http_archive(
     name = "ngraph",
     build_file = "//:bazel/ngraph.BUILD",
-    sha256 = "facce2ccb12688961a4899272908522db526a1fb210fd6c4c6ef15a6c5e39940",
-    strip_prefix = "ngraph-0.27.1-rc.0",
+    sha256 = "903991dfdb63304bc08bebab68e0fcb3e62690763b886c42178f363a0beb00f4",
+    strip_prefix = "ngraph-0.27.1-rc.1",
     urls = [
-        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.27.1-rc.0.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.27.1-rc.0.tar.gz"
+        "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.27.1-rc.1.tar.gz",
+        "https://github.com/NervanaSystems/ngraph/archive/v0.27.1-rc.1.tar.gz"
     ],
 )
 
