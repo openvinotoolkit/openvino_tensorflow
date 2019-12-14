@@ -98,7 +98,8 @@ Status NgraphDataCache<KeyType, ValueType>::RemoveItem(
       callback_destroy_item(m_ng_items_map.at(key));
     } catch (std::bad_function_call& exception) {
       return errors::Internal(
-          "Failed to destroy item. Invalid Callback to Destroy");
+          "Failed to destroy item. Invalid Callback to Destroy ",
+          exception.what(), "\n");
     }
     m_ng_items_map.erase(key);
     m_lru.pop_back();
@@ -124,7 +125,8 @@ Status NgraphDataCache<KeyType, ValueType>::RemoveAll(
       callback_destroy_item(it->second);
     } catch (std::bad_function_call& exception) {
       return errors::Internal(
-          "Failed to destroy item. Invalid Callback to Destroy");
+          "Failed to destroy item. Invalid Callback to Destroy ",
+          exception.what(), "\n");
     }
   }
   if (m_ng_items_map.size() != m_lru.size()) {
@@ -160,7 +162,8 @@ NgraphDataCache<KeyType, ValueType>::LookUpOrCreate(
   } catch (std::bad_function_call& exception) {
     return std::make_pair(
         errors::Internal(
-            "Failed to create an item. Invalid Callback to Create"),
+            "Failed to create an item. Invalid Callback to Create ",
+            exception.what(), "\n"),
         item);
   }
   // If item is successfully created we will place in the cache.
@@ -177,7 +180,8 @@ NgraphDataCache<KeyType, ValueType>::LookUpOrCreate(
         } catch (std::bad_function_call& exception) {
           return std::make_pair(
               errors::Internal(
-                  "Failed to destroy item. Invalid Callback to Destroy"),
+                  "Failed to destroy item. Invalid Callback to Destroy ",
+                  exception.what(), "\n"),
               item);
         }
         m_ng_items_map.erase(key_to_evict);
