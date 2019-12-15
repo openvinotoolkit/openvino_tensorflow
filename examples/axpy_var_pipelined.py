@@ -26,13 +26,14 @@ import ngraph_bridge
 import sys
 
 
-def build_simple_model(input_array):
+def build_simple_model(input_array, tensor_var, var_modifier, array_multiplier):
     # Convert the numpy array to TF Tensor
     input = tf.cast(input_array, tf.float32)
 
     # Define the Ops
-    mul = tf.compat.v1.math.multiply(input_array, 5)
-    add = tf.compat.v1.math.add(mul, 10)
+    mul = tf.compat.v1.math.multiply(input_array, array_multiplier)
+    tensor_var_assign = tensor_var.assign(tensor_var + var_modifier)
+    add = tf.compat.v1.math.add(mul, tensor_var_assign)
     output = add
     return output
 
@@ -50,26 +51,31 @@ def build_data_pipeline(input_array, map_function, batch_size):
 
 def run_axpy_pipeline():
     input_array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    expected_output_array = [-1, -1, 1, -1, -1, -1, -1, -1, -1]
+    expected_output_array = [-1, -1, -1, -1, -1, -1, -1, -1, -1]
     output_array = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     multiplier = 10
-
+    init = tf.constant(10)
+    var = tf.get_variable('x', initializer=init)
     for i in range(1, 10):
         input_array[i - 1] = input_array[i - 1] * i * multiplier
     map_function = lambda x: x * multiplier
     batch_size = 1
     pipeline, iterator = build_data_pipeline(input_array, map_function,
                                              batch_size)
-    model = build_simple_model(pipeline)
+    var_modifier = 1
+    array_multiplier = 5
+    model = build_simple_model(pipeline, var, var_modifier, array_multiplier)
+    var_sum = 11
     with tf.Session() as sess:
         # Initialize the globals and the dataset
+        sess.run(tf.global_variables_initializer())
         sess.run(iterator.initializer)
 
         for i in range(1, 10):
             # Expected value is:
             expected_output_array[i - 1] = (
-                (input_array[i - 1] * multiplier) * 5) + 10
-
+                (input_array[i - 1] * multiplier) * array_multiplier) + var_sum
+            var_sum = var_sum + var_modifier
             # Run one iteration
             output = sess.run(model)
             output_array[i - 1] = output[0]
