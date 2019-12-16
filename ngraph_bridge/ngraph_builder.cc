@@ -4985,6 +4985,7 @@ const static std::map<
     TRANSLATE_OP_MAP {
   {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
       {"Add", TranslateBinaryOp<ngraph::op::Add>}, {"AddN", TranslateAddNOp},
+      {"AddV2", TranslateBinaryOp<ngraph::op::Add>},
       {"Any", TranslateDirectReduceOp<ng::op::Any>},
       {"All", TranslateDirectReduceOp<ng::op::All>},
       {"ArgMax", TranslateArgMinMaxOp<ng::op::ArgMax>},

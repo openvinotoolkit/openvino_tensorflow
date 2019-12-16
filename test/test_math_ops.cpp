@@ -123,6 +123,45 @@ TEST(MathOps, Add) {
   opexecuter.RunTest();
 }  // end of test op Add
 
+// Test op: AddV2
+TEST(MathOps, AddV2) {
+  // Run a bunch of sub-test combinations to check shape broadcasting
+  vector<TensorShape> tensors_combs = {
+      // A-size, B-size
+      {2, 4}, {2, 4},  // sub-test# 1
+      {2, 4}, {2, 1},  // sub-test# 2
+      {2, 4}, {1, 4},  // sub-test# 3
+      {2, 1}, {2, 4},  // sub-test# 4
+      {1, 4}, {2, 4},  // sub-test# 5
+      {2, 4}, {1, 1},  // sub-test# 6
+      {1, 1}, {2, 4},  // sub-test# 7
+  };
+
+  for (int i = 0; i < tensors_combs.size(); i += 2) {
+    NGRAPH_VLOG(5) << "========>> Running AddV2 sub-test# " << (int)(i / 2 + 1)
+                   << " ...";
+
+    Scope root = Scope::NewRootScope();
+
+    Tensor A(DT_FLOAT, TensorShape(tensors_combs[i]));
+    Tensor B(DT_FLOAT, TensorShape(tensors_combs[i + 1]));
+
+    AssignInputValues(A, 2.1f);
+    AssignInputValues(B, 4.1f);
+
+    vector<int> static_input_indexes = {};
+    auto R = ops::AddV2(root, A, B);
+
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "AddV2", static_input_indexes, output_datatypes,
+                          sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
+
+}  // end of test op AddV2
+
 // Test op: AddN
 TEST(MathOps, AddN) {
   Scope root = Scope::NewRootScope();
