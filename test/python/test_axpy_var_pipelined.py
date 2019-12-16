@@ -13,17 +13,17 @@ from common import NgraphTest
 
 # For eg. when running the test from ngraph-bridge/build_cmake/test/python
 # you can add this path as below
-#sys.path.insert(0, '../../examples')
+# sys.path.insert(0, '../../examples')
 
 from axpy_var_pipelined import *
 
 
-class TestAxpyPipelined(NgraphTest):
+class TestAxpyVarPipelined(NgraphTest):
 
-    def test_axpy_pipelined(self):
-        #prefetch_env = "NGRAPH_TF_USE_PREFETCH"
-        #env_var_map = self.store_env_variables([prefetch_env])
-        #self.set_env_variable(prefetch_env, "1")
+    def test_axpy_var_pipelined(self):
+        prefetch_env = "NGRAPH_TF_USE_PREFETCH"
+        env_var_map = self.store_env_variables([prefetch_env])
+        self.set_env_variable(prefetch_env, "1")
         input_array, output_array, expected_output_array = run_axpy_pipeline()
         for i in range(1, 10):
             print("Iteration:", i, " Input: ", input_array[i - 1], " Output: ",
@@ -33,5 +33,5 @@ class TestAxpyPipelined(NgraphTest):
             assert np.allclose(
                 output_array[i - 1], expected_output_array[i - 1],
                 atol=1e-3), "Output  and expected output values don't match"
-        #self.unset_env_variable(prefetch_env)
-        #self.restore_env_variables(env_var_map)
+        self.unset_env_variable(prefetch_env)
+        self.restore_env_variables(env_var_map)

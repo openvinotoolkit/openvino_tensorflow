@@ -42,6 +42,7 @@
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_encapsulate_op.h"
+#include "ngraph_bridge/ngraph_encapsulate_op_utils.h"
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
@@ -113,6 +114,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
                                                  const string& backend_name) {
+  NGRAPH_VLOG(1) << "Create Parallel Executor " << name();
   GraphDef* graph_def;
   unique_ptr<Graph> encap_subgraph(new Graph(OpRegistry::Global()));
 
@@ -184,6 +186,7 @@ void NGraphEncapsulateOp::CreateParallelExecutor(OpKernelConstruction* ctx,
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::CreateLegacyExecutor(OpKernelConstruction* ctx,
                                                const string& backend_name) {
+  NGRAPH_VLOG(1) << "Create Legacy Executor " << name();
   ng_encap_impl_.SetName(name());
 
   std::ostringstream oss;
@@ -402,7 +405,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   ngraph::Event event_compute("Compute", "", "");
 
   if (m_use_parallel_executor) {
-    NGRAPH_VLOG(1) << "NGraphEncapsulateOp::Compute: Using Pipelined Executor";
+    NGRAPH_VLOG(1) << "NGraphEncapsulateOp::Compute: Using Parallel Executor";
     ComputeUsingParallelExecutor(ctx);
   } else {
     NGRAPH_VLOG(1) << "NGraphEncapsulateOp::Compute: Using Legacy Executor";
@@ -417,6 +420,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 // ComputeUsingParallelExecutor
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
+  NGRAPH_VLOG(1) << "Compute using Parallel Executor " << name();
   // TF input tensors
   std::vector<Tensor> tf_input_tensors;
 
@@ -454,159 +458,52 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
               errors::Internal("Pipeline Depth is not 2, got ",
                                m_parallel_executor->GetTensorPipelineDepth()));
 
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
-  io_tensors = pipelined_tensor_store->get_tensors();
-  OP_REQUIRES(ctx, !(std::get<0>(io_tensors) < 0),
-              errors::Internal("No free tensor available"));
-
   // Get Tensor Manager and some error checking
   auto tensor_manager = m_parallel_executor->GetTensorManager();
-  OP_REQUIRES(ctx, tensor_manager->GetNumberOfInputs() == ctx->num_inputs(),
+  int num_of_inputs = tensor_manager->GetNumberOfInputs();
+  int num_of_outputs = tensor_manager->GetNumberOfOutputs();
+  OP_REQUIRES(ctx, num_of_inputs == ctx->num_inputs(),
               errors::Internal("Num of inputs from TensorManager ",
-                               tensor_manager->GetNumberOfInputs(),
-                               " and Ctx->num_inputs() ", ctx->num_inputs(),
-                               " do not match"));
-  OP_REQUIRES(ctx,
-              tensor_manager->GetNumberOfInputs() == tf_input_tensors.size(),
-              errors::Internal("Num of inputs from TensorManager ",
-                               tensor_manager->GetNumberOfInputs(),
-                               " and num of "
-                               "input tensors from ctxt ",
-                               tf_input_tensors.size(), " do not match"));
+                               num_of_inputs, " and Ctx->num_inputs() ",
+                               ctx->num_inputs(), " do not match"));
+  OP_REQUIRES(
+      ctx, num_of_inputs == tf_input_tensors.size(),
+      errors::Internal("Num of inputs from TensorManager ", num_of_inputs,
+                       " and num of "
+                       "input tensors from ctxt ",
+                       tf_input_tensors.size(), " do not match"));
+  OP_REQUIRES(
+      ctx, num_of_inputs == ng_exec->get_parameters().size(),
+      errors::Internal("Num of inputs from TensorManager ", num_of_inputs,
+                       " and num of "
+                       "parameters from exec ",
+                       ng_exec->get_parameters().size(), " do not match"));
 
-  OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() == ctx->num_outputs(),
+  OP_REQUIRES(ctx, num_of_outputs == ctx->num_outputs(),
               errors::Internal("Num of outputs from TensorManager ",
-                               tensor_manager->GetNumberOfOutputs(),
-                               " and Ctx->num_outputs()", ctx->num_outputs(),
-                               " do not match"));
-  OP_REQUIRES(ctx, tensor_manager->GetNumberOfOutputs() ==
-                       ng_exec->get_results().size(),
+                               num_of_outputs, " and Ctx->num_outputs()",
+                               ctx->num_outputs(), " do not match"));
+  OP_REQUIRES(ctx, num_of_outputs == ng_exec->get_results().size(),
               errors::Internal("Num of outputs from TensorManager ",
-                               tensor_manager->GetNumberOfOutputs(),
-                               "and number of exec outputs ",
+                               num_of_outputs, "and number of exec outputs ",
                                ng_exec->get_results().size(), " do not match"));
 
-  // create inputs, outputs, pipelineId
-  int num_of_inputs = tensor_manager->GetNumberOfInputs();
-  int num_of_outputs = tensor_manager->GetNumberOfInputs();
-  int current_iter_pipeline_depth = get<0>(io_tensors);
+  // Get pipelined input output tensors for this iteration
+  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
+      pipelined_io_tensors;
+  OP_REQUIRES_OK(ctx, GetPipelinedIOTensorsReadyForExecution(
+                          ctx, tf_input_tensors, pipelined_tensor_store,
+                          tensor_manager, pipelined_io_tensors));
+
+  int current_iter_pipeline_depth = get<0>(pipelined_io_tensors);
   vector<shared_ptr<ng::runtime::Tensor>> ng_inputs(num_of_inputs);
   vector<shared_ptr<ng::runtime::Tensor>> ng_outputs(num_of_outputs);
 
-  // Assume All inputs and outputs are pipelined
+  // All inputs and outputs are pipelined.
+  // Of all these pipelined inputs some are prefetched
   // TODO: Fit in variables
-  ng_inputs = get<1>(io_tensors);
-  ng_outputs = get<2>(io_tensors);
-
-  bool skip_tf2ng_copy = false;
-  if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
-      nullptr) {
-    NGraphPrefetchSharedResouce::InputTensorBundle prefetch_input_tensor_bundle{
-        current_iter_pipeline_depth, ng_inputs};
-    // Set the prefetch shared obj if applicable
-    NGraphPrefetchSharedResouce* shared_data = nullptr;
-    Status s = ctx->resource_manager()->Lookup(
-        NGraphPrefetchSharedResouce::CONTAINER_NAME,
-        NGraphPrefetchSharedResouce::RESOURCE_NAME, &shared_data);
-
-    if (!s.ok()) {
-      // We are using this for the first time i.e., we need to do the following
-      // 1. Create the shared data object
-      // 2. save the input/output nG tensor set to the shared data object
-      // 3. Get another pipelined tensor pair for the current iteration and
-      //    copy the TF tensor to this set and continue with the execution for
-      //    for this iteration.
-      shared_data = new NGraphPrefetchSharedResouce(
-          name(), m_parallel_executor->GetOpBackendName(),
-          m_parallel_executor->GetGraphId(),
-          m_parallel_executor->GetNgraphClusterId());
-      // Get the set of IO tensors for the next iteration
-      std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
-          io_tensors_next_iter;
-      io_tensors_next_iter = pipelined_tensor_store->get_tensors();
-      // Save the ngTensors for the next iteration
-      NGraphPrefetchSharedResouce::InputTensorBundle next_input_tensor_bundle{
-          get<0>(io_tensors_next_iter), get<1>(io_tensors_next_iter)};
-
-      OP_REQUIRES(ctx,
-                  current_iter_pipeline_depth == (!next_input_tensor_bundle.Id),
-                  errors::Internal("Current Pipeline Depth is ",
-                                   current_iter_pipeline_depth,
-                                   " and next iter pipeline depth is also  ",
-                                   next_input_tensor_bundle.Id));
-
-      shared_data->AddNextInputTensorBundleForDeviceTransfer(
-          next_input_tensor_bundle);
-
-      ctx->SetStatus(ctx->resource_manager()->Create(
-          NGraphPrefetchSharedResouce::CONTAINER_NAME,
-          NGraphPrefetchSharedResouce::RESOURCE_NAME, shared_data));
-      // Continue the execution with the currently supplied TF tensor for the
-      // last time
-      NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Creating the shared object to "
-                        "signal prefetching";
-    } else {
-      int prefetch_buffer_depth = shared_data->GetBufferDepth();
-      int skip_count = shared_data->GetSkipCount();
-      NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: DEPTH: " << prefetch_buffer_depth
-                     << " skip count; " << skip_count;
-      if (skip_count >= prefetch_buffer_depth) {
-        // We have been using the pipelined tensors - therefore do the
-        // following:
-        // 1. Get the next set of IO tensors from the pipelined store
-        // 2. Save that to the shared data object so that the prefetcher
-        //    can continue with copying the next set of inout tensor to the
-        //    device
-        // 3. Execute the nGraph call for this iteration using the
-        //    nG tensors we got from the shared data
-        auto ng_input_tensor_bundle_ready =
-            shared_data->GetNextInputTensorBundleReadyForDeviceExecution();
-        // Add the next set of tensors for the next iteration
-        shared_data->AddNextInputTensorBundleForDeviceTransfer(
-            prefetch_input_tensor_bundle);
-        // Update the input_tensors with the one ready for exdcution
-        current_iter_pipeline_depth = ng_input_tensor_bundle_ready.Id;
-        ng_inputs = ng_input_tensor_bundle_ready.Inputs;
-        OP_REQUIRES(ctx, current_iter_pipeline_depth ==
-                             (!prefetch_input_tensor_bundle.Id),
-                    errors::Internal("Current Pipeline Depth is ",
-                                     current_iter_pipeline_depth,
-                                     " and next iter pipeline depth is ",
-                                     "also ", prefetch_input_tensor_bundle.Id));
-        skip_tf2ng_copy = true;
-        NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Using device tensors";
-      }
-      shared_data->IncrSkipCount();
-    }
-  }
-
-  // Allocate the input/
-  ngraph::Event event_copy_input_tensor("Copy Input Tensor", "", "");
-
-  if (!skip_tf2ng_copy) {
-    for (auto i = 0; i < tf_input_tensors.size(); i++) {
-      ng::element::Type ng_element_type;
-      OP_REQUIRES_OK(ctx, TFDataTypeToNGraphElementType(
-                              tf_input_tensors[i].dtype(), &ng_element_type));
-
-      void* current_src_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
-      try {
-        ng_inputs[i]->write(current_src_ptr, ng_inputs[i]->get_element_count() *
-                                                 ng_element_type.size());
-      } catch (const std::exception& exp) {
-        OP_REQUIRES(
-            ctx, false,
-            errors::Internal("Error copying TF tensor to device tensor: ",
-                             exp.what()));
-      } catch (...) {
-        OP_REQUIRES(
-            ctx, false,
-            errors::Internal("Error copying TF tensor to device tensor"));
-      }
-    }
-  }
-  event_copy_input_tensor.Stop();
-  ngraph::Event::write_trace(event_copy_input_tensor);
+  ng_inputs = get<1>(pipelined_io_tensors);
+  ng_outputs = get<2>(pipelined_io_tensors);
 
   // And execute
   ngraph::Event event_execute_graph("Execute Graph", "", "");
@@ -700,13 +597,14 @@ void NGraphEncapsulateOp::ComputeUsingParallelExecutor(OpKernelContext* ctx) {
   event_return_tensor.Stop();
   ngraph::Event::write_trace(event_return_tensor);
 
-  NGRAPH_VLOG(2) << "[PREFETCH] COMPUTE: Done";
+  NGRAPH_VLOG(2) << "COMPUTE: Done " << name();
 }
 
 //---------------------------------------------------------------------------
 //    ComputeUsingLegacyExecutor
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
+  NGRAPH_VLOG(1) << "Compute using Legacy Executor " << name();
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << ng_encap_impl_.GetInstanceId() << ": "
       << name();

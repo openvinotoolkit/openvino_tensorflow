@@ -47,6 +47,13 @@ namespace ngraph_bridge {
 vector<int> FindComplement(const int& max_element,
                            const vector<int>& element_set);
 
+// Finds the complement of element_set
+// From the superset
+// Finds: superset - element_set
+// Assumes superset and element_superset are sorted
+vector<int> FindComplement(const vector<int>& element_superset,
+                           const vector<int>& element_set);
+
 int FindNumberOfNodes(const Graph* graph, const string op_type);
 
 Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,

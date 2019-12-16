@@ -46,6 +46,12 @@ namespace ngraph_bridge {
 
 namespace testing {
 TEST(PrefetchCatalogTest, SmallGraph1) {
+  // Set flag to enable prefetch
+  list<string> env_vars{"NGRAPH_TF_USE_PREFETCH"};
+  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
+  SetEnvVariable("NGRAPH_TF_USE_PREFETCH", "1");
+
+  // Create Graph
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
   Graph input_graph(OpRegistry::Global());
@@ -72,9 +78,17 @@ TEST(PrefetchCatalogTest, SmallGraph1) {
 
   // Clean up
   NGraphCatalog::ClearCatalog();
+  // Unset, Restore env flga
+  UnsetEnvVariable("NGRAPH_TF_USE_PREFETCH");
+  RestoreEnv(env_map);
 }
 
 TEST(PrefetchCatalogTest, SmallGraph2) {
+  // Set flag to enable prefetch
+  list<string> env_vars{"NGRAPH_TF_USE_PREFETCH"};
+  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
+  SetEnvVariable("NGRAPH_TF_USE_PREFETCH", "1");
+
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
   Graph input_graph(OpRegistry::Global());
@@ -98,6 +112,9 @@ TEST(PrefetchCatalogTest, SmallGraph2) {
 
   // Clean up
   NGraphCatalog::ClearCatalog();
+  // Unset, restore env flags
+  UnsetEnvVariable("NGRAPH_TF_USE_PREFETCH");
+  RestoreEnv(env_map);
 }
 
 }  // namespace testing

@@ -48,6 +48,15 @@ vector<int> FindComplement(const int& max_element,
   vector<int> superset(max_element);
   iota(begin(superset), end(superset), 0);
 
+  return FindComplement(superset, element_set);
+}
+
+// Finds the complement of element_set
+// From the superset
+// Finds: superset - element_set
+// Assumes superset and element_superset are sorted
+vector<int> FindComplement(const vector<int>& superset,
+                           const vector<int>& element_set) {
   // max size of complement is superset
   vector<int> complement(superset.size());
   vector<int>::iterator it = set_difference(

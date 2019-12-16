@@ -85,6 +85,5 @@ def main(_):
 
 
 if __name__ == '__main__':
-    os.environ['NGRAPH_TF_BACKEND'] = "INTERPRETER"
     #os.environ['NGRAPH_TF_USE_PREFETCH'] = "1"
     tf.app.run(main=main)

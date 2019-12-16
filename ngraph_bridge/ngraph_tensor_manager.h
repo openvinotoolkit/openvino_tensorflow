@@ -24,7 +24,10 @@
 
 #include "tensorflow/core/common_runtime/dma_helper.h"
 
+#include "ngraph/ngraph.hpp"
+
 using namespace std;
+namespace ng = ngraph;
 namespace tensorflow {
 
 namespace ngraph_bridge {
@@ -38,6 +41,12 @@ class NGraphTensorManager {
                                const int number_of_outputs);
 
   ~NGraphTensorManager();
+
+  string GetName() { return m_ng_encap_node_name; }
+
+  int GetClusterId() { return m_ng_encap_cluster_id; }
+
+  int GetGraphId() { return m_ng_encap_graph_id; }
 
   const int& GetNumberOfInputs() { return m_number_of_inputs; }
 
@@ -63,12 +72,24 @@ class NGraphTensorManager {
     return m_pipelined_output_indexes;
   }
 
+  // wrt to all inputs
   const vector<int>& GetPrefetchedInputIndexes() {
     return m_prefetched_input_indexes;
   }
 
+  // wrt to all inputs
+  const vector<int>& GetPipelinedButNotPrefetchedInputIndexes() {
+    return m_pipelined_not_prefetched_input_indexes;
+  }
+
+  // wrt to pipelined inputs
   const vector<int>& GetPipelinedInputIndexesThatArePrefetched() {
-    return m_pipelined_input_indexes_prefetched;
+    return m_pipelined_input_indexes_that_are_prefetched;
+  }
+
+  // wrt to pipelined inputs
+  const vector<int>& GetPipelinedInputIndexesThatAreNotPrefetched() {
+    return m_pipelined_input_indexes_that_are_not_prefetched;
   }
 
  private:
@@ -80,17 +101,23 @@ class NGraphTensorManager {
   int m_number_of_outputs;
 
   // Book-keeping for weights-on-device optimizations
+  // indexes wrt all inputs/outputs
   vector<int> m_input_indexes_from_variables;
   vector<int> m_output_indexes_assigning_variable;
   vector<int> m_output_indexes_that_need_copy;
 
-  // All indexes that are not for from/to variables
+  // All indexes that are not from/to variables
+  // These are pipelined, some of these are also prefetched
+  // indexes wrt all inputs/outputs
   vector<int> m_pipelined_input_indexes;
   vector<int> m_pipelined_output_indexes;
-  vector<int> m_pipelined_input_indexes_prefetched;
+  // indexes wrt pipelined inputs
+  vector<int> m_pipelined_input_indexes_that_are_prefetched;
+  vector<int> m_pipelined_input_indexes_that_are_not_prefetched;
 
-  //[TODO] Book-keeping for prefetched inputs
+  // indexes wrt all inputs
   vector<int> m_prefetched_input_indexes;
+  vector<int> m_pipelined_not_prefetched_input_indexes;
 };
 
 }  // namespace ngraph_bridge

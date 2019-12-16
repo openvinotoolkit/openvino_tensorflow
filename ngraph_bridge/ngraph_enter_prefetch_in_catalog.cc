@@ -23,6 +23,7 @@
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/ngraph_catalog.h"
 #include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
+#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
@@ -44,6 +45,12 @@ namespace ngraph_bridge {
 //
 
 Status EnterPrefetchInCatalog(Graph* graph, int graph_id) {
+  if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) ==
+      nullptr) {
+    // if prefetch is not requested return
+    return Status::OK();
+  }
+
   // Go over all the nodes in the graph
   for (auto node : graph->op_nodes()) {
     // If the node is a NGraphEncapsulate, go over all it's

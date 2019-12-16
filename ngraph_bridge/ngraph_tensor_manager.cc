@@ -58,6 +58,10 @@ void NGraphTensorManager::Initialize() {
       m_output_indexes_that_need_copy.push_back(index);
     }
   }
+#else
+  m_output_indexes_that_need_copy.resize(m_number_of_outputs);
+  iota(begin(m_output_indexes_that_need_copy),
+       end(m_output_indexes_that_need_copy), 0);
 #endif
   m_pipelined_input_indexes =
       FindComplement(m_number_of_inputs, m_input_indexes_from_variables);
@@ -85,9 +89,16 @@ void NGraphTensorManager::Initialize() {
                                to_string(pref_index) +
                                " not found in pipelined inputs.");
     }
-    m_pipelined_input_indexes_prefetched.push_back(
+    m_pipelined_input_indexes_that_are_prefetched.push_back(
         position - m_pipelined_input_indexes.begin());
   }
+
+  // complements
+  m_pipelined_input_indexes_that_are_not_prefetched =
+      FindComplement(m_pipelined_input_indexes.size(),
+                     m_pipelined_input_indexes_that_are_prefetched);
+  m_pipelined_not_prefetched_input_indexes =
+      FindComplement(m_pipelined_input_indexes, m_prefetched_input_indexes);
 }
 
 //---------------------------------------------------------------------------
