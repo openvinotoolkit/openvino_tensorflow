@@ -756,17 +756,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       confirmation_function_map["SquaredDifference"] =
           SimpleConfirmationFunction();
       confirmation_function_map["Squeeze"] = SimpleConfirmationFunction();
-      confirmation_function_map["StridedSlice"] = [](Node* n, bool* result) {
-        // Reject if "new_axis_mask" is set.
-        int tf_new_axis_mask;
-        TF_RETURN_IF_ERROR(
-            GetNodeAttr(n->attrs(), "new_axis_mask", &tf_new_axis_mask));
-        int tf_ellipsis_mask;
-        TF_RETURN_IF_ERROR(
-            GetNodeAttr(n->attrs(), "ellipsis_mask", &tf_ellipsis_mask));
-        *result = (tf_new_axis_mask == 0) && (tf_ellipsis_mask == 0);
-        return Status::OK();
-      };
+      confirmation_function_map["StridedSlice"] = SimpleConfirmationFunction();
       confirmation_function_map["Pack"] = SimpleConfirmationFunction();
       confirmation_function_map["Sub"] = SimpleConfirmationFunction();
       confirmation_function_map["Sum"] = SimpleConfirmationFunction();
