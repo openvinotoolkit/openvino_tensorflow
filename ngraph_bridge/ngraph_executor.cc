@@ -485,24 +485,26 @@ NGraphExecutor::InitializeIOTensorPipeline(
                  << num_pipelined_inputs
                  << " No. of Pipelined Pipelined Outputs: "
                  << num_pipelined_outputs;
-  PipelinedTensorMatrix pipelined_input_tensors(num_pipelined_inputs);
-  PipelinedTensorMatrix pipelined_output_tensors(num_pipelined_outputs);
-
+  PipelinedTensorMatrix pipelined_input_tensors(m_depth);
+  PipelinedTensorMatrix pipelined_output_tensors(m_depth);
+  PipelinedTensorVector temp;
   for (size_t i = 0; i < num_pipelined_inputs; i++) {
     int input_index = pipelined_input_indexes[i];
-    pipelined_input_tensors[i] =
-        ng_exec->create_input_tensor(input_index, m_depth);
+    temp = ng_exec->create_input_tensor(input_index, m_depth);
+    for (size_t j = 0; j < temp.size(); j++) {
+      pipelined_input_tensors[j].push_back(temp[j]);
+    }
   }
-
   for (size_t i = 0; i < num_pipelined_outputs; i++) {
     int output_index = pipelined_output_indexes[i];
-    pipelined_output_tensors[i] =
-        ng_exec->create_output_tensor(output_index, m_depth);
+    temp = ng_exec->create_output_tensor(output_index, m_depth);
+    for (size_t j = 0; j < temp.size(); j++) {
+      pipelined_output_tensors[j].push_back(temp[j]);
+    }
   }
 
   shared_ptr<PipelinedTensorsStore> pts(new PipelinedTensorsStore(
       pipelined_input_tensors, pipelined_output_tensors));
-
   return std::make_pair(Status::OK(), pts);
 }
 

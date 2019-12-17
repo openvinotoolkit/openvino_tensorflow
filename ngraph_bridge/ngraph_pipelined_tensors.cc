@@ -91,30 +91,19 @@ bool IndexLibrary::is_free(size_t id) {
 
 PipelinedTensorsStore::PipelinedTensorsStore(PipelinedTensorMatrix in,
                                              PipelinedTensorMatrix out)
-    : m_in_tensors(in),
-      m_out_tensors(out),
-      m_num_inputs(in.size()),
-      m_num_outputs(out.size()) {
-  // The executable could have no inputs or no outputs.
-  // Hence the if-else below to determine m_depth
-  bool has_inputs = in.size() > 0;
-  bool has_outputs = out.size() > 0;
-  if (has_inputs) {
-    if (has_outputs) {
-      auto m_depth_in = in[0].size();
-      auto m_depth_out = out[0].size();
-      // We assume that input and output depths are same
-      m_depth = std::min(m_depth_in, m_depth_out);
-    } else {
-      m_depth = in[0].size();
-    }
-  } else {
-    if (has_outputs) {
-      m_depth = out[0].size();
-    } else {
-      m_depth = 0;  // The executable has no inputs and outputs
-    }
+    : m_in_tensors(in), m_out_tensors(out) {
+  auto m_depth_in = in.size();
+  auto m_depth_out = out.size();
+
+  if (m_depth_in != m_depth_out) {
+    throw std::runtime_error(
+        "Input and Output depth does not match. Input depth: " +
+        to_string(m_depth_in) + " Output depth: " + to_string(m_depth_out));
   }
+
+  // We assume that input and output depths are same
+  m_depth = m_depth_in;
+
   idx_lib = make_shared<IndexLibrary>(m_depth);
 }
 
@@ -131,11 +120,11 @@ void PipelinedTensorsStore::return_tensors(size_t id) {
 
 PipelinedTensorVector PipelinedTensorsStore::get_group(bool is_input,
                                                        size_t i) {
-  PipelinedTensorVector group;
-  for (size_t idx = 0; idx < (is_input ? m_num_inputs : m_num_outputs); idx++) {
-    group.push_back((is_input ? m_in_tensors : m_out_tensors)[idx][i]);
+  if (is_input) {
+    return m_in_tensors[i];
+  } else {
+    return m_out_tensors[i];
   }
-  return group;
 }
 }
 }

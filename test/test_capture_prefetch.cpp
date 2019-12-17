@@ -90,7 +90,7 @@ TEST(CapturePrefetchTest, SmallGraph2) {
       count_ng_prefetch = count_ng_prefetch + 1;
       // This NGraphPrefetchDataset node should have only one output
       ASSERT_EQ(node->num_outputs(), 1);
-      Node* dst;
+      Node* dst = nullptr;
       for (auto edge : node->out_edges()) {
         dst = edge->dst();
       }

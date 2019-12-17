@@ -558,13 +558,20 @@ Status NGraphEncapsulateImpl::UpdatePipelinedTensorCache(
     // Create these pipelined ng tensors only if needed, else reuse from cache
     size_t num_inputs = ng_exec->get_parameters().size();
     size_t num_outputs = ng_exec->get_results().size();
-    PipelinedTensorMatrix pipelined_input_tensors(num_inputs);
-    PipelinedTensorMatrix pipelined_output_tensors(num_outputs);
+    PipelinedTensorMatrix pipelined_input_tensors(m_depth);
+    PipelinedTensorMatrix pipelined_output_tensors(m_depth);
+    PipelinedTensorVector temp;
     for (size_t i = 0; i < num_inputs; i++) {
-      pipelined_input_tensors[i] = ng_exec->create_input_tensor(i, m_depth);
+      temp = ng_exec->create_input_tensor(i, m_depth);
+      for (size_t j = 0; j < temp.size(); j++) {
+        pipelined_input_tensors[j].push_back(temp[j]);
+      }
     }
     for (size_t i = 0; i < num_outputs; i++) {
-      pipelined_output_tensors[i] = ng_exec->create_output_tensor(i, m_depth);
+      temp = ng_exec->create_output_tensor(i, m_depth);
+      for (size_t j = 0; j < temp.size(); j++) {
+        pipelined_output_tensors[j].push_back(temp[j]);
+      }
     }
     m_executable_pipelined_tensors_map.insert(
         {ng_exec, PipelinedTensorsStore(pipelined_input_tensors,

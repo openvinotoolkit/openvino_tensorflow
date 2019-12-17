@@ -67,6 +67,7 @@ set(SRC
     test_enter_prefetch_in_catalog.cc
     test_ngraph_tensor_manager.cpp
     test_capture_prefetch.cpp
+    test_pipelined_tensor_store.cc
 )
 
 if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
