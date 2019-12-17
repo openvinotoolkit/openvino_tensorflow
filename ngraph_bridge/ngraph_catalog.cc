@@ -171,10 +171,16 @@ bool NGraphCatalog::ExistsInEncapOutputInfoMap(const string& key) {
 
 bool NGraphCatalog::ExistsInEncapOutputInfoMap(const int& graphid,
                                                const string& node_name,
-                                               const int& input_index) {
-  string key = NGraphCatalog::CreateNodeKey(graphid, node_name, input_index);
+                                               const int& output_index) {
+  string key = NGraphCatalog::CreateNodeKey(graphid, node_name, output_index);
   auto itr = NGraphCatalog::encap_output_info_map_.find(key);
   return itr != NGraphCatalog::encap_output_info_map_.end();
+}
+
+const tuple<string, bool>& NGraphCatalog::GetInfoFromEncapOutputInfoMap(
+    const int& graphid, const string& node_name, const int& output_index) {
+  string key = NGraphCatalog::CreateNodeKey(graphid, node_name, output_index);
+  return NGraphCatalog::GetInfoFromEncapOutputInfoMap(key);
 }
 
 const tuple<string, bool>& NGraphCatalog::GetInfoFromEncapOutputInfoMap(

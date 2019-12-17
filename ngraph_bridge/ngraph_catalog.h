@@ -138,6 +138,10 @@ class NGraphCatalog {
                                          const int& output_index);
   static const tuple<string, bool>& GetInfoFromEncapOutputInfoMap(
       const string& key);
+
+  static const tuple<string, bool>& GetInfoFromEncapOutputInfoMap(
+      const int& graphid, const string& node_name, const int& output_index);
+
   static const string& GetVariableSharedNameFromEncapOutputInfoMap(
       const string& key);
   static const bool& GetCopyToTFFromEncapOutputInfoMap(const string& key);

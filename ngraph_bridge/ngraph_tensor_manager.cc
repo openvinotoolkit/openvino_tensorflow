@@ -42,16 +42,44 @@ NGraphTensorManager::NGraphTensorManager(const string ng_encap_node_name,
 
 void NGraphTensorManager::Initialize() {
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+
+  // input variables book-keeping
   for (int index = 0; index < m_number_of_inputs; index++) {
     if (NGraphCatalog::ExistsInInputVariableSharedNameMap(
             m_ng_encap_graph_id, m_ng_encap_node_name, index)) {
       m_input_indexes_from_variables.push_back(index);
+      // store the variable shared name
+      try {
+        auto shared_name = NGraphCatalog::GetInputVariableSharedName(
+            m_ng_encap_graph_id, m_ng_encap_node_name, index);
+        input_variable_shared_name_map.insert({index, shared_name});
+      } catch (const std::exception& exp) {
+        throw runtime_error(
+            "Could not find variable shared name in catalog for input index " +
+            to_string(index) + "for encapsulate op " + m_ng_encap_node_name);
+      }
     }
   }
+
+  // output variables book-keeping
+  // these weights are updated in place
   for (int index = 0; index < m_number_of_outputs; index++) {
     if (NGraphCatalog::ExistsInEncapOutputInfoMap(
             m_ng_encap_graph_id, m_ng_encap_node_name, index)) {
       m_output_indexes_assigning_variable.push_back(index);
+
+      // store the output variable shared name + copy_to_tf info
+      try {
+        auto shared_name_copy_to_tf =
+            NGraphCatalog::GetInfoFromEncapOutputInfoMap(
+                m_ng_encap_graph_id, m_ng_encap_node_name, index);
+        output_variable_info_map.insert({index, shared_name_copy_to_tf});
+      } catch (const std::exception& exp) {
+        throw runtime_error(
+            "Could not find variable shared name and copy_to_tf information in "
+            "catalog for output index " +
+            to_string(index) + " for encapsulate op " + m_ng_encap_node_name);
+      }
     }
     if (NGraphCatalog::EncapOutputIndexNeedsCopy(m_ng_encap_graph_id,
                                                  m_ng_encap_node_name, index)) {
@@ -105,6 +133,48 @@ void NGraphTensorManager::Initialize() {
 //  NGraphTensorManager::~NGraphTensorManager
 //---------------------------------------------------------------------------
 NGraphTensorManager::~NGraphTensorManager() {}
+
+//---------------------------------------------------------------------------
+//  NGraphTensorManager::GetInputVariableSharedName
+//---------------------------------------------------------------------------
+Status NGraphTensorManager::GetInputVariableSharedName(
+    const int& input_index, string* input_var_shared_name) {
+  auto itr = input_variable_shared_name_map.find(input_index);
+  if (itr == input_variable_shared_name_map.end()) {
+    return errors::Internal("Could not find shared name info for input index ",
+                            input_index, " in tensor manager ");
+  }
+  *input_var_shared_name = itr->second;
+  return Status::OK();
+}
+
+//---------------------------------------------------------------------------
+//  NGraphTensorManager::GetOutputVariableSharedName
+//---------------------------------------------------------------------------
+Status NGraphTensorManager::GetOutputVariableSharedName(
+    const int& output_index, string* output_var_shared_name) {
+  auto itr = output_variable_info_map.find(output_index);
+  if (itr == output_variable_info_map.end()) {
+    return errors::Internal("Could not find shared name info for output index ",
+                            output_index, " in tensor manager");
+  }
+  *output_var_shared_name = get<0>(itr->second);
+  return Status::OK();
+}
+
+//---------------------------------------------------------------------------
+//  NGraphTensorManager::GetOutputVariableCopyToTF
+//---------------------------------------------------------------------------
+Status NGraphTensorManager::GetOutputVariableCopyToTF(
+    const int& output_index, bool* output_var_copy_to_tf) {
+  auto itr = output_variable_info_map.find(output_index);
+  if (itr == output_variable_info_map.end()) {
+    return errors::Internal("Could not find copy_to_tf info for output index ",
+                            output_index, " in tensor manager");
+  }
+  *output_var_copy_to_tf = get<1>(itr->second);
+  return Status::OK();
+}
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
