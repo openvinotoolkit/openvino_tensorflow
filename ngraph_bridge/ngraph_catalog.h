@@ -75,15 +75,19 @@ class NGraphCatalog {
   //  bool : NGraphAssign‘s copy_to_tf attribute ‘s value
   static unordered_map<string, tuple<string, bool>> encap_output_info_map_;
 
-  // Map keeps track of encap nodes whose input is an IteratorGenNext.
-  // This is map from the node to the input indexs of the
-  // encapsulate node that are prefetched.
+  // Map keeps track of encap nodes whose input is from an IteratorGenNext Op.
+  // This is a map from the node to
+  //     Another map of indexes, whose
+  //      - Key is the input indexes of the encapsulate node that are prefetched
+  //      - Value is the output indexes of the IteratorGetNext node that feed
+  //      these inputs
   // Will be used by NGraphEncapsulate Op.
   // Map of
   // Key
   //      string : GraphId + _ + nodename
-  // Value : Set of indices
-  static unordered_map<string, unordered_set<int>> prefetched_input_index_map_;
+  // Value : Map of {encap input indices, iteratorgetnext output indices}
+
+  static unordered_map<string, map<int, int>> prefetched_input_index_map_;
 
  public:
   // Utility to create key to query the maps
@@ -150,13 +154,13 @@ class NGraphCatalog {
   static void PrintEncapOutputInfoMap();
 
   // Functions for PrefetedInputs Map
-  static void AddToPrefetchedInputIndexMap(const int& graphid,
-                                           const string& node_name,
-                                           const unordered_set<int>& val);
+  static void AddToPrefetchedInputIndexMap(
+      const int& graphid, const string& node_name,
+      const map<int, int>& encap_inp_index_map);
   static bool ExistsInPrefetchedInputIndexMap(const int& graphid,
                                               const string& node_name);
   static bool ExistsInPrefetchedInputIndexMap(const string& key);
-  static const unordered_set<int>& GetIndexesFromPrefetchedInputIndexMap(
+  static const map<int, int>& GetIndexesFromPrefetchedInputIndexMap(
       const int& graphid, const string& node_name);
 
   static void ClearPrefetchedInputIndexMap();

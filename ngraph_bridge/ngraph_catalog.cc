@@ -33,8 +33,7 @@ unordered_map<string, unordered_set<int>>
     NGraphCatalog::encap_output_copy_indexes_map_;
 unordered_map<string, tuple<string, bool>>
     NGraphCatalog::encap_output_info_map_;
-unordered_map<string, unordered_set<int>>
-    NGraphCatalog::prefetched_input_index_map_;
+unordered_map<string, map<int, int>> NGraphCatalog::prefetched_input_index_map_;
 
 // Function to create the Node Key
 string NGraphCatalog::CreateNodeKey(const int& graph_id,
@@ -220,13 +219,13 @@ void NGraphCatalog::PrintEncapOutputInfoMap() {
 // Functions for PrefetchedInputIndex Map
 void NGraphCatalog::AddToPrefetchedInputIndexMap(
     const int& graphid, const string& node_name,
-    const unordered_set<int>& val) {
+    const map<int, int>& encap_inp_index_map) {
   string key = NGraphCatalog::CreateNodeKey(graphid, node_name);
   if (NGraphCatalog::ExistsInPrefetchedInputIndexMap(key)) {
     throw runtime_error("Trying to add an already existing key ( " + key +
                         " ) in PrefetchedInputIndexMap ");
   }
-  NGraphCatalog::prefetched_input_index_map_.insert({key, val});
+  NGraphCatalog::prefetched_input_index_map_.insert({key, encap_inp_index_map});
 }
 
 bool NGraphCatalog::ExistsInPrefetchedInputIndexMap(const int& graphid,
@@ -240,7 +239,7 @@ bool NGraphCatalog::ExistsInPrefetchedInputIndexMap(const string& key) {
   return itr != NGraphCatalog::prefetched_input_index_map_.end();
 }
 
-const unordered_set<int>& NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
+const map<int, int>& NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
     const int& graphid, const string& node_name) {
   string key = NGraphCatalog::CreateNodeKey(graphid, node_name);
   return NGraphCatalog::prefetched_input_index_map_.at(key);
@@ -255,7 +254,8 @@ void NGraphCatalog::PrintPrefetchedInputIndexMap() {
   for (auto it : prefetched_input_index_map_) {
     NGRAPH_VLOG(4) << "Key: (GraphId_NodeName) " << it.first;
     for (auto itr = it.second.begin(); itr != it.second.end(); ++itr) {
-      NGRAPH_VLOG(4) << " Value: " << *itr;
+      NGRAPH_VLOG(4) << " NGEncap Input Index: " << itr->first
+                     << ", IteratorGetNext Output Index: " << itr->second;
     }
   }
 }

@@ -92,6 +92,11 @@ class NGraphTensorManager {
     return m_pipelined_input_indexes_that_are_not_prefetched;
   }
 
+  // wrt to pipelined inputs
+  const map<int, int>& GetInputIndexesForPrefetchSharedObject() {
+    return m_prefetch_iterator_encap_index_map;
+  }
+
   // input ng-variable shared name
   Status GetInputVariableSharedName(const int& input_index,
                                     string* input_var_shared_name);
@@ -121,9 +126,11 @@ class NGraphTensorManager {
   // All indexes that are not from/to variables
   // Book-keeping primarily for data pipelining
   // These are pipelined, some of these are also prefetched
+
   // indexes wrt all inputs/outputs
   vector<int> m_pipelined_input_indexes;
   vector<int> m_pipelined_output_indexes;
+
   // indexes wrt pipelined inputs
   vector<int> m_pipelined_input_indexes_that_are_prefetched;
   vector<int> m_pipelined_input_indexes_that_are_not_prefetched;
@@ -131,6 +138,12 @@ class NGraphTensorManager {
   // indexes wrt all inputs
   vector<int> m_prefetched_input_indexes;
   vector<int> m_pipelined_not_prefetched_input_indexes;
+
+  // Map of
+  // key : index of the pipelined input tensors that are prefetched
+  // value: index of the IteratorGetNext feeding into this input of NGEncap Op
+  // Used to create prefetch shared data by NGEncap Op
+  map<int, int> m_prefetch_iterator_encap_index_map;
 
   // Book-keeping for weights-on-device optimizations
   unordered_map<int, string> input_variable_shared_name_map;

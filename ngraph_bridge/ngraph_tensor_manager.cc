@@ -96,30 +96,41 @@ void NGraphTensorManager::Initialize() {
   m_pipelined_output_indexes =
       FindComplement(m_number_of_outputs, m_output_indexes_assigning_variable);
 
+  // Prefetch indexes
   if (NGraphCatalog::ExistsInPrefetchedInputIndexMap(m_ng_encap_graph_id,
                                                      m_ng_encap_node_name)) {
-    auto prefetch_indexes =
+    auto prefetch_index_map =
         NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
             m_ng_encap_graph_id, m_ng_encap_node_name);
-    m_prefetched_input_indexes.insert(m_prefetched_input_indexes.begin(),
-                                      prefetch_indexes.begin(),
-                                      prefetch_indexes.end());
-    // keeping the indexes sorted, is helpful in general testing
-    sort(m_prefetched_input_indexes.begin(), m_prefetched_input_indexes.end());
-  }
 
-  // the prefetched input indexes will also be pipelined
-  for (int pref_index : m_prefetched_input_indexes) {
-    auto position = std::find(m_pipelined_input_indexes.begin(),
-                              m_pipelined_input_indexes.end(), pref_index);
-    if (position == m_pipelined_input_indexes.end()) {
-      throw std::runtime_error("Prefetched input index " +
-                               to_string(pref_index) +
-                               " not found in pipelined inputs.");
+    // Since it's a map, the keys must be sorted
+    for (auto itr : prefetch_index_map) {
+      int prefetch_index = itr.first;
+      m_prefetched_input_indexes.push_back(prefetch_index);
+
+      // the prefetched input indexes will also be pipelined
+      auto position =
+          std::find(m_pipelined_input_indexes.begin(),
+                    m_pipelined_input_indexes.end(), prefetch_index);
+      if (position == m_pipelined_input_indexes.end()) {
+        throw std::runtime_error("Prefetched input index " +
+                                 to_string(prefetch_index) +
+                                 " not found in pipelined inputs.");
+      }
+
+      int prefetch_index_wrt_pipeline =
+          position - m_pipelined_input_indexes.begin();
+      m_pipelined_input_indexes_that_are_prefetched.push_back(
+          prefetch_index_wrt_pipeline);
+
+      // The EncapOp shares with prefetch op only the pipelined tensors
+      // so the map needs relative indexing for encap op
+      // the corresponding iteratorgetnext output ops
+      int corres_iterator_index = prefetch_index_map.at(prefetch_index);
+      m_prefetch_iterator_encap_index_map.insert(
+          {prefetch_index_wrt_pipeline, corres_iterator_index});
     }
-    m_pipelined_input_indexes_that_are_prefetched.push_back(
-        position - m_pipelined_input_indexes.begin());
-  }
+  }  // if prefetch input found in catalog
 
   // complements
   m_pipelined_input_indexes_that_are_not_prefetched =

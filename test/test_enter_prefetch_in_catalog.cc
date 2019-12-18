@@ -69,12 +69,12 @@ TEST(PrefetchCatalogTest, SmallGraph1) {
       NGraphCatalog::ExistsInPrefetchedInputIndexMap("0_ngraph_cluster_4"));
   ASSERT_TRUE(
       NGraphCatalog::ExistsInPrefetchedInputIndexMap(0, "ngraph_cluster_4"));
-  std::unordered_set<int> expected;
-  expected.insert(0);
-  std::unordered_set<int> indexes;
-  indexes = NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
+  std::map<int, int> expected;
+  expected.insert({0, 0});
+  std::map<int, int> indexes_map;
+  indexes_map = NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
       0, "ngraph_cluster_4");
-  ASSERT_EQ(indexes, expected);
+  ASSERT_EQ(indexes_map, expected);
 
   // Clean up
   NGraphCatalog::ClearCatalog();
@@ -102,10 +102,10 @@ TEST(PrefetchCatalogTest, SmallGraph2) {
       NGraphCatalog::ExistsInPrefetchedInputIndexMap("0_ngraph_cluster_340"));
   ASSERT_TRUE(
       NGraphCatalog::ExistsInPrefetchedInputIndexMap(0, "ngraph_cluster_340"));
-  std::unordered_set<int> expected;
-  expected.insert(2);
-  expected.insert(3);
-  std::unordered_set<int> indexes;
+  std::map<int, int> expected;
+  expected.insert({2, 1});
+  expected.insert({3, 0});
+  std::map<int, int> indexes;
   indexes = NGraphCatalog::GetIndexesFromPrefetchedInputIndexMap(
       0, "ngraph_cluster_340");
   ASSERT_EQ(indexes, expected);

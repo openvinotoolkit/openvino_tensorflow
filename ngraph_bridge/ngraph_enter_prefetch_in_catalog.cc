@@ -55,16 +55,20 @@ Status EnterPrefetchInCatalog(Graph* graph, int graph_id) {
   for (auto node : graph->op_nodes()) {
     // If the node is a NGraphEncapsulate, go over all it's
     // inputs
-    unordered_set<int> in_indexes_for_encap;
+    map<int, int> in_indexes_for_encap;
     if (node->type_string() == "NGraphEncapsulate") {
       for (auto edge : node->in_edges()) {
         // If any input is coming from "IteratorGetNext" then
         // add the input index for it to the set
+        // [TODO] Data Pipeling assumes there is only 1 IteratorGetNext
+        //
         if (edge->src()->type_string() == "IteratorGetNext") {
           NGRAPH_VLOG(4) << "Adding to PrefetchedInputIndexMap";
           NGRAPH_VLOG(4) << "Key: " << node->name();
-          NGRAPH_VLOG(4) << "Input index: " << edge->dst_input();
-          in_indexes_for_encap.insert(edge->dst_input());
+          NGRAPH_VLOG(4) << "NGEncap Input index: " << edge->dst_input();
+          NGRAPH_VLOG(4) << "IteratorGetNext Output index: "
+                         << edge->src_output();
+          in_indexes_for_encap.insert({edge->dst_input(), edge->src_output()});
         }
       }  // end loop over input edges
 

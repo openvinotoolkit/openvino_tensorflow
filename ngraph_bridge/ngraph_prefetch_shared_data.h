@@ -40,11 +40,11 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
  public:
   explicit NGraphPrefetchSharedResouce(
       const std::string& ng_enc_op_name, int cluster_id, int graph_id,
-      const vector<int>& prefetch_input_indexes)
+      const map<int, int>& prefetch_input_index_map)
       : m_ng_enc_op_name(ng_enc_op_name),
         m_graph_id(graph_id),
         m_cluster_id(cluster_id),
-        m_prefetch_input_indexes(prefetch_input_indexes) {}
+        m_prefetch_input_index_map(prefetch_input_index_map) {}
 
   // Returns a debug string for *this.
   string DebugString() const override { return "NGraphPrefetchSharedResouce"; }
@@ -117,15 +117,19 @@ class NGraphPrefetchSharedResouce : public ResourceBase {
   void IncrSkipCount() { m_skip_count++; }
   int GetSkipCount() { return m_skip_count; }
 
-  const vector<int>& GetPrefetchInputIndexes() {
-    return m_prefetch_input_indexes;
+  const map<int, int>& GetPrefetchInputIndexesMap() {
+    return m_prefetch_input_index_map;
   }
 
  private:
   const std::string m_ng_enc_op_name;
   const int m_graph_id;
   const int m_cluster_id;
-  const vector<int> m_prefetch_input_indexes;
+
+  // Map of
+  // Key : indexes of IOTensorBundle.Inputs that are prefetched
+  // Value : corresponding index for TF PrefetchBuffer
+  const map<int, int> m_prefetch_input_index_map;
   // We need to maintain two queues as follows:
   // ----------+------------+------------+------------------------------------+
   // Queue     | Writer     | Reader     | Comments                           |

@@ -77,12 +77,11 @@ Status GetPipelinedIOTensorsReadyForExecution(
       // 2. We get another pipelined tensor pair for the current iteration and
       //   add it to the shared data. It will be accessed by prefetcher to copy
       //   the prefetched inputs to device
-      auto ng_prefetch_input_indexes =
-          tensor_manager->GetPipelinedInputIndexesThatArePrefetched();
 
       shared_data = new NGraphPrefetchSharedResouce(
           tensor_manager->GetName(), tensor_manager->GetGraphId(),
-          tensor_manager->GetClusterId(), ng_prefetch_input_indexes);
+          tensor_manager->GetClusterId(),
+          tensor_manager->GetInputIndexesForPrefetchSharedObject());
 
       // Get the set of IO tensors for the next iteration
       std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>

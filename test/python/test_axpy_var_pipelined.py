@@ -13,7 +13,7 @@ from common import NgraphTest
 
 # For eg. when running the test from ngraph-bridge/build_cmake/test/python
 # you can add this path as below
-# sys.path.insert(0, '../../examples')
+sys.path.insert(0, '../../examples')
 
 from axpy_var_pipelined import *
 

@@ -420,36 +420,39 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
 
           auto ng_input_tensor_bundle =
               shared_data->GetNextIOTensorBundleForDeviceTransfer();
-          auto ng_prefetch_input_indexes =
-              shared_data->GetPrefetchInputIndexes();
+          auto ng_prefetch_input_indexes_map =
+              shared_data->GetPrefetchInputIndexesMap();
 
           int number_of_buffer_elements = buffer_element.value.size();
-          if (number_of_buffer_elements != ng_prefetch_input_indexes.size()) {
+          if (number_of_buffer_elements !=
+              ng_prefetch_input_indexes_map.size()) {
             throw std::runtime_error(
                 "Prefetch buffer elements size " +
                 to_string(number_of_buffer_elements) +
                 " does not match the number of prefetch inputs expected by "
                 "encap " +
-                to_string(ng_prefetch_input_indexes.size()));
+                to_string(ng_prefetch_input_indexes_map.size()));
           }
 
           // Write to these tensors
-          for (auto i = 0; i < buffer_element.value.size(); i++) {
+          for (auto itr : ng_prefetch_input_indexes_map) {
+            int ng_index = itr.first;
+            int tf_index = itr.second;
+
             ng::element::Type ng_element_type;
             auto status = ngraph_bridge::TFDataTypeToNGraphElementType(
-                buffer_element.value[i].dtype(), &ng_element_type);
+                buffer_element.value[tf_index].dtype(), &ng_element_type);
 
             void* current_src_ptr =
-                (void*)DMAHelper::base(&buffer_element.value[i]);
+                (void*)DMAHelper::base(&buffer_element.value[tf_index]);
             try {
               NGRAPH_VLOG(2)
                   << "[PREFETCH] INPUT tensor being written by Prefetch: "
-                  << " Value: " << buffer_element.value[i].DebugString();
-              int input_index = ng_prefetch_input_indexes[i];
-              ng_input_tensor_bundle.Inputs[input_index]->write(
-                  current_src_ptr, ng_input_tensor_bundle.Inputs[input_index]
-                                           ->get_element_count() *
-                                       ng_element_type.size());
+                  << " Value: " << buffer_element.value[tf_index].DebugString();
+              ng_input_tensor_bundle.Inputs[ng_index]->write(
+                  current_src_ptr,
+                  ng_input_tensor_bundle.Inputs[ng_index]->get_element_count() *
+                      ng_element_type.size());
             } catch (const std::exception& exp) {
               throw exp;
             } catch (...) {
