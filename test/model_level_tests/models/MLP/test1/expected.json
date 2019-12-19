@@ -2,29 +2,34 @@
     "default": {
         "logparse": {
             "0": {
-                "num_ng_clusters": 0,
                 "num_nodes_in_graph": 50,
-                "num_nodes_marked_for_clustering": 0
+                "num_nodes_marked_for_clustering": 0,
+                "num_ng_clusters": 0
             },
             "1": {
-                "num_ng_clusters": 15,
                 "num_nodes_in_graph": 311,
-                "num_nodes_marked_for_clustering": 249
+                "num_nodes_marked_for_clustering": 251,
+                "num_ng_clusters": 15
+            },
+            "2": {
+                "num_nodes_in_graph": 65,
+                "num_nodes_marked_for_clustering": 45,
+                "num_ng_clusters": 3
             }
         },
         "time": 10
     },
     "grappler": {
         "logparse": {
-            "0": {
-                "num_ng_clusters": 0,
-                "num_nodes_in_graph": 50,
-                "num_nodes_marked_for_clustering": 0
-            },
             "1": {
-                "num_ng_clusters": 15,
                 "num_nodes_in_graph": 330,
-                "num_nodes_marked_for_clustering": 267
+                "num_nodes_marked_for_clustering": 269,
+                "num_ng_clusters": 15
+            },
+            "2": {
+                "num_nodes_in_graph": 72,
+                "num_nodes_marked_for_clustering": 51,
+                "num_ng_clusters": 3
             }
         },
         "time": 10
@@ -32,14 +37,19 @@
     "varopts": {
         "logparse": {
             "0": {
-                "num_ng_clusters": 0,
                 "num_nodes_in_graph": 50,
-                "num_nodes_marked_for_clustering": 0
+                "num_nodes_marked_for_clustering": 0,
+                "num_ng_clusters": 0
             },
             "1": {
-                "num_ng_clusters": 15,
                 "num_nodes_in_graph": 312,
-                "num_nodes_marked_for_clustering": 250
+                "num_nodes_marked_for_clustering": 252,
+                "num_ng_clusters": 15
+            },
+            "2": {
+                "num_nodes_in_graph": 65,
+                "num_nodes_marked_for_clustering": 45,
+                "num_ng_clusters": 3
             }
         },
         "time": 10

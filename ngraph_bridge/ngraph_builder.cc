@@ -3187,6 +3187,38 @@ static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
   return Status::OK();
 }
 
+static Status TranslateRandomUniformOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
+
+  auto const_min = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng::element::f32, ng::Shape{}, std::vector<float>{0});
+
+  auto const_max = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng::element::f32, ng::Shape{}, std::vector<float>{1});
+
+  std::vector<int64> shape;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 0, static_input_map, &shape));
+
+  auto const_shape = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng::element::i64, ng::Shape{shape.size()}, shape);
+
+  auto const_use_fixed_seed = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng::element::boolean, ng::Shape{}, std::vector<bool>{true});
+
+  tensorflow::int64 seed{};
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "seed", &seed));
+
+  auto random_uniform = ConstructNgNode<ng::op::RandomUniform>(
+      op->name(), const_min, const_max, const_shape, const_use_fixed_seed,
+      seed);
+
+  SaveNgOp(ng_op_map, op->name(), random_uniform);
+  return Status::OK();
+}
+
 static Status TranslateReciprocalOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -5048,6 +5080,7 @@ const static std::map<
        TranslateQuantizedConv2DWithBiasSumAndReluAndRequantizeOp},
       {"QuantizedMaxPool", TranslateQuantizedMaxPoolOp},
       {"QuantizeV2", TranslateQuantizeV2Op}, {"Rank", TranslateRankOp},
+      {"RandomUniform", TranslateRandomUniformOp},
       {"RealDiv", TranslateBinaryOp<ngraph::op::Divide>},
       {"Reciprocal", TranslateReciprocalOp},
       {"Relu", TranslateUnaryOp<ngraph::op::Relu>}, {"Relu6", TranslateRelu6Op},

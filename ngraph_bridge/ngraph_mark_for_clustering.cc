@@ -469,6 +469,10 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
         std::make_shared<ngraph::op::Abs>(),
         std::make_shared<ngraph::op::Maximum>(),
         std::make_shared<ngraph::op::Quantize>()}},
+      {
+          "RandomUniform",
+          {constant, std::make_shared<ngraph::op::RandomUniform>()},
+      },
       {"Rank", {constant}},
       {"RealDiv", {std::make_shared<ngraph::op::Divide>()}},
       {"Reciprocal", {constant, std::make_shared<ngraph::op::Power>()}},
@@ -701,6 +705,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
           SimpleConfirmationFunction();
       confirmation_function_map["Prod"] = SimpleConfirmationFunction();
       confirmation_function_map["Rank"] = SimpleConfirmationFunction();
+      confirmation_function_map["RandomUniform"] = SimpleConfirmationFunction();
       confirmation_function_map["QuantizeAndDequantizeV2"] = [](Node* n,
                                                                 bool* result) {
         // accept only when num_bits == 8 and range is given
@@ -875,6 +880,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
           DT_FLOAT};  // TF allows half too
       type_constraint_map["OneHot"]["T"] = NGraphDTypes();
       type_constraint_map["Pack"]["T"] = NGraphDTypes();
+      type_constraint_map["RandomUniform"]["T"] = NGraphDTypes();
       type_constraint_map["Pad"]["T"] = NGraphDTypes();
       type_constraint_map["Pad"]["Tpaddings"] = NGraphIndexDTypes();
       type_constraint_map["Pow"]["T"] = NGraphNumericDTypes();
@@ -1005,6 +1011,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
       set_attributes_map["OneHot"] = SetStaticInputs({1});
       set_attributes_map["Pad"] = SetStaticInputs({1});
       set_attributes_map["Prod"] = SetStaticInputs({1});
+
       set_attributes_map["QuantizeAndDequantizeV2"] = SetStaticInputs({1, 2});
       set_attributes_map["QuantizedConcat"] = [](Node* n) {
         SetStaticInputs(n, {0});  // the axis
@@ -1026,6 +1033,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
         SetStaticInputs(n, static_input_vec);
         return Status::OK();
       };
+      set_attributes_map["RandomUniform"] = SetStaticInputs({0});
       set_attributes_map["Reshape"] = SetStaticInputs({1});
       set_attributes_map["Slice"] = SetStaticInputs({1, 2});
       set_attributes_map["Split"] = SetStaticInputs({0});
