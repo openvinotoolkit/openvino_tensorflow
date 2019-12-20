@@ -66,7 +66,7 @@ The requirements for building nGraph bridge are identical to the requirements fo
 Install the following requirements before building
  `nGraph-bridge`. 
  
-TensorFlow uses a build system called "bazel". For the current
+Tensorflow uses a build system called "bazel". For the current
  version of `bazel`, use [bazel version].
 
 Install `bazel`:
