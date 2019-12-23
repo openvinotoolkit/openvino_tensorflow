@@ -52,4 +52,5 @@ class TestSigmoid(NgraphTest):
                                             y: y_np,
                                             z: z_np
                                         })
-        np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
+        assert np.allclose(
+            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
