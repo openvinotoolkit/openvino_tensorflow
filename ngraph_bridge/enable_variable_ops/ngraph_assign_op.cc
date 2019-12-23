@@ -25,11 +25,11 @@
 #include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
-#include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/ngraph_catalog.h"
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/ngraph_var.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -83,7 +83,7 @@ class NGraphAssignOp : public OpKernel {
 
   void Compute(OpKernelContext* context) override {
     std::ostringstream oss;
-    oss << "Execute: Assign_" << my_instance_id << ": " << name();
+    oss << "NGAssign::Compute::" << name();
     ngraph::Event event_compute(oss.str(), name(), "");
 
     NGRAPH_VLOG(4) << "NGraphAssign:: Compute called for: " << def().name()

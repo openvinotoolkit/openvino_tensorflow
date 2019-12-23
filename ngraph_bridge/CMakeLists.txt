@@ -57,6 +57,7 @@ set(SRC
    ngraph_rewrite_pass.cc
    ngraph_tensor_manager.cc
    ngraph_tracked_variable.cc
+   ngraph_var.cc
    ngraph_utils.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
@@ -86,7 +87,6 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC enable_variable_ops/ngraph_tracked_variable.cc)
 
     # new files
-    list(APPEND SRC enable_variable_ops/ngraph_var.cc)
     list(APPEND SRC enable_variable_ops/ngraph_assign_op.cc)
     list(APPEND SRC enable_variable_ops/ngraph_enter_in_catalog.cc)
     list(APPEND SRC enable_variable_ops/ngraph_remove_ngraphassigns.cc)

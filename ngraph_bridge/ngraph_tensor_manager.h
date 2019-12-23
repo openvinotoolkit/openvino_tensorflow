@@ -109,6 +109,8 @@ class NGraphTensorManager {
   Status GetOutputVariableCopyToTF(const int& output_index,
                                    bool* output_var_copy_to_tf);
 
+  void Print();
+
  private:
   void Initialize();
   string m_ng_encap_node_name;

@@ -108,7 +108,7 @@ def run_ngtf_pytests(venv_dir, build_dir):
     build_dir = os.path.abspath(build_dir)
     venv_dir = os.path.abspath(venv_dir)
     mnist_dir = os.path.abspath(build_dir + '/examples/mnist/')
-
+    axpy_dir = os.path.abspath(build_dir + '/examples/')
     test_dir = os.path.join(build_dir, "test")
     test_dir = os.path.join(test_dir, "python")
 
@@ -130,7 +130,8 @@ def run_ngtf_pytests(venv_dir, build_dir):
         build_dir) + " --ignore=" + build_dir + "/test/python/bfloat16"
     env = os.environ.copy()
     new_paths = venv_dir + '/bin/python3:' + os.path.abspath(
-        build_dir) + ":" + os.path.abspath(mnist_dir)
+        build_dir) + ":" + os.path.abspath(axpy_dir) + ":" + os.path.abspath(
+            mnist_dir)
     if 'PYTHONPATH' in env:
         env["PYTHONPATH"] = new_paths + ":" + env["PYTHONPATH"]
     else:

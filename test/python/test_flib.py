@@ -46,6 +46,7 @@ class TestFlibOperations(NgraphTest):
 
             res1 = self.with_ngraph(sess_fn)
             res2 = self.without_ngraph(sess_fn)
+
             exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
             # Note both run on Host (because NgraphEncapsulate can only run on host)
             assert np.isclose(res1, res2).all()

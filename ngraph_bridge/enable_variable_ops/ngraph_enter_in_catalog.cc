@@ -160,15 +160,12 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         }
       }
 
-      // are there indexes that need copy
-      if (op_index_to_copy.size() > 0) {
-        try {
-          NGraphCatalog::AddToEncapOutputCopyIndexesMap(graph_id, node->name(),
-                                                        op_index_to_copy);
-        } catch (const std::exception& exp) {
-          return errors::Internal(
-              "Caught exception while entering in catalog: ", exp.what(), "\n");
-        }
+      try {
+        NGraphCatalog::AddToEncapOutputCopyIndexesMap(graph_id, node->name(),
+                                                      op_index_to_copy);
+      } catch (const std::exception& exp) {
+        return errors::Internal("Caught exception while entering in catalog: ",
+                                exp.what(), "\n");
       }
 
     }  // end of node is type NGraphEncapsulate

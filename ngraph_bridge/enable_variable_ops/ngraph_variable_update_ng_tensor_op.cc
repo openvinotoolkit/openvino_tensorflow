@@ -24,10 +24,10 @@
 
 #include "ngraph/event_tracing.hpp"
 
-#include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_variable_update_ng_tensor_op.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/ngraph_var.h"
 
 using namespace std;
 namespace ng = ngraph;
@@ -67,6 +67,7 @@ NGraphVariableUpdateNGTensorOp::~NGraphVariableUpdateNGTensorOp() {
 void NGraphVariableUpdateNGTensorOp::Compute(OpKernelContext* context) {
   std::ostringstream oss;
   // Start event tracing
+  oss << "NGVariableUpdateNGTensor::Compute::" << name();
   ngraph::Event event_compute(oss.str(), name(), "");
   bool log_copies = false;
   OP_REQUIRES_OK(context,

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_ENTER_IN_CATALOG_H_
-#define NGRAPH_TF_ENTER_IN_CATALOG_H_
+#ifndef NGRAPH_TF_ENTER_PREFETCH_IN_CATALOG_H_
+#define NGRAPH_TF_ENTER_PREFETCH_IN_CATALOG_H_
 #pragma once
 
 #include "tensorflow/core/graph/graph.h"

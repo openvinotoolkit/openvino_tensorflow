@@ -26,12 +26,12 @@
 
 #include "ngraph/runtime/backend.hpp"
 
-#include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_catalog.h"
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/ngraph_var.h"
 
 using namespace std;
 namespace ng = ngraph;

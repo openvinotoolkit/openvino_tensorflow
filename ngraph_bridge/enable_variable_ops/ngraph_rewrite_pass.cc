@@ -30,6 +30,7 @@
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
@@ -253,6 +254,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     if (DumpRemoveNGraphAssignsGraphs()) {
       DumpGraphs(options, idx, "ngraphassigns_optimized",
                  "Graph with NGraphAssigns Optimized/Removed");
+    }
+
+    // 8. Enter Prefetch in catalog then.
+    TF_RETURN_IF_ERROR(EnterPrefetchInCatalog(options.graph->get(), idx));
+    if (DumpCatalogedGraphs()) {
+      DumpGraphs(options, idx, "prefetch-cataloged",
+                 "Graph with Prefetched Inputs Entered in Catalog");
     }
 
     return Status::OK();

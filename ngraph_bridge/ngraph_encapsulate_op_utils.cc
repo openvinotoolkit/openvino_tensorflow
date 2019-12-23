@@ -18,17 +18,22 @@
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
+#include "ngraph_bridge/ngraph_var.h"
+
 using namespace std;
 
 namespace tensorflow {
 
 namespace ngraph_bridge {
 
+//---------------------------------------------------------------------------
+//  GetPipelinedIOTensorsReadyForExecution
+//---------------------------------------------------------------------------
 Status GetPipelinedIOTensorsReadyForExecution(
-    OpKernelContext* ctx, std::vector<Tensor>& tf_input_tensors,
-    shared_ptr<PipelinedTensorsStore>& pipelined_tensor_store,
-    shared_ptr<NGraphTensorManager>& tensor_manager,
-    std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>&
+    OpKernelContext* ctx, const vector<Tensor>& tf_input_tensors,
+    const shared_ptr<PipelinedTensorsStore>& pipelined_tensor_store,
+    const shared_ptr<NGraphTensorManager>& tensor_manager,
+    tuple<int, PipelinedTensorVector, PipelinedTensorVector>&
         pipelined_io_tensors) {
   auto io_tensors = pipelined_tensor_store->get_tensors();
 
@@ -84,7 +89,7 @@ Status GetPipelinedIOTensorsReadyForExecution(
           tensor_manager->GetInputIndexesForPrefetchSharedObject());
 
       // Get the set of IO tensors for the next iteration
-      std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
+      tuple<int, PipelinedTensorVector, PipelinedTensorVector>
           io_tensors_next_iter;
       io_tensors_next_iter = pipelined_tensor_store->get_tensors();
 
@@ -154,18 +159,21 @@ Status GetPipelinedIOTensorsReadyForExecution(
 
   // Allocate the input/
   ngraph::Event event_copy_input_tensor("Copy Pipelined Input Tensors", "", "");
-
+  std::vector<std::unique_ptr<ngraph::Event>> input_write_events;
   if (!skip_tf2ng_copy) {
     // All pipelined inputs are copied
 
     for (auto i = 0; i < pipelined_input_indexes.size(); i++) {
       int tf_index = pipelined_input_indexes[i];
-
       ng::element::Type ng_element_type;
       TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(
           tf_input_tensors[tf_index].dtype(), &ng_element_type));
       void* current_src_ptr =
           (void*)DMAHelper::base(&tf_input_tensors[tf_index]);
+
+      std::unique_ptr<ngraph::Event> event_copy_h2d(
+          new ngraph::Event("H2D_Input_" + std::to_string(tf_index), "", ""));
+
       try {
         ng_pipelined_inputs[i]->write(
             current_src_ptr, ng_pipelined_inputs[i]->get_element_count() *
@@ -176,6 +184,8 @@ Status GetPipelinedIOTensorsReadyForExecution(
       } catch (...) {
         return errors::Internal("Error copying TF tensor to device tensor");
       }
+      event_copy_h2d->Stop();
+      input_write_events.push_back(std::move(event_copy_h2d));
     }
   } else {
     // All pipelined inputs that are not prefetched are copied
@@ -199,18 +209,26 @@ Status GetPipelinedIOTensorsReadyForExecution(
           tf_input_tensors[tf_index].dtype(), &ng_element_type));
       void* current_src_ptr =
           (void*)DMAHelper::base(&tf_input_tensors[tf_index]);
+      unique_ptr<ngraph::Event> event_copy_h2d(
+          new ngraph::Event("H2D_Input_" + to_string(tf_index), "", ""));
       try {
         ng_pipelined_inputs[ng_index]->write(
             current_src_ptr,
             ng_pipelined_inputs[ng_index]->get_element_count() *
                 ng_element_type.size());
-      } catch (const std::exception& exp) {
+      } catch (const exception& exp) {
         return errors::Internal("Error copying TF tensor to device tensor: ",
                                 exp.what());
       } catch (...) {
         return errors::Internal("Error copying TF tensor to device tensor");
       }
+      event_copy_h2d->Stop();
+      input_write_events.push_back(move(event_copy_h2d));
     }
+  }
+
+  for (auto& next : input_write_events) {
+    ngraph::Event::write_trace(*next.get());
   }
   event_copy_input_tensor.Stop();
   ngraph::Event::write_trace(event_copy_input_tensor);
@@ -218,6 +236,102 @@ Status GetPipelinedIOTensorsReadyForExecution(
   pipelined_io_tensors = make_tuple(current_iter_pipeline_depth,
                                     ng_pipelined_inputs, ng_pipelined_outputs);
 
+  return Status::OK();
+}
+
+//---------------------------------------------------------------------------
+//  GetTensorFromContext
+//---------------------------------------------------------------------------
+Status GetTensorFromContext(const OpKernelContext* ctx,
+                            const string& shared_name,
+                            shared_ptr<ng::runtime::Tensor>& ng_tensor) {
+  // Get shared name from tensor manager
+  NGraphVar* var;
+  TF_RETURN_IF_ERROR(ctx->resource_manager()->Lookup<NGraphVar>(
+      ctx->resource_manager()->default_container(), shared_name, &var));
+  ng_tensor = var->ng_tensor();
+  var->Unref();
+  return Status::OK();
+}
+
+//---------------------------------------------------------------------------
+//  GetIOTensorsReadyForExecution
+//---------------------------------------------------------------------------
+Status GetIOTensorsReadyForExecution(
+    OpKernelContext* ctx, const shared_ptr<NGraphTensorManager>& tensor_manager,
+    const PipelinedTensorVector& pipelined_in_tensors,
+    const PipelinedTensorVector& pipelined_out_tensors,
+    vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs,
+    vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
+  // Get Variables that are inputs
+  auto var_input_indexes = tensor_manager->GetInputIndexesFedByVariables();
+  for (int input_index : var_input_indexes) {
+    string shared_name;
+    TF_RETURN_IF_ERROR(
+        tensor_manager->GetInputVariableSharedName(input_index, &shared_name));
+    TF_RETURN_IF_ERROR(
+        GetTensorFromContext(ctx, shared_name, ng_inputs[input_index]));
+  }
+
+  // Get Variables that are outputs
+  auto var_output_indexes =
+      tensor_manager->GetOutputIndexesAssigningVariables();
+  for (int output_index : var_output_indexes) {
+    string shared_name;
+    TF_RETURN_IF_ERROR(tensor_manager->GetOutputVariableSharedName(
+        output_index, &shared_name));
+    TF_RETURN_IF_ERROR(
+        GetTensorFromContext(ctx, shared_name, ng_outputs[output_index]));
+  }
+
+  // Fit Pipelined Input Tensors
+  auto pipelined_input_indexes = tensor_manager->GetPipelinedInputIndexes();
+  for (int i = 0; i < pipelined_input_indexes.size(); i++) {
+    int input_index = pipelined_input_indexes[i];
+    ng_inputs[input_index] = pipelined_in_tensors[i];
+  }
+
+  // Fit Pipelined Output Tensors
+  auto pipelined_output_indexes = tensor_manager->GetPipelinedOutputIndexes();
+  for (int i = 0; i < pipelined_output_indexes.size(); i++) {
+    int output_index = pipelined_output_indexes[i];
+    ng_outputs[output_index] = pipelined_out_tensors[i];
+  }
+
+  return Status::OK();
+}
+
+//---------------------------------------------------------------------------
+//  SyncOutputVarTensors
+//---------------------------------------------------------------------------
+Status SyncOutputVarTensors(
+    const OpKernelContext* ctx,
+    const shared_ptr<NGraphTensorManager>& tensor_manager) {
+  // Get Variables that are outputs
+  auto var_output_indexes =
+      tensor_manager->GetOutputIndexesAssigningVariables();
+  NGRAPH_VLOG(4) << "output indexes size " << var_output_indexes.size();
+
+  for (int output_index : var_output_indexes) {
+    bool copy_to_tf;
+    TF_RETURN_IF_ERROR(
+        tensor_manager->GetOutputVariableCopyToTF(output_index, &copy_to_tf));
+
+    if (copy_to_tf) {
+      NGRAPH_VLOG(4) << "Sync NG Output Variable Tensors " << output_index;
+      // Get shared name from tensor manager
+      string shared_name;
+      TF_RETURN_IF_ERROR(tensor_manager->GetOutputVariableSharedName(
+          output_index, &shared_name));
+      NGraphVar* var;
+      TF_RETURN_IF_ERROR(ctx->resource_manager()->Lookup<NGraphVar>(
+          ctx->resource_manager()->default_container(), shared_name, &var));
+      // update tensor
+      var->copy_ng_to_tf();
+      var->Unref();
+      NGRAPH_VLOG(4) << "Sync Completed " << output_index;
+    }
+  }
   return Status::OK();
 }
 
