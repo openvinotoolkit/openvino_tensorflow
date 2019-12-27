@@ -294,13 +294,6 @@ NGraphExecutor::CreateCallback(const std::string signature,
 
   // Serialize to nGraph if needed
   if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-    std::string file_name = "tf_function_" + m_node_name + ".json";
-    auto status_ser = StringToFile("tf_function_" + m_node_name + ".json",
-                                   serialized_ng_func);
-    if (status_ser != Status::OK()) {
-      return std::make_pair(status_ser,
-                            std::make_tuple(ng_exec, serialized_ng_func, pts));
-    }
 #if defined NGRAPH_DISTRIBUTED
     int rank_id;
     rank_id = ng::get_distributed_interface()->get_rank();
@@ -309,6 +302,13 @@ NGraphExecutor::CreateCallback(const std::string signature,
         serialized_ng_func);
     if (status != Status::OK()) {
       return std::make_pair(status,
+                            std::make_tuple(ng_exec, serialized_ng_func, pts));
+    }
+#else
+    auto status_ser = StringToFile("tf_function_" + m_node_name + ".json",
+                                   serialized_ng_func);
+    if (status_ser != Status::OK()) {
+      return std::make_pair(status_ser,
                             std::make_tuple(ng_exec, serialized_ng_func, pts));
     }
 #endif
