@@ -33,31 +33,35 @@ NCHW_TO_NHWC = (0, 2, 3, 1)
 
 np.random.seed(5)
 
+B = 4
+C = 3
+A = 112
+
 
 class TestMaxPoolBackpropInput(NgraphTest):
 
     # NHWC
-    input_nhwc = np.random.rand(128, 224, 224, 3)
+    input_nhwc = np.random.rand(B, A, A, C)
     strides_nhwc = ksize_nhwc = [1, 2, 3, 1]
     output_nhwc = {
-        "VALID": np.random.rand(128, 112, 74, 3),
-        "SAME": np.random.rand(128, 112, 75, 3)
+        "VALID": np.random.rand(B, (A // 2), (A // 3), C),
+        "SAME": np.random.rand(B, (A // 2), (A // 3) + 1, C)
     }
     grad_nhwc = {
-        "VALID": np.random.rand(128, 112, 74, 3),
-        "SAME": np.random.rand(128, 112, 75, 3)
+        "VALID": np.random.rand(B, (A // 2), (A // 3), C),
+        "SAME": np.random.rand(B, (A // 2), (A // 3) + 1, C)
     }
 
     # NCHW
     input_nchw = np.transpose(input_nhwc, NHWC_TO_NCHW)
-    strides_nchw = ksize_nchw = [1, 1, 2, 3]
+    strides_nchw = ksize_nchw = [1, 1, 2, C]
     output_nchw = {
-        "VALID": np.random.rand(128, 3, 112, 74),
-        "SAME": np.random.rand(128, 3, 112, 75)
+        "VALID": np.random.rand(B, C, (A // 2), (A // 3)),
+        "SAME": np.random.rand(B, C, (A // 2), (A // 3) + 1)
     }
     grad_nchw = {
-        "VALID": np.random.rand(128, 3, 112, 74),
-        "SAME": np.random.rand(128, 3, 112, 75)
+        "VALID": np.random.rand(B, C, (A // 2), (A // 3)),
+        "SAME": np.random.rand(B, C, (A // 2), (A // 3) + 1)
     }
 
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
@@ -67,9 +71,10 @@ class TestMaxPoolBackpropInput(NgraphTest):
         output = self.output_nhwc[padding]
         g_nhwc = self.grad_nhwc[padding]
         if padding == "VALID":
-            grad = tf.placeholder(tf.float32, shape=(128, 112, 74, 3))
+            grad = tf.placeholder(tf.float32, shape=(B, (A // 2), (A // 3), C))
         elif padding == "SAME":
-            grad = tf.placeholder(tf.float32, shape=(128, 112, 75, 3))
+            grad = tf.placeholder(
+                tf.float32, shape=(B, (A // 2), (A // 3) + 1, C))
         out = max_pool_grad(
             self.input_nhwc,
             output,
@@ -89,9 +94,10 @@ class TestMaxPoolBackpropInput(NgraphTest):
         output = self.output_nchw[padding]
         g_nchw = self.grad_nchw[padding]
         if padding == "VALID":
-            grad = tf.placeholder(tf.float32, shape=(128, 3, 112, 74))
+            grad = tf.placeholder(tf.float32, shape=(B, C, (A // 2), (A // 3)))
         elif padding == "SAME":
-            grad = tf.placeholder(tf.float32, shape=(128, 3, 112, 75))
+            grad = tf.placeholder(
+                tf.float32, shape=(B, C, (A // 2), (A // 3) + 1))
 
         def test_on_ng(sess):
             a = max_pool_grad(

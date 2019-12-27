@@ -329,7 +329,8 @@ NGraphExecutor::CreateCallback(const std::string signature,
     Status st = StringToFile("tf_function_error_" + m_node_name + ".json",
                              serialized_ng_func);
     string status_string =
-        "Error in compiling op_backend." +
+        "Error in compiling op_backend with error: " +
+        status_ng_exec_pair.first.error_message() +
         (st.ok() ? "" : (" Also error in dumping serialized function: " +
                          st.error_message()));
     return std::make_pair(errors::Internal(status_string),
