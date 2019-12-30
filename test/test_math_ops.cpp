@@ -335,6 +335,31 @@ TEST(MathOps, AllPositiveAxis) {
   opexecuter.RunTest();
 }  // end of test op All
 
+// Test op: Cumsum
+TEST(MathOps, Cumsum) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_INT32, TensorShape({}));
+
+  AssignInputValues(A, 2.1f);
+  AssignInputValues(B, 0);
+
+  vector<int> static_input_indexes = {};
+  auto attrs = ops::Cumsum::Attrs();
+  attrs.exclusive_ = true;
+  attrs.reverse_ = true;
+  auto R = ops::Cumsum(root, A, B, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Cumsum", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Cumsum
+
 // Test op: Sum with & without keep dims & with both positive & negative axis
 TEST(MathOps, Sum) {
   int dim1 = 2;
@@ -525,6 +550,29 @@ TEST(MathOps, ArgMinPos) {
                         sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op ArgMin
+
+// Test op: Atan2
+TEST(MathOps, Atan2) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 5;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues<float>(A, {0, -0, 3, -3.5, 1.2, 3, 5, -4.5, 1.0, -7.0});
+  AssignInputValues<float>(B, {0, -0, 3, 2.5, -0.7, 2, 3.4, -5.6, 30, 0.06});
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Atan2(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Atan2", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Atan2
 
 // Test op: BatchMatMul
 // BatchMatMul2D

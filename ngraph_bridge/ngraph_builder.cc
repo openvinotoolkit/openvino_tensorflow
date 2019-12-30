@@ -27,6 +27,7 @@
 #include "ngraph/builder/quantize_builder.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/experimental/layers/interpolate.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/slice_plan.hpp"
 
@@ -1627,6 +1628,56 @@ static Status TranslateConv3DOp(const Node* op,
 
   BatchToTensorflow3D(op->name(), is_ndhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
+  return Status::OK();
+}
+
+// Translate TranslateCropAndResizeOp op
+static Status TranslateCropAndResizeOp(const Node* op,
+                                       const std::vector<const Tensor*>&,
+                                       Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> image, boxes, box_ind, crop_size;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, &image, &boxes, &box_ind, &crop_size));
+
+  // Get the attributes
+  float extrapolation_value;
+  std::string method;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "extrapolation_value", &extrapolation_value));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "method", &method));
+
+  ng::op::CropAndResize::ResizeMethod ng_method =
+      ng::op::CropAndResize::ResizeMethod::unspecified;
+  if (method == "bilinear") {
+    ng_method = ng::op::CropAndResize::ResizeMethod::bilinear;
+  } else if (method == "nearest") {
+    ng_method = ng::op::CropAndResize::ResizeMethod::nearest;
+  } else {
+    return errors::Internal(
+        "Expected crop and resize's interpolation mode to be bilinear or "
+        "nearest, but got ",
+        extrapolation_value, " in op ", op->name());
+  }
+
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ng::op::CropAndResize>(op->name(), image, boxes,
+                                                  box_ind, crop_size, ng_method,
+                                                  extrapolation_value));
+  return Status::OK();
+}
+
+static Status TranslateCumsumOp(const Node* op,
+                                const std::vector<const Tensor*>&,
+                                Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_x, ng_axis;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_x, &ng_axis));
+  bool exclusive, reverse;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "exclusive", &exclusive));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "reverse", &reverse));
+
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ng::op::CumSum>(op->name(), ng_x, ng_axis, exclusive,
+                                           reverse));
   return Status::OK();
 }
 
@@ -3763,6 +3814,33 @@ static Status TranslateReshapeOp(
   return Status::OK();
 }
 
+static Status TranslateResizeBilinearOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> images, size;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &images, &size));
+
+  bool align_corners;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
+
+  ngraph::op::InterpolateAttrs attrs;
+  attrs.align_corners = align_corners;
+  attrs.mode = "linear";
+  attrs.antialias = false;
+  // The TF "images" is has dimensions [batch, height, width, channels].
+  // So 1 and 2 are the spatial axes
+  // TODO check this parameter
+  attrs.axes = {1, 2};
+  // TODO: pads_begin and pads_end are not populated. Check correctness
+
+  auto size_int64 =
+      ConstructNgNode<ng::op::Convert>(op->name(), size, ngraph::element::i64);
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::op::Interpolate>(
+                                      op->name(), images, size_int64, attrs));
+
+  return Status::OK();
+}
+
 static Status TranslateRsqrtOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3779,6 +3857,34 @@ static Status TranslateRsqrtOp(
         // Raise each element of the input to the power -0.5.
         return ConstructNgNode<ng::op::Power>(op->name(), n, ng_exponent);
       });
+}
+
+static Status TranslateScatterNdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_indices;
+  shared_ptr<ng::Node> ng_updates;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, &ng_indices, &ng_updates, nullptr));
+
+  std::vector<int> ng_shape;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &ng_shape));
+  // Copy the int vector to a size_t vector, because that is what ng::Shape
+  // accepts
+  std::vector<size_t> ng_shape_size_t(ng_shape.begin(), ng_shape.end());
+
+  // Create a tensor and populate the tensor with "0" to Add to ScatterNd
+  auto et = ng_updates->get_element_type();
+  std::vector<std::string> constant_values(ng::shape_size(ng_shape_size_t),
+                                           "0");
+  auto ng_inputs = ConstructNgNode<ng::op::Constant>(
+      op->name(), et, ng::Shape(ng_shape_size_t), constant_values);
+
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ng::op::ScatterNDAdd>(op->name(), ng_inputs,
+                                                 ng_indices, ng_updates));
+
+  return Status::OK();
 }
 
 static Status TranslateRsqrtGradOp(const Node* op,
@@ -5005,6 +5111,7 @@ const static std::map<
       {"All", TranslateDirectReduceOp<ng::op::All>},
       {"ArgMax", TranslateArgMinMaxOp<ng::op::ArgMax>},
       {"ArgMin", TranslateArgMinMaxOp<ng::op::ArgMin>},
+      {"Atan2", TranslateBinaryOp<ngraph::op::Atan2>},
       {"AvgPool", TranslateAvgPoolOp}, {"AvgPoolGrad", TranslateAvgPoolGradOp},
       {"BatchMatMul", TranslateBatchMatMulOp},
       {"BatchMatMulV2", TranslateBatchMatMulV2Op},
@@ -5016,7 +5123,8 @@ const static std::map<
       {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
       {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
       {"Conv3D", TranslateConv3DOp}, {"Cos", TranslateUnaryOp<ngraph::op::Cos>},
-      {"DepthToSpace", TranslateDepthToSpaceOp},
+      {"CropAndResize", TranslateCropAndResizeOp},
+      {"Cumsum", TranslateCumsumOp}, {"DepthToSpace", TranslateDepthToSpaceOp},
       {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
       {"Dequantize", TranslateDequantizeOp},
       {"Equal", TranslateBinaryOp<ngraph::op::Equal>},
@@ -5085,9 +5193,11 @@ const static std::map<
       {"Reciprocal", TranslateReciprocalOp},
       {"Relu", TranslateUnaryOp<ngraph::op::Relu>}, {"Relu6", TranslateRelu6Op},
       {"ReluGrad", TranslateReluGradOp}, {"Reshape", TranslateReshapeOp},
+      {"ResizeBilinear", TranslateResizeBilinearOp},
       {"Rsqrt", TranslateRsqrtOp}, {"RsqrtGrad", TranslateRsqrtGradOp},
-      {"Select", TranslateSelectOp}, {"Shape", TranslateShapeOp},
-      {"Sigmoid", TranslateSigmoidOp}, {"SigmoidGrad", TranslateSigmoidGradOp},
+      {"ScatterNd", TranslateScatterNdOp}, {"Select", TranslateSelectOp},
+      {"Shape", TranslateShapeOp}, {"Sigmoid", TranslateSigmoidOp},
+      {"SigmoidGrad", TranslateSigmoidGradOp},
       {"Sin", TranslateUnaryOp<ngraph::op::Sin>}, {"Size", TranslateSizeOp},
       {"Sign", TranslateUnaryOp<ngraph::op::Sign>}, {"Slice", TranslateSliceOp},
       {"Snapshot", TranslateIdentityOp}, {"Softmax", TranslateSoftmaxOp},

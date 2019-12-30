@@ -166,6 +166,7 @@ cc_library(
         "src/ngraph/runtime/cpu/builder/convert.cpp",
         "src/ngraph/runtime/cpu/builder/convert_layout.cpp",
         "src/ngraph/runtime/cpu/builder/convolution.cpp",
+        "src/ngraph/runtime/cpu/builder/cum_sum.cpp",
         "src/ngraph/runtime/cpu/builder/dot.cpp",
         "src/ngraph/runtime/cpu/builder/dropout.cpp",
         "src/ngraph/runtime/cpu/builder/embedding_lookup.cpp",

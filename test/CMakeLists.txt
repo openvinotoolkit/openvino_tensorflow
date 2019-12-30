@@ -56,6 +56,7 @@ set(SRC
     test_index_library.cpp
     test_ngraph_data_cache.cpp
     test_utilities.cpp
+    test_image_ops.cpp
     test_math_ops.cpp
     test_nn_ops.cpp
     test_array_ops.cpp
