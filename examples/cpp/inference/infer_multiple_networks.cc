@@ -164,6 +164,13 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+// Register cpu backend for static linking
+// [TODO]: Revisit this to see if we can remove registering here and register
+// only in BackendManager.
+#if defined(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+  ngraph_register_cpu_backend();
+#endif
+
   const char* backend = "CPU";
   if (SetNGraphBackend(backend) != tf::Status::OK()) {
     std::cout << "Error: Cannot set the backend: " << backend << std::endl;

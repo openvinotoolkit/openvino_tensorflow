@@ -62,6 +62,10 @@ if (APPLE)
 endif()
 
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+    add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)
+endif()
+
+if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     target_link_libraries(${APP_NAME} 
         -Wl,--whole-archive
             ngraph_bridge_static

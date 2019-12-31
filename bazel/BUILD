@@ -134,6 +134,7 @@ cc_library(
         "-Wno-strict-overflow",
         '-D NGRAPH_BRIDGE_STATIC_LIB_ENABLE',
         '-D NGRAPH_TF_USE_GRAPPLER_OPTIMIZER',
+        '-D NGRAPH_CPU_STATIC_LIB_ENABLE',
         "-I ngraph_bridge",
         "-I logging",
         "-I external/ngraph/src",

@@ -62,8 +62,7 @@ TEST(OpByOpCapability, Backend) {
   ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&ng_backend_type));
 
   // Map with all the backends, and what the boolean is_supported should be
-  std::map<std::string, bool> backend_map{
-      {"CPU", true}, {"INTERPRETER", true}, {"NOP", false}};
+  std::map<std::string, bool> backend_map{{"CPU", true}, {"INTERPRETER", true}};
 
   // Tests three cases of (Backend, is_supported=true/false)
   // 1. CPU, true
