@@ -134,10 +134,24 @@ void BackendManager::UnlockBackend(const string& backend_name) {
 
 // Returns the nGraph supported backend names
 vector<string> BackendManager::GetSupportedBackendNames() {
+// Register backends for static linking
+#if defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
+  ngraph_register_cpu_backend();
+#endif
+#if defined(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+  ngraph_register_interpreter_backend();
+#endif
   return ng::runtime::BackendManager::get_registered_backends();
 }
 
 size_t BackendManager::GetNumOfSupportedBackends() {
+// Register backends for static linking
+#if defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
+  ngraph_register_cpu_backend();
+#endif
+#if defined(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+  ngraph_register_interpreter_backend();
+#endif
   return ng::runtime::BackendManager::get_registered_backends().size();
 }
 
