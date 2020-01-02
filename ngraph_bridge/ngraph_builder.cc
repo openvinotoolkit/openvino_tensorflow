@@ -3323,8 +3323,17 @@ static Status TranslateQuantizeAndDequantizeV2Op(
       op->name(), ng_r_et, ng::Shape(), std::vector<float>({scale}));
   auto ng_offset = ConstructNgNode<ng::op::Constant>(
       op->name(), ng_q_et, ng::Shape(), std::vector<int>({0}));
-  ng::op::Quantize::RoundMode ng_round_mode =
-      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
+  ng::op::Quantize::RoundMode ng_round_mode;
+  string round_mode_string;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "round_mode", &round_mode_string));
+  if (round_mode_string == "HALF_UP") {
+    ng_round_mode = ng::op::Quantize::RoundMode::ROUND_NEAREST_UPWARD;
+  } else if (round_mode_string == "HALF_TO_EVEN") {
+    ng_round_mode = ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+  } else {
+    return errors::Internal("Tensorflow Rounding Mode not supported by Ngraph");
+  }
   auto ng_quant = ConstructNgNode<ng::op::Quantize>(
       op->name(), ng_input, ng_scale, ng_offset, ng_q_et, ng::AxisSet(),
       ng_round_mode);
@@ -3604,10 +3613,17 @@ static Status TranslateQuantizeV2Op(const Node* op,
   ng::element::Type ng_et;
   TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
 
-  // TODO: Only RoundMode = ROUND_NEAREST_TOWARD_EVEN is supported, for now.
-  // Support other modes later
-  ng::op::Quantize::RoundMode ng_round_mode =
-      ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+  ng::op::Quantize::RoundMode ng_round_mode;
+  string round_mode_string;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "round_mode", &round_mode_string));
+  if (round_mode_string == "HALF_UP") {
+    ng_round_mode = ng::op::Quantize::RoundMode::ROUND_NEAREST_UPWARD;
+  } else if (round_mode_string == "HALF_TO_EVEN") {
+    ng_round_mode = ng::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+  } else {
+    return errors::Internal("Tensorflow Rounding Mode not supported by Ngraph");
+  }
 
   auto ng_node = ng::builder::QuantizeBuilder(ng_input, ng_min, ng_max, ng_et,
                                               ng::AxisSet(), ng_round_mode);

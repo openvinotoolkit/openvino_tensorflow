@@ -843,7 +843,61 @@ TEST(ArrayOps, QuantizeAndDequantizeV2x8xtruexfalse) {
                         output_datatypes, sess_run_fetchoutputs);
 
   opexecuter.RunTest();
-}  // end of test op QuantizeAndDequantizeV2x8xtruexfalse
+}
+
+TEST(ArrayOps, QuantizeAndDequantizeV2RoundingMode1) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {0.9, 3.4, 2.6, 5.4, 4.2, 4.5});
+
+  auto attrs = ops::QuantizeAndDequantizeV2::Attrs();
+  attrs.num_bits_ = 8;
+  attrs.range_given_ = true;
+  attrs.signed_input_ = true;
+  attrs.round_mode_ = "HALF_UP";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeAndDequantizeV2 R =
+      ops::QuantizeAndDequantizeV2(root, A, 0.0f, 127.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "QuantizeAndDequantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(ArrayOps, QuantizeAndDequantizeV2RoundingMode2) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValues<float>(A, {0.9, 3.4, 2.6, 5.4, 4.2, 4.5});
+
+  auto attrs = ops::QuantizeAndDequantizeV2::Attrs();
+  attrs.num_bits_ = 8;
+  attrs.range_given_ = true;
+  attrs.signed_input_ = true;
+  attrs.round_mode_ = "HALF_TO_EVEN";
+
+  vector<int> static_input_indexes = {1, 2};
+  ops::QuantizeAndDequantizeV2 R =
+      ops::QuantizeAndDequantizeV2(root, A, 0.0f, 127.0f, attrs);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R.output};
+  OpExecuter opexecuter(root, "QuantizeAndDequantizeV2", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op QuantizeAndDequantizeV2x8xtruextrue
 
 // CPU only supports QuantizedConcat with DT_QINT32 and DT_QUINT8
 TEST(ArrayOps, QuantizedConcat) {
