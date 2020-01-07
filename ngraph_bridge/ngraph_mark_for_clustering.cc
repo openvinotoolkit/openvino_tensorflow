@@ -1271,6 +1271,11 @@ void SetNodeBackend(Node* node, const string& backend_name) {
   node->AddAttr("_ngraph_backend", backend_name);
 }
 
+void ResetMarkForClustering(Graph* graph) {
+  ClearAttribute(graph, {"_ngraph_marked_for_clustering", "_ngraph_backend",
+                         "_ngraph_static_inputs"});
+}
+
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow

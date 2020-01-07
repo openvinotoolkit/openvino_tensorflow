@@ -58,6 +58,12 @@ TEST(MarkForClustering, SimpleTest) {
                 .Attr("T", DT_FLOAT)
                 .Finalize(&g, &node3));
 
+  Node* node4;
+  ASSERT_OK(NodeBuilder("node4", "Abs")
+                .Input(node3, 0)
+                .Attr("T", DT_FLOAT)
+                .Finalize(&g, &node4));
+
   // Add edges from SRC to node1 and node2
   // Add edge from node3 to SINK
   // The graph is disconnected without these edges
@@ -65,7 +71,7 @@ TEST(MarkForClustering, SimpleTest) {
   Node* sink = g.sink_node();
   g.AddEdge(source, Graph::kControlSlot, node1, Graph::kControlSlot);
   g.AddEdge(source, Graph::kControlSlot, node2, Graph::kControlSlot);
-  g.AddEdge(node3, Graph::kControlSlot, sink, Graph::kControlSlot);
+  g.AddEdge(node4, Graph::kControlSlot, sink, Graph::kControlSlot);
 
   const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
   string expected_backend{"CPU"};
@@ -75,9 +81,20 @@ TEST(MarkForClustering, SimpleTest) {
   ASSERT_OK(MarkForClustering(&g, {}, expected_backend));
 
   string backend;
+  const set<string> nodes_expected_to_be_marked{"node1", "node2", "node3",
+                                                "node4"};
   for (auto node : g.op_nodes()) {
     ASSERT_OK(GetNodeBackend(node, &backend));
     ASSERT_EQ(backend, expected_backend);
+    ASSERT_EQ(nodes_expected_to_be_marked.find(node->name()) !=
+                  nodes_expected_to_be_marked.end(),
+              NodeIsMarkedForClustering(node));
+  }
+
+  ResetMarkForClustering(&g);
+  for (auto node : g.op_nodes()) {
+    ASSERT_NOT_OK(GetNodeBackend(node, &backend));
+    ASSERT_FALSE(NodeIsMarkedForClustering(node));
   }
 }
 }

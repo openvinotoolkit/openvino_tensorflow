@@ -348,6 +348,8 @@ std::string GraphFilenamePrefix(std::string, int);
 
 std::string GraphFilenamePrefix(std::string, int, int);
 
+void ClearAttribute(Graph*, const std::set<string>&);
+
 void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
                 std::string filename_prefix, std::string title);
 

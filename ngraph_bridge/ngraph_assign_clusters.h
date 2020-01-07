@@ -25,6 +25,8 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 Status AssignClusters(Graph* graph);
+// reset the effect of AssignClusters
+void ResetAssignClusters(Graph* graph);
 Status GetNodeCluster(const Node* node, int* cluster);
 
 }  // namespace ngraph_bridge

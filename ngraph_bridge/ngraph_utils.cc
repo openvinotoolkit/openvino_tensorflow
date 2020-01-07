@@ -600,6 +600,15 @@ bool IsProcessedByNgraphPass(Graph* g) {
   return false;
 }
 
+void ClearAttribute(Graph* g,
+                    const std::set<string>& attributes_to_be_cleared) {
+  for (auto node : g->nodes()) {
+    for (const auto& attr : attributes_to_be_cleared) {
+      node->ClearAttr(attr);
+    }
+  }
+}
+
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow

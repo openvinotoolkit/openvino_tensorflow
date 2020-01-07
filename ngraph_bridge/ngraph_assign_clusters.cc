@@ -817,6 +817,10 @@ Status GetNodeCluster(const Node* node, int* cluster) {
   return s;
 }
 
+void ResetAssignClusters(Graph* graph) {
+  ClearAttribute(graph, {"_ngraph_cluster"});
+}
+
 }  // namespace ngraph_bridge
 
 }  // namespace tensorflow
