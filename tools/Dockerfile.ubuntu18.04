@@ -18,10 +18,6 @@
 
 FROM ubuntu:18.04
 
-# Setup the environment
-ENV https_proxy http://proxy-chain.intel.com:912
-ENV http_proxy http://proxy-chain.intel.com:911
-
 RUN apt-get update &&  apt-get install -y \
     vim \
     python \
