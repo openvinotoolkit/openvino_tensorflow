@@ -32,7 +32,7 @@ Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes,
 void ResetMarkForClustering(Graph* graph);
 Status IsSupportedByBackend(
     const Node* node, const ngraph::runtime::Backend* op_backend,
-    std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
+    const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported);
 bool NodeIsMarkedForClustering(const Node* node);
@@ -40,6 +40,19 @@ void GetStaticInputs(const Node* node, std::vector<int32>* inputs);
 bool InputIsStatic(const Node* node, int index);
 Status GetNodeBackend(const Node* node, string* backend_name);
 void SetNodeBackend(Node* node, const string& backend_name);
+
+using SetAttributesFunction = std::function<Status(Node*)>;
+const std::map<std::string, SetAttributesFunction>& GetAttributeSetters();
+
+using TypeConstraintMap =
+    std::map<std::string, std::map<std::string, gtl::ArraySlice<DataType>>>;
+const TypeConstraintMap& GetTypeConstraintMap();
+
+using ConfirmationFunction = std::function<Status(Node*, bool*)>;
+const std::map<std::string, ConfirmationFunction>& GetConfirmationMap();
+
+const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
+GetTFToNgOpMap();
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 

@@ -342,6 +342,25 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
                                     ng_function))
       << "Failed to TranslateGraph";
 
+  std::set<std::shared_ptr<ngraph::Node>> TFtoNgraphOpSet =
+      GetTFToNgOpMap().at(test_op_type_);
+
+  for (auto n : ng_function->get_ops()) {
+    auto ng_node = dynamic_pointer_cast<ng::op::Result>(n);
+    bool is_result = (ng_node != nullptr);
+    if (!is_result && !(n->is_parameter())) {
+      bool found = false;
+      for (auto itr : TFtoNgraphOpSet) {
+        found = n->is_same_op_type(itr);
+        if (found) break;
+      }
+      ASSERT_TRUE(found) << "After translation found ngraph op "
+                         << (n->get_name())
+                         << " which was not found in map. To fix this issue "
+                            "check GetTFToNgOpMap";
+    }
+  }
+
   // ng function should get same number of outputs
   ASSERT_EQ(expected_output_datatypes_.size(), ng_function->get_output_size())
       << "Number of outputs of requested outputs and ngraph function outputs "
