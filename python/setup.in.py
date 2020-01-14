@@ -59,7 +59,7 @@ package_data_dict['ngraph_bridge'] = include_list
 
 setup( 
     name='ngraph_tensorflow_bridge',
-    version='0.21.0rc2',
+    version='0.22.0rc2',
     description='Intel nGraph compiler and runtime for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -24,7 +24,7 @@
 // nGraph-TensorFlow bridge uses semantic versioning: see http://semver.org/
 
 #define NG_TF_MAJOR_VERSION 0
-#define NG_TF_MINOR_VERSION 21
+#define NG_TF_MINOR_VERSION 22
 #define NG_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers
