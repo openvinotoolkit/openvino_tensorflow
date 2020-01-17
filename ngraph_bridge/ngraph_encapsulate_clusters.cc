@@ -62,7 +62,7 @@ namespace ngraph_bridge {
 //
 
 // begin code copied and pasted (and modified) from graph.cc...
-static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
+void Encapsulator::AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
   if (src_slot == Graph::kControlSlot) {
     dst->add_input(strings::StrCat("^", src_name));
   } else if (src_slot == 0) {
@@ -75,30 +75,287 @@ static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
 
 Status EncapsulateClusters(
     Graph* graph, int graph_id, FunctionDefLibrary* fdeflib,
-    std::unordered_map<std::string, std::string> device_config,
-    AOTInfo aot_info) {
-  // A map from cluster indices to the expected device name for nodes
-  // in that cluster.
-  std::map<int, std::string> device_name_map;
+    const std::unordered_map<std::string, std::string>& device_config,
+    const AOTInfo& aot_info) {
+  Encapsulator enc(graph);
+  NGRAPH_VLOG(3) << "Running AnalysisPass in EncapsulateClusters";
+  TF_RETURN_IF_ERROR(enc.AnalysisPass());
+  NGRAPH_VLOG(3) << "Running RewritePass in EncapsulateClusters";
+  TF_RETURN_IF_ERROR(enc.RewritePass(fdeflib, graph_id, device_config));
+  NGRAPH_VLOG(3) << "Performing AOT in EncapsulateClusters";
+  TF_RETURN_IF_ERROR(PerformAOTOnEncapsulates(graph, aot_info));
 
-  // We *should* eventually have a way of monitoring the device and the backend
-  // together
-  std::map<int, std::string> backend_name_map;
+  set<int> newly_created_cluster_ids;
+  TF_RETURN_IF_ERROR(enc.GetNewClusterIDs(newly_created_cluster_ids));
 
-  // As we build the graph we will be tracking the.. TODO(amprocte): finish
-  // this comment.
-  std::map<std::tuple<int, int>, std::tuple<int, int>> output_remap_map;
-  std::map<std::tuple<int, int, int>, int> input_remap_map;
-  std::map<std::tuple<int, std::string, int>, string> input_rename_map;
+  // Pass 9 (optional, only run if environment variable
+  // NGRAPH_TF_DUMP_CLUSTERS is set): validate the graph def, and
+  // make sure we can construct a graph from it.
+  if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
+    for (auto& cluster_idx : newly_created_cluster_ids) {
+      TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
+          *NGraphClusterManager::GetClusterGraph(cluster_idx),
+          *OpRegistry::Global()));
 
-  // A map from cluster indices to a vector of input data types.
-  std::map<int, std::vector<std::tuple<int, int, DataType>>> cluster_input_map;
-  // A map from cluster indices to a vector of output data types.
-  std::map<int, std::vector<DataType>> cluster_output_dt_map;
+      Graph g(OpRegistry::Global());
+      GraphConstructorOptions opts;
+      opts.allow_internal_ops = true;
+      TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
+          opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
 
-  // A map from cluster indices to corresponding NGraphEncapsulate nodes.
-  std::map<int, Node*> cluster_node_map;
+      std::stringstream ss;
+      ss << "ngraph_cluster_" << cluster_idx;
+      std::string filename_prefix = ss.str();
 
+      GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
+      GraphToDotFile(&g, filename_prefix + ".dot",
+                     "nGraph Cluster Dump: " + filename_prefix);
+    }
+  }
+
+  return Status::OK();
+}
+
+Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
+  bool aot_requested;
+  set<string> performed_aot_on_enc;
+  std::set<std::map<std::string, vector<int>>> node_shapes_hints_sets;
+  std::tie(aot_requested, node_shapes_hints_sets) = aot_info;
+  if (aot_requested) {
+    NGRAPH_VLOG(3) << "AOT requested";
+    if (!ngraph_tf_is_grappler_enabled()) {
+      return errors::Internal(
+          "AOT requested for non grappler build. Please use grappler build if "
+          "AOT is required");
+    }
+    string input_node_type = "Placeholder";
+    // In case of grappler, we have Placeholder, which might contain shape info,
+    // so it is possible we can aot without any provided shapes
+    // in normal pass its args. unless shapes are provided there is no chance of
+    // reading shapes from args.
+
+    // map between node name and the PartialShape it contains
+    std::map<std::string, PartialShape> node_partial_shape_map =
+        GetShapesFromTFInputnodes(graph, input_node_type);
+
+    // If no shape hints are provided but the placeholders contain complete
+    // shape, then we still need to enter the for loop below to compute AOT.
+    // Hence adding the shapes from placeholders as hints.
+
+    if (node_shapes_hints_sets.size() == 0) {
+      NGRAPH_VLOG(5) << "Using shapes from placeholders as hint";
+
+      std::map<std::string, vector<int>> shape_from_placeholders_as_hints;
+      for (auto itr : node_partial_shape_map) {
+        shape_from_placeholders_as_hints.insert(
+            {itr.first, itr.second.get_shape_vector()});
+      }
+      node_shapes_hints_sets.insert(shape_from_placeholders_as_hints);
+    }
+    // TODO: .....CHECK ABOVE IF
+
+    std::map<std::string, vector<int>> inputs_node_shapes_for_compilation;
+    // Iterate over each shape hint and see if they can be used
+    for (ShapeHintMap single_hint : node_shapes_hints_sets) {
+      // A boolean to determine if we can AOT for this single_hint
+      bool can_aot = true;
+
+      for (auto itr_single_hint : single_hint) {
+        if (node_partial_shape_map.find(itr_single_hint.first) ==
+            node_partial_shape_map.end()) {
+          return errors::Internal("Passed hint for node ",
+                                  itr_single_hint.first,
+                                  " but there is no input with that name");
+        }
+      }
+
+      for (auto node : graph->op_nodes()) {
+        if (node->type_string() == input_node_type) {
+          PartialShape partial_shape_from_node =
+              node_partial_shape_map.at(node->name());
+
+          PartialShape combined_shape_info = CombineNodeInfoAndHint(
+              node, partial_shape_from_node, single_hint);
+
+          can_aot = combined_shape_info.is_valid() &&
+                    combined_shape_info.is_concrete();
+          if (can_aot) {
+            inputs_node_shapes_for_compilation[node->name()] =
+                combined_shape_info.get_shape_vector();
+          } else {
+            // TODO: necessarily break? Maybe some things can be AOT, others
+            // maybe not
+            string fail_reason =
+                (combined_shape_info.is_valid()
+                     ? (node->name() + " could not be concretized")
+                     : "it is invalid for " + node->name());
+            return errors::Internal("Cannot AOT using this hint (",
+                                    HintAsString(single_hint), ") as ",
+                                    fail_reason);
+            break;
+          }
+        }  // end of if (node->type_string() == input_node_type)
+      }    // End of for loop that goes through all nodes
+
+      // Did we manage to concretize all input shapes?
+      for (auto itr : node_partial_shape_map) {  // iterate over all inputs
+        if (inputs_node_shapes_for_compilation.find(itr.first) ==
+            inputs_node_shapes_for_compilation.end()) {
+          can_aot = false;
+          // TODO: print "this" hint
+          return errors::Internal("Cannot AOT using this hint (",
+                                  HintAsString(single_hint), ") for ",
+                                  (itr.first), " was not concretized");
+        }
+      }
+
+      if (!can_aot) {
+        return errors::Internal(
+            "AOT requested, but could not perform AOT for hint = ",
+            HintAsString(single_hint));
+      }
+
+      // At this point we have collected all the AOT information and now we are
+      // ready to translate and compile
+      for (auto node : graph->op_nodes()) {
+        if (node->type_string() == "NGraphEncapsulate") {
+          // Check inputs of the encapsulates. They can only be fed by fully
+          // concrete shapes (after going through the shape hints) or consts
+          std::vector<int32> st_inputs;
+          GetStaticInputs(node, &st_inputs);
+          // Current assumption is that only encapsulates without static
+          // inputs are AOT
+          if (st_inputs.size() != 0) {
+            return errors::Internal(
+                "AOT requested. Found an encapsulate with static inputs, but "
+                "that is not supported");
+          }
+
+          // get backend.
+          // TODO: these sections can be hoisted out of the main loop
+          std::string backend_name;
+          TF_RETURN_IF_ERROR(
+              GetNodeAttr(node->attrs(), "ngraph_backend", &backend_name));
+          std::string device_id;
+          TF_RETURN_IF_ERROR(
+              GetNodeAttr(node->attrs(), "ngraph_device_id", &device_id));
+          string op_backend_name;
+          try {
+            op_backend_name = BackendManager::GetBackendCreationString(
+                backend_name, device_id);
+          } catch (const std::exception& exp) {
+            return errors::Internal(
+                "Caught exception while creating backend string ", exp.what(),
+                "\n");
+          }
+          TF_RETURN_IF_ERROR(BackendManager::CreateBackend(
+              op_backend_name));  // Created a backend here. must free it
+          // TranslateGraph must be called AFTER CreateBackend because some TF
+          // ops like CNMS and gather use backend specific nodes
+          std::unordered_map<std::string, std::string> additional_attribute_map;
+          for (auto itr : node->attrs()) {
+            // Find the optional attributes to be sent to the backend.
+            // The optional attributes have '_ngraph_' appended to the start
+            // so we need to get rid of that and only send the remaining
+            // string
+            // since the backend will only look for that.
+            // '_ngraph_' is only appended for the bridge.
+            // For e.g. _ngraph_ice_cores --> ice_cores
+            if (itr.first.find("_ngraph_") != std::string::npos) {
+              // leave out _ngraph_aot_requested
+              if (itr.first.find("_ngraph_aot_requested") ==
+                  std::string::npos) {
+                additional_attribute_map.insert(
+                    {itr.first.substr(strlen("_ngraph_")), itr.second.s()});
+              }
+            }
+          }
+          BackendManager::SetConfig(op_backend_name, additional_attribute_map);
+
+          // Backend has been created and setup. Now translate
+          string signature;
+          std::shared_ptr<ngraph::Function> ng_function;
+          TF_RETURN_IF_ERROR(
+              PerformTranslation(node, inputs_node_shapes_for_compilation,
+                                 signature, ng_function));
+          int json_indentation = 4;
+          string serialized_ngfunc(
+              ngraph::serialize(ng_function, json_indentation));
+
+          // Translation done, now compile
+          ng::runtime::Backend* op_backend = nullptr;
+          try {
+            op_backend = BackendManager::GetBackend(op_backend_name);
+          } catch (const std::out_of_range& e) {
+            NGRAPH_VLOG(5) << "Exception: " << e.what();
+            BackendManager::ReleaseBackend(op_backend_name);
+            throw;
+          }
+          BackendManager::LockBackend(op_backend_name);
+          std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+          try {
+            ng_exec = op_backend->compile(ng_function);
+          } catch (...) {
+            BackendManager::UnlockBackend(op_backend_name);
+            Status st =
+                NgraphSerialize("tf_function_error_aot.json", ng_function);
+            BackendManager::ReleaseBackend(op_backend_name);
+            return errors::Internal(
+                "Failed to compile ng_function for AOT.",
+                (st.ok() ? ""
+                         : " Failed to serialize as well with error: " +
+                               st.error_message()));
+          }
+          BackendManager::UnlockBackend(op_backend_name);
+          BackendManager::ReleaseBackend(op_backend_name);
+
+          // Compilation done, now serialize and attach as attribute
+          stringstream exec_dump;
+          ng_exec->save(exec_dump);
+          // ng function attached as debugging information
+          node->AddAttr("_ngraph_aot_ngfunction_" + signature,
+                        serialized_ngfunc);
+          // Compute will use this ngexec
+          node->AddAttr("_ngraph_aot_ngexec_" + signature, exec_dump.str());
+          // We do not need to add "_ngraph_aot_requested" attribute since it
+          // already is already present in device_config and inserted into the
+          // currently created NGraphEncapsulate
+          // TODO: create a separate namespace of node attributes for backend
+          // and for bridge
+          performed_aot_on_enc.insert(node->name());
+          NGRAPH_VLOG(5) << "Performed AOT on " << node->name();
+        }
+      }
+    }  // end of for (ShapeHintMap single_hint : node_shapes_hints_sets)
+
+    // In the end assert that all encapsulates have performed AOT
+    for (auto node : graph->op_nodes()) {
+      if (node->type_string() == "NGraphEncapsulate") {
+        if (performed_aot_on_enc.find(node->name()) ==
+            performed_aot_on_enc.end()) {
+          return errors::Internal("Requested AOT, but did not perform AOT on ",
+                                  node->name());
+        }
+      }
+    }
+  }  // end of if (aot_requested)
+  return Status::OK();
+}
+
+Encapsulator::Encapsulator(Graph* g)
+    : graph(g), analysis_done(false), rewrite_done(false) {}
+
+Status Encapsulator::AnalysisPass() {
+  if (rewrite_done) {
+    return errors::Internal(
+        "In Encapsulator, AnalysisPass called after RewritePass was already "
+        "done");
+  }
+
+  if (analysis_done) {
+    return errors::Internal(
+        "In Encapsulator, AnalysisPass called more than once");
+  }
   // Pass 1: Populate the cluster-index-to-device name map for each existing
   // cluster. PIGGYBACKING BACKEND TEST HERE, THEY WILL GET COMBINED INTO ONE
   for (auto node : graph->op_nodes()) {
@@ -309,6 +566,111 @@ Status EncapsulateClusters(
     }
   }
 
+  // Pass 5: Make copies of all clustered nodes inside the cluster graphs,
+  // rewiring the inputs in their NodeDefs as we go.
+
+  // Originally Pass 5 ran after Pass 4 ofcourse. But now calling it right after
+  // Pass 2 in the Analysis Phase.
+  // Pass 4 took care of removing some inter-cluster control edges, so by the
+  // time Pass 5 was run, those control inputs would have been removed
+  // But now since Pass 5 is running before Pass 4, we must take special care to
+  // not add inter-cluster (or TF to cluster) control edges in the graphdef we
+  // copy into the ClusterManager
+  // This is taken care of in the "if (edge->IsControlEdge())" line in the for
+  // loop over all edges
+  for (auto node : graph->op_nodes()) {
+    int cluster_idx;
+
+    if (GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
+        Status::OK()) {
+      continue;
+    }
+
+    // Because the input names may have changed from the original node def,
+    // we will need to borrow some code from Graph::ToGraphDefSubRange in
+    // tensorflow/core/graph/graph.cc that rewrites the node's input list.
+
+    // begin code copied and pasted (and modified) from graph.cc...
+    NodeDef original_def = node->def();
+
+    // Get the inputs for this Node.  We make sure control inputs are
+    // after data inputs, as required by GraphDef.
+    std::vector<const Edge*> inputs;
+    inputs.resize(node->num_inputs(), nullptr);
+    for (const Edge* edge : node->in_edges()) {
+      if (edge->IsControlEdge()) {
+        int src_cluster_idx;
+        auto ctrl_src = edge->src();
+        auto st = GetNodeCluster(ctrl_src, &src_cluster_idx);
+        if (st.ok()) {
+          if (src_cluster_idx == cluster_idx) {
+            inputs.push_back(edge);
+          }
+        }
+      } else {
+        CHECK(inputs[edge->dst_input()] == nullptr)
+            << "Edge " << edge->src()->DebugString() << ":"
+            << edge->dst()->DebugString() << " with dst_input "
+            << edge->dst_input() << " and had pre-existing input edge "
+            << inputs[edge->dst_input()]->src()->DebugString() << ":"
+            << inputs[edge->dst_input()]->dst()->DebugString();
+
+        inputs[edge->dst_input()] = edge;
+      }
+    }
+    original_def.clear_input();
+    original_def.mutable_input()->Reserve(inputs.size());
+
+    for (size_t i = 0; i < inputs.size(); ++i) {
+      const Edge* edge = inputs[i];
+      if (edge == nullptr) {
+        if (i < node->requested_inputs().size()) {
+          original_def.add_input(node->requested_inputs()[i]);
+        } else {
+          original_def.add_input("");
+        }
+      } else {
+        const Node* src = edge->src();
+        if (!src->IsOp()) continue;
+        AddInput(&original_def, src->name(), edge->src_output());
+      }
+    }
+    // ...end code copied and pasted (and modified) from graph.cc
+
+    auto node_def =
+        NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+    cluster_indices_for_this_graph.insert(cluster_idx);
+    *node_def = original_def;
+
+    for (auto& input : *(node_def->mutable_input())) {
+      TensorId tensor_id = ParseTensorName(input);
+
+      string tensor_name(tensor_id.first);
+      auto it = input_rename_map.find(
+          std::make_tuple(cluster_idx, tensor_name, tensor_id.second));
+
+      if (it != input_rename_map.end()) {
+        input = it->second;
+      }
+    }
+  }
+
+  analysis_done = true;
+
+  return Status::OK();
+}
+
+Status Encapsulator::RewritePass(
+    FunctionDefLibrary* fdeflib, int graph_id,
+    const std::unordered_map<std::string, std::string>& device_config) {
+  if (!analysis_done) {
+    return errors::Internal(
+        "In Encapsulator, called RewritePass without calling AnalysisPass");
+  }
+  if (rewrite_done) {
+    return errors::Internal(
+        "In Encapsulator, called RewritePass more than once");
+  }
   // Pass 3: Create encapsulation nodes for all clusters.
   for (auto& kv : device_name_map) {
     int cluster_idx = kv.first;
@@ -420,79 +782,6 @@ Status EncapsulateClusters(
     }
   }
 
-  // Pass 5: Make copies of all clustered nodes inside the cluster graphs,
-  // rewiring the inputs in their NodeDefs as we go.
-  std::set<int> cluster_indices_for_this_graph;
-  for (auto node : graph->op_nodes()) {
-    int cluster_idx;
-
-    if (GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
-        Status::OK()) {
-      continue;
-    }
-
-    // Because the input names may have changed from the original node def,
-    // we will need to borrow some code from Graph::ToGraphDefSubRange in
-    // tensorflow/core/graph/graph.cc that rewrites the node's input list.
-
-    // begin code copied and pasted (and modified) from graph.cc...
-    NodeDef original_def = node->def();
-
-    // Get the inputs for this Node.  We make sure control inputs are
-    // after data inputs, as required by GraphDef.
-    std::vector<const Edge*> inputs;
-    inputs.resize(node->num_inputs(), nullptr);
-    for (const Edge* edge : node->in_edges()) {
-      if (edge->IsControlEdge()) {
-        inputs.push_back(edge);
-      } else {
-        CHECK(inputs[edge->dst_input()] == nullptr)
-            << "Edge " << edge->src()->DebugString() << ":"
-            << edge->dst()->DebugString() << " with dst_input "
-            << edge->dst_input() << " and had pre-existing input edge "
-            << inputs[edge->dst_input()]->src()->DebugString() << ":"
-            << inputs[edge->dst_input()]->dst()->DebugString();
-
-        inputs[edge->dst_input()] = edge;
-      }
-    }
-    original_def.clear_input();
-    original_def.mutable_input()->Reserve(inputs.size());
-
-    for (size_t i = 0; i < inputs.size(); ++i) {
-      const Edge* edge = inputs[i];
-      if (edge == nullptr) {
-        if (i < node->requested_inputs().size()) {
-          original_def.add_input(node->requested_inputs()[i]);
-        } else {
-          original_def.add_input("");
-        }
-      } else {
-        const Node* src = edge->src();
-        if (!src->IsOp()) continue;
-        AddInput(&original_def, src->name(), edge->src_output());
-      }
-    }
-    // ...end code copied and pasted (and modified) from graph.cc
-
-    auto node_def =
-        NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
-    cluster_indices_for_this_graph.insert(cluster_idx);
-    *node_def = original_def;
-
-    for (auto& input : *(node_def->mutable_input())) {
-      TensorId tensor_id = ParseTensorName(input);
-
-      string tensor_name(tensor_id.first);
-      auto it = input_rename_map.find(
-          std::make_tuple(cluster_idx, tensor_name, tensor_id.second));
-
-      if (it != input_rename_map.end()) {
-        input = it->second;
-      }
-    }
-  }
-
   // Pass 6: Remove clustered nodes from the graph.
   std::vector<Node*> nodes_to_remove;
   for (auto node : graph->op_nodes()) {
@@ -529,381 +818,185 @@ Status EncapsulateClusters(
         subgraph, strings::StrCat("ngraph_cluster_", to_string(cluster_idx)),
         fdef));
   }
+  rewrite_done = true;
+  return Status::OK();
+}
 
-  // Pass 8:
-  bool aot_requested;
-  set<string> performed_aot_on_enc;
-  std::set<std::map<std::string, vector<int>>> node_shapes_hints_sets;
-  std::tie(aot_requested, node_shapes_hints_sets) = aot_info;
-  if (aot_requested) {
-    NGRAPH_VLOG(3) << "AOT requested";
-    if (!ngraph_tf_is_grappler_enabled()) {
-      return errors::Internal(
-          "AOT requested for non grappler build. Please use grappler build if "
-          "AOT is required");
+Status Encapsulator::GetNewClusterIDs(set<int>& result) {
+  if (!analysis_done) {
+    return errors::Internal(
+        "In Encapsulator, called GetNewClusterIDs without calling "
+        "AnalysisPass");
+  }
+  result.clear();
+  for (auto it = device_name_map.begin(); it != device_name_map.end(); ++it) {
+    result.insert(it->first);
+  }
+  return Status::OK();
+}
+
+std::string HintAsString(ShapeHintMap single_hint) {
+  string hint_str;
+  for (auto itr_node : single_hint) {
+    hint_str += ((itr_node.first) + ":[" + ng::join(itr_node.second) + "],");
+  }
+  return hint_str;
+}
+
+PartialShape CombineNodeInfoAndHint(Node* node,
+                                    PartialShape partial_shape_from_node,
+                                    const ShapeHintMap& single_hint) {
+  auto get_shape_for_node_from_shape_hint = [](Node* node,
+                                               ShapeHintMap single_hint) {
+    auto find_itr = single_hint.find(node->name());
+    return find_itr == single_hint.end() ? PartialShape()
+                                         : PartialShape(find_itr->second);
+  };
+
+  PartialShape shape_hint_for_node =
+      get_shape_for_node_from_shape_hint(node, single_hint);
+
+  // If a shape has been found in the input node, match with
+  // shape_hints if they exist
+  PartialShape combined_shape_info;
+  if (shape_hint_for_node.is_valid()) {
+    NGRAPH_VLOG(5) << "For node " << node->name() << " shape hint (",
+        HintAsString(single_hint),
+        ") for node is valid and is: " + shape_hint_for_node.to_string();
+    if (partial_shape_from_node.is_valid()) {
+      NGRAPH_VLOG(5) << "Partial shape from node is also valid. So "
+                        "will attempt to concretize if possible";
+      if (partial_shape_from_node.size() == 0) {
+        // TODO: revisit this if-else
+        NGRAPH_VLOG(5) << "Partial shape from node is empty, so will "
+                          "use shape from hint";
+        combined_shape_info = shape_hint_for_node;
+      } else {
+        NGRAPH_VLOG(5) << "Concretizing shape " +
+                              partial_shape_from_node.to_string() +
+                              "from node with hint for node, " +
+                              shape_hint_for_node.to_string();
+        partial_shape_from_node.concretize(shape_hint_for_node);
+        combined_shape_info = partial_shape_from_node;
+      }
+    } else {
+      NGRAPH_VLOG(5) << "Partial shape from node is invalid. So using "
+                        "hint for the node as shape";
+      combined_shape_info = shape_hint_for_node;
     }
-    string input_node_type = "Placeholder";
-    // In case of grappler, we have Placeholder, which might contain shape info,
-    // so it is possible we can aot without any provided shapes
-    // in normal pass its args. unless shapes are provided there is no chance of
-    // reading shapes from args.
-
-    auto get_shape_for_node_from_shape_hint = [](Node* node,
-                                                 ShapeHintMap single_hint) {
-      auto find_itr = single_hint.find(node->name());
-      return find_itr == single_hint.end() ? PartialShape()
-                                           : PartialShape(find_itr->second);
-    };
-
-    auto hint_as_string = [](ShapeHintMap single_hint) {
-      string hint_str;
-      for (auto itr_node : single_hint) {
-        hint_str +=
-            ((itr_node.first) + ":[" + ng::join(itr_node.second) + "],");
-      }
-      return hint_str;
-    };
-
-    std::map<std::string, vector<int>> inputs_node_shapes_for_compilation;
-    // map between node name and the PartialShape it contains
-    std::map<std::string, PartialShape> node_partial_shape_map;
-    // This is a map of placeholder names and the shapes we can infer from them
-    std::map<std::string, vector<int>> shape_from_placeholders_as_hints;
-    for (auto node : graph->op_nodes()) {
-      if (node->type_string() == input_node_type) {
-        NGRAPH_VLOG(5) << "Checking input for AOT: " << node->name() << "("
-                       << node->type_string()
-                       << "): " << node->attrs().SummarizeNode();
-        // TODO: need to confirm if its _output_shapes or shape
-        auto shape_field = node->attrs().Find("_output_shapes");
-        if (shape_field == nullptr) {
-          shape_field = node->attrs().Find("shape");
-        }
-        // It seems that _output_shapes is not found and hence the shape is
-        // inferred only from the hints. however if "shape" is present, it is
-        // empty, and in that case the empty shape and the rank!=0 hint fuse
-        // to give an invalid shape according to our current logic. have to
-        // modify that
-        PartialShape partial_shape_from_node;
-        if (shape_field != nullptr) {
-          // Get shape from the node
-          partial_shape_from_node = PartialShape(shape_field->shape());
-        }
-        NGRAPH_VLOG(5) << "For node " << node->name()
-                       << " got shape from nose: "
-                       << partial_shape_from_node.to_string();
-        node_partial_shape_map.insert({node->name(), partial_shape_from_node});
-        shape_from_placeholders_as_hints.insert(
-            {node->name(), partial_shape_from_node.get_shape_vector()});
-      }
-    }
-
-    // If no shape hints are provided but the placeholders contain complete
-    // shape, then we still need to enter the for loop below to compute AOT.
-    // Hence adding the shapes from placeholders as hints.
-    if (node_shapes_hints_sets.size() == 0) {
-      NGRAPH_VLOG(5) << "Using shapes from placeholders as hint";
-      node_shapes_hints_sets.insert(shape_from_placeholders_as_hints);
-    }
-    // TODO: .....CHECK ABOVE IF
-
-    // Iterate over each shape hint and see if they can be used
-    for (ShapeHintMap single_hint : node_shapes_hints_sets) {
-      // A boolean to determine if we can AOT for this single_hint
-      bool can_aot = true;
-
-      for (auto itr_single_hint : single_hint) {
-        if (shape_from_placeholders_as_hints.find(itr_single_hint.first) ==
-            shape_from_placeholders_as_hints.end()) {
-          return errors::Internal("Passed hint for node ",
-                                  itr_single_hint.first,
-                                  " but there is no input with that name");
-        }
-      }
-
-      for (auto node : graph->op_nodes()) {
-        if (node->type_string() == input_node_type) {
-          PartialShape partial_shape_from_node =
-              node_partial_shape_map.at(node->name());
-
-          PartialShape shape_hint_for_node =
-              get_shape_for_node_from_shape_hint(node, single_hint);
-
-          // If a shape has been found in the input node, match with
-          // shape_hints if they exist
-          PartialShape combined_shape_info;
-          if (shape_hint_for_node.is_valid()) {
-            NGRAPH_VLOG(5) << "For node " << node->name() << " shape hint (",
-                hint_as_string(single_hint),
-                ") for node is valid and is: " +
-                    shape_hint_for_node.to_string();
-            if (partial_shape_from_node.is_valid()) {
-              NGRAPH_VLOG(5) << "Partial shape from node is also valid. So "
-                                "will attempt to concretize if possible";
-              if (partial_shape_from_node.size() == 0) {
-                // TODO: revisit this if-else
-                NGRAPH_VLOG(5) << "Partial shape from node is empty, so will "
-                                  "use shape from hint";
-                combined_shape_info = shape_hint_for_node;
-              } else {
-                NGRAPH_VLOG(5) << "Concretizing shape " +
-                                      partial_shape_from_node.to_string() +
-                                      "from node with hint for node, " +
-                                      shape_hint_for_node.to_string();
-                partial_shape_from_node.concretize(shape_hint_for_node);
-                combined_shape_info = partial_shape_from_node;
-              }
-            } else {
-              NGRAPH_VLOG(5) << "Partial shape from node is invalid. So using "
-                                "hint for the node as shape";
-              combined_shape_info = shape_hint_for_node;
-            }
-          } else {
-            NGRAPH_VLOG(5) << "For node " << node->name()
-                           << " shape hint (" + hint_as_string(single_hint) +
-                                  ") for node is invalid";
-            if (partial_shape_from_node.is_valid()) {
-              // No shape hints found. But the node itself has some shape info
-              NGRAPH_VLOG(5) << "Partial shape from node is valid and is: " +
-                                    partial_shape_from_node.to_string();
-              combined_shape_info = partial_shape_from_node;
-            } else {
-              NGRAPH_VLOG(5) << "Partial shape from node is invalid";
-              combined_shape_info = PartialShape();
-            }
-          }
-
-          can_aot = combined_shape_info.is_valid() &&
-                    combined_shape_info.is_concrete();
-          if (can_aot) {
-            inputs_node_shapes_for_compilation[node->name()] =
-                combined_shape_info.get_shape_vector();
-          } else {
-            // TODO: necessarily break? Maybe some things can be AOT, others
-            // maybe not
-            string fail_reason =
-                (combined_shape_info.is_valid()
-                     ? (node->name() + " could not be concretized")
-                     : "it is invalid for " + node->name());
-            return errors::Internal("Cannot AOT using this hint (",
-                                    hint_as_string(single_hint), ") as ",
-                                    fail_reason);
-            break;
-          }
-        }  // end of if (node->type_string() == input_node_type)
-      }    // End of for loop that goes through all nodes
-
-      // Did we manage to concretize all input shapes?
-      for (auto itr : node_partial_shape_map) {  // iterate over all inputs
-        if (inputs_node_shapes_for_compilation.find(itr.first) ==
-            inputs_node_shapes_for_compilation.end()) {
-          can_aot = false;
-          // TODO: print "this" hint
-          return errors::Internal("Cannot AOT using this hint (",
-                                  hint_as_string(single_hint), ") for ",
-                                  (itr.first), " was not concretized");
-        }
-      }
-
-      if (!can_aot) {
-        return errors::Internal("AOT requested, but could not perform AOT");
-      }
-      for (auto node : graph->op_nodes()) {
-        if (node->type_string() == "NGraphEncapsulate") {
-          // Check inputs of the encapsulates. They can only be fed by fully
-          // concrete shapes (after going through the shape hints) or consts
-          std::vector<int32> st_inputs;
-          GetStaticInputs(node, &st_inputs);
-          // Current assumption is that only encapsulates without static
-          // inputs are AOT
-          if (st_inputs.size() != 0) {
-            return errors::Internal(
-                "AOT requested. Found an encapsulate with static inputs, but "
-                "that is not supported");
-          }
-
-          std::vector<TensorShape> input_shapes;
-          std::stringstream signature_ss;
-          for (auto in_node : node->in_nodes()) {
-            if (!in_node->IsSource()) {
-              auto itr_shape =
-                  inputs_node_shapes_for_compilation.find(in_node->name());
-              if (itr_shape == inputs_node_shapes_for_compilation.end()) {
-                // TODO: this error could potentially happen due to 2 reasons:
-                // 1. Enough valid shape hints were not passed
-                // 2. It is an encapsulate that has atleast 1 input fed by a
-                // non-placeholder (like another TF node or another
-                // encapsulate)
-                // Later provide more explicit debug message (reason 1 or 2 or
-                // anything else)
-                return errors::Internal(
-                    "AOT requested. Found an encapsulate that has a "
-                    "non-concrete input");
-              } else {
-                std::vector<int64> converted_to_int64(itr_shape->second.begin(),
-                                                      itr_shape->second.end());
-                input_shapes.push_back(TensorShape(converted_to_int64));
-                for (auto itr1 : itr_shape->second) {
-                  signature_ss << itr1 << ",";
-                }
-                signature_ss << ";";
-              }
-            }
-          }
-
-          signature_ss << "/";
-          string signature = signature_ss.str();
-          NGRAPH_VLOG(3) << "Performing AOT for " << node->name()
-                         << " for signature = " << signature << "\n";
-
-          std::vector<const Tensor*> static_input_map;
-          std::shared_ptr<ngraph::Function> ng_function;
-          int cluster_idx;
-          TF_RETURN_IF_ERROR(
-              GetNodeAttr(node->attrs(), "ngraph_cluster", &cluster_idx));
-          GraphDef* gdef_for_current_encapsulate;
-          gdef_for_current_encapsulate =
-              NGraphClusterManager::GetClusterGraph(cluster_idx);
-          GraphConstructorOptions opts;
-          opts.allow_internal_ops = true;
-          Graph graph_for_current_encapsulate(OpRegistry::Global());
-          TF_RETURN_IF_ERROR(
-              ConvertGraphDefToGraph(opts, *gdef_for_current_encapsulate,
-                                     &graph_for_current_encapsulate));
-
-          // get backend.
-          // TODO: Note that this is code duplication of some stuff present
-          // in NGraphEncapsulateOp
-          // Once NGraphEncapsulateOp is refactored, this code should be
-          // removed and a common function should be used
-
-          // TODO: these sections can be hoisted out of the main loop
-          std::string backend_name;
-          TF_RETURN_IF_ERROR(
-              GetNodeAttr(node->attrs(), "ngraph_backend", &backend_name));
-          std::string device_id;
-          TF_RETURN_IF_ERROR(
-              GetNodeAttr(node->attrs(), "ngraph_device_id", &device_id));
-
-          string op_backend_name;
-          try {
-            op_backend_name = BackendManager::GetBackendCreationString(
-                backend_name, device_id);
-          } catch (const std::exception& exp) {
-            return errors::Internal(
-                "Caught exception while creating backend string ", exp.what(),
-                "\n");
-          }
-          TF_RETURN_IF_ERROR(BackendManager::CreateBackend(
-              op_backend_name));  // Created a backend here. must free it
-          // TranslateGraph must be called AFTER CreateBackend because some TF
-          // ops like CNMS and gather use backend specific nodes
-          TF_RETURN_IF_ERROR(Builder::TranslateGraph(
-              input_shapes, static_input_map, &graph_for_current_encapsulate,
-              ng_function));
-          int json_indentation = 4;
-          string serialized_ngfunc(
-              ngraph::serialize(ng_function, json_indentation));
-          std::unordered_map<std::string, std::string> additional_attribute_map;
-          for (auto itr : node->attrs()) {
-            // Find the optional attributes to be sent to the backend.
-            // The optional attributes have '_ngraph_' appended to the start
-            // so we need to get rid of that and only send the remaining
-            // string
-            // since the backend will only look for that.
-            // '_ngraph_' is only appended for the bridge.
-            // For e.g. _ngraph_ice_cores --> ice_cores
-            if (itr.first.find("_ngraph_") != std::string::npos) {
-              // leave out _ngraph_aot_requested
-              if (itr.first.find("_ngraph_aot_requested") ==
-                  std::string::npos) {
-                additional_attribute_map.insert(
-                    {itr.first.substr(strlen("_ngraph_")), itr.second.s()});
-              }
-            }
-          }
-          BackendManager::SetConfig(op_backend_name, additional_attribute_map);
-          ng::runtime::Backend* op_backend = nullptr;
-          try {
-            op_backend = BackendManager::GetBackend(op_backend_name);
-          } catch (const std::out_of_range& e) {
-            NGRAPH_VLOG(5) << "Exception: " << e.what();
-            BackendManager::ReleaseBackend(op_backend_name);
-            throw;
-          }
-          BackendManager::LockBackend(op_backend_name);
-          std::shared_ptr<ngraph::runtime::Executable> ng_exec;
-          try {
-            ng_exec = op_backend->compile(ng_function);
-          } catch (...) {
-            BackendManager::UnlockBackend(op_backend_name);
-            Status st =
-                NgraphSerialize("tf_function_error_aot.json", ng_function);
-            BackendManager::ReleaseBackend(op_backend_name);
-            return errors::Internal(
-                "Failed to compile ng_function for AOT.",
-                (st.ok() ? ""
-                         : " Failed to serialize as well with error: " +
-                               st.error_message()));
-          }
-          BackendManager::UnlockBackend(op_backend_name);
-          BackendManager::ReleaseBackend(op_backend_name);
-
-          stringstream exec_dump;
-          ng_exec->save(exec_dump);
-          // ng function attached as debugging information
-          node->AddAttr("_ngraph_aot_ngfunction_" + signature,
-                        serialized_ngfunc);
-          // Compute will use this ngexec
-          node->AddAttr("_ngraph_aot_ngexec_" + signature, exec_dump.str());
-          // We do not need to add "_ngraph_aot_requested" attribute since it
-          // already is already present in device_config and inserted into the
-          // currently created NGraphEncapsulate
-          // TODO: create a separate namespace of node attributes for backend
-          // and for bridge
-          performed_aot_on_enc.insert(node->name());
-          NGRAPH_VLOG(5) << "Performed AOT on " << node->name();
-        }
-      }
-    }  // end of for (ShapeHintMap single_hint : node_shapes_hints_sets)
-
-    // In the end assert that all encapsulates have performed AOT
-    for (auto node : graph->op_nodes()) {
-      if (node->type_string() == "NGraphEncapsulate") {
-        if (performed_aot_on_enc.find(node->name()) ==
-            performed_aot_on_enc.end()) {
-          return errors::Internal("Requested AOT, but did not perform AOT on ",
-                                  node->name());
-        }
-      }
-    }
-  }  // end of if (aot_requested)
-
-  // Pass 9 (optional, only run if environment variable
-  // NGRAPH_TF_DUMP_CLUSTERS is set): validate the graph def, and
-  // make sure we can construct a graph from it.
-  if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
-    for (auto& kv : device_name_map) {
-      int cluster_idx = kv.first;
-      TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
-          *NGraphClusterManager::GetClusterGraph(cluster_idx),
-          *OpRegistry::Global()));
-
-      Graph g(OpRegistry::Global());
-      GraphConstructorOptions opts;
-      opts.allow_internal_ops = true;
-      TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
-          opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
-
-      std::stringstream ss;
-      ss << "ngraph_cluster_" << cluster_idx;
-      std::string filename_prefix = ss.str();
-
-      GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
-      GraphToDotFile(&g, filename_prefix + ".dot",
-                     "nGraph Cluster Dump: " + filename_prefix);
+  } else {
+    NGRAPH_VLOG(5) << "For node " << node->name()
+                   << " shape hint (" + HintAsString(single_hint) +
+                          ") for node is invalid";
+    if (partial_shape_from_node.is_valid()) {
+      // No shape hints found. But the node itself has some shape info
+      NGRAPH_VLOG(5) << "Partial shape from node is valid and is: " +
+                            partial_shape_from_node.to_string();
+      combined_shape_info = partial_shape_from_node;
+    } else {
+      NGRAPH_VLOG(5) << "Partial shape from node is invalid";
+      combined_shape_info = PartialShape();
     }
   }
+  return combined_shape_info;
+}
+
+std::map<std::string, PartialShape> GetShapesFromTFInputnodes(
+    Graph* graph, const string& input_node_type) {
+  // map between node name and the PartialShape it contains
+  std::map<std::string, PartialShape> node_partial_shape_map;
+  for (auto node : graph->op_nodes()) {
+    if (node->type_string() == input_node_type) {
+      NGRAPH_VLOG(5) << "Checking input for AOT: " << node->name() << "("
+                     << node->type_string()
+                     << "): " << node->attrs().SummarizeNode();
+      // TODO: need to confirm if its _output_shapes or shape
+      auto shape_field = node->attrs().Find("_output_shapes");
+      if (shape_field == nullptr) {
+        shape_field = node->attrs().Find("shape");
+      }
+      // It seems that _output_shapes is not found and hence the shape is
+      // inferred only from the hints. however if "shape" is present, it is
+      // empty, and in that case the empty shape and the rank!=0 hint fuse
+      // to give an invalid shape according to our current logic. have to
+      // modify that
+      PartialShape partial_shape_from_node;
+      if (shape_field != nullptr) {
+        // Get shape from the node
+        partial_shape_from_node = PartialShape(shape_field->shape());
+      }
+      NGRAPH_VLOG(5) << "For node " << node->name() << " got shape from node: "
+                     << partial_shape_from_node.to_string();
+      node_partial_shape_map.insert({node->name(), partial_shape_from_node});
+    }
+  }
+  return node_partial_shape_map;
+}
+
+Status PerformTranslation(Node* node, const std::map<std::string, vector<int>>&
+                                          inputs_node_shapes_for_compilation,
+                          string& signature,
+                          std::shared_ptr<ngraph::Function>& ng_function) {
+  if (node->type_string() != "NGraphEncapsulate") {
+    return errors::Internal(
+        "This function should only be called on an NGraphEncapsulate, but was "
+        "called on ",
+        node->name(), " which is of type ", node->type_string());
+  }
+  std::vector<TensorShape> input_shapes;
+  std::stringstream signature_ss;
+  for (auto in_node : node->in_nodes()) {
+    if (!in_node->IsSource()) {
+      auto itr_shape = inputs_node_shapes_for_compilation.find(in_node->name());
+      if (itr_shape == inputs_node_shapes_for_compilation.end()) {
+        // TODO: this error could potentially happen due to 2 reasons:
+        // 1. Enough valid shape hints were not passed
+        // 2. It is an encapsulate that has atleast 1 input fed by a
+        // non-placeholder (like another TF node or another
+        // encapsulate)
+        // Later provide more explicit debug message (reason 1 or 2 or
+        // anything else)
+        return errors::Internal(
+            "AOT requested. Found an encapsulate that has a "
+            "non-concrete input");
+      } else {
+        std::vector<int64> converted_to_int64(itr_shape->second.begin(),
+                                              itr_shape->second.end());
+        input_shapes.push_back(TensorShape(converted_to_int64));
+        for (auto itr1 : itr_shape->second) {
+          signature_ss << itr1 << ",";
+        }
+        signature_ss << ";";
+      }
+    }
+  }
+
+  signature_ss << "/";
+  signature = signature_ss.str();
+  NGRAPH_VLOG(3) << "Performing AOT for " << node->name()
+                 << " for signature = " << signature << "\n";
+  std::vector<const Tensor*> static_input_map;
+
+  int cluster_idx;
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(node->attrs(), "ngraph_cluster", &cluster_idx));
+  GraphDef* gdef_for_current_encapsulate;
+  gdef_for_current_encapsulate =
+      NGraphClusterManager::GetClusterGraph(cluster_idx);
+  GraphConstructorOptions opts;
+  opts.allow_internal_ops = true;
+  Graph graph_for_current_encapsulate(OpRegistry::Global());
+  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, *gdef_for_current_encapsulate,
+                                            &graph_for_current_encapsulate));
+
+  // TODO: Note that this is code duplication of some stuff present
+  // in NGraphEncapsulateOp
+  // Once NGraphEncapsulateOp is refactored, this code should be
+  // removed and a common function should be used
+
+  TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
+                                             &graph_for_current_encapsulate,
+                                             ng_function));
 
   return Status::OK();
 }
