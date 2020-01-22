@@ -346,6 +346,12 @@ const gtl::ArraySlice<DataType>& NGraphIndexDTypes() {
   return result;
 }
 
+const gtl::ArraySlice<DataType>& NGraphIntDTypes() {
+  static gtl::ArraySlice<DataType> result{DT_INT8, DT_UINT16, DT_INT16,
+                                          DT_INT32, DT_INT64};
+  return result;
+}
+
 const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes() {
   static gtl::ArraySlice<DataType> result{DT_QINT8, DT_QUINT8};
   return result;

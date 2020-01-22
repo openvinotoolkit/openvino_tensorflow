@@ -1359,6 +1359,29 @@ TEST(MathOps, FloorDiv) {
   opexecuter.RunTest();
 }  // end of test op FloorDiv
 
+TEST(MathOps, FloorDivInt) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_INT32, TensorShape({dim1, dim2}));
+  Tensor B(DT_INT32, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 4);
+  AssignInputValues(B, 3);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::FloorDiv(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_INT32};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op FloorDivInt
+
 // Test op: FloorDivBroadcasting
 TEST(MathOps, FloorDivBroadcasting) {
   Scope root = Scope::NewRootScope();
@@ -1384,10 +1407,7 @@ TEST(MathOps, FloorDivBroadcasting) {
 }  // end of test op FloorDivBroadcasting
 
 // Test op: FloorDivNegInt
-// Error found when running tensorflow python test
-// For this test case, TF outputs -1, NGraph outputs 0
-// Enable when NGraph fix the issue
-TEST(MathOps, DISABLED_FloorDivNegInt) {
+TEST(MathOps, FloorDivNegInt) {
   Scope root = Scope::NewRootScope();
 
   Tensor A(DT_INT32, TensorShape({1}));

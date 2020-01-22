@@ -309,6 +309,9 @@ const gtl::ArraySlice<DataType>& NGraphNumericAndQuantizedDTypes();
 // axis/tensor indices.
 const gtl::ArraySlice<DataType>& NGraphIndexDTypes();
 
+// Returns an ArraySlice containing all data integer types.
+const gtl::ArraySlice<DataType>& NGraphIntDTypes();
+
 // Returns an ArraySlice containing supported data types in the quantized domain
 const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes();
 
