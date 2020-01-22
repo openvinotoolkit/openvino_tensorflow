@@ -148,7 +148,7 @@ def setup_venv(venv_dir):
         "pip",
         "install",
         "-U",
-        "pip",
+        "pip==19.3.1",
         "setuptools",
         "psutil",
         "six>=1.10.0",
