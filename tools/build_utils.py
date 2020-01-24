@@ -123,7 +123,7 @@ def load_venv(venv_dir):
     exec(
         compile(
             open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
-        dict(__file__=activate_this_file), dict(__file__=activate_this_file))
+        dict(__file__=activate_this_file))
 
     return venv_dir
 
