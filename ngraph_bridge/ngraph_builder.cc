@@ -2170,7 +2170,8 @@ static Status TranslateGatherNdOp(const Node* op,
 
   auto ng_params_shape = ng_params->get_shape();
   size_t ng_params_rank = ng_params_shape.size();
-  size_t ng_indices_rank = ng_indices->get_shape().size();
+  auto ng_indices_shape = ng_indices->get_shape();
+  size_t ng_indices_rank = ng_indices_shape.size();
 
   for (size_t i = 0; i < ng_params_rank; i++) {
     if (ng_params_shape[i] == 0) {
@@ -2181,7 +2182,7 @@ static Status TranslateGatherNdOp(const Node* op,
     }
   }
 
-  if ((ng_indices_rank - 1) > ng_params_rank) {
+  if ((ng_indices_shape[ng_indices_rank - 1]) > ng_params_rank) {
     return errors::InvalidArgument(
         "The last dimension of indices can be at most the rank of params");
   }
