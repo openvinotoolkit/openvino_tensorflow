@@ -37,11 +37,15 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
  Complete the following steps to install a pre-built nGraph bridge for
  TensorFlow.
 
-1. Install TensorFlow:
+1. Ensure the following pip version is being used:
+
+        pip install --upgrade pip==19.3.1
+
+2. Install TensorFlow:
 
         pip install -U tensorflow==1.14.0
 
-2. Install `ngraph-tensorflow-bridge`:
+3. Install `ngraph-tensorflow-bridge`:
 
         pip install -U ngraph-tensorflow-bridge
    
@@ -59,15 +63,16 @@ Pyenv. Some users prefer Anaconda/Miniconda. Before building nGraph, ensure that
 you can successfully build TensorFlow on macOS with a suitable Python
 environment.
 
-The requirements for building nGraph bridge are identical to the requirements for building TensorFlow from source. For more information, review the [TensorFlow configuration] details. 
+The requirements for building nGraph bridge are identical to the requirements for 
+building TensorFlow from source. For more information, review the [TensorFlow configuration] 
+details. 
 
 ##### Prepare your build environment
 
-Install the following requirements before building
- `nGraph-bridge`. 
- 
-Tensorflow uses a build system called "bazel". For the current
- version of `bazel`, use [bazel version].
+Install the following requirements before building the `ngraph-bridge`. 
+
+TensorFlow uses a build system called "bazel". For the current version of `bazel`, 
+use [bazel version].
 
 Install `bazel`:
 
@@ -133,6 +138,7 @@ This will produce something like this:
     CXX11_ABI flag used for this build: 0
     nGraph bridge built with Grappler: False
     nGraph bridge built with Variables and Optimizers Enablement: False
+
 
 
 Note: The version of the ngraph-tensorflow-bridge is not going to be exactly 
