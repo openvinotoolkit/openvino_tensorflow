@@ -400,7 +400,7 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
   shared_ptr<PipelinedTensorsStore> pts;
   std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> io_tensors;
 
-  bool cache_hit = false;
+  vector<bool> cache_hit_vector(2, true);
   std::string ser_ng_func;
 
   // Now Fill in the tensor - X
@@ -413,11 +413,11 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
   ASSERT_OK(TFDataTypeToNGraphElementType(x.dtype(), &ng_element_type));
 
   auto worker = [&](size_t worker_id) {
-
+    bool cache_hit = true;
     ASSERT_OK(executor.GetExecutableFunctionAndTensors(
         tf_input_tensors, ng_exec, ser_ng_func, pts, cache_hit));
+    cache_hit_vector[worker_id] = cache_hit;
     io_tensors = pts.get()->get_tensors();
-    ASSERT_FALSE(cache_hit);
 
     // Copy the tensors from TensorFlow Tensor to nGraph Tensor
     // First X
@@ -468,6 +468,9 @@ TEST(ParallelExecutor, ExecuteOnMultipleThreads) {
 
   thread0.join();
   thread1.join();
+
+  ASSERT_FALSE(std::all_of(cache_hit_vector.begin(), cache_hit_vector.end(),
+                           [](bool v) { return v; }));
 }
 
 TEST(ParallelExecutor, E2E8Bit) {
