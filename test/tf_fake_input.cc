@@ -19,7 +19,7 @@ Revision: c3c312afdedcb0bc4bccd313f770f322d8f03de0
 File: tensorflow/tensorflow/core/framework/fake_input.cc
 *******************************************************************************/
 /*******************************************************************************
- * Copyright 2019 Intel Corporation
+ * Copyright 2019-2020 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
