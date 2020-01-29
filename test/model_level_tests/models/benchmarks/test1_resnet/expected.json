@@ -4,7 +4,7 @@
             "0": {
                 "num_ng_clusters": 15,
                 "num_nodes_in_graph": 1037,
-                "num_nodes_marked_for_clustering": 445
+                "num_nodes_marked_for_clustering": 498
             },
             "1": {
                 "num_ng_clusters": 1,

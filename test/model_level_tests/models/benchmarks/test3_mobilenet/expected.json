@@ -29,10 +29,10 @@
             "5": {
                 "num_ng_clusters": 37,
                 "num_nodes_in_graph": 1713,
-                "num_nodes_marked_for_clustering": 1106
+                "num_nodes_marked_for_clustering": 1107
             }
         },
-        "time": 33
+        "time": 75
     },
     "default_tf113": {
         "logparse": {

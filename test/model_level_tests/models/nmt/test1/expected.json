@@ -4,7 +4,7 @@
             "0": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "1": {
                 "num_ng_clusters": 0,
@@ -22,14 +22,14 @@
                 "num_nodes_marked_for_clustering": 8
             },
             "12": {
-                "num_ng_clusters": 17,
+                "num_ng_clusters": 14,
                 "num_nodes_in_graph": 237,
-                "num_nodes_marked_for_clustering": 127
+                "num_nodes_marked_for_clustering": 131
             },
             "13": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "14": {
                 "num_ng_clusters": 0,
@@ -47,9 +47,9 @@
                 "num_nodes_marked_for_clustering": 7
             },
             "17": {
-                "num_ng_clusters": 28,
+                "num_ng_clusters": 25,
                 "num_nodes_in_graph": 995,
-                "num_nodes_marked_for_clustering": 440
+                "num_nodes_marked_for_clustering": 446
             },
             "18": {
                 "num_ng_clusters": 0,
@@ -89,7 +89,7 @@
             "24": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "25": {
                 "num_ng_clusters": 0,
@@ -99,7 +99,7 @@
             "26": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "27": {
                 "num_ng_clusters": 0,
@@ -109,12 +109,17 @@
             "28": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
+            },
+            "29": {
+                "num_ng_clusters": 0,
+                "num_nodes_in_graph": 11,
+                "num_nodes_marked_for_clustering": 1
             },
             "3": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "4": {
                 "num_ng_clusters": 0,
@@ -134,12 +139,12 @@
             "7": {
                 "num_ng_clusters": 11,
                 "num_nodes_in_graph": 224,
-                "num_nodes_marked_for_clustering": 105
+                "num_nodes_marked_for_clustering": 108
             },
             "8": {
                 "num_ng_clusters": 1,
                 "num_nodes_in_graph": 48,
-                "num_nodes_marked_for_clustering": 25
+                "num_nodes_marked_for_clustering": 30
             },
             "9": {
                 "num_ng_clusters": 0,
