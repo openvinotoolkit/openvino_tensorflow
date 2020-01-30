@@ -33,133 +33,27 @@
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_var.h"
 
+#include "ngraph_bridge/ngraph_register_stub_kernels.h"
+
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
 
 namespace ngraph_bridge {
-/* -------------------------------------------------
-//
-// NGraphApplyMomentumOp
-//
----------------------------------------------------*/
 
-class NGraphApplyMomentumOp : public OpKernel {
- private:
- public:
-  explicit NGraphApplyMomentumOp(OpKernelConstruction* context)
-      : OpKernel(context) {
-    OP_REQUIRES(context, false,
-                errors::Internal("This constructor should not get called",
-                                 name(), "\n"));
-  }
+// Register NGraphOptimizers here
+// These Optimizer Ops are replaced by a TF computational subgraph
+// in ReplaceModifiers Rewrite Pass. Hence, these Stub Kernels/Op will never get
+// called
 
-  //---------------------------------------------------------------------------
-  //  ~NGraphApplyMomentumOp()
-  //---------------------------------------------------------------------------
-  ~NGraphApplyMomentumOp() override {}
-
-  // This will never be called
-  void Compute(OpKernelContext* context) override {
-    OP_REQUIRES(
-        context, false,
-        errors::Internal("This kernel should not get called", name(), "\n"));
-  }  // end of compute function
-};   // end of NGraphApplyGradientDescent class definition
-
-REGISTER_KERNEL_BUILDER(Name("NGraphApplyMomentum").Device(DEVICE_CPU),
-                        NGraphApplyMomentumOp);
-/* -------------------------------------------------
-//
-// NGraphApplyGradientDescentOp
-//
----------------------------------------------------*/
-
-class NGraphApplyGradientDescentOp : public OpKernel {
- private:
- public:
-  explicit NGraphApplyGradientDescentOp(OpKernelConstruction* context)
-      : OpKernel(context) {
-    OP_REQUIRES(context, false,
-                errors::Internal("This constructor should not get called",
-                                 name(), "\n"));
-  }
-
-  //---------------------------------------------------------------------------
-  //  ~NGraphApplyGradientDescentOp()
-  //---------------------------------------------------------------------------
-  ~NGraphApplyGradientDescentOp() override {}
-
-  // This will never be called
-  void Compute(OpKernelContext* context) override {
-    OP_REQUIRES(
-        context, false,
-        errors::Internal("This kernel should not get called", name(), "\n"));
-  }  // end of compute function
-};   // end of NGraphApplyGradientDescent class definition
-
-REGISTER_KERNEL_BUILDER(Name("NGraphApplyGradientDescent").Device(DEVICE_CPU),
-                        NGraphApplyGradientDescentOp);
-
-/* -------------------------------------------------
-//
-// NGraphAssignSubOp
-//
----------------------------------------------------*/
-
-// Computes *input[0] = *input[0] - input[1]
-class NGraphAssignSubOp : public OpKernel {
- private:
-  // bool use_exclusive_lock_; //TF op has this
-  ~NGraphAssignSubOp() override {}
-
- public:
-  explicit NGraphAssignSubOp(OpKernelConstruction* context)
-      : OpKernel(context) {
-    OP_REQUIRES(context, false,
-                errors::Internal("This constructor should not get called",
-                                 name(), "\n"));
-  }
-
-  void Compute(OpKernelContext* context) override {
-    OP_REQUIRES(
-        context, false,
-        errors::Internal("This kernel should not get called", name(), "\n"));
-  }
-};
-
-REGISTER_KERNEL_BUILDER(Name("NGraphAssignSub").Device(DEVICE_CPU),
-                        NGraphAssignSubOp);
-
-/* -------------------------------------------------
-//
-// NGraphAssignAddOp
-//
----------------------------------------------------*/
-
-// Computes *input[0] = *input[0] + input[1]
-class NGraphAssignAddOp : public OpKernel {
- public:
-  explicit NGraphAssignAddOp(OpKernelConstruction* context)
-      : OpKernel(context) {
-    OP_REQUIRES(context, false,
-                errors::Internal("This constructor should not get called",
-                                 name(), "\n"));
-  }
-
-  void Compute(OpKernelContext* context) override {
-    OP_REQUIRES(
-        context, false,
-        errors::Internal("This kernel should not get called", name(), "\n"));
-  }
-
- private:
-  ~NGraphAssignAddOp() override {}
-};
-
-REGISTER_KERNEL_BUILDER(Name("NGraphAssignAdd").Device(DEVICE_CPU),
-                        NGraphAssignAddOp);
+// Keep them in alphabetical order
+REGISTER_NGRAPH_STUB_KERNEL("NGraphApplyGradientDescent");
+REGISTER_NGRAPH_STUB_KERNEL("NGraphApplyMomentum");
+REGISTER_NGRAPH_STUB_KERNEL(
+    "NGraphAssignAdd");  //*input[0] = *input[0] + input[1]
+REGISTER_NGRAPH_STUB_KERNEL(
+    "NGraphAssignSub");  //*input[0] = *input[0] - input[1]
 
 }  // namespace ngraph_bridge
 

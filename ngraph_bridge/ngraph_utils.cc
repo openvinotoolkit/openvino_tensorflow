@@ -223,6 +223,11 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
     case DT_BOOL:
       TensorDataToStream<bool>(ostream, n_elements, data);
       break;
+    case DT_BFLOAT16:
+      return errors::Internal(
+          "TensorToStream got data type bfloat16. No compatible standard C++ "
+          "data type.");
+      break;
     default:
       return errors::Internal("TensorToStream got unsupported data type ",
                               DataType_Name(tensor.dtype()));
@@ -272,6 +277,8 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
       break;
     case DataType::DT_QINT32:
       *ng_et = ng::element::i32;
+    case DataType::DT_BFLOAT16:
+      *ng_et = ng::element::bf16;
       break;
     default:
       return errors::Unimplemented("Unsupported TensorFlow data type: ",
@@ -322,15 +329,16 @@ void print_node_histogram(const std::unordered_map<string, int>& histogram,
 
 const gtl::ArraySlice<DataType>& NGraphDTypes() {
   static gtl::ArraySlice<DataType> result{
-      DT_FLOAT,  DT_DOUBLE, DT_INT8,   DT_INT16, DT_INT32, DT_INT64, DT_UINT8,
-      DT_UINT16, DT_UINT32, DT_UINT64, DT_BOOL,  DT_QINT8, DT_QUINT8};
+      DT_FLOAT, DT_DOUBLE, DT_INT8,   DT_INT16,   DT_INT32,
+      DT_INT64, DT_UINT8,  DT_UINT16, DT_UINT32,  DT_UINT64,
+      DT_BOOL,  DT_QINT8,  DT_QUINT8, DT_BFLOAT16};
   return result;
 }
 
 const gtl::ArraySlice<DataType>& NGraphNumericDTypes() {
   static gtl::ArraySlice<DataType> result{
-      DT_FLOAT, DT_DOUBLE, DT_INT8,   DT_INT16,  DT_INT32,
-      DT_INT64, DT_UINT8,  DT_UINT16, DT_UINT32, DT_UINT64};
+      DT_FLOAT, DT_DOUBLE, DT_INT8,   DT_INT16,  DT_INT32,   DT_INT64,
+      DT_UINT8, DT_UINT16, DT_UINT32, DT_UINT64, DT_BFLOAT16};
   return result;
 }
 
@@ -358,7 +366,7 @@ const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes() {
 }
 
 const gtl::ArraySlice<DataType>& NGraphRealDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_FLOAT, DT_DOUBLE};
+  static gtl::ArraySlice<DataType> result{DT_FLOAT, DT_DOUBLE, DT_BFLOAT16};
   return result;
 }
 
