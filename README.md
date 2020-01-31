@@ -145,6 +145,11 @@ Note: The version of the ngraph-tensorflow-bridge is not going to be exactly
 the same as when you build from source. This is due to delay in the source 
 release and publishing the corresponding Python wheel. 
 
+### Build and run nGraph in Docker
+
+A shell script and dockerfiles are provided in the [`tools`](/tools) directory for easy setup in a Docker container. 
+See [this README](/tools) if you want to use Docker.
+
 ## Classify an image
 
 Once you have installed nGraph bridge, you can use TensorFlow to train a neural network or run inference using a trained model. 
