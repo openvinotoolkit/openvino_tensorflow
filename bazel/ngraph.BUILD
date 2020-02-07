@@ -14,6 +14,7 @@
 #  limitations under the License.
 # ==============================================================================
 licenses(["notice"])
+
 exports_files(["LICENSE"])
 
 load("@ngraph_bridge//:cxx_abi_option.bzl", "CXX_ABI")
@@ -23,41 +24,39 @@ cc_library(
     hdrs = glob([
         "src/ngraph/**/*.hpp",
         "src/ngraph/*.hpp",
-        "src/ngraph/**/*.h"
+        "src/ngraph/**/*.h",
     ]),
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "ngraph_core",
-    srcs = glob([
-        "src/ngraph/*.cpp",
-        "src/ngraph/autodiff/*.cpp",
-        "src/ngraph/builder/*.cpp",
-        "src/ngraph/descriptor/*.cpp",
-        "src/ngraph/descriptor/layout/*.cpp",
-        "src/ngraph/op/*.cpp",
-        "src/ngraph/op/fused/*.cpp",
-        "src/ngraph/op/experimental/*.cpp",
-        "src/ngraph/op/experimental/layers/*.cpp",
-        "src/ngraph/op/experimental/layers/*.hpp",
-        "src/ngraph/op/util/*.cpp",
-        "src/ngraph/pattern/*.cpp",
-        "src/ngraph/pattern/*.hpp",
-        "src/ngraph/pass/*.cpp",
-        "src/ngraph/pass/*.hpp",
-        "src/ngraph/runtime/*.cpp",
-        "src/ngraph/runtime/dynamic/dynamic_backend.cpp",
-        "src/ngraph/type/*.cpp",
+    srcs = glob(
+        [
+            "src/ngraph/*.cpp",
+            "src/ngraph/autodiff/*.cpp",
+            "src/ngraph/builder/*.cpp",
+            "src/ngraph/descriptor/*.cpp",
+            "src/ngraph/descriptor/layout/*.cpp",
+            "src/ngraph/op/*.cpp",
+            "src/ngraph/op/fused/*.cpp",
+            "src/ngraph/op/experimental/*.cpp",
+            "src/ngraph/op/experimental/layers/*.cpp",
+            "src/ngraph/op/experimental/layers/*.hpp",
+            "src/ngraph/op/util/*.cpp",
+            "src/ngraph/pattern/*.cpp",
+            "src/ngraph/pattern/*.hpp",
+            "src/ngraph/pass/*.cpp",
+            "src/ngraph/pass/*.hpp",
+            "src/ngraph/runtime/*.cpp",
+            "src/ngraph/runtime/dynamic/dynamic_backend.cpp",
+            "src/ngraph/type/*.cpp",
         ],
         exclude = [
-        "src/ngraph/ngraph.cpp",
-        "src/ngraph/serializer_stub.cpp"
-    ]),
-    deps = [
-        ":ngraph_headers",
-        "@nlohmann_json_lib",
-    ],
+            "src/ngraph/ngraph.cpp",
+            "src/ngraph/serializer_stub.cpp",
+        ],
+    ),
     copts = [
         "-I external/ngraph/src",
         "-I external/ngraph/src/ngraph",
@@ -71,10 +70,10 @@ cc_library(
         '-D NGRAPH_VERSION=\\"v0.28.0-rc.1\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
-        '-D NGRAPH_STATIC_LIB_ENABLE',
-        '-D NGRAPH_DYNAMIC_COMPONENTS_ENABLE',
-        '-D NGRAPH_ENABLE_CPU_CONV_AUTO',
-        '-D NGRAPH_USE_LEGACY_MKLDNN',
+        "-D NGRAPH_STATIC_LIB_ENABLE",
+        "-D NGRAPH_DYNAMIC_COMPONENTS_ENABLE",
+        "-D NGRAPH_ENABLE_CPU_CONV_AUTO",
+        "-D NGRAPH_USE_LEGACY_MKLDNN",
         "-march=native",
         "-mtune=native",
         "-Wall",
@@ -91,17 +90,18 @@ cc_library(
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_headers",
+        "@nlohmann_json_lib",
+    ],
     alwayslink = 1,
 )
 
 cc_library(
-    name = 'ngraph_version',
+    name = "ngraph_version",
     srcs = glob([
-        "src/ngraph/ngraph.cpp"
+        "src/ngraph/ngraph.cpp",
     ]),
-    deps = [
-        ":ngraph_headers",
-    ],
     copts = [
         "-I external/ngraph/src",
         "-I external/ngraph/src/ngraph",
@@ -115,7 +115,7 @@ cc_library(
         '-D NGRAPH_VERSION=\\"v0.28.0-rc.1\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
-        '-D NGRAPH_USE_LEGACY_MKLDNN',
+        "-D NGRAPH_USE_LEGACY_MKLDNN",
     ] + CXX_ABI,
     linkopts = [
         "-Wl,-z,noexecstack",
@@ -123,6 +123,9 @@ cc_library(
         "-Wl,-z,now",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_headers",
+    ],
     alwayslink = 1,
 )
 # TODO: If we update to mkl_dnn v1.0 in future, we should include
@@ -130,13 +133,7 @@ cc_library(
 # Currently we use legacy mkl_dnn, NGRAPH_USE_LEGACY_MKLDNN is set to TRUE by default
 
 cc_library(
-    name = 'cpu_backend',
-    hdrs = glob([
-        "src/ngraph/runtime/cpu/*.hpp",
-        "src/ngraph/runtime/cpu/*.h",
-        "src/ngraph/runtime/cpu/kernel/*.hpp",
-        "src/ngraph/state/rng_state.hpp",
-    ]),
+    name = "cpu_backend",
     srcs = glob([
         "src/ngraph/runtime/cpu/cpu_backend.cpp",
         "src/ngraph/runtime/cpu/cpu_builder.cpp",
@@ -256,12 +253,12 @@ cc_library(
         "src/ngraph/state/bernoulli_rng_state.cpp",
         "src/ngraph/state/uniform_rng_state.cpp",
     ]),
-    deps = [
-        ":ngraph_headers",
-        ":ngraph_core",
-        "@eigen",
-        "@mkl_dnn",
-    ],
+    hdrs = glob([
+        "src/ngraph/runtime/cpu/*.hpp",
+        "src/ngraph/runtime/cpu/*.h",
+        "src/ngraph/runtime/cpu/kernel/*.hpp",
+        "src/ngraph/state/rng_state.hpp",
+    ]),
     copts = [
         "-I external/ngraph/src",
         "-I external/ngraph/src/ngraph",
@@ -275,7 +272,7 @@ cc_library(
         '-D NGRAPH_VERSION=\\"v0.28.0-rc.1\\"',
         "-D NGRAPH_DEX_ONLY",
         '-D PROJECT_ROOT_DIR=\\"\\"',
-        '-D NGRAPH_CPU_STATIC_LIB_ENABLE',
+        "-D NGRAPH_CPU_STATIC_LIB_ENABLE",
         '-D NGRAPH_USE_LEGACY_MKLDNN=\\"TRUE\\"',
         "-march=native",
         "-mtune=native",
@@ -295,5 +292,11 @@ cc_library(
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_core",
+        ":ngraph_headers",
+        "@eigen",
+        "@mkl_dnn",
+    ],
     alwayslink = 1,
 )

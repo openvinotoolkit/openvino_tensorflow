@@ -15,8 +15,9 @@
 # ==============================================================================
 load("//:cxx_abi_option.bzl", "CXX_ABI")
 load(
-    "@org_tensorflow//tensorflow:tensorflow.bzl", 
-    "tf_cc_binary")
+    "@org_tensorflow//tensorflow:tensorflow.bzl",
+    "tf_cc_binary",
+)
 
 cc_library(
     name = "ngraph_bridge_headers",
@@ -68,12 +69,16 @@ cc_library(
 )
 
 cc_library(
-    name = 'ngraph_bridge_lib',
+    name = "ngraph_bridge_lib",
     srcs = [
+        "logging/ngraph_log.cc",
+        "logging/tf_graph_writer.cc",
+        "ngraph_bridge/grappler/ngraph_add_identityn.cc",
+        "ngraph_bridge/grappler/ngraph_optimizer.cc",
         "ngraph_bridge/ngraph_api.cc",
         "ngraph_bridge/ngraph_assign_clusters.cc",
-        "ngraph_bridge/ngraph_builder.cc",
         "ngraph_bridge/ngraph_backend_manager.cc",
+        "ngraph_bridge/ngraph_builder.cc",
         "ngraph_bridge/ngraph_capture_variables.cc",
         "ngraph_bridge/ngraph_catalog.cc",
         "ngraph_bridge/ngraph_cluster_manager.cc",
@@ -81,10 +86,10 @@ cc_library(
         "ngraph_bridge/ngraph_deassign_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_clusters.cc",
         "ngraph_bridge/ngraph_encapsulate_impl.cc",
-        "ngraph_bridge/ngraph_enter_prefetch_in_catalog.cc",
-        "ngraph_bridge/ngraph_executor.cc",
         "ngraph_bridge/ngraph_encapsulate_op.cc",
         "ngraph_bridge/ngraph_encapsulate_op_utils.cc",
+        "ngraph_bridge/ngraph_enter_prefetch_in_catalog.cc",
+        "ngraph_bridge/ngraph_executor.cc",
         "ngraph_bridge/ngraph_find_replace_prefetchdataset.cc",
         "ngraph_bridge/ngraph_freshness_tracker.cc",
         "ngraph_bridge/ngraph_mark_for_clustering.cc",
@@ -96,29 +101,14 @@ cc_library(
         "ngraph_bridge/ngraph_tracked_variable.cc",
         "ngraph_bridge/ngraph_utils.cc",
         "ngraph_bridge/ngraph_var.cc",
+        "ngraph_bridge/ops/ngraph_ops.cc",
         "ngraph_bridge/tf_deadness_analysis.cc",
         "ngraph_bridge/tf_graphcycles.cc",
-        "ngraph_bridge/ops/ngraph_ops.cc",
         "ngraph_bridge/version.cc",
-        "ngraph_bridge/grappler/ngraph_optimizer.cc",
-        "ngraph_bridge/grappler/ngraph_add_identityn.cc",
-        "logging/ngraph_log.cc",
-        "logging/tf_graph_writer.cc",
-    ],
-    deps = [
-        ":ngraph_bridge_headers",
-        "@org_tensorflow//tensorflow/core:core_cpu_headers_lib",
-        "@org_tensorflow//tensorflow/core/grappler/clusters:cluster",
-        "@org_tensorflow//tensorflow/core/grappler/optimizers:custom_graph_optimizer_registry",
-        "@org_tensorflow//tensorflow/core:framework_headers_lib",
-        "@org_tensorflow//tensorflow/core:protos_all_cc",
-        "@ngraph//:ngraph_headers",
-        "@ngraph//:ngraph_core",
-        "@ngraph//:ngraph_version",
     ],
     copts = [
-        "-pthread", 
-        "-std=c++11", 
+        "-pthread",
+        "-std=c++11",
         "-D_FORTIFY_SOURCE=2",
         "-Wall",
         "-Wextra",
@@ -134,35 +124,39 @@ cc_library(
         "-fvisibility=internal",
         "-Wmissing-field-initializers",
         "-Wno-strict-overflow",
-        '-D NGRAPH_BRIDGE_STATIC_LIB_ENABLE',
-        '-D NGRAPH_TF_USE_GRAPPLER_OPTIMIZER',
-        '-D NGRAPH_CPU_STATIC_LIB_ENABLE',
+        "-D NGRAPH_BRIDGE_STATIC_LIB_ENABLE",
+        "-D NGRAPH_TF_USE_GRAPPLER_OPTIMIZER",
+        "-D NGRAPH_CPU_STATIC_LIB_ENABLE",
         "-I ngraph_bridge",
         "-I logging",
         "-I external/ngraph/src",
         "-O3",
     ] + CXX_ABI,
-    linkstatic = True,
     linkopts = [
         "-Wl,-z,noexecstack",
         "-Wl,-z,relro",
         "-Wl,-z,now",
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_bridge_headers",
+        "@ngraph//:ngraph_core",
+        "@ngraph//:ngraph_headers",
+        "@ngraph//:ngraph_version",
+        "@org_tensorflow//tensorflow/core:core_cpu_headers_lib",
+        "@org_tensorflow//tensorflow/core:framework_headers_lib",
+        "@org_tensorflow//tensorflow/core:protos_all_cc",
+        "@org_tensorflow//tensorflow/core/grappler/clusters:cluster",
+        "@org_tensorflow//tensorflow/core/grappler/optimizers:custom_graph_optimizer_registry",
+    ],
     alwayslink = 1,
 )
 
 tf_cc_binary(
-    name = 'hello_tf',
+    name = "hello_tf",
     srcs = [
         "examples/cpp/hello_tf.cpp",
-    ],
-    deps = [
-        "@org_tensorflow//tensorflow/cc:client_session",
-        "@org_tensorflow//tensorflow/cc:ops",
-        "@org_tensorflow//tensorflow/core:tensorflow",
-        ":ngraph_bridge_lib",
-        "@ngraph//:cpu_backend",
     ],
     copts = [
         "-pthread",
@@ -176,24 +170,24 @@ tf_cc_binary(
         "-I external/ngraph/src",
         "-I logging",
     ] + CXX_ABI,
-    linkstatic=True,
+    linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_bridge_lib",
+        "@ngraph//:cpu_backend",
+        "@org_tensorflow//tensorflow/cc:client_session",
+        "@org_tensorflow//tensorflow/cc:ops",
+        "@org_tensorflow//tensorflow/core:tensorflow",
+    ],
 )
 
 tf_cc_binary(
-    name = 'infer_multiple_networks',
+    name = "infer_multiple_networks",
     srcs = [
         "examples/cpp/inference/infer_multiple_networks.cc",
-        "examples/cpp/inference/inference_engine.h",
         "examples/cpp/inference/inference_engine.cc",
+        "examples/cpp/inference/inference_engine.h",
         "examples/cpp/inference/tf_label_image_utils.cc",
-    ],
-    deps = [
-        "@org_tensorflow//tensorflow/cc:cc_ops",
-        "@org_tensorflow//tensorflow/cc:client_session",
-        "@org_tensorflow//tensorflow/core:tensorflow",
-        ":ngraph_bridge_lib",
-        "@ngraph//:cpu_backend",
     ],
     copts = [
         "-pthread",
@@ -209,12 +203,19 @@ tf_cc_binary(
         "-Wno-unknown-pragmas",
         "-fvisibility=internal",
         "-Wmissing-field-initializers",
-        "-Wno-strict-overflow", 
+        "-Wno-strict-overflow",
         "-I ngraph_bridge",
         "-I external/ngraph/src",
         "-I logging",
         "-O3",
     ] + CXX_ABI,
-    linkstatic=True,
+    linkstatic = True,
     visibility = ["//visibility:public"],
+    deps = [
+        ":ngraph_bridge_lib",
+        "@ngraph//:cpu_backend",
+        "@org_tensorflow//tensorflow/cc:cc_ops",
+        "@org_tensorflow//tensorflow/cc:client_session",
+        "@org_tensorflow//tensorflow/core:tensorflow",
+    ],
 )

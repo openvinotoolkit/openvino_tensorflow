@@ -15,9 +15,10 @@
 # ==============================================================================
 
 workspace(name = "ngraph_bridge")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@//tf_configure:tf_configure.bzl", "tf_configure")
+
 tf_configure(
     name = "local_config_tf",
 )
@@ -49,8 +50,13 @@ http_archive(
         "https://github.com/tensorflow/tensorflow/archive/v1.14.0.tar.gz",
     ],
 )
+
 load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
-tf_workspace(path_prefix = "", tf_repo_name = "org_tensorflow")
+
+tf_workspace(
+    path_prefix = "",
+    tf_repo_name = "org_tensorflow",
+)
 
 http_archive(
     name = "ngraph",
@@ -59,7 +65,7 @@ http_archive(
     strip_prefix = "ngraph-0.28.0-rc.1",
     urls = [
         "https://mirror.bazel.build/github.com/NervanaSystems/ngraph/archive/v0.28.0-rc.1.tar.gz",
-        "https://github.com/NervanaSystems/ngraph/archive/v0.28.0-rc.1.tar.gz"
+        "https://github.com/NervanaSystems/ngraph/archive/v0.28.0-rc.1.tar.gz",
     ],
 )
 
@@ -75,15 +81,15 @@ http_archive(
 )
 
 http_archive(
-        name = "eigen",
-        build_file = "//:bazel/eigen.BUILD",
-        sha256 = "74845ea27e19a1bcf63f3f271de62e06798f23e0467bb9d45b83a94918941b23",
-        strip_prefix = "eigen-eigen-20cbc6576426",
-        urls = [
-            "http://mirror.tensorflow.org/bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
-            "https://bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
-        ],
-    )
+    name = "eigen",
+    build_file = "//:bazel/eigen.BUILD",
+    sha256 = "74845ea27e19a1bcf63f3f271de62e06798f23e0467bb9d45b83a94918941b23",
+    strip_prefix = "eigen-eigen-20cbc6576426",
+    urls = [
+        "http://mirror.tensorflow.org/bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
+        "https://bitbucket.org/eigen/eigen/get/20cbc6576426.tar.gz",
+    ],
+)
 
 http_archive(
         name = "mkl_dnn",

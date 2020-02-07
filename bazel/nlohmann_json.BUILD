@@ -13,9 +13,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-licenses(["notice"]) 
+licenses(["notice"])
 
 exports_files(["LICENSE.MIT"])
+
 load("@ngraph_bridge//:cxx_abi_option.bzl", "CXX_ABI")
 
 cc_library(
@@ -25,7 +26,7 @@ cc_library(
     ]),
     copts = [
         "-I external/nlohmann_json_lib",
-    ]+ CXX_ABI,
+    ] + CXX_ABI,
     visibility = ["//visibility:public"],
     alwayslink = 1,
 )

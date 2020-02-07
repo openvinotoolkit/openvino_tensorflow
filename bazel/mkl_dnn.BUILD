@@ -18,7 +18,6 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-
 load(
     "@//tf_configure:tf_configure.bzl",
     "template_rule",
@@ -96,15 +95,15 @@ cc_library(
         "-DMKLDNN_DLL",
         "-DMKLDNN_DLL_EXPORTS",
         "-O3",
-    #] + select({
-    #   "@org_tensorflow//tensorflow:linux_x86_64": [
-            "-fopenmp",  # only works with gcc
-    #    ],
+        #] + select({
+        #   "@org_tensorflow//tensorflow:linux_x86_64": [
+        "-fopenmp",  # only works with gcc
+        #    ],
         # TODO(ibiryukov): enable openmp with clang by including libomp as a
         # dependency.
-    #    ":clang_linux_x86_64": [],
-    #    "//conditions:default": [],
-    #}),
+        #    ":clang_linux_x86_64": [],
+        #    "//conditions:default": [],
+        #}),
     ],
     includes = [
         "include",
@@ -117,9 +116,9 @@ cc_library(
     nocopts = "-fno-exceptions",
     visibility = ["//visibility:public"],
     deps = [
-            "@mkl_linux//:mkl_headers",
-            "@mkl_linux//:mkl_libs_linux",
-        ],
+        "@mkl_linux//:mkl_headers",
+        "@mkl_linux//:mkl_libs_linux",
+    ],
 )
 
 cc_library(
