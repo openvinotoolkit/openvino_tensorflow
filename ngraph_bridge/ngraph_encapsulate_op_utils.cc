@@ -159,8 +159,7 @@ Status GetPipelinedIOTensorsReadyForExecution(
   }
 
   // Allocate the input/
-  ngraph::Event event_copy_input_tensor("Copy Pipelined Input Tensors", "", "");
-  std::vector<std::unique_ptr<ngraph::Event>> input_write_events;
+  NG_TRACE("Copy Pipelined Input Tensors", "", "");
   if (!skip_tf2ng_copy) {
     // All pipelined inputs are copied
 
@@ -172,8 +171,7 @@ Status GetPipelinedIOTensorsReadyForExecution(
       void* current_src_ptr =
           (void*)DMAHelper::base(&tf_input_tensors[tf_index]);
 
-      std::unique_ptr<ngraph::Event> event_copy_h2d(
-          new ngraph::Event("H2D_Input_" + std::to_string(tf_index), "", ""));
+      NG_TRACE("H2D_Input_" + std::to_string(tf_index), "", "");
 
       try {
         ng_pipelined_inputs[i]->write(
@@ -185,8 +183,6 @@ Status GetPipelinedIOTensorsReadyForExecution(
       } catch (...) {
         return errors::Internal("Error copying TF tensor to device tensor");
       }
-      event_copy_h2d->Stop();
-      input_write_events.push_back(std::move(event_copy_h2d));
     }
   } else {
     // All pipelined inputs that are not prefetched are copied
@@ -210,8 +206,7 @@ Status GetPipelinedIOTensorsReadyForExecution(
           tf_input_tensors[tf_index].dtype(), &ng_element_type));
       void* current_src_ptr =
           (void*)DMAHelper::base(&tf_input_tensors[tf_index]);
-      unique_ptr<ngraph::Event> event_copy_h2d(
-          new ngraph::Event("H2D_Input_" + to_string(tf_index), "", ""));
+      NG_TRACE("H2D_Input_" + to_string(tf_index), "", "");
       try {
         ng_pipelined_inputs[ng_index]->write(
             current_src_ptr,
@@ -223,17 +218,8 @@ Status GetPipelinedIOTensorsReadyForExecution(
       } catch (...) {
         return errors::Internal("Error copying TF tensor to device tensor");
       }
-      event_copy_h2d->Stop();
-      input_write_events.push_back(move(event_copy_h2d));
     }
   }
-
-  for (auto& next : input_write_events) {
-    ngraph::Event::write_trace(*next.get());
-  }
-  event_copy_input_tensor.Stop();
-  ngraph::Event::write_trace(event_copy_input_tensor);
-
   pipelined_io_tensors = make_tuple(current_iter_pipeline_depth,
                                     ng_pipelined_inputs, ng_pipelined_outputs);
 

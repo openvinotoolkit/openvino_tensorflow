@@ -50,8 +50,6 @@ File: tensorflow/core/kernels/data/prefetch_dataset_op.cc
 #include "tensorflow/core/lib/strings/str_util.h"
 #include "tensorflow/core/lib/strings/stringprintf.h"
 
-#include "ngraph/event_tracing.hpp"
-
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/stats_utils.h"
@@ -286,7 +284,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
 
     Status Consume(IteratorContext* ctx, std::vector<Tensor>* out_tensors,
                    bool* end_of_sequence) EXCLUSIVE_LOCKS_REQUIRED(mu_) {
-      ngraph::Event evt_consume("Prefetch_Consume", "Prefetch_Consume", "");
+      NG_TRACE("Prefetch_Consume", "Prefetch_Consume", "");
 
       const auto& stats_aggregator = ctx->stats_aggregator();
       if (stats_aggregator) {
@@ -338,9 +336,6 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
       // GetNext and Prefetch.
       cond_var_.notify_all();
 
-      evt_consume.Stop();
-      ngraph::Event::write_trace(evt_consume);
-
       return s;
     }
 
@@ -365,7 +360,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
       // Keep track of where we are in an iteration "burst"
       int num_produced = 0;
       while (true) {
-        ngraph::Event evt_prefetch("Prefetch_Produce", "Prefetch_Produce", "");
+        NG_TRACE("Prefetch_Produce", "Prefetch_Produce", "");
 
         // 1. Wait for a slot in the buffer.
         {
@@ -421,7 +416,7 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
               shared_data->GetNextIOTensorBundleForDeviceTransfer();
           auto ng_prefetch_input_indexes_map =
               shared_data->GetPrefetchInputIndexesMap();
-          ngraph::Event evt_dev_cp(
+          NG_TRACE(
               "Prf Dev Copy: Pipe_Ind_" + to_string(ng_input_tensor_bundle.Id),
               "Copy", "");
           int number_of_buffer_elements = buffer_element.value.size();
@@ -434,8 +429,6 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
                 "encap " +
                 to_string(ng_prefetch_input_indexes_map.size()));
           }
-          std::vector<std::unique_ptr<ngraph::Event>>
-              prefetch_input_write_events;
           // Write to these tensors
           for (auto itr : ng_prefetch_input_indexes_map) {
             int ng_index = itr.first;
@@ -447,8 +440,8 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
 
             void* current_src_ptr =
                 (void*)DMAHelper::base(&buffer_element.value[tf_index]);
-            std::unique_ptr<ngraph::Event> event_copy_h2d(new ngraph::Event(
-                "H2D_PrefetchInput_" + std::to_string(tf_index), "Copy", ""));
+            NG_TRACE("H2D_PrefetchInput_" + std::to_string(tf_index), "Copy",
+                     "");
             try {
               NGRAPH_VLOG(2)
                   << "[PREFETCH] INPUT tensor being written by Prefetch: "
@@ -463,20 +456,12 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
               throw std::runtime_error(
                   "Error copying TF tensor to device tensor");
             }
-            event_copy_h2d->Stop();
-            prefetch_input_write_events.push_back(std::move(event_copy_h2d));
-          }
-
-          for (auto& next : prefetch_input_write_events) {
-            ngraph::Event::write_trace(*next.get());
           }
 
           // Now add them back to the other queue
           shared_data->AddNextIOTensorBundleReadyForDeviceExecution(
               ng_input_tensor_bundle);
           shared_data->Unref();
-          evt_dev_cp.Stop();
-          ngraph::Event::write_trace(evt_dev_cp);
         }
 
         // 3. Signal that the element has been produced.
@@ -488,8 +473,6 @@ class NGraphPrefetchDatasetOp::Dataset : public DatasetBase {
           cond_var_.notify_all();
         }
         ++num_produced;
-        evt_prefetch.Stop();
-        ngraph::Event::write_trace(evt_prefetch);
       }
     }
 

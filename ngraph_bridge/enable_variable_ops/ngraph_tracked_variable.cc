@@ -20,7 +20,6 @@
 #include "tensorflow/core/lib/strings/strcat.h"
 #include "tensorflow/core/platform/default/logging.h"
 
-#include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
@@ -120,7 +119,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
 
   std::ostringstream oss;
   oss << "NGVariable::Compute::" << name();
-  ngraph::Event event_compute(oss.str(), name(), "");
+  NG_TRACE(oss.str(), name(), "");
 
   bool log_copies = false;
   OP_REQUIRES_OK(ctx,
@@ -250,8 +249,6 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     ctx->record_persistent_memory_allocation(var->tensor()->AllocatedBytes());
   }
   var->Unref();
-  event_compute.Stop();
-  ngraph::Event::write_trace(event_compute);
 }
 
 REGISTER_KERNEL_BUILDER(Name("NGraphVariable").Device(DEVICE_CPU),

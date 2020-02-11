@@ -20,8 +20,6 @@
 #include "tensorflow/core/lib/strings/strcat.h"
 #include "tensorflow/core/platform/default/logging.h"
 
-#include "ngraph/event_tracing.hpp"
-
 #include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
@@ -108,7 +106,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   mutex_lock l(init_mu_);
   std::ostringstream oss;
   oss << "NGVariable::Compute::" << name();
-  ngraph::Event event_compute(oss.str(), name(), "");
+  NG_TRACE(oss.str(), name(), "");
 
   if (!initialized_) {
     OP_REQUIRES_OK(ctx, cinfo_.Init(ctx->resource_manager(), def(),
@@ -181,8 +179,6 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
     ctx->record_persistent_memory_allocation(var->tensor()->AllocatedBytes());
   }
   var->Unref();
-  event_compute.Stop();
-  ngraph::Event::write_trace(event_compute);
 }
 
 REGISTER_KERNEL_BUILDER(Name("NGraphVariable").Device(DEVICE_CPU),

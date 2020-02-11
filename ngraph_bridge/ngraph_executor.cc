@@ -27,7 +27,6 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 
-#include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 #if defined NGRAPH_DISTRIBUTED
@@ -347,7 +346,7 @@ NGraphExecutor::GetNgExecutable(std::string signature,
                                 ng::runtime::Backend*& op_backend) {
   std::shared_ptr<ngraph::runtime::Executable> ng_exec;
 
-  ngraph::Event event_compile("Compile nGraph", m_node_name, "");
+  NG_TRACE("Compile nGraph", m_node_name, "");
   BackendManager::LockBackend(m_op_backend_name);
   try {
     if (m_do_aot) {
@@ -378,8 +377,6 @@ NGraphExecutor::GetNgExecutable(std::string signature,
     return std::make_pair(errors::Internal(status_string), nullptr);
   }
   BackendManager::UnlockBackend(m_op_backend_name);
-  event_compile.Stop();
-  ngraph::Event::write_trace(event_compile);
 
   return std::make_pair(Status::OK(), ng_exec);
 }
