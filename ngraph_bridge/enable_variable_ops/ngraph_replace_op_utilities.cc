@@ -30,9 +30,8 @@ namespace ngraph_bridge {
 Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
                         const string replacement_node_name,
                         const string replacement_node_type,
-                        const bool just_looking,
-                        const bool outputs_ng_supported, const int graph_id,
-                        const bool is_backend_set) {
+                        const bool just_looking, const bool update_tf_tensor,
+                        const int graph_id, const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Start replacing " << node->type_string() << " "
                  << node->name();
 
@@ -51,7 +50,7 @@ Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
 
   NodeBuilder nb = NodeBuilder(replacement_node_name, replacement_node_type)
                        .Attr("just_looking", just_looking)
-                       .Attr("copy_to_tf", !outputs_ng_supported)
+                       .Attr("copy_to_tf", update_tf_tensor)
                        .Attr("ngraph_graph_id", graph_id)
                        .Device(node->assigned_device_name());
   // Threre can be varying no of attributes for  different Op ex. Momentum or
@@ -84,7 +83,7 @@ Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
 Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const string replacement_node_name,
                      const string replacement_node_type,
-                     const bool just_looking, const bool outputs_ng_supported,
+                     const bool just_looking, const bool update_tf_tensor,
                      const int graph_id, const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Replacing  " << node->name();
   DataType dtype;
@@ -108,7 +107,7 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                          .Attr("use_locking", true)
                          .Attr("T", dtype)
                          .Attr("just_looking", just_looking)
-                         .Attr("copy_to_tf", !outputs_ng_supported)
+                         .Attr("copy_to_tf", update_tf_tensor)
                          .Attr("ngraph_graph_id", graph_id)
                          .Input(input_ref)
                          .Input(input_val)
@@ -133,7 +132,7 @@ Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
 Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
                        const string replacement_node_name,
                        const string replacement_node_type,
-                       const bool just_looking, const bool outputs_ng_supported,
+                       const bool just_looking, const bool update_tf_tensor,
                        const int graph_id, const bool is_backend_set) {
   NGRAPH_VLOG(1) << "Replacing NGraphVariable " << node->name();
 
@@ -160,7 +159,7 @@ Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
           .Attr("shared_name",
                 (shared_name.empty() ? node->name() : shared_name))
           .Attr("just_looking", just_looking)
-          .Attr("copy_to_tf", !outputs_ng_supported)
+          .Attr("copy_to_tf", update_tf_tensor)
           .Attr("ngraph_graph_id", graph_id)
           .Device(node->assigned_device_name())
           .Finalize(graph, &(*replacement)));

@@ -18,6 +18,7 @@
 #include "tensorflow/core/graph/types.h"
 
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
+#include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
@@ -26,6 +27,32 @@ using namespace std;
 namespace tensorflow {
 
 namespace ngraph_bridge {
+
+// returns true if all the output nodes of this node
+// are implemented on bridge
+bool AreOutputsNGSupported(Node* node) {
+  for (auto edge : node->out_edges()) {
+    if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
+        !IsNGSupportedType(edge->dst()->type_string())) {
+      NGRAPH_VLOG(5) << "dst node is not implemented by bridge "
+                     << edge->DebugString();
+      return false;
+    }
+  }
+  return true;
+}
+
+// returns true if this node is a static input to any of its output nodes
+bool NodeIsStaticInput(Node* node) {
+  for (auto edge : node->out_edges()) {
+    if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
+        InputIsStatic(edge->dst(), edge->dst_input())) {
+      NGRAPH_VLOG(5) << "dst node has static inputs " << edge->DebugString();
+      return true;
+    }
+  }
+  return false;
+}
 
 //
 // Main entry point for rewrite-for-tracking.
@@ -36,7 +63,7 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
       const function<Status(
           Graph * graph, Node * node, Node * *replacement,
           const string replacement_node_name, const string replacement_op_type,
-          const bool just_looking, const bool outputs_ng_supported,
+          const bool just_looking, const bool update_tf_tensor,
           const int graph_id, const bool is_backend_set)>>
       REWRITE_REPLACE_OP_MAP{{"NGraphAssign", ReplaceAssign},
                              {"NGraphVariable", ReplaceVariable}};
@@ -46,25 +73,25 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
   for (auto node : graph->op_nodes()) {
     auto itr = REWRITE_REPLACE_OP_MAP.find(node->type_string());
     if (itr != REWRITE_REPLACE_OP_MAP.end()) {
-      NGRAPH_VLOG(1) << "Checking: " << DebugNode(node) << " " << node->name();
+      NGRAPH_VLOG(5) << "Checking: " << DebugNode(node) << " " << node->name();
 
-      bool outputs_ng_supported = true;
+      // Check if the TF Tensor of the Variable needs to be updated
+      // Update is required in two cases
+      // 1. If any of the outputs of this Op is feeding into a TF Op
+      // 2. If this is a static input to NGraphEncapsulate
+      // NGraphEncapsulate uses static inputs' TF Tensors' data to compute
+      // signature and translate graph. Hence, if NGVar is a static input we
+      // updated its TF Tensor
+      bool update_tf_tensor =
+          !AreOutputsNGSupported(node) || NodeIsStaticInput(node);
+
+      // The below loop does the following
+      // 1. If any of the nodes reading from this Variable node read the data
+      // as reference then we dont track it, else we do, determined by
+      // just_looking attribute
+      // 2. Determine which Ops need to be followed by
+      // NGraphVariableUpdateNGTensor Op
       bool just_looking = true;
-
-      // Check if all the outputs of this node are supported by nGraph
-      for (auto edge : node->out_edges()) {
-        auto dst = edge->dst();
-        NGRAPH_VLOG(1) << "dst node " << DebugNode(dst);
-        if (dst->IsOp() && !edge->IsControlEdge() &&
-            !IsNGSupportedType(dst->type_string())) {
-          NGRAPH_VLOG(1) << "ngraph does not support dst node ";
-          outputs_ng_supported = false;
-          break;
-        }
-      }
-
-      // If any of the nodes reading from this Variable node read the data as
-      // reference then we dont track it, else we do
       for (auto edge : node->out_edges()) {
         if (edge->dst()->IsOp() && !edge->IsControlEdge() &&
             IsRefType(edge->dst()->input_type(edge->dst_input()))) {
@@ -90,21 +117,21 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
             break;
           }
         }
-      }
+      }  // end of for loop
 
-      NGRAPH_VLOG(1) << "Just_Looking: " << PrintBool(just_looking);
-      NGRAPH_VLOG(1) << "Outputs supported by nGraph: "
-                     << PrintBool(outputs_ng_supported);
-      NGRAPH_VLOG(1) << "Requires Replacement "
-                     << PrintBool(!outputs_ng_supported || !just_looking);
+      NGRAPH_VLOG(5) << "Just_Looking: " << PrintBool(just_looking);
+      NGRAPH_VLOG(5) << " Update TF Tensor " << PrintBool(update_tf_tensor);
+      NGRAPH_VLOG(5) << "Requires Replacement "
+                     << PrintBool(update_tf_tensor || !just_looking);
 
+      // Create and add the replacement node to the graph
       std::string node_new_name = node->name();
       if (just_looking) {
         node_new_name += "/peek";
       }
 
-      if (!outputs_ng_supported) {
-        node_new_name += "/non_ng_outputs";
+      if (update_tf_tensor) {
+        node_new_name += "/update_tf_tensor";
       }
 
       node_new_name += "/gid_" + to_string(graph_id);
@@ -112,11 +139,9 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
                      << node_new_name;
 
       Node* replacement;
-
-      // Create and add the replacement node
       TF_RETURN_IF_ERROR((itr->second)(graph, node, &replacement, node_new_name,
                                        node->type_string(), just_looking,
-                                       outputs_ng_supported, graph_id, true));
+                                       update_tf_tensor, graph_id, true));
 
       TF_RETURN_IF_ERROR(ReplaceInputControlEdges(graph, node, replacement));
       TF_RETURN_IF_ERROR(ReplaceOutputEdges(graph, node, replacement));
@@ -127,6 +152,7 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
   }    // end of looping through the nodes in the graph
 
   for (auto node : replaced_nodes) {
+    NGRAPH_VLOG(4) << "Removing node " << node->name();
     graph->RemoveNode(node);
   }
 
@@ -156,7 +182,6 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
         TF_RETURN_IF_ERROR(status);
         sync_node->set_assigned_device_name(
             edge->src()->assigned_device_name());
-
         // If the input edge is going to index 0 of the TF op,
         // then move output edges from the TF op
         // since that is the output we want.
@@ -174,7 +199,6 @@ Status RewriteForTracking(Graph* graph, int graph_id) {
             }
           }
         }
-
         // Add a control edge from the TF optimizer node
         // to the sync node making sure that the sync node
         // is executed after the TF optimizer

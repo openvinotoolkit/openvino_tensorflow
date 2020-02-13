@@ -85,12 +85,14 @@ TEST(NGVarUpdateNGTensorOpTest, SimpleGraph1) {
   for (auto node : g.op_nodes()) {
     node_map[node->name()] = node;
   }
-  ASSERT_EQ(node_map.find("var_node/non_ng_outputs/gid_0/sync_node")
+  ASSERT_NE(node_map.find("var_node/update_tf_tensor/gid_0/sync_node"),
+            node_map.end());
+  ASSERT_EQ(node_map.find("var_node/update_tf_tensor/gid_0/sync_node")
                 ->second->type_string(),
             "NGraphVariableUpdateNGTensor");
 
   Node *in_0, *in_ctrl,
-      *sync_node = node_map.at("var_node/non_ng_outputs/gid_0/sync_node");
+      *sync_node = node_map.at("var_node/update_tf_tensor/gid_0/sync_node");
   // NOTE:node->input_edge(...), node->input_node(...) cannot be used for
   // control edges
   int edge_count = 0;
@@ -106,7 +108,7 @@ TEST(NGVarUpdateNGTensorOpTest, SimpleGraph1) {
 
   // Assert on edges connected to sync node
   ASSERT_EQ(edge_count, 2);
-  ASSERT_EQ(in_0, node_map.at("var_node/non_ng_outputs/gid_0"));
+  ASSERT_EQ(in_0, node_map.at("var_node/update_tf_tensor/gid_0"));
   ASSERT_EQ(in_ctrl, node_map.at("assign"));
   ASSERT_EQ(sync_node->num_outputs(), 1);
 

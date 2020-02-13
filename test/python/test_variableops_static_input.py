@@ -20,7 +20,7 @@ Var
 |   Encap 
 |   /
 Assign (or removed)
-* The input to Encap is a static input from Variable
+* The input to Encap is a static input
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -37,13 +37,8 @@ import json
 import ngraph_bridge
 import os
 
-# If the below graph is run for many iterations
-# The NGraphVar's NGTensor is updated every iteration
-# NGraphVar's TFTensor is not updated as no TF Node needs it
-# However StaticInputs are derived from the input TF Tensor (which is stale)
-# giving functionally incorrect results
-# TF MeanOp expects a static input
-# * The input to Encap is a static input from Variable
+# Tests the scenario when Variable Op is a static input to Encapsulate
+# *: The input to Encap is a static input
 #
 #    Const     NGraphVar     Const
 #      \       /   |   \     /
@@ -105,11 +100,8 @@ class TestVariableStaticInputs(NgraphTest):
         var_final_val = var.eval(sess)
         return var_init_value, mean_values, var_final_val
 
+    # Tests when buffer sharing is not enabled
     def test_variable_static_input_variables_dont_share_buffer(self):
-        # This test is not applicable for CPU as NGVariable's NG and TF Tensors
-        # share buffer on CPU. To simulate other backend's non buffer sharing
-        # property we can use this env flag NGRAPH_TF_NGVARIABLE_BUFFER_SHARING
-
         # set env variable to disable NGraphVariable's buffer sharing
         buffer_sharing_env = "NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"
         env_var_map = self.store_env_variables([buffer_sharing_env])
@@ -129,24 +121,20 @@ class TestVariableStaticInputs(NgraphTest):
             self.__run_test)
 
         # Compare Values
-        # initial Var value will match
+        # initial Var value
         assert np.allclose(ng_var_init_val, tf_var_init_val)
 
-        # 1st iteration mean value will match, 2nd and 3rd wont
-        assert np.allclose(ng_mean_values[0], tf_mean_values[0])
+        # Computed Mean Values
+        assert np.allclose(ng_mean_values, tf_mean_values)
 
-        if ngraph_bridge.are_variables_enabled():
-            assert (np.allclose(ng_mean_values[1], tf_mean_values[1]) == False)
-            assert (np.allclose(ng_mean_values[2], tf_mean_values[2]) == False)
-
-        # Final Var value will match
+        # Final Var value
         assert np.allclose(ng_var_final, tf_var_final)
 
         # clean up
         self.unset_env_variable(buffer_sharing_env)
         self.restore_env_variables(env_var_map)
 
-    # Everything works fine when buffer is shared
+    # Tests when buffer sharing is enabled
     def test_variable_static_input_variables_share_buffer(self):
         # set env variable to enable NGraphVariable's buffer sharing
         buffer_sharing_env = "NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"
@@ -171,9 +159,7 @@ class TestVariableStaticInputs(NgraphTest):
         assert np.allclose(ng_var_init_val, tf_var_init_val)
 
         # mean value matches for all iterations
-        assert np.allclose(ng_mean_values[0], tf_mean_values[0])
-        assert np.allclose(ng_mean_values[1], tf_mean_values[1])
-        assert np.allclose(ng_mean_values[2], tf_mean_values[2])
+        assert np.allclose(ng_mean_values, tf_mean_values)
 
         # Final Var value will match
         assert np.allclose(ng_var_final, tf_var_final)
