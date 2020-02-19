@@ -18,7 +18,6 @@
 #define NGRAPH_TF_BRIDGE_PIPELINED_TENSORS_H_
 #pragma once
 
-#include "ngraph/event_tracing.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 // Consider an ng executable, which has a inputs and b outputs. Let d_input[i]

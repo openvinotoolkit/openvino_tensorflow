@@ -25,7 +25,6 @@
 #include "tensorflow/core/protobuf/rewriter_config.pb.h"
 #include "tensorflow/core/public/session.h"
 
-#include "ngraph/event_tracing.hpp"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/version.h"
 
