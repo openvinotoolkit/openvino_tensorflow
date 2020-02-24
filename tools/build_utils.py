@@ -218,6 +218,7 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
         "bazel",
         "build",
         "--config=opt",
+        "--config=v2",
         "--config=noaws",
         "--config=nohdfs",
         "--config=noignite",
@@ -371,11 +372,10 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
     # Get the name of the TensorFlow pip package
     tf_wheel_files = glob.glob("tensorflow-*.whl")
-    if (len(tf_wheel_files) != 1):
-        raise Exception(
-            "artifacts directory contains more than 1 version of tensorflow wheel"
-        )
-
+    if (len(tf_wheel_files) < 1):
+        raise Exception("no tensorflow wheels found")
+    elif (len(tf_wheel_files) > 1):
+        raise Exception("more than 1 version of tensorflow wheels found")
     command_executor(["pip", "install", "-U", tf_wheel_files[0]])
 
     cxx_abi = "0"
@@ -493,6 +493,8 @@ def download_repo(target_name, repo, version):
 
 
 def apply_patch(patch_file):
+    # IF patching TensorFlow unittests is done through an automation system,
+    # please ensure the latest `libdvdnav-dev` or `libdvdnav-devel` is installed.
     cmd = subprocess.Popen(
         'patch -p1 -N -i ' + patch_file, shell=True, stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
@@ -506,7 +508,7 @@ def apply_patch(patch_file):
 
 def get_gcc_version():
     cmd = subprocess.Popen(
-        'gcc -dumpversion',
+        'gcc -dumpfullversion -dumpversion',
         shell=True,
         stdout=subprocess.PIPE,
         bufsize=1,
@@ -537,11 +539,11 @@ def get_bazel_version():
         universal_newlines=True)
     # The bazel version format is a multi line output:
     #
-    # Build label: 0.24.1
-    # Build target: bazel-out/k8-opt/bin/src/main/java/com/...
-    # Build time: Tue Apr 2 16:29:26 2019 (1554222566)
-    # Build timestamp: 1554222566
-    # Build timestamp as int: 1554222566
+    # Build label: 0.25.2
+    # Build target: bazel-out/k8-opt/bin/src/main/java/com/google/devtools/build/lib/bazel/BazelServer_deploy.jar
+    # Build time: Fri May 10 20:47:48 2019 (1557521268)
+    # Build timestamp: 1557521268
+    # Build timestamp as int: 1557521268
     #
     output = cmd.communicate()[0].splitlines()[0].strip()
     output = output.split(':')[1].strip()

@@ -58,7 +58,7 @@ RUN pip3 install --upgrade pytest
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 
 # This bazel version 21 works with current TF
-ARG BAZEL_VERSION=0.24.1
+ARG BAZEL_VERSION=0.25.2
 RUN wget --no-verbose -c https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
 RUN dpkg -i bazel_${BAZEL_VERSION}-linux-x86_64.deb || true
 

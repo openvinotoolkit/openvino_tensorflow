@@ -1,8 +1,8 @@
-diff --git a/tensorflow/python/framework/test_util.py b/tensorflow/python/framework/test_util.py
-index 544190e23d..19e621478e 100644
---- a/tensorflow/python/framework/test_util.py
-+++ b/tensorflow/python/framework/test_util.py
-@@ -2737,7 +2737,9 @@ class TensorFlowTestCase(googletest.TestCase):
+diff --git a/tensorflow_core/python/framework/test_util.py b/tensorflow_core/python/framework/test_util.py
+index 8857e767ed..d1d92da91b 100644
+--- a/tensorflow_core/python/framework/test_util.py
++++ b/tensorflow_core/python/framework/test_util.py
+@@ -2905,7 +2905,9 @@ class TensorFlowTestCase(googletest.TestCase):
            rewriter_config_pb2.RewriterConfig.OFF)
        config.graph_options.rewrite_options.pin_to_host_optimization = (
            rewriter_config_pb2.RewriterConfig.OFF)

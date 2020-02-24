@@ -17,11 +17,16 @@
 # Docker file to setup build envrionment for nGraph-TensorFlow
 
 FROM ubuntu:18.04
+
+ARG GCC_VER=7
+
 RUN apt-get update &&  apt-get install -y \
     vim \
     python \
     python-pip \
     python3-pip \
+    gcc-${GCC_VER} \
+    g++-${GCC_VER} \
     git \
     unzip zip wget \
     sudo \
@@ -39,14 +44,9 @@ RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 RUN cmake --version
 
 #Install Bazel 
-ADD https://github.com/bazelbuild/bazel/releases/download/0.24.1/bazel-0.24.1-installer-linux-x86_64.sh ./bazel-0.24.1-installer-linux-x86_64.sh
-RUN bash bazel-0.24.1-installer-linux-x86_64.sh
+ADD https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel-0.25.2-installer-linux-x86_64.sh ./bazel-0.25.2-installer-linux-x86_64.sh
+RUN bash bazel-0.25.2-installer-linux-x86_64.sh
 RUN bazel
-
-#install gcc-4.8 and register both 7 and 4.8 with alternatives
-#RUN apt-get update && apt-get install -y gcc-4.8 g++-4.8
-#RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8 && \
-  #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
 
 # Install Clang
 RUN apt-get install -y clang-8 libc++-dev libc++abi-dev

@@ -16,7 +16,7 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       python3 build_ngtf.py --build_gpu_backend --enable_variables_and_optimizers \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
-        --use_tensorflow_from_location /localdisk/buildkite-agent/prebuilt_tensorflow_1_14_0
+        --use_tensorflow_from_location /localdisk/buildkite-agent/prebuilt_tensorflow_1_15_0
       
     label: ":hammer_and_wrench: Build"
     timeout_in_minutes: 60
@@ -41,7 +41,7 @@
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install psutil && pip install -U \
-        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.14.0-cp??-cp??m-linux_x86_64.whl
+        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-1.15.0-cp??-cp??m-linux_x86_64.whl
       pip install -U pip==19.3.1
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
       

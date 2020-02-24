@@ -7,12 +7,12 @@ echo "BUILDKITE_REPO: $BUILDKITE_REPO"
 echo "PIPELINE OS: $PIPELINE_QUEUE"
 
 if [[ $PIPELINE_QUEUE = 'cpu' ]]; then
-   TF_PY_WHEEL=tensorflow-1.14.0-cp35-cp35m-linux_x86_64.whl
+   TF_PY_WHEEL=tensorflow-1.15.0-cp35-cp35m-linux_x86_64.whl
    # For the time being - hardcode the file
    # Eventually we will replace the queue and other variables during the pipeline creation
    STEPS_FILE=ngtf-cpu_ubuntu.yaml
 elif [[ $PIPELINE_QUEUE = 'cpu-centos' ]]; then
-   TF_PY_WHEEL=tensorflow-1.14.0-cp36-cp36m-linux_x86_64.whl
+   TF_PY_WHEEL=tensorflow-1.15.0-cp36-cp36m-linux_x86_64.whl
    STEPS_FILE=ngtf-cpu_centos.yaml
 else
    echo "Unknown PILELINE_QUEUE: $PIPELINE_QUEUE"

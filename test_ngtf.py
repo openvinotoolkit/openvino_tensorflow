@@ -99,7 +99,7 @@ def main():
 
     if (not os.path.isdir(build_dir + '/tensorflow')):
         download_repo(build_dir + "/tensorflow",
-                      "https://github.com/tensorflow/tensorflow.git", "v1.14.0")
+                      "https://github.com/tensorflow/tensorflow.git", "v1.15.0")
 
     # Next run the TensorFlow python tests
     os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'

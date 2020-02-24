@@ -87,7 +87,7 @@ if __name__ == '__main__':
     main()
     # Usage
     # Build TF once
-    # ./build_tf.py --tf_version v1.14.0-rc0 --output_dir /prebuilt/tf/dir
+    # ./build_tf.py --tf_version v1.15.0 --output_dir /prebuilt/tf/dir
     #
     # Reuse TF in different ngraph-bridge builds
     # mkdir ngtf_1; cd ngtf_1

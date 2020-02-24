@@ -70,7 +70,7 @@ RUN pip3 install --upgrade pytest
 
 # This bazel version works with current TF
 # Install the most recent bazel release.
-ARG BAZEL_VERSION=0.24.1
+ARG BAZEL_VERSION=0.25.2
 RUN mkdir /bazel && \
     cd /bazel && \
     wget --quiet https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
