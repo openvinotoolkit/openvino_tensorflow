@@ -1920,6 +1920,34 @@ TEST(MathOps, RealDivBroadcasting) {
   opexecuter.RunTest();
 }  // end of test op RealDivBroadcasting
 
+// Test op: RealDiv for nan, inf case
+TEST(MathOps, RealDivNonfinite) {
+  Scope root = Scope::NewRootScope();
+  int dim = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim}));
+  Tensor B(DT_FLOAT, TensorShape({dim}));
+
+  auto inf = std::numeric_limits<float>::infinity();
+
+  vector<float> dividend_vals = {0, -inf, inf};
+  vector<float> divisor_vals = {0, 1.0, 1.0};
+
+  AssignInputValues(A, dividend_vals);
+  AssignInputValues(B, divisor_vals);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::RealDiv(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "RealDiv", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test RealDivNonfinite
+
 // Test op: Reciprocal
 TEST(MathOps, Reciprocal) {
   Scope root = Scope::NewRootScope();
