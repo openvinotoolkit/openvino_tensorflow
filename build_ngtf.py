@@ -310,7 +310,7 @@ def main():
                     cxx_abi = install_tensorflow(venv_dir, artifacts_location)
                 except:
                     raise Exception("Please build tensorflow from source "
-                                    "by running: pthon3 build_ngtf.py")
+                                    "by running: python3 build_ngtf.py")
 
             # Copy the libtensorflow_framework.so to the artifacts so that
             # we can run c++ tests from that location later
