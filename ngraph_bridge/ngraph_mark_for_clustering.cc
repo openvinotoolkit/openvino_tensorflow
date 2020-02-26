@@ -355,6 +355,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Less"] = SimpleConfirmationFunction();
     confirmation_function_map["LessEqual"] = SimpleConfirmationFunction();
     confirmation_function_map["Log"] = SimpleConfirmationFunction();
+    confirmation_function_map["Log1p"] = SimpleConfirmationFunction();
     confirmation_function_map["LogicalAnd"] = SimpleConfirmationFunction();
     confirmation_function_map["LogicalNot"] = SimpleConfirmationFunction();
     confirmation_function_map["LogicalOr"] = SimpleConfirmationFunction();
@@ -553,6 +554,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Less"]["T"] = NGraphDTypes();
     type_constraint_map["LessEqual"]["T"] = NGraphDTypes();
     type_constraint_map["Log"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Log1p"]["T"] = NGraphRealDTypes();
     // LogicalAnd and LogicalNot have no type attributes ("T", if it existed,
     // would always be bool).
     type_constraint_map["MatMul"]["T"] = NGraphNumericDTypes();
@@ -838,6 +840,9 @@ GetTFToNgOpMap() {
         {"Less", {std::make_shared<ngraph::op::Less>()}},
         {"LessEqual", {std::make_shared<ngraph::op::LessEq>()}},
         {"Log", {std::make_shared<ngraph::op::Log>()}},
+        {"Log1p",
+         {constant, std::make_shared<ngraph::op::Add>(),
+          std::make_shared<ngraph::op::Log>()}},
         {"LogicalAnd", {std::make_shared<ngraph::op::And>()}},
         {"LogicalNot", {std::make_shared<ngraph::op::Not>()}},
         {"LogicalOr", {std::make_shared<ngraph::op::Or>()}},

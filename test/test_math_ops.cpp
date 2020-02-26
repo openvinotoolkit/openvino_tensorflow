@@ -1614,6 +1614,28 @@ TEST(MathOps, Log2D) {
   opexecuter.RunTest();
 }  // end of test op Log
 
+TEST(MathOps, Log1p) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 4;
+  vector<float> vals = {-2, -1, 0, 0.25, 0.5, 1, 5, 10};
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, vals);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Log1p(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Log1p", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Log1p
+
 // Test Op:LogicalOr
 TEST(MathOps, LogicalOr) {
   Scope root = Scope::NewRootScope();

@@ -2588,6 +2588,21 @@ static Status TranslateL2LossOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateLog1pOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  return TranslateUnaryOp(
+      op, static_input_map, ng_op_map, [&op](std::shared_ptr<ng::Node> n) {
+        auto et = n->get_element_type();
+        auto shape = n->get_shape();
+        std::vector<std::string> val_1(ng::shape_size(shape), "1");
+        auto ng_const1 =
+            ConstructNgNode<ng::op::Constant>(op->name(), et, shape, val_1);
+        auto ng_add = ConstructNgNode<ng::op::Add>(op->name(), ng_const1, n);
+        return ConstructNgNode<ng::op::Log>(op->name(), ng_add);
+      });
+}
+
 static Status TranslateLogSoftmaxOp(const Node* op,
                                     const std::vector<const Tensor*>&,
                                     Builder::OpMap& ng_op_map) {
@@ -5101,7 +5116,7 @@ const static std::map<
       {"L2Loss", TranslateL2LossOp}, {"LogSoftmax", TranslateLogSoftmaxOp},
       {"Less", TranslateBinaryOp<ngraph::op::Less>},
       {"LessEqual", TranslateBinaryOp<ngraph::op::LessEq>},
-      {"Log", TranslateUnaryOp<ngraph::op::Log>},
+      {"Log", TranslateUnaryOp<ngraph::op::Log>}, {"Log1p", TranslateLog1pOp},
       {"LogicalAnd", TranslateBinaryOp<ngraph::op::And>},
       {"LogicalNot", TranslateUnaryOp<ngraph::op::Not>},
       {"LogicalOr", TranslateBinaryOp<ngraph::op::Or>},
