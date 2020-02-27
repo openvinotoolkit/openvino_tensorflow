@@ -20,6 +20,10 @@ array_ops_test.StridedSliceTest.testShrink
 array_ops_test.StridedSliceTest.testTensorIndexing
 #array_ops_test.StridedSliceTest.test_basic_slice
 
+#array_ops_test.StridedSliceGradTest.testGradient
+array_ops_test.StridedSliceGradTest.testGradientZero
+array_ops_test.StridedSliceGradTest.testInt64Indices
+
 array_ops_test.ShapeSizeRankTest.testDenseShape
 array_ops_test.ShapeSizeRankTest.testSizeDtype
 array_ops_test.ShapeSizeRankTest.testSparseShape

@@ -234,6 +234,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Split"] = SetStaticInputs({0});
     set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
     set_attributes_map["StridedSlice"] = SetStaticInputs({1, 2, 3});
+    set_attributes_map["StridedSliceGrad"] = SetStaticInputs({0, 1, 2, 3});
     set_attributes_map["Sum"] = SetStaticInputs({1});
     set_attributes_map["TopKV2"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
@@ -446,6 +447,8 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
         SimpleConfirmationFunction();
     confirmation_function_map["Squeeze"] = SimpleConfirmationFunction();
     confirmation_function_map["StridedSlice"] = SimpleConfirmationFunction();
+    confirmation_function_map["StridedSliceGrad"] =
+        SimpleConfirmationFunction();
     confirmation_function_map["Pack"] = SimpleConfirmationFunction();
     confirmation_function_map["Sub"] = SimpleConfirmationFunction();
     confirmation_function_map["Sum"] = SimpleConfirmationFunction();
@@ -667,6 +670,8 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Squeeze"]["T"] = NGraphDTypes();
     type_constraint_map["StridedSlice"]["T"] = NGraphDTypes();
     type_constraint_map["StridedSlice"]["Index"] = NGraphIndexDTypes();
+    type_constraint_map["StridedSliceGrad"]["T"] = NGraphDTypes();
+    type_constraint_map["StridedSliceGrad"]["Index"] = NGraphIndexDTypes();
     type_constraint_map["Sub"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Sum"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Sum"]["Tidx"] = NGraphIndexDTypes();
@@ -1050,6 +1055,8 @@ GetTFToNgOpMap() {
          {std::make_shared<ngraph::op::Reverse>(),
           std::make_shared<ngraph::op::Slice>(),
           std::make_shared<ngraph::op::Reshape>()}},
+        {"StridedSliceGrad",
+         {constant, std::make_shared<ngraph::op::ReplaceSlice>()}},
         {"Sub", {std::make_shared<ngraph::op::Subtract>()}},
         {"Sum",
          {std::make_shared<ngraph::op::Sum>(),

@@ -156,7 +156,7 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
       << "Failed to run opexecutor on TF";
   for (size_t i = 0; i < tf_outputs.size(); i++) {
-    NGRAPH_VLOG(5) << " TF op " << i << tf_outputs[i].DebugString();
+    NGRAPH_VLOG(5) << " TF op " << i << " " << tf_outputs[i].DebugString();
   }
 }
 

@@ -1513,7 +1513,102 @@ TEST(ArrayOps, DISABLED_StridedSlice) {
     }
   }
   cout << "Ran a total of " << tot_num_tests_run << " tests\n";
-}  // end of test op Tile
+}  // end of test op StridedSlice
+
+// Test op: StridedSliceGrad
+TEST(ArrayOps, StridedSliceGradTest1) {
+  // scope
+  Scope root_scope = Scope::NewRootScope();
+
+  // original shape
+  vector<int64> c_original_shape = {3, 4, 4};
+  Tensor original_shape(DT_INT64,
+                        TensorShape{static_cast<int>(c_original_shape.size())});
+  AssignInputValues<int64>(original_shape, c_original_shape);
+
+  // begin, end, stride
+  vector<int64> cstart = {0, 0, 0};
+  Tensor begin(DT_INT64, TensorShape({static_cast<int>(cstart.size())}));
+  AssignInputValues<int64>(begin, cstart);
+
+  vector<int64> cend = {1, 4, 4};
+  Tensor end(DT_INT64, TensorShape({static_cast<int>(cend.size())}));
+  AssignInputValues<int64>(end, cend);
+
+  vector<int64> cstride = {1, 1, 1};
+  Tensor strides(DT_INT64, TensorShape({static_cast<int>(cstride.size())}));
+  AssignInputValues<int64>(strides, cstride);
+
+  // dy
+  std::vector<int64> dy_shape = {1, 4, 4};
+  Tensor dy_data(DT_FLOAT, TensorShape(dy_shape));
+  AssignInputValues<float>(dy_data, 1.0f);
+
+  ops::StridedSlice::Attrs attrs;
+  attrs.begin_mask_ = 0;
+  attrs.ellipsis_mask_ = 0;
+  attrs.end_mask_ = 0;
+  attrs.new_axis_mask_ = 0;
+  attrs.shrink_axis_mask_ = 0;
+
+  auto R = ops::StridedSliceGrad(root_scope, original_shape, begin, end,
+                                 strides, dy_data);
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  vector<Output> sess_run_fetchoutputs = {R};
+
+  vector<int> static_input_indexes = {0, 1, 2, 3};
+  OpExecuter opexecuter(root_scope, "StridedSliceGrad", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(ArrayOps, StridedSliceGradTest2) {
+  // scope
+  Scope root_scope = Scope::NewRootScope();
+
+  // original shape
+  vector<int64> c_original_shape = {3, 4, 4};
+  Tensor original_shape(DT_INT64,
+                        TensorShape{static_cast<int>(c_original_shape.size())});
+  AssignInputValues<int64>(original_shape, c_original_shape);
+
+  // begin, end, stride
+  vector<int64> cstart = {0, 0, 0};
+  Tensor begin(DT_INT64, TensorShape({static_cast<int>(cstart.size())}));
+  AssignInputValues<int64>(begin, cstart);
+
+  vector<int64> cend = {1, 4, 4};
+  Tensor end(DT_INT64, TensorShape({static_cast<int>(cend.size())}));
+  AssignInputValues<int64>(end, cend);
+
+  vector<int64> cstride = {1, 2, 2};
+  Tensor strides(DT_INT64, TensorShape({static_cast<int>(cstride.size())}));
+  AssignInputValues<int64>(strides, cstride);
+
+  // dy
+  std::vector<int64> dy_shape = {1, 2, 2};
+  Tensor dy_data(DT_FLOAT, TensorShape(dy_shape));
+  AssignInputValues<float>(dy_data, 1.0f);
+
+  ops::StridedSlice::Attrs attrs;
+  attrs.begin_mask_ = 0;
+  attrs.ellipsis_mask_ = 0;
+  attrs.end_mask_ = 0;
+  attrs.new_axis_mask_ = 0;
+  attrs.shrink_axis_mask_ = 0;
+
+  auto R = ops::StridedSliceGrad(root_scope, original_shape, begin, end,
+                                 strides, dy_data);
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  vector<Output> sess_run_fetchoutputs = {R};
+
+  vector<int> static_input_indexes = {0, 1, 2, 3};
+  OpExecuter opexecuter(root_scope, "StridedSliceGrad", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op StridedSliceGrad
 
 // Test SplitNegativeAxis op
 TEST(ArrayOps, SplitNegativeAxis) {
