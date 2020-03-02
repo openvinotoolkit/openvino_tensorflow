@@ -24,7 +24,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 |Using pre-built packages| Building from source|
 | -----------------------|-------------------|
 |Python 3| Python 3|
-|TensorFlow v1.15.0|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
+|TensorFlow v1.15.2|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
 |        |`cmake` 3.4 or higher|
 |        |Bazel 0.25.2|
 |        |`virtualenv` 16.0.0|
@@ -43,12 +43,12 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 2. Install TensorFlow:
 
-        pip install -U tensorflow==1.15.0
+        pip install -U tensorflow==1.15.2
 
 3. Install `ngraph-tensorflow-bridge`:
 
         pip install -U ngraph-tensorflow-bridge
-   
+
 ### Build nGraph from source
 
 To use the latest version of nGraph Library, complete the following steps to
@@ -131,10 +131,10 @@ Verify that `ngraph-bridge` installed correctly:
 
 This will produce something like this:
 
-        TensorFlow version:  1.15.0
+        TensorFlow version:  1.15.2
         nGraph bridge version: b'0.22.0-rc3'
         nGraph version used for this build: b'0.28.0-rc.1+d2cd873'
-        TensorFlow version used for this build: v1.15.0-0-g590d6eef7e
+        TensorFlow version used for this build: v1.15.2-0-g5d80e1e8e6
         CXX11_ABI flag used for this build: 1
         nGraph bridge built with Grappler: False
         nGraph bridge built with Variables and Optimizers Enablement: False
@@ -163,7 +163,7 @@ Download the Inception v3 trained model and labels file:
 Extract the frozen model and labels file from the tarball:
 
     tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz
-        
+
 Download the image file: 
 
     wget https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/data/grace_hopper.jpg
@@ -171,7 +171,7 @@ Download the image file:
 Download the TensorFlow script:
 
    wget https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/label_image.py
-       
+
 Modify the downloaded TensorFlow script to run TensorFlow with nGraph optimizations:
 
     import ngraph_bridge

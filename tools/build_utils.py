@@ -47,7 +47,7 @@ def is_venv():
 def command_executor(cmd, verbose=False, msg=None, stdout=None, stderr=None):
     '''
     Executes the command.
-    Example: 
+    Example:
       - command_executor('ls -lrt')
       - command_executor(['ls', '-lrt'])
     '''
@@ -218,7 +218,7 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
         "bazel",
         "build",
         "--config=opt",
-        "--config=v2",
+        "--config=v1",
         "--config=noaws",
         "--config=nohdfs",
         "--config=noignite",

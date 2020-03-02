@@ -14,7 +14,7 @@
   - command: |
       source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       python3 build_ngtf.py --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID \
-        --use_tensorflow_from_location  /usr/local/var/buildkite-agent/tf_1.15.0_install
+        --use_tensorflow_from_location  /usr/local/var/buildkite-agent/tf_1.15.2_install
       
     label: ":hammer_and_wrench: Build"
     timeout_in_minutes: 60
@@ -38,7 +38,7 @@
   - command: |
       source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install -U \
-        /usr/local/var/buildkite-agent/tf_1.15.0_install/artifacts/tensorflow/tensorflow-1.15.0-cp37-cp37m-macosx_10_7_x86_64.whl
+        /usr/local/var/buildkite-agent/tf_1.15.2_install/artifacts/tensorflow/tensorflow-1.15.2-cp37-cp37m-macosx_10_14_x86_64.whl
       pip install psutil && \
       pip install psutil pip==19.3.1 && \
         pip install -U /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl

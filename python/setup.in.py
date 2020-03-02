@@ -57,22 +57,22 @@ include_list.extend(ng_data_list)
 package_data_dict = {}
 package_data_dict['ngraph_bridge'] = include_list
 
-setup( 
+setup(
     name='ngraph_tensorflow_bridge',
     version='0.22.0rc3',
     description='Intel nGraph compiler and runtime for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/tensorflow/ngraph-bridge',
-    packages=['ngraph_bridge'], 
-    author='Intel Nervana', 
+    packages=['ngraph_bridge'],
+    author='Intel Nervana',
     license='Apache License, Version 2.0',
     platforms='Ubuntu 16.04, macOS Sierra',
     include_package_data=True,
     package_data= package_data_dict,
     cmdclass={'bdist_wheel': BinaryBdistWheel},
     install_requires=[
-        "tensorflow==1.15.0",
+        "tensorflow==1.15.2",
     ],
     extras_require={
         'plaidml': ["plaidml>=0.6.3"],

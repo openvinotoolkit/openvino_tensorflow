@@ -21,12 +21,12 @@ from tools.build_utils import *
 def version_check(use_prebuilt_tensorflow):
     # Check pre-requisites
     if use_prebuilt_tensorflow:
-        # Check if the gcc version is at least 5.4.0
+        # Check if the gcc version is at least 5.3.0
         if (platform.system() != 'Darwin'):
             gcc_ver = get_gcc_version()
-            if gcc_ver < '5.4.0':
+            if gcc_ver < '5.3.0':
                 raise Exception(
-                    "Need GCC 5.4.0 or newer to build using prebuilt TensorFlow\n"
+                    "Need GCC 5.3.0 or newer to build using prebuilt TensorFlow\n"
                     "Gcc version installed: " + gcc_ver + "\n"
                     "To build from source ommit `use_prebuilt_tensorflow`")
     # Check cmake version
@@ -54,7 +54,7 @@ def main():
 
     # Component versions
     ngraph_version = "v0.28.0-rc.1"
-    tf_version = "v1.15.0"
+    tf_version = "v1.15.2"
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)

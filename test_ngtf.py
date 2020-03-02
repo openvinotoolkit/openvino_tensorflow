@@ -31,7 +31,7 @@ from tools.build_utils import download_repo
 
 def main():
     '''
-    Tests nGraph-TensorFlow Python 3. This script needs to be run after 
+    Tests nGraph-TensorFlow Python 3. This script needs to be run after
     running build_ngtf.py which builds the ngraph-tensorflow-bridge
     and installs it to a virtual environment that would be used by this script.
     '''
@@ -99,7 +99,7 @@ def main():
 
     if (not os.path.isdir(build_dir + '/tensorflow')):
         download_repo(build_dir + "/tensorflow",
-                      "https://github.com/tensorflow/tensorflow.git", "v1.15.0")
+                      "https://github.com/tensorflow/tensorflow.git", "v1.15.2")
 
     # Next run the TensorFlow python tests
     os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
