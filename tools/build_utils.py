@@ -286,9 +286,16 @@ def build_tensorflow_cc(src_dir, artifacts_dir, target_arch, verbosity):
 
     # Now build the TensorFlow C++ library
     cmd = [
-        "bazel", "build", "--config=opt", "--config=noaws", "--config=nohdfs",
-        "--config=noignite", "--config=nokafka", "--config=nonccl",
-        "//tensorflow:libtensorflow_cc.so.1"
+        "bazel",
+        "build",
+        "--config=opt",
+        "--config=v2",
+        "--config=noaws",
+        "--config=nohdfs",
+        "--config=noignite",
+        "--config=nokafka",
+        "--config=nonccl",
+        "//tensorflow:libtensorflow_cc.so.1",
     ]
     command_executor(cmd)
     copy_tf_cc_lib_to_artifacts(artifacts_dir, None)
