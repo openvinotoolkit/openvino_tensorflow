@@ -42,7 +42,6 @@
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_encapsulate_op.h"
 #include "ngraph_bridge/ngraph_encapsulate_op_utils.h"
-#include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
@@ -337,19 +336,6 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
     m_parallel_executor.reset();
     BackendManager::ReleaseBackend(backend);
     return;
-  }
-
-  // If the kernel goes away, we must de-register all of its cached
-  // functions
-  // from the freshness tracker.
-  if (ng_encap_impl_.GetNgraphFreshnessTracker() != nullptr) {
-    for (auto kv : ng_encap_impl_.GetNgExecMap()) {
-      ng_encap_impl_.GetNgraphFreshnessTracker()->RemoveUser(kv.second);
-    }
-
-    // TODO(amprocte): We should be able to unref the tracker here, but it
-    // seems to screw things up in the C++ unit tests.
-    // m_freshness_tracker->Unref();
   }
 
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
@@ -663,23 +649,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
         tmp_tpl;
   }
 
-  if (ng_encap_impl_.GetNgraphFreshnessTracker() == nullptr) {
-    auto creator = [](NGraphFreshnessTracker** tracker) {
-      *tracker = new NGraphFreshnessTracker();
-      return Status::OK();
-    };
-    NGraphFreshnessTracker* set_tracker = nullptr;
-    OP_REQUIRES_OK(
-        ctx, ctx->resource_manager()->LookupOrCreate<NGraphFreshnessTracker>(
-                 ctx->resource_manager()->default_container(),
-                 "ngraph_freshness_tracker", &set_tracker, creator));
-    ng_encap_impl_.SetNgraphFreshnessTracker(set_tracker);
-  }
-
-  NGRAPH_VLOG(4)
-      << "NGraphEncapsulateOp::Compute got freshness tracker for cluster "
-      << ng_encap_impl_.GetNgraphCluster();
-
   // Allocate tensors for input arguments.
   vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
@@ -767,13 +736,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
                               ctx->resource_manager()->default_container(),
                               ref_var_name, &var));
       current_ng_tensor = var->ng_tensor();
-
-      // There might be scenarios where the input and output tensors are the
-      // same.The staleness determined for the input tensor should be the
-      // final staleness for the given tensor. The staleness of output
-      // tensor should not matter as this tensor is meant to be
-      // overwritten with the computed value.
-      // So not setting staleness here.
       output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
       var->Unref();
       ng_outputs[i] = current_ng_tensor;
@@ -806,10 +768,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
                               ctx->resource_manager()->default_container(),
                               ref_var_name, &var));
 
-      void* current_tf_ptr = (void*)DMAHelper::base(&ctx->input(input_index));
-      bool is_stale = !ng_encap_impl_.GetNgraphFreshnessTracker()->IsFresh(
-          current_tf_ptr, ng_exec);
-      var->ng_tensor()->set_stale(is_stale);
       ng_inputs[input_index] = var->ng_tensor();
 
       var->Unref();
@@ -900,11 +858,12 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
                                   ctx->resource_manager()->default_container(),
                                   ref_var_name, &var));
 
-          if (NGraphCatalog::GetCopyToTFFromEncapOutputInfoMap(output_key)) {
+          if (NGraphCatalog::GetUpdateTFTensorFromEncapOutputInfoMap(
+                  output_key)) {
             if (var->copy_ng_to_tf()) {
               int copies = ng_encap_impl_.GetNumberOfCopies();
               ng_encap_impl_.SetNumberOfCopies(copies++);
-              ng_encap_impl_.AppendCopyLog(" COPY_TO_TF ");
+              ng_encap_impl_.AppendCopyLog(" UPDATE_TF_TENSOR ");
             }
           }
           var->Unref();
@@ -972,13 +931,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
   }
 #endif
 
-  // Mark input tensors as fresh for the next time around.
-  // Note: these ng_tensors are being marked fresh so that in the next
-  // iteration if this encapsulate finds the tensor fresh, then it will use it
-  for (int i = 0; i < input_shapes.size(); i++) {
-    void* src_ptr = (void*)DMAHelper::base(&ctx->input(i));
-    ng_encap_impl_.GetNgraphFreshnessTracker()->MarkFresh(src_ptr, ng_exec);
-  }
   int time_copy_output_tensors_to_host =
       copy_output_tensors_to_host.ElapsedInMS();
 

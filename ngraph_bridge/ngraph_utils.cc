@@ -529,16 +529,6 @@ void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
 
 bool DumpAllGraphs() { return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr; }
 
-bool DumpPrecaptureGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
-}
-
-bool DumpCapturedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
-}
-
 bool DumpUnmarkedGraphs() {
   return DumpAllGraphs() ||
          std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
@@ -562,16 +552,6 @@ bool DumpDeclusteredGraphs() {
 bool DumpEncapsulatedGraphs() {
   return DumpAllGraphs() ||
          std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
-}
-
-bool DumpTrackedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_TRACKED_GRAPHS") != nullptr;
-}
-
-bool DumpCatalogedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_CATALOGED_GRAPHS") != nullptr;
 }
 
 #if defined(NGRAPH_DISTRIBUTED)

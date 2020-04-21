@@ -29,7 +29,6 @@
 
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/ngraph_data_cache.h"
-#include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
 #include "ngraph_bridge/ngraph_tensor_manager.h"
 

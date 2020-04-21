@@ -28,20 +28,20 @@ namespace ngraph_bridge {
 Status ReplaceOptimizer(Graph* graph, Node* node, Node** replacement,
                         const string replacement_node_name,
                         const string replacement_op_type,
-                        const bool just_looking, const bool update_tf_tensor,
-                        const int graph_id, const bool is_backend_set);
+                        const bool update_tf_tensor, const int graph_id,
+                        const bool is_backend_set);
 
 Status ReplaceAssign(Graph* graph, Node* node, Node** replacement,
                      const string replacement_node_name,
-                     const string replacement_op_type, const bool just_looking,
+                     const string replacement_op_type,
                      const bool update_tf_tensor, const int graph_id,
                      const bool is_backend_set);
 
 Status ReplaceVariable(Graph* graph, Node* node, Node** replacement,
                        const string replacement_node_name,
                        const string replacement_op_type,
-                       const bool just_looking, const bool update_tf_tensor,
-                       const int graph_id, const bool is_backend_set);
+                       const bool update_tf_tensor, const int graph_id,
+                       const bool is_backend_set);
 
 // Adds the edges that are incoming control edges to the original node
 // as incoming control edges to the replacement node

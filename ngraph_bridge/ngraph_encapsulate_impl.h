@@ -27,7 +27,6 @@
 #include "ngraph/ngraph.hpp"
 
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_pipelined_tensors.h"
 
 namespace tensorflow {
@@ -189,14 +188,6 @@ class NGraphEncapsulateImpl {
     m_serialized_ng_function_map.clear();
   }
 
-  NGraphFreshnessTracker* GetNgraphFreshnessTracker() {
-    return m_freshness_tracker;
-  }
-
-  void SetNgraphFreshnessTracker(NGraphFreshnessTracker* tracker) {
-    m_freshness_tracker = tracker;
-  }
-
   void SetName(string name) { m_name = name; }
 
   Status ParseNodeAttributes(
@@ -240,12 +231,6 @@ class NGraphEncapsulateImpl {
 
   NgFunctionIOCache m_ng_exec_input_cache_map;
   NgFunctionIOCache m_ng_exec_output_cache_map;
-
-  // Freshness tracker maintains a set of ng::functions using a particular base
-  // pointer(for Tensor)
-  // A single instance of freshness_tracker is used across all
-  // nGraphEncapsulateOp and nGraphVariable op
-  NGraphFreshnessTracker* m_freshness_tracker;
 
   bool m_executable_can_create_tensor = false;
   std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>,

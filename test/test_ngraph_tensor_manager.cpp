@@ -511,14 +511,15 @@ TEST_F(NGraphTensorManagerTest, SharedName) {
     ASSERT_EQ(shared_name, "Z");
 
     // output var copy_to_tf
-    ASSERT_OK(tensor_manager.GetOutputVariableCopyToTF(1, &copy_to_tf));
+    ASSERT_OK(tensor_manager.GetOutputVariableUpdateTFTensor(1, &copy_to_tf));
     ASSERT_FALSE(copy_to_tf);
-    ASSERT_OK(tensor_manager.GetOutputVariableCopyToTF(5, &copy_to_tf));
+    ASSERT_OK(tensor_manager.GetOutputVariableUpdateTFTensor(5, &copy_to_tf));
     ASSERT_TRUE(copy_to_tf);
 
-    ASSERT_NOT_OK(tensor_manager.GetOutputVariableCopyToTF(2, &copy_to_tf));
+    ASSERT_NOT_OK(
+        tensor_manager.GetOutputVariableUpdateTFTensor(2, &copy_to_tf));
 
-    ASSERT_OK(tensor_manager.GetOutputVariableCopyToTF(0, &copy_to_tf));
+    ASSERT_OK(tensor_manager.GetOutputVariableUpdateTFTensor(0, &copy_to_tf));
     ASSERT_FALSE(copy_to_tf);
 
   } else {
@@ -535,9 +536,12 @@ TEST_F(NGraphTensorManagerTest, SharedName) {
     ASSERT_NOT_OK(tensor_manager.GetOutputVariableSharedName(2, &shared_name));
 
     // output var copy_to_tf
-    ASSERT_NOT_OK(tensor_manager.GetOutputVariableCopyToTF(1, &copy_to_tf));
-    ASSERT_NOT_OK(tensor_manager.GetOutputVariableCopyToTF(5, &copy_to_tf));
-    ASSERT_NOT_OK(tensor_manager.GetOutputVariableCopyToTF(2, &copy_to_tf));
+    ASSERT_NOT_OK(
+        tensor_manager.GetOutputVariableUpdateTFTensor(1, &copy_to_tf));
+    ASSERT_NOT_OK(
+        tensor_manager.GetOutputVariableUpdateTFTensor(5, &copy_to_tf));
+    ASSERT_NOT_OK(
+        tensor_manager.GetOutputVariableUpdateTFTensor(2, &copy_to_tf));
   }
 
   // clean up

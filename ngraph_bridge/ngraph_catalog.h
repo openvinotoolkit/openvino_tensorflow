@@ -72,7 +72,7 @@ class NGraphCatalog {
   //     string : GraphId + _ + nodename + : + output_index
   // Value : 3 element tuple
   //  string : NGraphAssign‘s variable shared_name
-  //  bool : NGraphAssign‘s copy_to_tf attribute ‘s value
+  //  bool : NGraphAssign‘s update_tf_tensor attribute ‘s value
   static unordered_map<string, tuple<string, bool>> encap_output_info_map_;
 
   // Map keeps track of encap nodes whose input is from an IteratorGenNext Op.
@@ -135,7 +135,7 @@ class NGraphCatalog {
                                       const tuple<string, bool>& val);
   static void AddToEncapOutputInfoMap(const string& key,
                                       const string& shared_name,
-                                      const bool& copy_to_tf);
+                                      const bool& update_tf_tensor);
   static bool ExistsInEncapOutputInfoMap(const string& key);
   static bool ExistsInEncapOutputInfoMap(const int& graphid,
                                          const string& node_name,
@@ -148,7 +148,7 @@ class NGraphCatalog {
 
   static const string& GetVariableSharedNameFromEncapOutputInfoMap(
       const string& key);
-  static const bool& GetCopyToTFFromEncapOutputInfoMap(const string& key);
+  static const bool& GetUpdateTFTensorFromEncapOutputInfoMap(const string& key);
   static void DeleteFromEncapOutputInfoMap(const string& key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();

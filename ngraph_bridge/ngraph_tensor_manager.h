@@ -106,8 +106,8 @@ class NGraphTensorManager {
                                      string* output_var_shared_name);
 
   // does output ng-variable's host-TF tensor needs to be updated
-  Status GetOutputVariableCopyToTF(const int& output_index,
-                                   bool* output_var_copy_to_tf);
+  Status GetOutputVariableUpdateTFTensor(const int& output_index,
+                                         bool* output_var_update_tf_tensor);
 
   void Print();
 

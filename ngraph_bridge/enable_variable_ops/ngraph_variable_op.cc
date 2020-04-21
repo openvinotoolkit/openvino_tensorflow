@@ -24,7 +24,6 @@
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_catalog.h"
-#include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_var.h"
 
@@ -60,14 +59,7 @@ class NGraphVariableOp : public OpKernel {
  private:
   int ng_graph_id_;
   TensorShape shape_;
-  NGraphFreshnessTracker* tracker_;
-  // If the variable is not going to be modified
-  // then just_looking = true
-  // This is added to keep it consistent with the path where
-  // enable_variable_and_optimizers flag is not set and to add the
-  // freshness tracking required for the CPU backend.
-  bool just_looking_;
-  bool copy_to_tf_;
+  bool update_tf_tensor_;
   DataType dtype_;
   string ng_backend_name_;
   mutex init_mu_;
@@ -83,39 +75,34 @@ int NGraphVariableOp::s_instance_count = 0;
 
 NGraphVariableOp::NGraphVariableOp(OpKernelConstruction* context)
     : OpKernel(context),
-      tracker_(nullptr),
-      just_looking_(false),
-      copy_to_tf_(false),
+      update_tf_tensor_(false),
       dtype_(RemoveRefType(context->output_type(0))) {
   my_instance_id = s_instance_count;
   s_instance_count++;
 
   OP_REQUIRES_OK(context, context->GetAttr("shape", &shape_));
-  OP_REQUIRES_OK(context, context->GetAttr("just_looking", &just_looking_));
-  OP_REQUIRES_OK(context, context->GetAttr("copy_to_tf", &copy_to_tf_));
+  OP_REQUIRES_OK(context,
+                 context->GetAttr("update_tf_tensor", &update_tf_tensor_));
   OP_REQUIRES_OK(context, context->GetAttr("ngraph_graph_id", &ng_graph_id_));
   OP_REQUIRES_OK(context,
                  context->GetAttr("_ngraph_backend", &ng_backend_name_));
   NGRAPH_VLOG(4) << "NGraphVariable:: Constructor called for: " << def().name()
-                 << " ,just looking " << just_looking_ << " ,copy-to-tf "
-                 << copy_to_tf_ << " ,Graph ID " << ng_graph_id_
-                 << " ,backend_name " << ng_backend_name_;
+                 << " ,update_tf_tensor " << update_tf_tensor_ << " ,Graph ID "
+                 << ng_graph_id_ << " ,backend_name " << ng_backend_name_;
 }
 
 NGraphVariableOp::~NGraphVariableOp() {
   NGRAPH_VLOG(4) << "~NGraphVariableOp:: " << name() << endl;
   string node_key = NGraphCatalog::CreateNodeKey(ng_graph_id_, name(), 0);
   NGraphCatalog::DeleteFromInputVariableSharedNameMap(node_key);
-  tracker_->Unref();
 }
 
 // (Changes: Renamed from VariableOp, modified to pass TensorShape to NGraphVar
 // constructor.)
 void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   NGRAPH_VLOG(4) << "NGraphVariable:: Compute called for: " << def().name()
-                 << " ,just looking " << just_looking_ << " ,copy-to-tf "
-                 << copy_to_tf_ << " ,Graph ID " << ng_graph_id_
-                 << " ,backend_name " << ng_backend_name_;
+                 << " ,update_tf_tensor " << update_tf_tensor_ << " ,Graph ID "
+                 << ng_graph_id_ << " ,backend_name " << ng_backend_name_;
 
   std::ostringstream oss;
   oss << "NGVariable::Compute::" << name();
@@ -126,7 +113,7 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
                  IsNgraphTFLogTensorCopiesEnabled(ng_graph_id_, log_copies));
   std::stringstream copy_log_str;
   copy_log_str << "KERNEL[" << type_string() << "]: " << name()
-               << " ,copy-to-tf " << PrintBool(copy_to_tf_) << "\n";
+               << " ,update_tf_tensor " << PrintBool(update_tf_tensor_) << "\n";
   int number_of_copies = 0;
 
   mutex_lock l(init_mu_);
@@ -175,10 +162,10 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
                           cinfo_.container(), cinfo_.name(), &var, creator));
 
   // If TF needs the tensor
-  if (copy_to_tf_) {
+  if (update_tf_tensor_) {
     if (var->copy_ng_to_tf()) {
       number_of_copies++;
-      copy_log_str << " COPY_TO_TF ";
+      copy_log_str << " UPDATE_TF_TENSOR ";
     }
     NGRAPH_VLOG(4) << "Copying to TF Tensor";
   }
@@ -193,50 +180,6 @@ void NGraphVariableOp::Compute(OpKernelContext* ctx) {
   // As long as the resource manager hasn't been cleared the ref we return
   // here is valid because it owns a ref on var.
 
-  // Mark the underlying tensor as stale. TODO(amprocte): Make this
-  // conditional on whether any reader is taking in a reference. More
-  // conservative condition that would work for now: invalidate if any
-  // reader is not NGraphEncapsulateOp.
-  auto t_creator = [](NGraphFreshnessTracker** tracker) {
-    *tracker = new NGraphFreshnessTracker();
-    return Status::OK();
-  };
-  if (tracker_ == nullptr) {
-    if (NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name()
-                     << ": getting tracker";
-    }
-    OP_REQUIRES_OK(
-        ctx, ctx->resource_manager()->LookupOrCreate<NGraphFreshnessTracker>(
-                 ctx->resource_manager()->default_container(),
-                 "ngraph_freshness_tracker", &tracker_, t_creator));
-    if (NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name()
-                     << ": got tracker";
-    }
-  }
-
-  if (NGRAPH_VLOG_IS_ON(5)) {
-    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": adding "
-                   << DMAHelper::base(var->tensor());
-  }
-  tracker_->AddTensor(DMAHelper::base(var->tensor()));
-  if (NGRAPH_VLOG_IS_ON(5)) {
-    NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": added "
-                   << DMAHelper::base(var->tensor());
-  }
-
-  if (!just_looking_) {
-    if (NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marking "
-                     << DMAHelper::base(var->tensor());
-    }
-    tracker_->MarkStale(DMAHelper::base(var->tensor()));
-    if (NGRAPH_VLOG_IS_ON(5)) {
-      NGRAPH_VLOG(5) << "Variable " << ctx->op_kernel().name() << ": marked "
-                     << DMAHelper::base(var->tensor());
-    }
-  }
   // To output a reference.  Caller retains ownership of mu and tensor_for_ref,
   // and they must outlive all uses within the step. See comment above.
   // REQUIRES: IsRefType(expected_output_dtype(index))

@@ -67,15 +67,16 @@ void NGraphTensorManager::Initialize() {
             m_ng_encap_graph_id, m_ng_encap_node_name, index)) {
       m_output_indexes_assigning_variable.push_back(index);
 
-      // store the output variable shared name + copy_to_tf info
+      // store the output variable shared name + update_tf_tensor info
       try {
-        auto shared_name_copy_to_tf =
+        auto shared_name_update_tf_tensor =
             NGraphCatalog::GetInfoFromEncapOutputInfoMap(
                 m_ng_encap_graph_id, m_ng_encap_node_name, index);
-        output_variable_info_map.insert({index, shared_name_copy_to_tf});
+        output_variable_info_map.insert({index, shared_name_update_tf_tensor});
       } catch (const std::exception& exp) {
         throw runtime_error(
-            "Could not find variable shared name and copy_to_tf information in "
+            "Could not find variable shared name and update_tf_tensor "
+            "information in "
             "catalog for output index " +
             to_string(index) + " for encapsulate op " + m_ng_encap_node_name);
       }
@@ -218,16 +219,17 @@ Status NGraphTensorManager::GetOutputVariableSharedName(
 }
 
 //---------------------------------------------------------------------------
-//  NGraphTensorManager::GetOutputVariableCopyToTF
+//  NGraphTensorManager::GetOutputVariableUpdateTFTensor
 //---------------------------------------------------------------------------
-Status NGraphTensorManager::GetOutputVariableCopyToTF(
-    const int& output_index, bool* output_var_copy_to_tf) {
+Status NGraphTensorManager::GetOutputVariableUpdateTFTensor(
+    const int& output_index, bool* output_var_update_tf_tensor) {
   auto itr = output_variable_info_map.find(output_index);
   if (itr == output_variable_info_map.end()) {
-    return errors::Internal("Could not find copy_to_tf info for output index ",
-                            output_index, " in tensor manager");
+    return errors::Internal(
+        "Could not find update_tf_tensor info for output index ", output_index,
+        " in tensor manager");
   }
-  *output_var_copy_to_tf = get<1>(itr->second);
+  *output_var_update_tf_tensor = get<1>(itr->second);
   return Status::OK();
 }
 

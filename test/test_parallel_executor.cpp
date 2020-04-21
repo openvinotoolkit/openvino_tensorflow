@@ -23,6 +23,7 @@
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_executor.h"
+#include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/version.h"
 #include "test/test_utilities.h"
 

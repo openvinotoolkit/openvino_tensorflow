@@ -28,8 +28,7 @@ REGISTER_OP("NGraphApplyGradientDescent")
     .Output("out: Ref(T)")
     .Attr("T: numbertype")
     .Attr("use_locking: bool = false")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("ngraph_graph_id: int");
 
 // ------------------------------------------------------------------
@@ -44,8 +43,7 @@ REGISTER_OP("NGraphApplyMomentum")
     .Attr("T: numbertype")
     .Attr("use_locking: bool = false")
     .Attr("use_nesterov: bool = false")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("ngraph_graph_id: int");
 // ------------------------------------------------------------------
 REGISTER_OP("NGraphAssign")
@@ -55,8 +53,7 @@ REGISTER_OP("NGraphAssign")
     .Attr("T: type")
     .Attr("validate_shape: bool = true")
     .Attr("use_locking: bool = true")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("ngraph_graph_id: int");
 
 // ------------------------------------------------------------------
@@ -67,8 +64,7 @@ REGISTER_OP("NGraphAssignAdd")
     .Attr("T: type")
     .Attr("validate_shape: bool = true")
     .Attr("use_locking: bool = true")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("ngraph_graph_id: int");
 
 // ------------------------------------------------------------------
@@ -79,8 +75,7 @@ REGISTER_OP("NGraphAssignSub")
     .Attr("T: type")
     .Attr("validate_shape: bool = true")
     .Attr("use_locking: bool = true")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("ngraph_graph_id: int");
 
 // ------------------------------------------------------------------
@@ -101,8 +96,7 @@ REGISTER_OP("NGraphVariable")
     .Output("ref: Ref(dtype)")
     .Attr("shape: shape")
     .Attr("dtype: type")
-    .Attr("just_looking: bool = false")
-    .Attr("copy_to_tf: bool = false")
+    .Attr("update_tf_tensor: bool = false")
     .Attr("container: string = ''")
     .Attr("shared_name: string = ''")
     .Attr("ngraph_graph_id: int")

@@ -60,8 +60,7 @@ namespace ngraph_bridge {
 //---------------------------------------------------------------------------
 //  NGraphEncapsulateImpl::ctor
 //---------------------------------------------------------------------------
-NGraphEncapsulateImpl::NGraphEncapsulateImpl()
-    : m_graph(OpRegistry::Global()), m_freshness_tracker(nullptr) {
+NGraphEncapsulateImpl::NGraphEncapsulateImpl() : m_graph(OpRegistry::Global()) {
   my_instance_id = s_instance_count;
   s_instance_count++;
 }
@@ -444,16 +443,6 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
     need_new_tensor_creation = no_ng_tensor_found;
   }
 
-  // It is stale if a new tensor was created OR the tf tensor has changed OR
-  // (tf tensor has not changed, but freshness tracker says its stale)
-  bool is_stale;
-  if (output_tensor) {
-    is_stale = true;  // For output tensors, it is always set stale to true
-  } else {
-    is_stale = need_new_tensor_creation || tf_tensor_has_changed ||
-               (!tf_tensor_has_changed &&
-                !m_freshness_tracker->IsFresh(current_tf_ptr, ng_exec));
-  }
   // create a new ng tensor or use the last one
   std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
   if (m_executable_can_create_tensor) {
@@ -471,7 +460,6 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
       current_ng_tensor = last_ng_tensor;
     }
   }
-  current_ng_tensor->set_stale(is_stale);
   return current_ng_tensor;
 }
 

@@ -81,10 +81,10 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         // get variable shared_name
         string shared_name;
         TF_RETURN_IF_ERROR(GetSharedName(node, &shared_name));
-        // get attribute copy_to_tf
-        bool copy_to_tf;
+        // get attribute update_tf_tensor
+        bool update_tf_tensor;
         TF_RETURN_IF_ERROR(
-            GetNodeAttr(node->attrs(), "copy_to_tf", &copy_to_tf));
+            GetNodeAttr(node->attrs(), "update_tf_tensor", &update_tf_tensor));
         // populate encap_output_info_map_
         const Edge* edge;
         TF_RETURN_IF_ERROR(node->input_edge(1, &edge));
@@ -93,7 +93,7 @@ Status EnterInCatalog(Graph* graph, int graph_id) {
         string key = NGraphCatalog::CreateNodeKey(graph_id, input_1->name(),
                                                   output_index);
 
-        tuple<string, bool> value = make_tuple(shared_name, copy_to_tf);
+        tuple<string, bool> value = make_tuple(shared_name, update_tf_tensor);
         NGRAPH_VLOG(4) << "Adding to EncapOutputInfoMap ";
         NGRAPH_VLOG(4) << "Key: " << key;
         NGRAPH_VLOG(4) << "Value: " << get<0>(value) << " " << get<1>(value);

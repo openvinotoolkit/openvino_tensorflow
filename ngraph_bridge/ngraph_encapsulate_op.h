@@ -27,7 +27,6 @@
 #include "logging/ngraph_log.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
-#include "ngraph_bridge/ngraph_freshness_tracker.h"
 #include "ngraph_executor.h"
 
 namespace tensorflow {

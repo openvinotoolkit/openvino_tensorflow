@@ -24,6 +24,7 @@
 #include "ngraph_bridge/enable_variable_ops/ngraph_enter_in_catalog.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_remove_ngraphassigns.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_variable_modifiers.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_rewrite_for_variable_sync.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_capture_variables.h"
@@ -32,7 +33,6 @@
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
 #include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 #if defined NGRAPH_DISTRIBUTED
@@ -68,9 +68,7 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 //
 // The variable capture pass replaces all instances of VariableV2 with the
 // NGraphVariable op. Making this replacement allows us to substitute in a
-// kernel that tracks the freshness of variables (invalidating freshness when
-// the reference is handed off to an "untrusted" op).
-//
+// kernel that disallows assigning the variable a new shape
 class NGraphVariableCapturePass : public NGraphRewritePass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
@@ -114,6 +112,17 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 
     return Status::OK();
   }
+
+ private:
+  bool DumpPrecaptureGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_PRE_CAPTURED_GRAPHS") != nullptr;
+  }
+
+  bool DumpCapturedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_CAPTURED_GRAPHS") != nullptr;
+  }
 };
 
 //
@@ -129,6 +138,8 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   5. Rewrite Variable Type Ops for Tracking [ngraph_rewrite_for_tracking.cc]
 //   6. Enter In Catalog  [ngraph_enter_in_catalog.cc]
 //   7. Remove NGraphAssigns [ngraph_remove_ngraphassigns.cc]
+//   8. Enter Prefetch In Catalog  [ngraph_enter_prefetch_in_catalog.cc]
+
 // Between phases, graph dumps (in both .dot and .pbtxt format) may be
 // requested by setting the following environment variables:
 //
@@ -139,7 +150,6 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1         dumps graphs after phase 3
 //   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1        dumps graphs after phase 4
 //   NGRAPH_TF_DUMP_TRACKED_GRAPHS=1             dumps graphs after phase 5
-//   NGRAPH_TF_DUMP_CATALOGED_GRAPHS=1           dumps graphs after phase 6
 //   NGRAPH_TF_DUMP_REMOVENGASSIGNS_GRAPHS=1     dumps graphs after phase 7
 //   NGRAPH_TF_DUMP_GRAPHS=1                     all of the above
 //
@@ -239,19 +249,21 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with Clusters Encapsulated");
     }
 
-    // 5. Rewrite for tracking then, if requested, dump the graphs.
-    TF_RETURN_IF_ERROR(RewriteForTracking(options.graph->get(), idx));
-    if (DumpTrackedGraphs()) {
-      DumpGraphs(options, idx, "tracked",
+    // 5. Rewrite for synchronization of variables
+    // 1. Assigns "update_tf_tensor" attribute.
+    //    Responsible for updating the NGraphVariable's TFTensor
+    // 2. Adds NGraphVariableUpdateNGTensor Nodes
+    // If requested, dump the graphs.
+    TF_RETURN_IF_ERROR(RewriteForVariableSync(options.graph->get(), idx));
+    if (DumpVarSyncedGraphs()) {
+      DumpGraphs(options, idx, "rewrite_var_synced",
                  "Graph with Variables Rewritten for Tracking");
     }
 
     // 6. Enter in catalog then.
+    // No point dumping graph here as there is no change to the graph
+    // and only the catalog is populated here
     TF_RETURN_IF_ERROR(EnterInCatalog(options.graph->get(), idx));
-    if (DumpCatalogedGraphs()) {
-      DumpGraphs(options, idx, "cataloged",
-                 "Graph with Variables Inputs Entered in Catalog");
-    }
 
     // 7. Remove Certain NGraphAssigns then.
     TF_RETURN_IF_ERROR(RemoveNGraphAssigns(options.graph->get()));
@@ -260,12 +272,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                  "Graph with NGraphAssigns Optimized/Removed");
     }
 
-    // 8. Enter Prefetch in catalog then.
+    // 8. Enter Prefetch Details in catalog then.
+    // No point dumping graph here as there is no change to the graph
+    // and only the catalog is populated here
     TF_RETURN_IF_ERROR(EnterPrefetchInCatalog(options.graph->get(), idx));
-    if (DumpCatalogedGraphs()) {
-      DumpGraphs(options, idx, "prefetch-cataloged",
-                 "Graph with Prefetched Inputs Entered in Catalog");
-    }
 
     return Status::OK();
   }
@@ -279,6 +289,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   static bool DumpRemoveNGraphAssignsGraphs() {
     return DumpAllGraphs() ||
            std::getenv("NGRAPH_TF_DUMP_REMOVENGASSIGNS_GRAPHS") != nullptr;
+  }
+
+  static bool DumpVarSyncedGraphs() {
+    return DumpAllGraphs() ||
+           std::getenv("NGRAPH_TF_DUMP_REWRITEVARSYNC_GRAPHS") != nullptr;
   }
 };
 

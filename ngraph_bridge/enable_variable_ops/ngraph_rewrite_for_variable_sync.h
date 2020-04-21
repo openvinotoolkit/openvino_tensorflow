@@ -14,8 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_REWRITE_FOR_TRACKING_H_
-#define NGRAPH_TF_REWRITE_FOR_TRACKING_H_
+#ifndef NGRAPH_TF_REWRITE_FOR_VARIABLE_SYNC_H_
+#define NGRAPH_TF_REWRITE_FOR_VARIABLE_SYNC_H_
 #pragma once
 
 #include "tensorflow/core/graph/graph.h"
@@ -24,9 +24,17 @@ namespace tensorflow {
 
 namespace ngraph_bridge {
 
-Status RewriteForTracking(Graph* graph, int graph_id);
+// Rewrite for synchronization of variables
+// 1. Assigns "update_tf_tensor: true" attribute to NGVariable and NGAssign Ops
+//    when the Variable is going to be used (read) by a TF Op
+//    Responsible for updating the NGraphVariable's TFTensor
+//    inside the kernel of NGVariable and NGAssign Op
+// 2. Adds NGraphVariableUpdateNGTensor Nodes
+//    when the variable has been updated (written to) by a TF Op
+//    Responsible for updating the NGraphVariable's NGTensor inside its kernel
+Status RewriteForVariableSync(Graph* graph, int graph_id);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_REWRITE_FOR_TRACKING_H_
+#endif  // NGRAPH_TF_REWRITE_FOR_VARIABLE_SYNC_H_

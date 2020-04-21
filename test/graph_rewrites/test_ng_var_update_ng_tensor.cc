@@ -23,8 +23,8 @@
 #include "tensorflow/core/platform/test.h"
 
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_rewrite_for_variable_sync.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_variable_update_ng_tensor_op.h"
-#include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_var.h"
 #include "test/test_utilities.h"
@@ -41,8 +41,7 @@ TEST(NGVarUpdateNGTensorOpTest, SimpleGraph1) {
   ASSERT_OK(NodeBuilder("var_node", "NGraphVariable")
                 .Attr("shape", varShape)
                 .Attr("dtype", DT_FLOAT)
-                .Attr("just_looking", false)
-                .Attr("copy_to_tf", false)
+                .Attr("update_tf_tensor", false)
                 .Attr("container", "")
                 .Attr("shared_name", "node1")
                 .Attr("ngraph_graph_id", 1)
@@ -79,7 +78,7 @@ TEST(NGVarUpdateNGTensorOpTest, SimpleGraph1) {
   g.AddEdge(source, Graph::kControlSlot, var_node, Graph::kControlSlot);
   g.AddEdge(assign, Graph::kControlSlot, sink, Graph::kControlSlot);
 
-  ASSERT_OK(RewriteForTracking(&g, 0));
+  ASSERT_OK(RewriteForVariableSync(&g, 0));
 
   map<string, Node*> node_map;
   for (auto node : g.op_nodes()) {

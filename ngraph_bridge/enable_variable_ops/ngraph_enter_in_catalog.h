@@ -52,7 +52,8 @@ namespace ngraph_bridge {
 //
 // 2. If the input to NGraphAssign Op is from NGraphEncapsulate Op
 // We add mapping of
-// {graphId_encapnodename_OutputIndex : tuple:{Variable_Shared_Name, CopyToTF}}
+// {graphId_encapnodename_OutputIndex : tuple:{Variable_Shared_Name,
+// UpdateTFTensor}}
 // to the EncapOutputInfoMap
 // We attach "_ngraph_remove" attribute to this NGraphAssign node
 //

@@ -300,11 +300,11 @@ Status SyncOutputVarTensors(
   NGRAPH_VLOG(4) << "output indexes size " << var_output_indexes.size();
 
   for (int output_index : var_output_indexes) {
-    bool copy_to_tf;
-    TF_RETURN_IF_ERROR(
-        tensor_manager->GetOutputVariableCopyToTF(output_index, &copy_to_tf));
+    bool update_tf_tensor;
+    TF_RETURN_IF_ERROR(tensor_manager->GetOutputVariableUpdateTFTensor(
+        output_index, &update_tf_tensor));
 
-    if (copy_to_tf) {
+    if (update_tf_tensor) {
       NGRAPH_VLOG(4) << "Sync NG Output Variable Tensors " << output_index;
       // Get shared name from tensor manager
       string shared_name;

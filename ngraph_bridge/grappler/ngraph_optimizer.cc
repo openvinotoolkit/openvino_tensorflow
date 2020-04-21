@@ -110,11 +110,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If requested, dump pre-capture graphs.
-  if (DumpPrecaptureGraphs()) {
-    DumpGraphs(graph, idx, "precapture", "Pre-Capture Graph");
-  }
-
   // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
   // we will not do anything; all subsequent passes become a no-op.
   bool ngraph_not_enabled =
@@ -181,19 +176,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
   std::set<string>& skip_these_nodes = nodes_to_preserve;
-
-  //
-  // Variable capture: Part that replaces all instances of VariableV2 with the
-  // NGraphVariable op. Making this replacement allows us to substitute in a
-  // kernel that tracks the freshness of variables (invalidating freshness when
-  // the reference is handed off to an "untrusted" op).
-  //
-
-  // Do variable capture then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(CaptureVariables(&graph, skip_these_nodes));
-  if (DumpCapturedGraphs()) {
-    DumpGraphs(graph, idx, "captured", "Graph With Variables Captured");
-  }
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -269,13 +251,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   }
   if (DumpEncapsulatedGraphs()) {
     DumpGraphs(graph, idx, "encapsulated", "Graph with Clusters Encapsulated");
-  }
-
-  // Rewrite for tracking then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(RewriteForTracking(&graph, idx));
-  if (DumpTrackedGraphs()) {
-    DumpGraphs(graph, idx, "tracked",
-               "Graph with Variables Rewritten for Tracking");
   }
 
   // Convert the graph back to Graphdef

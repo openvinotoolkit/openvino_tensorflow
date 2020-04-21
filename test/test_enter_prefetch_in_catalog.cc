@@ -22,19 +22,9 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_api.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_catalog.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_deassign_clusters.h"
-#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
 #include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_rewrite_for_tracking.h"
 #include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/version.h"
 #include "test/test_utilities.h"
 
 using namespace std;
