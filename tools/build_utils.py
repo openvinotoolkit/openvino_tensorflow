@@ -289,7 +289,7 @@ def build_tensorflow_cc(src_dir, artifacts_dir, target_arch, verbosity):
         "bazel",
         "build",
         "--config=opt",
-        "--config=v2",
+        "--config=v1",
         "--config=noaws",
         "--config=nohdfs",
         "--config=noignite",
