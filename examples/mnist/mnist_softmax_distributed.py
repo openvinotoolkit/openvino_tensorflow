@@ -32,12 +32,15 @@ import argparse
 import sys
 import time
 
-from tensorflow.examples.tutorials.mnist import input_data
+from keras.datasets import mnist
+from keras.utils.np_utils import to_categorical
 
 import tensorflow as tf
 import ngraph_bridge
+import tensorflow.compat.v1 as tf
+tf.compat.v1.disable_eager_execution()
+import numpy as np
 import horovod.tensorflow as hvd
-learn = tf.contrib.learn
 
 FLAGS = None
 
@@ -49,19 +52,15 @@ def main(_):
 
 
 def run_mnist(_):
-    # Import data
-    mnist = learn.datasets.mnist.read_data_sets(
-        FLAGS.data_dir + 'MNIST-data-%d' % hvd.rank(), one_hot=True)
-
     # Create the model
     with tf.name_scope("mnist_placholder"):
-        x = tf.placeholder(tf.float32, [None, 784])
+        x = tf.compat.v1.placeholder(tf.float32, [None, 784])
         W = tf.Variable(tf.zeros([784, 10]))
         b = tf.Variable(tf.zeros([10]))
         y = tf.matmul(x, W) + b
 
         # Define loss and optimizer
-        y_ = tf.placeholder(tf.float32, [None, 10])
+        y_ = tf.compat.v1.placeholder(tf.float32, [None, 10])
 
     # The raw formulation of cross-entropy,
     #
@@ -93,14 +92,14 @@ def run_mnist(_):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # Enable soft placement and tracing as needed
-    config = tf.ConfigProto(
+    config = tf.compat.v1.ConfigProto(
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=1)
     config_ngraph_enabled = ngraph_bridge.update_config(config)
 
     #config.graph_options.optimizer_options.global_jit_level = jit_level
-    run_metadata = tf.RunMetadata()
+    run_metadata = tf.compat.v1.RunMetadata()
 
     #init_op = tf.global_variables_initializer()
     print("Variables initialized ...")
@@ -109,22 +108,29 @@ def run_mnist(_):
     with tf.train.MonitoredTrainingSession(
             hooks=hooks, config=config_ngraph_enabled) as mon_sess:
         start = time.time()
-        train_writer = tf.summary.FileWriter(FLAGS.log_dir, mon_sess.graph)
+        train_writer = tf.compat.v1.summary.FileWriter(FLAGS.log_dir,
+                                                       mon_sess.graph)
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+        x_train = np.reshape(x_train, (60000, 784))
+        x_train = x_train.astype(np.float32) / 255
+        y_train = to_categorical(y_train, num_classes=10)
         while not mon_sess.should_stop():
             # Train
-            batch_xs, batch_ys = mnist.train.next_batch(100)
+            index = np.random.choice(60000, 100)
+            batch_xs = x_train[index]
+            batch_ys = y_train[index]
             mon_sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
             # Test trained model
+            x_test = np.reshape(x_test, (10000, 784))
+            x_test = x_test.astype(np.float32) / 255
+            y_test = to_categorical(y_test, num_classes=10)
             if not mon_sess.should_stop():
-                print(
-                    "Accuracy: ",
-                    mon_sess.run(
-                        accuracy,
-                        feed_dict={
-                            x: mnist.test.images,
-                            y_: mnist.test.labels
-                        }))
+                print("Accuracy: ",
+                      mon_sess.run(accuracy, feed_dict={
+                          x: x_test,
+                          y_: y_test
+                      }))
 
         end = time.time()
 

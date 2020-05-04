@@ -176,9 +176,9 @@ Modify the downloaded TensorFlow script to run TensorFlow with nGraph optimizati
 
     import ngraph_bridge
     ...
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config_ngraph_enabled = ngraph_bridge.update_config(config)
-    sess = tf.Session(config=config_ngraph_enabled) 
+    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
 
 Run the classification:
 

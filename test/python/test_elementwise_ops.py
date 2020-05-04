@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -34,8 +35,8 @@ class TestElementwiseOperations(NgraphTest):
                               ([0.0, 5.0, 10.0], [6.0],
                                (np.array([[6.0, 6.0, 10.0]]),))))
     def test_maximum(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.float32, shape=(None))
-        val2 = tf.placeholder(tf.float32, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.float32, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.maximum(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -53,8 +54,8 @@ class TestElementwiseOperations(NgraphTest):
                                  (np.array([[True, False, True]]),)),
          ([-1.0, 1.0, -4], [-1.0], (np.array([[True, False, True]]),))))
     def test_less_equal(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.float32, shape=(None))
-        val2 = tf.placeholder(tf.float32, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.float32, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.less_equal(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -72,8 +73,8 @@ class TestElementwiseOperations(NgraphTest):
                                   (np.array([[True, False, False]]),)),
          ([-1.0, 1.0, -4], [-1.0], (np.array([[False, False, True]]),))))
     def test_less(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.float32, shape=(None))
-        val2 = tf.placeholder(tf.float32, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.float32, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.less(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -91,8 +92,8 @@ class TestElementwiseOperations(NgraphTest):
                                  (np.array([[False, True, True]]),)),
          ([-1.0, 1.0, -4], [-1.0], (np.array([[True, True, False]]),))))
     def test_greater_equal(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.float32, shape=(None))
-        val2 = tf.placeholder(tf.float32, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.float32, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.greater_equal(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -110,8 +111,8 @@ class TestElementwiseOperations(NgraphTest):
                                   (np.array([[False, True, False]]),)),
          ([-1.0, 1.0, -4], [-1.0], (np.array([[False, True, False]]),))))
     def test_greater(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.float32, shape=(None))
-        val2 = tf.placeholder(tf.float32, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.float32, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.greater(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -128,8 +129,8 @@ class TestElementwiseOperations(NgraphTest):
                               ([False, True, False], [True],
                                (np.array([[False, True, False]]),))))
     def test_logical_and(self, v1, v2, expected):
-        val1 = tf.placeholder(tf.bool, shape=(None))
-        val2 = tf.placeholder(tf.bool, shape=(None))
+        val1 = tf.compat.v1.placeholder(tf.bool, shape=(None))
+        val2 = tf.compat.v1.placeholder(tf.bool, shape=(None))
         out = tf.logical_and(val1, val2)
 
         sess_fn = lambda sess: sess.run((out,),
@@ -143,7 +144,7 @@ class TestElementwiseOperations(NgraphTest):
     @pytest.mark.parametrize(("test_input", "expected"), ((False, True),
                                                           (True, False)))
     def test_logicalnot_1d(self, test_input, expected):
-        val = tf.placeholder(tf.bool, shape=(1,))
+        val = tf.compat.v1.placeholder(tf.bool, shape=(1,))
         out = tf.logical_not(val)
 
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})[
@@ -154,7 +155,7 @@ class TestElementwiseOperations(NgraphTest):
     def test_logicalnot_2d(self):
         test_input = ((True, False, True), (False, True, False))
         expected = np.logical_not(test_input)
-        val = tf.placeholder(tf.bool, shape=(2, 3))
+        val = tf.compat.v1.placeholder(tf.bool, shape=(2, 3))
         out = tf.logical_not(val)
 
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})[0]

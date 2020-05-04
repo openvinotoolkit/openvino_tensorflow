@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops.gen_nn_ops import sparse_softmax_cross_entropy_with_logits
 import numpy as np

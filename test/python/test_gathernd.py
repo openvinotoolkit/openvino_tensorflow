@@ -22,7 +22,7 @@ from __future__ import print_function
 
 import pytest
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import os
 import numpy as np
 

@@ -41,7 +41,7 @@ def build_simple_model(input_array, tensor_var, var_modifier, array_multiplier):
 
 
 def build_data_pipeline(input_array, map_function, batch_size):
-    dataset = (tf.data.Dataset.from_tensor_slices(
+    dataset = (tf.compat.v1.data.Dataset.from_tensor_slices(
         (tf.constant(input_array)
         )).map(map_function).batch(batch_size).prefetch(1))
 
@@ -61,7 +61,7 @@ def run_axpy_pipeline():
                                              batch_size)
     var_init = 10
     init = tf.constant([var_init])
-    var = tf.get_variable('x', initializer=init)
+    var = tf.compat.v1.get_variable('x', initializer=init)
 
     var_modifier = 1
     array_multiplier = 5
@@ -70,9 +70,9 @@ def run_axpy_pipeline():
     expected_output_array = []
     output_array = []
     var_val = var_init
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         # Initialize the globals and the dataset
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
         sess.run(iterator.initializer)
 
         for i in range(1, 10):

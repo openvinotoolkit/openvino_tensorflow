@@ -187,8 +187,10 @@ def run_tensorflow_pytests(venv_dir, build_dir, ngraph_tf_src_dir, tf_src_dir):
     # Next patch the TensorFlow so that the tests run using ngraph_bridge
     pwd = os.getcwd()
 
-    # Go to the site-packages
-    os.chdir(glob.glob(venv_dir_absolute + "/lib/py*/site-packages")[0])
+    # Go to the site-packages/tensorflow_core_python/framework
+    os.chdir(
+        glob.glob(venv_dir_absolute +
+                  "/lib/py*/site-packages/tensorflow_core/python/framework")[0])
     print("CURRENT DIR: " + os.getcwd())
 
     print("Patching TensorFlow using: %s" % patch_file)
@@ -246,11 +248,19 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     # Go to the location of TesorFlow install directory
     import tensorflow as tf
     tf_dir = tf.sysconfig.get_lib()
-    os.chdir(os.path.join(tf_dir, '../'))
+    os.chdir(tf_dir + '/python/framework')
     print("CURRENT DIR: " + os.getcwd())
 
     print("Patching TensorFlow using: %s" % patch_file)
-    apply_patch(patch_file)
+    cmd = subprocess.Popen(
+        'patch -N -i ' + patch_file, shell=True, stdout=subprocess.PIPE)
+    printed_lines = cmd.communicate()
+    # Check if the patch is being applied for the first time, in which case
+    # cmd.returncode will be 0 or if the patch has already been applied, in
+    # which case the string will be found, in all other cases the assertion
+    # will fail
+    assert cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
+        printed_lines[0]), "Error applying the patch."
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
@@ -362,7 +372,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # Now clone the repo and proceed
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
     os.chdir('benchmarks')
-    call(['git', 'checkout', '4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed'])
+    call(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'])
 
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
@@ -434,6 +444,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
         '--model=resnet50', '--batch_size=' + str(batch_size), '--num_batches',
         str(iterations), '--eval', '--eval_dir=' + eval_eventlog_dir
     ]
+    # Commenting the eval since it currently fails with TF2.0
     command_executor(cmd, verbose=True)
 
     os.chdir(root_pwd)

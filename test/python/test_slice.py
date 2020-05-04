@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import pytest
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 import numpy as np
 from tensorflow.python.framework import constant_op
@@ -41,7 +42,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (4, 4)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
         slice_ts.append(array_ops.slice(x, [0, 0], [2, 2]))
         slice_ts.append(array_ops.slice(x, [0, 0], [-1, -1]))
         slice_ts.append(array_ops.slice(x, [2, 2], [-1, -1]))
@@ -66,7 +67,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (4, 5)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         slice_ts.append(x[:])
         slice_ts.append(x[:, :])
@@ -161,7 +162,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (3, 2, 3)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         slice_ts.append(x[-1:0, 2:2, 2:3:-1])
 
@@ -183,7 +184,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (3, 2, 3)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         slice_ts.append(x[-1:0, -10:-10, 2:3:-1])
 
@@ -205,7 +206,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (3, 2, 3)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         slice_ts.append(x[-1:0, 0:-10, 2:3:-1])
 
@@ -224,10 +225,10 @@ class TestSliceOperations(NgraphTest):
         a = [[[[[1, 2, 4, 5], [5, 6, 7, 8], [9, 10, 11, 12]]],
               [[[13, 14, 15, 16], [17, 18, 19, 20], [21, 22, 23, 24]]]]]
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
         bar = tf.constant(2)
         bar2 = tf.constant(3)
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
         slice_ts = [
             x[..., bar:bar2], x[..., bar], x[..., 3], x[..., 2**64 // 2**63]
         ]
@@ -249,7 +250,7 @@ class TestSliceOperations(NgraphTest):
         a = np.array([float(x) for x in inp.ravel(order="C")])
         a.shape = (4, 0, 5)
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         #(slicing an empty dim by empty slice)
         slice_ts.append(x[1:2, 2:2, 1:2])
@@ -271,7 +272,7 @@ class TestSliceOperations(NgraphTest):
         inp = 0
         slice_ts = []
 
-        x = tf.placeholder(dtype=dtypes.float32)
+        x = tf.compat.v1.placeholder(dtype=dtypes.float32)
 
         #(slicing an empty dim by empty slice)
         slice_ts.append(x[1:1])

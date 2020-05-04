@@ -25,6 +25,7 @@ import ctypes
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.client import timeline
 import json
 
@@ -39,7 +40,8 @@ train_writer = tf.summary.FileWriter(graph_location)
 
 # Define the data
 a = tf.constant(np.full((2048, 2048), 1.5, dtype=np.float32), name='alpha')
-x = tf.get_variable('x', [2048, 2048], initializer=tf.zeros_initializer)
+x = tf.compat.v1.get_variable(
+    'x', [2048, 2048], initializer=tf.zeros_initializer)
 y = tf.constant(np.full((2048, 2048), 1.0, dtype=np.float32), name='y')
 
 c = a * x
@@ -50,13 +52,13 @@ with tf.control_dependencies([train_step]):
     train_op = tf.no_op('train_op')
 
 # Configure the session
-config = tf.ConfigProto(
+config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1,
-    graph_options=tf.GraphOptions(
-        optimizer_options=tf.OptimizerOptions(
-            opt_level=tf.OptimizerOptions.L0,
+    graph_options=tf.compat.v1.GraphOptions(
+        optimizer_options=tf.compat.v1.OptimizerOptions(
+            opt_level=tf.compat.v1.OptimizerOptions.L0,
             do_common_subexpression_elimination=False,
             do_constant_folding=False,
             do_function_inlining=False,
@@ -64,13 +66,14 @@ config = tf.ConfigProto(
 config_ngraph_enabled = ngraph_bridge.update_config(config)
 
 # Create session and run
-with tf.Session(config=config_ngraph_enabled) as sess:
+with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
     print("Python: Running with Session")
-    options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-    run_metadata = tf.RunMetadata()
+    options = tf.compat.v1.RunOptions(
+        trace_level=tf.compat.v1.RunOptions.FULL_TRACE)
+    run_metadata = tf.compat.v1.RunMetadata()
 
     event_times = []
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
     for i in range(10):
         (result_axpy) = sess.run((train_op),
                                  options=options,
@@ -89,4 +92,4 @@ with tf.Session(config=config_ngraph_enabled) as sess:
             for tr in parsed_trace['traceEvents']:
                 f.write(json.dumps(tr) + ',\n')
 
-train_writer.add_graph(tf.get_default_graph())
+train_writer.add_graph(tf.compat.v1.get_default_graph())

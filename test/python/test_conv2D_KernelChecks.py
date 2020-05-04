@@ -36,6 +36,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import array_ops

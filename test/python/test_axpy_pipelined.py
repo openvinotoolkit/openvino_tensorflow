@@ -2,6 +2,7 @@ import sys
 import pytest
 import getpass
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import ngraph_bridge
 
 import numpy as np

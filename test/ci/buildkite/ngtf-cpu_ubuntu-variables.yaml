@@ -67,6 +67,7 @@
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
+      pip install keras
       NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd`:`pwd`/examples:`pwd`/tools:`pwd`/examples/mnist \
         python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python

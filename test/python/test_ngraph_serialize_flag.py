@@ -26,6 +26,7 @@ import platform
 import os
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import re
 
@@ -38,16 +39,16 @@ class TestNgraphSerialize(NgraphTest):
     def test_ng_serialize_to_json(self):
         initial_contents = set(os.listdir())
         xshape = (3, 4, 5)
-        x = tf.placeholder(tf.float32, shape=xshape)
+        x = tf.compat.v1.placeholder(tf.float32, shape=xshape)
         out = tf.nn.l2_loss(tf.abs(x))
         values = np.random.rand(*xshape)
 
-        config = ngraph_bridge.update_config(tf.ConfigProto())
+        config = ngraph_bridge.update_config(tf.compat.v1.ConfigProto())
         ngraph_enable_serialize = os.environ.pop('NGRAPH_ENABLE_SERIALIZE',
                                                  None)
         os.environ['NGRAPH_ENABLE_SERIALIZE'] = '1'
         ngraph_bridge.enable()
-        with tf.Session(config=config) as sess:
+        with tf.compat.v1.Session(config=config) as sess:
             out = sess.run((out), feed_dict={x: values})
         os.environ.pop('NGRAPH_ENABLE_SERIALIZE', None)
         if ngraph_enable_serialize is not None:

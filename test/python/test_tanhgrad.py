@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops.gen_math_ops import tanh_grad

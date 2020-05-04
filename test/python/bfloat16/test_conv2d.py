@@ -19,6 +19,7 @@
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import os
 
@@ -48,8 +49,10 @@ W = 5
 filter_size = np.random.rand(1, 1, 1, 2)
 input_size_nhwc = [N, H, W, C]
 input_size_nchw = [N, C, H, W]
-input_nhwc = tf.placeholder(tf.float32, shape=input_size_nhwc, name='x')
-input_nchw = tf.placeholder(tf.float32, shape=input_size_nchw, name='x')
+input_nhwc = tf.compat.v1.placeholder(
+    tf.float32, shape=input_size_nhwc, name='x')
+input_nchw = tf.compat.v1.placeholder(
+    tf.float32, shape=input_size_nchw, name='x')
 
 n_np = np.random.rand(*input_size_nchw).astype('f')
 #Tensorflow supports only NHWC, change input shapes from NCHW to NHWC
@@ -80,7 +83,7 @@ def ng_model():
     return m, input_nchw
 
 
-config = tf.ConfigProto(
+config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
@@ -88,14 +91,14 @@ config = tf.ConfigProto(
 
 def test_conv2d():
     #Test 1: tf_model TF-native
-    with tf.Session(config=config) as sess_tf:
+    with tf.compat.v1.Session(config=config) as sess_tf:
         ngraph_bridge.disable()
         tf_out, input_data = tf_model()
         feed_dict = {input_data: t_np}
         tf_outval = sess_tf.run(tf_out, feed_dict=feed_dict)
 
     #Test 2: model2 with ngraph, NNP backend
-    with tf.Session(config=config) as sess_ng:
+    with tf.compat.v1.Session(config=config) as sess_ng:
         ngraph_bridge.enable()
         ngraph_bridge.update_config(config)
         os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'

@@ -2,6 +2,8 @@ import sys
 import pytest
 import getpass
 import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_eager_execution()
 import ngraph_bridge
 
 import numpy as np
@@ -13,7 +15,7 @@ from common import NgraphTest
 
 # For eg. when running the test from ngraph-bridge/build_cmake/test/python
 # you can add this path as below
-sys.path.insert(0, '../../examples')
+# sys.path.insert(0, '../../examples')
 
 from axpy_var_pipelined import *
 

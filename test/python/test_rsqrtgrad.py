@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.ops.gen_math_ops import rsqrt_grad
 
 from common import NgraphTest
@@ -39,8 +40,8 @@ class TestRsqrtGrad(NgraphTest):
         ([4, 2, 1, 3],),
     ))
     def test_rsqrtgrad(self, shape):
-        a = tf.placeholder(tf.float32, shape)
-        b = tf.placeholder(tf.float32, shape)
+        a = tf.compat.v1.placeholder(tf.float32, shape)
+        b = tf.compat.v1.placeholder(tf.float32, shape)
 
         y = np.random.rand(*shape)
         dy = np.random.rand(*shape)

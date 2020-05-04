@@ -25,6 +25,7 @@ import os
 import numpy as np
 import shutil
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import ngraph_bridge
 import json
 
@@ -43,9 +44,9 @@ def get_pbtxt_name(tag, p0_shape, p1_shape):
 
 def create_graph(p0_shape, p1_shape):
     temp_pbtxt_name = get_pbtxt_name('temp_graph_in_', p0_shape, p1_shape)
-    with tf.Session() as sess:
-        x = tf.placeholder(tf.float32, shape=p0_shape, name='x')
-        y = tf.placeholder(tf.float32, shape=p1_shape, name='y')
+    with tf.compat.v1.Session() as sess:
+        x = tf.compat.v1.placeholder(tf.float32, shape=p0_shape, name='x')
+        y = tf.compat.v1.placeholder(tf.float32, shape=p1_shape, name='y')
         z = tf.add(tf.abs(x), tf.abs(y), name="z")
         tf.io.write_graph(sess.graph, '.', temp_pbtxt_name, as_text=True)
     return x, y, z, temp_pbtxt_name
@@ -56,16 +57,16 @@ def get_inputs(p_shape):
 
 
 def run_pbtxt(pbtxt_filename, inp0, inp1):
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
     gdef = graph_pb2.GraphDef()
     with open(pbtxt_filename, 'r') as f:
         raw_contents = f.read()
     text_format.Parse(raw_contents, gdef)
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         tf.import_graph_def(gdef, name='')
-        x = tf.get_default_graph().get_tensor_by_name("x:0")
-        y = tf.get_default_graph().get_tensor_by_name("y:0")
-        z = tf.get_default_graph().get_tensor_by_name("z:0")
+        x = tf.compat.v1.get_default_graph().get_tensor_by_name("x:0")
+        y = tf.compat.v1.get_default_graph().get_tensor_by_name("y:0")
+        z = tf.compat.v1.get_default_graph().get_tensor_by_name("z:0")
         return sess.run(z, feed_dict={x: inp0, y: inp1})
 
 

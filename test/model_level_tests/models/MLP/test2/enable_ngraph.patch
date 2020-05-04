@@ -10,10 +10,10 @@ index 25aa07b6..97090b01 100644
 +import tensorflow as tf
 +
 +from keras.backend.tensorflow_backend import set_session
-+config = tf.ConfigProto()
++config = tf.compat.v1.ConfigProto()
 +config = ngraph_bridge.update_config(config)
-+sess = tf.Session(config=config)
-+set_session(sess)
++sess = tf.compat.v1.Session(config=config)
++tf.compat.v1.keras.backend.set_session(sess)
  
  batch_size = 128
  num_classes = 10

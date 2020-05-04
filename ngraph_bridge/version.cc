@@ -17,6 +17,8 @@
 #include <iostream>
 #include <string>
 
+#include "tensorflow/core/public/version.h"
+
 #include "ngraph/ngraph.hpp"
 
 #include "ngraph_bridge/version.h"
@@ -75,6 +77,16 @@ bool ngraph_tf_are_variables_enabled() {
 
 bool ngraph_tf_is_distributed_enabled() {
 #if defined(NGRAPH_DISTRIBUTED)
+  return true;
+#else
+  return false;
+#endif
+}
+
+const char* tf_version() { return (TF_VERSION_STRING); }
+
+bool ngraph_tf_is_tf2_enabled() {
+#if defined(NGRAPH_TF_USE_TENSORFLOW_2)
   return true;
 #else
   return false;

@@ -24,6 +24,7 @@ import pytest
 import platform
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops import nn_ops
 import numpy as np

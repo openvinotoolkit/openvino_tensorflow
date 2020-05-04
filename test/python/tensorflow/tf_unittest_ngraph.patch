@@ -1,12 +1,12 @@
-diff --git a/tensorflow_core/python/framework/test_util.py b/tensorflow_core/python/framework/test_util.py
-index 8857e767ed..3dcd7d17b2 100644
---- a/tensorflow_core/python/framework/test_util.py
-+++ b/tensorflow_core/python/framework/test_util.py
-@@ -1767,6 +1767,7 @@ class TensorFlowTestCase(googletest.TestCase):
-     self._threads = []
-     self._tempdir = None
-     self._cached_session = None
-+    import ngraph_bridge
- 
-   def setUp(self):
-     self._ClearCachedSession()
+*** test_util.py	2020-01-15 15:44:13.595859904 -0800
+--- updated_test_util.py	2020-01-15 15:32:11.630592207 -0800
+***************
+*** 1767,1772 ****
+--- 1767,1773 ----
+      self._threads = []
+      self._tempdir = None
+      self._cached_session = None
++     import ngraph_bridge
+  
+    def setUp(self):
+      self._ClearCachedSession()

@@ -18,6 +18,7 @@ import sys
 import pytest
 import getpass
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import ngraph_bridge
 
 import numpy as np
@@ -36,6 +37,9 @@ from mnist_deep_simplified import *
 
 class TestMnistTraining(NgraphTest):
 
+    #Todo: Unskip this test
+    @pytest.mark.skipif(
+        ngraph_bridge.is_tf2_enabled(), reason="Does not work with tf2.0")
     @pytest.mark.parametrize(("optimizer"), ("adam", "sgd", "momentum"))
     def test_mnist_training(self, optimizer):
 
@@ -53,7 +57,7 @@ class TestMnistTraining(NgraphTest):
                 self.optimizer = optimizer
 
         data_dir = '/tmp/' + getpass.getuser() + 'tensorflow/mnist/input_data'
-        train_loop_count = 20
+        train_loop_count = 50
         batch_size = 50
         test_image_count = None
         make_deterministic = True
@@ -67,7 +71,7 @@ class TestMnistTraining(NgraphTest):
         ng_loss_values, ng_test_accuracy = train_mnist_cnn(FLAGS)
         ng_values = ng_loss_values + [ng_test_accuracy]
         # Reset the Graph
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
 
         # disable ngraph-tf
         ngraph_bridge.disable()

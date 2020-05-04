@@ -23,6 +23,7 @@ from __future__ import print_function
 import numpy as np
 import pytest
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -43,14 +44,14 @@ class TestFusedBatchNorm(NgraphTest):
     def test_fusedbatchnorm_nchw(self):
 
         def test_on_ng(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 self.x, self.scale, self.offset, data_format='NCHW')
             return (sess.run(norm))
 
         def test_on_tf(sess):
             # tensorflow CPU doesn't support NCHW
             x_t = tf.transpose(self.x, NCHW_TO_NHWC)  # NHWC
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t, self.scale, self.offset, data_format='NHWC')
             return (sess.run(norm))
 
@@ -68,12 +69,12 @@ class TestFusedBatchNorm(NgraphTest):
         x_t = tf.transpose(self.x, NCHW_TO_NHWC)
 
         def test_on_ng(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t, self.scale, self.offset, data_format='NHWC')
             return (sess.run(norm))
 
         def test_on_tf(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t, self.scale, self.offset, data_format='NHWC')
             return (sess.run(norm))
 
@@ -86,7 +87,7 @@ class TestFusedBatchNorm(NgraphTest):
     def test_fusedbatchnorm_inference_nchw(self):
 
         def test_on_ng(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 self.x,
                 self.scale,
                 self.offset,
@@ -98,7 +99,7 @@ class TestFusedBatchNorm(NgraphTest):
 
         def test_on_tf(sess):
             x_t = tf.transpose(self.x, NCHW_TO_NHWC)
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t,
                 self.scale,
                 self.offset,
@@ -117,7 +118,7 @@ class TestFusedBatchNorm(NgraphTest):
         x_t = tf.transpose(self.x, NCHW_TO_NHWC)
 
         def test_on_ng(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t,
                 self.scale,
                 self.offset,
@@ -128,7 +129,7 @@ class TestFusedBatchNorm(NgraphTest):
             return (sess.run(norm[0]))
 
         def test_on_tf(sess):
-            norm = tf.nn.fused_batch_norm(
+            norm = tf.compat.v1.nn.fused_batch_norm(
                 x_t,
                 self.scale,
                 self.offset,

@@ -21,6 +21,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.ops import nn_ops
 import os
 import numpy as np
@@ -57,7 +58,7 @@ class TestOpDisableOperations(NgraphTest):
         # TODO: enable this test for grappler as well.
         if (not ngraph_bridge.is_grappler_enabled()):
             ngraph_bridge.set_disabled_ops(invalid_op_list)
-            a = tf.placeholder(tf.int32, shape=(5,))
+            a = tf.compat.v1.placeholder(tf.int32, shape=(5,))
             b = tf.constant(np.ones((5,)), dtype=tf.int32)
             c = a + b
 
@@ -86,7 +87,7 @@ class TestOpDisableOperations(NgraphTest):
         FW = 3
         FH = 3
         O = 6
-        inp = tf.placeholder(tf.float32, shape=(N, C, H, W))
+        inp = tf.compat.v1.placeholder(tf.float32, shape=(N, C, H, W))
         filt = tf.constant(np.ones((FH, FW, C, O)), dtype=tf.float32)
         conv = nn_ops.conv2d(
             inp, filt, strides=[1, 1, 1, 2], padding="SAME", data_format='NCHW')

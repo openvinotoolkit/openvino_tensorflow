@@ -24,6 +24,7 @@ import pytest
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -34,7 +35,7 @@ class TestTanhOp(NgraphTest):
                              ((1.4, np.tanh(1.4)), (0.5, np.tanh(0.5)),
                               (-0.3, np.tanh(-0.3))))
     def test_tanh_1d(self, test_input, expected):
-        val = tf.placeholder(tf.float32, shape=(1,))
+        val = tf.compat.v1.placeholder(tf.float32, shape=(1,))
         atol = 1e-5
         out = tf.tanh(val)
 
@@ -46,7 +47,7 @@ class TestTanhOp(NgraphTest):
         test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
         expected = np.tanh(test_input)
 
-        val = tf.placeholder(tf.float32, shape=(2, 3))
+        val = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
         atol = 1e-5
 
         out = tf.tanh(val)

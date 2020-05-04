@@ -24,6 +24,7 @@ import pytest
 import os
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.core.protobuf import rewriter_config_pb2
 
 from common import NgraphTest
@@ -35,7 +36,7 @@ class TestUpdateConfig(NgraphTest):
     @pytest.mark.skipif(
         not ngraph_bridge.is_grappler_enabled(), reason='Only for Grappler')
     def test_update_config(self):
-        config = tf.ConfigProto()
+        config = tf.compat.v1.ConfigProto()
         config.allow_soft_placement = True
         config_new = ngraph_bridge.update_config(config)
         rewriter_options = config_new.graph_options.rewrite_options
@@ -62,7 +63,7 @@ class TestUpdateConfig(NgraphTest):
 
         # allow_soft_placement is set just to simulate
         # a real world non-empty initial ConfigProto
-        config = tf.ConfigProto(allow_soft_placement=True)
+        config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
         assert count_ng_optimizers(config) == 0
         config_new_1 = ngraph_bridge.update_config(config)
         config_new_2 = ngraph_bridge.update_config(config_new_1)

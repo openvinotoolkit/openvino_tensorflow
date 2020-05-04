@@ -18,6 +18,7 @@
 """
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import os
 import ngraph_bridge
 import pytest
@@ -32,7 +33,7 @@ input_shape_nhwc = [4, 1, 2, channels]
 
 
 def tf_model():
-    x = tf.placeholder(tf.float32, shape=input_shape_nhwc)
+    x = tf.compat.v1.placeholder(tf.float32, shape=input_shape_nhwc)
 
     # cast the input dtype to bfloat16 for TF
     x_c = tf.cast(x, dtype=tf.bfloat16)
@@ -45,12 +46,12 @@ def tf_model():
 
 
 def ng_model():
-    x = tf.placeholder(tf.float32, shape=input_shape_nhwc)
+    x = tf.compat.v1.placeholder(tf.float32, shape=input_shape_nhwc)
     norm = tf.nn.fused_batch_norm(x, scale, offset, data_format='NHWC')
     return norm, x
 
 
-config = tf.ConfigProto(
+config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
@@ -60,14 +61,14 @@ k_np = np.random.rand(*input_shape_nhwc).astype('f')  # NHWC
 
 def test_fusedbatchnorm_nhwc():
     #Test 1: tf_model TF-native
-    with tf.Session(config=config) as sess_tf:
+    with tf.compat.v1.Session(config=config) as sess_tf:
         ngraph_bridge.disable()
         tf_out, in_0 = tf_model()
         feed_dict = {in_0: k_np}
         tf_outval = sess_tf.run(tf_out, feed_dict=feed_dict)
 
     #Test 2: model2 with ngraph, NNP backend
-    with tf.Session(config=config) as sess_ng:
+    with tf.compat.v1.Session(config=config) as sess_ng:
         ngraph_bridge.enable()
         ngraph_bridge.update_config(config)
         os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'

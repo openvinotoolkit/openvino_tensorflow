@@ -24,6 +24,7 @@ import pytest
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -32,7 +33,7 @@ class TestSelect(NgraphTest):
 
     def test_select_scalar(self):
         a = [1.5]
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x=[1], y=[0])
 
         def run_test(sess):
@@ -43,7 +44,7 @@ class TestSelect(NgraphTest):
 
     def test_select_sameshape(self):
         a = [True, False, True, True]
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x=[1] * 4, y=[0] * 4)
 
         def run_test(sess):
@@ -56,7 +57,7 @@ class TestSelect(NgraphTest):
         a = [1, 1]
         x = [[0, 0], [2, 2]]
         y = [[2, 2], [1, 1]]
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, y)
 
         def run_test(sess):
@@ -69,7 +70,7 @@ class TestSelect(NgraphTest):
         a = np.random.randint(2, size=[7])
         x = np.random.uniform(0, 11, [7, 3, 2, 1])
 
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
 
         def run_test(sess):
@@ -82,7 +83,7 @@ class TestSelect(NgraphTest):
         a = np.random.randint(2, size=[7])
         x = np.random.uniform(0, 11, [7, 3, 2, 7])
 
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
 
         def run_test(sess):
@@ -95,7 +96,7 @@ class TestSelect(NgraphTest):
         a = np.random.randint(2, size=[5])
         x = np.random.uniform(0, 11, [5, 3, 1])
 
-        p = tf.placeholder(dtype=tf.bool)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
 
         def run_test(sess):

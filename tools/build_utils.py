@@ -172,7 +172,8 @@ def setup_venv(venv_dir):
     command_executor(["pip", "list"])
 
 
-def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
+def build_tensorflow(tf_version, venv_dir, src_dir, artifacts_dir, target_arch,
+                     verbosity):
 
     base = sys.prefix
     python_lib_path = os.path.join(base, 'lib', 'python%s' % sys.version[:3],
@@ -213,19 +214,29 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
 
     command_executor("./configure")
 
-    # Build the python package
     cmd = [
         "bazel",
         "build",
         "--config=opt",
-        "--config=v1",
         "--config=noaws",
         "--config=nohdfs",
         "--config=noignite",
         "--config=nokafka",
         "--config=nonccl",
-        "//tensorflow/tools/pip_package:build_pip_package",
     ]
+    # Build the python package
+    if (tf_version == "v2.0.0"):
+        cmd.extend([
+            "--config=v2",
+        ])
+    elif (tf_version == "v1.15.2"):
+        cmd.extend([
+            "--config=v1",
+        ])
+    cmd.extend([
+        "//tensorflow/tools/pip_package:build_pip_package",
+    ])
+
     if verbosity:
         cmd.extend(['-s'])
 
@@ -244,7 +255,8 @@ def build_tensorflow(venv_dir, src_dir, artifacts_dir, target_arch, verbosity):
     os.chdir(pwd)
 
 
-def build_tensorflow_cc(src_dir, artifacts_dir, target_arch, verbosity):
+def build_tensorflow_cc(tf_version, src_dir, artifacts_dir, target_arch,
+                        verbosity):
 
     pwd = os.getcwd()
 
@@ -289,23 +301,30 @@ def build_tensorflow_cc(src_dir, artifacts_dir, target_arch, verbosity):
         "bazel",
         "build",
         "--config=opt",
-        "--config=v1",
         "--config=noaws",
         "--config=nohdfs",
         "--config=noignite",
         "--config=nokafka",
         "--config=nonccl",
-        "//tensorflow:libtensorflow_cc.so.1",
     ]
+    # Build the python package
+    if (tf_version == "v2.0.0"):
+        cmd.extend(["--config=v2", "//tensorflow:libtensorflow_cc.so.2"])
+    elif (tf_version == "v1.15.2"):
+        cmd.extend(["--config=v1", "//tensorflow:libtensorflow_cc.so.1"])
+
     command_executor(cmd)
-    copy_tf_cc_lib_to_artifacts(artifacts_dir, None)
+    copy_tf_cc_lib_to_artifacts(tf_version, artifacts_dir, None)
 
     # popd
     os.chdir(pwd)
 
 
-def copy_tf_cc_lib_to_artifacts(artifacts_dir, tf_prebuilt):
-    tf_cc_lib_name = 'libtensorflow_cc.so.1'
+def copy_tf_cc_lib_to_artifacts(tf_version, artifacts_dir, tf_prebuilt):
+    if (tf_version == "v2.0.0"):
+        tf_cc_lib_name = 'libtensorflow_cc.so.2'
+    elif (tf_version == "v1.15.2"):
+        tf_cc_lib_name = 'libtensorflow_cc.so.1'
     #if (platform.system() == 'Darwin'):
     #tf_cc_lib_name = 'libtensorflow_cc.1.dylib'
     try:
@@ -334,12 +353,20 @@ def locate_tf_whl(tf_whl_loc):
     return tf_whl
 
 
-def copy_tf_to_artifacts(artifacts_dir, tf_prebuilt):
-    tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
+def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt):
+    if (tf_version == "v2.0.0"):
+        tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
+        tf_cc_lib_name = 'libtensorflow_cc.so.2'
+    elif (tf_version == "v1.15.2"):
+        tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
+        tf_cc_lib_name = 'libtensorflow_cc.so.1'
     if (platform.system() == 'Darwin'):
-        tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
+        if (tf_version == "v2.0.0"):
+            tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+        elif (tf_version == "v1.15.2"):
+            tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     try:
-        doomed_file = os.path.join(artifacts_dir, "libtensorflow_cc.so.1")
+        doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
         os.unlink(doomed_file)
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
         os.unlink(doomed_file)
@@ -349,10 +376,10 @@ def copy_tf_to_artifacts(artifacts_dir, tf_prebuilt):
 
     # Now copy the TF libraries
     if tf_prebuilt is None:
-        tf_cc_lib_file = "bazel-bin/tensorflow/libtensorflow_cc.so.1"
+        tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
         tf_cc_fmwk_file = "bazel-bin/tensorflow/" + tf_fmwk_lib_name
     else:
-        tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/libtensorflow_cc.so.1')
+        tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
         tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' + tf_fmwk_lib_name)
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
@@ -464,7 +491,7 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     return output_wheel
 
 
-def install_ngraph_tf(venv_dir, ngtf_pip_whl):
+def install_ngraph_tf(tf_version, venv_dir, ngtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 

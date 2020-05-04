@@ -24,6 +24,7 @@ import pytest
 import numpy as np
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import os
 import sys
 from common import NgraphTest
@@ -36,8 +37,8 @@ class TestBfloat16(NgraphTest):
     @pytest.mark.skip(
         reason="CPU backend does not support dtype bf16 for MatMul/Dot Op")
     def test_matmul_bfloat16(self):
-        a = tf.placeholder(tf.bfloat16, [2, 3], name='a')
-        x = tf.placeholder(tf.bfloat16, [3, 4], name='x')
+        a = tf.compat.v1.placeholder(tf.bfloat16, [2, 3], name='a')
+        x = tf.compat.v1.placeholder(tf.bfloat16, [3, 4], name='x')
         a_inp = np.random.rand(2, 3)
         x_inp = np.random.rand(3, 4)
         out = tf.matmul(a, x)
@@ -56,8 +57,9 @@ class TestBfloat16(NgraphTest):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
         filter_shape_hwio = (3, 3, 1, 2)
-        input_pl = tf.placeholder(tf.bfloat16, input_shape_nhwc, name="inp_pl")
-        filter_shape_pl = tf.placeholder(
+        input_pl = tf.compat.v1.placeholder(
+            tf.bfloat16, input_shape_nhwc, name="inp_pl")
+        filter_shape_pl = tf.compat.v1.placeholder(
             tf.bfloat16, filter_shape_hwio, name="filter_pl")
         input_values = np.arange(16).reshape(
             input_shape_nhwc)  #np.random.rand(*input_shape_nhwc)
@@ -95,8 +97,9 @@ class TestBfloat16(NgraphTest):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
         filter_shape_hwio = (3, 3, 1, 2)
-        input_pl = tf.placeholder(tf.float32, input_shape_nhwc, name="inp_pl")
-        filter_shape_pl = tf.placeholder(
+        input_pl = tf.compat.v1.placeholder(
+            tf.float32, input_shape_nhwc, name="inp_pl")
+        filter_shape_pl = tf.compat.v1.placeholder(
             tf.float32, filter_shape_hwio, name="filter_pl")
         input_values = np.arange(16).reshape(
             input_shape_nhwc)  #np.random.rand(*input_shape_nhwc)

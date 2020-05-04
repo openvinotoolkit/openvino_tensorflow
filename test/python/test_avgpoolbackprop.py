@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops.gen_nn_ops import avg_pool_grad
@@ -50,9 +51,11 @@ class TestAvgPoolBackpropInput(NgraphTest):
     def test_nhwc(self, padding):
         np_nhwc = self.grad_input_nhwc[padding]
         if padding == "VALID":
-            grad_input = tf.placeholder(tf.float32, shape=(128, 112, 74, 3))
+            grad_input = tf.compat.v1.placeholder(
+                tf.float32, shape=(128, 112, 74, 3))
         elif padding == "SAME":
-            grad_input = tf.placeholder(tf.float32, shape=(128, 112, 75, 3))
+            grad_input = tf.compat.v1.placeholder(
+                tf.float32, shape=(128, 112, 75, 3))
         out = avg_pool_grad(
             self.forward_arg_shape_NHWC,
             grad_input,
@@ -72,9 +75,11 @@ class TestAvgPoolBackpropInput(NgraphTest):
         self.ksize = [1, 1, 3, 1]
         np_nchw = self.grad_input_nchw[padding]
         if padding == "VALID":
-            grad_input = tf.placeholder(tf.float32, shape=(128, 3, 74, 224))
+            grad_input = tf.compat.v1.placeholder(
+                tf.float32, shape=(128, 3, 74, 224))
         elif padding == "SAME":
-            grad_input = tf.placeholder(tf.float32, shape=(128, 3, 75, 224))
+            grad_input = tf.compat.v1.placeholder(
+                tf.float32, shape=(128, 3, 75, 224))
 
         out_ngtf = avg_pool_grad(
             self.forward_arg_shape_NCHW,

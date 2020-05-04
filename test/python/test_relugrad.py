@@ -24,6 +24,7 @@ import pytest
 import numpy as np
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops.gen_nn_ops import relu_grad
 
@@ -35,8 +36,8 @@ np.random.seed(5)
 class TestReluGradOperations(NgraphTest):
 
     def test_relugrad_2d(self):
-        gradients = tf.placeholder(tf.float32, [2, 3])
-        features = tf.placeholder(tf.float32, [2, 3])
+        gradients = tf.compat.v1.placeholder(tf.float32, [2, 3])
+        features = tf.compat.v1.placeholder(tf.float32, [2, 3])
         out = relu_grad(gradients, features)
         g = np.random.rand(2, 3)
         f = np.random.rand(2, 3)
@@ -49,8 +50,8 @@ class TestReluGradOperations(NgraphTest):
             self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)))
 
     def test_relugrad_1d(self):
-        gradients = tf.placeholder(tf.float32, [100])
-        features = tf.placeholder(tf.float32, [100])
+        gradients = tf.compat.v1.placeholder(tf.float32, [100])
+        features = tf.compat.v1.placeholder(tf.float32, [100])
         out = relu_grad(gradients, features)
         g = np.random.rand(100)
         f = np.random.rand(100)

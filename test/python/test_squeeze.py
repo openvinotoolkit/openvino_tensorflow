@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import pytest
 
 from common import NgraphTest
@@ -34,7 +35,7 @@ class TestSqueezeOperations(NgraphTest):
                               ((2, 1, 3, 1, 1),
                                (1, 4)), ((1, 1), None), ((1,), None)))
     def test_squeeze(self, shape, axis):
-        a = tf.placeholder(tf.float32, shape=shape)
+        a = tf.compat.v1.placeholder(tf.float32, shape=shape)
 
         a1 = tf.squeeze(a, axis)
         a_val = np.random.random_sample(shape)
@@ -47,7 +48,7 @@ class TestSqueezeOperations(NgraphTest):
 
     def test_incorrect_squeeze(self):
         shape1 = (1, 2, 3, 1)
-        a = tf.placeholder(tf.float32, shape=shape1)
+        a = tf.compat.v1.placeholder(tf.float32, shape=shape1)
         with pytest.raises(ValueError):
             a1 = tf.squeeze(a, [0, 1])
             sess_fn = lambda sess: sess.run((a1,))

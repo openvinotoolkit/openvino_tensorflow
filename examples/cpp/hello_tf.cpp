@@ -102,6 +102,9 @@ void RunSimpleNetworkExample() {
 }
 
 void PrintVersion() {
+  // Tensorflow version info
+  std::cout << "Tensorflow version: " << tensorflow::ngraph_bridge::tf_version()
+            << std::endl;
   // nGraph Bridge version info
   std::cout << "Bridge version: "
             << tensorflow::ngraph_bridge::ngraph_tf_version() << std::endl;

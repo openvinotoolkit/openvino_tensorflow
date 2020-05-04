@@ -16,6 +16,7 @@
 
 import argparse
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from google.protobuf import text_format
 from tensorflow.core.protobuf import meta_graph_pb2
 from tensorflow.core.protobuf import rewriter_config_pb2
@@ -140,8 +141,9 @@ def update_config_to_include_custom_config(config, backend, device_id,
     ngraph_optimizer.parameter_map["aot_requested"].s = str(
         ("0", "1")[do_aot]).encode()
     config.MergeFrom(
-        tf.ConfigProto(
-            graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
+        tf.compat.v1.ConfigProto(
+            graph_options=tf.compat.v1.GraphOptions(
+                rewrite_options=rewriter_options)))
     return config
 
 
@@ -151,7 +153,7 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
     graph = tf.Graph()
     with graph.as_default():
         tf.import_graph_def(input_gdef, name="")
-    grappler_meta_graph_def = tf.train.export_meta_graph(
+    grappler_meta_graph_def = tf.compat.v1.train.export_meta_graph(
         graph_def=graph.as_graph_def(add_shapes=True), graph=graph)
 
     _to_bytes = lambda s: s.encode("utf-8", errors="surrogateescape")
@@ -166,7 +168,7 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
     grappler_meta_graph_def.collection_def["train_op"].CopyFrom(
         output_collection)
 
-    session_config = tf.ConfigProto()
+    session_config = tf.compat.v1.ConfigProto()
     # Pass backend and backend_optional_params to grappler through rewriter config by updating the config
     # TODO: move update_config_to_include_custom_config to ngraph_bridge
     session_config = update_config_to_include_custom_config(
@@ -181,14 +183,14 @@ def run_ngraph_grappler_optimizer(input_gdef, output_nodes, ng_backend,
 
 
 def get_gdef_from_savedmodel(export_dir):
-    with tf.Session(graph=tf.Graph()) as sess:
-        tf.saved_model.loader.load(sess, [tf.saved_model.tag_constants.SERVING],
-                                   export_dir)
+    with tf.compat.v1.Session(graph=tf.compat.v1.Graph()) as sess:
+        tf.compat.v1.saved_model.loader.load(
+            sess, [tf.compat.v1.saved_model.tag_constants.SERVING], export_dir)
         return sess.graph.as_graph_def()
 
 
 def get_gdef_from_protobuf(pb_filename):
-    graph_def = tf.GraphDef()
+    graph_def = tf.compat.v1.GraphDef()
     if pb_filename.endswith("pbtxt"):
         with open(pb_filename, "r") as f:
             text_format.Merge(f.read(), graph_def)
@@ -305,14 +307,15 @@ def filter_dict(prefix, dictionary):
 
 
 def save_gdef_to_savedmodel(gdef, location):
-    builder = tf.saved_model.builder.SavedModelBuilder(location)
+    builder = tf.compat.v1.saved_model.builder.SavedModelBuilder(location)
     with tf.Graph().as_default() as graph:
         tf.import_graph_def(gdef, name="")
-        with tf.Session(graph=graph) as sess:
+        with tf.compat.v1.Session(graph=graph) as sess:
             builder.add_meta_graph_and_variables(
-                sess, [tf.saved_model.tag_constants.TRAINING])
-            builder.add_meta_graph([tf.saved_model.tag_constants.SERVING],
-                                   strip_default_attrs=True)
+                sess, [tf.compat.v1.saved_model.tag_constants.TRAINING])
+            builder.add_meta_graph(
+                [tf.compat.v1.saved_model.tag_constants.SERVING],
+                strip_default_attrs=True)
         builder.save()
 
 
@@ -431,11 +434,11 @@ def infer_output_nodes(inp_format, inp_loc):
     or try to guess the outputs from the graphdef
     '''
     if inp_format == 'savedmodel':
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.compat.v1.Graph()) as sess:
             # load the saved model
-            imported = tf.saved_model.load(
+            imported = tf.compat.v1.saved_model.load(
                 sess,
-                tags=[tf.saved_model.tag_constants.SERVING],
+                tags=[tf.compat.v1.saved_model.tag_constants.SERVING],
                 export_dir=inp_loc)
             try:
                 # Check if the saved model has outputs specified

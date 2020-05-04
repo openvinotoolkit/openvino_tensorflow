@@ -38,7 +38,7 @@ def build_simple_model(input_array):
 
 
 def build_data_pipeline(input_array, map_function, batch_size):
-    dataset = (tf.data.Dataset.from_tensor_slices(
+    dataset = (tf.compat.v1.data.Dataset.from_tensor_slices(
         (tf.constant(input_array)
         )).map(map_function).batch(batch_size).prefetch(1))
 
@@ -61,7 +61,7 @@ def run_axpy_pipeline():
     pipeline, iterator = build_data_pipeline(input_array, map_function,
                                              batch_size)
     model = build_simple_model(pipeline)
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         # Initialize the globals and the dataset
         sess.run(iterator.initializer)
 

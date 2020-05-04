@@ -18,6 +18,7 @@
 """
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import pytest
 
@@ -30,7 +31,7 @@ class TestSplitOperations(NgraphTest):
                              (((2, 7), [1, 1, 5], 1), ((2, 7), [1, 1], 0),
                               ((9, 9, 9), [2, 2, 5], 1)))
     def test_split_sizes(self, shape, sizes, split_dim):
-        a = tf.placeholder(tf.float64, shape)
+        a = tf.compat.v1.placeholder(tf.float64, shape)
 
         tensors = tf.split(a, sizes, split_dim)
         input_val = np.random.random_sample(shape)
@@ -55,7 +56,7 @@ class TestSplitOperations(NgraphTest):
     @pytest.mark.parametrize(("shape", "number", "split_dim"),
                              (((2, 7), 7, 1), ((2, 7), 1, 0), ((9, 9), 3, 0)))
     def test_split_num(self, shape, number, split_dim):
-        a = tf.placeholder(tf.float64, shape)
+        a = tf.compat.v1.placeholder(tf.float64, shape)
 
         tensors = tf.split(a, number, split_dim)
         input_val = np.random.random_sample(shape)
@@ -69,7 +70,7 @@ class TestSplitOperations(NgraphTest):
             assert np.allclose(slices[i], results[0][i])
 
     def test_split_outputs_order(self):
-        a = tf.placeholder(tf.float64, (5,))
+        a = tf.compat.v1.placeholder(tf.float64, (5,))
 
         (t0, t1) = tf.split(a, [2, 3], 0)
         # Add operation is in the same ngraph block, following split.
@@ -87,7 +88,7 @@ class TestSplitOperations(NgraphTest):
         assert np.allclose(r0, [0, 0])
 
     def test_split_cpu_one_output(self):
-        a = tf.placeholder(tf.float64, (5,))
+        a = tf.compat.v1.placeholder(tf.float64, (5,))
 
         (t0, t1) = tf.split(a, [2, 3], 0)
         t1plus = t1 + [0, 0, 0]

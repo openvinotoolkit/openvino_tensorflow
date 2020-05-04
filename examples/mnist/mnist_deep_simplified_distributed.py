@@ -52,10 +52,13 @@ import tempfile
 import getpass
 import time
 
-from tensorflow.examples.tutorials.mnist import input_data
+from keras.datasets import mnist
+from keras.utils.np_utils import to_categorical
 
 import tensorflow as tf
 import ngraph_bridge
+tf.compat.v1.disable_eager_execution()
+import numpy as np
 import horovod.tensorflow as hvd
 
 FLAGS = None
@@ -116,7 +119,7 @@ def deepnn(x):
 
         # y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
         y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
-    return y_conv, tf.placeholder(tf.float32)
+    return y_conv, tf.compat.v1.placeholder(tf.float32)
 
 
 def conv2d(x, W):
@@ -132,7 +135,7 @@ def max_pool_2x2(x):
 
 def weight_variable(shape, name):
     """weight_variable generates a weight variable of a given shape."""
-    weight_var = tf.get_variable(name, shape)
+    weight_var = tf.compat.v1.get_variable(name, shape)
     return weight_var
 
 
@@ -144,7 +147,7 @@ def bias_variable(shape):
 
 def train_mnist_cnn(FLAGS):
     # Config
-    config = tf.ConfigProto(
+    config = tf.compat.v1.ConfigProto(
         allow_soft_placement=True,
         log_device_placement=False,
         inter_op_parallelism_threads=1)
@@ -156,14 +159,11 @@ def train_mnist_cnn(FLAGS):
     # The OMP_NUM_THREADS number should correspond to the number of
     # cores in the system
 
-    # Import data
-    mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
-
     # Create the model
-    x = tf.placeholder(tf.float32, [None, 784])
+    x = tf.compat.v1.placeholder(tf.float32, [None, 784])
 
     # Define loss and optimizer
-    y_ = tf.placeholder(tf.float32, [None, 10])
+    y_ = tf.compat.v1.placeholder(tf.float32, [None, 10])
 
     # Build the graph for the deep net
     y_conv, keep_prob = deepnn(x)
@@ -174,7 +174,7 @@ def train_mnist_cnn(FLAGS):
     cross_entropy = tf.reduce_mean(cross_entropy)
 
     # add distributed wrapper to "adam_optimizer"
-    opt = hvd.DistributedOptimizer(tf.train.AdamOptimizer(1e-4))
+    opt = hvd.DistributedOptimizer(tf.compat.v1.train.AdamOptimizer(1e-4))
     global_step = tf.contrib.framework.get_or_create_global_step()
     with tf.name_scope('distributed_optimizer'):
         train_step = opt.minimize(cross_entropy, global_step=global_step)
@@ -183,18 +183,18 @@ def train_mnist_cnn(FLAGS):
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         correct_prediction = tf.cast(correct_prediction, tf.float32)
     accuracy = tf.reduce_mean(correct_prediction)
-    tf.summary.scalar('Training accuracy', accuracy)
-    tf.summary.scalar('Loss function', cross_entropy)
+    tf.compat.v1.summary.scalar('Training accuracy', accuracy)
+    tf.compat.v1.summary.scalar('Loss function', cross_entropy)
 
     graph_location = "/tmp/" + getpass.getuser(
     ) + "/tensorboard-logs/mnist-convnet"
     print('Saving graph to: %s' % graph_location)
 
-    merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(graph_location)
-    train_writer.add_graph(tf.get_default_graph())
+    merged = tf.compat.v1.summary.merge_all()
+    train_writer = tf.compat.v1.summary.FileWriter(graph_location)
+    train_writer.add_graph(tf.compat.v1.get_default_graph())
 
-    saver = tf.train.Saver()
+    saver = tf.compat.v1.train.Saver()
     train_loops = FLAGS.train_loop_count
     num_test_images = FLAGS.test_image_count
     hooks = [
@@ -216,9 +216,15 @@ def train_mnist_cnn(FLAGS):
 
         loss_values = []
         test_accuracy = []
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+        x_train = np.reshape(x_train, (60000, 784))
+        x_train = x_train.astype(np.float32) / 255
+        y_train = to_categorical(y_train, num_classes=10)
         while not sess.should_stop():
-            batch = mnist.train.next_batch(FLAGS.batch_size)
-            sess.run(train_step, feed_dict={x: batch[0], y_: batch[1]})
+            index = np.random.choice(60000, FLAGS.batch_size)
+            x_random = x_train[index]
+            y_random = y_train[index]
+            sess.run(train_step, feed_dict={x: x_random, y_: y_random})
             step += 1
             if step % 10 == 0:
                 t = time.time()
@@ -227,14 +233,14 @@ def train_mnist_cnn(FLAGS):
                           (step,
                            sess.run(
                                accuracy, feed_dict={
-                                   x: batch[0],
-                                   y_: batch[1]
+                                   x: x_random,
+                                   y_: y_random
                                }), time.time() - t))
             t = time.time()
             _, summary, loss = sess.run([train_step, merged, cross_entropy],
                                         feed_dict={
-                                            x: batch[0],
-                                            y_: batch[1],
+                                            x: x_random,
+                                            y_: y_random,
                                             keep_prob: 0.5
                                         })
             loss_values.append(loss)
@@ -244,6 +250,9 @@ def train_mnist_cnn(FLAGS):
             train_writer.add_summary(summary, step)
 
             if step == (train_loops // hvd.size() - 1) and hvd.rank() == 0:
+                x_test = np.reshape(x_test, (10000, 784))
+                x_test = x_test.astype(np.float32) / 255
+                y_test = to_categorical(y_test, num_classes=10)
                 x_test = mnist.test.images[:num_test_images]
                 y_test = mnist.test.labels[:num_test_images]
                 print('test accuracy: ',

@@ -52,6 +52,7 @@
   - command: |
       source /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
+      pip install keras
       PYTHONPATH=`pwd`:`pwd`/examples:`pwd`/tools:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
         --artifacts /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID --test_python
     

@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 
 from common import NgraphTest
@@ -31,9 +32,9 @@ from common import NgraphTest
 class TestSigmoid(NgraphTest):
 
     def test_sigmoid(self):
-        x = tf.placeholder(tf.float32, shape=(2, 3))
-        y = tf.placeholder(tf.float32, shape=(2, 3))
-        z = tf.placeholder(tf.float32, shape=(2, 3))
+        x = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
+        y = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
+        z = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
 
         a = x + y + z
         b = tf.nn.sigmoid(a)

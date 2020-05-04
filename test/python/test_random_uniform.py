@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -33,7 +34,7 @@ class TestRandomUniformOperations(NgraphTest):
         samples = 10000
         shape = [samples]
         data = tf.random.uniform(shape, seed=0)
-        out = tf.math.reduce_sum(data, axis=0, keep_dims=True)
+        out = tf.math.reduce_sum(data, axis=0, keepdims=True)
         rel_out = tf.math.divide(out, samples)
 
         sess_fn = lambda sess: sess.run([rel_out], feed_dict={})

@@ -15,6 +15,7 @@
 # ==============================================================================
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import argparse
 import numpy as np
 import ngraph_bridge
@@ -59,7 +60,7 @@ def calculate_output(param_dict, select_device, input_example):
     Returns:
         The output vector obtained from running the input_example through the graph.
     """
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
     is_ckpt = False
 
     if "pb_graph_location" in param_dict and "checkpoint_graph_location" in param_dict:
@@ -77,32 +78,32 @@ def calculate_output(param_dict, select_device, input_example):
 
     output_tensor_name = param_dict["output_tensor_name"]
 
-    config = tf.ConfigProto(
+    config = tf.compat.v1.ConfigProto(
         inter_op_parallelism_threads=1, allow_soft_placement=True)
     config_ngraph_enabled = ngraph_bridge.update_config(config)
 
-    sess = tf.Session(config=config_ngraph_enabled)
+    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
     set_os_env(select_device)
 
     # if checkpoint, then load checkpoint
     if (is_ckpt):
         meta_filename = checkpoint_filename + '.meta'
-        if not tf.gfile.Exists(meta_filename):
+        if not tf.io.gfile.exists(meta_filename):
             raise Exception("Meta file does not exist")
         else:
-            saver = tf.train.import_meta_graph(meta_filename)
+            saver = tf.compat.v1.train.import_meta_graph(meta_filename)
 
-        if not tf.train.checkpoint_exists(checkpoint_filename):
+        if not tf.compat.v1.train.checkpoint_exists(checkpoint_filename):
             raise Exception("Checkpoint with this prefix does not exist")
         else:
             saver.restore(sess, checkpoint_filename)
 
         print("Model restored: " + select_device)
-        graph = tf.get_default_graph()
+        graph = tf.compat.v1.get_default_graph()
 
     #if graph, then load graph
     else:
-        graph_def = tf.GraphDef()
+        graph_def = tf.compat.v1.GraphDef()
         if pb_filename.endswith("pbtxt"):
             with open(pb_filename, "r") as f:
                 text_format.Merge(f.read(), graph_def)
@@ -112,7 +113,7 @@ def calculate_output(param_dict, select_device, input_example):
 
         with tf.Graph().as_default() as graph:
             tf.import_graph_def(graph_def)
-        sess = tf.Session(graph=graph, config=config)
+        sess = tf.compat.v1.Session(graph=graph, config=config)
 
     # if no outputs are specified, then compare for all tensors
     if len(output_tensor_name) == 0:

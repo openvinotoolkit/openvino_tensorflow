@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.ops.gen_nn_ops import softmax_cross_entropy_with_logits
 import numpy as np
 from common import NgraphTest

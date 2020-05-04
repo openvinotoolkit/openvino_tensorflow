@@ -25,6 +25,7 @@ import os
 import numpy as np
 import shutil
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import ngraph_bridge
 from subprocess import Popen, PIPE
 
@@ -174,13 +175,13 @@ class Testtf2ngraph(NgraphTest):
         export_pbtxt = 'temp_pytest_pbtxt_orig.pbtxt'
         tf2ngraph_out_loc = 'temp_pytest_pbtxt_tf2ngraph.pbtxt'
 
-        with tf.Session() as sess:
-            x = tf.placeholder(tf.float32, [None, 784], name="input")
+        with tf.compat.v1.Session() as sess:
+            x = tf.compat.v1.placeholder(tf.float32, [None, 784], name="input")
             W = tf.constant(np.zeros([784, 10]), tf.float32)
             b = tf.constant(np.zeros([10]), tf.float32)
             linear = tf.matmul(x, W) + b
             y = tf.nn.softmax(linear, name="output")
-            tf.saved_model.simple_save(
+            tf.compat.v1.saved_model.simple_save(
                 sess,
                 export_dir_saved_model,
                 inputs={"inp1": x},
@@ -257,16 +258,18 @@ class Testtf2ngraph(NgraphTest):
         # tf2ngraph is expected to fail,
         # since it does not support graphs with variables
         export_dir = 'saved_model'
-        x = tf.placeholder(tf.float32, [None, 784], name='x')
+        x = tf.compat.v1.placeholder(tf.float32, [None, 784], name='x')
         W = tf.Variable(tf.zeros([784, 10]))
         matmul = tf.matmul(x, W, name='mm')
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            builder = tf.saved_model.builder.SavedModelBuilder(export_dir)
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
+            builder = tf.compat.v1.saved_model.builder.SavedModelBuilder(
+                export_dir)
             builder.add_meta_graph_and_variables(
-                sess, [tf.saved_model.tag_constants.TRAINING])
-            builder.add_meta_graph([tf.saved_model.tag_constants.SERVING],
-                                   strip_default_attrs=True)
+                sess, [tf.compat.v1.saved_model.tag_constants.TRAINING])
+            builder.add_meta_graph(
+                [tf.compat.v1.saved_model.tag_constants.SERVING],
+                strip_default_attrs=True)
             builder.save()
 
         expected_to_fail = "python tf2ngraph.py --input_savedmodel saved_model" + \

@@ -24,6 +24,7 @@ import pytest
 import numpy as np
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -33,8 +34,8 @@ np.random.seed(5)
 class TestCastOperations(NgraphTest):
 
     def test_pad(self):
-        input_data = tf.placeholder(tf.int32, shape=(2, 3))
-        paddings = tf.placeholder(tf.int32, shape=(2, 2))
+        input_data = tf.compat.v1.placeholder(tf.int32, shape=(2, 3))
+        paddings = tf.compat.v1.placeholder(tf.int32, shape=(2, 2))
 
         out = tf.pad(input_data, paddings)
 

@@ -27,6 +27,7 @@ from platform import system
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python import pywrap_tensorflow as py_tf
 from tensorflow.python.framework import errors_impl
 
@@ -48,6 +49,7 @@ __all__ = [
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config', 'are_variables_enabled',
     'set_disabled_ops', 'get_disabled_ops', 'is_distributed_enabled',
+    'is_tf2_enabled',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -134,6 +136,7 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
+    ngraph_bridge_lib.ngraph_tf_is_tf2_enabled.restype = ctypes.c_bool
 
     try:
         importlib.import_module('plaidml.settings')
@@ -204,6 +207,9 @@ if ngraph_classic_loaded:
     def is_grappler_enabled():
         return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
 
+    def is_tf2_enabled():
+        return ngraph_bridge_lib.ngraph_tf_is_tf2_enabled()
+
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled
         if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
@@ -222,7 +228,7 @@ if ngraph_classic_loaded:
             ngraph_optimizer.name = opt_name
             ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
             ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
-            config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
+            config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
             # For reference, if we want to provide configuration support(backend parameters)
             # in a python script using the ngraph-optimizer
             # rewriter_options = rewriter_config_pb2.RewriterConfig()
@@ -234,7 +240,7 @@ if ngraph_classic_loaded:
             # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
             # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
             # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
-            # config.MergeFrom(tf.ConfigProto(graph_options=tf.GraphOptions(rewrite_options=rewriter_options)))
+            # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
         return config
 
     def are_variables_enabled():

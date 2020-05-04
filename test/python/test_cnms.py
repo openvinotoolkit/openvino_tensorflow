@@ -22,6 +22,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 from common import NgraphTest
 from google.protobuf import text_format

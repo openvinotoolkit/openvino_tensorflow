@@ -27,6 +27,7 @@ import numpy as np
 import os
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.ops.gen_nn_ops import max_pool_grad
 
 import ngraph_bridge
@@ -59,13 +60,13 @@ ksize_nhwc = [1, 3, 3, 1]
 
 # TF graph
 def tf_model(padding):
-    orig_in = tf.placeholder(tf.float32, shape=[N, H, W, C])
+    orig_in = tf.compat.v1.placeholder(tf.float32, shape=[N, H, W, C])
     if padding == "VALID":
-        grad = tf.placeholder(tf.float32, shape=valid_shape)
-        orig_out = tf.placeholder(tf.float32, shape=valid_shape)
+        grad = tf.compat.v1.placeholder(tf.float32, shape=valid_shape)
+        orig_out = tf.compat.v1.placeholder(tf.float32, shape=valid_shape)
     elif padding == "SAME":
-        grad = tf.placeholder(tf.float32, shape=same_shape)
-        orig_out = tf.placeholder(tf.float32, shape=same_shape)
+        grad = tf.compat.v1.placeholder(tf.float32, shape=same_shape)
+        orig_out = tf.compat.v1.placeholder(tf.float32, shape=same_shape)
 
     # cast the input dtype to bfloat16 for TF
     orig_in_c = tf.cast(orig_in, tf.bfloat16)
@@ -88,13 +89,13 @@ def tf_model(padding):
 
 # Ngraph graph
 def ng_model(padding):
-    orig_in = tf.placeholder(tf.float32, shape=[N, H, W, C])
+    orig_in = tf.compat.v1.placeholder(tf.float32, shape=[N, H, W, C])
     if padding == "VALID":
-        grad = tf.placeholder(tf.float32, shape=valid_shape)
-        orig_out = tf.placeholder(tf.float32, shape=valid_shape)
+        grad = tf.compat.v1.placeholder(tf.float32, shape=valid_shape)
+        orig_out = tf.compat.v1.placeholder(tf.float32, shape=valid_shape)
     elif padding == "SAME":
-        grad = tf.placeholder(tf.float32, shape=same_shape)
-        orig_out = tf.placeholder(tf.float32, shape=same_shape)
+        grad = tf.compat.v1.placeholder(tf.float32, shape=same_shape)
+        orig_out = tf.compat.v1.placeholder(tf.float32, shape=same_shape)
 
     out = max_pool_grad(
         orig_in,
@@ -107,7 +108,7 @@ def ng_model(padding):
     return out, orig_in, orig_out, grad
 
 
-config = tf.ConfigProto(
+config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
@@ -121,14 +122,14 @@ def test_maxpoolbackprop_nhwc(padding):
     o_np = output_nhwc[padding]
 
     #Test 1: tf_model TF-native
-    with tf.Session(config=config) as sess_tf:
+    with tf.compat.v1.Session(config=config) as sess_tf:
         ngraph_bridge.disable()
         tf_out, orig_in, orig_out, grad = tf_model(padding)
         feed_dict = {orig_in: i_np, orig_out: o_np, grad: g_np}
         tf_outval = sess_tf.run(tf_out, feed_dict=feed_dict)
 
     #Test 2: model2 with ngraph, NNP backend
-    with tf.Session(config=config) as sess_ng:
+    with tf.compat.v1.Session(config=config) as sess_ng:
         ngraph_bridge.enable()
         ngraph_bridge.update_config(config)
         os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'

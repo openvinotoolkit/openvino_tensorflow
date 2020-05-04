@@ -47,7 +47,7 @@ class TestDumpingGraphs(NgraphTest):
         # Specifically we want NgraphSerialize to work
         # even when there are '/' in the file name
         pb_filename = 'flib_graph_1.pbtxt'
-        graph_def = tf.GraphDef()
+        graph_def = tf.compat.v1.GraphDef()
         with open(pb_filename, "r") as f:
             text_format.Merge(f.read(), graph_def)
 

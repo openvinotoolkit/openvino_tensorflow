@@ -19,6 +19,7 @@
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import os
 from tensorflow.python.ops import nn_ops
@@ -52,8 +53,9 @@ stride_nchw = [1, 1, 2, 2]
 #TF graph
 def tf_model(padding):
     t1 = tf.constant(input_sizes_nhwc, dtype=tf.int32, name='t1')
-    t2 = tf.placeholder(dtype=tf.float32, shape=filter_size_hwio, name='t2')
-    t3 = tf.placeholder(
+    t2 = tf.compat.v1.placeholder(
+        dtype=tf.float32, shape=filter_size_hwio, name='t2')
+    t3 = tf.compat.v1.placeholder(
         dtype=tf.float32, shape=out_backprop_in_sizes[padding], name='t3')
     #reshaping the out_backprop to NHWC since TF does not support NCHW
     t3 = tf.transpose(t3, [0, 2, 3, 1])
@@ -75,8 +77,9 @@ def tf_model(padding):
 #Ngraph Graph
 def ng_model(padding):
     t1 = tf.constant(input_sizes_nchw, dtype=tf.int32, name='t1')
-    t2 = tf.placeholder(dtype=tf.float32, shape=filter_size_hwio, name='t2')
-    t3 = tf.placeholder(
+    t2 = tf.comapt.v1.placeholder(
+        dtype=tf.float32, shape=filter_size_hwio, name='t2')
+    t3 = tf.compat.v1.placeholder(
         dtype=tf.float32, shape=out_backprop_in_sizes[padding], name='t3')
 
     inp = nn_ops.conv2d_backprop_input(
@@ -84,7 +87,7 @@ def ng_model(padding):
     return inp, t2, t3
 
 
-config = tf.ConfigProto(
+config = tf.comapt.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
@@ -97,14 +100,14 @@ def test_conv2dbackpropinput_nchw(padding):
     #Reshape to NHWC for TF
     t_np_out = np.transpose(n_np_out, (0, 2, 3, 1))
 
-    with tf.Session(config=config) as sess_tf:
+    with tf.comapt.v1.Session(config=config) as sess_tf:
         ngraph_bridge.disable()
         tf_out, filter_size, out_backprop = tf_model(padding)
         feed_dict = {filter_size: np_filter, out_backprop: t_np_out}
         tf_outval = sess_tf.run(tf_out, feed_dict=feed_dict)
 
     #Test 2: model2 with ngraph, NNP backend
-    with tf.Session(config=config) as sess_ng:
+    with tf.comapt.v1.Session(config=config) as sess_ng:
         ngraph_bridge.enable()
         ngraph_bridge.update_config(config)
         os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'

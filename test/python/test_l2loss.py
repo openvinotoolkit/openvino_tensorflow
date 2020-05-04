@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import pytest
 
@@ -33,7 +34,7 @@ class TestL2Loss(NgraphTest):
 
     @pytest.mark.parametrize(("xshape"), ((3, 4, 5), (1,)))
     def test_l2loss(self, xshape):
-        x = tf.placeholder(tf.float32, shape=xshape)
+        x = tf.compat.v1.placeholder(tf.float32, shape=xshape)
         out = tf.nn.l2_loss(x)
         values = np.random.rand(*xshape)
         sess_fn = lambda sess: sess.run((out), feed_dict={x: values})
@@ -41,7 +42,7 @@ class TestL2Loss(NgraphTest):
             self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
 
     def test_l2loss_empty(self):
-        x = tf.placeholder(tf.float32, shape=())
+        x = tf.compat.v1.placeholder(tf.float32, shape=())
         out = tf.nn.l2_loss(x)
         sess_fn = lambda sess: sess.run((out), feed_dict={x: None})
 

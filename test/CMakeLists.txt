@@ -33,11 +33,20 @@ include_directories(${TensorFlow_SRC_DIR})
 include_directories(${TensorFlow_SRC_DIR}/bazel-genfiles)
 
 add_library(tensorflow_cc_lib SHARED IMPORTED)
-set_target_properties(
-    tensorflow_cc_lib
-    PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1
-)
+if(NGRAPH_TF_USE_TENSORFLOW_2)
+    set_target_properties(
+        tensorflow_cc_lib
+        PROPERTIES IMPORTED_LOCATION
+        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2
+    )
+else()
+    set_target_properties(
+        tensorflow_cc_lib
+        PROPERTIES IMPORTED_LOCATION
+        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1
+    )
+endif()
+
 
 set(SRC
     main.cpp

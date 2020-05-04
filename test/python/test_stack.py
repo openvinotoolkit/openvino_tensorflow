@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import pytest
 
 from common import NgraphTest
@@ -46,7 +47,7 @@ class TestStackOperations(NgraphTest):
     def test_stack(self, shapes, axis):
         values = [np.random.random_sample(s) for s in shapes]
         expected = np.stack(values, axis)
-        placeholders = [tf.placeholder(tf.float64, s) for s in shapes]
+        placeholders = [tf.compat.v1.placeholder(tf.float64, s) for s in shapes]
         a = tf.stack(placeholders, axis)
         sess_fn = lambda sess: sess.run(
             [a], feed_dict={p: v for p, v in zip(placeholders, values)})

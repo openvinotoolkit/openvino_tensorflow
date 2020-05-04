@@ -20,6 +20,7 @@ import sys
 import pytest
 import getpass
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import dtypes
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -31,13 +32,11 @@ from common import NgraphTest
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-import ngraph_bridge
-
 
 class TestPrefetched(NgraphTest):
 
     def build_data_pipeline(self, input_array, map_function, batch_size):
-        dataset = (tf.data.Dataset.from_tensor_slices(
+        dataset = (tf.compat.v1.data.Dataset.from_tensor_slices(
             (tf.constant(input_array)
             )).map(map_function).batch(batch_size).prefetch(1))
 
@@ -50,9 +49,9 @@ class TestPrefetched(NgraphTest):
         input_f = tf.cast(input_array, tf.float32)
 
         # Define the Ops
-        pl1 = tf.placeholder(dtype=dtypes.int32)
+        pl1 = tf.compat.v1.placeholder(dtype=dtypes.int32)
         pl1_f = tf.cast(pl1, tf.float32)
-        pl2 = tf.placeholder(dtype=dtypes.int32)
+        pl2 = tf.compat.v1.placeholder(dtype=dtypes.int32)
         pl2_f = tf.cast(pl2, tf.float32)
 
         mul = tf.compat.v1.math.multiply(input_f, c1)
@@ -77,7 +76,7 @@ class TestPrefetched(NgraphTest):
 
         outputs = []
 
-        sess = tf.Session()
+        sess = tf.compat.v1.Session()
 
         # Initialize the globals and the dataset
         sess.run(iterator.initializer)
@@ -99,7 +98,7 @@ class TestPrefetched(NgraphTest):
                                      self.build_model1)
 
         # Reset Graph
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
 
         # Run on TF
         disable_tf = "NGRAPH_TF_DISABLE"

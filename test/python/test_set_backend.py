@@ -17,6 +17,7 @@
 from __future__ import print_function
 import pytest
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import ngraph_bridge
 
 from common import NgraphTest
@@ -53,7 +54,7 @@ class TestSetBackend(NgraphTest):
         assert (found_cpu and found_interpreter) == True
 
         # Create Graph
-        val = tf.placeholder(tf.float32)
+        val = tf.compat.v1.placeholder(tf.float32)
         out1 = tf.abs(val)
         out2 = tf.abs(out1)
 
@@ -65,7 +66,7 @@ class TestSetBackend(NgraphTest):
         # create new session to execute graph
         # If you want to re-confirm which backend the graph was executed
         # currently the only way is to enable NGRAPH_TF_VLOG_LEVEL=5
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_interpreter
@@ -75,7 +76,7 @@ class TestSetBackend(NgraphTest):
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_cpu
         # create new session to execute graph
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         currently_set_backend = ngraph_bridge.get_currently_set_backend_name()
         assert currently_set_backend == backend_cpu

@@ -24,6 +24,7 @@ import pytest
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import os
 
 from common import NgraphTest
@@ -33,8 +34,8 @@ class TestLog1pOperations(NgraphTest):
 
     def test_log1p(self):
         test_input = (-3.0, -1.0, -0.5, 0.0, 0.25, 0.5, 1, 10)
-        val = tf.placeholder(tf.float32, shape=(8,))
-        out = tf.log1p(val)
+        val = tf.compat.v1.placeholder(tf.float32, shape=(8,))
+        out = tf.math.log1p(val)
 
         def run_test(sess):
             return sess.run(out, feed_dict={val: test_input})

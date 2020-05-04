@@ -24,6 +24,7 @@ import pytest
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 from common import NgraphTest
 
@@ -31,9 +32,9 @@ from common import NgraphTest
 class TestSoftplus(NgraphTest):
 
     def test_softplus(self):
-        x = tf.placeholder(tf.float32, shape=(2, 3))
-        y = tf.placeholder(tf.float32, shape=(2, 3))
-        z = tf.placeholder(tf.float32, shape=(2, 3))
+        x = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
+        y = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
+        z = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
 
         a = x + y + z
         b = x + y + z

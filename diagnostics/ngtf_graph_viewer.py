@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import ngraph_bridge
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 import re
 import os
@@ -148,9 +149,9 @@ def protobuf_to_dot(input_filename, dot_dir, input_binary=False, node_map={}):
 def graphdef_to_tensorboard(gdef, tensorboard_output):
     # convert graphdef to graph, even though FileWriter can accepts graphdefs.
     # this is because FileWriter has deprecated graphdef as inputs, and prefers graphs as inputs
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         tf.import_graph_def(gdef)
-        writer = tf.summary.FileWriter(tensorboard_output, sess.graph)
+        writer = tf.compat.v1.summary.FileWriter(tensorboard_output, sess.graph)
         # TODO: try with tf master
         # wont work now if we have NGraphVariable, NGraphEncapsulateOp
         # TODO: How about supporting NGraphVariable and NGraphEncapsulateOp by switching their optype with something TB knows

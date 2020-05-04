@@ -23,6 +23,7 @@ from __future__ import print_function
 import pytest
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import numpy as np
 
 from common import NgraphTest
@@ -31,7 +32,7 @@ from common import NgraphTest
 class TestSoftmax(NgraphTest):
 
     def test_softmax_2d(self):
-        x = tf.placeholder(tf.float32, shape=(2, 3))
+        x = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
 
         # input value and expected value
         x_np = np.random.rand(2, 3)
@@ -48,7 +49,7 @@ class TestSoftmax(NgraphTest):
         assert np.allclose(self.with_ngraph(sess_fn), expected)
 
     def test_softmax_3d(self):
-        x = tf.placeholder(tf.float32, shape=(2, 3, 2))
+        x = tf.compat.v1.placeholder(tf.float32, shape=(2, 3, 2))
 
         # input value and expected value
         x_np = np.random.rand(2, 3, 2)
@@ -65,7 +66,7 @@ class TestSoftmax(NgraphTest):
         assert np.allclose(self.with_ngraph(sess_fn), expected)
 
     def test_softmax_4d(self):
-        x = tf.placeholder(tf.float32, shape=(2, 3, 2, 4))
+        x = tf.compat.v1.placeholder(tf.float32, shape=(2, 3, 2, 4))
 
         # input value and expected value
         x_np = np.random.rand(2, 3, 2, 4)

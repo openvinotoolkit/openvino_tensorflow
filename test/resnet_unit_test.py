@@ -29,6 +29,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import argparse
 import numpy as np
 import ngraph_bridge
@@ -732,9 +733,10 @@ if __name__ == '__main__':
     data_format_dict = {'NCHW': 'channels_first', 'NHWC': 'channels_last'}
 
     #Input Placeholders
-    inputs = tf.placeholder(dtype=tf.float32, shape=[None, 224, 224, 3])
+    inputs = tf.compat.v1.placeholder(
+        dtype=tf.float32, shape=[None, 224, 224, 3])
 
-    labels_placeholder = tf.placeholder(dtype=tf.int32, shape=[None])
+    labels_placeholder = tf.compat.v1.placeholder(dtype=tf.int32, shape=[None])
 
     #Create Model
     resnet_model = ImagenetModel(
@@ -744,14 +746,15 @@ if __name__ == '__main__':
         dtype=tf.float32)
 
     #Define Optimizer
-    optimizer = tf.train.MomentumOptimizer(learning_rate=0.001, momentum=0.9)
+    optimizer = tf.compat.v1.train.MomentumOptimizer(
+        learning_rate=0.001, momentum=0.9)
 
-    with tf.variable_scope('resnet', reuse=tf.AUTO_REUSE):
+    with tf.compat.v1.variable_scope('resnet', reuse=tf.AUTO_REUSE):
         #Model on nGraph
         with tf.device('/job:localhost/replica:0/task:0/device:' + 'NGRAPH' +
                        ':0'):
-            tf.set_random_seed(0)
-            init = tf.global_variables_initializer()
+            tf.compat.v1.set_random_seed(0)
+            init = tf.compat.v1.global_variables_initializer()
             logits_1 = resnet_model(inputs, phase_training)
             if phase_training:
                 _, train_op_1 = generate_gradients(logits_1, labels_placeholder)
@@ -759,8 +762,8 @@ if __name__ == '__main__':
         #Model on CPU
         with tf.device('/job:localhost/replica:0/task:0/device:' + 'CPU' +
                        ':0'):
-            tf.set_random_seed(0)
-            init = tf.global_variables_initializer()
+            tf.compat.v1.set_random_seed(0)
+            init = tf.compat.v1.global_variables_initializer()
             logits_2 = resnet_model(inputs, phase_training)
             if phase_training:
                 _, train_op_2 = generate_gradients(logits_2, labels_placeholder)
@@ -771,7 +774,9 @@ if __name__ == '__main__':
     labels = np.random.randint(0, _NUM_CLASSES, size=(batch_size,))
 
     ##Run Session on nGraph
-    with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess_1:
+    with tf.compat.v1.Session(
+            config=tf.compat.v1.ConfigProto(
+                allow_soft_placement=True)) as sess_1:
         print("Running on nGraph")
 
         sess_1.run(init)
@@ -785,7 +790,9 @@ if __name__ == '__main__':
             logits_ngraph = sess_1.run(logits_1, {inputs: images})
 
     ##Run Session on CPU
-    with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess_2:
+    with tf.compat.v1.Session(
+            config=tf.compat.v1.ConfigProto(
+                allow_soft_placement=True)) as sess_2:
 
         print("Running on CPU")
         sess_2.run(init)

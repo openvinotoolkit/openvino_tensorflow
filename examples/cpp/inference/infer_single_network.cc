@@ -70,6 +70,9 @@ tf::Status SetNGraphBackend(const string& backend_name) {
 }
 
 void PrintVersion() {
+  // Tensorflow version info
+  std::cout << "Tensorflow version: " << tensorflow::ngraph_bridge::tf_version()
+            << std::endl;
   // nGraph Bridge version info
   std::cout << "Bridge version: " << tf::ngraph_bridge::ngraph_tf_version()
             << std::endl;

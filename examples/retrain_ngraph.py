@@ -151,6 +151,7 @@ import shlex
 import time
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 import tensorflow_hub as hub
 
 import ngraph_bridge
@@ -332,8 +333,8 @@ def create_module_graph(module_spec):
   """
     height, width = hub.get_expected_image_size(module_spec)
     with tf.Graph().as_default() as graph:
-        resized_input_tensor = tf.placeholder(tf.float32,
-                                              [None, height, width, 3])
+        resized_input_tensor = tf.compat.v1.placeholder(
+            tf.float32, [None, height, width, 3])
         m = hub.Module(module_spec)
         bottleneck_tensor = m(resized_input_tensor)
         wants_quantization = any(
@@ -699,7 +700,7 @@ def add_input_distortions(flip_left_right, random_crop, random_scale,
   """
     input_height, input_width = hub.get_expected_image_size(module_spec)
     input_depth = hub.get_num_image_channels(module_spec)
-    jpeg_data = tf.placeholder(tf.string, name='DistortJPGInput')
+    jpeg_data = tf.compat.v1.placeholder(tf.string, name='DistortJPGInput')
     decoded_image = tf.image.decode_jpeg(jpeg_data, channels=input_depth)
     # Convert from full range of uint8 to range [0,1] of float32.
     decoded_image_as_float = tf.image.convert_image_dtype(
@@ -774,12 +775,12 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     batch_size, bottleneck_tensor_size = bottleneck_tensor.get_shape().as_list()
     assert batch_size is None, 'We want to work with arbitrary batch size.'
     with tf.name_scope('input'):
-        bottleneck_input = tf.placeholder_with_default(
+        bottleneck_input = tf.compat.v1.placeholder_with_default(
             bottleneck_tensor,
             shape=[batch_size, bottleneck_tensor_size],
             name='BottleneckInputPlaceholder')
 
-        ground_truth_input = tf.placeholder(
+        ground_truth_input = tf.compat.v1.placeholder(
             tf.int64, [batch_size], name='GroundTruthInput')
 
     # Organizing the following ops so they are easier to see in TensorBoard.
@@ -825,7 +826,8 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
-        optimizer = tf.train.GradientDescentOptimizer(FLAGS.learning_rate)
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(
+            FLAGS.learning_rate)
         train_step = optimizer.minimize(cross_entropy_mean)
 
     return (train_step, cross_entropy_mean, bottleneck_input,
@@ -912,7 +914,7 @@ def build_eval_session(module_spec, class_count):
     eval_graph, bottleneck_tensor, resized_input_tensor, wants_quantization = (
         create_module_graph(module_spec))
 
-    eval_sess = tf.Session(graph=eval_graph)
+    eval_sess = tf.compat.v1.Session(graph=eval_graph)
     with eval_graph.as_default():
         # Add the new layer for exporting.
         (_, _, bottleneck_input, ground_truth_input,
@@ -925,7 +927,7 @@ def build_eval_session(module_spec, class_count):
 
         # Now we need to restore the values from the training graph to the eval
         # graph.
-        tf.train.Saver().restore(eval_sess, FLAGS.checkpoint_path)
+        tf.compat.v1.train.Saver().restore(eval_sess, FLAGS.checkpoint_path)
 
         evaluation_step, prediction = add_evaluation_step(
             final_tensor, ground_truth_input)
@@ -968,7 +970,7 @@ def add_jpeg_decoding(module_spec):
   """
     input_height, input_width = hub.get_expected_image_size(module_spec)
     input_depth = hub.get_num_image_channels(module_spec)
-    jpeg_data = tf.placeholder(tf.string, name='DecodeJPGInput')
+    jpeg_data = tf.compat.v1.placeholder(tf.string, name='DecodeJPGInput')
     decoded_image = tf.image.decode_jpeg(jpeg_data, channels=input_depth)
     # Convert from full range of uint8 to range [0,1] of float32.
     decoded_image_as_float = tf.image.convert_image_dtype(
@@ -1093,10 +1095,11 @@ def main(_):
     config.inter_op_parallelism_threads = 2
     config_ngraph_enabled = ngraph_bridge.update_config(config)
 
-    with tf.Session(config=config_ngraph_enabled, graph=graph) as sess:
+    with tf.compat.v1.Session(
+            config=config_ngraph_enabled, graph=graph) as sess:
         # Initialize all weights: for the module to their pretrained values,
         # and for the newly added retraining layer to random initial values.
-        init = tf.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         sess.run(init)
 
         # Set up the image decoding sub-graph.
@@ -1130,7 +1133,7 @@ def main(_):
 
         # Create a train saver that is used to restore values into an eval graph
         # when exporting models.
-        train_saver = tf.train.Saver()
+        train_saver = tf.compat.v1.train.Saver()
 
         # Run the training for as many cycles as requested on the command line.
         start = None
