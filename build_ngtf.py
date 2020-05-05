@@ -101,6 +101,13 @@ def main():
         action="store_true")
 
     parser.add_argument(
+        '--use_prebuilt_ngraph',
+        type=str,
+        help=
+        "Skip building ngraph and use pre-built version from the specified directory.\n",
+        action="store")
+
+    parser.add_argument(
         '--distributed_build',
         type=str,
         help="Builds a distributed version of the nGraph components\n",
@@ -386,65 +393,69 @@ def main():
             # will be 1
             cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
-    # Download nGraph if required.
-    ngraph_src_dir = './ngraph'
-    if arguments.ngraph_src_dir:
-        ngraph_src_dir = arguments.ngraph_src_dir
-
-        print("Using local nGraph source in directory ", ngraph_src_dir)
-    else:
-        if arguments.ngraph_version:
-            ngraph_version = arguments.ngraph_version
-
-        print("nGraph Version: ", ngraph_version)
-        download_repo("ngraph", "https://github.com/NervanaSystems/ngraph.git",
-                      ngraph_version)
-
-    # Now build nGraph
-    ngraph_cmake_flags = [
-        "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DNGRAPH_DEX_ONLY=TRUE",
-        "-DNGRAPH_DEBUG_ENABLE=NO", "-DNGRAPH_UNIT_TEST_ENABLE=NO",
-        "-DNGRAPH_TARGET_ARCH=" + target_arch,
-        "-DNGRAPH_TUNE_ARCH=" + target_arch, "-DNGRAPH_TBB_ENABLE=FALSE"
-    ]
-
-    if arguments.use_ngraph_staticlibs:
-        ngraph_cmake_flags.extend(["-DNGRAPH_STATIC_LIB_ENABLE=TRUE"])
-        ngraph_cmake_flags.extend(["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
-        ngraph_cmake_flags.extend(
-            ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
-
-    if arguments.debug_build:
-        ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
-
-    if (arguments.distributed_build == "OMPI"):
-        ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OMPI"])
-    elif (arguments.distributed_build == "MLSL"):
-        ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=MLSL"])
-    else:
-        ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OFF"])
-
-    if arguments.build_plaidml_backend:
-        command_executor(["pip", "install", "-U", "plaidML"])
-
     flag_string_map = {True: 'YES', False: 'NO'}
-    ngraph_cmake_flags.extend([
-        "-DNGRAPH_TOOLS_ENABLE=" +
-        flag_string_map[platform.system() != 'Darwin']
-    ])
-    ngraph_cmake_flags.extend(
-        ["-DNGRAPH_GPU_ENABLE=" + flag_string_map[arguments.build_gpu_backend]])
-    ngraph_cmake_flags.extend([
-        "-DNGRAPH_PLAIDML_ENABLE=" +
-        flag_string_map[arguments.build_plaidml_backend]
-    ])
-    ngraph_cmake_flags.extend([
-        "-DNGRAPH_INTELGPU_ENABLE=" +
-        flag_string_map[arguments.build_intelgpu_backend]
-    ])
+    # Build nGraph if required.
+    if not arguments.use_prebuilt_ngraph:
+        ngraph_src_dir = './ngraph'
+        if arguments.ngraph_src_dir:
+            ngraph_src_dir = arguments.ngraph_src_dir
 
-    build_ngraph(build_dir, ngraph_src_dir, ngraph_cmake_flags, verbosity)
+            print("Using local nGraph source in directory ", ngraph_src_dir)
+        else:
+            if arguments.ngraph_version:
+                ngraph_version = arguments.ngraph_version
+
+            print("nGraph Version: ", ngraph_version)
+            download_repo("ngraph",
+                          "https://github.com/NervanaSystems/ngraph.git",
+                          ngraph_version)
+
+        # Now build nGraph
+        ngraph_cmake_flags = [
+            "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
+            "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DNGRAPH_DEX_ONLY=TRUE",
+            "-DNGRAPH_DEBUG_ENABLE=NO", "-DNGRAPH_UNIT_TEST_ENABLE=NO",
+            "-DNGRAPH_TARGET_ARCH=" + target_arch,
+            "-DNGRAPH_TUNE_ARCH=" + target_arch, "-DNGRAPH_TBB_ENABLE=FALSE"
+        ]
+
+        if arguments.use_ngraph_staticlibs:
+            ngraph_cmake_flags.extend(["-DNGRAPH_STATIC_LIB_ENABLE=TRUE"])
+            ngraph_cmake_flags.extend(["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
+            ngraph_cmake_flags.extend(
+                ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
+
+        if arguments.debug_build:
+            ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+
+        if (arguments.distributed_build == "OMPI"):
+            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OMPI"])
+        elif (arguments.distributed_build == "MLSL"):
+            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=MLSL"])
+        else:
+            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OFF"])
+
+        if arguments.build_plaidml_backend:
+            command_executor(["pip", "install", "-U", "plaidML"])
+
+        ngraph_cmake_flags.extend([
+            "-DNGRAPH_TOOLS_ENABLE=" +
+            flag_string_map[platform.system() != 'Darwin']
+        ])
+        ngraph_cmake_flags.extend([
+            "-DNGRAPH_GPU_ENABLE=" +
+            flag_string_map[arguments.build_gpu_backend]
+        ])
+        ngraph_cmake_flags.extend([
+            "-DNGRAPH_PLAIDML_ENABLE=" +
+            flag_string_map[arguments.build_plaidml_backend]
+        ])
+        ngraph_cmake_flags.extend([
+            "-DNGRAPH_INTELGPU_ENABLE=" +
+            flag_string_map[arguments.build_intelgpu_backend]
+        ])
+
+        build_ngraph(build_dir, ngraph_src_dir, ngraph_cmake_flags, verbosity)
 
     ngraph_tf_cmake_flags = [
         "-DNGRAPH_TF_INSTALL_PREFIX=" + artifacts_location,
@@ -452,8 +463,16 @@ def main():
         "-DUNIT_TEST_ENABLE=ON",
         "-DNGRAPH_TARGET_ARCH=" + target_arch,
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
-        "-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location,
     ]
+
+    if not arguments.use_prebuilt_ngraph:
+        ngraph_tf_cmake_flags.extend(
+            ["-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location])
+    else:
+        ngraph_tf_cmake_flags.extend([
+            "-DNGRAPH_ARTIFACTS_DIR=" + os.path.abspath(
+                arguments.use_prebuilt_ngraph)
+        ])
 
     if (arguments.use_ngraph_staticlibs):
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE=TRUE"])
