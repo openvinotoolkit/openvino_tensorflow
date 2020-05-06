@@ -38,21 +38,6 @@
     parallelism: 1
 
   - wait
-  
-  - command: |
-      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      pip install -U \
-        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.0.0-cp36-cp36m-linux_x86_64.whl
-      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
-        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_bazel
-      bazel clean --expunge
-    
-    label: ":bazel: Bazel Build"
-    timeout_in_minutes: 30
-    agents:
-    - "queue=cpu"
-
-  - wait
 
   - command: |
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \

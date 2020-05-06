@@ -64,17 +64,18 @@ def main():
                   arguments.tf_version)
 
     # Build TensorFlow
-    build_tensorflow(venv_dir, "tensorflow", 'artifacts', arguments.target_arch,
-                     False)
+    build_tensorflow(arguments.tf_version, venv_dir, "tensorflow", 'artifacts',
+                     arguments.target_arch, False)
 
     # Build TensorFlow C++ Library
-    build_tensorflow_cc("tensorflow", 'artifacts', arguments.target_arch, False)
+    build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
+                        arguments.target_arch, False)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
     os.chdir("tensorflow")
 
-    copy_tf_to_artifacts(artifacts_dir, None)
+    copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None)
 
     print('\033[1;35mTensorFlow Build finished\033[0m')
 
