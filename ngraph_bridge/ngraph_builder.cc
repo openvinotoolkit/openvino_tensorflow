@@ -889,18 +889,9 @@ static Status TranslateBatchMatMulOp(
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "adj_y", &tf_adj_y));
 
   if (n_dims == 2) {
-    // Transpose X if AdjX = true
-    if (tf_adj_x) {
-      ng_lhs = ng::builder::numpy_transpose(ng_lhs, {1, 0});
-      Builder::SetTracingInfo(op->name(), ng_lhs);
-    }
-    // Transpose Y if AdjY = true
-    if (tf_adj_y) {
-      ng_rhs = ng::builder::numpy_transpose(ng_rhs, {1, 0});
-      Builder::SetTracingInfo(op->name(), ng_rhs);
-    }
     SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<ngraph::op::Dot>(op->name(), ng_lhs, ng_rhs));
+             ConstructNgNode<ngraph::op::MatMul>(op->name(), ng_lhs, ng_rhs,
+                                                 tf_adj_x, tf_adj_y));
   } else if (n_dims == 3) {
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<ngraph::op::BatchMatMulTranspose>(
@@ -2277,37 +2268,19 @@ static Status TranslateFusedMatMulOp(const Node* op,
   std::vector<string> fused_ops;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "fused_ops", &fused_ops));
 
-  auto CreateNgDot = [&](shared_ptr<ng::Node>& ng_lhs,
-                         shared_ptr<ng::Node>& ng_rhs,
-                         shared_ptr<ng::Node>& ng_dot) {
+  // Transpose arguments if requested.
+  bool transpose_a = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "transpose_a", &transpose_a));
 
-    // Transpose arguments if requested.
-    bool transpose_a = false;
-    bool transpose_b = false;
+  bool transpose_b = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "transpose_b", &transpose_b));
 
-    if (GetNodeAttr(op->attrs(), "transpose_a", &transpose_a) == Status::OK() &&
-        transpose_a) {
-      ng_lhs = ng::builder::numpy_transpose(ng_lhs, ng::AxisVector{1, 0});
-      Builder::SetTracingInfo(op->name(), ng_lhs);
-    }
-    if (GetNodeAttr(op->attrs(), "transpose_b", &transpose_b) == Status::OK() &&
-        transpose_b) {
-      ng_rhs = ng::builder::numpy_transpose(ng_rhs, ng::AxisVector{1, 0});
-      Builder::SetTracingInfo(op->name(), ng_rhs);
-    }
-
-    // The default axis count for nGraph's Dot op is 1, which is just what
-    // we need here.
-    ng_dot = ConstructNgNode<ngraph::op::Dot>(op->name(), ng_lhs, ng_rhs);
-
-    return Status::OK();
-  };
-
-  shared_ptr<ng::Node> ng_lhs, ng_rhs, ng_bias, ng_dot;
+  shared_ptr<ng::Node> ng_lhs, ng_rhs, ng_bias, ng_matmul;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_lhs, &ng_rhs, &ng_bias));
-  TF_RETURN_IF_ERROR(CreateNgDot(ng_lhs, ng_rhs, ng_dot));
+  ng_matmul = ConstructNgNode<ngraph::op::MatMul>(op->name(), ng_lhs, ng_rhs,
+                                                  transpose_a, transpose_b);
 
-  auto ng_dot_shape = ng_dot->get_shape();
+  auto ng_matmul_shape = ng_matmul->get_shape();
   auto ng_bias_shape = ng_bias->get_shape();
 
   if (ng_bias_shape.size() != 1) {
@@ -2319,15 +2292,15 @@ static Status TranslateFusedMatMulOp(const Node* op,
 
   // TODO : _FusedMatMul doesn't have data_format attributes, insert broadcast
   // axes as if it's NHWC for now.
-  for (size_t i = 0; i < ng_dot_shape.size() - 1; i++) {
+  for (size_t i = 0; i < ng_matmul_shape.size() - 1; i++) {
     ng_broadcast_axes.insert(i);
   }
 
   auto ng_bias_broadcasted = ConstructNgNode<ng::op::Broadcast>(
-      op->name(), ng_bias, ng_dot_shape, ng_broadcast_axes);
+      op->name(), ng_bias, ng_matmul_shape, ng_broadcast_axes);
 
   auto ng_add =
-      ConstructNgNode<ng::op::Add>(op->name(), ng_dot, ng_bias_broadcasted);
+      ConstructNgNode<ng::op::Add>(op->name(), ng_matmul, ng_bias_broadcasted);
   if (fused_ops.size() == 1) {  // Only fusing BiasAdd
     SaveNgOp(ng_op_map, op->name(), ng_add);
   } else if (fused_ops.size() == 2) {  // Also has activation
@@ -2729,23 +2702,14 @@ static Status TranslateMatMulOp(const Node* op,
 
   // Transpose arguments if requested.
   bool transpose_a = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "transpose_a", &transpose_a));
+
   bool transpose_b = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "transpose_b", &transpose_b));
 
-  if (GetNodeAttr(op->attrs(), "transpose_a", &transpose_a) == Status::OK() &&
-      transpose_a) {
-    ng_lhs = ng::builder::numpy_transpose(ng_lhs, ng::AxisVector{1, 0});
-    Builder::SetTracingInfo(op->name(), ng_lhs);
-  }
-  if (GetNodeAttr(op->attrs(), "transpose_b", &transpose_b) == Status::OK() &&
-      transpose_b) {
-    ng_rhs = ng::builder::numpy_transpose(ng_rhs, ng::AxisVector{1, 0});
-    Builder::SetTracingInfo(op->name(), ng_rhs);
-  }
-
-  // The default axis count for nGraph's Dot op is 1, which is just what
-  // we need here.
   SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<ngraph::op::Dot>(op->name(), ng_lhs, ng_rhs));
+           ConstructNgNode<ngraph::op::MatMul>(op->name(), ng_lhs, ng_rhs,
+                                               transpose_a, transpose_b));
   return Status::OK();
 }
 
