@@ -27,9 +27,9 @@
                 "num_nodes_marked_for_clustering": 0
             },
             "5": {
-                "num_ng_clusters": 3,
-                "num_nodes_in_graph": 1811,
-                "num_nodes_marked_for_clustering": 1326
+                "num_ng_clusters": 2,
+                "num_nodes_in_graph": 2048,
+                "num_nodes_marked_for_clustering": 1563
             }
         },
         "time": 10
