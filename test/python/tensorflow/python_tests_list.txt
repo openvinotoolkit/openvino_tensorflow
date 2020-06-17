@@ -21,7 +21,7 @@ array_ops_test.StridedSliceTest.testTensorIndexing
 #array_ops_test.StridedSliceTest.test_basic_slice
 
 #array_ops_test.StridedSliceGradTest.testGradient
-array_ops_test.StridedSliceGradTest.testGradientZero
+#array_ops_test.StridedSliceGradTest.testGradientZero
 array_ops_test.StridedSliceGradTest.testInt64Indices
 
 array_ops_test.ShapeSizeRankTest.testDenseShape
@@ -278,16 +278,16 @@ one_hot_op_test.OneHotTest.testComplex128Basic
 one_hot_op_test.OneHotTest.testComplex64Basic
 one_hot_op_test.OneHotTest.testComplexBatch
 one_hot_op_test.OneHotTest.testDoubleBasic
-one_hot_op_test.OneHotTest.testDoubleBatch
+#one_hot_op_test.OneHotTest.testDoubleBatch
 one_hot_op_test.OneHotTest.testDtypeMismatchTypeError
 one_hot_op_test.OneHotTest.testFloatBasic
-one_hot_op_test.OneHotTest.testFloatBatch
+#one_hot_op_test.OneHotTest.testFloatBatch
 one_hot_op_test.OneHotTest.testHalfBatch
 one_hot_op_test.OneHotTest.testIndicesTypes
 one_hot_op_test.OneHotTest.testInt32Basic
-one_hot_op_test.OneHotTest.testInt32Batch
+#one_hot_op_test.OneHotTest.testInt32Batch
 one_hot_op_test.OneHotTest.testInt64Basic
-one_hot_op_test.OneHotTest.testInt64Batch
+#one_hot_op_test.OneHotTest.testInt64Batch
 one_hot_op_test.OneHotTest.testOnOffMismatchTypeError
 one_hot_op_test.OneHotTest.testPrefixDimOverflow
 one_hot_op_test.OneHotTest.testSimpleCases
@@ -336,7 +336,7 @@ reduction_ops_test.AnyReductionTest.testAxesType
 
 reduction_ops_test.MaxReductionTest.testAxesType
 reduction_ops_test.MaxReductionTest.testDoubleReduce3D
-reduction_ops_test.MaxReductionTest.testEmptyGradients
+#reduction_ops_test.MaxReductionTest.testEmptyGradients
 reduction_ops_test.MaxReductionTest.testFloatReduce3D
 reduction_ops_test.MaxReductionTest.testGradient
 reduction_ops_test.MaxReductionTest.testGradient2
@@ -358,7 +358,7 @@ reduction_ops_test.MeanReductionTest.testInt32
 
 reduction_ops_test.MinReductionTest.testAxesType
 reduction_ops_test.MinReductionTest.testDoubleReduce3D
-reduction_ops_test.MinReductionTest.testEmptyGradients
+#reduction_ops_test.MinReductionTest.testEmptyGradients
 reduction_ops_test.MinReductionTest.testFloatReduce3D
 reduction_ops_test.MinReductionTest.testGradient
 reduction_ops_test.MinReductionTest.testGradient2

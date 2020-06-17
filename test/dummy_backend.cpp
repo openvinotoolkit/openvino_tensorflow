@@ -45,6 +45,10 @@ shared_ptr<runtime::Tensor> runtime::dummy::DummyBackend::create_tensor(
                                           "external");
 }
 
+shared_ptr<runtime::Tensor> runtime::dummy::DummyBackend::create_tensor() {
+  throw runtime_error("Dummy backend does not support dynamic tensors");
+}
+
 shared_ptr<runtime::Executable> runtime::dummy::DummyBackend::compile(
     shared_ptr<ng::Function> function, bool enable_performance_collection) {
   return make_shared<DummyExecutable>(function, enable_performance_collection);

@@ -53,7 +53,7 @@ def main():
     '''
 
     # Component versions
-    ngraph_version = "v0.28.0-rc.1"
+    ngraph_version = "94456090176ad6abda633b496b89cc16157ed4b0"  #add codegen support to cpu backend (#4679) ,May 26
     tf_version = "v1.15.2"
 
     # Command line parser options

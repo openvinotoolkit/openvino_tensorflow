@@ -56,6 +56,8 @@ class ng::runtime::dummy::DummyBackend : public ng::runtime::Backend {
   std::shared_ptr<ng::runtime::Tensor> create_tensor(
       const ng::element::Type& type, const ng::Shape& shape) override;
 
+  std::shared_ptr<ng::runtime::Tensor> create_tensor() override;
+
   std::shared_ptr<ng::runtime::Executable> compile(
       std::shared_ptr<ng::Function> function,
       bool enable_performance_data = false) override;
