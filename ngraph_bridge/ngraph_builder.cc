@@ -4446,19 +4446,6 @@ static Status TranslateSquareOp(
       });
 }
 
-static Status TranslateSquaredDifferenceOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  return TranslateBinaryOp(
-      op, static_input_map, ng_op_map, [&op](std::shared_ptr<ng::Node> input1,
-                                             std::shared_ptr<ng::Node> input2) {
-        auto ng_diff =
-            ConstructNgNode<ng::opset3::Subtract>(op->name(), input1, input2);
-        return ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_diff,
-                                                     ng_diff);
-      });
-}
-
 static Status TranslateSqueezeOp(const Node* op,
                                  const std::vector<const Tensor*>&,
                                  Builder::OpMap& ng_op_map) {
@@ -5058,7 +5045,8 @@ const static std::map<
       {"Split", TranslateSplitOp}, {"SplitV", TranslateSplitVOp},
       {"Sqrt", TranslateUnaryOp<ngraph::op::Sqrt>},
       {"Square", TranslateSquareOp},
-      {"SquaredDifference", TranslateSquaredDifferenceOp},
+      {"SquaredDifference",
+       TranslateBinaryOp<ngraph::opset3::SquaredDifference>},
       {"Squeeze", TranslateSqueezeOp},
       {"StridedSlice", TranslateStridedSliceOp},
       {"StridedSliceGrad", TranslateStridedSliceGradOp},
