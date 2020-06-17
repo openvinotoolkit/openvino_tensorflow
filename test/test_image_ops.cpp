@@ -68,37 +68,6 @@ TEST(ImageOps, DISABLED_CropAndResize) {
   opexecuter.RunTest();
 }
 
-// Test op: ResizeBilinear
-// Disabled till a backend starts supporting it
-TEST(ImageOps, DISABLED_ResizeBilinear) {
-  for (auto align : {true, false}) {
-    Scope root = Scope::NewRootScope();
-    // [batch, height, width, channels]
-    Tensor images(DT_FLOAT, TensorShape({4, 64, 64, 3}));
-    AssignInputValuesRandom(images);
-
-    // Todo: test by changing align_corners
-
-    // new_height, new_width
-    Tensor size(DT_INT32, TensorShape({2}));
-    vector<int> new_dims = {93, 27};
-    // TODO loop and do multiple sizes, larger
-    // and smaller than original
-    AssignInputValues(size, new_dims);
-
-    auto attr = ops::ResizeBilinear::Attrs().AlignCorners(align);
-
-    vector<int> static_input_indexes = {};
-    auto R = ops::ResizeBilinear(root, images, size, attr);
-    vector<DataType> output_datatypes = {DT_FLOAT};
-
-    std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "ResizeBilinear", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
-
-    opexecuter.RunTest();
-  }
-}
-}
-}
-}
+}  // testing
+}  // ngraph-bridge
+}  // tensorflow

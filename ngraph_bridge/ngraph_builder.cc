@@ -3724,38 +3724,6 @@ static Status TranslateReshapeOp(
   return Status::OK();
 }
 
-static Status TranslateResizeBilinearOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> images;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &images, nullptr));
-
-  std::vector<int32> size_vector;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 1, static_input_map, &size_vector));
-
-  auto size_int64 = ConstructNgNode<ng::op::Constant>(
-      op->name(), ngraph::element::i64, ng::Shape{2}, size_vector);
-
-  bool align_corners;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
-
-  ngraph::op::InterpolateAttrs attrs;
-  attrs.align_corners = align_corners;
-  attrs.mode = "linear";
-  attrs.antialias = false;
-  // The TF "images" is has dimensions [batch, height, width, channels].
-  // So 1 and 2 are the spatial axes
-  // TODO check this parameter
-  attrs.axes = {1, 2};
-  // TODO: pads_begin and pads_end are not populated. Check correctness
-
-  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::op::Interpolate>(
-                                      op->name(), images, size_int64, attrs));
-
-  return Status::OK();
-}
-
 static Status TranslateRsqrtOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -5074,7 +5042,6 @@ const static std::map<
       {"Reciprocal", TranslateReciprocalOp},
       {"Relu", TranslateUnaryOp<ngraph::op::Relu>}, {"Relu6", TranslateRelu6Op},
       {"ReluGrad", TranslateReluGradOp}, {"Reshape", TranslateReshapeOp},
-      {"ResizeBilinear", TranslateResizeBilinearOp},
       {"Rsqrt", TranslateRsqrtOp}, {"RsqrtGrad", TranslateRsqrtGradOp},
       {"ScatterNd", TranslateScatterNdOp}, {"Select", TranslateSelectOp},
       {"Shape", TranslateShapeOp}, {"Sigmoid", TranslateSigmoidOp},
