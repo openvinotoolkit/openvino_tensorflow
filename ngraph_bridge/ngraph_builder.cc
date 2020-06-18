@@ -3220,11 +3220,11 @@ static Status TranslateReciprocalOp(
         auto et = n->get_element_type();
         auto shape = n->get_shape();
         std::vector<std::string> constant_values(ng::shape_size(shape), "-1");
-        auto ng_exponent = ConstructNgNode<ng::op::Constant>(
+        auto ng_exponent = ConstructNgNode<ng::opset3::Constant>(
             op->name(), et, shape, constant_values);
 
         // Raise each element of the input to the power -1.
-        return ConstructNgNode<ng::op::Power>(op->name(), n, ng_exponent);
+        return ConstructNgNode<ng::opset3::Power>(op->name(), n, ng_exponent);
       });
 }
 
@@ -3734,11 +3734,11 @@ static Status TranslateRsqrtOp(
         auto et = n->get_element_type();
         auto shape = n->get_shape();
         std::vector<std::string> constant_values(ng::shape_size(shape), "-0.5");
-        auto ng_exponent = ConstructNgNode<ng::op::Constant>(
+        auto ng_exponent = ConstructNgNode<ng::opset3::Constant>(
             op->name(), et, shape, constant_values);
 
         // Raise each element of the input to the power -0.5.
-        return ConstructNgNode<ng::op::Power>(op->name(), n, ng_exponent);
+        return ConstructNgNode<ng::opset3::Power>(op->name(), n, ng_exponent);
       });
 }
 
@@ -3782,17 +3782,17 @@ static Status TranslateRsqrtGradOp(const Node* op,
   auto et = ng_input->get_element_type();
   auto shape = ng_input->get_shape();
   std::vector<std::string> constant_values(ng::shape_size(shape), "3");
-  auto ng_exponent =
-      ConstructNgNode<ng::op::Constant>(op->name(), et, shape, constant_values);
+  auto ng_exponent = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), et, shape, constant_values);
 
   // Raise each element of the input to the power 3.
   auto ng_pow =
-      ConstructNgNode<ng::op::Power>(op->name(), ng_input, ng_exponent);
+      ConstructNgNode<ng::opset3::Power>(op->name(), ng_input, ng_exponent);
 
   // Create a constant tensor populated with the value -1/2.
   std::vector<std::string> constant_diff(ng::shape_size(shape), "-0.5");
-  auto ng_diff =
-      ConstructNgNode<ng::op::Constant>(op->name(), et, shape, constant_diff);
+  auto ng_diff = ConstructNgNode<ng::opset3::Constant>(op->name(), et, shape,
+                                                       constant_diff);
   auto ng_result = ConstructNgNode<ng::opset3::Multiply>(
       op->name(),
       (ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_pow, ng_delta)),
@@ -4936,7 +4936,8 @@ const static std::map<
     const function<Status(const Node*, const std::vector<const Tensor*>&,
                           Builder::OpMap&)>>
     TRANSLATE_OP_MAP {
-  {"Abs", TranslateUnaryOp<ngraph::op::Abs>},
+  {"Abs", TranslateUnaryOp<ngraph::opset3::Abs>},
+      {"Acos", TranslateUnaryOp<ngraph::opset3::Acos>},
       {"Add", TranslateBinaryOp<ngraph::opset3::Add>},
       {"AddN", TranslateAddNOp},
       {"AddV2", TranslateBinaryOp<ngraph::opset3::Add>},
@@ -4955,13 +4956,14 @@ const static std::map<
       {"Conv2D", TranslateConv2DOp},
       {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
       {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
-      {"Conv3D", TranslateConv3DOp}, {"Cos", TranslateUnaryOp<ngraph::op::Cos>},
+      {"Conv3D", TranslateConv3DOp},
+      {"Cos", TranslateUnaryOp<ngraph::opset3::Cos>},
       {"CropAndResize", TranslateCropAndResizeOp},
       {"Cumsum", TranslateCumsumOp}, {"DepthToSpace", TranslateDepthToSpaceOp},
       {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
       {"Dequantize", TranslateDequantizeOp},
       {"Equal", TranslateBinaryOp<ngraph::opset3::Equal>},
-      {"Exp", TranslateUnaryOp<ngraph::op::Exp>},
+      {"Exp", TranslateUnaryOp<ngraph::opset3::Exp>},
       {"ExpandDims", TranslateExpandDimsOp}, {"Fill", TranslateFillOp},
       {"Floor", TranslateUnaryOp<ngraph::opset3::Floor>},
       {"FloorDiv", TranslateFloorDivOp},
@@ -4985,9 +4987,10 @@ const static std::map<
       {"L2Loss", TranslateL2LossOp}, {"LogSoftmax", TranslateLogSoftmaxOp},
       {"Less", TranslateBinaryOp<ngraph::opset3::Less>},
       {"LessEqual", TranslateBinaryOp<ngraph::opset3::LessEqual>},
-      {"Log", TranslateUnaryOp<ngraph::op::Log>}, {"Log1p", TranslateLog1pOp},
+      {"Log", TranslateUnaryOp<ngraph::opset3::Log>},
+      {"Log1p", TranslateLog1pOp},
       {"LogicalAnd", TranslateBinaryOp<ngraph::opset3::LogicalAnd>},
-      {"LogicalNot", TranslateUnaryOp<ngraph::op::Not>},
+      {"LogicalNot", TranslateUnaryOp<ngraph::opset3::LogicalNot>},
       {"LogicalOr", TranslateBinaryOp<ngraph::opset3::LogicalOr>},
       {"MatMul", TranslateMatMulOp},
       {"Max", TranslateDirectReduceOp<ng::opset3::ReduceMax>},
@@ -4999,7 +5002,7 @@ const static std::map<
       {"Min", TranslateDirectReduceOp<ng::opset3::ReduceMin>},
       {"Minimum", TranslateBinaryOp<ngraph::opset3::Minimum>},
       {"Mul", TranslateBinaryOp<ngraph::opset3::Multiply>},
-      {"Neg", TranslateUnaryOp<ngraph::op::Negative>},
+      {"Neg", TranslateUnaryOp<ngraph::opset3::Negative>},
       // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
       // reasons, but they have no data flow inputs or outputs.
       {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
@@ -5027,15 +5030,16 @@ const static std::map<
       {"RandomUniform", TranslateRandomUniformOp},
       {"RealDiv", TranslateBinaryOp<ngraph::opset3::Divide>},
       {"Reciprocal", TranslateReciprocalOp},
-      {"Relu", TranslateUnaryOp<ngraph::op::Relu>}, {"Relu6", TranslateRelu6Op},
-      {"ReluGrad", TranslateReluGradOp}, {"Reshape", TranslateReshapeOp},
-      {"Rsqrt", TranslateRsqrtOp}, {"RsqrtGrad", TranslateRsqrtGradOp},
-      {"ScatterNd", TranslateScatterNdOp}, {"Select", TranslateSelectOp},
-      {"Shape", TranslateShapeOp}, {"Sigmoid", TranslateSigmoidOp},
-      {"SigmoidGrad", TranslateSigmoidGradOp},
-      {"Sin", TranslateUnaryOp<ngraph::op::Sin>}, {"Size", TranslateSizeOp},
-      {"Sign", TranslateUnaryOp<ngraph::op::Sign>}, {"Slice", TranslateSliceOp},
-      {"Snapshot", TranslateIdentityOp}, {"Softmax", TranslateSoftmaxOp},
+      {"Relu", TranslateUnaryOp<ngraph::opset3::Relu>},
+      {"Relu6", TranslateRelu6Op}, {"ReluGrad", TranslateReluGradOp},
+      {"Reshape", TranslateReshapeOp}, {"Rsqrt", TranslateRsqrtOp},
+      {"RsqrtGrad", TranslateRsqrtGradOp}, {"ScatterNd", TranslateScatterNdOp},
+      {"Select", TranslateSelectOp}, {"Shape", TranslateShapeOp},
+      {"Sigmoid", TranslateSigmoidOp}, {"SigmoidGrad", TranslateSigmoidGradOp},
+      {"Sin", TranslateUnaryOp<ngraph::opset3::Sin>}, {"Size", TranslateSizeOp},
+      {"Sign", TranslateUnaryOp<ngraph::opset3::Sign>},
+      {"Slice", TranslateSliceOp}, {"Snapshot", TranslateIdentityOp},
+      {"Softmax", TranslateSoftmaxOp},
       {"SoftmaxCrossEntropyWithLogits",
        TranslateSoftmaxCrossEntropyWithLogitsOp},
       {"Softplus", TranslateSoftplusOp},
@@ -5043,7 +5047,7 @@ const static std::map<
       {"SparseSoftmaxCrossEntropyWithLogits",
        TranslateSparseSoftmaxCrossEntropyWithLogitsOp},
       {"Split", TranslateSplitOp}, {"SplitV", TranslateSplitVOp},
-      {"Sqrt", TranslateUnaryOp<ngraph::op::Sqrt>},
+      {"Sqrt", TranslateUnaryOp<ngraph::opset3::Sqrt>},
       {"Square", TranslateSquareOp},
       {"SquaredDifference",
        TranslateBinaryOp<ngraph::opset3::SquaredDifference>},
@@ -5052,7 +5056,7 @@ const static std::map<
       {"StridedSliceGrad", TranslateStridedSliceGradOp},
       {"Sub", TranslateBinaryOp<ngraph::opset3::Subtract>},
       {"Sum", TranslateDirectReduceOp<ng::opset3::ReduceSum>},
-      {"Tanh", TranslateUnaryOp<ngraph::op::Tanh>},
+      {"Tanh", TranslateUnaryOp<ngraph::opset3::Tanh>},
       {"TanhGrad", TranslateTanhGradOp}, {"Tile", TranslateTileOp},
       {"TopKV2", TranslateTopKV2Op}, {"Transpose", TranslateTransposeOp},
       {"UnsortedSegmentSum", TranslateUnsortedSegmentSumOp},

@@ -100,6 +100,26 @@ TEST(MathOps, Abs2D) {
   opexecuter.RunTest();
 }  // end of test op Abs
 
+// Test op: Acos
+TEST(MathOps, Acos2D) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 4;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Acos(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Acos", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Acos
+
 // Test op: Add
 TEST(MathOps, Add) {
   Scope root = Scope::NewRootScope();
@@ -1666,6 +1686,28 @@ TEST(MathOps, LogicalOr) {
   opexecuter.RunTest();
 }  // end of LogicalOr
 
+// Test Op:LogicalNot
+TEST(MathOps, LogicalNot) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 3;
+  std::vector<bool> v1 = {true, true, true, true, false, false};
+
+  Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
+  AssignInputValues(A, v1);
+
+  vector<int> static_input_indexes = {};
+
+  auto R = ops::LogicalNot(root, A);
+
+  vector<DataType> output_datatypes = {DT_BOOL};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "LogicalNot", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of LogicalNot
+
 // Test op: Max
 TEST(MathOps, MaxNegativeAxis) {
   int dim1 = 2;
@@ -2012,6 +2054,28 @@ TEST(MathOps, Reciprocal) {
   opexecuter.RunTest();
 }  // end of test op Reciprocal
 
+// Test op: Relu
+TEST(MathOps, Relu) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Relu(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Relu", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Relu
+
 // Test op: Rsqrt
 TEST(MathOps, Rsqrt) {
   Scope root = Scope::NewRootScope();
@@ -2032,6 +2096,26 @@ TEST(MathOps, Rsqrt) {
                         sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Rsqrt
+
+// Test op: Sign
+TEST(MathOps, Sign) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  AssignInputValuesRandom<float>(A, -50, 50);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Sign(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Sign", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Sign
 
 // Test op: Sin
 TEST(MathOps, Sin) {
@@ -2205,6 +2289,28 @@ TEST(MathOps, SquaredDifferenceBroadcasting) {
 
   opexecuter.RunTest();
 }  // end of test op SquaredDifferenceBroadcasting
+
+// Test op: Tanh
+TEST(MathOps, Tanh) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 7.5f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Tanh(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Tanh", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Tanh
 
 // Test op: UnsortedSegmentSum
 TEST(MathOps, UnsortedSegmentSum) {
