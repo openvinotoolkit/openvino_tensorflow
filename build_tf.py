@@ -43,12 +43,9 @@ def main():
         default="native")
     arguments = parser.parse_args()
 
-    assert not os.path.isdir(
-        arguments.output_dir), arguments.output_dir + " already exists"
-    os.makedirs(arguments.output_dir)
+    if not os.path.isdir(arguments.output_dir):
+        os.makedirs(arguments.output_dir)
     os.chdir(arguments.output_dir)
-    assert not is_venv(
-    ), "Please deactivate virtual environment before running this script"
 
     assert not is_venv(
     ), "Please deactivate virtual environment before running this script"
@@ -59,9 +56,18 @@ def main():
     load_venv(venv_dir)
     setup_venv(venv_dir)
 
-    # Download TensorFlow
-    download_repo("tensorflow", "https://github.com/tensorflow/tensorflow.git",
-                  arguments.tf_version)
+    if not os.path.isdir(os.path.join(arguments.output_dir, "tensorflow")):
+        # Download TensorFlow
+        download_repo("tensorflow",
+                      "https://github.com/tensorflow/tensorflow.git",
+                      arguments.tf_version)
+    else:
+        pwd = os.getcwd()
+        os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
+        call(["git", "fetch"])
+        command_executor(["git", "checkout", arguments.tf_version])
+        call(["git", "pull"])
+        os.chdir(pwd)
 
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, venv_dir, "tensorflow", 'artifacts',
