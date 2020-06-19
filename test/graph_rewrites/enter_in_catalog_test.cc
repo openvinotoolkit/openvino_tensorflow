@@ -105,9 +105,9 @@ TEST(CatalogTest, SmallGraph2) {
   auto init_value = ops::Const(root, {{1.f, 1.f}, {1.f, 1.f}});
   auto var_assign = ops::Assign(root.WithOpName("Var_Assign"), var, init_value);
 
-  auto asin = ops::Asin(root.WithOpName("Asin"), var);
+  auto asinh = ops::Asinh(root.WithOpName("Asinh"), var);
 
-  auto assign = ops::Assign(root.WithOpName("Assign"), var, asin);
+  auto assign = ops::Assign(root.WithOpName("Assign"), var, asinh);
 
   std::set<string> skip_these_nodes = {};
 
@@ -150,7 +150,7 @@ TEST(CatalogTest, SmallGraph2) {
 //           |      /\            |
 //           |     /  \           |
 //           |    /    \          |
-//          Assign_1   Asin       |
+//          Assign_1   Asinh      |
 //                       \        |
 //                        \       |
 //                         \      |
@@ -158,7 +158,7 @@ TEST(CatalogTest, SmallGraph2) {
 // Assign_A, Assign_B and Assign_1 should have the attribute
 // _ngraph_remove added and set to true
 // whereas Assign_2 should not have the attribute added since
-// it is being fed by Asin which is not supported by nGraph.
+// it is being fed by Asinh which is not supported by nGraph.
 TEST(CatalogTest, SmallGraph3) {
   Scope root = Scope::NewRootScope();
 
@@ -179,9 +179,9 @@ TEST(CatalogTest, SmallGraph3) {
 
   auto assign_1 = ops::Assign(root.WithOpName("Assign_1"), var_a, add);
 
-  auto asin = ops::Asin(root.WithOpName("Asin"), add);
+  auto asinh = ops::Asinh(root.WithOpName("Asinh"), add);
 
-  auto assign_2 = ops::Assign(root.WithOpName("Assign_2"), var_b, asin);
+  auto assign_2 = ops::Assign(root.WithOpName("Assign_2"), var_b, asinh);
 
   std::set<string> skip_these_nodes = {};
 

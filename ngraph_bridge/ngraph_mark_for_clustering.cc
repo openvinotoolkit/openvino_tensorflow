@@ -281,6 +281,8 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["All"] = SimpleConfirmationFunction();
     confirmation_function_map["ArgMax"] = SimpleConfirmationFunction();
     confirmation_function_map["ArgMin"] = SimpleConfirmationFunction();
+    confirmation_function_map["Asin"] = SimpleConfirmationFunction();
+    confirmation_function_map["Atan"] = SimpleConfirmationFunction();
     confirmation_function_map["Atan2"] = SimpleConfirmationFunction();
     confirmation_function_map["AvgPool"] = SimpleConfirmationFunction();
     confirmation_function_map["AvgPoolGrad"] = SimpleConfirmationFunction();
@@ -504,6 +506,8 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["ArgMax"]["Tidx"] = NGraphIndexDTypes();
     type_constraint_map["ArgMin"]["T"] = NGraphNumericDTypes();
     type_constraint_map["ArgMin"]["Tidx"] = NGraphIndexDTypes();
+    type_constraint_map["Asin"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Atan"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Atan2"]["T"] = NGraphRealDTypes();
     type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
     type_constraint_map["AvgPoolGrad"]["T"] = NGraphNumericDTypes();
@@ -723,6 +727,8 @@ GetTFToNgOpMap() {
          {std::make_shared<ngraph::opset3::ReduceLogicalAnd>(), constant}},
         {"ArgMax", {std::make_shared<ngraph::op::ArgMax>()}},
         {"ArgMin", {std::make_shared<ngraph::op::ArgMin>()}},
+        {"Asin", {std::make_shared<ngraph::opset3::Asin>()}},
+        {"Atan", {std::make_shared<ngraph::opset3::Atan>()}},
         {"Atan2", {std::make_shared<ngraph::op::Atan2>()}},
         {"AvgPool", {std::make_shared<ngraph::op::AvgPool>()}},
         {"AvgPoolGrad", {std::make_shared<ngraph::op::AvgPoolBackprop>()}},

@@ -359,6 +359,45 @@ TEST(MathOps, DISABLED_AllPositiveAxis) {
   opexecuter.RunTest();
 }  // end of test op All
 
+// Test op: Asin
+TEST(MathOps, Asin) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 4;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Asin(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Asin", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Asin
+
+// Test op: Atan
+TEST(MathOps, Atan) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Atan(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Atan", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Atan
+
 // Test op: Cumsum
 TEST(MathOps, Cumsum) {
   Scope root = Scope::NewRootScope();
