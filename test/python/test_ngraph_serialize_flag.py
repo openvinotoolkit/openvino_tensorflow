@@ -24,6 +24,7 @@ from __future__ import print_function
 import pytest
 import platform
 import os
+import glob
 
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
@@ -37,6 +38,8 @@ import ngraph_bridge
 class TestNgraphSerialize(NgraphTest):
 
     def test_ng_serialize_to_json(self):
+        for f in glob.glob("tf_function_ngraph_cluster*.json"):
+            os.remove(f)
         initial_contents = set(os.listdir())
         xshape = (3, 4, 5)
         x = tf.compat.v1.placeholder(tf.float32, shape=xshape)

@@ -12,12 +12,7 @@
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      # We search inside cloned TensorFlow copy for a previously built version v1.15.2
-      # so we do the clone here instead of later on and within tools/build_utils.py
-      git clone https://github.com/tensorflow/tensorflow.git /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow
-      # We don't need to copy the binary and a symlink is enought for 'build_ngtf.py --use_prebuilt_tensorflow' to use it
-      ln -sf /localdisk/buildkite-agent/prebuilt_tensorflow_1_15_2/artifacts/tensorflow/tensorflow-1.15.2-cp36-cp36m-linux_x86_64.whl /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow
-      python3 build_ngtf.py --use_prebuilt_tensorflow  --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+      python3 build_ngtf.py --use_prebuilt_tensorflow --disable_cpp_api --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
       
     label: ":hammer_and_wrench: Build"
     timeout_in_minutes: 60
@@ -31,7 +26,6 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install psutil 
       pip install -U pip==19.3.1
-      pip install -U /localdisk/buildkite-agent/prebuilt_tensorflow_1_15_2/artifacts/tensorflow/tensorflow-1.15.2-cp36-cp36m-linux_x86_64.whl
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet

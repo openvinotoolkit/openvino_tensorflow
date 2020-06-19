@@ -47,9 +47,6 @@ def main():
         os.makedirs(arguments.output_dir)
     os.chdir(arguments.output_dir)
 
-    assert not is_venv(
-    ), "Please deactivate virtual environment before running this script"
-
     venv_dir = './venv3/'
 
     install_virtual_env(venv_dir)
