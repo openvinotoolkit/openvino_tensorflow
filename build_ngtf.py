@@ -37,15 +37,16 @@ def version_check(use_prebuilt_tensorflow, disable_cpp_api):
 
     if not disable_cpp_api:
         # Check bazel version
-        bazel_ver = get_bazel_version()
-        got_correct_bazel_version = False
-        if (int(bazel_ver[1]) > 24 and int(bazel_ver[1]) <= 25):
+        bazel_kind, bazel_ver = get_bazel_version()
+        got_correct_bazel_version = bazel_kind == 'Bazelisk version'
+        if (not got_correct_bazel_version and int(bazel_ver[1]) > 24 and
+                int(bazel_ver[1]) <= 25):
             if (int(bazel_ver[2]) >= 1 and int(bazel_ver[2]) <= 2):
                 got_correct_bazel_version = True
 
-        if not got_correct_bazel_version:
-            raise Exception("Need bazel 0.24.1 < version <= 0.25.2 \n" +
-                            "Got: " + '.'.join(bazel_ver))
+            if not got_correct_bazel_version:
+                raise Exception("Need bazel 0.24.1 < version <= 0.25.2 \n" +
+                                "Got: " + '.'.join(bazel_ver))
 
 
 def main():

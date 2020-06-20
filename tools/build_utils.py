@@ -580,7 +580,8 @@ def get_bazel_version():
     # Build timestamp as int: 1557521268
     #
     output = cmd.communicate()[0].splitlines()[0].strip()
-    output = output.split(':')[1].strip()
-
-    version_tuple = output.split('.')
-    return version_tuple
+    version_info = output.split(':')
+    bazel_kind = version_info[0].strip()
+    version = version_info[1].strip()
+    version_tuple = version.split('.')
+    return bazel_kind, version_tuple
