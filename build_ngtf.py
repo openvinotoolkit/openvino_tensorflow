@@ -386,8 +386,8 @@ def main():
                 os.chdir(pwd)
 
             # Build TensorFlow
-            build_tensorflow(tf_version, venv_dir, "tensorflow",
-                             artifacts_location, target_arch, verbosity)
+            build_tensorflow(tf_version, "tensorflow", artifacts_location,
+                             target_arch, verbosity)
 
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,

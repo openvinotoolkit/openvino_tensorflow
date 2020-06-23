@@ -67,7 +67,7 @@ def main():
         os.chdir(pwd)
 
     # Build TensorFlow
-    build_tensorflow(arguments.tf_version, venv_dir, "tensorflow", 'artifacts',
+    build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False)
 
     # Build TensorFlow C++ Library
