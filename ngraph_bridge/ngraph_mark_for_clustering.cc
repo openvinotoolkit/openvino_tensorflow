@@ -192,8 +192,6 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["ArgMin"] = SetStaticInputs({1});
     set_attributes_map["AvgPoolGrad"] = SetStaticInputs({0});
     set_attributes_map["ConcatV2"] = SetStaticInputs({-1});
-    set_attributes_map["CombinedNonMaxSuppression"] =
-        SetStaticInputs({2, 3, 4, 5});
     set_attributes_map["Conv2DBackpropFilter"] = SetStaticInputs({1});
     set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
     set_attributes_map["ExpandDims"] = SetStaticInputs({1});
@@ -375,6 +373,8 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Minimum"] = SimpleConfirmationFunction();
     confirmation_function_map["Mul"] = SimpleConfirmationFunction();
     confirmation_function_map["Neg"] = SimpleConfirmationFunction();
+    confirmation_function_map["NonMaxSuppressionV4"] =
+        SimpleConfirmationFunction();
     confirmation_function_map["NoOp"] = SimpleConfirmationFunction();
     confirmation_function_map["OneHot"] = SimpleConfirmationFunction();
     confirmation_function_map["Pad"] = SimpleConfirmationFunction();
@@ -869,6 +869,8 @@ GetTFToNgOpMap() {
         {"Minimum", {std::make_shared<ngraph::opset3::Minimum>()}},
         {"Mul", {std::make_shared<ngraph::opset3::Multiply>()}},
         {"Neg", {std::make_shared<ngraph::opset3::Negative>()}},
+        {"NonMaxSuppressionV4",
+         {std::make_shared<ngraph::opset3::NonMaxSuppression>(), constant}},
         {"OneHot", {std::make_shared<ngraph::opset3::OneHot>(), constant}},
         {"Pack",
          {std::make_shared<ngraph::op::Concat>(),
@@ -1102,24 +1104,6 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
     confirmation_function_map = GetConfirmationMap();
     initialized = true;
   }
-
-  // Right now it cannot be inside the if(!initialized) block, because it is
-  // backend dependent, which might change with different sess.run()s
-  confirmation_function_map["NonMaxSuppressionV4"] = [&current_backend](
-      Node*, bool* result) {
-    auto config_map =
-        BackendManager::GetBackendAttributeValues(current_backend);
-    *result = (config_map.at("ngraph_backend") == "NNPI");
-    return Status::OK();
-  };
-
-  confirmation_function_map["CombinedNonMaxSuppression"] = [&current_backend](
-      Node*, bool* result) {
-    auto config_map =
-        BackendManager::GetBackendAttributeValues(current_backend);
-    *result = (config_map.at("ngraph_backend") == "NNPI");
-    return Status::OK();
-  };
 
   if (op_set_support_has_changed) {
     NGRAPH_VLOG(5) << "Changing op support";
