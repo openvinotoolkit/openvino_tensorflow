@@ -1083,7 +1083,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
 
   try {
     SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<ng::op::Convert>(op->name(), ng_input, ng_et));
+             ConstructNgNode<ng::opset3::Convert>(op->name(), ng_input, ng_et));
   } catch (const std::out_of_range&) {
     return errors::Unimplemented("Unsupported TensorFlow data type: ",
                                  DataType_Name(dtype));
@@ -4834,8 +4834,10 @@ const static std::map<
       {"BatchMatMul", TranslateBatchMatMulOp},
       {"BatchMatMulV2", TranslateBatchMatMulV2Op},
       {"BiasAdd", TranslateBiasAddOp}, {"BiasAddGrad", TranslateBiasAddGradOp},
-      {"Cast", TranslateCastOp}, {"ConcatV2", TranslateConcatV2Op},
-      {"Const", TranslateConstOp}, {"Conv2D", TranslateConv2DOp},
+      {"Cast", TranslateCastOp},
+      {"Ceil", TranslateUnaryOp<ngraph::opset3::Ceiling>},
+      {"ConcatV2", TranslateConcatV2Op}, {"Const", TranslateConstOp},
+      {"Conv2D", TranslateConv2DOp},
       {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
       {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
       {"Conv3D", TranslateConv3DOp},

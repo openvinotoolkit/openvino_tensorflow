@@ -1334,6 +1334,27 @@ TEST(MathOps, Cast2D) {
   opexecuter.RunTest();
 }  // end of test op Cast
 
+// Test op: Ceil
+TEST(MathOps, Ceil) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 5;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Ceil(root, A);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Ceil", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Ceil
+
 // Test op: Cos
 TEST(MathOps, Cos) {
   Scope root = Scope::NewRootScope();

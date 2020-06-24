@@ -289,6 +289,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["BiasAdd"] = SimpleConfirmationFunction();
     confirmation_function_map["BiasAddGrad"] = SimpleConfirmationFunction();
     confirmation_function_map["Cast"] = SimpleConfirmationFunction();
+    confirmation_function_map["Ceil"] = SimpleConfirmationFunction();
     confirmation_function_map["ConcatV2"] = SimpleConfirmationFunction();
     confirmation_function_map["Const"] = SimpleConfirmationFunction();
     confirmation_function_map["Conv2D"] = SimpleConfirmationFunction();
@@ -517,6 +518,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["BiasAddGrad"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
     type_constraint_map["Cast"]["DstT"] = NGraphDTypes();
+    type_constraint_map["Ceil"]["T"] = NGraphRealDTypes();
     type_constraint_map["ConcatV2"]["T"] = NGraphDTypes();
     type_constraint_map["ConcatV2"]["Tidx"] = NGraphIndexDTypes();
     type_constraint_map["Const"]["dtype"] = NGraphDTypes();
@@ -744,7 +746,8 @@ GetTFToNgOpMap() {
          {std::make_shared<ngraph::opset3::Add>(),
           std::make_shared<ngraph::op::Broadcast>()}},
         {"BiasAddGrad", {std::make_shared<ngraph::op::Sum>(), constant}},
-        {"Cast", {std::make_shared<ngraph::op::Convert>()}},
+        {"Cast", {std::make_shared<ngraph::opset3::Convert>()}},
+        {"Ceil", {std::make_shared<ngraph::opset3::Ceiling>()}},
         {"ConcatV2", {std::make_shared<ngraph::op::Concat>()}},
         {"Const", {constant}}, {"Conv2D",
                                 {std::make_shared<ngraph::op::Reshape>(),
