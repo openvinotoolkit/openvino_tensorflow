@@ -27,10 +27,8 @@
 #include "logging/ngraph_log.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
-#include "ngraph_executor.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 class NGraphEncapsulateOp : public OpKernel {
@@ -40,21 +38,15 @@ class NGraphEncapsulateOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override;
 
  private:
-  void CreateParallelExecutor(OpKernelConstruction* ctx,
-                              const string& backend_name);
   void CreateLegacyExecutor(OpKernelConstruction* ctx,
                             const string& backend_name);
   void ComputeUsingLegacyExecutor(OpKernelContext* ctx);
-  void ComputeUsingParallelExecutor(OpKernelContext* ctx);
 
   static int s_instance_id;
   NGraphEncapsulateImpl ng_encap_impl_;
-  bool m_use_parallel_executor = false;
   std::mutex m_compute_lock_;
-  unique_ptr<NGraphExecutor> m_parallel_executor;
 };
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_ENCAPSULATE_OP_H_

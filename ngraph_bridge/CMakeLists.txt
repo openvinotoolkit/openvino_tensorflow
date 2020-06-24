@@ -46,7 +46,6 @@ set(SRC
    ngraph_enter_prefetch_in_catalog.cc
    ngraph_pipelined_tensors.cc
    ngraph_encapsulate_impl.cc
-   ngraph_executor.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_encapsulate_op_utils.cc
