@@ -32,6 +32,7 @@ import ngraph_bridge
 
 class TestModelTester(NgraphTest):
 
+    @pytest.mark.skip(reason="Disabling until bridge is more stable")
     @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     def test_MLP(self):
         cwd = os.getcwd()
