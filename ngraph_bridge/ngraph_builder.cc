@@ -2656,12 +2656,17 @@ static Status TranslateMaxPoolOp(const Node* op,
   ng::Shape ng_padding_below{0, 0};
   ng::Shape ng_padding_above{0, 0};
 
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_padding_below, ng_padding_above);
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_padding_below, ng_padding_above);
+  }
 
-  std::shared_ptr<ng::Node> ng_maxpool = ConstructNgNode<ng::op::MaxPool>(
-      op->name(), ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
-      ng_padding_above);
+  std::shared_ptr<ng::Node> ng_maxpool = ConstructNgNode<ng::opset3::MaxPool>(
+      op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
+      ng_kernel_shape, ng::op::RoundingType::FLOOR, ng_pad_type);
 
   BatchToTensorflow(op->name(), is_nhwc, ng_maxpool);
 
@@ -2718,12 +2723,17 @@ static Status TranslateMaxPool3DOp(const Node* op,
   ng::Shape ng_padding_below{0, 0, 0};
   ng::Shape ng_padding_above{0, 0, 0};
 
-  Builder::MakePadding3D(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_padding_below, ng_padding_above);
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding3D(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                           ng_strides, ng_padding_below, ng_padding_above);
+  }
 
-  std::shared_ptr<ng::Node> ng_maxpool = ConstructNgNode<ng::op::MaxPool>(
-      op->name(), ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
-      ng_padding_above);
+  std::shared_ptr<ng::Node> ng_maxpool = ConstructNgNode<ng::opset3::MaxPool>(
+      op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
+      ng_kernel_shape, ng::op::RoundingType::FLOOR, ng_pad_type);
 
   BatchToTensorflow3D(op->name(), is_ndhwc, ng_maxpool);
 
@@ -2731,64 +2741,6 @@ static Status TranslateMaxPool3DOp(const Node* op,
                  << "}";
 
   SaveNgOp(ng_op_map, op->name(), ng_maxpool);
-  return Status::OK();
-}
-
-static Status TranslateMaxPoolGradOp(const Node* op,
-                                     const std::vector<const Tensor*>&,
-                                     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_grad, ng_fwd;
-  TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, &ng_input, &ng_fwd, &ng_grad));
-
-  std::vector<int32> tf_strides;
-  std::vector<int32> tf_ksize;
-  std::string tf_padding_type;
-  std::string tf_data_format;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
-    return errors::InvalidArgument(
-        "MaxPoolGrad data format is neither NHWC nor NCHW");
-  }
-
-  bool is_nhwc = (tf_data_format == "NHWC");
-  NGRAPH_VLOG(3) << ng::join(tf_strides);
-  NGRAPH_VLOG(3) << ng::join(tf_ksize);
-  NGRAPH_VLOG(3) << tf_padding_type;
-  NGRAPH_VLOG(3) << tf_data_format;
-
-  ng::Strides ng_strides(2);
-  ng::Shape ng_image_shape(2);
-  ng::Shape ng_kernel_shape(2);
-
-  BatchedOpParamToNGraph(is_nhwc, ng_input->get_shape(), ng_image_shape);
-  BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
-  BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_kernel_shape);
-  BatchToNGraph(op->name(), is_nhwc, ng_input);
-  BatchToNGraph(op->name(), is_nhwc, ng_grad);
-  BatchToNGraph(op->name(), is_nhwc, ng_fwd);
-
-  NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
-  NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
-  NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
-
-  ng::Shape ng_padding_below{0, 0};
-  ng::Shape ng_padding_above{0, 0};
-
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_padding_below, ng_padding_above);
-
-  std::shared_ptr<ng::Node> ng_maxpool_backprop =
-      ConstructNgNode<ng::op::MaxPoolBackprop>(
-          op->name(), ng_input, ng_grad, ng_fwd, ng_kernel_shape, ng_strides,
-          ng_padding_below, ng_padding_above);
-  BatchToTensorflow(op->name(), is_nhwc, ng_maxpool_backprop);
-  NGRAPH_VLOG(3) << "maxpoolbackprop outshape: {"
-                 << ng::join(ng_maxpool_backprop->get_shape()) << "}";
-  SaveNgOp(ng_op_map, op->name(), ng_maxpool_backprop);
   return Status::OK();
 }
 
@@ -4550,7 +4502,6 @@ const static std::map<
       {"Max", TranslateDirectReduceOp<ng::opset3::ReduceMax>},
       {"Maximum", TranslateBinaryOp<ngraph::opset3::Maximum>},
       {"MaxPool", TranslateMaxPoolOp}, {"MaxPool3D", TranslateMaxPool3DOp},
-      {"MaxPoolGrad", TranslateMaxPoolGradOp},
       {"NonMaxSuppressionV4", TranslateNonMaxSuppressionV4Op},
       {"Mean", TranslateDirectReduceOp<ng::opset3::ReduceMean>},
       {"Min", TranslateDirectReduceOp<ng::opset3::ReduceMin>},

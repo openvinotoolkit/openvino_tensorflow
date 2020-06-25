@@ -352,9 +352,18 @@ def run_resnet50(build_dir):
 
     # Run training job
     cmd = [
-        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
-        '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
-        '--num_batches', '10', '--model=resnet50', '--batch_size=128'
+        junit_script,
+        'python',
+        'tf_cnn_benchmarks.py',
+        '--data_format',
+        'NHWC',
+        '--num_inter_threads',
+        '1',
+        '--train_dir=' + model_save_dir,
+        '--num_batches',
+        '10',
+        '--model=resnet50',
+        '--batch_size=128',
     ]
     command_executor(cmd, verbose=True)
 
@@ -364,7 +373,7 @@ def run_resnet50(build_dir):
 
     # Run inference job
     cmd = [
-        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
+        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format', 'NHWC',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
     ]
@@ -426,12 +435,12 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # Run training job
     # cmd = [
     #     junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format',
-    #     'NCHW', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
+    #     'NHWC', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
     #     '--num_batches', '10', '--model=resnet50', '--batch_size=128'
     # ]
 
     cmd = [
-        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
+        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NHWC',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--num_batches',
         str(iterations), '--model=resnet50', '--batch_size=' + str(batch_size),
@@ -446,11 +455,11 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # Run inference job
     # cmd = [
     #     junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format',
-    #     'NCHW', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
+    #     'NHWC', '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
     #     '--model=resnet50', '--batch_size=128', '--num_batches', '10', '--eval'
     # ]
     cmd = [
-        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
+        'python', 'tf_cnn_benchmarks.py', '--data_format', 'NHWC',
         '--num_inter_threads', '1', '--train_dir=' + model_save_dir,
         '--model=resnet50', '--batch_size=' + str(batch_size), '--num_batches',
         str(iterations), '--eval', '--eval_dir=' + eval_eventlog_dir
@@ -502,7 +511,7 @@ def run_resnet50_forward_pass(build_dir):
 
     # Run inference job
     cmd = [
-        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format', 'NCHW',
+        junit_script, 'python', 'tf_cnn_benchmarks.py', '--data_format', 'NHWC',
         '--num_inter_threads', '2', '--freeze_when_forward_only=True',
         '--model=resnet50', '--batch_size=1', '--num_batches', '32'
     ]
@@ -552,7 +561,7 @@ def run_resnet50_forward_pass_from_artifacts(ngraph_tf_src_dir, artifact_dir,
         'python',
         'tf_cnn_benchmarks.py',
         '--data_format',
-        'NCHW',
+        'NHWC',
         '--num_inter_threads',
         '2',
         '--freeze_when_forward_only=True',

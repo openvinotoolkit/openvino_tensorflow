@@ -367,7 +367,6 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Maximum"] = SimpleConfirmationFunction();
     confirmation_function_map["MaxPool"] = SimpleConfirmationFunction();
     confirmation_function_map["MaxPool3D"] = SimpleConfirmationFunction();
-    confirmation_function_map["MaxPoolGrad"] = SimpleConfirmationFunction();
     confirmation_function_map["Mean"] = SimpleConfirmationFunction();
     confirmation_function_map["Min"] = SimpleConfirmationFunction();
     confirmation_function_map["Minimum"] = SimpleConfirmationFunction();
@@ -568,7 +567,6 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Maximum"]["T"] = NGraphNumericDTypes();
     type_constraint_map["MaxPool"]["T"] = NGraphNumericDTypes();
     type_constraint_map["MaxPool3D"]["T"] = NGraphNumericDTypes();
-    type_constraint_map["MaxPoolGrad"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Mean"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Mean"]["Tidx"] = NGraphIndexDTypes();
     type_constraint_map["Min"]["T"] = NGraphNumericDTypes();
@@ -845,13 +843,10 @@ GetTFToNgOpMap() {
         {"Maximum", {std::make_shared<ngraph::opset3::Maximum>()}},
         {"MaxPool",
          {std::make_shared<ngraph::op::Reshape>(),
-          std::make_shared<ngraph::op::MaxPool>()}},
+          std::make_shared<ngraph::opset3::MaxPool>()}},
         {"MaxPool3D",
          {std::make_shared<ngraph::op::Reshape>(),
-          std::make_shared<ngraph::op::MaxPool>()}},
-        {"MaxPoolGrad",
-         {std::make_shared<ngraph::op::Reshape>(),
-          std::make_shared<ngraph::op::MaxPoolBackprop>()}},
+          std::make_shared<ngraph::opset3::MaxPool>()}},
         {"Mean", {std::make_shared<ngraph::opset3::ReduceMean>(), constant}},
         {"Min", {std::make_shared<ngraph::opset3::ReduceMin>(), constant}},
         {"Minimum", {std::make_shared<ngraph::opset3::Minimum>()}},
