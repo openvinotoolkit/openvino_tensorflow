@@ -87,6 +87,9 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         ${TensorFlow_FRAMEWORK_LIBRARY}
         tensorflow_cc_lib
         absl_synchronization
+        lib_dnnl
+        lib_iomp5
+        lib_mklml_intel
     )
 else()
     target_link_libraries(
@@ -119,6 +122,9 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         ${TensorFlow_FRAMEWORK_LIBRARY}
         tensorflow_cc_lib
         absl_synchronization
+        lib_dnnl
+        lib_iomp5
+        lib_mklml_intel
     )
 else()
     target_link_libraries(

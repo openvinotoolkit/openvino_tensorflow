@@ -92,15 +92,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)
 endif()
 
-if(NGRAPH_CPU_STATIC_LIB_ENABLE)
-    add_definitions(-DNGRAPH_CPU_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
-    add_definitions(-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
-endif()
-
-
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)            
     list(REMOVE_ITEM SRC ngraph_rewrite_pass.cc)
     list(APPEND SRC grappler/ngraph_optimizer.cc)
@@ -119,13 +110,15 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
             ${TensorFlow_FRAMEWORK_LIBRARY} 
             ngraph_lib
             lib_cpu_backend_static
-            lib_interpreter_backend_static 
+            lib_interpreter_backend_static
             ngraph_lib
             dl
+            pthread
             absl_algorithm
             absl_container
             absl_strings
-            lib_mkldnn
+            lib_mklml_intel
+            lib_dnnl
             lib_iomp5
         )
 
@@ -159,7 +152,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         ${LIB_NAME_STATIC}
         ngraph_logger
         ${TensorFlow_FRAMEWORK_LIBRARY} 
-        ngraph_lib
         lib_cpu_backend_static
         lib_interpreter_backend_static 
         ngraph_lib
@@ -167,9 +159,9 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         absl_algorithm
         absl_container
         absl_strings
-        lib_mkldnn
-        lib_mklml_intel
+        lib_dnnl
         lib_iomp5
+        lib_mklml_intel
     )
     target_compile_definitions(
     ${LIB_NAME_STATIC} PRIVATE 

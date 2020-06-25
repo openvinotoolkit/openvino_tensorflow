@@ -23,6 +23,8 @@ include(ExternalProject)
 include(CMakeDependentOption)
 include(cmake/sdl.cmake)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -290,7 +292,7 @@ set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     set(CPU_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBCPU_BACKEND_A})
     set(INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBINTERPRETER_BACKEND_A})
-    set(LIB_MKLDNN_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libmkldnn.so)
+    set(LIB_DNNL_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libdnnl.so)
     set(LIB_MKLML_INTEL_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libmklml_intel.so)
     set(LIB_IOMP5_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libiomp5.so)
 
@@ -315,11 +317,11 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         ${INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC}
     )
 
-    add_library(lib_mkldnn SHARED IMPORTED)
+    add_library(lib_dnnl SHARED IMPORTED)
     set_target_properties(
-        lib_mkldnn
+        lib_dnnl
         PROPERTIES IMPORTED_LOCATION
-        ${LIB_MKLDNN_IMPORTED_LOCATION}
+        ${LIB_DNNL_IMPORTED_LOCATION}
     )
 
     add_library(lib_mklml_intel SHARED IMPORTED)
@@ -327,6 +329,7 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
         lib_mklml_intel
         PROPERTIES IMPORTED_LOCATION
         ${LIB_MKLML_INTEL_IMPORTED_LOCATION}
+        IMPORTED_NO_SONAME 1
     )
 
     add_library(lib_iomp5 SHARED IMPORTED)

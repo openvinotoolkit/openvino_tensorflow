@@ -428,6 +428,8 @@ def main():
             ngraph_cmake_flags.extend(["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
             ngraph_cmake_flags.extend(
                 ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
+            ngraph_cmake_flags.extend(
+                ["-DNGRAPH_DYNAMIC_COMPONENTS_ENABLE=OFF"])
 
         if arguments.debug_build:
             ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
