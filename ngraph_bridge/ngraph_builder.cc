@@ -4047,46 +4047,12 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  std::set<int> axis_set(tf_axis.begin(), tf_axis.end());
-  ng::Shape input_shape = ng_input->get_shape();
-  std::vector<int> dims;
+  auto ng_const = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), ng::element::u32, ng::Shape{tf_axis.size()}, tf_axis);
 
-  if (axis_set.size() == 0) {
-    for (size_t i = 0; i < input_dims; i++) {
-      if (input_shape[i] > 1) {
-        dims.push_back(input_shape[i]);
-      }
-    }
-  } else {
-    for (size_t i = 0; i < input_dims; i++) {
-      bool skip = false;
-      if (axis_set.find(i) != axis_set.end()) {
-        if (input_shape[i] == 1) {
-          skip = true;
-        } else {
-          throw errors::InvalidArgument(
-              "Tried to explicitly squeeze "
-              "dimension ",
-              i, " but dimension was not 1: ", input_shape[i]);
-        }
-      }
-      if (!skip) {
-        dims.push_back(input_shape[i]);
-      }
-    }
-  }
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::opset3::Squeeze>(
+                                      op->name(), ng_input, ng_const));
 
-  ng::Shape output_shape(dims.size());
-  for (size_t i = 0; i < dims.size(); ++i) {
-    output_shape[i] = dims[i];
-  }
-
-  ng::AxisVector ng_axis_order(ng_input->get_shape().size());
-  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
-
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<ng::op::Reshape>(op->name(), ng_input, ng_axis_order,
-                                            output_shape));
   return Status::OK();
 }
 

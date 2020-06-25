@@ -992,7 +992,7 @@ GetTFToNgOpMap() {
         {"Square", {std::make_shared<ngraph::opset3::Multiply>()}},
         {"SquaredDifference",
          {std::make_shared<ngraph::opset3::SquaredDifference>()}},
-        {"Squeeze", {std::make_shared<ngraph::op::Reshape>()}},
+        {"Squeeze", {std::make_shared<ngraph::opset3::Squeeze>(), constant}},
         {"StridedSlice",
          {std::make_shared<ngraph::op::Reverse>(),
           std::make_shared<ngraph::op::Slice>(),
