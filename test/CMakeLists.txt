@@ -92,7 +92,6 @@ set(SRC
     graph_rewrites/disable_ops_test.cc
     graph_rewrites/mark_for_clustering_test.cc
     graph_rewrites/op_by_op_capability_test.cc
-    test_index_library.cpp
     test_ngraph_data_cache.cpp
     test_utilities.cpp
     test_image_ops.cpp
@@ -104,9 +103,7 @@ set(SRC
     opexecuter.cpp
     test_thread_safe_queue.cc
     test_enter_prefetch_in_catalog.cc
-    test_ngraph_tensor_manager.cpp
     test_capture_prefetch.cpp
-    test_pipelined_tensor_store.cc
     dummy_backend.cpp
     test_dummy_backend.cpp
 )

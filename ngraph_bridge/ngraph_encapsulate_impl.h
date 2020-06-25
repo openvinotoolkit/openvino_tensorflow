@@ -27,7 +27,6 @@
 #include "ngraph/ngraph.hpp"
 
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_pipelined_tensors.h"
 
 namespace tensorflow {
 
@@ -61,7 +60,6 @@ class NGraphEncapsulateImpl {
   Status AllocateNGInputTensors(
       const std::vector<Tensor>& tf_input_tensors,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      const PipelinedTensorVector& inp_group_from_pipeline,
       ng::runtime::Backend* const op_backend,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs);
 
@@ -70,7 +68,6 @@ class NGraphEncapsulateImpl {
   Status AllocateNGOutputTensors(
       const std::vector<Tensor*>& tf_output_tensors,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      const PipelinedTensorVector& out_group_from_pipeline,
       ng::runtime::Backend* const op_backend,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs);
 
@@ -81,22 +78,10 @@ class NGraphEncapsulateImpl {
       const bool& output_tensor,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
       ng::runtime::Backend* const op_backend,
-      const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
-      std::shared_ptr<ng::runtime::Tensor> tensor_from_pipeline);
+      const ng::element::Type& ng_element_type, const ng::Shape& ng_shape);
 
   // Clear all maps with ng_exec as keys
   void ClearExecMaps();
-
-  // Get pipeline index and input and output tensor groups from executable (if
-  // they can create tensors)
-  Status GetPipelineIdxAndTensors(
-      const std::shared_ptr<ngraph::runtime::Executable>&,
-      std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>&);
-
-  // Once done using, return the index to indicate that those executable created
-  // tensors are free for reuse
-  Status ReturnPipelinedTensors(std::shared_ptr<ngraph::runtime::Executable>,
-                                size_t);
 
   Status DumpNgFunction(const string&,
                         std::shared_ptr<ngraph::runtime::Executable>);
@@ -197,10 +182,6 @@ class NGraphEncapsulateImpl {
 
   bool GetExecCanCreateTensor() { return m_executable_can_create_tensor; }
 
-  void ClearNgExecPipelinedTensorMap() {
-    m_executable_pipelined_tensors_map.clear();
-  }
-
   // TF Graph for the cluster
   Graph m_graph;
 
@@ -233,14 +214,6 @@ class NGraphEncapsulateImpl {
   NgFunctionIOCache m_ng_exec_output_cache_map;
 
   bool m_executable_can_create_tensor = false;
-  std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>,
-                     PipelinedTensorsStore>
-      m_executable_pipelined_tensors_map;
-
-  Status UpdatePipelinedTensorCache(
-      std::shared_ptr<ngraph::runtime::Executable> ng_exec);
-  std::tuple<int, PipelinedTensorVector, PipelinedTensorVector>
-  GetTensorsFromPipeline(std::shared_ptr<ngraph::runtime::Executable> ng_exec);
 
   int m_depth{2};  // TODO make this settable
 };

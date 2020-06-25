@@ -23,7 +23,6 @@
 #include "tensorflow/core/platform/env.h"
 
 #include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_pipelined_tensors.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 #include "test/test_utilities.h"
@@ -77,44 +76,6 @@ class NGraphExecTest : public ::testing::Test {
     if (IsEnvVariableSet(env_name)) {
       *backend_name = GetEnvVariable(env_name);
     }
-    return Status::OK();
-  }
-
-  // Creates the pipelined tensors given the input and output indexes
-  Status CreatePipelinedTensors(
-      const shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      const vector<int>& pipelined_input_indexes,
-      const vector<int>& pipelined_output_indexes, const int& pipeline_depth,
-      tuple<PipelinedTensorMatrix, PipelinedTensorMatrix>& io_tensors
-
-      ) {
-    PipelinedTensorMatrix inputs(pipelined_input_indexes.size());
-    PipelinedTensorMatrix outputs(pipelined_output_indexes.size());
-
-    for (int i = 0; i < pipelined_input_indexes.size(); i++) {
-      try {
-        inputs[i] = ng_exec->create_input_tensor(pipelined_input_indexes[i],
-                                                 pipeline_depth);
-      } catch (const std::exception& exp) {
-        return errors::Internal(
-            "Failed to create pipelined tensor input for index i ", i,
-            ".Got ngraph exception ", exp.what());
-      }
-    }
-
-    for (int i = 0; i < pipelined_output_indexes.size(); i++) {
-      try {
-        outputs[i] = ng_exec->create_output_tensor(pipelined_output_indexes[i],
-                                                   pipeline_depth);
-
-      } catch (const std::exception& exp) {
-        return errors::Internal(
-            "Failed to create pipelined tensor output for index i ", i,
-            ".Got ngraph exception ", exp.what());
-      }
-    }
-
-    io_tensors = std::make_tuple(inputs, outputs);
     return Status::OK();
   }
 
@@ -382,123 +343,6 @@ TEST_F(NGraphExecTest, MixedTensors) {
 
   // Comparing
   Compare(expected_outputs, actual_outputs);
-}
-
-TEST_F(NGraphExecTest, MixedTensorsPipelined) {
-  Graph input_graph(OpRegistry::Global());
-  ASSERT_OK(LoadGraph("test_general_graph.pbtxt", &input_graph));
-
-  // Create the inputs for this graph
-  int num_inputs = 3;
-  DataType tf_dt = DT_FLOAT;
-  TensorShape tf_shape = TensorShape({2, 3});
-  std::vector<TensorShape> tf_input_shapes(num_inputs, tf_shape);
-
-  // Translate the Graph: Create ng_function
-  shared_ptr<ngraph::Function> ng_function;
-  std::vector<const Tensor*> static_input_map(num_inputs, nullptr);
-  ASSERT_OK(ngraph_bridge::Builder::TranslateGraph(
-      tf_input_shapes, static_input_map, &input_graph, ng_function))
-      << "Could not complete TranslateGraph successfully";
-
-  // Create the nGraph backend
-  string backend_name = "INTERPRETER";
-  OverrideBackendFromEnv(&backend_name);
-  auto backend = ng::runtime::Backend::create(backend_name);
-  NGRAPH_VLOG(0) << "NGraph using backend " << backend_name << endl;
-
-  // check if the backend executable can create tensors
-  ASSERT_TRUE(backend->executable_can_create_tensors())
-      << "Backend Executable cannot create tensors";
-
-  // Compile the nGraph function.
-  shared_ptr<ngraph::runtime::Executable> ng_exec;
-  ng_exec = backend->compile(ng_function);
-
-  int num_outputs = ng_function->get_output_size();
-  int pipeline_depth = 2;
-
-  // Lets assume inputs and outputs 0 and 2 are pipelined
-  vector<int> pipelined_input_indexes = {0, 2};
-  vector<int> pipelined_output_indexes = {1};
-  vector<int> non_pipelined_input_indexes = {1};
-  vector<int> non_pipelined_output_indexes = {0, 2};
-
-  tuple<PipelinedTensorMatrix, PipelinedTensorMatrix> inp_out;
-  ASSERT_OK(CreatePipelinedTensors(ng_exec, pipelined_input_indexes,
-                                   pipelined_output_indexes, pipeline_depth,
-                                   inp_out));
-  PipelinedTensorMatrix pipelined_inputs = get<0>(inp_out);
-  PipelinedTensorMatrix pipelined_outputs = get<1>(inp_out);
-
-  int increment = 2.0f;
-
-  for (int itr = 0; itr < 10; itr++) {
-    int use_pipeline_depth = (itr % 2);
-    Tensor x(tf_dt, tf_shape);
-    Tensor y(tf_dt, tf_shape);
-    Tensor z(tf_dt, tf_shape);
-    AssignInputValues(x, 1.0f + increment);
-    AssignInputValues(y, 2.0f + increment);
-    AssignInputValues(z, 3.0f + increment);
-
-    vector<Tensor> tf_inputs = {x, y, z};
-    vector<std::pair<string, Tensor>> feed_dict = {
-        {"x", x}, {"y", y}, {"z", z}};
-    vector<string> out_node_names = {"N3_Mul", "N2_Add", "N4_Sub"};
-    vector<Tensor> desired_outputs;
-    ASSERT_OK(
-        RunGraphOnTF(input_graph, feed_dict, out_node_names, desired_outputs));
-
-    // Run on nGraph
-    // Allocate ng tensors for inputs and outputs
-    vector<shared_ptr<ng::runtime::Tensor>> ng_inputs(num_inputs, nullptr);
-    vector<shared_ptr<ng::runtime::Tensor>> ng_outputs(num_outputs, nullptr);
-
-    // Prepare Inputs
-    // Get Backend Tensors
-    for (auto index : non_pipelined_input_indexes) {
-      ASSERT_OK(
-          CreateTensorFromBackend(backend, tf_inputs[index], ng_inputs[index]));
-    }
-    // Get Pipelined Tensors
-    for (int i = 0; i < pipelined_input_indexes.size(); i++) {
-      int index = pipelined_input_indexes[i];
-      ng_inputs[index] = pipelined_inputs[i][use_pipeline_depth];
-      WriteNGTensor(ng_inputs[index], &tf_inputs[index]);
-    }
-
-    // Prepare Outputs
-    // Get Backend Tensors
-    for (auto index : non_pipelined_output_indexes) {
-      auto shape = ng_function->get_output_shape(index);
-      auto elem_type = ng_function->get_output_element_type(index);
-      ASSERT_OK(CreateTensorFromBackend(backend, elem_type, shape,
-                                        ng_outputs[index]));
-    }
-    // Get Pipelined Tensors
-    for (int i = 0; i < pipelined_output_indexes.size(); i++) {
-      int index = pipelined_output_indexes[i];
-      ng_outputs[index] = pipelined_outputs[i][use_pipeline_depth];
-    }
-
-    // call
-    ng_exec->call(ng_outputs, ng_inputs);
-
-    // Read outputs to compare
-    std::vector<Tensor> actual_outputs;
-    for (size_t i = 0; i < num_outputs; i++) {
-      // Convert to tf tensor
-      Tensor output_tensor(tf_dt, tf_shape);
-      void* dst_ptr = DMAHelper::base(&output_tensor);
-      ng_outputs[i]->read(dst_ptr, output_tensor.TotalBytes());
-      actual_outputs.push_back(output_tensor);
-    }
-
-    // Compare Outputs
-    Compare(desired_outputs, actual_outputs);
-    increment++;
-  }
 }
 
 TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {

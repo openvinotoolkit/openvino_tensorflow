@@ -44,16 +44,13 @@ set(SRC
    ngraph_deassign_clusters.cc
    ngraph_encapsulate_clusters.cc
    ngraph_enter_prefetch_in_catalog.cc
-   ngraph_pipelined_tensors.cc
    ngraph_encapsulate_impl.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
-   ngraph_encapsulate_op_utils.cc
    ngraph_mark_for_clustering.cc
    ngraph_partial_shapes.cc
    ngraph_register_stub_kernels.cc   
    ngraph_rewrite_pass.cc
-   ngraph_tensor_manager.cc
    ngraph_var.cc
    ngraph_utils.cc
    tf_graphcycles.cc

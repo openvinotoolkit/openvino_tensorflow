@@ -30,8 +30,6 @@
 #include "logging/ngraph_log.h"
 #include "ngraph/ngraph.hpp"
 
-#include "ngraph_bridge/ngraph_pipelined_tensors.h"
-
 namespace tensorflow {
 
 namespace ngraph_bridge {

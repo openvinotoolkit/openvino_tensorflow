@@ -145,7 +145,7 @@ TEST(EncapsulateOp, AllocateNGInputTensors) {
 
   std::vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
 
-  ASSERT_OK(ng_encap_impl.AllocateNGInputTensors(input_tensors, ng_exec, {},
+  ASSERT_OK(ng_encap_impl.AllocateNGInputTensors(input_tensors, ng_exec,
                                                  op_backend, ng_inputs));
   BackendManager::ReleaseBackend("CPU");
 }
@@ -186,7 +186,7 @@ TEST(EncapsulateOp, AllocateNGOutputTensors) {
   }
   std::vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
 
-  ASSERT_OK(ng_encap_impl.AllocateNGOutputTensors(output_tensors, ng_exec, {},
+  ASSERT_OK(ng_encap_impl.AllocateNGOutputTensors(output_tensors, ng_exec,
                                                   op_backend, ng_outputs));
 
   BackendManager::ReleaseBackend("CPU");

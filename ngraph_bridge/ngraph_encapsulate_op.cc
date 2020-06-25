@@ -41,9 +41,7 @@
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_encapsulate_op.h"
-#include "ngraph_bridge/ngraph_encapsulate_op_utils.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_pipelined_tensors.h"
 #include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
@@ -326,25 +324,13 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
 
   Timer create_or_lookup_tensors;
 
-  int pipeline_idx = -1;
-  PipelinedTensorVector inp_group_from_pipeline;
-  PipelinedTensorVector out_group_from_pipeline;
-  if (ng_encap_impl_.GetExecCanCreateTensor()) {
-    std::tuple<int, PipelinedTensorVector, PipelinedTensorVector> tmp_tpl;
-    OP_REQUIRES_OK(ctx,
-                   ng_encap_impl_.GetPipelineIdxAndTensors(ng_exec, tmp_tpl));
-    std::tie(pipeline_idx, inp_group_from_pipeline, out_group_from_pipeline) =
-        tmp_tpl;
-  }
-
   // Allocate tensors for input arguments.
   vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
   {
     NG_TRACE("Input: maybe create", name(), "");
     OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGInputTensors(
-                            tf_input_tensors, ng_exec, inp_group_from_pipeline,
-                            op_backend, ng_inputs));
+                            tf_input_tensors, ng_exec, op_backend, ng_inputs));
   }
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
@@ -384,9 +370,9 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
                            "the element type expected by TensorFlow"));
     }
 
-    OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGOutputTensors(
-                            tf_output_tensors, ng_exec, out_group_from_pipeline,
-                            op_backend, ng_outputs));
+    OP_REQUIRES_OK(
+        ctx, ng_encap_impl_.AllocateNGOutputTensors(tf_output_tensors, ng_exec,
+                                                    op_backend, ng_outputs));
     output_caches = ng_encap_impl_.GetNgExecOutputCacheMap(ng_exec);
   }
   NGRAPH_VLOG(4)
@@ -621,11 +607,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
 
   int time_copy_output_tensors_to_host =
       copy_output_tensors_to_host.ElapsedInMS();
-
-  if (ng_encap_impl_.GetExecCanCreateTensor()) {
-    OP_REQUIRES_OK(
-        ctx, ng_encap_impl_.ReturnPipelinedTensors(ng_exec, pipeline_idx));
-  }
 
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
