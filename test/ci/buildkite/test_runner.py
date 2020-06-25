@@ -100,7 +100,6 @@ def main():
                     "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
                     "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
                     "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-                    "NNOps.SparseSoftmaxCrossEntropyWithLogits:"
                     "ArrayOps.GatherNd*")
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)

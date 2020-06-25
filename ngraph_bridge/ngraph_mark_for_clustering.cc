@@ -434,13 +434,9 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Slice"] = SimpleConfirmationFunction();
     confirmation_function_map["Snapshot"] = SimpleConfirmationFunction();
     confirmation_function_map["Softmax"] = SimpleConfirmationFunction();
-    confirmation_function_map["SoftmaxCrossEntropyWithLogits"] =
-        SimpleConfirmationFunction();
     confirmation_function_map["Softplus"] = SimpleConfirmationFunction();
     confirmation_function_map["SpaceToDepth"] =
         confirmation_function_map["DepthToSpace"];
-    confirmation_function_map["SparseSoftmaxCrossEntropyWithLogits"] =
-        SimpleConfirmationFunction();
     confirmation_function_map["Split"] = SimpleConfirmationFunction();
     confirmation_function_map["SplitV"] = SimpleConfirmationFunction();
     confirmation_function_map["Sqrt"] = SimpleConfirmationFunction();
@@ -655,16 +651,8 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Slice"]["Index"] = NGraphIndexDTypes();
     type_constraint_map["Snapshot"]["T"] = NGraphDTypes();
     type_constraint_map["Softmax"]["T"] = NGraphNumericDTypes();
-    // For SoftmaxCrossEntropyWithLogits, see
-    // https://github.com/tensorflow/tensorflow/blob/c95ca05536144451ef78ca6e2c15f0f65ebaaf95/tensorflow/core/ops/nn_ops.cc#L1096
-    type_constraint_map["SoftmaxCrossEntropyWithLogits"]["T"] =
-        NGraphRealDTypes();
     type_constraint_map["Softplus"]["T"] = NGraphRealDTypes();
     type_constraint_map["SpaceToDepth"]["T"] = NGraphDTypes();
-    type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["T"] =
-        NGraphRealDTypes();
-    type_constraint_map["SparseSoftmaxCrossEntropyWithLogits"]["Tlabels"] =
-        NGraphNumericDTypes();
     type_constraint_map["Split"]["T"] = NGraphDTypes();
     type_constraint_map["SplitV"]["T"] = NGraphDTypes();
     type_constraint_map["SplitV"]["Tlen"] = NGraphIndexDTypes();
@@ -990,17 +978,7 @@ GetTFToNgOpMap() {
         {"Size", {constant}},
         {"Sign", {std::make_shared<ngraph::opset3::Sign>()}},
         {"Slice", {std::make_shared<ngraph::op::Slice>()}}, {"Snapshot", {}},
-        {"Softmax", {std::make_shared<ngraph::op::Softmax>(), constant}},
-        {"SoftmaxCrossEntropyWithLogits",
-         {std::make_shared<ngraph::op::Broadcast>(),
-          std::make_shared<ngraph::op::Max>(),
-          std::make_shared<ngraph::opset3::Subtract>(),
-          std::make_shared<ngraph::op::Exp>(),
-          std::make_shared<ngraph::op::Sum>(),
-          std::make_shared<ngraph::opset3::Divide>(),
-          std::make_shared<ngraph::op::Convert>(),
-          std::make_shared<ngraph::opset3::Multiply>(),
-          std::make_shared<ngraph::op::Log>(), constant}},
+        {"Softmax", {std::make_shared<ngraph::opset3::Softmax>()}},
         {"Softplus",
          {constant, std::make_shared<ngraph::op::Exp>(),
           std::make_shared<ngraph::op::Log>(),
@@ -1008,17 +986,6 @@ GetTFToNgOpMap() {
         {"SpaceToDepth",
          {std::make_shared<ngraph::op::Slice>(),
           std::make_shared<ngraph::op::Concat>()}},
-        {"SparseSoftmaxCrossEntropyWithLogits",
-         {std::make_shared<ngraph::op::Broadcast>(),
-          std::make_shared<ngraph::op::Max>(),
-          std::make_shared<ngraph::opset3::Subtract>(),
-          std::make_shared<ngraph::op::Exp>(),
-          std::make_shared<ngraph::op::Sum>(),
-          std::make_shared<ngraph::opset3::Divide>(),
-          std::make_shared<ngraph::op::OneHot>(),
-          std::make_shared<ngraph::op::Convert>(),
-          std::make_shared<ngraph::opset3::Multiply>(),
-          std::make_shared<ngraph::op::Log>(), constant}},
         {"Split", {std::make_shared<ngraph::op::Slice>()}},
         {"SplitV", {std::make_shared<ngraph::op::Slice>()}},
         {"Sqrt", {std::make_shared<ngraph::opset3::Sqrt>()}},
