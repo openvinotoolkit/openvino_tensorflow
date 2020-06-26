@@ -2350,9 +2350,82 @@ TEST(MathOps, SquaredDifferenceBroadcasting) {
   opexecuter.RunTest();
 }  // end of test op SquaredDifferenceBroadcasting
 
+// Test op: Xdivy
+TEST(MathOps, Xdivy) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 4.3f);
+  AssignInputValues(B, 3.7f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Xdivy(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, XdivyZeroX) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 3;
+  int dim2 = 3;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, std::vector<float>{0.0f, 1.1f, 5.1f, 3.2f, 8.1f, 1.0f,
+                                          -1.0f, 2.0f, 0.0f});
+  AssignInputValues(B, std::vector<float>{2.0f, 1.2f, 4.2f, 8.9f, 0.0f, 0.0f,
+                                          0.0f, 0.0f, 0.0f});
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Xdivy(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
+TEST(MathOps, XdivyZeroXZeroY) {
+  Scope root = Scope::NewRootScope();
+
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 0.0f);
+  AssignInputValues(B, 0.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Xdivy(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Xdivy
+
 // Test op: Tanh
 TEST(MathOps, Tanh) {
   Scope root = Scope::NewRootScope();
+
   int dim1 = 2;
   int dim2 = 2;
 

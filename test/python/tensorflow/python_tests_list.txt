@@ -254,6 +254,9 @@ math_ops_test.ReduceTest.testReduceExplicitAxes
 
 math_ops_test.SquaredDifferenceTest.testSquaredDifference
 
+math_ops_test.XdivyTest.testXdivyNoZero
+math_ops_test.XdivyTest.testXdivyWithZero
+math_ops_test.XdivyTest.testXdivyWithZeroBroadcast
 math_ops_test.Xlog1pyTest.testXlog1pyNoNeg1
 math_ops_test.Xlog1pyTest.testXlog1pyWithNegOne
 math_ops_test.Xlog1pyTest.testXlog1pyWithZeroBroadcast

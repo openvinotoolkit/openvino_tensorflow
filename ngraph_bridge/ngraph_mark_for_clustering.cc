@@ -445,6 +445,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Unpack"] = SimpleConfirmationFunction();
     confirmation_function_map["UnsortedSegmentSum"] =
         SimpleConfirmationFunction();
+    confirmation_function_map["Xdivy"] = SimpleConfirmationFunction();
     confirmation_function_map["ZerosLike"] = SimpleConfirmationFunction();
     initialized = true;
   }
@@ -647,6 +648,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["UnsortedSegmentSum"]["Tindices"] = NGraphIndexDTypes();
     type_constraint_map["UnsortedSegmentSum"]["Tnumsegments"] =
         NGraphIndexDTypes();
+    type_constraint_map["Xdivy"]["T"] = NGraphRealDTypes();
     initialized = true;
   }
   return type_constraint_map;
@@ -948,6 +950,12 @@ GetTFToNgOpMap() {
          {std::make_shared<ngraph::op::TopK>(),
           std::make_shared<ngraph::op::GetOutputElement>()}},
         {"Transpose", {constant, std::make_shared<ngraph::op::Reshape>()}},
+        {"Xdivy",
+         {constant, std::make_shared<ngraph::op::Divide>(),
+          std::make_shared<ngraph::op::Equal>(),
+          std::make_shared<ngraph::op::Convert>(),
+          std::make_shared<ngraph::op::Select>(),
+          std::make_shared<ngraph::op::Broadcast>()}},
         {"UnsortedSegmentSum",
          {constant, std::make_shared<ngraph::op::ScatterAdd>()}},
         {"Unpack",

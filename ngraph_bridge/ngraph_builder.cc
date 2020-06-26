@@ -3991,6 +3991,27 @@ static Status TranslateUnpackOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateXdivyOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  shared_ptr<ng::Node> ng_input1, ng_input2;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input1, &ng_input2));
+  std::tie(ng_input1, ng_input2) =
+      Builder::PerformNgBroadcast(op->name(), ng_input1, ng_input2);
+  ng::Shape input1_shape = ng_input1->get_shape();
+  std::vector<std::string> const_values(ng::shape_size(input1_shape), "0");
+  auto const_zero = ConstructNgNode<ng::op::Constant>(
+      op->name(), ng_input1->get_element_type(), input1_shape, const_values);
+  auto ng_is_zero =
+      ConstructNgNode<ng::op::Equal>(op->name(), ng_input1, const_zero);
+  auto ng_x_over_y =
+      ConstructNgNode<ng::op::Divide>(op->name(), ng_input1, ng_input2);
+  auto ng_xdivy = ConstructNgNode<ng::op::Select>(op->name(), ng_is_zero,
+                                                  ng_input1, ng_x_over_y);
+  SaveNgOp(ng_op_map, op->name(), ng_xdivy);
+  return Status::OK();
+}
+
 static Status TranslateUnsortedSegmentSumOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4176,7 +4197,7 @@ const static std::map<
       {"Tile", TranslateTileOp}, {"TopKV2", TranslateTopKV2Op},
       {"Transpose", TranslateTransposeOp},
       {"UnsortedSegmentSum", TranslateUnsortedSegmentSumOp},
-      {"Unpack", TranslateUnpackOp}, {
+      {"Unpack", TranslateUnpackOp}, {"Xdivy", TranslateXdivyOp}, {
     "ZerosLike", TranslateZerosLikeOp
   }
 };
