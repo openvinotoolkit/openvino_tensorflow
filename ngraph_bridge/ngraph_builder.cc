@@ -770,83 +770,6 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateAvgPoolGradOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_grad;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, nullptr, &ng_grad));
-
-  std::vector<int32> tf_orig_input_shape_vec;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 0, static_input_map, &tf_orig_input_shape_vec));
-
-  std::vector<int32> tf_strides;
-  std::vector<int32> tf_ksize;
-  std::string tf_padding_type;
-  std::string tf_data_format;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ksize", &tf_ksize));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
-
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
-    return errors::InvalidArgument(
-        "AvgPoolGrad data format is neither NHWC nor NCHW");
-  }
-
-  bool is_nhwc = (tf_data_format == "NHWC");
-
-  NGRAPH_VLOG(3) << ng::join(tf_strides);
-  NGRAPH_VLOG(3) << ng::join(tf_ksize);
-  NGRAPH_VLOG(3) << tf_padding_type;
-  NGRAPH_VLOG(3) << tf_data_format;
-
-  ng::Shape ng_orig_input_shape;
-  for (size_t i = 0; i < tf_orig_input_shape_vec.size(); i++) {
-    ng_orig_input_shape.push_back(tf_orig_input_shape_vec[i]);
-  }
-
-  ng::Shape ng_forward_arg_shape(4);
-  ng::Strides ng_strides(2);
-  ng::Shape ng_image_shape(2);
-  ng::Shape ng_window_shape(2);
-
-  BatchedOpParamReshape(is_nhwc, ng_orig_input_shape, ng_forward_arg_shape);
-  BatchToNGraph(op->name(), is_nhwc, ng_grad);
-  BatchedOpParamToNGraph(is_nhwc, tf_strides, ng_strides);
-  BatchedOpParamToNGraph(is_nhwc, ng_orig_input_shape, ng_image_shape);
-  BatchedOpParamToNGraph(is_nhwc, tf_ksize, ng_window_shape);
-
-  NGRAPH_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
-  NGRAPH_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
-  NGRAPH_VLOG(3) << "ng_window_shape: " << ng::join(ng_window_shape);
-  NGRAPH_VLOG(3) << "ng_forward_arg_shape: " << ng::join(ng_forward_arg_shape);
-
-  // TODO: change this once nGraph supports negative padding
-  // (CoordinateDiff) for AvgPool
-  // ng::CoordinateDiff ng_padding_below{0,0};
-  // ng::CoordinateDiff ng_padding_above{0,0};
-  ng::Shape ng_padding_below{0, 0};
-  ng::Shape ng_padding_above{0, 0};
-
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_window_shape,
-                       ng_strides, ng_padding_below, ng_padding_above);
-
-  std::shared_ptr<ng::Node> ng_avgpool_backprop =
-      ConstructNgNode<ng::op::AvgPoolBackprop>(
-          op->name(), ng_forward_arg_shape, ng_grad, ng_window_shape,
-          ng_strides, ng_padding_below, ng_padding_above, false);
-
-  BatchToTensorflow(op->name(), is_nhwc, ng_avgpool_backprop);
-
-  NGRAPH_VLOG(3) << "avgpoolbackprop outshape: {"
-                 << ng::join(ng_avgpool_backprop->get_shape()) << "}";
-
-  SaveNgOp(ng_op_map, op->name(), ng_avgpool_backprop);
-
-  return Status::OK();
-}
-
 static Status TranslateBatchMatMulOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -1017,56 +940,6 @@ static Status TranslateBiasAddOp(
                                                  ng_bias_broadcasted);
 
   SaveNgOp(ng_op_map, op->name(), ng_add);
-  return Status::OK();
-}
-
-static Status TranslateBiasAddGradOp(const Node* op,
-                                     const std::vector<const Tensor*>&,
-                                     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
-
-  std::string tf_data_format;
-  if (GetNodeAttr(op->attrs(), "data_format", &tf_data_format) !=
-      Status::OK()) {
-    tf_data_format = "NHWC";
-  }
-
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
-    return errors::InvalidArgument(
-        "BiasAddGrad data format is neither NHWC nor NCHW");
-  }
-
-  bool is_nhwc = (tf_data_format == "NHWC");
-
-  ng::AxisSet reduction_axes;
-  shared_ptr<ng::Node> ng_biasadd_backprop;
-  auto ng_input_shape = ng_input->get_shape();
-
-  if (is_nhwc) {
-    if (ng_input_shape.size() < 2) {
-      return errors::InvalidArgument(
-          "BiasAddGrad argument needs to have at least 2 dimensions for NHWC "
-          "data format");
-    }
-    for (size_t i = 0; i < ng_input_shape.size() - 1; i++) {
-      reduction_axes.insert(i);
-    }
-  } else {
-    // Tensorflow NCHW format supports only 4D input/output tensor
-    if (ng_input_shape.size() != 4) {
-      return errors::InvalidArgument(
-          "BiasAddGrad only support 4d input/output for NCHW data format");
-    }
-    for (size_t i = 0; i < ng_input_shape.size(); i++) {
-      if (i != ng_input_shape.size() - 3) reduction_axes.insert(i);
-    }
-  }
-
-  ng_biasadd_backprop =
-      ConstructNgNode<ng::op::Sum>(op->name(), ng_input, reduction_axes);
-
-  SaveNgOp(ng_op_map, op->name(), ng_biasadd_backprop);
   return Status::OK();
 }
 
@@ -2032,107 +1905,6 @@ static Status TranslateFusedBatchNormOp(
       SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
     }
   }
-
-  return Status::OK();
-}
-
-static Status TranslateFusedBatchNormGradOp(const Node* op,
-                                            const std::vector<const Tensor*>&,
-                                            Builder::OpMap& ng_op_map) {
-  bool is_v3 = op->type_string() == "FusedBatchNormGradV3";
-  TF_RETURN_IF_ERROR(ValidateInputCount(op, is_v3 ? 6 : 5));
-
-  bool tf_is_training;
-  // We only support is_training=true case. We marked rejection for the case
-  // is_training=false.
-  if (GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
-      Status::OK()) {
-    NGRAPH_VLOG(3) << "is_training attribute not present, setting to true";
-    tf_is_training = true;
-  }
-
-  NGRAPH_VLOG(3) << "is_training: " << tf_is_training;
-
-  shared_ptr<ng::Node> ng_delta;
-  shared_ptr<ng::Node> ng_input;
-  shared_ptr<ng::Node> ng_scale;
-  shared_ptr<ng::Node> ng_mean;
-  shared_ptr<ng::Node> ng_variance;
-  if (is_v3) {
-    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
-                                     &ng_scale, &ng_mean, &ng_variance,
-                                     nullptr));
-  } else {
-    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_input,
-                                     &ng_scale, &ng_mean, &ng_variance));
-  }
-
-  std::string tf_data_format;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
-
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
-    return errors::InvalidArgument(
-        "FusedBatchnormGrad data format is neither NHWC nor NCHW");
-  }
-
-  bool is_nhwc = (tf_data_format == "NHWC");
-
-  NGRAPH_VLOG(3) << "data_format: " << tf_data_format;
-
-  float tf_epsilon;
-  if (GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) != Status::OK()) {
-    NGRAPH_VLOG(3) << "epsilon attribute not present, setting to 0.0001";
-    tf_epsilon = 0.0001;
-  }
-
-  NGRAPH_VLOG(3) << "epsilon: " << tf_epsilon;
-
-  // TODO: We are temporarily supplying a fake value for beta here
-  // (all zero, same shape/et as scale/gamma), because Tensorflow does not give
-  // beta to us. This should work because nGraph should not actually use beta.
-  // The nGraph op may change to discard this parameter. Update this when nGraph
-  // does.
-  shared_ptr<ng::Node> ng_beta = ConstructNgNode<ngraph::op::Constant>(
-      op->name(), ng_scale->get_element_type(), ng_scale->get_shape(),
-      std::vector<std::string>{ng::shape_size(ng_scale->get_shape()), "0"});
-
-  BatchToNGraph(op->name(), is_nhwc, ng_input);
-  BatchToNGraph(op->name(), is_nhwc, ng_delta);
-
-  std::shared_ptr<ng::Node> ng_batch_norm_backprop;
-
-  ng_batch_norm_backprop = ConstructNgNode<ng::op::BatchNormTrainingBackprop>(
-      op->name(), tf_epsilon, ng_scale, ng_beta, ng_input, ng_mean, ng_variance,
-      ng_delta);
-
-  shared_ptr<ngraph::Node> ng_input_delta_op =
-      ConstructNgNode<ng::op::GetOutputElement>(op->name(),
-                                                ng_batch_norm_backprop, 0);
-  shared_ptr<ngraph::Node> ng_scale_delta_op =
-      ConstructNgNode<ng::op::GetOutputElement>(op->name(),
-                                                ng_batch_norm_backprop, 1);
-  shared_ptr<ngraph::Node> ng_beta_delta_op =
-      ConstructNgNode<ng::op::GetOutputElement>(op->name(),
-                                                ng_batch_norm_backprop, 2);
-
-  BatchToTensorflow(op->name(), is_nhwc, ng_input_delta_op);
-
-  SaveNgOp(ng_op_map, op->name(), ng_input_delta_op);
-  SaveNgOp(ng_op_map, op->name(), ng_scale_delta_op);
-  SaveNgOp(ng_op_map, op->name(), ng_beta_delta_op);
-  // Output reserve_space_3: Unused placeholder to match the mean input
-  // in FusedBatchNorm.
-  std::shared_ptr<ng::Node> output_mean = ConstructNgNode<ngraph::op::Constant>(
-      op->name(), ng_mean->get_element_type(), ng::Shape{},
-      std::vector<std::string>{""});
-  SaveNgOp(ng_op_map, op->name(), output_mean);
-  // Output reserve_space_4: Unused placeholder to match the variance input
-  // in FusedBatchNorm.
-  std::shared_ptr<ng::Node> output_variance =
-      ConstructNgNode<ngraph::op::Constant>(
-          op->name(), ng_variance->get_element_type(), ng::Shape{},
-          std::vector<std::string>{""});
-  SaveNgOp(ng_op_map, op->name(), output_variance);
 
   return Status::OK();
 }
@@ -3493,18 +3265,6 @@ static Status TranslateRelu6Op(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateReluGradOp(const Node* op,
-                                  const std::vector<const Tensor*>&,
-                                  Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_arg, ng_delta;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_delta, &ng_arg));
-
-  auto ng_relu_grad =
-      ConstructNgNode<ng::op::ReluBackprop>(op->name(), ng_arg, ng_delta);
-  SaveNgOp(ng_op_map, op->name(), ng_relu_grad);
-  return Status::OK();
-}
-
 static Status TranslateReshapeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3572,37 +3332,6 @@ static Status TranslateScatterNdOp(
   return Status::OK();
 }
 
-static Status TranslateRsqrtGradOp(const Node* op,
-                                   const std::vector<const Tensor*>&,
-                                   Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input;
-  shared_ptr<ng::Node> ng_delta;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_delta));
-
-  //`grad = dy * -0.5 * y^3`, where `y = rsqrt(x)`, and `dy`
-  // Create a constant tensor populated with the value 3.
-  auto et = ng_input->get_element_type();
-  auto shape = ng_input->get_shape();
-  std::vector<std::string> constant_values(ng::shape_size(shape), "3");
-  auto ng_exponent = ConstructNgNode<ng::opset3::Constant>(
-      op->name(), et, shape, constant_values);
-
-  // Raise each element of the input to the power 3.
-  auto ng_pow =
-      ConstructNgNode<ng::opset3::Power>(op->name(), ng_input, ng_exponent);
-
-  // Create a constant tensor populated with the value -1/2.
-  std::vector<std::string> constant_diff(ng::shape_size(shape), "-0.5");
-  auto ng_diff = ConstructNgNode<ng::opset3::Constant>(op->name(), et, shape,
-                                                       constant_diff);
-  auto ng_result = ConstructNgNode<ng::opset3::Multiply>(
-      op->name(),
-      (ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_pow, ng_delta)),
-      ng_diff);
-  SaveNgOp(ng_op_map, op->name(), ng_result);
-  return Status::OK();
-}
-
 static Status TranslateShapeOp(const Node* op,
                                const std::vector<const Tensor*>&,
                                Builder::OpMap& ng_op_map) {
@@ -3630,27 +3359,6 @@ static Status TranslateShapeOp(const Node* op,
   }
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<ng::op::Constant>(op->name(), type, shape, values));
-  return Status::OK();
-}
-
-static Status TranslateSigmoidGradOp(const Node* op,
-                                     const std::vector<const Tensor*>&,
-                                     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input;
-  shared_ptr<ng::Node> ng_delta;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_delta));
-
-  auto ng_mul =
-      ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_input, ng_delta);
-  auto ng_subtract = ConstructNgNode<ng::opset3::Subtract>(
-      op->name(), ConstructNgNode<ng::op::Constant>(
-                      op->name(), ng_input->get_element_type(),
-                      ng_input->get_shape(), std::vector<int>({1})),
-      ng_input);
-  auto ng_result =
-      ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_mul, ng_subtract);
-
-  SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
 }
 
@@ -4094,94 +3802,6 @@ static Status TranslateStridedSliceOp(
   return Status::OK();
 }
 
-// For StridedSliceGradOp, see
-// .../tensorflow/core/kernels/strided_slice_op.cc
-// and .../tensorflow/core/api_def/base_api/api_def_StridedSliceGrad.pbtxt
-static Status TranslateStridedSliceGradOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  strided_slice_mask_attrs mask_attrs;
-  TF_RETURN_IF_ERROR(GetStridedSliceAttrs(op, mask_attrs));
-
-  // get original shape
-  std::vector<int64> original_shape;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 0, static_input_map, &original_shape));
-  ng::Shape ng_original_shape(
-      std::vector<size_t>(original_shape.begin(), original_shape.end()));
-  NGRAPH_VLOG(5) << "Original shape rank " << ng_original_shape.size();
-  NGRAPH_VLOG(5) << "Original shape: " << ng::join(ng_original_shape);
-
-  shared_ptr<ng::Node> ng_delta;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, &ng_delta));
-  ng::Shape ng_delta_shape = ng_delta->get_shape();
-  NGRAPH_VLOG(5) << "delta shape rank " << ng_delta_shape.size();
-  if (ng_original_shape.size() != 0 && ng_delta_shape.size() == 0) {
-    NGRAPH_VLOG(5) << "Need to broadcast the scalar.";
-    ng::AxisSet ng_axis_set = {0};
-    ng::Shape output_shape = {1};
-    ng_delta = ConstructNgNode<ng::op::Broadcast>(op->name(), ng_delta,
-                                                  output_shape, ng_axis_set);
-  }
-  NGRAPH_VLOG(5) << "Delta shape: " << ng::join(ng_delta->get_shape());
-
-  // get begin, end, and stride
-  std::vector<int64> begin_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &begin_vec));
-  std::vector<int64_t> begin_vec_longint(begin_vec.begin(), begin_vec.end());
-
-  std::vector<int64> end_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &end_vec));
-  std::vector<int64_t> end_vec_longint(end_vec.begin(), end_vec.end());
-
-  std::vector<int64> stride_vec;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 3, static_input_map, &stride_vec));
-  std::vector<int64_t> stride_vec_longint(stride_vec.begin(), stride_vec.end());
-
-  ng::SlicePlan sp =
-      GetSlicePlan(ng_original_shape, begin_vec_longint, end_vec_longint,
-                   stride_vec_longint, mask_attrs);
-
-  // Need to convert int64_t to size_t
-  std::vector<size_t> sp_begins(sp.begins.begin(), sp.begins.end());
-  std::vector<size_t> sp_ends(sp.ends.begin(), sp.ends.end());
-  std::vector<size_t> sp_strides(sp.strides.begin(), sp.strides.end());
-
-  auto zeros = ConstructNgNode<ng::op::Constant>(
-      op->name(), ng_delta->get_element_type(), ng_original_shape,
-      std::vector<float>{0});
-
-  auto ng_result = ConstructNgNode<ng::op::ReplaceSlice>(
-      op->name(), zeros, ng_delta, sp_begins, sp_ends, sp_strides);
-  SaveNgOp(ng_op_map, op->name(), ng_result);
-  return Status::OK();
-}
-
-// Computes the gradient for tanh of 'x' w.r.t its input
-// grad = dy * (1 - y * y)
-// where y = tanh(x) and dy is the corresponding input gradient
-static Status TranslateTanhGradOp(const Node* op,
-                                  const std::vector<const Tensor*>&,
-                                  Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_delta;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_delta));
-
-  auto ng_sq =
-      ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_input, ng_input);
-  ng::Shape input_shape = ng_input->get_shape();
-  std::vector<std::string> const_values(ng::shape_size(input_shape), "1");
-  auto ng_const = ConstructNgNode<ng::op::Constant>(
-      op->name(), ng_input->get_element_type(), input_shape, const_values);
-  auto ng_sub =
-      ConstructNgNode<ng::opset3::Subtract>(op->name(), ng_const, ng_sq);
-  auto ng_result =
-      ConstructNgNode<ng::opset3::Multiply>(op->name(), ng_delta, ng_sub);
-
-  SaveNgOp(ng_op_map, op->name(), ng_result);
-  return Status::OK();
-}
-
 static Status TranslateTileOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4452,11 +4072,9 @@ const static std::map<
       {"Asin", TranslateUnaryOp<ngraph::opset3::Asin>},
       {"Atan", TranslateUnaryOp<ngraph::opset3::Atan>},
       {"Atan2", TranslateBinaryOp<ngraph::op::Atan2>},
-      {"AvgPool", TranslateAvgPoolOp}, {"AvgPoolGrad", TranslateAvgPoolGradOp},
-      {"BatchMatMul", TranslateBatchMatMulOp},
+      {"AvgPool", TranslateAvgPoolOp}, {"BatchMatMul", TranslateBatchMatMulOp},
       {"BatchMatMulV2", TranslateBatchMatMulV2Op},
-      {"BiasAdd", TranslateBiasAddOp}, {"BiasAddGrad", TranslateBiasAddGradOp},
-      {"Cast", TranslateCastOp},
+      {"BiasAdd", TranslateBiasAddOp}, {"Cast", TranslateCastOp},
       {"Ceil", TranslateUnaryOp<ngraph::opset3::Ceiling>},
       {"ConcatV2", TranslateConcatV2Op}, {"Const", TranslateConstOp},
       {"Conv2D", TranslateConv2DOp},
@@ -4477,10 +4095,7 @@ const static std::map<
       {"FusedBatchNorm", TranslateFusedBatchNormOp},
       {"FusedBatchNormV2", TranslateFusedBatchNormOp},
       {"FusedBatchNormV3", TranslateFusedBatchNormOp},
-      {"FusedBatchNormGrad", TranslateFusedBatchNormGradOp},
-      {"GatherNd", TranslateGatherNdOp},
-      {"FusedBatchNormGradV3", TranslateFusedBatchNormGradOp},
-      {"GatherV2", TranslateGatherV2Op},
+      {"GatherNd", TranslateGatherNdOp}, {"GatherV2", TranslateGatherV2Op},
       {"_FusedConv2D", TranslateFusedConv2DOp},
       {"_FusedMatMul", TranslateFusedMatMulOp},
       {"Greater", TranslateBinaryOp<ngraph::opset3::Greater>},
@@ -4535,11 +4150,10 @@ const static std::map<
       {"RealDiv", TranslateBinaryOp<ngraph::opset3::Divide>},
       {"Reciprocal", TranslateReciprocalOp},
       {"Relu", TranslateUnaryOp<ngraph::opset3::Relu>},
-      {"Relu6", TranslateRelu6Op}, {"ReluGrad", TranslateReluGradOp},
-      {"Reshape", TranslateReshapeOp}, {"Rsqrt", TranslateRsqrtOp},
-      {"RsqrtGrad", TranslateRsqrtGradOp}, {"ScatterNd", TranslateScatterNdOp},
+      {"Relu6", TranslateRelu6Op}, {"Reshape", TranslateReshapeOp},
+      {"Rsqrt", TranslateRsqrtOp}, {"ScatterNd", TranslateScatterNdOp},
       {"Select", TranslateSelectOp}, {"Shape", TranslateShapeOp},
-      {"Sigmoid", TranslateSigmoidOp}, {"SigmoidGrad", TranslateSigmoidGradOp},
+      {"Sigmoid", TranslateSigmoidOp},
       {"Sin", TranslateUnaryOp<ngraph::opset3::Sin>}, {"Size", TranslateSizeOp},
       {"Sign", TranslateUnaryOp<ngraph::opset3::Sign>},
       {"Slice", TranslateSliceOp}, {"Snapshot", TranslateIdentityOp},
@@ -4552,12 +4166,11 @@ const static std::map<
        TranslateBinaryOp<ngraph::opset3::SquaredDifference>},
       {"Squeeze", TranslateSqueezeOp},
       {"StridedSlice", TranslateStridedSliceOp},
-      {"StridedSliceGrad", TranslateStridedSliceGradOp},
       {"Sub", TranslateBinaryOp<ngraph::opset3::Subtract>},
       {"Sum", TranslateDirectReduceOp<ng::opset3::ReduceSum>},
       {"Tanh", TranslateUnaryOp<ngraph::opset3::Tanh>},
-      {"TanhGrad", TranslateTanhGradOp}, {"Tile", TranslateTileOp},
-      {"TopKV2", TranslateTopKV2Op}, {"Transpose", TranslateTransposeOp},
+      {"Tile", TranslateTileOp}, {"TopKV2", TranslateTopKV2Op},
+      {"Transpose", TranslateTransposeOp},
       {"UnsortedSegmentSum", TranslateUnsortedSegmentSumOp},
       {"Unpack", TranslateUnpackOp}, {
     "ZerosLike", TranslateZerosLikeOp
