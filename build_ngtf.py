@@ -328,6 +328,22 @@ def main():
                 ["pip", "install", "-U", "tensorflow==" + tf_version])
             cxx_abi = get_tf_cxxabi()
 
+            if not arguments.disable_cpp_api:
+                tf_src_dir = os.path.join(artifacts_location, "tensorflow")
+                print("TF_SRC_DIR: ", tf_src_dir)
+                # Download TF source
+                pwd_now = os.getcwd()
+                os.chdir(artifacts_location)
+                print("DOWNLOADING TF: PWD", os.getcwd())
+                download_repo("tensorflow",
+                              "https://github.com/tensorflow/tensorflow.git",
+                              tf_version)
+                os.chdir(pwd_now)
+
+                # Now build the libtensorflow_cc.so - the C++ library
+                build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
+                                    target_arch, verbosity)
+
             # Copy the libtensorflow_framework.so to the artifacts so that
             # we can run c++ tests from that location later
             if use_tensorflow_2:
@@ -351,21 +367,6 @@ def main():
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
             shutil.copyfile(tf_lib_file, dst)
 
-            if not arguments.disable_cpp_api:
-                tf_src_dir = os.path.join(artifacts_location, "tensorflow")
-                print("TF_SRC_DIR: ", tf_src_dir)
-                # Download TF source
-                pwd_now = os.getcwd()
-                os.chdir(artifacts_location)
-                print("DOWNLOADING TF: PWD", os.getcwd())
-                download_repo("tensorflow",
-                              "https://github.com/tensorflow/tensorflow.git",
-                              tf_version)
-                os.chdir(pwd_now)
-
-                # Now build the libtensorflow_cc.so - the C++ library
-                build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
-                                    target_arch, verbosity)
         else:
             print("Building TensorFlow from source")
             # Download TensorFlow
