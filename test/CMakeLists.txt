@@ -102,8 +102,6 @@ set(SRC
     test_momentum_op.cpp
     opexecuter.cpp
     test_thread_safe_queue.cc
-    test_enter_prefetch_in_catalog.cc
-    test_capture_prefetch.cpp
     dummy_backend.cpp
     test_dummy_backend.cpp
 )
@@ -155,20 +153,8 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt
         ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_8bit.pbtxt
     COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_capture_prefetch.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_capture_prefetch.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_capture_prefetch_1.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_capture_prefetch_1.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_CURRENT_SOURCE_DIR}/test_general_graph.pbtxt
         ${CMAKE_CURRENT_BINARY_DIR}/test_general_graph.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_catalog_for_prefetch.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_catalog_for_prefetch.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_catalog_for_prefetch_1.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_catalog_for_prefetch_1.pbtxt
 )
 
 if (APPLE)
@@ -221,8 +207,4 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt DESTINATION ${CMAKE_IN
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_int8_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_capture_prefetch.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_capture_prefetch_1.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_general_graph.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_catalog_for_prefetch.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_catalog_for_prefetch_1.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)

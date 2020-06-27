@@ -22,10 +22,10 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_capture_variables.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_remove_ngraphassigns.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "test/test_utilities.h"

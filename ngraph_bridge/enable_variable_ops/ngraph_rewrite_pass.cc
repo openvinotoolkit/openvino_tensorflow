@@ -21,17 +21,16 @@
 
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_capture_variables.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_enter_in_catalog.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_remove_ngraphassigns.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_variable_modifiers.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_rewrite_for_variable_sync.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
-#include "ngraph_bridge/ngraph_enter_prefetch_in_catalog.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
@@ -138,7 +137,6 @@ class NGraphVariableCapturePass : public NGraphRewritePass {
 //   5. Rewrite Variable Type Ops for Tracking [ngraph_rewrite_for_tracking.cc]
 //   6. Enter In Catalog  [ngraph_enter_in_catalog.cc]
 //   7. Remove NGraphAssigns [ngraph_remove_ngraphassigns.cc]
-//   8. Enter Prefetch In Catalog  [ngraph_enter_prefetch_in_catalog.cc]
 
 // Between phases, graph dumps (in both .dot and .pbtxt format) may be
 // requested by setting the following environment variables:
@@ -271,11 +269,6 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       DumpGraphs(options, idx, "ngraphassigns_optimized",
                  "Graph with NGraphAssigns Optimized/Removed");
     }
-
-    // 8. Enter Prefetch Details in catalog then.
-    // No point dumping graph here as there is no change to the graph
-    // and only the catalog is populated here
-    TF_RETURN_IF_ERROR(EnterPrefetchInCatalog(options.graph->get(), idx));
 
     return Status::OK();
   }

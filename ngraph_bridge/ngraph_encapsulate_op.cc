@@ -42,7 +42,6 @@
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_encapsulate_op.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_var.h"

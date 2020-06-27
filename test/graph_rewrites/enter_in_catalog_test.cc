@@ -23,12 +23,12 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_capture_variables.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_enter_in_catalog.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_variable_modifiers.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_catalog.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"

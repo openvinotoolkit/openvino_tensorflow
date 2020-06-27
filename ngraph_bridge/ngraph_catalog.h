@@ -75,20 +75,6 @@ class NGraphCatalog {
   //  bool : NGraphAssign‘s update_tf_tensor attribute ‘s value
   static unordered_map<string, tuple<string, bool>> encap_output_info_map_;
 
-  // Map keeps track of encap nodes whose input is from an IteratorGenNext Op.
-  // This is a map from the node to
-  //     Another map of indexes, whose
-  //      - Key is the input indexes of the encapsulate node that are prefetched
-  //      - Value is the output indexes of the IteratorGetNext node that feed
-  //      these inputs
-  // Will be used by NGraphEncapsulate Op.
-  // Map of
-  // Key
-  //      string : GraphId + _ + nodename
-  // Value : Map of {encap input indices, iteratorgetnext output indices}
-
-  static unordered_map<string, map<int, int>> prefetched_input_index_map_;
-
  public:
   // Utility to create key to query the maps
   static string CreateNodeKey(const int& graph_id, const string& node_name,
@@ -152,19 +138,6 @@ class NGraphCatalog {
   static void DeleteFromEncapOutputInfoMap(const string& key);
   static void ClearEncapOutputInfoMap();
   static void PrintEncapOutputInfoMap();
-
-  // Functions for PrefetedInputs Map
-  static void AddToPrefetchedInputIndexMap(
-      const int& graphid, const string& node_name,
-      const map<int, int>& encap_inp_index_map);
-  static bool ExistsInPrefetchedInputIndexMap(const int& graphid,
-                                              const string& node_name);
-  static bool ExistsInPrefetchedInputIndexMap(const string& key);
-  static const map<int, int>& GetIndexesFromPrefetchedInputIndexMap(
-      const int& graphid, const string& node_name);
-
-  static void ClearPrefetchedInputIndexMap();
-  static void PrintPrefetchedInputIndexMap();
 };
 
 }  // ngraph_bridge

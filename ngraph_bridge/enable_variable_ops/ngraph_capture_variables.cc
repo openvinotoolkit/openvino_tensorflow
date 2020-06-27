@@ -17,11 +17,9 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
 
+#include "ngraph_bridge/enable_variable_ops/ngraph_capture_variables.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
 #include "ngraph_bridge/ngraph_api.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
-#include "ngraph_bridge/ngraph_find_replace_prefetchdataset.h"
-#include "ngraph_bridge/ngraph_prefetch_shared_data.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
@@ -62,8 +60,6 @@ Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes) {
           {"VariableV2", std::make_pair("NGraphVariable", ReplaceVariable)}};
 
   std::set<Node*> nodes_to_capture;
-  std::vector<Node*> make_iterator_nodes;
-
   for (auto node : graph->op_nodes()) {
     std::set<Node*> ref_list;
     if (NGraphPlacementRequested(node)) {
@@ -86,8 +82,6 @@ Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes) {
           }
           ref_list.clear();
         }
-      } else if (node->type_string() == "MakeIterator") {
-        make_iterator_nodes.push_back(node);
       }
     }
   }
@@ -110,38 +104,6 @@ Status CaptureVariables(Graph* graph, std::set<string> skip_these_nodes) {
     graph->RemoveNode(node);
   }
 
-  // If Prefetch is requested
-  if (std::getenv(NGraphPrefetchSharedResouce::NGRAPH_TF_USE_PREFETCH) !=
-      nullptr) {
-    if (make_iterator_nodes.size() == 0) {
-      // No MakeIterator Op found in the Graph
-      make_iterator_nodes.clear();
-      nodes_to_capture.clear();
-      return Status::OK();
-    }
-
-    if (make_iterator_nodes.size() > 1) {
-      return errors::Internal(
-          "Found more than 1 MakeIterator nodes. This case is not supported.");
-    }
-    // Else try to capture it
-    Node* make_iterator_node = make_iterator_nodes[0];
-    // We expect the MakeIterator to have 1 input thats
-    // an iterator and the other one can be either a
-    // PrefetchDataset node or a ModelDataset node
-    // Other cases are not handled at the moment.
-    Node* prefetch_node = FindPrefetch(make_iterator_node);
-    if (prefetch_node != nullptr) {
-      return ReplacePrefetch(graph, prefetch_node);
-    } else {
-      return errors::Internal(
-          "Did not find PrefetchDataset or "
-          "ModelDataset+OptimizeDataset+PrefetchDataset as MakeIterator "
-          "nodes' inputs. Only those 2 cases are handled for now.");
-    }
-  }
-
-  make_iterator_nodes.clear();
   nodes_to_capture.clear();
   return Status::OK();
 }

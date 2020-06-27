@@ -30,7 +30,6 @@
 #include "ngraph_bridge/grappler/ngraph_add_identityn.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"

@@ -22,8 +22,8 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_capture_variables.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_replace_op_utilities.h"
-#include "ngraph_bridge/ngraph_capture_variables.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "test/test_utilities.h"
 
