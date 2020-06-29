@@ -116,12 +116,6 @@ def main():
         action="store")
 
     parser.add_argument(
-        '--distributed_build',
-        type=str,
-        help="Builds a distributed version of the nGraph components\n",
-        action="store")
-
-    parser.add_argument(
         '--enable_variables_and_optimizers',
         help=
         "Ops like variable and optimizers are supported by nGraph in this version of the bridge\n",
@@ -435,13 +429,6 @@ def main():
         if arguments.debug_build:
             ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-        if (arguments.distributed_build == "OMPI"):
-            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OMPI"])
-        elif (arguments.distributed_build == "MLSL"):
-            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=MLSL"])
-        else:
-            ngraph_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=OFF"])
-
         if arguments.build_plaidml_backend:
             command_executor(["pip", "install", "-U", "plaidML"])
 
@@ -502,12 +489,6 @@ def main():
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
         ])
-
-    if ((arguments.distributed_build == "OMPI") or
-        (arguments.distributed_build == "MLSL")):
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=TRUE"])
-    else:
-        ngraph_tf_cmake_flags.extend(["-DNGRAPH_DISTRIBUTED_ENABLE=FALSE"])
 
     ngraph_tf_cmake_flags.extend([
         "-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=" +

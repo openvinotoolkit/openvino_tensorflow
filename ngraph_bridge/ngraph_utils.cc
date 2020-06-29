@@ -29,10 +29,6 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
-#if defined NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/version.h"
 
@@ -474,10 +470,6 @@ std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
 std::string GraphFilenamePrefix(std::string kind, int idx) {
   std::stringstream ss;
   ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
-#if defined NGRAPH_DISTRIBUTED
-  int rank_id = ng::get_distributed_interface()->get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
-#endif
   return ss.str();
 }
 
@@ -485,10 +477,6 @@ std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
   std::stringstream ss;
   ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
      << std::setw(4) << sub_idx;
-#if defined NGRAPH_DISTRIBUTED
-  int rank_id = ng::get_distributed_interface()->get_rank();
-  ss << "_" << std::setfill('0') << std::setw(4) << rank_id;
-#endif
   return ss.str();
 }
 
@@ -553,32 +541,6 @@ bool DumpEncapsulatedGraphs() {
   return DumpAllGraphs() ||
          std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
 }
-
-#if defined(NGRAPH_DISTRIBUTED)
-void OpControlOrder(const std::shared_ptr<ngraph::Function>& ng_function,
-                    const std::string& op_name) {
-  // Get the serialized ops and stored the allreduce ops to a vector and
-  ng::NodeVector op_list;
-  for (const shared_ptr<ng::Node>& node : ng_function->get_ordered_ops()) {
-    if (node->description() == op_name) {
-      op_list.push_back(node);
-    }
-  }
-  // Sort the allreduce ops according to the TF names
-  std::sort(op_list.begin(), op_list.end(),
-            [](const shared_ptr<ng::Node>& x, const shared_ptr<ng::Node>& y) {
-              return x->get_friendly_name() < y->get_friendly_name();
-            });
-  // Add control dependency in for the allreduce ops
-  if (op_list.size() > 1) {
-    for (size_t i = 1; i < op_list.size(); ++i) {
-      auto pre_node = op_list[i - 1];
-      auto cur_node = op_list[i];
-      cur_node->add_control_dependency(pre_node);
-    }
-  }
-}
-#endif
 
 bool IsProcessedByNgraphPass(Graph* g) {
   // TODO: place a dummy node as a marker

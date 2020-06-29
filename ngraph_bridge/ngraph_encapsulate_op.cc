@@ -31,10 +31,6 @@
 
 #include "ngraph/runtime/backend.hpp"
 
-#if defined NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"

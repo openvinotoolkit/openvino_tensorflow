@@ -48,8 +48,7 @@ __all__ = [
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config', 'are_variables_enabled',
-    'set_disabled_ops', 'get_disabled_ops', 'is_distributed_enabled',
-    'is_tf2_enabled',
+    'set_disabled_ops', 'get_disabled_ops', 'is_tf2_enabled',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -252,9 +251,6 @@ if ngraph_classic_loaded:
     def get_disabled_ops():
         return ngraph_bridge_lib.ngraph_get_disabled_ops()
 
-    def is_distributed_enabled():
-        return ngraph_bridge_lib.ngraph_tf_is_distributed_enabled()
-
     __version__ = \
     "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
     "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
@@ -262,6 +258,4 @@ if ngraph_classic_loaded:
     "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
     "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
     "nGraph bridge built with Variables and Optimizers Enablement: " \
-    + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled()) + "\n" \
-    "nGraph bridge built with Distributed Build: " \
-    + str(ngraph_bridge_lib.ngraph_tf_is_distributed_enabled()) 
+    + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())

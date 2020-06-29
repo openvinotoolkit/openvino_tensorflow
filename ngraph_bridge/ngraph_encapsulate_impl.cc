@@ -30,10 +30,6 @@
 
 #include "ngraph/runtime/backend.hpp"
 
-#if defined NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
@@ -154,13 +150,6 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
       std::string file_name = "tf_function_" + m_name + ".json";
       TF_RETURN_IF_ERROR(
           StringToFile("tf_function_" + m_name + ".json", serialized_ng_func));
-#if defined NGRAPH_DISTRIBUTED
-      int rank_id;
-      rank_id = ng::get_distributed_interface()->get_rank();
-      TF_RETURN_IF_ERROR(StringToFile(
-          "tf_function_" + m_name + "_" + to_string(rank_id) + ".json",
-          serialized_ng_func));
-#endif
     }
     // Evict the cache if the number of elements exceeds the limit
     const char* cache_depth_specified =

@@ -31,10 +31,6 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
-#if defined NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 using namespace std;
 
 namespace tensorflow {

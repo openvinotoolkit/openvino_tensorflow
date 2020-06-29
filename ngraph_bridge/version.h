@@ -38,10 +38,6 @@ bool ngraph_tf_is_grappler_enabled();
 // --enable_variables_and_optimizers flag
 bool ngraph_tf_are_variables_enabled();
 
-// Return true when nGraph-bridge is build with
-// --distributed_build flag
-bool ngraph_tf_is_distributed_enabled();
-
 // Returns the tensorflow version
 const char* tf_version();
 

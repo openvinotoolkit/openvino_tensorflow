@@ -29,10 +29,6 @@
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 
-#if defined NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 #include <iostream>
 
 using namespace std;
