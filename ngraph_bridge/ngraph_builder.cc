@@ -2117,25 +2117,30 @@ static Status TranslateFusedConv2DOp(const Node* op,
     ng::CoordinateDiff ng_padding_below{0, 0};
     ng::CoordinateDiff ng_padding_above{0, 0};
 
-    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
+    ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+    if (tf_padding_type == "VALID") {
+      ng_pad_type = ng::op::PadType::VALID;
+    } else {
+      Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                           ng_strides, ng_dilations, ng_padding_below,
+                           ng_padding_above);
+    }
 
-    ng_conv = ConstructNgNode<ng::op::Convolution>(
+    ng_conv = ConstructNgNode<ng::opset3::Convolution>(
         op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
-        ng_dilations, ng_padding_below, ng_padding_above);
+        ng_padding_below, ng_padding_above, ng_dilations, ng_pad_type);
 
     return Status::OK();
   };
 
   auto create_relu6 = [](const string& op_name,
                          const shared_ptr<ng::Node>& ng_node) {
-    auto constant_6 = ConstructNgNode<ng::op::Constant>(
+    auto constant_6 = ConstructNgNode<ng::opset3::Constant>(
         op_name, ng_node->get_element_type(), ng_node->get_shape(),
         std::vector<std::string>(ng::shape_size(ng_node->get_shape()), "6"));
-    auto relu6_op = ConstructNgNode<ng::op::Minimum>(
-        op_name,
-        ConstructNgNode<ng::op::Relu>(op_name + "_FusedConv2D_Relu", ng_node),
+    auto relu6_op = ConstructNgNode<ng::opset3::Minimum>(
+        op_name, ConstructNgNode<ng::opset3::Relu>(
+                     op_name + "_FusedConv2D_Relu", ng_node),
         constant_6);
     return relu6_op;
   };
@@ -2163,30 +2168,13 @@ static Status TranslateFusedConv2DOp(const Node* op,
           "Bias argument to BiasAdd does not have one dimension");
     }
 
-    ng::AxisSet ng_broadcast_axes;
-
-    if (is_nhwc) {
-      for (size_t i = 0; i < ng_conv_shape.size() - 1; i++) {
-        ng_broadcast_axes.insert(i);
-      }
-    } else {
-      for (size_t i = 0; i < ng_conv_shape.size(); i++) {
-        if (i != 1) {
-          ng_broadcast_axes.insert(i);
-        }
-      }
-    }
-
-    auto ng_bias_broadcasted = ConstructNgNode<ng::op::Broadcast>(
-        op->name() + "_FusedConv2D_BiasAdd", ng_bias, ng_conv_shape,
-        ng_broadcast_axes);
     auto ng_add = ConstructNgNode<ng::opset3::Add>(
-        op->name() + "_FusedConv2D_BiasAdd", ng_conv, ng_bias_broadcasted);
+        op->name() + "_FusedConv2D_BiasAdd", ng_conv, ng_bias);
 
     if (VecStrCmp(fused_ops, {"BiasAdd", "Relu"})) {
       SaveNgOp(ng_op_map, op->name(),
-               ConstructNgNode<ng::op::Relu>(op->name() + "_FusedConv2D_Relu",
-                                             ng_add));
+               ConstructNgNode<ng::opset3::Relu>(
+                   op->name() + "_FusedConv2D_Relu", ng_add));
     } else if (VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
       SaveNgOp(ng_op_map, op->name(), create_relu6(op->name(), ng_add));
     } else {
@@ -2211,7 +2199,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon));
 
     std::shared_ptr<ng::Node> ng_batch_norm =
-        ConstructNgNode<ng::op::BatchNormInference>(
+        ConstructNgNode<ng::opset3::BatchNormInference>(
             op->name() + "_FusedConv2D_BatchNorm", tf_epsilon, ng_scale,
             ng_offset, ng_conv, ng_mean, ng_variance);
 
@@ -2219,7 +2207,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"})) {
       SaveNgOp(ng_op_map, op->name(),
-               ConstructNgNode<ng::op::Relu>(
+               ConstructNgNode<ng::opset3::Relu>(
                    op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm));
     } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
       SaveNgOp(ng_op_map, op->name(), create_relu6(op->name(), ng_batch_norm));
