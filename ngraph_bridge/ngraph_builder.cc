@@ -1797,25 +1797,11 @@ static Status TranslateFloorDivOp(
 static Status TranslateFusedBatchNormOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  bool tf_is_training;
-  if (GetNodeAttr(op->attrs(), "is_training", &tf_is_training) !=
-      Status::OK()) {
-    NGRAPH_VLOG(3) << "is_training attribute not present, setting to true";
-    tf_is_training = true;
-  }
-
-  NGRAPH_VLOG(3) << "is_training: " << tf_is_training;
-
   shared_ptr<ng::Node> ng_input, ng_scale, ng_offset, ng_mean, ng_variance;
   bool is_v3 = op->type_string() == "FusedBatchNormV3";
-  if (tf_is_training) {
-    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, &ng_input));
-    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, &ng_scale));
-    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, &ng_offset));
-  } else {
-    TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_scale,
-                                     &ng_offset, &ng_mean, &ng_variance));
-  }
+
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_scale,
+                                   &ng_offset, &ng_mean, &ng_variance));
 
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
@@ -1842,70 +1828,23 @@ static Status TranslateFusedBatchNormOp(
 
   std::shared_ptr<ng::Node> ng_batch_norm;
 
-  if (tf_is_training) {
-    ng_batch_norm = ConstructNgNode<ng::op::BatchNormTraining>(
-        op->name(), tf_epsilon, ng_scale, ng_offset, ng_input);
-
-    shared_ptr<ngraph::Node> ng_y, ng_mean, ng_variance;
-    ng_y =
-        ConstructNgNode<ng::op::GetOutputElement>(op->name(), ng_batch_norm, 0);
-    ng_mean =
-        ConstructNgNode<ng::op::GetOutputElement>(op->name(), ng_batch_norm, 1);
-    ng_variance =
-        ConstructNgNode<ng::op::GetOutputElement>(op->name(), ng_batch_norm, 2);
-    // This is for Bessel's correction in ng_variance:
-    int ng_input_size = ng::shape_size(ng_input->get_shape());
-    int num_channels = ng::shape_size(ng_variance->get_shape());
-    int sample_size = ng_input_size / num_channels;
-    int sample_size_minus_one = sample_size > 1 ? (sample_size - 1) : 1;
-    float factor = float(sample_size) / float(sample_size_minus_one);
-    std::vector<float> Bessel_factor(num_channels, factor);
-    auto Bessel_scale = ConstructNgNode<ng::op::Constant>(
-        op->name(), ng_variance->get_element_type(), ng_variance->get_shape(),
-        Bessel_factor);
-    auto variance = ConstructNgNode<ng::opset3::Multiply>(
-        op->name(), ng_variance, Bessel_scale);
-
-    BatchToTensorflow(op->name(), is_nhwc, ng_y);
-
-    SaveNgOp(ng_op_map, op->name(), ng_y);
+  ng_batch_norm = ConstructNgNode<ng::opset3::BatchNormInference>(
+      op->name(), tf_epsilon, ng_scale, ng_offset, ng_input, ng_mean,
+      ng_variance);
+  BatchToTensorflow(op->name(), is_nhwc, ng_batch_norm);
+  SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+  if (is_v3) {
     SaveNgOp(ng_op_map, op->name(), ng_mean);
-    SaveNgOp(ng_op_map, op->name(), variance);
-    // Output reserve_space_1: A 1D Tensor for the computed batch mean, to be
-    // reused in the gradient computation.
-    SaveNgOp(ng_op_map, op->name(), ng_mean);
-    // Output reserve_space_2: A 1D Tensor for the computed batch variance
-    //(inverted variance in the cuDNN case), to be reused in the gradient
-    // computation.
     SaveNgOp(ng_op_map, op->name(), ng_variance);
-    if (is_v3) {
-      // FusedBatchNormV3 has 6 outputs (reserve_space_3)
-      shared_ptr<ng::Node> ng_reserved_3 =
-          ConstructNgNode<ngraph::op::Constant>(
-              op->name(), ng_mean->get_element_type(), ng::Shape{},
-              std::vector<std::string>{""});
-      SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
-    }
-  } else {
-    ng_batch_norm = ConstructNgNode<ng::op::BatchNormInference>(
-        op->name(), tf_epsilon, ng_scale, ng_offset, ng_input, ng_mean,
-        ng_variance);
-    BatchToTensorflow(op->name(), is_nhwc, ng_batch_norm);
-    SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
-    if (is_v3) {
-      SaveNgOp(ng_op_map, op->name(), ng_mean);
-      SaveNgOp(ng_op_map, op->name(), ng_variance);
-      SaveNgOp(ng_op_map, op->name(), ng_mean);
-      SaveNgOp(ng_op_map, op->name(), ng_variance);
-      // FusedBatchNormV3 has 6 outputs (reserve_space_3)
-      shared_ptr<ng::Node> ng_reserved_3 =
-          ConstructNgNode<ngraph::op::Constant>(
-              op->name(), ng_mean->get_element_type(), ng::Shape{},
-              std::vector<std::string>{""});
-      SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
-    }
+    SaveNgOp(ng_op_map, op->name(), ng_mean);
+    SaveNgOp(ng_op_map, op->name(), ng_variance);
+    // FusedBatchNormV3 has 6 outputs (reserve_space_3)
+    shared_ptr<ng::Node> ng_reserved_3 =
+        ConstructNgNode<ngraph::opset3::Constant>(
+            op->name(), ng_mean->get_element_type(), ng::Shape{},
+            std::vector<std::string>{""});
+    SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
   }
-
   return Status::OK();
 }
 

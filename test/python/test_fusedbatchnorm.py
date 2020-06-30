@@ -41,49 +41,6 @@ class TestFusedBatchNorm(NgraphTest):
     mean = [0.4, 0.5, 0.6]
     variance = [0.1, 0.2, 0.3]
 
-    def test_fusedbatchnorm_nchw(self):
-
-        def test_on_ng(sess):
-            norm = tf.compat.v1.nn.fused_batch_norm(
-                self.x, self.scale, self.offset, data_format='NCHW')
-            return (sess.run(norm))
-
-        def test_on_tf(sess):
-            # tensorflow CPU doesn't support NCHW
-            x_t = tf.transpose(self.x, NCHW_TO_NHWC)  # NHWC
-            norm = tf.compat.v1.nn.fused_batch_norm(
-                x_t, self.scale, self.offset, data_format='NHWC')
-            return (sess.run(norm))
-
-        expected = self.without_ngraph(test_on_tf)
-        result = self.with_ngraph(test_on_ng)
-        np.testing.assert_allclose(
-            result[0],
-            np.transpose(expected[0], NHWC_TO_NCHW),
-            rtol=0,
-            atol=5e-5)
-        np.testing.assert_allclose(result[1], expected[1], rtol=0, atol=5e-5)
-        np.testing.assert_allclose(result[2], expected[2], rtol=0, atol=5e-5)
-
-    def test_fusedbatchnorm_nhwc(self):
-        x_t = tf.transpose(self.x, NCHW_TO_NHWC)
-
-        def test_on_ng(sess):
-            norm = tf.compat.v1.nn.fused_batch_norm(
-                x_t, self.scale, self.offset, data_format='NHWC')
-            return (sess.run(norm))
-
-        def test_on_tf(sess):
-            norm = tf.compat.v1.nn.fused_batch_norm(
-                x_t, self.scale, self.offset, data_format='NHWC')
-            return (sess.run(norm))
-
-        expected = self.without_ngraph(test_on_tf)
-        result = self.with_ngraph(test_on_ng)
-        np.testing.assert_allclose(result[0], expected[0], rtol=0, atol=5e-5)
-        np.testing.assert_allclose(result[1], expected[1], rtol=0, atol=5e-5)
-        np.testing.assert_allclose(result[2], expected[2], rtol=0, atol=5e-5)
-
     def test_fusedbatchnorm_inference_nchw(self):
 
         def test_on_ng(sess):

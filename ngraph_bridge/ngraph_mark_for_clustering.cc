@@ -138,6 +138,19 @@ static ConfirmationFunction SimpleConfirmationFunction() {
   return cf;
 };
 
+static ConfirmationFunction FusedBatchNormConfirmationFunction() {
+  auto cf = [](Node* n, bool* result) {
+    bool tf_is_training;
+    if (GetNodeAttr(n->attrs(), "is_training", &tf_is_training) !=
+        Status::OK()) {
+      tf_is_training = true;
+    }
+    *result = !tf_is_training;
+    return Status::OK();
+  };
+  return cf;
+};
+
 // Check if op is supported by backend using is_supported API
 Status IsSupportedByBackend(
     const Node* node, const ng::runtime::Backend* op_backend,
@@ -318,11 +331,12 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Floor"] = SimpleConfirmationFunction();
     confirmation_function_map["FloorDiv"] = SimpleConfirmationFunction();
     // confirmation_function_map["FloorMod"] = SimpleConfirmationFunction();
-    confirmation_function_map["FusedBatchNorm"] = SimpleConfirmationFunction();
+    confirmation_function_map["FusedBatchNorm"] =
+        FusedBatchNormConfirmationFunction();
     confirmation_function_map["FusedBatchNormV2"] =
-        SimpleConfirmationFunction();
+        FusedBatchNormConfirmationFunction();
     confirmation_function_map["FusedBatchNormV3"] =
-        SimpleConfirmationFunction();
+        FusedBatchNormConfirmationFunction();
     confirmation_function_map["_FusedConv2D"] = SimpleConfirmationFunction();
     confirmation_function_map["GatherNd"] = SimpleConfirmationFunction();
     confirmation_function_map["GatherV2"] = SimpleConfirmationFunction();
@@ -722,22 +736,12 @@ GetTFToNgOpMap() {
         std::make_shared<ngraph::opset3::Floor>(),
         std::make_shared<ngraph::op::Broadcast>()}},
       //{"FloorMod", {std::make_shared<ngraph::opset3::FloorMod>()}},
-      {"FusedBatchNorm",
-       {std::make_shared<ngraph::op::BatchNormTraining>(),
-        std::make_shared<ngraph::op::GetOutputElement>(), constant,
-        std::make_shared<ngraph::opset3::Multiply>(),
-        std::make_shared<ngraph::op::BatchNormInference>()}},
+      {"FusedBatchNorm", {std::make_shared<ngraph::op::BatchNormInference>()}},
       {"FusedBatchNormV2",
-       {std::make_shared<ngraph::op::BatchNormTraining>(),
-        std::make_shared<ngraph::op::GetOutputElement>(), constant,
-        std::make_shared<ngraph::opset3::Multiply>(),
-        std::make_shared<ngraph::op::BatchNormInference>(),
+       {std::make_shared<ngraph::op::BatchNormInference>(),
         std::make_shared<ngraph::op::Reshape>()}},
       {"FusedBatchNormV3",
-       {std::make_shared<ngraph::op::BatchNormTraining>(),
-        std::make_shared<ngraph::op::GetOutputElement>(), constant,
-        std::make_shared<ngraph::opset3::Multiply>(),
-        std::make_shared<ngraph::op::BatchNormInference>(),
+       {constant, std::make_shared<ngraph::op::BatchNormInference>(),
         std::make_shared<ngraph::op::Reshape>()}},
       {"GatherNd", {std::make_shared<ngraph::op::GatherND>()}},
       {"GatherV2", {std::make_shared<ngraph::op::Gather>()}},
