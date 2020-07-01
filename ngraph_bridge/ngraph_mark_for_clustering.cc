@@ -204,7 +204,6 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["ArgMax"] = SetStaticInputs({1});
     set_attributes_map["ArgMin"] = SetStaticInputs({1});
     set_attributes_map["ConcatV2"] = SetStaticInputs({-1});
-    set_attributes_map["Conv2DBackpropFilter"] = SetStaticInputs({1});
     set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
     set_attributes_map["ExpandDims"] = SetStaticInputs({1});
     set_attributes_map["Fill"] = SetStaticInputs({0});
@@ -301,8 +300,6 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["ConcatV2"] = SimpleConfirmationFunction();
     confirmation_function_map["Const"] = SimpleConfirmationFunction();
     confirmation_function_map["Conv2D"] = SimpleConfirmationFunction();
-    confirmation_function_map["Conv2DBackpropFilter"] =
-        SimpleConfirmationFunction();
     confirmation_function_map["Conv2DBackpropInput"] =
         SimpleConfirmationFunction();
     confirmation_function_map["Conv3D"] = SimpleConfirmationFunction();
@@ -702,15 +699,12 @@ GetTFToNgOpMap() {
       {"Const", {constant}},
       {"Conv2D",
        {std::make_shared<ngraph::op::Reshape>(),
-        std::make_shared<ngraph::op::Convolution>()}},
-      {"Conv2DBackpropFilter",
-       {std::make_shared<ngraph::op::ConvolutionBackpropFilters>(),
-        std::make_shared<ngraph::op::Reshape>()}},
+        std::make_shared<ngraph::opset3::Convolution>()}},
       {"Conv2DBackpropInput",
-       {std::make_shared<ngraph::op::ConvolutionBackpropData>(),
-        std::make_shared<ngraph::op::Reshape>()}},
+       {std::make_shared<ngraph::opset3::ConvolutionBackpropData>(),
+        std::make_shared<ngraph::op::Reshape>(), constant}},
       {"Conv3D",
-       {std::make_shared<ngraph::op::Convolution>(),
+       {std::make_shared<ngraph::opset3::Convolution>(),
         std::make_shared<ngraph::op::Reshape>()}},
       {"Cos", {std::make_shared<ngraph::opset3::Cos>()}},
       {"CropAndResize", {std::make_shared<ngraph::op::CropAndResize>()}},

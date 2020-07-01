@@ -1086,138 +1086,21 @@ static Status TranslateConv2DOp(const Node* op,
   ng::CoordinateDiff ng_padding_below{0, 0};
   ng::CoordinateDiff ng_padding_above{0, 0};
 
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, ng_padding_below,
-                       ng_padding_above);
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_dilations, ng_padding_below,
+                         ng_padding_above);
+  }
 
-  std::shared_ptr<ng::Node> ng_conv = ConstructNgNode<ng::op::Convolution>(
-      op->name(), ng_input, ng_filter, ng_strides, ng_dilations,
-      ng_padding_below, ng_padding_above);
+  std::shared_ptr<ng::Node> ng_conv = ConstructNgNode<ng::opset3::Convolution>(
+      op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+      ng_padding_above, ng_dilations, ng_pad_type);
 
   BatchToTensorflow(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
-  return Status::OK();
-}
-
-static Status TranslateConv2DBackpropFilterOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_data_batch, ng_output_delta;
-  TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, &ng_data_batch, nullptr, &ng_output_delta));
-
-  std::vector<int32> tf_strides;
-  std::string tf_padding_type;
-  std::vector<int32> tf_dilations;
-  std::string tf_data_format;
-
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "dilations", &tf_dilations));
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
-
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
-    return errors::InvalidArgument("Data format is neither NHWC nor NCHW: ",
-                                   op->type_string());
-  }
-
-  NGRAPH_VLOG(3) << "tf data format" << tf_data_format;
-  bool is_nhwc = (tf_data_format == "NHWC");
-
-  // Dilations in batch and depth dimensions must be 1
-  if (tf_dilations[0] != 1 || tf_dilations[is_nhwc ? 3 : 1] != 1) {
-    return errors::InvalidArgument(
-        "Dilations in batch and depth dimensions must be 1: ",
-        op->type_string());
-  }
-
-  std::vector<int64> tf_filter_sizes;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 1, static_input_map, &tf_filter_sizes));
-
-  if (std::any_of(tf_filter_sizes.begin(), tf_filter_sizes.end(),
-                  [](int32 size) { return size <= 0; })) {
-    return errors::InvalidArgument("Filter sizes must be positive integers :",
-                                   op->type_string());
-  }
-
-  NGRAPH_VLOG(3) << "tf filter size" << ng::join(tf_filter_sizes);
-  NGRAPH_VLOG(3) << "tf filter size" << ng::join(tf_filter_sizes);
-  NGRAPH_VLOG(3) << "tf strides" << ng::join(tf_strides);
-  NGRAPH_VLOG(3) << "tf dilations" << ng::join(tf_dilations);
-  NGRAPH_VLOG(3) << "tf padding type" << tf_padding_type;
-
-  ng::Shape ng_filters_shape(4);
-  ng::Strides ng_window_movement_strides_forward(2);
-  ng::Strides ng_window_dilation_strides_forward(2);
-  ng::CoordinateDiff ng_padding_below_forward{0, 0};
-  ng::CoordinateDiff ng_padding_above_forward{0, 0};
-  // H,W data_dilation is set to 1 , TF does not have this attribute
-  ng::Strides ng_data_dilation_strides_forward(2, 1);
-
-  // Convert inputs, args to nGraph Format
-  // nGraph Data Format:
-  //    nGraph Tensor           [N, C_IN, D1, ... Df]
-  //    nGraph Filter           [C_OUT, C_IN, F1, ... Ff]
-  //    nGraph Output Delta     [N, C_OUT, F1, ... Ff]
-  //    nGraph Window Strides   [f]
-  //    nGraph Window Dilations [f]
-  //    nGraph Padding Below    [f]
-  //    nGraph Padding Above    [f]
-  //    nGraph Dilation Stride  [f]
-  BatchToNGraph(op->name(), is_nhwc, ng_data_batch);
-  // tf_filter shape :
-  // [filter_height, filter_width, in_channels, out_channels]
-  // reshape for nGraph
-  ng_filters_shape = {static_cast<unsigned int>(tf_filter_sizes[3]),
-                      static_cast<unsigned int>(tf_filter_sizes[2]),
-                      static_cast<unsigned int>(tf_filter_sizes[0]),
-                      static_cast<unsigned int>(tf_filter_sizes[1])};
-  BatchToNGraph(op->name(), is_nhwc, ng_output_delta);
-  BatchedOpParamToNGraph(is_nhwc, tf_strides,
-                         ng_window_movement_strides_forward);
-  BatchedOpParamToNGraph(is_nhwc, tf_dilations,
-                         ng_window_dilation_strides_forward);
-  // H, W of image/input and filter are required to figure out padding
-  // arguments
-  ng::Shape ng_filter_HW(2);
-  ng::Shape ng_input_data_HW(2);
-
-  auto& ng_data_batch_shape = ng_data_batch->get_shape();
-  ng_input_data_HW[0] = ng_data_batch_shape[2];
-  ng_input_data_HW[1] = ng_data_batch_shape[3];
-
-  ng_filter_HW[0] = ng_filters_shape[2];
-  ng_filter_HW[1] = ng_filters_shape[3];
-
-  Builder::MakePadding(tf_padding_type, ng_input_data_HW, ng_filter_HW,
-                       ng_window_movement_strides_forward,
-                       ng_window_dilation_strides_forward,
-                       ng_padding_below_forward, ng_padding_above_forward);
-
-  NGRAPH_VLOG(3) << "ng input data shape" << ng::join(ng_data_batch_shape);
-  NGRAPH_VLOG(3) << "ng filter shape" << ng::join(ng_filters_shape);
-  NGRAPH_VLOG(3) << "ng output delta shape"
-                 << ng::join(ng_output_delta->get_shape());
-  NGRAPH_VLOG(3) << "ng strides"
-                 << ng::join(ng_window_movement_strides_forward);
-  NGRAPH_VLOG(3) << "ng dilations"
-                 << ng::join(ng_window_dilation_strides_forward);
-  NGRAPH_VLOG(3) << "ng padding type" << tf_padding_type;
-
-  std::shared_ptr<ng::Node> ng_back_prop_filter =
-      ConstructNgNode<ng::op::ConvolutionBackpropFilters>(
-          op->name(), ng_data_batch, ng_filters_shape, ng_output_delta,
-          ng_window_movement_strides_forward,
-          ng_window_dilation_strides_forward, ng_padding_below_forward,
-          ng_padding_above_forward, ng_data_dilation_strides_forward);
-
-  // Reshape the output to tf format : [filter_height, filter_width,
-  // in_channels, out_channels]
-  Reshape<2, 3, 1, 0>(ng_back_prop_filter);
-  Builder::SetTracingInfo(op->name(), ng_back_prop_filter);
-
-  SaveNgOp(ng_op_map, op->name(), ng_back_prop_filter);
   return Status::OK();
 }
 
@@ -1298,15 +1181,23 @@ static Status TranslateConv2DBackpropInputOp(
   ng::CoordinateDiff ng_padding_below{0, 0};
   ng::CoordinateDiff ng_padding_above{0, 0};
 
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, ng_padding_below,
-                       ng_padding_above);
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_dilations, ng_padding_below,
+                         ng_padding_above);
+  }
+
+  auto ng_output_shape = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), ng::element::i64, ng::Shape{ng_batch_shape.size() - 2},
+      vector<size_t>(ng_batch_shape.begin() + 2, ng_batch_shape.end()));
 
   std::shared_ptr<ng::Node> ng_data =
-      ConstructNgNode<ng::op::ConvolutionBackpropData>(
-          op->name(), ng_batch_shape, ng_filter, ng_out_backprop, ng_strides,
-          ng_dilations, ng_padding_below, ng_padding_above,
-          ng::Strides(ng_batch_shape.size() - 2, 1));
+      ConstructNgNode<ng::opset3::ConvolutionBackpropData>(
+          op->name(), ng_out_backprop, ng_filter, ng_output_shape, ng_strides,
+          ng_padding_below, ng_padding_above, ng_dilations, ng_pad_type);
 
   BatchToTensorflow(op->name(), is_nhwc, ng_data);
 
@@ -1377,13 +1268,18 @@ static Status TranslateConv3DOp(const Node* op,
   ng::CoordinateDiff ng_padding_below{0, 0, 0};
   ng::CoordinateDiff ng_padding_above{0, 0, 0};
 
-  Builder::MakePadding3D(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding3D(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                           ng_strides, ng_dilations, ng_padding_below,
+                           ng_padding_above);
+  }
 
-  std::shared_ptr<ng::Node> ng_conv = ConstructNgNode<ng::op::Convolution>(
-      op->name(), ng_input, ng_filter, ng_strides, ng_dilations,
-      ng_padding_below, ng_padding_above);
+  std::shared_ptr<ng::Node> ng_conv = ConstructNgNode<ng::opset3::Convolution>(
+      op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+      ng_padding_above, ng_dilations, ng_pad_type);
 
   BatchToTensorflow3D(op->name(), is_ndhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
@@ -4029,7 +3925,6 @@ const static std::map<
         {"ConcatV2", TranslateConcatV2Op},
         {"Const", TranslateConstOp},
         {"Conv2D", TranslateConv2DOp},
-        {"Conv2DBackpropFilter", TranslateConv2DBackpropFilterOp},
         {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
         {"Conv3D", TranslateConv3DOp},
         {"Cos", TranslateUnaryOp<ngraph::opset3::Cos>},
