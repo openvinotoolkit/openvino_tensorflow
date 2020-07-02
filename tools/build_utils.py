@@ -291,7 +291,8 @@ def build_tensorflow_cc(tf_version,
         artifacts_dir,
         target_arch,
         verbosity,
-        target="//tensorflow:" + tf_cc_lib_name)
+        target="//tensorflow:" + tf_cc_lib_name +
+        " //tensorflow/core/kernels:ops_testutil")
 
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()

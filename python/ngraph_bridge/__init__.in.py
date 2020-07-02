@@ -48,7 +48,7 @@ __all__ = [
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config', 'are_variables_enabled',
-    'set_disabled_ops', 'get_disabled_ops', 'is_tf2_enabled',
+    'set_disabled_ops', 'get_disabled_ops',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -135,7 +135,6 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
-    ngraph_bridge_lib.ngraph_tf_is_tf2_enabled.restype = ctypes.c_bool
 
     try:
         importlib.import_module('plaidml.settings')
@@ -205,9 +204,6 @@ if ngraph_classic_loaded:
 
     def is_grappler_enabled():
         return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
-
-    def is_tf2_enabled():
-        return ngraph_bridge_lib.ngraph_tf_is_tf2_enabled()
 
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled

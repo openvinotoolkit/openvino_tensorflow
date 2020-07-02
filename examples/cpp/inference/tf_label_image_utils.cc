@@ -136,7 +136,7 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
                                         "' expected ", file_size, " got ",
                                         data.size());
   }
-  output->scalar<string>()() = string(data);
+  output->scalar<tensorflow::tstring>()() = tensorflow::tstring(data);
   return Status::OK();
 }
 

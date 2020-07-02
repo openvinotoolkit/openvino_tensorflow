@@ -16,6 +16,7 @@
 
 #include <iomanip>
 
+#include "absl/synchronization/mutex.h"
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
 #include "tensorflow/core/grappler/clusters/cluster.h"

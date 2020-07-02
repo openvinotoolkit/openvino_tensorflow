@@ -83,16 +83,13 @@ class NGraphDevice : public LocalDevice {
     return ProcessState::singleton()->GetCPUAllocator(0);
   }
 
-  Status FillContextMap(const Graph* graph,
-                        DeviceContextMap* device_context_map) override {
+  Status TryGetDeviceContext(DeviceContext** out_context) override {
     static NGraphDeviceContext* ctx = new NGraphDeviceContext;
-    device_context_map->resize(graph->num_node_ids());
-    for (Node* n : graph->nodes()) {
-      ctx->Ref();
-      (*device_context_map)[n->id()] = ctx;
-    }
+    ctx->Ref();
+    *out_context = ctx;
     return Status::OK();
   }
+
   Status MakeTensorFromProto(const TensorProto& tensor_proto,
                              const AllocatorAttributes alloc_attrs,
                              Tensor* tensor) override {

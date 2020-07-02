@@ -17,17 +17,17 @@
                 "num_nodes_marked_for_clustering": 0
             },
             "3": {
-                "num_ng_clusters": 9,
-                "num_nodes_in_graph": 268,
-                "num_nodes_marked_for_clustering": 176
+                "num_ng_clusters": 19,
+                "num_nodes_in_graph": 447,
+                "num_nodes_marked_for_clustering": 301
             },
             "4": {
-                "num_ng_clusters": 4,
-                "num_nodes_in_graph": 78,
-                "num_nodes_marked_for_clustering": 47
+                "num_ng_clusters": 12,
+                "num_nodes_in_graph": 147,
+                "num_nodes_marked_for_clustering": 115
             }
         },
-        "time": 5.185155630111694
+        "time": 7.095110654830933
     },
     "grappler": {
         "logparse": {

@@ -24,9 +24,9 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 |Using pre-built packages| Building from source|
 | -----------------------|-------------------|
 |Python 3| Python 3|
-|TensorFlow v1.15.2|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
+|TensorFlow v2.2.0|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
 |        |`cmake` 3.4 or higher|
-|        |Bazel 0.25.2|
+|        |Bazelisk|
 |        |`virtualenv` 16.0.0|
 |        ||
 
@@ -43,7 +43,7 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 
 2. Install TensorFlow:
 
-        pip install -U tensorflow==1.15.2
+        pip install -U tensorflow==2.2.0
 
 3. Install `ngraph-tensorflow-bridge`:
 
@@ -74,10 +74,11 @@ Install the following requirements before building the `ngraph-bridge`.
 TensorFlow uses a build system called "bazel". For the current version of `bazel`, 
 use [bazel version].
 
-Install `bazel`:
+Install `bazelisk`:
 
-        wget https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel-0.25.2-installer-linux-x86_64.sh      
-        bash bazel-0.25.2-installer-linux-x86_64.sh --user
+        wget https://github.com/bazelbuild/bazelisk/releases/download/v1.5.0/bazelisk-linux-amd64
+        mv bazelisk-linux-amd64 ~/bin/bazel
+        chmod +x ~/bin/bazel
 
 Add and source the `bin` path to your `~/.bashrc` file to call
 bazel:
@@ -131,10 +132,10 @@ Verify that `ngraph-bridge` installed correctly:
 
 This will produce something like this:
 
-        TensorFlow version:  1.15.2
+        TensorFlow version:  2.2.0
         nGraph bridge version: b'0.22.0-rc3'
         nGraph version used for this build: b'0.28.0-rc.1+d2cd873'
-        TensorFlow version used for this build: v1.15.2-0-g5d80e1e8e6
+        TensorFlow version used for this build: v2.2.0-0-2b96f3662b
         CXX11_ABI flag used for this build: 1
         nGraph bridge built with Grappler: False
         nGraph bridge built with Variables and Optimizers Enablement: False

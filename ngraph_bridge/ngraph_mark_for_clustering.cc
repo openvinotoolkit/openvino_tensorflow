@@ -650,6 +650,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["UnsortedSegmentSum"]["Tnumsegments"] =
         NGraphIndexDTypes();
     type_constraint_map["Xdivy"]["T"] = NGraphRealDTypes();
+    type_constraint_map["ZerosLike"]["T"] = NGraphNumericDTypes();
     initialized = true;
   }
   return type_constraint_map;

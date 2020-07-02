@@ -550,7 +550,7 @@ sparse_xent_op_test.SparseXentTest.testHighDim2
 sparse_xent_op_test.SparseXentTest.testNpXent
 sparse_xent_op_test.SparseXentTest.testScalar
 #sparse_xent_op_test.SparseXentTest.testScalarHandling
-sparse_xent_op_test.SparseXentTest.testSecondGradient
+#sparse_xent_op_test.SparseXentTest.testSecondGradient
 sparse_xent_op_test.SparseXentTest.testShapeMismatch
 sparse_xent_op_test.SparseXentTest.testSingleClass
 sparse_xent_op_test.SparseXentTest.testVector

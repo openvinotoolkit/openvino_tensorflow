@@ -16,6 +16,7 @@
 
 #include <iomanip>
 
+#include "absl/synchronization/mutex.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"

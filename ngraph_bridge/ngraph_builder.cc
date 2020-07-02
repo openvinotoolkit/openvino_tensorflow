@@ -16,7 +16,6 @@
 
 #include "tensorflow/core/framework/tensor.pb.h"
 #include "tensorflow/core/framework/tensor_shape.pb.h"
-#include "tensorflow/core/framework/tensor_shape.pb_text.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
@@ -958,7 +957,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<ng::opset3::Convert>(op->name(), ng_input, ng_et));
   } catch (const std::out_of_range&) {
-    return errors::Unimplemented("Unsupported TensorFlow data type: ",
+    return errors::Unimplemented("Failed to convert TF data type: ",
                                  DataType_Name(dtype));
   }
   return Status::OK();
@@ -1018,7 +1017,7 @@ static Status TranslateConstOp(const Node* op,
     const auto& func_param = Builder::TF_NGRAPH_CONST_MAP().at(dtype);
     TF_RETURN_IF_ERROR(func_param.first(op, func_param.second, &ng_node));
   } catch (const std::out_of_range&) {
-    return errors::Unimplemented("Unsupported TensorFlow data type: ",
+    return errors::Unimplemented("Failed to translate Constant with TF type: ",
                                  DataType_Name(dtype));
   }
 

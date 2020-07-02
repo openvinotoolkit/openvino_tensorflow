@@ -269,8 +269,12 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
       break;
     case DataType::DT_QINT32:
       *ng_et = ng::element::i32;
+      break;
     case DataType::DT_BFLOAT16:
       *ng_et = ng::element::bf16;
+      break;
+    case DataType::DT_HALF:
+      *ng_et = ng::element::f16;
       break;
     default:
       return errors::Unimplemented("Unsupported TensorFlow data type: ",

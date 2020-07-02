@@ -63,8 +63,8 @@ class NGraphVariableOp : public OpKernel {
   DataType dtype_;
   string ng_backend_name_;
   mutex init_mu_;
-  ContainerInfo cinfo_ GUARDED_BY(init_mu_);
-  bool initialized_ GUARDED_BY(init_mu_){false};
+  ContainerInfo cinfo_ TF_GUARDED_BY(init_mu_);
+  bool initialized_ TF_GUARDED_BY(init_mu_){false};
   static int s_instance_count;
   int my_instance_id{0};
 
