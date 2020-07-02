@@ -24,9 +24,9 @@
 
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_rewrite_for_variable_sync.h"
+#include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/enable_variable_ops/ngraph_variable_update_ng_tensor_op.h"
 #include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/ngraph_var.h"
 #include "test/test_utilities.h"
 
 namespace tensorflow {

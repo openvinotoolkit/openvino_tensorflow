@@ -42,6 +42,7 @@
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_partial_shapes.h"
 #include "ngraph_bridge/ngraph_utils.h"
@@ -283,40 +284,16 @@ Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
               ngraph::serialize(ng_function, json_indentation));
 
           // Translation done, now compile
-          ng::runtime::Backend* op_backend = nullptr;
-          try {
-            op_backend = BackendManager::GetBackend(op_backend_name);
-          } catch (const std::out_of_range& e) {
-            NGRAPH_VLOG(5) << "Exception: " << e.what();
-            BackendManager::ReleaseBackend(op_backend_name);
-            throw;
-          }
-          BackendManager::LockBackend(op_backend_name);
-          std::shared_ptr<ngraph::runtime::Executable> ng_exec;
-          try {
-            ng_exec = op_backend->compile(ng_function);
-          } catch (...) {
-            BackendManager::UnlockBackend(op_backend_name);
-            Status st =
-                NgraphSerialize("tf_function_error_aot.json", ng_function);
-            BackendManager::ReleaseBackend(op_backend_name);
-            return errors::Internal(
-                "Failed to compile ng_function for AOT.",
-                (st.ok() ? ""
-                         : " Failed to serialize as well with error: " +
-                               st.error_message()));
-          }
-          BackendManager::UnlockBackend(op_backend_name);
-          BackendManager::ReleaseBackend(op_backend_name);
+          std::string ng_exec_str;
+          TF_RETURN_IF_ERROR(NGraphEncapsulateImpl::GetCompiledString(
+              op_backend_name, ng_function, &ng_exec_str));
 
           // Compilation done, now serialize and attach as attribute
-          stringstream exec_dump;
-          ng_exec->save(exec_dump);
           // ng function attached as debugging information
           node->AddAttr("_ngraph_aot_ngfunction_" + signature,
                         serialized_ngfunc);
           // Compute will use this ngexec
-          node->AddAttr("_ngraph_aot_ngexec_" + signature, exec_dump.str());
+          node->AddAttr("_ngraph_aot_ngexec_" + signature, ng_exec_str);
           // We do not need to add "_ngraph_aot_requested" attribute since it
           // already is already present in device_config and inserted into the
           // currently created NGraphEncapsulate
@@ -324,6 +301,7 @@ Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
           // and for bridge
           performed_aot_on_enc.insert(node->name());
           NGRAPH_VLOG(5) << "Performed AOT on " << node->name();
+          BackendManager::ReleaseBackend(op_backend_name);
         }
       }
     }  // end of for (ShapeHintMap single_hint : node_shapes_hints_sets)

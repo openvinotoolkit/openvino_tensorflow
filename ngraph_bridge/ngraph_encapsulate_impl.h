@@ -48,11 +48,18 @@ class NGraphEncapsulateImpl {
                           std::vector<const Tensor*>& static_input_map,
                           std::stringstream& signature_ss);
 
+  static Status Compile(const std::string& backend_name,
+                        std::shared_ptr<ngraph::Function> ng_function,
+                        std::shared_ptr<ngraph::runtime::Executable>& ng_exec);
+
+  static Status GetCompiledString(const std::string& backend_name,
+                                  std::shared_ptr<ngraph::Function> ng_function,
+                                  std::string* ng_exec_str);
+
   // Calls Compute Signature and gets ngraph executable
   Status GetNgExecutable(const std::vector<Tensor>& tf_input_tensors,
                          std::vector<TensorShape>& input_shapes,
                          std::vector<const Tensor*>& static_input_map,
-                         ng::runtime::Backend*& op_backend,
                          std::shared_ptr<ngraph::runtime::Executable>& ng_exec);
 
   // Allocate tensors for input arguments. Creates ngraph input tensors using
@@ -60,7 +67,6 @@ class NGraphEncapsulateImpl {
   Status AllocateNGInputTensors(
       const std::vector<Tensor>& tf_input_tensors,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      ng::runtime::Backend* const op_backend,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs);
 
   // Allocate tensors for output results.  Creates ngraph output tensors using
@@ -68,7 +74,6 @@ class NGraphEncapsulateImpl {
   Status AllocateNGOutputTensors(
       const std::vector<Tensor*>& tf_output_tensors,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      ng::runtime::Backend* const op_backend,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs);
 
   // Get current ngraph tensor
@@ -77,7 +82,6 @@ class NGraphEncapsulateImpl {
       const std::shared_ptr<ng::runtime::Tensor>& last_ng_tensor,
       const bool& output_tensor,
       const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-      ng::runtime::Backend* const op_backend,
       const ng::element::Type& ng_element_type, const ng::Shape& ng_shape);
 
   // Clear all maps with ng_exec as keys
@@ -178,9 +182,6 @@ class NGraphEncapsulateImpl {
   Status ParseNodeAttributes(
       const google::protobuf::Map<string, AttrValue>& additional_attributes,
       std::unordered_map<std::string, std::string>* additional_attribute_map);
-  void SetExecCanCreateTensor(bool b) { m_executable_can_create_tensor = b; }
-
-  bool GetExecCanCreateTensor() { return m_executable_can_create_tensor; }
 
   // TF Graph for the cluster
   Graph m_graph;
@@ -212,8 +213,6 @@ class NGraphEncapsulateImpl {
 
   NgFunctionIOCache m_ng_exec_input_cache_map;
   NgFunctionIOCache m_ng_exec_output_cache_map;
-
-  bool m_executable_can_create_tensor = false;
 
   int m_depth{2};  // TODO make this settable
 };

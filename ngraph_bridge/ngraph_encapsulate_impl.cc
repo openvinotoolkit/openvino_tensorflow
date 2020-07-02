@@ -40,7 +40,6 @@
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
-#include "ngraph_bridge/ngraph_var.h"
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
 #include "ngraph_bridge/ngraph_catalog.h"
 #endif
@@ -92,12 +91,48 @@ Status NGraphEncapsulateImpl::ComputeSignature(
   return Status::OK();
 }
 
+// Compiles the ngraph function and returns ngraph executable
+Status NGraphEncapsulateImpl::Compile(
+    const std::string& backend_name,
+    std::shared_ptr<ngraph::Function> ng_function,
+    std::shared_ptr<ngraph::runtime::Executable>& ng_exec) {
+  ng::runtime::Backend* op_backend = BackendManager::GetBackend(backend_name);
+  BackendManager::LockBackend(backend_name);
+  try {
+    ng_exec = op_backend->compile(ng_function);
+  } catch (...) {
+    BackendManager::UnlockBackend(backend_name);
+    string fn_name = ng_function->get_friendly_name();
+    Status st =
+        NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
+    BackendManager::ReleaseBackend(backend_name);
+    return errors::Internal(
+        "Failed to compile ng_function.",
+        (st.ok() ? ""
+                 : " Failed to serialize as well with error: " +
+                       st.error_message()));
+  }
+  BackendManager::UnlockBackend(backend_name);
+  return Status::OK();
+}
+
+// Compiles the ngraph function and returns ngraph executable as a string
+Status NGraphEncapsulateImpl::GetCompiledString(
+    const std::string& backend_name,
+    std::shared_ptr<ngraph::Function> ng_function, std::string* ng_exec_str) {
+  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  NGraphEncapsulateImpl::Compile(backend_name, ng_function, ng_exec);
+  stringstream exec_dump;
+  ng_exec->save(exec_dump);
+  *ng_exec_str = exec_dump.str();
+  return Status::OK();
+}
+
 // Calls ComputeSignature and gets ngraph executable
 Status NGraphEncapsulateImpl::GetNgExecutable(
     const std::vector<Tensor>& tf_input_tensors,
     std::vector<TensorShape>& input_shapes,
     std::vector<const Tensor*>& static_input_map,
-    ng::runtime::Backend*& op_backend,
     std::shared_ptr<ngraph::runtime::Executable>& ng_exec) {
   std::stringstream signature_ss;
   string signature;
@@ -107,7 +142,8 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
 
   NGRAPH_VLOG(4) << "GetNgExecutable: Got backend of type: "
                  << m_op_backend_name;
-  op_backend = BackendManager::GetBackend(m_op_backend_name);
+  ng::runtime::Backend* op_backend =
+      BackendManager::GetBackend(m_op_backend_name);
 
   // Compute Signature
   TF_RETURN_IF_ERROR(ComputeSignature(tf_input_tensors, input_shapes,
@@ -192,43 +228,44 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     }  // cache eviction if cache size greater than cache depth
 
     NG_TRACE("Compile nGraph", m_name, "");
-    BackendManager::LockBackend(m_op_backend_name);
-    try {
-      if (m_do_aot) {
-        auto itr = m_aot_execs.find(signature);
-        if (itr == m_aot_execs.end()) {
-          BackendManager::UnlockBackend(m_op_backend_name);
-          return errors::Internal(
-              "Requested AOT, but could not find string with the "
-              "signature: ",
-              signature);
-        }
+    if (m_do_aot) {
+      auto itr = m_aot_execs.find(signature);
+      if (itr == m_aot_execs.end()) {
+        return errors::Internal(
+            "Requested AOT, but could not find string with the "
+            "signature: ",
+            signature);
+      }
+
+      BackendManager::LockBackend(m_op_backend_name);
+      try {
         stringstream serialized_exec_read;
         serialized_exec_read << (itr->second);
         ng_exec = op_backend->load(serialized_exec_read);
-      } else {
-        ng_exec = op_backend->compile(ng_function);
+      } catch (const std::exception& exp) {
+        BackendManager::UnlockBackend(m_op_backend_name);
+        Status st = StringToFile("tf_function_error_" + m_name + ".json",
+                                 serialized_ng_func);
+        string status_string =
+            "Caught exception while compiling op_backend: " +
+            string(exp.what()) +
+            (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                             st.error_message()));
+        return errors::Internal(status_string);
+      } catch (...) {
+        BackendManager::UnlockBackend(m_op_backend_name);
+        Status st = StringToFile("tf_function_error_" + m_name + ".json",
+                                 serialized_ng_func);
+        string status_string =
+            "Error in compiling op_backend." +
+            (st.ok() ? "" : (" Also error in dumping serialized function: " +
+                             st.error_message()));
+        return errors::Internal(status_string);
       }
-    } catch (const std::exception& exp) {
       BackendManager::UnlockBackend(m_op_backend_name);
-      Status st = StringToFile("tf_function_error_" + m_name + ".json",
-                               serialized_ng_func);
-      string status_string =
-          "Caught exception while compiling op_backend: " + string(exp.what()) +
-          (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                           st.error_message()));
-      return errors::Internal(status_string);
-    } catch (...) {
-      BackendManager::UnlockBackend(m_op_backend_name);
-      Status st = StringToFile("tf_function_error_" + m_name + ".json",
-                               serialized_ng_func);
-      string status_string =
-          "Error in compiling op_backend." +
-          (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                           st.error_message()));
-      return errors::Internal(status_string);
+    } else {
+      NGraphEncapsulateImpl::Compile(m_op_backend_name, ng_function, ng_exec);
     }
-    BackendManager::UnlockBackend(m_op_backend_name);
 
     SetNgExecMap(signature, ng_exec);
 
@@ -264,7 +301,6 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
 Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     const std::vector<Tensor>& tf_input_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    ng::runtime::Backend* const op_backend,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs) {
   std::vector<TensorShape> input_shapes;
   std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
@@ -311,7 +347,7 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     void* current_src_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
     std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
         GetCurrentNgTensor(current_src_ptr, last_src_ptr, last_ng_tensor, false,
-                           ng_exec, op_backend, ng_element_type, ng_shape);
+                           ng_exec, ng_element_type, ng_shape);
     bool is_cpu = m_op_backend_name == "CPU";
 
     if (!is_cpu && current_ng_tensor->get_stale()) {
@@ -353,7 +389,6 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
 Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
     const std::vector<Tensor*>& output_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    ng::runtime::Backend* const op_backend,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
   std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
       output_caches = m_ng_exec_output_cache_map[ng_exec];
@@ -389,7 +424,7 @@ Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
 
     current_ng_tensor =
         GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor, true,
-                           ng_exec, op_backend, ng_element_type, ng_shape);
+                           ng_exec, ng_element_type, ng_shape);
 
     current_ng_tensor->set_stale(true);
     output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
@@ -405,7 +440,6 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
     const std::shared_ptr<ng::runtime::Tensor>& last_ng_tensor,
     const bool& output_tensor,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    ng::runtime::Backend* const op_backend,
     const ng::element::Type& ng_element_type, const ng::Shape& ng_shape) {
   // NOTE: we assume that TF's pointers WILL change if it actually changes
   // values. ie, it will not reuse the same space if its rewritten it
@@ -428,6 +462,8 @@ std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
   }
 
   // create a new ng tensor or use the last one
+  ng::runtime::Backend* op_backend =
+      BackendManager::GetBackend(m_op_backend_name);
   std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
   if (need_new_tensor_creation) {
     if (is_cpu) {

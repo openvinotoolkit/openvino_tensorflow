@@ -40,9 +40,9 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/ngraph_var.h"
 
 #if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
+#include "ngraph_bridge/enable_variable_ops/ngraph_var.h"
 #include "ngraph_bridge/ngraph_catalog.h"
 #endif
 
@@ -202,17 +202,6 @@ void NGraphEncapsulateOp::CreateLegacyExecutor(OpKernelConstruction* ctx,
   // SetConfig will be called for each EncapsulateOp
   BackendManager::SetConfig(ng_encap_impl_.GetOpBackend(),
                             additional_attribute_map);
-
-  bool exec_can_create_tensor =
-      BackendManager::GetBackend(ng_encap_impl_.GetOpBackend())
-          ->executable_can_create_tensors();
-  if (ng_encap_impl_.GetOpBackend() == "CPU") {
-    ng_encap_impl_.SetExecCanCreateTensor(false);
-  } else {
-    ng_encap_impl_.SetExecCanCreateTensor(exec_can_create_tensor);
-  }
-  NGRAPH_VLOG(5) << "Executable can " << (exec_can_create_tensor ? "" : "not")
-                 << " create tensors";
 }
 
 //---------------------------------------------------------------------------
@@ -289,7 +278,6 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
   std::vector<TensorShape> input_shapes;
   std::vector<const Tensor*> static_input_map;
   std::shared_ptr<ngraph::runtime::Executable> ng_exec;
-  ng::runtime::Backend* op_backend;
   // TF input tensor
   std::vector<Tensor> tf_input_tensors;
   int step_id;
@@ -302,9 +290,9 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
     step_id = ctx->step_id();
 
     // Get ngraph executable and inputs information
-    OP_REQUIRES_OK(ctx, ng_encap_impl_.GetNgExecutable(
-                            tf_input_tensors, input_shapes, static_input_map,
-                            op_backend, ng_exec));
+    OP_REQUIRES_OK(
+        ctx, ng_encap_impl_.GetNgExecutable(tf_input_tensors, input_shapes,
+                                            static_input_map, ng_exec));
 
     NGRAPH_VLOG(1) << " Step_ID: " << step_id;
     NGRAPH_VLOG(4)
@@ -325,7 +313,7 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
   {
     NG_TRACE("Input: maybe create", name(), "");
     OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGInputTensors(
-                            tf_input_tensors, ng_exec, op_backend, ng_inputs));
+                            tf_input_tensors, ng_exec, ng_inputs));
   }
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
@@ -365,9 +353,8 @@ void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
                            "the element type expected by TensorFlow"));
     }
 
-    OP_REQUIRES_OK(
-        ctx, ng_encap_impl_.AllocateNGOutputTensors(tf_output_tensors, ng_exec,
-                                                    op_backend, ng_outputs));
+    OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGOutputTensors(
+                            tf_output_tensors, ng_exec, ng_outputs));
     output_caches = ng_encap_impl_.GetNgExecOutputCacheMap(ng_exec);
   }
   NGRAPH_VLOG(4)

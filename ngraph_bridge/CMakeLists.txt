@@ -48,7 +48,6 @@ set(SRC
    ngraph_partial_shapes.cc
    ngraph_register_stub_kernels.cc   
    ngraph_rewrite_pass.cc
-   ngraph_var.cc
    ngraph_utils.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
@@ -72,6 +71,7 @@ if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
     list(APPEND SRC enable_variable_ops/ngraph_replace_op_utilities.cc)
     list(APPEND SRC enable_variable_ops/ngraph_replace_variable_modifiers.cc)
     list(APPEND SRC enable_variable_ops/ngraph_rewrite_for_variable_sync.cc)
+    list(APPEND SRC enable_variable_ops/ngraph_var.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_modifiers.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_update_ng_tensor_op.cc)
     list(APPEND SRC enable_variable_ops/ngraph_variable_op.cc)
