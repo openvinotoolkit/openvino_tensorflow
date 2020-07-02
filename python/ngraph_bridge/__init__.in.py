@@ -47,7 +47,7 @@ __all__ = [
     'set_backend', 'get_currently_set_backend_name',
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
-    'is_grappler_enabled', 'update_config', 'are_variables_enabled',
+    'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
 ]
 
@@ -132,7 +132,6 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
     ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
     ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_tf_are_variables_enabled.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
 
@@ -238,9 +237,6 @@ if ngraph_classic_loaded:
             # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
         return config
 
-    def are_variables_enabled():
-        return ngraph_bridge_lib.ngraph_tf_are_variables_enabled()
-
     def set_disabled_ops(unsupported_ops):
         ngraph_bridge_lib.ngraph_set_disabled_ops(unsupported_ops.encode("utf-8"))
 
@@ -252,6 +248,4 @@ if ngraph_classic_loaded:
     "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
-    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
-    "nGraph bridge built with Variables and Optimizers Enablement: " \
-    + str(ngraph_bridge_lib.ngraph_tf_are_variables_enabled())
+    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled())

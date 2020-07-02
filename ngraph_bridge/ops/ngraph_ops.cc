@@ -33,15 +33,5 @@ REGISTER_OP("NGraphEncapsulate")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
-// ------------------------------------------------------------------
-REGISTER_OP("NGraphVariable")
-    .Output("ref: Ref(dtype)")
-    .Attr("shape: shape")
-    .Attr("dtype: type")
-    .Attr("container: string = ''")
-    .Attr("shared_name: string = ''")
-    .SetIsStateful()
-    .SetShapeFn(shape_inference::ExplicitShape);
-
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

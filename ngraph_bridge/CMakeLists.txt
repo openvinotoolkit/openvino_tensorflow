@@ -36,7 +36,6 @@ set(SRC
    ngraph_assign_clusters.cc
    ngraph_builder.cc
    ngraph_backend_manager.cc
-   ngraph_catalog.cc
    ngraph_cluster_manager.cc
    ngraph_conversions.cc
    ngraph_deassign_clusters.cc
@@ -53,32 +52,6 @@ set(SRC
    tf_deadness_analysis.cc
    version.cc
 )
-
-message(STATUS "NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS: ${NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS}")
-
-if(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-    # common files
-    list(REMOVE_ITEM SRC ngraph_rewrite_pass.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_rewrite_pass.cc)
-
-    list(REMOVE_ITEM SRC ops/ngraph_ops.cc)
-    list(APPEND SRC enable_variable_ops/ops/ngraph_ops.cc)
-
-    # new files
-    list(APPEND SRC enable_variable_ops/ngraph_assign_op.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_enter_in_catalog.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_remove_ngraphassigns.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_replace_op_utilities.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_replace_variable_modifiers.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_rewrite_for_variable_sync.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_var.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_variable_modifiers.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_variable_update_ng_tensor_op.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_variable_op.cc)
-    list(APPEND SRC enable_variable_ops/ngraph_capture_variables.cc)
-    
-    add_definitions(-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-endif()
 
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)

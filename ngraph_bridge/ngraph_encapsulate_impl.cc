@@ -40,10 +40,6 @@
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-#include "ngraph_bridge/ngraph_catalog.h"
-#endif
-
 using namespace std;
 namespace ng = ngraph;
 
@@ -306,30 +302,8 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
   std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
       input_caches = m_ng_exec_input_cache_map[ng_exec];
   input_caches.resize(tf_input_tensors.size());
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-  log_copies = false;
-  TF_RETURN_IF_ERROR(IsNgraphTFLogTensorCopiesEnabled(m_graph_id, log_copies));
-  std::stringstream copy_log_str;
-  copy_log_str << "["
-               << "NGraphEncapsulate:"
-               << "]: " << m_name << " ,GraphID " << m_graph_id << "\n";
-  number_of_copies = 0;
-#endif
 
   for (int i = 0; i < tf_input_tensors.size(); i++) {
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-    bool ref_exists = NGraphCatalog::ExistsInInputVariableSharedNameMap(
-        m_graph_id, m_name, i);
-
-    // If the input is from a Variable node, we are dealing with later
-    // just add a nullptr to the ng_inputs vector.
-    if (ref_exists) {
-      NGRAPH_VLOG(4) << "NGraphEncapsulateOp:: Input from Variable Node";
-      ng_inputs.push_back(nullptr);
-      continue;
-    }
-    NGRAPH_VLOG(4) << "NGraphEncapsulateOp:: Input from non Variable Node";
-#endif
     ng::Shape ng_shape(tf_input_tensors[i].shape().dims());
     for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
       ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);
@@ -353,11 +327,6 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     if (!is_cpu && current_ng_tensor->get_stale()) {
       // Fresh or stale, in case of CPU this step is never needed
       try {
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-        int copies = number_of_copies;
-        SetNumberOfCopies(copies++);
-        copy_log_str << " COPY_INP_VAL[" << i << "]";
-#endif
         size_t copy_size =
             current_ng_tensor->get_element_count() * ng_element_type.size();
         string event_name =
@@ -407,20 +376,6 @@ Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
 
     void* current_dst_ptr = DMAHelper::base(output_tensors[i]);
     std::shared_ptr<ng::runtime::Tensor> current_ng_tensor = nullptr;
-
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-    bool ref_exists =
-        NGraphCatalog::ExistsInEncapOutputInfoMap(m_graph_id, m_name, i);
-
-    // if the output tensor is going to be assigned to a variable
-    // we are dealing with later, just add a nullptr to ng_outputs vectorç
-    if (ref_exists) {
-      NGRAPH_VLOG(4) << "NGraphEncapsulateImpl:: Output from Variable Node";
-      ng_outputs.push_back(nullptr);
-      continue;
-    }
-    NGRAPH_VLOG(4) << "NGraphEncapsulateImpl:: Output from non Variable Node";
-#endif
 
     current_ng_tensor =
         GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor, true,

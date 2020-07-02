@@ -34,10 +34,6 @@ int ngraph_tf_cxx11_abi_flag();
 // graph rewriting
 bool ngraph_tf_is_grappler_enabled();
 
-// Returns true when nGraph-bridge is built with
-// --enable_variables_and_optimizers flag
-bool ngraph_tf_are_variables_enabled();
-
 // Returns the tensorflow version
 const char* tf_version();
 }

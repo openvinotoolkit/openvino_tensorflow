@@ -102,17 +102,7 @@ class TestVariableStaticInputs(NgraphTest):
         var_final_val = var.eval(sess)
         return var_init_value, mean_values, var_final_val
 
-    # With TF2.0 the VariableV2 has been replaced with the VarHandleOp
-    # But, when built with --enable_variables_and_optimizers option
-    # looks for and captures VariableV2 and this test when run will not
-    # work as intended. Hence, we are disabling TF2.0 behaviour and
-    # and running it.
-    def test_variable_static_input_variables_dont_share_buffer(self):
-        # set env variable to disable NGraphVariable's buffer sharing
-        buffer_sharing_env = "NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"
-        env_var_map = self.store_env_variables([buffer_sharing_env])
-        self.set_env_variable(buffer_sharing_env, "0")
-
+    def test_variable_static_input_variables(self):
         # Run on nGraph
         ng_var_init_val, ng_mean_values, ng_var_final = self.with_ngraph(
             self.__run_test)
@@ -135,41 +125,3 @@ class TestVariableStaticInputs(NgraphTest):
 
         # Final Var value
         assert np.allclose(ng_var_final, tf_var_final)
-
-        # clean up
-        self.unset_env_variable(buffer_sharing_env)
-        self.restore_env_variables(env_var_map)
-
-    # Tests when buffer sharing is enabled
-    def test_variable_static_input_variables_share_buffer(self):
-        # set env variable to enable NGraphVariable's buffer sharing
-        buffer_sharing_env = "NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"
-        env_var_map = self.store_env_variables([buffer_sharing_env])
-        self.set_env_variable(buffer_sharing_env, "1")
-
-        # Run on nGraph
-        ng_var_init_val, ng_mean_values, ng_var_final = self.with_ngraph(
-            self.__run_test)
-
-        # Reset Graph
-        # It is necessary to reset the graph because of the variables
-        # TF thinks you want to reuse the variables
-        tf.reset_default_graph()
-
-        # Run on TF
-        tf_var_init_val, tf_mean_values, tf_var_final = self.without_ngraph(
-            self.__run_test)
-
-        # Compare Values
-        # initial Var value will match
-        assert np.allclose(ng_var_init_val, tf_var_init_val)
-
-        # mean value matches for all iterations
-        assert np.allclose(ng_mean_values, tf_mean_values)
-
-        # Final Var value will match
-        assert np.allclose(ng_var_final, tf_var_final)
-
-        # clean up
-        self.unset_env_variable(buffer_sharing_env)
-        self.restore_env_variables(env_var_map)

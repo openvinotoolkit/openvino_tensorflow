@@ -112,12 +112,6 @@ def main():
         action="store")
 
     parser.add_argument(
-        '--enable_variables_and_optimizers',
-        help=
-        "Ops like variable and optimizers are supported by nGraph in this version of the bridge\n",
-        action="store_true")
-
-    parser.add_argument(
         '--use_grappler_optimizer',
         help="Use Grappler optimizer instead of the optimization passes\n",
         action="store_true")
@@ -449,11 +443,6 @@ def main():
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
         ])
-
-    ngraph_tf_cmake_flags.extend([
-        "-DNGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS=" +
-        flag_string_map[arguments.enable_variables_and_optimizers]
-    ])
 
     ngraph_tf_cmake_flags.extend([
         "-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=" +

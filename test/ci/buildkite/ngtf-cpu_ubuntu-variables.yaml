@@ -27,7 +27,7 @@
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      python3 build_ngtf.py --enable_variables_and_optimizers \
+      python3 build_ngtf.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
         --use_tensorflow_from_location /localdisk/buildkite-agent/prebuilt_tensorflow_2_2_0
       
@@ -40,7 +40,7 @@
   - wait
 
   - command: |
-      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
     
     label: ":chrome: C++ Unit Test"
@@ -68,7 +68,7 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install pytest
       pip install keras==2.3.1
-      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd`:`pwd`/examples:`pwd`/tools:`pwd`/examples/mnist \
+      PYTHONPATH=`pwd`:`pwd`/examples:`pwd`/tools:`pwd`/examples/mnist \
         python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
     
@@ -94,7 +94,7 @@
 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      NGRAPH_TF_NGVARIABLE_BUFFER_SHARING=0 PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet
     label: ":bar_chart: ResNet50"
     timeout_in_minutes: 30

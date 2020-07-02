@@ -64,8 +64,6 @@ int FindNumberOfNodes(const Graph* graph, const string op_type);
 Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
                                         bool& is_copy_log_enabled);
 
-Status GetNgraphVarBufferSharingState(int& buffer_sharing_state);
-
 void PrintTFTensor(Tensor& T1);
 std::string DebugNode(Node* node);
 
@@ -78,9 +76,6 @@ void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
                    Tensor* tf_tensor);
 
 void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out);
-
-// Node-types on a variable and are executed on nGraph
-bool IsNGVariableType(string node_type);
 
 // Node-types that are executed on nGraph
 bool IsNGSupportedType(string node_type);

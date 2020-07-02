@@ -30,9 +30,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Simple Graph
@@ -523,10 +521,6 @@ TEST(VariableTest, SmallGraph6) {
 // end to end
 // - execution terminates at the TF optimizer
 TEST(VariableTest, SmallGraph7) {
-  list<string> env_vars{"NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"};
-  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
-  SetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING", "0");
-
   Scope root = Scope::NewRootScope();
 
   PartialTensorShape varShape({2, 2});
@@ -587,17 +581,11 @@ TEST(VariableTest, SmallGraph7) {
   Compare(tf_outputs2, ng_outputs2);
 
   ActivateNGraph();
-  UnsetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
-  RestoreEnv(env_map);
 }  // SmallGraph7
 
 // - output of TF optimizer is fed to another op
 // e.g. Add op that is supported
 TEST(VariableTest, SmallGraph8) {
-  list<string> env_vars{"NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"};
-  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
-  SetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING", "0");
-
   Scope root = Scope::NewRootScope();
 
   PartialTensorShape varShape({2, 2});
@@ -674,17 +662,11 @@ TEST(VariableTest, SmallGraph8) {
   Compare(tf_outputs3, ng_outputs3);
 
   ActivateNGraph();
-  UnsetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
-  RestoreEnv(env_map);
 }  // SmallGraph8
 
 // - output of TF optimizer is fed to a variable modifier
 // that is supported e.g. AssignAdd
 TEST(VariableTest, SmallGraph9) {
-  list<string> env_vars{"NGRAPH_TF_NGVARIABLE_BUFFER_SHARING"};
-  const unordered_map<string, string>& env_map = StoreEnv(env_vars);
-  SetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING", "0");
-
   Scope root = Scope::NewRootScope();
 
   PartialTensorShape varShape({2, 2});
@@ -776,8 +758,6 @@ TEST(VariableTest, SmallGraph9) {
   Compare(tf_outputs4, ng_outputs4);
 
   ActivateNGraph();
-  UnsetEnvVariable("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
-  RestoreEnv(env_map);
 }  // SmallGraph9
 
 }  // namespace testing

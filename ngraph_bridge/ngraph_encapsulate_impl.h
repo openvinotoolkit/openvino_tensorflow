@@ -98,14 +98,6 @@ class NGraphEncapsulateImpl {
 
   void SetGraphId(const int& graph_id) { m_graph_id = graph_id; }
 
-#if defined(NGRAPH_TF_ENABLE_VARIABLES_AND_OPTIMIZERS)
-  const int& GetNumberOfCopies() { return number_of_copies; }
-
-  void SetNumberOfCopies(const int& number) { number_of_copies = number; }
-
-  void AppendCopyLog(const string str) { copy_log_str << str; }
-#endif
-
   const int& GetNgraphCluster() { return m_ngraph_cluster; }
 
   void SetNgraphCluster(const int& cluster) { m_ngraph_cluster = cluster; }

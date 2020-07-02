@@ -87,12 +87,6 @@ void PrintVersion() {
                     ? std::string("Yes")
                     : std::string("No"))
             << std::endl;
-  std::cout << "Variables Enabled? "
-            << (tf::ngraph_bridge::ngraph_tf_are_variables_enabled()
-                    ? std::string("Yes")
-                    : std::string("No"))
-            << std::endl;
-
   PrintAvailableBackends();
 }
 

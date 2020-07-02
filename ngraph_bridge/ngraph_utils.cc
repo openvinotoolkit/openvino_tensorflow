@@ -93,31 +93,6 @@ Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
   return Status::OK();
 }
 
-Status GetNgraphVarBufferSharingState(int& buffer_sharing_state) {
-  const char* ngvar_buffer_env_var =
-      std::getenv("NGRAPH_TF_NGVARIABLE_BUFFER_SHARING");
-  if (ngvar_buffer_env_var == nullptr) {
-    buffer_sharing_state = -1;
-    return Status::OK();
-  }
-  int env_var_val;
-  try {
-    env_var_val = stoi(string(ngvar_buffer_env_var));
-  } catch (const std::invalid_argument& ia) {
-    return errors::InvalidArgument(
-        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Exception: ",
-        ia.what());
-  }
-  if (env_var_val != 0 && env_var_val != 1) {
-    return errors::InvalidArgument(
-        "Invalid argument for NGRAPH_TF_NGVARIABLE_BUFFER_SHARING. Pass 1 to "
-        "enable, 0 to disable");
-  }
-
-  buffer_sharing_state = env_var_val;
-  return Status::OK();
-}
-
 void PrintTFTensor(Tensor& T1) {
   NGRAPH_VLOG(4) << "all tensor values" << (T1).SummarizeValue(64) << endl;
 }
@@ -129,15 +104,8 @@ std::string DebugNode(Node* node) {
 
 std::string PrintBool(bool var) { return (var ? "Yes" : "No"); }
 
-bool IsNGVariableType(string node_type) {
-  if (ngraph_tf_are_variables_enabled())
-    return (node_type == "NGraphVariable" || node_type == "NGraphAssign");
-  else
-    return node_type == "NGraphVariable";
-}
-
 bool IsNGSupportedType(string node_type) {
-  return (IsNGVariableType(node_type) || node_type == "NGraphEncapsulate");
+  return (node_type == "NGraphEncapsulate");
 };
 
 // Read from this ng_tensor into tf_tensor
