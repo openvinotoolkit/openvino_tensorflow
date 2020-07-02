@@ -1330,8 +1330,8 @@ static Status TranslateCumsumOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "reverse", &reverse));
 
   SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<ng::op::CumSum>(op->name(), ng_x, ng_axis, exclusive,
-                                           reverse));
+           ConstructNgNode<ng::opset3::CumSum>(op->name(), ng_x, ng_axis,
+                                               exclusive, reverse));
   return Status::OK();
 }
 
@@ -3927,6 +3927,7 @@ const static std::map<
         {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
         {"Conv3D", TranslateConv3DOp},
         {"Cos", TranslateUnaryOp<ngraph::opset3::Cos>},
+        {"Cosh", TranslateUnaryOp<ngraph::opset3::Cosh>},
         {"CropAndResize", TranslateCropAndResizeOp},
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
@@ -4007,6 +4008,7 @@ const static std::map<
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateSigmoidOp},
         {"Sin", TranslateUnaryOp<ngraph::opset3::Sin>},
+        {"Sinh", TranslateUnaryOp<ngraph::opset3::Sinh>},
         {"Size", TranslateSizeOp},
         {"Sign", TranslateUnaryOp<ngraph::opset3::Sign>},
         {"Slice", TranslateSliceOp},
@@ -4024,6 +4026,7 @@ const static std::map<
         {"StridedSlice", TranslateStridedSliceOp},
         {"Sub", TranslateBinaryOp<ngraph::opset3::Subtract>},
         {"Sum", TranslateDirectReduceOp<ng::opset3::ReduceSum>},
+        {"Tan", TranslateUnaryOp<ngraph::opset3::Tan>},
         {"Tanh", TranslateUnaryOp<ngraph::opset3::Tanh>},
         {"Tile", TranslateTileOp},
         {"TopKV2", TranslateTopKV2Op},
