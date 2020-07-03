@@ -75,7 +75,7 @@ def run_ngtf_gtests(build_dir, filters):
     else:
         cmd = ['./gtest_ngtf']
 
-    command_executor(cmd, verbose=True, stderr=subprocess.DEVNULL)
+    command_executor(cmd)
 
     os.chdir(root_pwd)
 
@@ -108,7 +108,7 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
     else:
         cmd = ['./gtest_ngtf']
 
-    command_executor(cmd, verbose=True, stderr=subprocess.DEVNULL)
+    command_executor(cmd)
     os.chdir(root_pwd)
 
 
