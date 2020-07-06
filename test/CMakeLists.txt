@@ -100,8 +100,6 @@ set(SRC
     test_momentum_op.cpp
     opexecuter.cpp
     test_thread_safe_queue.cc
-    dummy_backend.cpp
-    test_dummy_backend.cpp
 )
 
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
