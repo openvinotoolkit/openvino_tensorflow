@@ -38,10 +38,6 @@ class NGraphEncapsulateOp : public OpKernel {
   void Compute(OpKernelContext* ctx) override;
 
  private:
-  void CreateLegacyExecutor(OpKernelConstruction* ctx,
-                            const string& backend_name);
-  void ComputeUsingLegacyExecutor(OpKernelContext* ctx);
-
   static int s_instance_id;
   NGraphEncapsulateImpl ng_encap_impl_;
   std::mutex m_compute_lock_;

@@ -56,33 +56,26 @@ int NGraphEncapsulateOp::s_instance_id = 0;
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx) {
   // Set the backend type for the this NGraphEncapsulate Op
-  std::string backend_name;
-  OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_backend", &backend_name));
-  std::string device_id;
-  OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_device_id", &device_id));
+  std::string ngraph_backend;
+  OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_backend", &ngraph_backend));
+  std::string ngraph_device_id;
+  OP_REQUIRES_OK(ctx,
+                 ctx->GetAttr<string>("ngraph_device_id", &ngraph_device_id));
 
   // Concatenate the backend_name:device_id
-  string be_name =
-      BackendManager::GetBackendCreationString(backend_name, device_id);
+  string backend_name = BackendManager::GetBackendCreationString(
+      ngraph_backend, ngraph_device_id);
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name()
-                 << "BE: " << be_name;
-  OP_REQUIRES_OK(ctx, BackendManager::CreateBackend(be_name));
+                 << "Backend: " << backend_name;
+  OP_REQUIRES_OK(ctx, BackendManager::CreateBackend(backend_name));
 
-  auto backend = BackendManager::GetBackend(be_name);
-  OP_REQUIRES(
-      ctx, backend != nullptr,
-      errors::Internal("Cannot get the backend object for BE: ", be_name));
+  auto backend = BackendManager::GetBackend(backend_name);
+  OP_REQUIRES(ctx, backend != nullptr,
+              errors::Internal("Cannot get the backend object for backend: ",
+                               backend_name));
 
-  CreateLegacyExecutor(ctx, be_name);
-}
-
-//---------------------------------------------------------------------------
-//  CreateLegacyExecutor
-//---------------------------------------------------------------------------
-void NGraphEncapsulateOp::CreateLegacyExecutor(OpKernelConstruction* ctx,
-                                               const string& backend_name) {
-  NGRAPH_VLOG(1) << "Create Legacy Executor " << name();
+  NGRAPH_VLOG(1) << "Create Executor " << name();
   ng_encap_impl_.SetName(name());
 
   std::ostringstream oss;
@@ -219,16 +212,7 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
 // OpKernel::Compute
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
-  NG_TRACE("NGEncap::Compute::" + name(), name(), "");
-  NGRAPH_VLOG(1) << "NGraphEncapsulateOp::Compute: Using Legacy Executor";
-  ComputeUsingLegacyExecutor(ctx);
-}
-
-//---------------------------------------------------------------------------
-//    ComputeUsingLegacyExecutor
-//---------------------------------------------------------------------------
-void NGraphEncapsulateOp::ComputeUsingLegacyExecutor(OpKernelContext* ctx) {
-  NGRAPH_VLOG(1) << "Compute using Legacy Executor " << name();
+  NGRAPH_VLOG(1) << "Compute using Executor " << name();
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << ng_encap_impl_.GetInstanceId() << ": "
       << name();
