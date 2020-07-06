@@ -215,7 +215,9 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig "
                  << backend_creation_string;
 
-  NGRAPH_VLOG(0) << "NGraph using backend: " << backend_creation_string;
+  if ((std::getenv("NGRAPH_TF_LOG_0_DISABLED") == nullptr)) {
+    NGRAPH_VLOG(0) << "NGraph using backend: " << backend_creation_string;
+  }
 
   // 1. Mark for clustering then, if requested, dump the graphs.
   TF_RETURN_IF_ERROR(

@@ -276,14 +276,16 @@ def run_test(test_list, xml_report, verbosity=0):
     else:
         for test in test_list:
             start = time.time()
+            saved_stdout = sys.stdout
             sys.stdout = open(os.devnull, "w")
-            sys.stderr = open(os.devnull, "w")
+            #sys.stderr = open(os.devnull, "w")
 
             test_result = unittest.TextTestRunner(verbosity=verbosity).run(
                 loader.loadTestsFromName(test))
 
-            sys.stderr = sys.__stderr__
-            sys.stdout = sys.__stdout__
+            #sys.stderr = sys.__stderr__
+            #sys.stdout = sys.__stdout__
+            sys.stdout = saved_stdout
             elapsed = time.time() - start
             elapsed = str(timedelta(seconds=elapsed))
 

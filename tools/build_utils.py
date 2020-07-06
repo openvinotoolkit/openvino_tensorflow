@@ -65,7 +65,8 @@ def command_executor(cmd,
             shlex.split(cmd), stdout=stdout, stderr=stderr)
         so, se = process.communicate()
         retcode = process.returncode
-        assert retcode == 0, "Error in running command: " + cmd
+        assert retcode == 0, "dir:" + os.getcwd(
+        ) + ". Error in running command: " + cmd
     except OSError as e:
         print(
             "!!! Execution failed !!!",
