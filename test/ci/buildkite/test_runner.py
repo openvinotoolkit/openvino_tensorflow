@@ -61,6 +61,11 @@ def main():
         action="store_true")
 
     parser.add_argument(
+        '--test_resnet50_infer',
+        help="Runs ResNet50 inference from IntelAI models.\n",
+        action="store_true")
+
+    parser.add_argument(
         '--artifacts_dir',
         type=str,
         help=
@@ -125,6 +130,14 @@ def main():
                     iterations = 100
             run_resnet50_from_artifacts('./', arguments.artifacts_dir,
                                         batch_size, iterations)
+    elif (arguments.test_resnet50_infer):
+        if get_os_type() == 'Darwin':
+            raise Exception("RN50 inference test not supported on Darwin")
+        else:
+            batch_size = 128
+            iterations = 10
+            run_resnet50_infer_from_artifacts('./', arguments.artifacts_dir,
+                                              batch_size, iterations)
     else:
         raise Exception("No tests specified")
 
