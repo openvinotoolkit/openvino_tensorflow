@@ -307,24 +307,6 @@ def main():
                 # Now build the libtensorflow_cc.so - the C++ library
                 build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
                                     target_arch, verbosity)
-
-            # Copy the libtensorflow_framework.so to the artifacts so that
-            # we can run c++ tests from that location later
-            tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
-            if (platform.system() == 'Darwin'):
-                tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
-            import tensorflow as tf
-            tf_lib_dir = tf.sysconfig.get_lib()
-            tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
-            print("SYSCFG LIB: ", tf_lib_file)
-
-            dst_dir = os.path.join(artifacts_location, "tensorflow")
-            if not os.path.isdir(dst_dir):
-                os.mkdir(dst_dir)
-
-            dst = os.path.join(dst_dir, tf_fmwk_lib_name)
-            shutil.copyfile(tf_lib_file, dst)
-
         else:
             print("Building TensorFlow from source")
             # Download TensorFlow
@@ -347,8 +329,20 @@ def main():
             # will be 1
             cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
-            # This function copies the TF .so files
-            copy_tf_to_artifacts(tf_version, artifacts_location, None)
+        # Finally, copy the libtensorflow_framework.so to the artifacts so that
+        # we can run c++ tests from that location later
+        tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
+        if (platform.system() == 'Darwin'):
+            tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+        import tensorflow as tf
+        tf_lib_dir = tf.sysconfig.get_lib()
+        tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
+        print("SYSCFG LIB: ", tf_lib_file)
+        dst_dir = os.path.join(artifacts_location, "tensorflow")
+        if not os.path.isdir(dst_dir):
+            os.mkdir(dst_dir)
+        dst = os.path.join(dst_dir, tf_fmwk_lib_name)
+        shutil.copyfile(tf_lib_file, dst)
 
     flag_string_map = {True: 'YES', False: 'NO'}
     # Build nGraph if required.
