@@ -922,19 +922,19 @@ static Status TranslateBiasAddOp(
   ng::AxisSet ng_broadcast_axes;
 
   if (is_nhwc) {
-    for (size_t i = 0; i < ng_input_shape.size() - 1; i++) {
-      ng_broadcast_axes.insert(i);
-    }
+    ng_broadcast_axes.insert(ng_input_shape.size() - 1);
   } else {
-    for (size_t i = 0; i < ng_input_shape.size(); i++) {
-      if (i != 1) {
-        ng_broadcast_axes.insert(i);
-      }
-    }
+    ng_broadcast_axes.insert(1);
   }
 
-  auto ng_bias_broadcasted = ConstructNgNode<ng::op::Broadcast>(
-      op->name(), ng_bias, ng_input_shape, ng_broadcast_axes);
+  auto target_shape_node = make_shared<ng::opset3::Constant>(
+      ng::element::i64, ng::Shape{ng_input_shape.size()}, ng_input_shape);
+  auto axes_mapping_node = make_shared<ng::opset3::Constant>(
+      ng::element::i64, ng::Shape{ng_broadcast_axes.size()},
+      vector<size_t>(ng_broadcast_axes.begin(), ng_broadcast_axes.end()));
+
+  auto ng_bias_broadcasted = ConstructNgNode<ng::opset3::Broadcast>(
+      op->name(), ng_bias, target_shape_node, axes_mapping_node);
   auto ng_add = ConstructNgNode<ng::opset3::Add>(op->name(), ng_input,
                                                  ng_bias_broadcasted);
 
