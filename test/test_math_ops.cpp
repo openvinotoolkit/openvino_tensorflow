@@ -637,6 +637,28 @@ TEST(MathOps, Atan2) {
   opexecuter.RunTest();
 }  // end of test op Atan2
 
+// Test op: MatMul
+TEST(MathOps, MatMul) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor A(DT_FLOAT, TensorShape({2, 3}));
+  Tensor B(DT_FLOAT, TensorShape({3, 4}));
+
+  AssignInputValues(A, 2.0f);
+  AssignInputValues(B, 7.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::MatMul(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "MatMul", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}
+
 // Test op: BatchMatMul
 // BatchMatMul2D
 // AdjX = false
