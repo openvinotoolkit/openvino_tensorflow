@@ -72,3 +72,45 @@ class TestBiasAddOperations(NgraphTest):
 
         assert (
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    def test_BiasAdd3(self):
+        input_data = (0, 1, 0, 1, 2, 1, 1, 0, 3, 1, 1, 0, 4, 4, 5, 4, 3, 5, 1,
+                      2, 0, 4, 0, 1)
+        input_data = np.reshape(input_data, (2, 3, 2, 2))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(2, 3, 2, 2))
+
+        bias_data = (100., -100., 50)  # channels = 3
+        bias_var = tf.compat.v1.placeholder(tf.float32, shape=(3))
+
+        out = tf.nn.bias_add(input_var, bias_var, 'NCHW')
+
+        def run_test(sess):
+            return sess.run(
+                out, feed_dict={
+                    input_var: input_data,
+                    bias_var: bias_data
+                })
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    def test_BiasAdd4(self):
+        input_data = (0, 1, 0, 1, 2, 1, 1, 0, 3, 1, 1, 0, 4, 4, 5, 4, 3, 5, 1,
+                      2, 0, 4, 0, 1)
+        input_data = np.reshape(input_data, (2, 2, 2, 3))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(2, 2, 2, 3))
+
+        bias_data = (100., -100., 50)  # channels = 3
+        bias_var = tf.compat.v1.placeholder(tf.float32, shape=(3))
+
+        out = tf.nn.bias_add(input_var, bias_var, 'NHWC')
+
+        def run_test(sess):
+            return sess.run(
+                out, feed_dict={
+                    input_var: input_data,
+                    bias_var: bias_data
+                })
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

@@ -918,6 +918,77 @@ TEST(NNOps, Softplus) {
   }
 }
 
+// Test Op :"BiasAdd", also see ./python/test_biasadd.py
+// Run .../ngraph-bridge/build_cmake/test$ ./gtest_ngtf
+// --gtest_filter="NNOps.BiasAdd"
+TEST(NNOps, BiasAdd) {
+  {
+    Tensor A(DT_FLOAT, TensorShape({2, 2, 2, 2}));
+    AssignInputValues<float>(A,
+                             {0, 1, 0, 1, 2, 1, 1, 0, 3, 1, 1, 0, 4, 4, 5, 4});
+    Tensor B(DT_FLOAT, TensorShape({2}));
+    AssignInputValues<float>(B, {100, -100});
+    ops::BiasAdd::Attrs attrs;
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    vector<int> static_input_indexes = {};
+    std::vector<std::string> formats{"NHWC", "NCHW"};
+
+    for (auto& format : formats) {
+      NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+      Scope root = Scope::NewRootScope();
+      attrs = attrs.DataFormat(format);
+      // see TF file .../tensorflow/cc/ops/nn_ops.h
+      auto R = ops::BiasAdd(root, A, B, attrs);
+      std::vector<Output> sess_run_fetchoutputs = {R};
+      OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
+                            output_datatypes, sess_run_fetchoutputs);
+      opexecuter.RunTest();
+    }
+  }
+
+  {
+    Tensor A(DT_FLOAT, TensorShape({2, 3, 2, 2}));  // NCHW
+    AssignInputValues<float>(A, {0, 1, 0, 1, 2, 1, 1, 0, 3, 1, 1, 0,
+                                 4, 4, 5, 4, 3, 5, 1, 2, 0, 4, 0, 1});
+    Tensor B(DT_FLOAT, TensorShape({3}));
+    AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
+    ops::BiasAdd::Attrs attrs;
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    vector<int> static_input_indexes = {};
+    std::string format("NCHW");
+    NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+    Scope root = Scope::NewRootScope();
+    attrs = attrs.DataFormat(format);
+    // see TF file .../tensorflow/cc/ops/nn_ops.h
+    auto R = ops::BiasAdd(root, A, B, attrs);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+    opexecuter.RunTest();
+  }
+
+  {
+    Tensor A(DT_FLOAT, TensorShape({2, 2, 2, 3}));  // NHWC
+    AssignInputValues<float>(A, {0, 1, 0, 1, 2, 1, 1, 0, 3, 1, 1, 0,
+                                 4, 4, 5, 4, 3, 5, 1, 2, 0, 4, 0, 1});
+    Tensor B(DT_FLOAT, TensorShape({3}));
+    AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
+    ops::BiasAdd::Attrs attrs;
+    vector<DataType> output_datatypes = {DT_FLOAT};
+    vector<int> static_input_indexes = {};
+    std::string format("NHWC");
+    NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+    Scope root = Scope::NewRootScope();
+    attrs = attrs.DataFormat(format);
+    // see TF file .../tensorflow/cc/ops/nn_ops.h
+    auto R = ops::BiasAdd(root, A, B, attrs);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
+                          output_datatypes, sess_run_fetchoutputs);
+    opexecuter.RunTest();
+  }
+}
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
