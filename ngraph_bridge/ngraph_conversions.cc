@@ -24,11 +24,11 @@ namespace ngraph_bridge {
 namespace detail {
 
 void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Reshape<0, 3, 1, 2>(ng_node);
+  Transpose<0, 3, 1, 2>(ng_node);
 }
 
 void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Reshape3D<0, 4, 1, 2, 3>(ng_node);
+  Transpose3D<0, 4, 1, 2, 3>(ng_node);
 }
 }  // namespace detail
 
@@ -53,7 +53,7 @@ void BatchToTensorflow(const string& op_name, bool is_nhwc,
   if (!is_nhwc) {
     return;
   }
-  Reshape<0, 2, 3, 1>(ng_node);
+  Transpose<0, 2, 3, 1>(ng_node);
   Builder::SetTracingInfo(op_name, ng_node);
 }
 
@@ -62,7 +62,7 @@ void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
   if (!is_ndhwc) {
     return;
   }
-  Reshape3D<0, 2, 3, 4, 1>(ng_node);
+  Transpose3D<0, 2, 3, 4, 1>(ng_node);
   Builder::SetTracingInfo(op_name, ng_node);
 }
 }  // namespace ngraph_bridge

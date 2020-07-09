@@ -26,10 +26,10 @@ namespace ngraph_bridge {
 
 namespace testing {
 
-TEST(conversions, reshape) {
+TEST(conversions, transpose) {
   std::shared_ptr<ng::Node> ng_node =
       make_shared<ng::op::Parameter>(ng::element::f32, ng::Shape{2, 3, 4, 5});
-  Reshape<3, 2, 0, 1>(ng_node);
+  Transpose<3, 2, 0, 1>(ng_node);
   ASSERT_EQ(ng_node->get_shape(), (ng::Shape{5, 4, 2, 3}));
 }
 

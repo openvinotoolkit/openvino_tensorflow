@@ -1078,7 +1078,7 @@ static Status TranslateConv2DOp(const Node* op,
   auto& ng_filter_shape = ng_filter->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Reshape<3, 2, 0, 1>(ng_filter);
+  Transpose<3, 2, 0, 1>(ng_filter);
   Builder::SetTracingInfo(op->name(), ng_filter);
 
   NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -1173,7 +1173,7 @@ static Status TranslateConv2DBackpropInputOp(
   auto& ng_filter_shape = ng_filter->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Reshape<3, 2, 0, 1>(ng_filter);
+  Transpose<3, 2, 0, 1>(ng_filter);
   Builder::SetTracingInfo(op->name(), ng_filter);
 
   NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -1260,7 +1260,7 @@ static Status TranslateConv3DOp(const Node* op,
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
   ng_kernel_shape[2] = ng_filter_shape[2];
-  Reshape3D<4, 3, 0, 1, 2>(ng_filter);
+  Transpose3D<4, 3, 0, 1, 2>(ng_filter);
   Builder::SetTracingInfo(op->name(), ng_filter);
 
   NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -1541,7 +1541,7 @@ static Status TranslateDepthwiseConv2dNativeOp(
   auto& ng_filter_shape = ng_filter->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Reshape<3, 2, 0, 1>(ng_filter);
+  Transpose<3, 2, 0, 1>(ng_filter);
   Builder::SetTracingInfo(op->name(), ng_filter);
 
   NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -1929,7 +1929,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     auto& ng_filter_shape = ng_filter->get_shape();
     ng_kernel_shape[0] = ng_filter_shape[0];
     ng_kernel_shape[1] = ng_filter_shape[1];
-    Reshape<3, 2, 0, 1>(ng_filter);
+    Transpose<3, 2, 0, 1>(ng_filter);
     Builder::SetTracingInfo(op->name(), ng_filter);
 
     NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
@@ -2940,7 +2940,7 @@ static Status TranslateQuantizedConv(
   auto& ng_filter_shape = node_inps[1]->get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Reshape<3, 2, 0, 1>(node_inps[1]);
+  Transpose<3, 2, 0, 1>(node_inps[1]);
   Builder::SetTracingInfo(op->name(), node_inps[1]);
   ng::CoordinateDiff ng_padding_below{0, 0};
   ng::CoordinateDiff ng_padding_above{0, 0};
