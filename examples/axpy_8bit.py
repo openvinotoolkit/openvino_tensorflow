@@ -13,30 +13,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # ==============================================================================
-"""nGraph TensorFlow axpy
+"""nGraph TensorFlow axpy int8
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import getpass
-import ctypes
-
 import numpy as np
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 from tensorflow.python.client import timeline
-import json
 
 import ngraph_bridge
 
 print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)
-
-# Setup TensorBoard
-graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"
-print('Saving graph to: %s' % graph_location)
-train_writer = tf.summary.FileWriter(graph_location)
 
 # Define the data
 a = tf.constant(np.full((2, 2), 5, dtype=np.int8), name='alpha')
@@ -57,7 +44,6 @@ with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
         trace_level=tf.compat.v1.RunOptions.FULL_TRACE)
     run_metadata = tf.compat.v1.RunMetadata()
 
-    event_times = []
     for i in range(1):
         (result_axpy, result_c) = sess.run((axpy, c),
                                            feed_dict={
@@ -67,16 +53,3 @@ with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
                                            options=options,
                                            run_metadata=run_metadata)
         print(result_axpy)
-        event_times.append(timeline.Timeline(run_metadata.step_stats))
-
-    print("Writing event trace")
-    with open('tf_event_trace.json', 'w') as f:
-        f.write("[\n")
-        for event in event_times:
-            chrome_trace = event.generate_chrome_trace_format(
-                show_dataflow=False)
-            parsed_trace = json.loads(chrome_trace)
-            for tr in parsed_trace['traceEvents']:
-                f.write(json.dumps(tr) + ',\n')
-
-train_writer.add_graph(tf.compat.v1.get_default_graph())

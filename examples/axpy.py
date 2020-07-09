@@ -14,7 +14,6 @@
 #  limitations under the License.
 # ==============================================================================
 """nGraph TensorFlow axpy
-
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -36,7 +35,7 @@ print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)
 # Setup TensorBoard
 graph_location = "/tmp/" + getpass.getuser() + "/tensorboard-logs/test"
 print('Saving graph to: %s' % graph_location)
-train_writer = tf.summary.FileWriter(graph_location)
+train_writer = tf.compat.v1.summary.FileWriter(graph_location)
 
 # Define the data
 a = tf.constant(np.full((2048, 2048), 0.05, dtype=np.float32), name='alpha')
