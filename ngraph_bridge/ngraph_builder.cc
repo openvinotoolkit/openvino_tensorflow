@@ -917,26 +917,27 @@ static Status TranslateBiasAddOp(
         "Bias argument to BiasAdd does not have one dimension");
   }
 
-  bool is_nhwc = (tf_data_format == "NHWC");
-
-  ng::AxisSet ng_broadcast_axes;
-
-  if (is_nhwc) {
-    ng_broadcast_axes.insert(ng_input_shape.size() - 1);
-  } else {
-    ng_broadcast_axes.insert(1);
+  // We'll choose reshape over broadcast
+  // Reshape the bias to (1, C, 1, ...) if input is channels-first.
+  shared_ptr<ng::Node> ng_bias_reshaped = ng_bias;
+  if (tf_data_format == "NCHW") {
+    auto channel_dim = ng_input_shape[1];
+    std::vector<int64> target_shape(ng_input_shape.size());
+    for (int64_t i = 0; i < ng_input_shape.size(); i++) {
+      if (i == 1) {
+        target_shape[i] = channel_dim;
+      } else {
+        target_shape[i] = 1;
+      }
+    }
+    auto target_shape_node = make_shared<ng::opset3::Constant>(
+        ng::element::i64, ng::Shape{ng_input_shape.size()}, target_shape);
+    ng_bias_reshaped = ConstructNgNode<ng::opset3::Reshape>(
+        op->name(), ng_bias, target_shape_node, false);
   }
 
-  auto target_shape_node = make_shared<ng::opset3::Constant>(
-      ng::element::i64, ng::Shape{ng_input_shape.size()}, ng_input_shape);
-  auto axes_mapping_node = make_shared<ng::opset3::Constant>(
-      ng::element::i64, ng::Shape{ng_broadcast_axes.size()},
-      vector<size_t>(ng_broadcast_axes.begin(), ng_broadcast_axes.end()));
-
-  auto ng_bias_broadcasted = ConstructNgNode<ng::opset3::Broadcast>(
-      op->name(), ng_bias, target_shape_node, axes_mapping_node);
-  auto ng_add = ConstructNgNode<ng::opset3::Add>(op->name(), ng_input,
-                                                 ng_bias_broadcasted);
+  shared_ptr<ng::Node> ng_add =
+      ConstructNgNode<ng::opset3::Add>(op->name(), ng_input, ng_bias_reshaped);
 
   SaveNgOp(ng_op_map, op->name(), ng_add);
   return Status::OK();
