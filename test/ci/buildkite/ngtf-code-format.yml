@@ -1,0 +1,12 @@
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      export PATH=/opt/llvm-3.9.0/bin/:$$PATH
+      maint/check-code-format.sh
+      
+    label: ":pencil: Code Format ?"
+    timeout_in_minutes: 30
+    parallelism: 1
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+  - wait

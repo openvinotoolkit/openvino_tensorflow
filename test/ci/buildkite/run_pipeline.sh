@@ -2,36 +2,18 @@
 
 set -euo pipefail
 
-echo "BUILDKITE_PULL_REQUEST_REPO: " $BUILDKITE_PULL_REQUEST_REPO
-echo "BUILDKITE_REPO: $BUILDKITE_REPO"
-echo "PIPELINE OS: $PIPELINE_QUEUE"
-
-if [[ $PIPELINE_QUEUE = 'cpu' ]]; then
-   TF_PY_WHEEL=tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
-   # For the time being - hardcode the file
-   # Eventually we will replace the queue and other variables during the pipeline creation
-   STEPS_FILE=ngtf-cpu_ubuntu.yaml
-elif [[ $PIPELINE_QUEUE = 'cpu-centos' ]]; then
-   TF_PY_WHEEL=tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
-   STEPS_FILE=ngtf-cpu_centos.yaml
-else
-   echo "Unknown PILELINE_QUEUE: $PIPELINE_QUEUE"
-   exit -1
-fi
+echo "BUILDKITE_AGENT_META_DATA_QUEUE: ${BUILDKITE_AGENT_META_DATA_QUEUE}"
+echo "BUILDKITE_AGENT_META_DATA_NAME: ${BUILDKITE_AGENT_META_DATA_NAME}"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-if [[ $BUILDKITE_PULL_REQUEST = 'false' ]]; then
-   echo "Not a pull request"
-   cat $SCRIPT_DIR/header.yaml  $SCRIPT_DIR/$STEPS_FILE | buildkite-agent pipeline upload
+# Always run setup for now
+PIPELINE_STEPS=" ${SCRIPT_DIR}/setup.yml "
+if [ "${BUILDKITE_PIPELINE_NAME}" == "ngtf-cpu-ubuntu-grappler" ]; then
+   export BUILD_OPTIONS=--use_grappler
+   PIPELINE_STEPS+=" ${SCRIPT_DIR}/ngtf-cpu-ubuntu.yml "
 else
-if [[ -n \"${BUILDKITE_PULL_REQUEST_REPO##*//}\" && \"${BUILDKITE_REPO##*//}\" != \"${BUILDKITE_PULL_REQUEST_REPO##*//}\" ]]; then
-   echo "External Commit"
-   export BUILDKITE_CLEAN_CHECKOUT=true
-   export BUILDKITE_NO_LOCAL_HOOKS=true
-   cat $SCRIPT_DIR/header.yaml  $SCRIPT_DIR/block_build.yaml $SCRIPT_DIR/$STEPS_FILE | buildkite-agent pipeline upload
-else
-   echo "Internal Commit"
-   cat $SCRIPT_DIR/header.yaml  $SCRIPT_DIR/$STEPS_FILE | buildkite-agent pipeline upload
+   PIPELINE_STEPS+=" ${SCRIPT_DIR}/${BUILDKITE_PIPELINE_NAME}.yml "
 fi
-fi
+
+cat ${PIPELINE_STEPS} | buildkite-agent pipeline upload

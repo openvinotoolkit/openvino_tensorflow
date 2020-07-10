@@ -1,0 +1,15 @@
+steps:
+  - command: |
+      rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+      virtualenv -p python3 /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv 
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install -U pip yapf==0.26.0 pytest keras==2.3.1
+      
+    label: ":gear: Setup"
+    timeout_in_minutes: 30
+    parallelism: 1
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
+  - wait
