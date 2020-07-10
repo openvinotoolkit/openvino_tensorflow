@@ -609,8 +609,14 @@ static Status TranslateQuantizedPoolOp(const Node* op,
 
   ng::Shape ng_padding_below{0, 0};
   ng::Shape ng_padding_above{0, 0};
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_padding_below, ng_padding_above);
+
+  ng::op::PadType ng_pad_type = ng::op::PadType::EXPLICIT;
+  if (tf_padding_type == "VALID") {
+    ng_pad_type = ng::op::PadType::VALID;
+  } else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_padding_below, ng_padding_above);
+  }
 
   // Creating and passing dummy nodes to quantized pool operation because it
   // does
@@ -622,14 +628,14 @@ static Status TranslateQuantizedPoolOp(const Node* op,
   if (is_quantizedAvgPool) {
     // QuantizeAvgPool
     // TF doesn't include padding in avg calculation
-    ng_quant_pool = ConstructNgNode<ng::op::AvgPool>(
-        op->name(), ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
-        ng_padding_above, false);
+    ng_quant_pool = ConstructNgNode<ng::opset3::AvgPool>(
+        op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
+        ng_kernel_shape, true, ng::op::RoundingType::FLOOR, ng_pad_type);
   } else {
     // QuantizeMaxPool
-    ng_quant_pool = ConstructNgNode<ng::op::MaxPool>(
-        op->name(), ng_input, ng_kernel_shape, ng_strides, ng_padding_below,
-        ng_padding_above);
+    ng_quant_pool = ConstructNgNode<ng::opset3::MaxPool>(
+        op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
+        ng_kernel_shape, ng::op::RoundingType::FLOOR, ng_pad_type);
   }
   Builder::SetTracingInfo(op->name(), ng_quant_pool);
 
@@ -1864,8 +1870,11 @@ static Status TranslateGatherV2Op(
                                    "), but got ", tf_axis[0]);
   }
 
-  auto gather_op = ConstructNgNode<ng::op::Gather>(op->name(), ng_input,
-                                                   ng_input_coords, tf_axis[0]);
+  auto ng_axis = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), ng::element::i64, ng::Shape{tf_axis.size()}, tf_axis);
+
+  auto gather_op = ConstructNgNode<ng::opset3::Gather>(
+      op->name(), ng_input, ng_input_coords, ng_axis);
 
   SaveNgOp(ng_op_map, op->name(), gather_op);
   return Status::OK();
@@ -2059,26 +2068,25 @@ static Status TranslateIsFiniteOp(
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
 
-  auto const_inf = ConstructNgNode<ng::op::Constant>(
+  auto const_inf = ConstructNgNode<ng::opset3::Constant>(
       op->name(), ng_input->get_element_type(), ng::Shape{},
       std::vector<float>{std::numeric_limits<float>::infinity()});
 
-  auto const_neg_inf = ConstructNgNode<ng::op::Constant>(
+  auto const_neg_inf = ConstructNgNode<ng::opset3::Constant>(
       op->name(), ng_input->get_element_type(), ng::Shape{},
       std::vector<float>{-std::numeric_limits<float>::infinity()});
 
-  auto neq_inf = ConstructNgNode<ng::op::NotEqual>(
-      op->name(), ng_input, const_inf,
-      ng::op::AutoBroadcastSpec(ng::op::AutoBroadcastType::NUMPY));
-  auto neq_neg_inf = ConstructNgNode<ng::op::NotEqual>(
-      op->name(), ng_input, const_neg_inf,
-      ng::op::AutoBroadcastSpec(ng::op::AutoBroadcastType::NUMPY));
-  auto eq_nan = ConstructNgNode<ng::op::Equal>(op->name(), ng_input, ng_input);
+  auto neq_inf =
+      ConstructNgNode<ng::opset3::NotEqual>(op->name(), ng_input, const_inf);
+  auto neq_neg_inf = ConstructNgNode<ng::opset3::NotEqual>(op->name(), ng_input,
+                                                           const_neg_inf);
+  auto eq_nan =
+      ConstructNgNode<ng::opset3::Equal>(op->name(), ng_input, ng_input);
 
   auto neq_inf_and_neq_neg_inf =
-      ConstructNgNode<ng::op::And>(op->name(), neq_inf, neq_neg_inf);
-  auto is_finite =
-      ConstructNgNode<ng::op::And>(op->name(), neq_inf_and_neq_neg_inf, eq_nan);
+      ConstructNgNode<ng::opset3::LogicalAnd>(op->name(), neq_inf, neq_neg_inf);
+  auto is_finite = ConstructNgNode<ng::opset3::LogicalAnd>(
+      op->name(), neq_inf_and_neq_neg_inf, eq_nan);
 
   SaveNgOp(ng_op_map, op->name(), is_finite);
   return Status::OK();
@@ -3191,8 +3199,8 @@ static Status TranslateShapeOp(const Node* op,
   for (size_t i = 0; i < rank; i++) {
     values[i] = input_shape[i];
   }
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<ng::op::Constant>(op->name(), type, shape, values));
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::opset3::Constant>(
+                                      op->name(), type, shape, values));
   return Status::OK();
 }
 
@@ -3641,7 +3649,7 @@ static Status TranslateTileOp(
   }
   if (is_empty) {
     SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<ngraph::op::Constant>(
+             ConstructNgNode<ngraph::opset3::Constant>(
                  op->name(), ng_input->get_element_type(), output_shape,
                  std::vector<std::string>(ng::shape_size(output_shape), "0")));
   } else {
@@ -3655,7 +3663,7 @@ static Status TranslateTileOp(
         tmp_tensors.push_back(ng_output);
       }
       auto ng_concat =
-          ConstructNgNode<ngraph::op::Concat>(op->name(), tmp_tensors, i);
+          ConstructNgNode<ngraph::opset3::Concat>(op->name(), tmp_tensors, i);
       ng_output = ng_concat;
     }
     SaveNgOp(ng_op_map, op->name(), ng_output);
@@ -3883,7 +3891,7 @@ static Status TranslateZerosLikeOp(const Node* op,
 
   ng::Shape input_shape = ng_input->get_shape();
   std::vector<std::string> const_values(ng::shape_size(input_shape), "0");
-  auto ng_result = ConstructNgNode<ng::op::Constant>(
+  auto ng_result = ConstructNgNode<ng::opset3::Constant>(
       op->name(), ng_input->get_element_type(), input_shape, const_values);
 
   SaveNgOp(ng_op_map, op->name(), ng_result);
@@ -3963,7 +3971,9 @@ const static std::map<
         {"Minimum", TranslateBinaryOp<ngraph::opset3::Minimum>},
         {"MirrorPad", TranslatePadOp},
         {"Mul", TranslateBinaryOp<ngraph::opset3::Multiply>},
+        {"Mod", TranslateBinaryOp<ngraph::opset3::Mod>},
         {"Neg", TranslateUnaryOp<ngraph::opset3::Negative>},
+        {"NotEqual", TranslateBinaryOp<ngraph::opset3::NotEqual>},
         // Do nothing! NoOps sometimes get placed on nGraph for bureaucratic
         // reasons, but they have no data flow inputs or outputs.
         {"NoOp", [](const Node*, const std::vector<const Tensor*>&,

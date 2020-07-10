@@ -2647,6 +2647,52 @@ TEST(MathOps, UnsortedSegmentSumTwoDims) {
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
 
+// Test op: NotEqual
+TEST(MathOps, NotEqual) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 2.1f);
+  AssignInputValues(B, 4.1f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::NotEqual(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_BOOL};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "NotEqual", static_input_indexes,
+                        output_datatypes, sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op NotEqual
+
+// Test op: Mod
+TEST(MathOps, Mod) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 2;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValues(A, 4.1f);
+  AssignInputValues(B, 2.0f);
+
+  vector<int> static_input_indexes = {};
+  auto R = ops::Mod(root, A, B);
+
+  vector<DataType> output_datatypes = {DT_FLOAT};
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Mod", static_input_indexes, output_datatypes,
+                        sess_run_fetchoutputs);
+
+  opexecuter.RunTest();
+}  // end of test op Mod
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }

@@ -366,7 +366,9 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Minimum"] = SimpleConfirmationFunction();
     confirmation_function_map["MirrorPad"] = SimpleConfirmationFunction();
     confirmation_function_map["Mul"] = SimpleConfirmationFunction();
+    confirmation_function_map["Mod"] = SimpleConfirmationFunction();
     confirmation_function_map["Neg"] = SimpleConfirmationFunction();
+    confirmation_function_map["NotEqual"] = SimpleConfirmationFunction();
     confirmation_function_map["NonMaxSuppressionV4"] =
         SimpleConfirmationFunction();
     confirmation_function_map["NoOp"] = SimpleConfirmationFunction();
@@ -561,7 +563,9 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["MirrorPad"]["T"] = NGraphDTypes();
     type_constraint_map["MirrorPad"]["Tpaddings"] = NGraphIndexDTypes();
     type_constraint_map["Mul"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Mod"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Neg"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["NotEqual"]["T"] = NGraphDTypes();
     type_constraint_map["NonMaxSuppressionV4"]["T"] = {
         DT_FLOAT};  // TF allows half too
     type_constraint_map["OneHot"]["T"] = NGraphDTypes();
@@ -751,7 +755,7 @@ GetTFToNgOpMap() {
        {constant, std::make_shared<ngraph::op::BatchNormInference>(),
         std::make_shared<ngraph::opset3::Transpose>()}},
       {"GatherNd", {std::make_shared<ngraph::op::GatherND>()}},
-      {"GatherV2", {std::make_shared<ngraph::op::Gather>()}},
+      {"GatherV2", {constant, std::make_shared<ngraph::opset3::Gather>()}},
       {"_FusedConv2D",
        {std::make_shared<ngraph::opset3::Convolution>(), constant,
         std::make_shared<ngraph::opset3::Minimum>(),
@@ -767,9 +771,9 @@ GetTFToNgOpMap() {
       {"GreaterEqual", {std::make_shared<ngraph::opset3::GreaterEqual>()}},
       {"Identity", {}},
       {"IsFinite",
-       {constant, std::make_shared<ngraph::op::NotEqual>(),
-        std::make_shared<ngraph::op::Equal>(),
-        std::make_shared<ngraph::op::And>()}},
+       {constant, std::make_shared<ngraph::opset3::NotEqual>(),
+        std::make_shared<ngraph::opset3::Equal>(),
+        std::make_shared<ngraph::opset3::LogicalAnd>()}},
       {"L2Loss",
        {constant, std::make_shared<ngraph::opset3::Multiply>(),
         std::make_shared<ngraph::op::Sum>(),
@@ -804,7 +808,9 @@ GetTFToNgOpMap() {
       {"Minimum", {std::make_shared<ngraph::opset3::Minimum>()}},
       {"MirrorPad", {constant, std::make_shared<ngraph::opset3::Pad>()}},
       {"Mul", {std::make_shared<ngraph::opset3::Multiply>()}},
+      {"Mod", {std::make_shared<ngraph::opset3::Mod>()}},
       {"Neg", {std::make_shared<ngraph::opset3::Negative>()}},
+      {"NotEqual", {std::make_shared<ngraph::opset3::NotEqual>()}},
       {"NonMaxSuppressionV4",
        {std::make_shared<ngraph::opset3::NonMaxSuppression>(), constant}},
       {"OneHot", {std::make_shared<ngraph::opset3::OneHot>(), constant}},
@@ -821,7 +827,7 @@ GetTFToNgOpMap() {
         std::make_shared<ngraph::op::Dequantize>()}},
       // Next few are CPU only ops
       {"QuantizedAvgPool",
-       {constant, std::make_shared<ngraph::op::AvgPool>(),
+       {constant, std::make_shared<ngraph::opset3::AvgPool>(),
         std::make_shared<ngraph::opset3::Transpose>()}},
       {"QuantizedConcat",
        {constant, std::make_shared<ngraph::op::Reshape>(),
@@ -890,7 +896,7 @@ GetTFToNgOpMap() {
         std::make_shared<ngraph::op::Convert>()}},
       {"QuantizedMaxPool",
        {constant, std::make_shared<ngraph::opset3::Transpose>(),
-        std::make_shared<ngraph::op::MaxPool>()}},
+        std::make_shared<ngraph::opset3::MaxPool>()}},
       // End of CPU only ops
       {"QuantizeV2",
        {constant, std::make_shared<ngraph::op::Minimum>(),
@@ -943,7 +949,7 @@ GetTFToNgOpMap() {
       {"Sum", {std::make_shared<ngraph::opset3::ReduceSum>(), constant}},
       {"Tan", {std::make_shared<ngraph::opset3::Tan>()}},
       {"Tanh", {std::make_shared<ngraph::opset3::Tanh>()}},
-      {"Tile", {constant, std::make_shared<ngraph::op::Concat>()}},
+      {"Tile", {constant, std::make_shared<ngraph::opset3::Concat>()}},
       {"TopKV2",
        {std::make_shared<ngraph::op::TopK>(),
         std::make_shared<ngraph::op::GetOutputElement>()}},
