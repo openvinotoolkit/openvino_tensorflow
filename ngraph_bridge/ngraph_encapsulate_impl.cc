@@ -190,37 +190,14 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
       my_function_cache_depth_in_items = atoi(cache_depth_specified);
     }
     if (m_ng_exec_map.size() >= my_function_cache_depth_in_items) {
-      int input_tensors_bytes_free = 0;
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
       m_ng_exec_map.erase(m_lru.back());
       m_serialized_ng_function_map.erase(evicted_ng_exec);
 
       // Call delete function here for the erased func
       op_backend->remove_compiled_function(evicted_ng_exec);
-      // Now clean the input cache
-      std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-          input_caches = m_ng_exec_input_cache_map[evicted_ng_exec];
-      for (auto& next_input : input_caches) {
-        input_tensors_bytes_free += next_input.second->get_size_in_bytes();
-        next_input.second.reset();
-      }
-      m_ng_exec_input_cache_map.erase(evicted_ng_exec);
 
-      // Clean the output cache
-      std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-          output_caches = m_ng_exec_output_cache_map[evicted_ng_exec];
-      int output_tensors_bytes_free = 0;
-      for (auto& next_output : output_caches) {
-        output_tensors_bytes_free += next_output.second->get_size_in_bytes();
-        next_output.second.reset();
-      }
-      m_ng_exec_output_cache_map.erase(evicted_ng_exec);
       m_lru.pop_back();
-      NGRAPH_VLOG(1) << "NGRAPH_TF_MEM_PROFILE:  OP_ID: " << my_instance_id
-                     << " Cluster: " << m_name << " Input Tensors freed: "
-                     << input_tensors_bytes_free / (1024 * 1024) << " MB"
-                     << " Output Tensors freed: "
-                     << output_tensors_bytes_free / (1024 * 1024) << " MB";
     }  // cache eviction if cache size greater than cache depth
 
     NG_TRACE("Compile nGraph", m_name, "");
@@ -298,11 +275,8 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     const std::vector<Tensor>& tf_input_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs) {
-  std::vector<TensorShape> input_shapes;
-  std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-      input_caches = m_ng_exec_input_cache_map[ng_exec];
-  input_caches.resize(tf_input_tensors.size());
-
+  ng::runtime::Backend* op_backend =
+      BackendManager::GetBackend(m_op_backend_name);
   for (int i = 0; i < tf_input_tensors.size(); i++) {
     ng::Shape ng_shape(tf_input_tensors[i].shape().dims());
     for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
@@ -312,44 +286,11 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(
         tf_input_tensors[i].dtype(), &ng_element_type));
 
-    // At the first call of the ng_exec, both last_src_ptr and
-    // last_ng_tensor shall point to null. Otherwise, they are retrived
-    // from cache.
-    void* last_src_ptr = input_caches[i].first;
-    std::shared_ptr<ng::runtime::Tensor> last_ng_tensor =
-        input_caches[i].second;
-    void* current_src_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
+    void* current_tf_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
     std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-        GetCurrentNgTensor(current_src_ptr, last_src_ptr, last_ng_tensor, false,
-                           ng_exec, ng_element_type, ng_shape);
-    bool is_cpu = m_op_backend_name == "CPU";
-
-    if (!is_cpu && current_ng_tensor->get_stale()) {
-      // Fresh or stale, in case of CPU this step is never needed
-      try {
-        size_t copy_size =
-            current_ng_tensor->get_element_count() * ng_element_type.size();
-        string event_name =
-            "Input_" + to_string(i) + "_" + to_string(copy_size);
-        NG_TRACE(event_name, m_name, "");
-        current_ng_tensor->write(
-            current_src_ptr,
-            current_ng_tensor->get_element_count() * ng_element_type.size());
-
-      } catch (const std::exception& exp) {
-        return errors::Internal(
-            "Caught exception while transferring tensor data to nGraph. "
-            "Exception: ",
-            exp.what());
-      } catch (...) {
-        return errors::Internal(
-            "Error in transferring tensor data to nGraph\n");
-      }
-    }
-    input_caches[i] = std::make_pair(current_src_ptr, current_ng_tensor);
+        op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
     ng_inputs.push_back(current_ng_tensor);
-  }  // for (int i = 0; i < input_shapes.size(); i++)
-
+  }
   return Status::OK();
 }
 
@@ -359,78 +300,19 @@ Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
     const std::vector<Tensor*>& output_tensors,
     const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
-  std::vector<std::pair<void*, std::shared_ptr<ng::runtime::Tensor>>>&
-      output_caches = m_ng_exec_output_cache_map[ng_exec];
-  output_caches.resize(ng_exec->get_results().size());
-
-  // ngraph executable returns get_results, using that to get the tensor shape
-  // and element type.
+  ng::runtime::Backend* op_backend =
+      BackendManager::GetBackend(m_op_backend_name);
   for (auto i = 0; i < ng_exec->get_results().size(); i++) {
     auto ng_element = ng_exec->get_results()[i];
     auto ng_shape = ng_element->get_shape();
     auto ng_element_type = ng_element->get_element_type();
 
-    void* last_dst_ptr = output_caches[i].first;
-    std::shared_ptr<ng::runtime::Tensor> last_ng_tensor =
-        output_caches[i].second;
-
-    void* current_dst_ptr = DMAHelper::base(output_tensors[i]);
-    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor = nullptr;
-
-    current_ng_tensor =
-        GetCurrentNgTensor(current_dst_ptr, last_dst_ptr, last_ng_tensor, true,
-                           ng_exec, ng_element_type, ng_shape);
-
-    current_ng_tensor->set_stale(true);
-    output_caches[i] = std::make_pair(current_dst_ptr, current_ng_tensor);
+    void* current_tf_ptr = DMAHelper::base(output_tensors[i]);
+    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
+        op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
     ng_outputs.push_back(current_ng_tensor);
   }
-
   return Status::OK();
-}
-
-// Get current ngraph tensor
-std::shared_ptr<ng::runtime::Tensor> NGraphEncapsulateImpl::GetCurrentNgTensor(
-    void* current_tf_ptr, void* last_tf_ptr,
-    const std::shared_ptr<ng::runtime::Tensor>& last_ng_tensor,
-    const bool& output_tensor,
-    const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
-    const ng::element::Type& ng_element_type, const ng::Shape& ng_shape) {
-  // NOTE: we assume that TF's pointers WILL change if it actually changes
-  // values. ie, it will not reuse the same space if its rewritten it
-  bool tf_tensor_has_changed = current_tf_ptr != last_tf_ptr;
-  bool no_ng_tensor_found = last_ng_tensor == nullptr;
-  bool is_cpu = m_op_backend_name == "CPU";
-
-  // We need to check last_ng_tensor != nullptr, since there are cases where
-  // at the first call to the ng_exec, both current_dst_ptr (when the
-  // output is a 0-sized tensor) and last_dst_ptr (uninitialized at the
-  // first call) are nullptr
-  // A new tensor needs to be created for sure if no_ng_tensor_found
-  // Additionally for CPU, it needs to be created if tf_tensor_has_changed,
-  // for others, we do not create
-  bool need_new_tensor_creation;
-  if (is_cpu) {
-    need_new_tensor_creation = no_ng_tensor_found || tf_tensor_has_changed;
-  } else {
-    need_new_tensor_creation = no_ng_tensor_found;
-  }
-
-  // create a new ng tensor or use the last one
-  ng::runtime::Backend* op_backend =
-      BackendManager::GetBackend(m_op_backend_name);
-  std::shared_ptr<ng::runtime::Tensor> current_ng_tensor;
-  if (need_new_tensor_creation) {
-    if (is_cpu) {
-      current_ng_tensor =
-          op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
-    } else {
-      current_ng_tensor = op_backend->create_tensor(ng_element_type, ng_shape);
-    }
-  } else {
-    current_ng_tensor = last_ng_tensor;
-  }
-  return current_ng_tensor;
 }
 
 Status NGraphEncapsulateImpl::ParseNodeAttributes(
@@ -505,12 +387,9 @@ Status NGraphEncapsulateImpl::DumpNgFunction(
 }
 
 void NGraphEncapsulateImpl::NGraphEncapsulateImpl::ClearExecMaps() {
-  m_ng_exec_input_cache_map.clear();
-  m_ng_exec_output_cache_map.clear();
   m_ng_exec_map.clear();
   m_serialized_ng_function_map.clear();
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

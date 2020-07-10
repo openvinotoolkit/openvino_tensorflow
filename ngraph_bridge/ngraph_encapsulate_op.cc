@@ -305,7 +305,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
     OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGOutputTensors(
                             tf_output_tensors, ng_exec, ng_outputs));
-    output_caches = ng_encap_impl_.GetNgExecOutputCacheMap(ng_exec);
   }
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
@@ -363,42 +362,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
                  << ng_encap_impl_.GetNgraphCluster();
 
-  // Copy value to host if backend is not CPU
-  Timer copy_output_tensors_to_host;
-  {
-    NG_TRACE("Output - copy back", name(), "");
-    try {
-      size_t output_tensor_count = output_caches.size();
-      if (ng_encap_impl_.GetOpBackend() != "CPU") {
-        for (size_t i = 0; i < output_tensor_count; ++i) {
-          void* dst_ptr;
-          std::shared_ptr<ng::runtime::Tensor> dst_ng_tensor;
-          std::tie(dst_ptr, dst_ng_tensor) = output_caches[i];
-          auto ng_element_type = dst_ng_tensor->get_element_type();
-          NG_TRACE(("Output_" + std::to_string(i) + "_" +
-                    std::to_string(dst_ng_tensor->get_element_count() *
-                                   ng_element_type.size())),
-                   name(), "");
-          dst_ng_tensor->read(dst_ptr, dst_ng_tensor->get_element_count() *
-                                           ng_element_type.size());
-        }
-      }
-    } catch (const std::exception& exp) {
-      OP_REQUIRES(
-          ctx, false,
-          errors::Internal(
-              "Caught exception while transferring tensor data to host: ",
-              exp.what(), "\n"));
-    } catch (...) {
-      OP_REQUIRES(
-          ctx, false,
-          errors::Internal("Error in transferring tensor data to host\n"));
-    }
-  }
-
-  int time_copy_output_tensors_to_host =
-      copy_output_tensors_to_host.ElapsedInMS();
-
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
       << ng_encap_impl_.GetNgraphCluster();
@@ -409,9 +372,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                  << " Function-Create-or-Lookup: " << time_func_create_or_lookup
                  << " Create-and-copy-tensors: "
                  << time_create_or_lookup_tensors
-                 << " Execute: " << time_execute_function
-                 << " Copy-outputs-to-host: "
-                 << time_copy_output_tensors_to_host;
+                 << " Execute: " << time_execute_function;
 }  // end compute
 
 int NGraphEncapsulateImpl::s_instance_count = 0;
