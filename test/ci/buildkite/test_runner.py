@@ -24,7 +24,6 @@ import glob
 import platform
 from distutils.sysconfig import get_python_lib
 
-#from tools.build_utils import load_venv, command_executor
 from tools.test_utils import *
 
 
@@ -72,12 +71,6 @@ def main():
         "Location of the artifacts that would be used for running the tests\n",
         action="store")
 
-    parser.add_argument(
-        '--backend',
-        type=str,
-        help="String indicating what backend to use (e.g., CPU, INTERPRETER)\n",
-        action="store")
-
     arguments = parser.parse_args()
 
     #-------------------------------
@@ -91,21 +84,24 @@ def main():
         raise Exception("Need to specify --artifacts_dir")
 
     # Set the backend if specified
-    # NOTE: This way of backend setting will not work with grappler
-    if (arguments.backend):
-        os.environ['NGRAPH_TF_BACKEND'] = arguments.backend
+    backend = 'CPU'
+    if 'NGRAPH_TF_BACKEND' in os.environ:
+        backend = os.environ['NGRAPH_TF_BACKEND']
+
+    print("nGraph bridge backend set to:", backend)
 
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
-        if arguments.backend:
-            if 'GPU' in arguments.backend:
-                test_filter = str(
-                    "-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
-                    "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
-                    "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
-                    "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-                    "ArrayOps.GatherNd*")
+        if 'GPU' in backend:
+            test_filter = str(
+                "-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
+                "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
+                "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
+                "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
+                "ArrayOps.GatherNd*")
+        elif 'INTERPRETER' in backend:
+            test_filter = str("-NNOps.QuantizedAvgPoolEvenInput")
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
@@ -115,8 +111,8 @@ def main():
     elif (arguments.test_tf_python):
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
-            arguments.backend, './',
-            arguments.artifacts_dir + '/tensorflow/python', False)
+            backend, './', arguments.artifacts_dir + '/tensorflow/python',
+            False)
     elif (arguments.test_resnet):
         if get_os_type() == 'Darwin':
             run_resnet50_forward_pass_from_artifacts(
@@ -124,8 +120,8 @@ def main():
         else:
             batch_size = 128
             iterations = 10
-            if arguments.backend:
-                if 'GPU' in arguments.backend:
+            if backend:
+                if 'GPU' in backend:
                     batch_size = 64
                     iterations = 100
             run_resnet50_from_artifacts('./', arguments.artifacts_dir,

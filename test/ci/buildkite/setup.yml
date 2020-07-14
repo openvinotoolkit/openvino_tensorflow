@@ -1,3 +1,6 @@
+env:
+  NGRAPH_TF_BACKEND: ${NGRAPH_TF_BACKEND:-CPU}
+
 steps:
   - command: |
       rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID

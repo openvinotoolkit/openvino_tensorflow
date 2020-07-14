@@ -31,6 +31,7 @@ __all__ = ['LIBNGRAPH_BRIDGE', 'NgraphTest']
 _ext = 'dylib' if platform.system() == 'Darwin' else 'so'
 
 LIBNGRAPH_BRIDGE = 'libngraph_bridge.' + _ext
+NGTF_BACKEND = ngraph_bridge.get_currently_set_backend_name()
 
 
 class NgraphTest(object):
@@ -133,5 +134,6 @@ class NgraphTest(object):
 
     # restore env variables
     def restore_env_variables(self, env_var_map):
+        print("Restoring env varaibles")
         for k, v in env_var_map.items():
             self.set_env_variable(k, v)

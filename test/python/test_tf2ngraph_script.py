@@ -76,6 +76,12 @@ class Testtf2ngraph(NgraphTest):
         # Only run this test when grappler is enabled
         if not ngraph_bridge.is_grappler_enabled():
             return
+
+        # Store and unset env variable NGRAPH_TF_BACKEND because the test
+        # implicitly tests with different options
+        env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
+        self.unset_env_variable("NGRAPH_TF_BACKEND")
+
         assert Testtf2ngraph.format_and_loc_match(inp_format, inp_loc)
         out_loc = inp_loc.split('.')[0] + '_modified' + (
             '' if out_format == 'savedmodel' else ('.' + out_format))
@@ -121,7 +127,7 @@ class Testtf2ngraph(NgraphTest):
                     return
             else:
                 convert(inp_format, inp_loc, out_format, out_loc, ['out_node'],
-                        ng_device, optional_backend_params, shape_hints,
+                        ng_device, "", optional_backend_params, shape_hints,
                         precompile, save_ng_clusters)
             file_present = 'ngraph_cluster_0.pbtxt' in os.listdir()
             assert save_ng_clusters == file_present
@@ -163,6 +169,9 @@ class Testtf2ngraph(NgraphTest):
             assert np.isclose(res1, res2).all()
             # Comparing with expected value
             assert np.isclose(res1, exp).all()
+
+        # Restore env variable NGRAPH_TF_BACKEND that was stored
+        self.restore_env_variables(env_var_map)
 
     def test_output_node_inference_for_saved_model(self):
         # The saved model we create in this pytest

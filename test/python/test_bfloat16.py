@@ -27,7 +27,7 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import os
 import sys
-from common import NgraphTest
+from common import NgraphTest, NGTF_BACKEND
 
 np.random.seed(5)
 
@@ -53,6 +53,10 @@ class TestBfloat16(NgraphTest):
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
     # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
+    @pytest.mark.skipif(
+        NGTF_BACKEND == "INTERPRETER",
+        reason=
+        "INTERPRETER backend does not support dtype bf16 for Convolution op")
     def test_conv2d_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
@@ -93,6 +97,10 @@ class TestBfloat16(NgraphTest):
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
     # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
+    @pytest.mark.skipif(
+        NGTF_BACKEND == "INTERPRETER",
+        reason=
+        "INTERPRETER backend does not support dtype bf16 for Convolution op")
     def test_conv2d_cast_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
