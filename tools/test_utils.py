@@ -283,10 +283,7 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     else:
         test_manifest_file = os.path.join(test_src_dir, "python_tests_list.txt")
     if backend is not None:
-        if 'GPU' in backend:
-            test_manifest_file = os.path.join(test_src_dir,
-                                              "python_tests_list_gpu.txt")
-        elif 'INTERPRETER' in backend:
+        if 'INTERPRETER' in backend:
             test_manifest_file = os.path.join(test_src_dir,
                                               "python_tests_list_int.txt")
 

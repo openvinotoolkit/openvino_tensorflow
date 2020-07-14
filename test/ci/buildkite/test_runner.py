@@ -93,14 +93,7 @@ def main():
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
-        if 'GPU' in backend:
-            test_filter = str(
-                "-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
-                "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
-                "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
-                "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-                "ArrayOps.GatherNd*")
-        elif 'INTERPRETER' in backend:
+        if 'INTERPRETER' in backend:
             test_filter = str("-NNOps.QuantizedAvgPoolEvenInput")
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
@@ -120,10 +113,6 @@ def main():
         else:
             batch_size = 128
             iterations = 10
-            if backend:
-                if 'GPU' in backend:
-                    batch_size = 64
-                    iterations = 100
             run_resnet50_from_artifacts('./', arguments.artifacts_dir,
                                         batch_size, iterations)
     elif (arguments.test_resnet50_infer):

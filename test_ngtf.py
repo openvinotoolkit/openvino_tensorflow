@@ -42,11 +42,6 @@ def main():
         action="store_true")
 
     parser.add_argument(
-        '--gpu_unit_tests_enable',
-        help="Builds and tests the examples on GPU.\n",
-        action="store_true")
-
-    parser.add_argument(
         '--plaidml_unit_tests_enable',
         help="Builds and tests the examples on PLAIDML.\n",
         action="store_true")
@@ -66,17 +61,6 @@ def main():
 
     # First run the C++ gtests
     run_ngtf_gtests(build_dir, None)
-
-    # If the GPU tests are requested, then run them as well
-    if (arguments.gpu_unit_tests_enable):
-        os.environ['NGRAPH_TF_BACKEND'] = 'GPU'
-        run_ngtf_gtests(
-            build_dir,
-            str("-ArrayOps.Quanti*:ArrayOps.Dequant*:BackendManager.BackendAssignment:"
-                "MathOps.AnyKeepDims:MathOps.AnyNegativeAxis:MathOps.AnyPositiveAxis:"
-                "MathOps.AllKeepDims:MathOps.AllNegativeAxis:MathOps.AllPositiveAxis:"
-                "NNOps.Qu*:NNOps.SoftmaxZeroDimTest*:"
-                "NNOps.SparseSoftmaxCrossEntropyWithLogits"))
 
     # If the PLAIDML tests are requested, then run them as well
     if (arguments.plaidml_unit_tests_enable):

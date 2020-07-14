@@ -76,22 +76,9 @@ def main():
     )
 
     parser.add_argument(
-        '--build_gpu_backend',
-        help=
-        "nGraph backends will include nVidia GPU. Use: NGRAPH_TF_BACKEND=GPU\n"
-        "Note: You need to have CUDA headers and libraries available on the build system.\n",
-        action="store_true")
-
-    parser.add_argument(
         '--build_plaidml_backend',
         help=
         "nGraph backends will include PlaidML backend. Use: NGRAPH_TF_BACKEND=PLAIDML\n",
-        action="store_true")
-
-    parser.add_argument(
-        '--build_intelgpu_backend',
-        help=
-        "nGraph backends will include Intel GPU bckend. Use: NGRAPH_TF_BACKEND=INTELGPU\n",
         action="store_true")
 
     parser.add_argument(
@@ -432,16 +419,8 @@ def main():
                 flag_string_map[platform.system() != 'Darwin']
             ])
             ngraph_cmake_flags.extend([
-                "-DNGRAPH_GPU_ENABLE=" +
-                flag_string_map[arguments.build_gpu_backend]
-            ])
-            ngraph_cmake_flags.extend([
                 "-DNGRAPH_PLAIDML_ENABLE=" +
                 flag_string_map[arguments.build_plaidml_backend]
-            ])
-            ngraph_cmake_flags.extend([
-                "-DNGRAPH_INTELGPU_ENABLE=" +
-                flag_string_map[arguments.build_intelgpu_backend]
             ])
 
             cmake_build(build_dir, ngraph_src_dir, ngraph_cmake_flags,
