@@ -133,15 +133,6 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
     ngraph_bridge_lib.ngraph_tf_is_openvino_enabled.restype = ctypes.c_bool
 
-    try:
-        importlib.import_module('plaidml.settings')
-        # Importing plaidml.settings -- if it exists -- will have read the
-        # user's settings and configured the runtime environment
-        # appropriately.
-    except ImportError:
-        pass
-
-
     def enable():
         ngraph_bridge_lib.ngraph_enable()
 

@@ -74,7 +74,4 @@ setup(
     install_requires=[
         "tensorflow==2.2.0",
     ],
-    extras_require={
-        'plaidml': ["plaidml>=0.6.3"],
-    },
 )

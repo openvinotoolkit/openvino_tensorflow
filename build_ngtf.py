@@ -76,12 +76,6 @@ def main():
     )
 
     parser.add_argument(
-        '--build_plaidml_backend',
-        help=
-        "nGraph backends will include PlaidML backend. Use: NGRAPH_TF_BACKEND=PLAIDML\n",
-        action="store_true")
-
-    parser.add_argument(
         '--build_openvino_backend',
         help="Build OpenVINO backend\n",
         action="store_true")
@@ -411,16 +405,9 @@ def main():
             if arguments.debug_build:
                 ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-            if arguments.build_plaidml_backend:
-                command_executor(["pip", "install", "-U", "plaidML"])
-
             ngraph_cmake_flags.extend([
                 "-DNGRAPH_TOOLS_ENABLE=" +
                 flag_string_map[platform.system() != 'Darwin']
-            ])
-            ngraph_cmake_flags.extend([
-                "-DNGRAPH_PLAIDML_ENABLE=" +
-                flag_string_map[arguments.build_plaidml_backend]
             ])
 
             cmake_build(build_dir, ngraph_src_dir, ngraph_cmake_flags,

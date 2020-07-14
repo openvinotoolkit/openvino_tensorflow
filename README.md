@@ -104,9 +104,8 @@ Run the following Python script to build TensorFlow, nGraph, and the bridge. Use
 
 When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`) are created in the `build_cmake/artifacts` directory. 
 
-Add the following flags to build PlaidML, Intel GPU or OpenVINO backends (optional):
+Add the following flags to build OpenVINO backend (optional):
 
-        --build_plaidml_backend
         --build_openvino_backend
 
 For more build options:
@@ -240,9 +239,10 @@ Observe that the output time runs faster than TensorFlow native (i.e., without n
 
 #### Add additional backends
 
-You can substitute the default CPU backend with a different backend such as `PLAIDML`. Use the following API:
+You can substitute the default CPU backend with a different backend. 
+Use the following API:
 
-    ngraph_bridge.set_backend('PLAIDML')
+    ngraph_bridge.set_backend('backend_name')
 
 To determine what backends are available on your system, use the following API:
 
