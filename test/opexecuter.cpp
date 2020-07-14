@@ -20,9 +20,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Utility Function to create NodeDef for _Arg and _Retval nodes
@@ -214,7 +212,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs,
     NGRAPH_VLOG(0) << "NGraph using backend: " << ng_backend_type;
   }
 
-  ng::runtime::Backend* backend;
+  Backend* backend;
   try {
     backend = BackendManager::GetBackend(ng_backend_type);
   } catch (...) {

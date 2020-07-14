@@ -20,6 +20,7 @@
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_encapsulate_impl.h"
 #include "ngraph_bridge/ngraph_encapsulate_op.h"
+#include "ngraph_bridge/ngraph_executable.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "test/test_utilities.h"
 
@@ -27,7 +28,6 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 namespace testing {
@@ -104,7 +104,7 @@ TEST(EncapsulateOp, GetNgExecutable) {
   ng_encap_impl.SetOpBackend("CPU");
   ASSERT_OK(BackendManager::CreateBackend(ng_encap_impl.GetOpBackend()));
 
-  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  std::shared_ptr<Executable> ng_exec;
   ASSERT_OK(ng_encap_impl.GetNgExecutable(input_tensors, input_shapes,
                                           static_input_map, ng_exec));
 
@@ -123,7 +123,7 @@ TEST(EncapsulateOp, AllocateNGInputTensors) {
   ng_encap_impl.SetOpBackend("CPU");
   ASSERT_OK(BackendManager::CreateBackend(ng_encap_impl.GetOpBackend()));
 
-  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  std::shared_ptr<Executable> ng_exec;
   NGraphEncapsulateImpl::Compile(ng_encap_impl.GetOpBackend(), f, ng_exec);
 
   std::vector<tensorflow::TensorShape> input_shapes;
@@ -159,7 +159,7 @@ TEST(EncapsulateOp, AllocateNGOutputTensors) {
   ng_encap_impl.SetOpBackend("CPU");
   ASSERT_OK(BackendManager::CreateBackend(ng_encap_impl.GetOpBackend()));
 
-  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  std::shared_ptr<Executable> ng_exec;
   NGraphEncapsulateImpl::Compile(ng_encap_impl.GetOpBackend(), f, ng_exec);
 
   std::vector<tensorflow::TensorShape> input_shapes;

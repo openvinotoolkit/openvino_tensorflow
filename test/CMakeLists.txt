@@ -184,6 +184,10 @@ else()
     )
 endif()
 
+if (ENABLE_OPENVINO)
+    target_link_libraries(gtest_ngtf ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(gtest_ngtf ${PLAIDML_LIBRARIES})
 endif()

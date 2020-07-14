@@ -28,19 +28,18 @@
 #include "tensorflow/core/lib/core/errors.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
 
 #include "logging/ngraph_log.h"
+#include "ngraph_bridge/ngraph_backend.h"
 
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
-struct Backend {
-  shared_ptr<ng::runtime::Backend> backend_ptr;
+struct _Backend {
+  shared_ptr<Backend> backend_ptr;
   mutex backend_mutex;
 };
 
@@ -78,30 +77,13 @@ class BackendManager {
 
   // Returns a backend pointer of the type specified by the backend name
   // The backend must have already been created (use CreateBackend(...))
-  static ng::runtime::Backend* GetBackend(const string& backend_name);
+  static Backend* GetBackend(const string& backend_name);
 
   // LockBackend
   static void LockBackend(const string& backend_name);
 
   // UnlockBackend
   static void UnlockBackend(const string& backend_name);
-
-  // Backend Config Functions
-  // These functions facilitate getting/setting
-  // of additional backend configurations by abstracting the
-  // backend specific details from the user
-  // They do not validate the backend type or the attribute values
-
-  // Returns the backend specific additional attributes
-  // For e.g.
-  // 1. GetBackendAdditionalAttributes("CPU")
-  // returns {"_ngraph_device_config"}
-  // 2. GetBackendAdditionalAttributes("TEST")
-  // returns {"_ngraph_device_config"}
-  // 3. GetBackendAdditionalAttributes("NNPI")
-  // returns {"_ngraph_device_id", "_ngraph_ice_cores","_ngraph_max_batch_size"}
-  static vector<string> GetBackendAdditionalAttributes(
-      const string& backend_name);
 
   // Given a string, splits the string into the backend name and other
   // attributes
@@ -129,7 +111,7 @@ class BackendManager {
   static mutex ng_backend_name_mutex_;
 
   // map of cached backend objects
-  static map<string, std::unique_ptr<Backend>> ng_backend_map_;
+  static map<string, std::unique_ptr<_Backend>> ng_backend_map_;
   static mutex ng_backend_map_mutex_;
 
   // Map of backends and their reference counts

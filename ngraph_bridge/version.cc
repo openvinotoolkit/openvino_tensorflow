@@ -67,6 +67,14 @@ bool ngraph_tf_is_grappler_enabled() {
 #endif
 }
 
+bool ngraph_tf_is_openvino_enabled() {
+#if defined(ENABLE_OPENVINO)
+  return true;
+#else
+  return false;
+#endif
+}
+
 const char* tf_version() { return (TF_VERSION_STRING); }
 
 }  // namespace ngraph_bridge

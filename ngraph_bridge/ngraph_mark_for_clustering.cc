@@ -18,8 +18,6 @@
 
 #include "ngraph/opsets/opset3.hpp"
 
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
@@ -29,7 +27,6 @@
 using namespace std;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 //
@@ -153,7 +150,7 @@ static ConfirmationFunction FusedBatchNormConfirmationFunction() {
 
 // Check if op is supported by backend using is_supported API
 Status IsSupportedByBackend(
-    const Node* node, const ng::runtime::Backend* op_backend,
+    const Node* node, const Backend* op_backend,
     const std::map<std::string, std::set<shared_ptr<ng::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported) {
@@ -1039,8 +1036,7 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
   BackendManager::GetCurrentlySetBackendName(&ng_backend_type);
   // Create backend to query is_supported
   TF_RETURN_IF_ERROR(BackendManager::CreateBackend(ng_backend_type));
-  ng::runtime::Backend* op_backend =
-      BackendManager::GetBackend(ng_backend_type);
+  Backend* op_backend = BackendManager::GetBackend(ng_backend_type);
 
   for (auto node : graph->op_nodes()) {
     bool mark_for_clustering = false;

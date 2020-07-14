@@ -28,9 +28,8 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 
-#include "ngraph/runtime/backend.hpp"
-
 #include "logging/ngraph_log.h"
+#include "ngraph_bridge/ngraph_backend.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
@@ -44,7 +43,6 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 // Ngraph Encapsulate Implementation class for EncapsulateOp class
@@ -91,8 +89,8 @@ Status NGraphEncapsulateImpl::ComputeSignature(
 Status NGraphEncapsulateImpl::Compile(
     const std::string& backend_name,
     std::shared_ptr<ngraph::Function> ng_function,
-    std::shared_ptr<ngraph::runtime::Executable>& ng_exec) {
-  ng::runtime::Backend* op_backend = BackendManager::GetBackend(backend_name);
+    std::shared_ptr<Executable>& ng_exec) {
+  Backend* op_backend = BackendManager::GetBackend(backend_name);
   BackendManager::LockBackend(backend_name);
   try {
     ng_exec = op_backend->compile(ng_function);
@@ -116,7 +114,7 @@ Status NGraphEncapsulateImpl::Compile(
 Status NGraphEncapsulateImpl::GetCompiledString(
     const std::string& backend_name,
     std::shared_ptr<ngraph::Function> ng_function, std::string* ng_exec_str) {
-  std::shared_ptr<ngraph::runtime::Executable> ng_exec;
+  std::shared_ptr<Executable> ng_exec;
   NGraphEncapsulateImpl::Compile(backend_name, ng_function, ng_exec);
   stringstream exec_dump;
   ng_exec->save(exec_dump);
@@ -129,17 +127,16 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     const std::vector<Tensor>& tf_input_tensors,
     std::vector<TensorShape>& input_shapes,
     std::vector<const Tensor*>& static_input_map,
-    std::shared_ptr<ngraph::runtime::Executable>& ng_exec) {
+    std::shared_ptr<Executable>& ng_exec) {
   std::stringstream signature_ss;
   string signature;
 
   std::shared_ptr<ngraph::Function> ng_function;
-  std::shared_ptr<ngraph::runtime::Executable> evicted_ng_exec;
+  std::shared_ptr<Executable> evicted_ng_exec;
 
   NGRAPH_VLOG(4) << "GetNgExecutable: Got backend of type: "
                  << m_op_backend_name;
-  ng::runtime::Backend* op_backend =
-      BackendManager::GetBackend(m_op_backend_name);
+  Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
 
   // Compute Signature
   TF_RETURN_IF_ERROR(ComputeSignature(tf_input_tensors, input_shapes,
@@ -237,7 +234,8 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
       }
       BackendManager::UnlockBackend(m_op_backend_name);
     } else {
-      NGraphEncapsulateImpl::Compile(m_op_backend_name, ng_function, ng_exec);
+      TF_RETURN_IF_ERROR(NGraphEncapsulateImpl::Compile(m_op_backend_name,
+                                                        ng_function, ng_exec));
     }
 
     SetNgExecMap(signature, ng_exec);
@@ -273,10 +271,9 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
 // tensorflow tensors required to execute ngraph function
 Status NGraphEncapsulateImpl::AllocateNGInputTensors(
     const std::vector<Tensor>& tf_input_tensors,
-    const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+    const std::shared_ptr<Executable>& ng_exec,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs) {
-  ng::runtime::Backend* op_backend =
-      BackendManager::GetBackend(m_op_backend_name);
+  Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
   for (int i = 0; i < tf_input_tensors.size(); i++) {
     ng::Shape ng_shape(tf_input_tensors[i].shape().dims());
     for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
@@ -298,10 +295,9 @@ Status NGraphEncapsulateImpl::AllocateNGInputTensors(
 // tensorflow tensors required to execute ngraph function
 Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
     const std::vector<Tensor*>& output_tensors,
-    const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+    const std::shared_ptr<Executable>& ng_exec,
     vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
-  ng::runtime::Backend* op_backend =
-      BackendManager::GetBackend(m_op_backend_name);
+  Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
   for (auto i = 0; i < ng_exec->get_results().size(); i++) {
     auto ng_element = ng_exec->get_results()[i];
     auto ng_shape = ng_element->get_shape();
@@ -375,8 +371,7 @@ Status NGraphEncapsulateImpl::ParseNodeAttributes(
 }
 
 Status NGraphEncapsulateImpl::DumpNgFunction(
-    const string& file_name,
-    std::shared_ptr<ngraph::runtime::Executable> ng_exec) {
+    const string& file_name, std::shared_ptr<Executable> ng_exec) {
   auto itr = m_serialized_ng_function_map.find(ng_exec);
   if (itr == m_serialized_ng_function_map.end()) {
     return errors::Internal(

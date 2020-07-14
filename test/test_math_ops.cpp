@@ -77,8 +77,6 @@ TEST(MathOps, Abs1D) {
   // the third is the retval. In multiple test runs the retval's number changes,
   // hence not adding in an assert
   ASSERT_EQ(node_list.size(), 3);
-  auto it = node_list.begin();
-  ASSERT_EQ((*std::next(it))->get_friendly_name(), "Abs");
 }
 
 TEST(MathOps, Abs2D) {

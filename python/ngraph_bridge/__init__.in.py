@@ -28,8 +28,6 @@ from platform import system
 import numpy as np
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
-from tensorflow.python import pywrap_tensorflow as py_tf
-from tensorflow.python.framework import errors_impl
 
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops
@@ -49,6 +47,7 @@ __all__ = [
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
+    'is_openvino_enabled',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -99,7 +98,6 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
-
     if "NGRAPH_TF_USE_DEVICE_MODE" not in os.environ:
         full_lib_path = os.path.join(libpath, 'libngraph_bridge.' + ext)
         _ = load_library.load_op_library(full_lib_path)
@@ -113,7 +111,6 @@ else:
     raise ValueError(
         "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
         .format(TF_VERSION, TF_VERSION_NEEDED))
-
 
 def requested():
     return ops.get_default_graph()._attr_scope({
@@ -134,6 +131,7 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
+    ngraph_bridge_lib.ngraph_tf_is_openvino_enabled.restype = ctypes.c_bool
 
     try:
         importlib.import_module('plaidml.settings')
@@ -173,11 +171,9 @@ if ngraph_classic_loaded:
             backend_list.append(backend.decode("utf-8"))
         return backend_list
 
-
     def set_backend(backend):
         if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
             raise Exception("Backend " + backend + " unavailable.")
-
 
     def get_currently_set_backend_name():
         result = (ctypes.c_char_p * 1)()
@@ -186,14 +182,11 @@ if ngraph_classic_loaded:
         list_result = list(result)
         return list_result[0].decode("utf-8")
 
-
     def start_logging_placement():
         ngraph_bridge_lib.ngraph_start_logging_placement()
 
-
     def stop_logging_placement():
         ngraph_bridge_lib.ngraph_stop_logging_placement()
-
 
     def is_logging_placement():
         return ngraph_bridge_lib.ngraph_is_logging_placement()
@@ -203,6 +196,9 @@ if ngraph_classic_loaded:
 
     def is_grappler_enabled():
         return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+
+    def is_openvino_enabled():
+        return ngraph_bridge_lib.ngraph_tf_is_openvino_enabled()
 
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled
@@ -248,4 +244,5 @@ if ngraph_classic_loaded:
     "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
-    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled())
+    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
+    "nGraph bridge using OpenVino: " + str(ngraph_bridge_lib.ngraph_tf_is_openvino_enabled())

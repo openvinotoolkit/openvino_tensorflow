@@ -22,8 +22,10 @@
 #include "tensorflow/core/graph/graph_constructor.h"
 #include "tensorflow/core/platform/env.h"
 
+#include "ngraph_bridge/ngraph_backend.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
+#include "ngraph_bridge/ngraph_executable.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 #include "test/test_utilities.h"
@@ -32,9 +34,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 class NGraphExecTest : public ::testing::Test {
@@ -84,7 +84,7 @@ class NGraphExecTest : public ::testing::Test {
   // Tensor
   // Copies data from TF Tensor to it
   Status CreateTensorFromBackend(
-      const shared_ptr<ngraph::runtime::Backend>& ng_backend, Tensor& tf_tensor,
+      const shared_ptr<Backend>& ng_backend, Tensor& tf_tensor,
       shared_ptr<ngraph::runtime::Tensor>& ng_tensor) {
     ng::element::Type ng_element_type;
     TF_RETURN_IF_ERROR(
@@ -101,7 +101,7 @@ class NGraphExecTest : public ::testing::Test {
 
   // Creates the tensor from backend of the provided shape and data type
   Status CreateTensorFromBackend(
-      const shared_ptr<ngraph::runtime::Backend>& ng_backend,
+      const shared_ptr<Backend>& ng_backend,
       const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
       shared_ptr<ngraph::runtime::Tensor>& ng_tensor) {
     try {
@@ -156,7 +156,7 @@ TEST_F(NGraphExecTest, Axpy) {
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
   // Create the nGraph backend
-  auto backend = ng::runtime::Backend::create("CPU");
+  auto backend = Backend::create("CPU");
 
   // Allocate tensors for arguments a, b, c
   ng::Shape ng_shape_x(x.shape().dims());
@@ -215,7 +215,7 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
   // Create the nGraph backend
-  auto backend = ng::runtime::Backend::create("CPU");
+  auto backend = Backend::create("CPU");
 
   // Allocate tensors for arguments a, b, c
   ng::Shape ng_shape_x(x.shape().dims());
@@ -289,12 +289,8 @@ TEST_F(NGraphExecTest, MixedTensors) {
   // Create the nGraph backend
   string backend_name = "INTERPRETER";
   OverrideBackendFromEnv(&backend_name);
-  auto backend = ng::runtime::Backend::create(backend_name);
+  auto backend = Backend::create(backend_name);
   NGRAPH_VLOG(0) << "NGraph using backend " << backend_name << endl;
-
-  // check if the backend executable can create tensors
-  ASSERT_TRUE(backend->executable_can_create_tensors())
-      << "Backend Executable cannot create tensors";
 
   // Compile the nGraph function.
   auto exec = backend->compile(ng_function);

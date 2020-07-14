@@ -22,8 +22,9 @@
 
 #include "ngraph/ngraph.hpp"
 
-namespace tensorflow {
+#include "ngraph_bridge/ngraph_backend.h"
 
+namespace tensorflow {
 namespace ngraph_bridge {
 
 Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes,
@@ -31,7 +32,7 @@ Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes,
 // remove marking, backend and static input nodes attributes
 void ResetMarkForClustering(Graph* graph);
 Status IsSupportedByBackend(
-    const Node* node, const ngraph::runtime::Backend* op_backend,
+    const Node* node, const Backend* op_backend,
     const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported);

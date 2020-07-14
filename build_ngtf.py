@@ -17,11 +17,13 @@
 
 from tools.build_utils import *
 
+flag_string_map = {True: 'YES', False: 'NO'}
+
 
 def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                   disable_cpp_api):
     # Check pre-requisites
-    if use_prebuilt_tensorflow:
+    if use_prebuilt_tensorflow and not disable_cpp_api:
         # Check if the gcc version is at least 5.3.0
         if (platform.system() != 'Darwin'):
             gcc_ver = get_gcc_version()
@@ -91,6 +93,18 @@ def main():
         help=
         "nGraph backends will include Intel GPU bckend. Use: NGRAPH_TF_BACKEND=INTELGPU\n",
         action="store_true")
+
+    parser.add_argument(
+        '--build_openvino_backend',
+        help="Build OpenVINO backend\n",
+        action="store_true")
+
+    parser.add_argument(
+        '--use_prebuilt_openvino',
+        type=str,
+        help=
+        "Skip building OpenVINO and use the pre-built version from the specified directory.\n",
+        action="store")
 
     parser.add_argument(
         '--use_prebuilt_tensorflow',
@@ -344,64 +358,96 @@ def main():
         dst = os.path.join(dst_dir, tf_fmwk_lib_name)
         shutil.copyfile(tf_lib_file, dst)
 
-    flag_string_map = {True: 'YES', False: 'NO'}
-    # Build nGraph if required.
-    if not arguments.use_prebuilt_ngraph:
-        ngraph_src_dir = './ngraph'
-        if arguments.ngraph_src_dir:
-            ngraph_src_dir = arguments.ngraph_src_dir
-            print("Using local nGraph source in directory ", ngraph_src_dir)
-        else:
-            if arguments.ngraph_version:
-                ngraph_version = arguments.ngraph_version
+    # Build OpenVINO if required.
+    if arguments.build_openvino_backend:
+        if not arguments.use_prebuilt_openvino:
+            openvino_version = "releases/2020/4"
+            openvino_src_dir = "./openvino"
+            download_repo(
+                "openvino",
+                "https://github.com/openvinotoolkit/openvino",
+                openvino_version,
+                submodule_update=True)
 
-            print("nGraph Version: ", ngraph_version)
-            download_repo("ngraph",
-                          "https://github.com/NervanaSystems/ngraph.git",
-                          ngraph_version)
+            # Now build OpenVINO
+            openvino_cmake_flags = [
+                "-DENABLE_TESTS=OFF",
+                "-DENABLE_FUNCTIONAL_TESTS=OFF",
+                "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build
+                "-DENABLE_CPPLINT=OFF",
+                "-DENABLE_SPEECH_DEMO=FALSE",
+                "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+                "-DCMAKE_INSTALL_PREFIX=" + os.path.join(
+                    artifacts_location, "openvino")
+            ]
 
-        # Now build nGraph
-        ngraph_cmake_flags = [
-            "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
-            "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DNGRAPH_DEX_ONLY=TRUE",
-            "-DNGRAPH_DEBUG_ENABLE=NO", "-DNGRAPH_UNIT_TEST_ENABLE=NO",
-            "-DNGRAPH_TARGET_ARCH=" + target_arch,
-            "-DNGRAPH_TUNE_ARCH=" + target_arch, "-DNGRAPH_TBB_ENABLE=FALSE"
-        ]
+            if arguments.debug_build:
+                openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
-        if arguments.use_ngraph_staticlibs:
-            ngraph_cmake_flags.extend(["-DNGRAPH_STATIC_LIB_ENABLE=TRUE"])
-            ngraph_cmake_flags.extend(["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
-            ngraph_cmake_flags.extend(
-                ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
-            ngraph_cmake_flags.extend(
-                ["-DNGRAPH_DYNAMIC_COMPONENTS_ENABLE=OFF"])
+            cmake_build(build_dir, openvino_src_dir, openvino_cmake_flags,
+                        verbosity)
+    else:
+        # Skip building nGraph if we're building OpenVINO
+        # Build nGraph if required.
+        if not arguments.use_prebuilt_ngraph:
+            ngraph_src_dir = './ngraph'
+            if arguments.ngraph_src_dir:
+                ngraph_src_dir = arguments.ngraph_src_dir
+                print("Using local nGraph source in directory ", ngraph_src_dir)
+            else:
+                if arguments.ngraph_version:
+                    ngraph_version = arguments.ngraph_version
 
-        if arguments.debug_build:
-            ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+                print("nGraph Version: ", ngraph_version)
+                download_repo("ngraph",
+                              "https://github.com/NervanaSystems/ngraph.git",
+                              ngraph_version)
 
-        if arguments.build_plaidml_backend:
-            command_executor(["pip", "install", "-U", "plaidML"])
+            # Now build nGraph
+            ngraph_cmake_flags = [
+                "-DNGRAPH_INSTALL_PREFIX=" + artifacts_location,
+                "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DNGRAPH_DEX_ONLY=TRUE",
+                "-DNGRAPH_DEBUG_ENABLE=NO", "-DNGRAPH_UNIT_TEST_ENABLE=NO",
+                "-DNGRAPH_TARGET_ARCH=" + target_arch,
+                "-DNGRAPH_TUNE_ARCH=" + target_arch, "-DNGRAPH_TBB_ENABLE=FALSE"
+            ]
 
-        ngraph_cmake_flags.extend([
-            "-DNGRAPH_TOOLS_ENABLE=" +
-            flag_string_map[platform.system() != 'Darwin']
-        ])
-        ngraph_cmake_flags.extend([
-            "-DNGRAPH_GPU_ENABLE=" +
-            flag_string_map[arguments.build_gpu_backend]
-        ])
-        ngraph_cmake_flags.extend([
-            "-DNGRAPH_PLAIDML_ENABLE=" +
-            flag_string_map[arguments.build_plaidml_backend]
-        ])
-        ngraph_cmake_flags.extend([
-            "-DNGRAPH_INTELGPU_ENABLE=" +
-            flag_string_map[arguments.build_intelgpu_backend]
-        ])
+            if arguments.use_ngraph_staticlibs:
+                ngraph_cmake_flags.extend(["-DNGRAPH_STATIC_LIB_ENABLE=TRUE"])
+                ngraph_cmake_flags.extend(
+                    ["-DNGRAPH_CPU_STATIC_LIB_ENABLE=TRUE"])
+                ngraph_cmake_flags.extend(
+                    ["-DNGRAPH_INTERPRETER_STATIC_LIB_ENABLE=TRUE"])
+                ngraph_cmake_flags.extend(
+                    ["-DNGRAPH_DYNAMIC_COMPONENTS_ENABLE=OFF"])
 
-        build_ngraph(build_dir, ngraph_src_dir, ngraph_cmake_flags, verbosity)
+            if arguments.debug_build:
+                ngraph_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
+            if arguments.build_plaidml_backend:
+                command_executor(["pip", "install", "-U", "plaidML"])
+
+            ngraph_cmake_flags.extend([
+                "-DNGRAPH_TOOLS_ENABLE=" +
+                flag_string_map[platform.system() != 'Darwin']
+            ])
+            ngraph_cmake_flags.extend([
+                "-DNGRAPH_GPU_ENABLE=" +
+                flag_string_map[arguments.build_gpu_backend]
+            ])
+            ngraph_cmake_flags.extend([
+                "-DNGRAPH_PLAIDML_ENABLE=" +
+                flag_string_map[arguments.build_plaidml_backend]
+            ])
+            ngraph_cmake_flags.extend([
+                "-DNGRAPH_INTELGPU_ENABLE=" +
+                flag_string_map[arguments.build_intelgpu_backend]
+            ])
+
+            cmake_build(build_dir, ngraph_src_dir, ngraph_cmake_flags,
+                        verbosity)
+
+    # Next build CMAKE options for the bridge
     ngraph_tf_cmake_flags = [
         "-DNGRAPH_TF_INSTALL_PREFIX=" + artifacts_location,
         "-DUSE_PRE_BUILT_NGRAPH=ON",
@@ -409,14 +455,30 @@ def main():
         "-DNGRAPH_TUNE_ARCH=" + target_arch,
     ]
 
-    if not arguments.use_prebuilt_ngraph:
+    if arguments.build_openvino_backend:
+        openvino_artifacts_dir = ""
+        if not arguments.use_prebuilt_openvino:
+            openvino_artifacts_dir = os.path.join(artifacts_location,
+                                                  "openvino")
+        else:
+            openvino_artifacts_dir = os.path.abspath(
+                arguments.use_prebuilt_openvino)
+            ngraph_tf_cmake_flags.extend(["-DUSE_PREBUILT_OPENVINO=TRUE"])
+
+        ngraph_tf_cmake_flags.extend(["-DENABLE_OPENVINO=ON"])
         ngraph_tf_cmake_flags.extend(
-            ["-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location])
+            ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
+        ngraph_tf_cmake_flags.extend(
+            ["-DNGRAPH_ARTIFACTS_DIR=" + openvino_artifacts_dir])
     else:
-        ngraph_tf_cmake_flags.extend([
-            "-DNGRAPH_ARTIFACTS_DIR=" + os.path.abspath(
-                arguments.use_prebuilt_ngraph)
-        ])
+        if not arguments.use_prebuilt_ngraph:
+            ngraph_tf_cmake_flags.extend(
+                ["-DNGRAPH_ARTIFACTS_DIR=" + artifacts_location])
+        else:
+            ngraph_tf_cmake_flags.extend([
+                "-DNGRAPH_ARTIFACTS_DIR=" + os.path.abspath(
+                    arguments.use_prebuilt_ngraph)
+            ])
 
     if (arguments.use_ngraph_staticlibs):
         ngraph_tf_cmake_flags.extend(["-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE=TRUE"])

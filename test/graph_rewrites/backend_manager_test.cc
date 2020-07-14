@@ -31,9 +31,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 #define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
@@ -116,27 +114,6 @@ TEST(BackendManager, CanCreateBackend) {
   ASSERT_OK(BackendManager::CanCreateBackend("CPU:0"));
   ASSERT_NOT_OK(BackendManager::CanCreateBackend("temp"));
   ASSERT_NOT_OK(BackendManager::CanCreateBackend(""));
-}
-
-// Test GetSupportedBackendNames
-TEST(BackendManager, GetSupportedBackendNames) {
-  vector<string> ng_tf_backends = BackendManager::GetSupportedBackendNames();
-
-  NGRAPH_VLOG(5) << "Supported Backends";
-  for (auto backend : ng_tf_backends) {
-    NGRAPH_VLOG(5) << backend;
-  }
-
-  vector<string> ng_backends =
-      ng::runtime::BackendManager::get_registered_backends();
-
-  NGRAPH_VLOG(5) << "nGraph Supported Backends";
-  for (auto backend : ng_backends) {
-    NGRAPH_VLOG(5) << backend;
-  }
-
-  ASSERT_EQ(ng_tf_backends.size(), ng_backends.size());
-  ASSERT_EQ(ng_tf_backends, ng_backends);
 }
 
 // Test Backend Assignment

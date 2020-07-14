@@ -30,9 +30,8 @@ a variety of nGraph-enabled backends: CPU, GPU, and custom silicon like the
 |TensorFlow v2.2.0|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
 |        |`cmake` 3.4 or higher|
 |        |Bazelisk|
-|        |`virtualenv` 16.0.0|
-|        ||
-
+|        |`virtualenv` 16.0.0+|
+|        |`patchelf` (when building with OpenVINO backend)|
 
 ### Use pre-built packages
 
@@ -105,10 +104,11 @@ Run the following Python script to build TensorFlow, nGraph, and the bridge. Use
 
 When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`) are created in the `build_cmake/artifacts` directory. 
 
-Add the following flags to build PlaidML and Intel GPU backends (optional):
+Add the following flags to build PlaidML, Intel GPU or OpenVINO backends (optional):
 
         --build_plaidml_backend
         --build_intelgpu_backend
+        --build_openvino_backend
 
 For more build options:
         

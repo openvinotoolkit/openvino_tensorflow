@@ -79,7 +79,7 @@ def command_executor(cmd,
         raise
 
 
-def build_ngraph(build_dir, src_location, cmake_flags, verbose):
+def cmake_build(build_dir, src_location, cmake_flags, verbose):
     pwd = os.getcwd()
 
     src_location = os.path.abspath(src_location)
@@ -487,23 +487,21 @@ def install_ngraph_tf(tf_version, venv_dir, ngtf_pip_whl):
     print(ngraph_bridge.__version__)
 
 
-def download_repo(target_name, repo, version):
-
+def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
     call(["git", "clone", repo, target_name])
 
-    # Next goto this folder nd determine the name of the root folder
     pwd = os.getcwd()
-
-    # Go to the tree
     os.chdir(target_name)
 
-    # checkout the specified branch
+    # checkout the specified branch and get the latest changes
     call(["git", "fetch"])
     command_executor(["git", "checkout", version])
-
-    # Get the latest if applicable
     call(["git", "pull"])
+
+    if submodule_update:
+        call(["git", "submodule", "update", "--init", "--recursive"])
+
     os.chdir(pwd)
 
 

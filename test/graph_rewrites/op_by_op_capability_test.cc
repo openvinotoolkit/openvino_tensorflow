@@ -28,6 +28,7 @@
 
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
+#include "ngraph_bridge/ngraph_backend.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "test/test_utilities.h"
@@ -36,9 +37,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Test to verify if the set backend supports all the ops in a graph
@@ -72,7 +71,7 @@ TEST(OpByOpCapability, Backend) {
     ASSERT_OK(BackendManager::SetBackendName(it->first));
     // Create nGraph backend
     ASSERT_OK(BackendManager::CreateBackend(it->first));
-    ng::runtime::Backend* backend = BackendManager::GetBackend(it->first);
+    Backend* backend = BackendManager::GetBackend(it->first);
 
     // Create dummy node for Const as there is no default ctor yet
     // TODO(Sindhu) Change this to default once this is added in nGraph

@@ -27,6 +27,7 @@
 #include "ngraph/ngraph.hpp"
 
 #include "logging/ngraph_log.h"
+#include "ngraph_bridge/ngraph_executable.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
@@ -45,7 +46,7 @@ class NGraphEncapsulateImpl {
 
   static Status Compile(const std::string& backend_name,
                         std::shared_ptr<ngraph::Function> ng_function,
-                        std::shared_ptr<ngraph::runtime::Executable>& ng_exec);
+                        std::shared_ptr<Executable>& ng_exec);
 
   static Status GetCompiledString(const std::string& backend_name,
                                   std::shared_ptr<ngraph::Function> ng_function,
@@ -55,27 +56,26 @@ class NGraphEncapsulateImpl {
   Status GetNgExecutable(const std::vector<Tensor>& tf_input_tensors,
                          std::vector<TensorShape>& input_shapes,
                          std::vector<const Tensor*>& static_input_map,
-                         std::shared_ptr<ngraph::runtime::Executable>& ng_exec);
+                         std::shared_ptr<Executable>& ng_exec);
 
   // Allocate tensors for input arguments. Creates ngraph input tensors using
   // tensorflow tensors required to execute ngraph function
   Status AllocateNGInputTensors(
       const std::vector<Tensor>& tf_input_tensors,
-      const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+      const std::shared_ptr<Executable>& ng_exec,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs);
 
   // Allocate tensors for output results.  Creates ngraph output tensors using
   // tensorflow tensors required to execute ngraph function
   Status AllocateNGOutputTensors(
       const std::vector<Tensor*>& tf_output_tensors,
-      const std::shared_ptr<ngraph::runtime::Executable>& ng_exec,
+      const std::shared_ptr<Executable>& ng_exec,
       vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs);
 
   // Clear all maps with ng_exec as keys
   void ClearExecMaps();
 
-  Status DumpNgFunction(const string&,
-                        std::shared_ptr<ngraph::runtime::Executable>);
+  Status DumpNgFunction(const string&, std::shared_ptr<Executable>);
 
   // Accessors(getters and setters) for the private data members of
   // NgraphEncapsulateImpl class
@@ -122,13 +122,12 @@ class NGraphEncapsulateImpl {
     m_input_is_static[index] = value;
   }
 
-  std::unordered_map<std::string, std::shared_ptr<ngraph::runtime::Executable>>
-  GetNgExecMap() {
+  std::unordered_map<std::string, std::shared_ptr<Executable>> GetNgExecMap() {
     return m_ng_exec_map;
   }
 
   void SetNgExecMap(const std::string& ng_map_key,
-                    const std::shared_ptr<ngraph::runtime::Executable>& exec) {
+                    const std::shared_ptr<Executable>& exec) {
     m_ng_exec_map[ng_map_key] = exec;
   }
 
@@ -166,9 +165,9 @@ class NGraphEncapsulateImpl {
   map<string, string> m_aot_functions;
   map<string, string> m_aot_execs;
 
-  std::unordered_map<std::string, std::shared_ptr<ngraph::runtime::Executable>>
-      m_ng_exec_map;
-  std::unordered_map<std::shared_ptr<ngraph::runtime::Executable>, std::string>
+  // ng_function, ng_executable, Output and Input Cache maps
+  std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
+  std::unordered_map<std::shared_ptr<Executable>, std::string>
       m_serialized_ng_function_map;
 
   int m_depth{2};  // TODO make this settable
