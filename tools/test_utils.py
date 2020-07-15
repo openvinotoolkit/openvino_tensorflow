@@ -575,15 +575,6 @@ def run_resnet50_forward_pass_from_artifacts(ngraph_tf_src_dir, artifact_dir,
     os.chdir(root_pwd)
 
 
-# See https://github.com/tensorflow/benchmarks/tree/master/perfzero
-def run_tfperfzero_resnet50_infer_from_artifacts(
-        ngraph_tf_src_dir, artifact_dir, batch_size, iterations):
-    root_pwd = os.getcwd(
-    )  # e.g. /localdisk/buildkite-agent/builds/aipg-ra-skx-168-2/ngraph/ngtf-cpu-ubuntu
-    # ....
-    # TODO
-
-
 # See https://github.com/IntelAI/models/blob/master/benchmarks/image_recognition/tensorflow/resnet50v1_5/README.md#fp32-inference-instructions
 def run_intelaimodels_resnet50_infer_from_artifacts(
         ngraph_tf_src_dir, artifact_dir, batch_size, iterations):
@@ -679,12 +670,11 @@ def run_intelaimodels_resnet50_infer_from_artifacts(
         '--socket-id=0',
     ]
     command_executor(cmd, verbose=True)
-
     os.chdir(root_pwd)
 
 
-def run_simple_resnet50_infer_from_artifacts(ngraph_tf_src_dir, artifact_dir,
-                                             batch_size, iterations):
+def run_resnet50_infer_from_artifacts(ngraph_tf_src_dir, artifact_dir,
+                                      batch_size, iterations):
     root_pwd = os.getcwd(
     )  # e.g. /localdisk/buildkite-agent/builds/aipg-ra-skx-168-2/ngraph/ngtf-cpu-ubuntu
     artifact_dir = os.path.abspath(artifact_dir)
@@ -727,19 +717,10 @@ def run_simple_resnet50_infer_from_artifacts(ngraph_tf_src_dir, artifact_dir,
         '--batch-size',
         str(batch_size),
         '--num-images',
-        str(batch_size * 10),
+        str(batch_size * iterations),
     ]
     command_executor(cmd, verbose=True)
-
     os.chdir(root_pwd)
-
-
-def run_resnet50_infer_from_artifacts(ngraph_tf_src_dir, artifact_dir,
-                                      batch_size, iterations):
-    #run_intelaimodels_resnet50_infer_from_artifacts(
-    #    ngraph_tf_src_dir, artifact_dir, batch_size, iterations)
-    run_simple_resnet50_infer_from_artifacts(ngraph_tf_src_dir, artifact_dir,
-                                             batch_size, iterations)
 
 
 def run_cpp_example_test(build_dir):

@@ -33,7 +33,7 @@ OUTPUTS = 'softmax_tensor'
 RESNET_IMAGE_SIZE = 224
 
 
-class rn50_graph:
+class RN50Graph:
     """Evaluate image classifier with optimized TensorFlow graph"""
 
     def __init__(self):
@@ -41,7 +41,7 @@ class rn50_graph:
         arg_parser.add_argument(
             "--batch-size", dest="batch_size", type=int, default=8)
         arg_parser.add_argument(
-            "--num-images", dest='num_images', type=int, default=500)
+            "--num-images", dest='num_images', type=int, default=512)
         arg_parser.add_argument(
             "--num-inter-threads",
             dest='num_inter_threads',
@@ -57,6 +57,8 @@ class rn50_graph:
             dest='input_graph',
             type=str,
             default="resnet50_v1.pb")
+        arg_parser.add_argument(
+            "--warmup-iters", dest='warmup_iters', type=int, default=8)
         self.args = arg_parser.parse_args()
 
     def run(self):
@@ -67,7 +69,7 @@ class rn50_graph:
         config = tf.compat.v1.ConfigProto()
         config.intra_op_parallelism_threads = self.args.num_intra_threads
         config.inter_op_parallelism_threads = self.args.num_inter_threads
-        config.use_per_session_threads = 1
+        config.use_per_session_threads = True
 
         data_graph = tf.Graph()
         with data_graph.as_default():
@@ -88,6 +90,8 @@ class rn50_graph:
             with tf.io.gfile.GFile(self.args.input_graph, 'rb') as input_file:
                 input_graph_content = input_file.read()
                 graph_def.ParseFromString(input_graph_content)
+            print(
+                "Optimizing graph %s for inference..." % self.args.input_graph)
             output_graph = optimize_for_inference(
                 graph_def, [INPUTS], [OUTPUTS], dtypes.float32.as_datatype_enum,
                 False)
@@ -96,63 +100,76 @@ class rn50_graph:
         input_tensor = infer_graph.get_tensor_by_name('input_tensor:0')
         output_tensor = infer_graph.get_tensor_by_name('softmax_tensor:0')
 
+        # Run without nGraph first
+        print("Run inference (without nGraph)")
+        ngraph_bridge.disable()
         data_sess = tf.compat.v1.Session(graph=data_graph, config=config)
         infer_sess = tf.compat.v1.Session(graph=infer_graph, config=config)
 
+        iteration = 0
         num_processed_images = 0
         num_remaining_images = self.args.num_images
-        total_accuracy1, total_accuracy5 = (0.0, 0.0)
-
-        ngraph_bridge.disable()
+        tf_time = 0.0
+        tf_labels = np.array([], dtype=np.int32)
         while num_remaining_images >= self.args.batch_size:
             np_images = data_sess.run(images)
-            num_processed_images += self.args.batch_size
-            num_remaining_images -= self.args.batch_size
+            if iteration > self.args.warmup_iters:
+                num_processed_images += self.args.batch_size
+                num_remaining_images -= self.args.batch_size
 
             tf_start_time = time.time()
-            tf_predictions = infer_sess.run(output_tensor,
-                                            {input_tensor: np_images})
+            predictions = infer_sess.run(output_tensor,
+                                         {input_tensor: np_images})
             tf_elapsed_time = time.time() - tf_start_time
 
-            np_labels = np.argmax(tf_predictions, axis=-1)
+            if iteration > self.args.warmup_iters:
+                tf_time += tf_elapsed_time
+                tf_labels = np.append(tf_labels, np.argmax(
+                    predictions, axis=-1))
+            iteration += 1
 
-            ngraph_bridge.enable()
+        print("Total execution time (TF): ", tf_time)
+
+        # Run with nGraph now
+        print("Run inference (with nGraph)")
+        ngraph_bridge.enable()
+
+        data_sess = tf.compat.v1.Session(graph=data_graph, config=config)
+        infer_sess = tf.compat.v1.Session(graph=infer_graph, config=config)
+
+        iteration = 0
+        num_processed_images = 0
+        num_remaining_images = self.args.num_images
+        ngtf_time = 0.0
+        ngtf_labels = np.array([], dtype=np.int32)
+        while num_remaining_images >= self.args.batch_size:
+            np_images = data_sess.run(images)
+            if iteration > self.args.warmup_iters:
+                num_processed_images += self.args.batch_size
+                num_remaining_images -= self.args.batch_size
+
             ngtf_start_time = time.time()
-            ngtf_predictions = infer_sess.run(output_tensor,
-                                              {input_tensor: np_images})
+            predictions = infer_sess.run(output_tensor,
+                                         {input_tensor: np_images})
             ngtf_elapsed_time = time.time() - ngtf_start_time
-            ngraph_bridge.disable()
 
-            with tf.Graph().as_default():
-                accuracy1 = tf.reduce_sum(
-                    input_tensor=tf.cast(
-                        tf.nn.in_top_k(
-                            predictions=tf.constant(ngtf_predictions),
-                            targets=tf.constant(np_labels),
-                            k=1), tf.float32))
+            if iteration > self.args.warmup_iters:
+                ngtf_time += ngtf_elapsed_time
+                ngtf_labels = np.append(ngtf_labels,
+                                        np.argmax(predictions, axis=-1))
+            iteration += 1
 
-                accuracy5 = tf.reduce_sum(
-                    input_tensor=tf.cast(
-                        tf.nn.in_top_k(
-                            predictions=tf.constant(ngtf_predictions),
-                            targets=tf.constant(np_labels),
-                            k=5), tf.float32))
+        print("Total execution time (NGTF): ", ngtf_time)
 
-                with tf.compat.v1.Session() as accu_sess:
-                    np_accuracy1, np_accuracy5 = accu_sess.run(
-                        [accuracy1, accuracy5])
-
-                total_accuracy1 += np_accuracy1
-                total_accuracy5 += np_accuracy5
-
-            print("Iteration time (TF): %0.4f ms" % tf_elapsed_time)
-            print("Iteration time (NGTF): %0.4f ms" % ngtf_elapsed_time)
-            print("Processed %d images. (Top1 accuracy, Top5 accuracy) = (%0.4f, %0.4f)" \
-                      % (num_processed_images, total_accuracy1 / num_processed_images,
-                          total_accuracy5 / num_processed_images))
-            assert (total_accuracy1 >= 0.99999 and total_accuracy5 >= 0.99999)
+        print("Processed %d images. Batch size = %d" % (num_processed_images,
+                                                        self.args.batch_size))
+        print("Avg throughput (TF): %0.4f img/s" %
+              (num_processed_images / tf_time))
+        print("Avg throughput (NGTF): %0.4f img/s" %
+              (num_processed_images / ngtf_time))
+        assert ((tf_labels == ngtf_labels).all())
 
 
 if __name__ == "__main__":
-    graph = rn50_graph()
+    graph = RN50Graph()
     graph.run()

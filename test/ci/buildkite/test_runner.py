@@ -121,6 +121,9 @@ def main():
         else:
             batch_size = 128
             iterations = 10
+            if backend and 'INTERPRETER' in backend:
+                batch_size = 1
+                iterations = 1
             run_resnet50_infer_from_artifacts('./', arguments.artifacts_dir,
                                               batch_size, iterations)
     else:
