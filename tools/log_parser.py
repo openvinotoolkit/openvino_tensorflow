@@ -79,11 +79,15 @@ def parse_logs(log_lines, verbose=False):
                     line.split(':')[-1].strip())
             if verbose and ('DEADNESS' in line and 'STATICINPUT' in line):
                 line = line[len("NGTF_SUMMARY:"):]
-                reasons = dict([i.strip() for i in item.split(":")] for item in line.split(","))
+                reasons = dict([i.strip()
+                                for i in item.split(":")]
+                               for item in line.split(","))
                 if "reasons why a pair of edge connected encapsulates did not merge" in prev_line:
-                    curr_result['why_edge_connected_encapsulates_did_not_merge'] = reasons
+                    curr_result[
+                        'why_edge_connected_encapsulates_did_not_merge'] = reasons
                 elif "reasons why a pair of edge connected clusters did not merge" in prev_line:
-                    curr_result['why_edge_connected_clusters_did_not_merge'] = reasons
+                    curr_result[
+                        'why_edge_connected_clusters_did_not_merge'] = reasons
 
                 # default has_deadness_issues and has_static_input_issues to 'No'
                 if 'has_deadness_issues' not in curr_result.keys():
@@ -97,10 +101,13 @@ def parse_logs(log_lines, verbose=False):
                 if int(reasons['STATICINPUT']) > 0:
                     curr_result['has_static_input_issues'] = "Yes"
             elif verbose and 'Nodes per cluster' in line:
-                curr_result['nodes_per_cluster'] = float(line.split(':')[-1].strip())
+                curr_result['nodes_per_cluster'] = float(
+                    line.split(':')[-1].strip())
             elif verbose and 'Types of edges::' in line:
                 line = line[len("NGTF_SUMMARY: Types of edges:: "):]
-                edge_types = dict([i.strip() for i in item.split(":")] for item in line.split(","))
+                edge_types = dict([i.strip()
+                                   for i in item.split(":")]
+                                  for item in line.split(","))
                 curr_result["types_of_edges"] = edge_type
                 s
             elif verbose and 'Op_not_supported' in line:

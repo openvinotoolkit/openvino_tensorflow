@@ -1,0 +1,44 @@
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      python3 build_ngtf.py ${BUILD_OPTIONS} \
+      --build_openvino_backend \
+      --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
+      --use_tensorflow_from_location /localdisk/buildkite-agent/prebuilt_tensorflow_2_2_0
+      
+    label: ":hammer_and_wrench: Build"
+    timeout_in_minutes: 60
+    parallelism: 1
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
+  - wait 
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
+      
+    label: ":gear: Install"
+    timeout_in_minutes: 30
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
+  - wait
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+        --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet50_infer
+    label: ":bar_chart: ResNet50 Inference"
+    timeout_in_minutes: 30
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
+  - wait
+  - command: |
+      rm -rf /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+    label: ":wastebasket: Cleanup"
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
