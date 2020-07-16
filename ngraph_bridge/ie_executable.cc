@@ -44,6 +44,11 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
   m_network = InferenceEngine::CNNNetwork(func);
   set_parameters_and_results(*func);
 
+  if (std::getenv("NGRAPH_TF_DUMP_GRAPHS")) {
+    auto& name = m_network.getName();
+    m_network.serialize(name + ".xml", name + ".bin");
+  }
+
   NGRAPH_VLOG(2) << "Loading IE CNN network to device " << m_device;
 
   InferenceEngine::Core ie;

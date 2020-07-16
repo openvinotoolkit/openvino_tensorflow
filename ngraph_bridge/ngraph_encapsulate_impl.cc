@@ -94,17 +94,12 @@ Status NGraphEncapsulateImpl::Compile(
   BackendManager::LockBackend(backend_name);
   try {
     ng_exec = op_backend->compile(ng_function);
-  } catch (...) {
+  } catch (const std::exception& ex) {
     BackendManager::UnlockBackend(backend_name);
     string fn_name = ng_function->get_friendly_name();
-    Status st =
-        NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
+    NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
     BackendManager::ReleaseBackend(backend_name);
-    return errors::Internal(
-        "Failed to compile ng_function.",
-        (st.ok() ? ""
-                 : " Failed to serialize as well with error: " +
-                       st.error_message()));
+    return errors::Internal("Failed to compile ng_function: ", ex.what());
   }
   BackendManager::UnlockBackend(backend_name);
   return Status::OK();
