@@ -30,6 +30,7 @@ class IETensor : public ngraph::runtime::Tensor {
            const ngraph::PartialShape& shape);
   IETensor(const ngraph::element::Type& element_type,
            const ngraph::Shape& shape, void* memory_pointer);
+  ~IETensor() override;
 
   void write(const void* src, size_t bytes) override;
   void read(void* dst, size_t bytes) const override;

@@ -88,50 +88,54 @@ IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
   InferenceEngine::Layout layout = getLayoutByDims(shape.size());
 
   auto desc = InferenceEngine::TensorDesc(precision, shape, layout);
-  auto size = (memory_pointer == nullptr)
-                  ? 0
-                  : shape_size(shape_) * element_type.size();
+  auto size = shape_size(shape_) * element_type.size();
+
+#define MAKE_IE_BLOB(type_, desc_, ptr_, size_)                               \
+  do {                                                                        \
+    if (ptr_ == nullptr) {                                                    \
+      m_blob = make_shared<InferenceEngine::TBlob<type_>>(desc);              \
+    } else {                                                                  \
+      m_blob = make_shared<InferenceEngine::TBlob<type_>>(desc, (type_*)ptr_, \
+                                                          size);              \
+    }                                                                         \
+  } while (0)
 
   switch (element_type) {
     case element::Type_t::f32:
-      m_blob = make_shared<InferenceEngine::TBlob<float>>(
-          desc, (float*)memory_pointer, size);
+      MAKE_IE_BLOB(float, desc, memory_pointer, size);
       break;
     case element::Type_t::u8:
-      m_blob = make_shared<InferenceEngine::TBlob<uint8_t>>(
-          desc, (uint8_t*)memory_pointer, size);
+      MAKE_IE_BLOB(uint8_t, desc, memory_pointer, size);
       break;
     case element::Type_t::i8:
-      m_blob = make_shared<InferenceEngine::TBlob<int8_t>>(
-          desc, (int8_t*)memory_pointer, size);
+      MAKE_IE_BLOB(int8_t, desc, memory_pointer, size);
       break;
     case element::Type_t::u16:
-      m_blob = make_shared<InferenceEngine::TBlob<uint16_t>>(
-          desc, (uint16_t*)memory_pointer, size);
+      MAKE_IE_BLOB(uint16_t, desc, memory_pointer, size);
       break;
     case element::Type_t::i16:
-      m_blob = make_shared<InferenceEngine::TBlob<int16_t>>(
-          desc, (int16_t*)memory_pointer, size);
+      MAKE_IE_BLOB(int16_t, desc, memory_pointer, size);
       break;
     case element::Type_t::i32:
-      m_blob = make_shared<InferenceEngine::TBlob<int32_t>>(
-          desc, (int32_t*)memory_pointer, size);
+      MAKE_IE_BLOB(int32_t, desc, memory_pointer, size);
       break;
     case element::Type_t::u64:
-      m_blob = make_shared<InferenceEngine::TBlob<uint64_t>>(
-          desc, (uint64_t*)memory_pointer, size);
+      MAKE_IE_BLOB(uint64_t, desc, memory_pointer, size);
       break;
     case element::Type_t::i64:
-      m_blob = make_shared<InferenceEngine::TBlob<int64_t>>(
-          desc, (int64_t*)memory_pointer, size);
+      MAKE_IE_BLOB(int64_t, desc, memory_pointer, size);
       break;
     case element::Type_t::boolean:
-      m_blob = make_shared<InferenceEngine::TBlob<uint8_t>>(
-          desc, (uint8_t*)memory_pointer, size);
+      MAKE_IE_BLOB(uint8_t, desc, memory_pointer, size);
       break;
     default:
       THROW_IE_EXCEPTION << "Can't create IE blob for type " << element_type
                          << " and shape " << shape_;
+  }
+#undef MAKE_IE_TBLOB
+
+  if (memory_pointer == nullptr) {
+    m_blob->allocate();
   }
 }
 
@@ -143,6 +147,8 @@ IETensor::IETensor(const element::Type& element_type, const PartialShape& shape)
           make_shared<descriptor::Tensor>(element_type, shape, "")) {
   throw runtime_error("partial shapes not supported.");
 }
+
+IETensor::~IETensor() { m_blob->deallocate(); }
 
 void IETensor::write(const void* src, size_t bytes) {
   const int8_t* src_ptr = static_cast<const int8_t*>(src);
