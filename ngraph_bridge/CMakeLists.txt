@@ -48,6 +48,7 @@ set(SRC
    ngraph_register_stub_kernels.cc   
    ngraph_rewrite_pass.cc
    ngraph_utils.cc
+   pass/transpose_folding.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
    version.cc

@@ -29,6 +29,7 @@
 #include "ngraph/op/experimental/layers/interpolate.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/opsets/opset3.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/slice_plan.hpp"
 
 #include "logging/ngraph_log.h"
@@ -38,6 +39,7 @@
 #include "ngraph_bridge/ngraph_conversions.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/pass/transpose_folding.h"
 
 using tensorflow::int32;
 using namespace std;
@@ -1206,7 +1208,6 @@ static Status TranslateConv2DBackpropInputOp(
           ng_padding_below, ng_padding_above, ng_dilations, ng_pad_type);
 
   BatchToTensorflow(op->name(), is_nhwc, ng_data);
-
   SaveNgOp(ng_op_map, op->name(), ng_data);
   return Status::OK();
 }
@@ -4175,6 +4176,13 @@ Status Builder::TranslateGraph(
   // Create the nGraph function.
   //
   ng_function = make_shared<ng::Function>(ng_result_list, ng_parameter_list);
+
+  //
+  // Apply additional passes on the nGraph function here.
+  //
+  ngraph::pass::Manager passes;
+  passes.register_pass<TransposeFolding>();
+  passes.run_passes(ng_function);
 
   //
   // Request row-major layout on results.
