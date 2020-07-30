@@ -19,8 +19,6 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
 
-set(NGRAPH_DEVICE_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
@@ -123,7 +121,6 @@ target_compile_definitions(
 )
 
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
 
 if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     add_library(${LIB_NAME_STATIC} STATIC ${SRC})
@@ -152,7 +149,6 @@ if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
     )
 
     target_include_directories(${LIB_NAME_STATIC} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
-    target_include_directories(${LIB_NAME_STATIC} PUBLIC "${NGRAPH_DEVICE_INCLUDE_PATH}")
 endif()
 
 #------------------------------------------------------------------------------
