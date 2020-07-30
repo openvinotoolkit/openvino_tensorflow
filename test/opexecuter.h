@@ -43,9 +43,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 class OpExecuter {
@@ -64,18 +62,14 @@ class OpExecuter {
   // const std::vector<Output>& fetch_ops    : Output ops to be fetched,
   //                                           is passed to tf.session.run()
   OpExecuter(const Scope sc, const string test_op,
-             const vector<int>& static_input_indexes,
-             const vector<DataType>& op_types, const vector<Output>& fetch_ops);
+             const vector<Output>& fetch_ops);
 
   ~OpExecuter();
 
   // Creates the tf graph from tf Scope
   // Translates the tf graph to nGraph
-  // Executes the nGraph on nGraph Backend specified by backend_name
   // Returns outputs as tf Tensors
-  // NOTE: Env Variable NGRAPH_TF_BACKEND if set, overrides ng_backend_name
-  void ExecuteOnNGraph(vector<Tensor>& outputs,
-                       const string& ng_backend_name = "CPU");
+  void ExecuteOnNGraph(vector<Tensor>& outputs);
 
   // Creates tf Session from tf Scope
   // Executes on TF
@@ -83,35 +77,19 @@ class OpExecuter {
   void ExecuteOnTF(vector<Tensor>& outputs);
 
   // Executes on NGraph backend, then executes on TF, and compares the results
-  // NOTE: Env Variable NGRAPH_TF_BACKEND if set, overrides ng_backend_name
-  void RunTest(const string& ng_backend_name = "CPU",
-               float rtol = static_cast<float>(1e-05),
+  void RunTest(float rtol = static_cast<float>(1e-05),
                float atol = static_cast<float>(1e-08));
-  // If only want to set tolerance values and running using default backends
-  void RunTest(float rtol, float atol) { return RunTest("CPU", rtol, atol); };
-
-  shared_ptr<ng::Function> get_ng_function() { return ng_function; }
 
  private:
   Scope tf_scope_;
   const string test_op_type_;
-  shared_ptr<ng::Function> ng_function;
-  set<int> static_input_indexes_;
-  const vector<DataType> expected_output_datatypes_;
   const std::vector<Output> sess_run_fetchoutputs_;
 
-  void GetNodeData(Graph& graph, NodeMetaData& node_inedge_md,
-                   NodeMetaData& node_outedge_md, NodeOutEdges& node_outedges,
-                   Node** test_op);
   void ValidateGraph(const Graph& graph, const vector<string> allowed_nodes);
-
-  void CreateNodeDef(const string op_type, const string op_name_prefix,
-                     int index, const DataType dt, NodeDef& node_def);
 };
 
 }  // namespace testing
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_OPEXECUTER_H_

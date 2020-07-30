@@ -35,7 +35,7 @@ NGStubOp::NGStubOp(OpKernelConstruction* context) : OpKernel(context) {
   OP_REQUIRES(
       context, false,
       errors::Internal("The constructor for OpType ", type_string(),
-                       "should not get called. This Op is expected to have "
+                       " should not get called. This Op is expected to have "
                        "been encapsulated or replaced by other ops. Op Name: ",
                        name(), "\n"));
 }
@@ -44,7 +44,7 @@ void NGStubOp::Compute(OpKernelContext* context) {
   OP_REQUIRES(
       context, false,
       errors::Internal("This kernel for OpType ", type_string(),
-                       "should not get called. This Op is expected to have "
+                       " should not get called. This Op is expected to have "
                        "been encapsulated or replaced by other ops. Op Name: ",
                        name(), "\n"));
 }

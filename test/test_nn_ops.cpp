@@ -61,8 +61,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWSame) {
   vector<int64> output_del_size_same_NCHW = {1, 2, 4, 3};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
   std::vector<int> stride_NHWC = {1, 2, 2, 1};
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
@@ -81,9 +79,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSame) {
                                            padding_type, op_attr_nchw);
 
   vector<Output> sess_run_fetchoutputs = {r_ngraph};
-  vector<DataType> output_datatypes = {DT_FLOAT};
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
-                               static_input_indexes, output_datatypes,
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
   opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
@@ -102,7 +98,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWSame) {
   auto tf_output_transposed = ops::Transpose(tf_scope, r_tf, {0, 3, 1, 2});
   vector<Output> sess_run_fetchoutputs_tf = {tf_output_transposed};
   OpExecuter opexecuter_tf(tf_scope, "Conv2DBackpropInput",
-                           static_input_indexes, output_datatypes,
                            sess_run_fetchoutputs_tf);
 
   vector<Tensor> tf_outputs;
@@ -122,9 +117,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
   vector<int64> filter_size_HWIO = {3, 3, 2, 2};
   vector<int64> output_del_size_same_NCHW = {1, 2, 4, 3};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
-
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
@@ -153,9 +145,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
                                            padding_type, op_attr_nchw);
 
   vector<Output> sess_run_fetchoutputs = {r_ngraph};
-  vector<DataType> output_datatypes = {DT_FLOAT};
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
-                               static_input_indexes, output_datatypes,
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
   opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
@@ -191,8 +181,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWValid) {
   vector<int64> output_del_size_valid_NCHW = {1, 2, 3, 2};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
   std::vector<int> stride_NHWC = {1, 2, 2, 1};
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
@@ -211,9 +199,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValid) {
                                            padding_type, op_attr_nchw);
 
   vector<Output> sess_run_fetchoutputs = {r_ngraph};
-  vector<DataType> output_datatypes = {DT_FLOAT};
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
-                               static_input_indexes, output_datatypes,
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
   opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
@@ -232,7 +218,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWValid) {
   auto tf_output_transposed = ops::Transpose(tf_scope, r_tf, {0, 3, 1, 2});
   vector<Output> sess_run_fetchoutputs_tf = {tf_output_transposed};
   OpExecuter opexecuter_tf(tf_scope, "Conv2DBackpropInput",
-                           static_input_indexes, output_datatypes,
                            sess_run_fetchoutputs_tf);
 
   vector<Tensor> tf_outputs;
@@ -252,8 +237,6 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
   vector<int64> filter_size_HWIO = {3, 3, 2, 2};
   vector<int64> output_del_size_same_NCHW = {1, 2, 1, 1};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
@@ -282,9 +265,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
                                            padding_type, op_attr_nchw);
 
   vector<Output> sess_run_fetchoutputs = {r_ngraph};
-  vector<DataType> output_datatypes = {DT_FLOAT};
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
-                               static_input_indexes, output_datatypes,
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
   opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
@@ -322,9 +303,6 @@ TEST(NNOps, Conv2DBackpropInputNHWC) {
   std::map<std::string, vector<int64>> out_delta_size_map = {
       {"VALID", output_del_size_valid}, {"SAME", output_del_size_same}};
 
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
-
   for (auto map_iterator : out_delta_size_map) {
     Scope root = Scope::NewRootScope();
     auto padding_type = map_iterator.first;
@@ -341,10 +319,8 @@ TEST(NNOps, Conv2DBackpropInputNHWC) {
     auto R = ops::Conv2DBackpropInput(root, input_sizes, filter, output_delta,
                                       stride, padding_type);
 
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Conv2DBackpropInput", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Conv2DBackpropInput", sess_run_fetchoutputs);
 
     opexecuter.RunTest(1e-05, 1e-05);
   }
@@ -383,8 +359,6 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
   std::map<std::string, vector<int64>> out_delta_size_map = {
       {"VALID", output_del_size_valid}, {"SAME", output_del_size_same}};
 
-  // Conv2DBackpropInput has static input of index 0
-  vector<int> static_input_indexes = {0};
   // changet the dilation attribute
   ops::Conv2DBackpropInput::Attrs op_attr;
   op_attr = op_attr.Dilations({1, 3, 2, 1});
@@ -415,10 +389,8 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
     auto R = ops::Conv2DBackpropInput(root, input_sizes, filter, output_delta,
                                       stride, padding_type, op_attr);
 
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Conv2DBackpropInput", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Conv2DBackpropInput", sess_run_fetchoutputs);
     vector<Tensor> ngraph_outputs;
     opexecuter.ExecuteOnNGraph(ngraph_outputs);
 
@@ -451,8 +423,6 @@ TEST(NNOps, Conv3DNDHWCSame) {
   op_attr_ndhwc = op_attr_ndhwc.DataFormat("NDHWC");
   op_attr_ndhwc = op_attr_ndhwc.Dilations({1, 1, 1, 1, 1});
 
-  vector<int> static_input_indexes = {};
-
   Scope root = Scope::NewRootScope();
   string padding_type = "SAME";
 
@@ -462,10 +432,8 @@ TEST(NNOps, Conv3DNDHWCSame) {
   auto R = ops::Conv3D(root, input_data_NDHWC, filter, stride, padding_type,
                        op_attr_ndhwc);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Conv3D", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Conv3D", sess_run_fetchoutputs);
 
   opexecuter.RunTest(1e-03, 1e-03);
 }
@@ -498,16 +466,11 @@ TEST(NNOps, FusedBatchNormV2NHWCInference) {
   attrs.epsilon_ = 0.0001f;
   attrs.data_format_ = "NHWC";
 
-  // test grab the first three outputs from the FusedBatchNormGrad op
-  vector<int> static_input_indexes = {};
-
-  vector<DataType> output_datatypes = {DT_FLOAT};
   auto R = ops::FusedBatchNormV2(root, x, scale, offset, mean, variance, attrs);
 
   // In inference case, y is the only output tensor
   std::vector<Output> sess_run_fetchoutputs = {R.y};
-  OpExecuter opexecuter(root, "FusedBatchNormV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FusedBatchNormV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest(1e-05, 1e-06);
 }  // end of FusedBatchNormV2NHWCInference
@@ -540,16 +503,11 @@ TEST(NNOps, FusedBatchNormV3NHWCInference) {
   attrs.epsilon_ = 0.0001f;
   attrs.data_format_ = "NHWC";
 
-  // test grab the first three outputs from the FusedBatchNormGrad op
-  vector<int> static_input_indexes = {};
-
-  vector<DataType> output_datatypes = {DT_FLOAT};
   auto R = ops::FusedBatchNormV3(root, x, scale, offset, mean, variance, attrs);
 
   // In inference case, y is the only output tensor
   std::vector<Output> sess_run_fetchoutputs = {R.y};
-  OpExecuter opexecuter(root, "FusedBatchNormV3", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FusedBatchNormV3", sess_run_fetchoutputs);
 
   opexecuter.RunTest(1e-05, 1e-06);
 }  // end of FusedBatchNormV3NHWCInference
@@ -560,8 +518,6 @@ TEST(NNOps, L2Loss) {
   input_sizes.push_back({2, 3, 4});
   input_sizes.push_back({0});
 
-  vector<int> static_input_indexes = {};
-
   for (auto const& input_size : input_sizes) {
     Scope root = Scope::NewRootScope();
 
@@ -569,11 +525,9 @@ TEST(NNOps, L2Loss) {
     AssignInputValuesRandom<float>(input_data, -10, 10);
 
     auto R = ops::L2Loss(root, input_data);
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
 
-    OpExecuter opexecuter(root, "L2Loss", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "L2Loss", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -584,8 +538,6 @@ TEST(NNOps, LogSoftmax) {
   std::vector<std::vector<int64>> input_sizes = {
       {3}, {3, 2}, {5, 6}, {3, 4, 5}, {2, 3, 4, 5}};
 
-  vector<int> static_input_indexes = {};
-
   for (auto const& input_size : input_sizes) {
     Scope root = Scope::NewRootScope();
 
@@ -593,11 +545,9 @@ TEST(NNOps, LogSoftmax) {
     AssignInputValuesRandom<float>(input_data, -2, 2);
 
     auto R = ops::LogSoftmax(root, input_data);
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
 
-    OpExecuter opexecuter(root, "LogSoftmax", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "LogSoftmax", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -609,8 +559,6 @@ TEST(NNOps, MaxPool3DNDHWCSame) {
   input_sizes.push_back({2, 3, 4, 4, 3});
   input_sizes.push_back({10, 30, 15, 20, 3});
 
-  vector<int> static_input_indexes = {};
-
   for (auto const& input_size : input_sizes) {
     Scope root = Scope::NewRootScope();
 
@@ -621,11 +569,9 @@ TEST(NNOps, MaxPool3DNDHWCSame) {
     vector<int> stride = {1, 1, 1, 1, 1};
 
     auto R = ops::MaxPool3D(root, input_data, filter, stride, "SAME");
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
 
-    OpExecuter opexecuter(root, "MaxPool3D", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "MaxPool3D", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -637,8 +583,6 @@ TEST(NNOps, MaxPool3DNDHWCValid) {
   input_sizes.push_back({2, 3, 4, 4, 3});
   input_sizes.push_back({10, 30, 15, 20, 3});
 
-  vector<int> static_input_indexes = {};
-
   for (auto const& input_size : input_sizes) {
     Scope root = Scope::NewRootScope();
 
@@ -649,11 +593,9 @@ TEST(NNOps, MaxPool3DNDHWCValid) {
     vector<int> stride = {1, 1, 1, 1, 1};
 
     auto R = ops::MaxPool3D(root, input_data, filter, stride, "VALID");
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
 
-    OpExecuter opexecuter(root, "MaxPool3D", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "MaxPool3D", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -673,24 +615,18 @@ TEST(NNOps, QuantizedAvgPoolEvenInput) {
         for (int stride2 : stride_sizes) {
           for (auto padding_mode : {"SAME", "VALID"}) {
             Scope root = Scope::NewRootScope();
-            auto quant_type = DT_QUINT8;
-            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            Tensor A(DT_QUINT8, TensorShape({1, dim1, dim2, channels}));
             AssignInputValues<quint8>(A, {50, 242, 14, 0, 16, 22, 100, 250, 34,
                                           60, 79, 254, 34, 18, 20, 48});
             vector<int> ksize = {1, windowsize1, windowsize2, 1};
             vector<int> strides = {1, stride1, stride2, 1};
 
-            vector<int> static_input_indexes = {1, 2};
             auto R = ops::QuantizedAvgPool(root, A, -10.0f, 10.99f, ksize,
                                            strides, padding_mode);
-
-            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
-                                                 DT_FLOAT};
 
             std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
                                                          R.max_output};
             OpExecuter opexecuter(root, "QuantizedAvgPool",
-                                  static_input_indexes, output_datatypes,
                                   sess_run_fetchoutputs);
 
             opexecuter.RunTest();
@@ -714,24 +650,18 @@ TEST(NNOps, DISABLED_QuantizedAvgPool) {
         for (int stride2 = 1; stride2 < 2; stride2++) {
           for (auto padding_mode : {"SAME", "VALID"}) {
             Scope root = Scope::NewRootScope();
-            auto quant_type = DT_QUINT8;
-            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            Tensor A(DT_QUINT8, TensorShape({1, dim1, dim2, channels}));
             AssignInputValues<quint8>(
                 A, {50, 242, 14, 0, 17, 22, 100, 250, 34, 60, 79, 255});
             vector<int> ksize = {1, windowsize1, windowsize2, 1};
             vector<int> strides = {1, stride1, stride2, 1};
 
-            vector<int> static_input_indexes = {1, 2};
             auto R = ops::QuantizedAvgPool(root, A, -10.0f, 10.99f, ksize,
                                            strides, padding_mode);
-
-            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
-                                                 DT_FLOAT};
 
             std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
                                                          R.max_output};
             OpExecuter opexecuter(root, "QuantizedAvgPool",
-                                  static_input_indexes, output_datatypes,
                                   sess_run_fetchoutputs);
 
             opexecuter.RunTest();
@@ -757,24 +687,18 @@ TEST(NNOps, QuantizedMaxPool) {
         for (int stride2 = 1; stride2 < 3; stride2++) {
           for (auto padding_mode : {"SAME", "VALID"}) {
             Scope root = Scope::NewRootScope();
-            auto quant_type = DT_QUINT8;
-            Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+            Tensor A(DT_QUINT8, TensorShape({1, dim1, dim2, channels}));
             AssignInputValues<quint8>(
                 A, {50, 242, 14, 0, 17, 22, 100, 250, 34, 60, 79, 255});
             vector<int> ksize = {1, windowsize1, windowsize2, 1};
             vector<int> strides = {1, stride1, stride2, 1};
 
-            vector<int> static_input_indexes = {1, 2};
             auto R = ops::QuantizedMaxPool(root, A, -10.0f, 10.99f, ksize,
                                            strides, padding_mode);
-
-            vector<DataType> output_datatypes = {quant_type, DT_FLOAT,
-                                                 DT_FLOAT};
 
             std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
                                                          R.max_output};
             OpExecuter opexecuter(root, "QuantizedMaxPool",
-                                  static_input_indexes, output_datatypes,
                                   sess_run_fetchoutputs);
 
             opexecuter.RunTest();
@@ -792,22 +716,17 @@ TEST(NNOps, QuantizedMaxPoolSameMinMax) {
   int channels = 2;
 
   Scope root = Scope::NewRootScope();
-  auto quant_type = DT_QUINT8;
-  Tensor A(quant_type, TensorShape({1, dim1, dim2, channels}));
+  Tensor A(DT_QUINT8, TensorShape({1, dim1, dim2, channels}));
   AssignInputValues<quint8>(A, {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5});
   vector<int> ksize = {1, 2, 2, 1};
   vector<int> strides = {1, 2, 2, 1};
 
-  vector<int> static_input_indexes = {1, 2};
   auto R =
       ops::QuantizedMaxPool(root, A, -10.0f, -10.0f, ksize, strides, "SAME");
 
-  vector<DataType> output_datatypes = {quant_type, DT_FLOAT, DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R.output, R.min_output,
                                                R.max_output};
-  OpExecuter opexecuter(root, "QuantizedMaxPool", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "QuantizedMaxPool", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -819,17 +738,12 @@ TEST(NNOps, Softmax2D) {
   int num_of_classes = 2;
 
   Tensor A(DT_FLOAT, TensorShape({batch, num_of_classes}));
-
   AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Softmax(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Softmax", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -837,19 +751,12 @@ TEST(NNOps, Softmax2D) {
 // Softmax on 3D tensor
 TEST(NNOps, Softmax3D) {
   Scope root = Scope::NewRootScope();
-
   Tensor A(DT_FLOAT, TensorShape({2, 3, 4}));
 
   AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
-
-  vector<int> static_input_indexes = {};
   auto R = ops::Softmax(root, A);
-
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Softmax", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -861,15 +768,9 @@ TEST(NNOps, SoftmaxZeroDimTest1) {
   Tensor A(DT_FLOAT, TensorShape({3, 0, 2}));
 
   AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
-
-  vector<int> static_input_indexes = {};
   auto R = ops::Softmax(root, A);
-
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Softmax", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -881,15 +782,10 @@ TEST(NNOps, SoftmaxZeroDimTest2) {
   Tensor A(DT_FLOAT, TensorShape({3, 2, 0}));
 
   AssignInputValuesRandom<float>(A, -2.0f, 2.0f);
-
-  vector<int> static_input_indexes = {};
   auto R = ops::Softmax(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Softmax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Softmax", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -899,8 +795,6 @@ TEST(NNOps, Softplus) {
   std::vector<std::vector<int64>> input_sizes = {
       {3}, {3, 2}, {5, 6}, {3, 4, 5}, {2, 3, 4, 5}};
 
-  vector<int> static_input_indexes = {};
-
   for (auto const& input_size : input_sizes) {
     Scope root = Scope::NewRootScope();
 
@@ -908,11 +802,9 @@ TEST(NNOps, Softplus) {
     AssignInputValuesRandom<float>(input_data, -2, 2);
 
     auto R = ops::Softplus(root, input_data);
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
 
-    OpExecuter opexecuter(root, "Softplus", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Softplus", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -929,8 +821,6 @@ TEST(NNOps, BiasAdd) {
     Tensor B(DT_FLOAT, TensorShape({2}));
     AssignInputValues<float>(B, {100, -100});
     ops::BiasAdd::Attrs attrs;
-    vector<DataType> output_datatypes = {DT_FLOAT};
-    vector<int> static_input_indexes = {};
     std::vector<std::string> formats{"NHWC", "NCHW"};
 
     for (auto& format : formats) {
@@ -940,8 +830,7 @@ TEST(NNOps, BiasAdd) {
       // see TF file .../tensorflow/cc/ops/nn_ops.h
       auto R = ops::BiasAdd(root, A, B, attrs);
       std::vector<Output> sess_run_fetchoutputs = {R};
-      OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
-                            output_datatypes, sess_run_fetchoutputs);
+      OpExecuter opexecuter(root, "BiasAdd", sess_run_fetchoutputs);
       opexecuter.RunTest();
     }
   }
@@ -953,8 +842,6 @@ TEST(NNOps, BiasAdd) {
     Tensor B(DT_FLOAT, TensorShape({3}));
     AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
     ops::BiasAdd::Attrs attrs;
-    vector<DataType> output_datatypes = {DT_FLOAT};
-    vector<int> static_input_indexes = {};
     std::string format("NCHW");
     NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
     Scope root = Scope::NewRootScope();
@@ -962,8 +849,7 @@ TEST(NNOps, BiasAdd) {
     // see TF file .../tensorflow/cc/ops/nn_ops.h
     auto R = ops::BiasAdd(root, A, B, attrs);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "BiasAdd", sess_run_fetchoutputs);
     opexecuter.RunTest();
   }
 
@@ -974,8 +860,6 @@ TEST(NNOps, BiasAdd) {
     Tensor B(DT_FLOAT, TensorShape({3}));
     AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
     ops::BiasAdd::Attrs attrs;
-    vector<DataType> output_datatypes = {DT_FLOAT};
-    vector<int> static_input_indexes = {};
     std::string format("NHWC");
     NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
     Scope root = Scope::NewRootScope();
@@ -983,8 +867,7 @@ TEST(NNOps, BiasAdd) {
     // see TF file .../tensorflow/cc/ops/nn_ops.h
     auto R = ops::BiasAdd(root, A, B, attrs);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "BiasAdd", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "BiasAdd", sess_run_fetchoutputs);
     opexecuter.RunTest();
   }
 }

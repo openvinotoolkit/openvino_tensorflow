@@ -338,8 +338,7 @@ bool Compare(std::vector<string> desired, std::vector<string> actual) {
   return true;
 }
 
-Status CreateSession(const string& graph_filename, const string& backend_name,
-                     unique_ptr<tf::Session>& session) {
+tf::SessionOptions GetSessionOptions(const string& backend_name) {
   tf::SessionOptions options;
   options.config.mutable_graph_options()
       ->mutable_optimizer_options()
@@ -366,10 +365,13 @@ Status CreateSession(const string& graph_filename, const string& backend_name,
         ->mutable_rewrite_options()
         ->set_meta_optimizer_iterations(tf::RewriterConfig::ONE);
   }
+  return options;
+}
 
-  // Load the network
-  Status load_graph_status = LoadGraph(graph_filename, &session, options);
-  return load_graph_status;
+Status CreateSession(const string& graph_filename, const string& backend_name,
+                     unique_ptr<tf::Session>& session) {
+  auto options = GetSessionOptions(backend_name);
+  return LoadGraph(graph_filename, &session, options);
 }
 
 Status LoadGraph(const string& graph_file_name,

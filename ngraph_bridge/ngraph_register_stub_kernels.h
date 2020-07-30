@@ -50,7 +50,6 @@ class NGStubOp : public OpKernel {
       NGStubOp);
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_REGISTER_STUB_KERNELS_H_

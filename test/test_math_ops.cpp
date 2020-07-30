@@ -60,23 +60,12 @@ TEST(MathOps, Abs1D) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Abs(root, A);
-  vector<DataType> output_datatypes = {DT_FLOAT};
 
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Abs", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Abs", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
-
-  auto ng_function = opexecuter.get_ng_function();
-  auto node_list = ng_function->get_ordered_ops();
-  // Since its a unary op, get_ordered_op will produce a total ordering, and
-  // hence we can be sure the first is the arg, and the second is the op, and
-  // the third is the retval. In multiple test runs the retval's number changes,
-  // hence not adding in an assert
-  ASSERT_EQ(node_list.size(), 3);
 }
 
 TEST(MathOps, Abs2D) {
@@ -88,13 +77,10 @@ TEST(MathOps, Abs2D) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Abs(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Abs", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Abs", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Abs
 
@@ -108,13 +94,10 @@ TEST(MathOps, Acos2D) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Acos(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Acos", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Acos", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Acos
 
@@ -130,13 +113,10 @@ TEST(MathOps, Add) {
   AssignInputValues(A, 2.1f);
   AssignInputValues(B, 4.1f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Add(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Add", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Add", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Add
@@ -167,13 +147,10 @@ TEST(MathOps, AddV2) {
     AssignInputValues(A, 2.1f);
     AssignInputValues(B, 4.1f);
 
-    vector<int> static_input_indexes = {};
     auto R = ops::AddV2(root, A, B);
 
-    vector<DataType> output_datatypes = {DT_FLOAT};
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "AddV2", static_input_indexes, output_datatypes,
-                          sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "AddV2", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -194,14 +171,10 @@ TEST(MathOps, AddN) {
   AssignInputValues(B, 3.2f);
   AssignInputValues(C, 2.3f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::AddN(root, {A, B, C});
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "AddN", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "AddN", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op AddN
@@ -221,14 +194,11 @@ TEST(MathOps, DISABLED_AnyKeepDims) {
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = 0;
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
 
   Scope root = Scope::NewRootScope();
   auto R = ops::Any(root, A, axis, keep_dims);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Any", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Any", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -243,14 +213,11 @@ TEST(MathOps, DISABLED_AnyNegativeAxis) {
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = -1;
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
 
   Scope root = Scope::NewRootScope();
   auto R = ops::Any(root, A, axis);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Any", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Any", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
 
@@ -265,14 +232,11 @@ TEST(MathOps, DISABLED_AnyPositiveAxis) {
   // axis at which the dimension will be inserted
   // should be -rank <= axis < rank
   int axis = 1;
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
 
   Scope root = Scope::NewRootScope();
   auto R = ops::Any(root, A, axis);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Any", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Any", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Any
 
@@ -295,13 +259,9 @@ TEST(MathOps, DISABLED_AllKeepDims) {
   // should be -rank <= axis < rank
   int axis = 0;
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   auto R = ops::All(root, A, axis, keep_dims);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "All", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "All", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -320,13 +280,9 @@ TEST(MathOps, DISABLED_AllNegativeAxis) {
   // should be -rank <= axis < rank
   int axis = -1;
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   auto R = ops::All(root, A, axis);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "All", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "All", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -346,13 +302,9 @@ TEST(MathOps, DISABLED_AllPositiveAxis) {
   // should be -rank <= axis < rank
   int axis = 1;
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   auto R = ops::All(root, A, axis);
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "All", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "All", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op All
@@ -367,13 +319,10 @@ TEST(MathOps, Asin) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Asin(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Asin", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Asin", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Asin
 
@@ -386,13 +335,10 @@ TEST(MathOps, Atan) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Atan(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Atan", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Atan", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Atan
 
@@ -408,16 +354,13 @@ TEST(MathOps, Cumsum) {
   AssignInputValues(A, 2.1f);
   AssignInputValues(B, 0);
 
-  vector<int> static_input_indexes = {};
   auto attrs = ops::Cumsum::Attrs();
   attrs.exclusive_ = true;
   attrs.reverse_ = true;
   auto R = ops::Cumsum(root, A, B, attrs);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Cumsum", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Cumsum", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Cumsum
 
@@ -439,13 +382,9 @@ TEST(MathOps, Sum) {
 
       AssignInputValues<int>(A, v);
 
-      vector<int> static_input_indexes = {1};
-      vector<DataType> output_datatypes = {DT_INT32};
-
       auto R = ops::Sum(root, A, axis, keep_dims_attr);
       std::vector<Output> sess_run_fetchoutputs = {R};
-      OpExecuter opexecuter(root, "Sum", static_input_indexes, output_datatypes,
-                            sess_run_fetchoutputs);
+      OpExecuter opexecuter(root, "Sum", sess_run_fetchoutputs);
 
       opexecuter.RunTest();
     }
@@ -470,13 +409,9 @@ TEST(MathOps, Mean) {
 
       AssignInputValues<int>(A, v);
 
-      vector<int> static_input_indexes = {1};
-      vector<DataType> output_datatypes = {DT_INT32};
-
       auto R = ops::Mean(root, A, axis, keep_dims_attr);
       std::vector<Output> sess_run_fetchoutputs = {R};
-      OpExecuter opexecuter(root, "Mean", static_input_indexes,
-                            output_datatypes, sess_run_fetchoutputs);
+      OpExecuter opexecuter(root, "Mean", sess_run_fetchoutputs);
 
       opexecuter.RunTest();
     }
@@ -501,13 +436,9 @@ TEST(MathOps, Prod) {
 
       AssignInputValues<int>(A, v);
 
-      vector<int> static_input_indexes = {1};
-      vector<DataType> output_datatypes = {DT_INT32};
-
       auto R = ops::Prod(root, A, axis, keep_dims_attr);
       std::vector<Output> sess_run_fetchoutputs = {R};
-      OpExecuter opexecuter(root, "Prod", static_input_indexes,
-                            output_datatypes, sess_run_fetchoutputs);
+      OpExecuter opexecuter(root, "Prod", sess_run_fetchoutputs);
 
       opexecuter.RunTest();
     }
@@ -525,15 +456,10 @@ TEST(MathOps, ArgMaxNeg) {
 
   int dim = -1;
 
-  vector<int> static_input_indexes = {1};
-
   auto R = ops::ArgMax(root, A, dim);
 
-  vector<DataType> output_datatypes = {DT_INT64};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "ArgMax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "ArgMax", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
 
@@ -548,18 +474,13 @@ TEST(MathOps, ArgMaxPos) {
 
   int dim = 1;
 
-  vector<int> static_input_indexes = {1};
-
   auto attrs = ops::ArgMax::Attrs();
   attrs.output_type_ = DT_INT32;
 
   auto R = ops::ArgMax(root, A, dim, attrs);
 
-  vector<DataType> output_datatypes = {DT_INT32};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "ArgMax", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "ArgMax", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op ArgMax
 
@@ -574,15 +495,10 @@ TEST(MathOps, ArgMinNeg) {
 
   int dim = -1;
 
-  vector<int> static_input_indexes = {1};
-
   auto R = ops::ArgMin(root, A, dim);
 
-  vector<DataType> output_datatypes = {DT_INT64};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "ArgMin", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "ArgMin", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
 
@@ -597,18 +513,13 @@ TEST(MathOps, ArgMinPos) {
 
   int dim = 1;
 
-  vector<int> static_input_indexes = {1};
-
   auto attrs = ops::ArgMin::Attrs();
   attrs.output_type_ = DT_INT32;
 
   auto R = ops::ArgMin(root, A, dim, attrs);
 
-  vector<DataType> output_datatypes = {DT_INT32};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "ArgMin", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "ArgMin", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op ArgMin
 
@@ -624,13 +535,10 @@ TEST(MathOps, Atan2) {
   AssignInputValues<float>(A, {0, -0, 3, -3.5, 1.2, 3, 5, -4.5, 1.0, -7.0});
   AssignInputValues<float>(B, {0, -0, 3, 2.5, -0.7, 2, 3.4, -5.6, 30, 0.06});
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Atan2(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Atan2", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Atan2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Atan2
@@ -645,14 +553,10 @@ TEST(MathOps, MatMul) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::MatMul(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "MatMul", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "MatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -670,14 +574,10 @@ TEST(MathOps, BatchMatMul2D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMul(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -697,15 +597,10 @@ TEST(MathOps, BatchMatMul2DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -725,14 +620,10 @@ TEST(MathOps, BatchMatMul2DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMul(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -753,14 +644,10 @@ TEST(MathOps, BatchMatMul2DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMul(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -777,15 +664,10 @@ TEST(MathOps, BatchMatMul3D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -805,15 +687,10 @@ TEST(MathOps, BatchMatMul3DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -833,15 +710,10 @@ TEST(MathOps, BatchMatMul3DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -862,15 +734,10 @@ TEST(MathOps, BatchMatMul3DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -887,15 +754,10 @@ TEST(MathOps, BatchMatMul4D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -915,15 +777,10 @@ TEST(MathOps, BatchMatMul4DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -943,15 +800,10 @@ TEST(MathOps, BatchMatMul4DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -972,15 +824,10 @@ TEST(MathOps, BatchMatMul4DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMul(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMul", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMul", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op BatchMatMul
@@ -998,14 +845,10 @@ TEST(MathOps, BatchMatMulV22D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMulV2(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1025,15 +868,10 @@ TEST(MathOps, BatchMatMulV22DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1053,14 +891,10 @@ TEST(MathOps, BatchMatMulV22DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1081,14 +915,10 @@ TEST(MathOps, BatchMatMulV22DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1105,15 +935,10 @@ TEST(MathOps, BatchMatMulV23D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1133,15 +958,10 @@ TEST(MathOps, BatchMatMulV23DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1161,15 +981,10 @@ TEST(MathOps, BatchMatMulV23DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1190,15 +1005,10 @@ TEST(MathOps, BatchMatMulV23DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1215,15 +1025,10 @@ TEST(MathOps, BatchMatMulV24D) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1243,15 +1048,10 @@ TEST(MathOps, BatchMatMulV24DAdjX) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_x);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1271,15 +1071,10 @@ TEST(MathOps, BatchMatMulV24DAdjY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_y);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1300,15 +1095,10 @@ TEST(MathOps, BatchMatMulV24DAdjXY) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::BatchMatMulV2(root, A, B, attrs_xy);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "BatchMatMulV2", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "BatchMatMulV2", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op BatchMatMulV2
@@ -1322,13 +1112,10 @@ TEST(MathOps, Cast1D) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Cast(root, A, DT_INT32);
 
-  vector<DataType> output_datatypes = {DT_INT32};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Cast", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Cast", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1342,14 +1129,10 @@ TEST(MathOps, Cast2D) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Cast(root, A, DT_INT32);
 
-  vector<DataType> output_datatypes = {DT_INT32};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Cast", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Cast", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Cast
@@ -1364,13 +1147,10 @@ TEST(MathOps, Ceil) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Ceil(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Ceil", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Ceil", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Ceil
@@ -1386,13 +1166,10 @@ TEST(MathOps, Cos) {
   AssignInputValues<float>(
       A, {0, -0, M_PI / 2, M_PI, 1.0, 3.8, 4.2, -3.9, -4.2, -1.0});
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Cos(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Cos", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Cos", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Cos
@@ -1406,13 +1183,10 @@ TEST(MathOps, Cosh) {
 
   AssignInputValuesRandom(A);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Cosh(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Cosh", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Cosh", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Cosh
 
@@ -1425,14 +1199,10 @@ TEST(MathOps, Exp1D) {
 
   AssignInputValues(A, 2.5f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Exp(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Exp", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Exp", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1446,14 +1216,10 @@ TEST(MathOps, Exp2D) {
 
   AssignInputValues(A, 3.6f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Exp(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Exp", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Exp", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Exp
@@ -1470,14 +1236,10 @@ TEST(MathOps, FloorDiv) {
   AssignInputValues(A, 4.5f);
   AssignInputValues(B, 3.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorDiv
@@ -1493,14 +1255,10 @@ TEST(MathOps, FloorDivInt) {
   AssignInputValues(A, 4);
   AssignInputValues(B, 3);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_INT32};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorDivInt
@@ -1517,14 +1275,10 @@ TEST(MathOps, FloorDivBroadcasting) {
   AssignInputValues(A, 4.5f);
   AssignInputValues(B, 3.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorDivBroadcasting
@@ -1539,14 +1293,10 @@ TEST(MathOps, FloorDivNegInt) {
   AssignInputValues(A, -1);
   AssignInputValues(B, 3);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_INT32};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorDivNegInt
@@ -1561,14 +1311,10 @@ TEST(MathOps, FloorDivNegFloat) {
   AssignInputValues(A, -1.f);
   AssignInputValues(B, 3.f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorDiv", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorDiv", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op FloorDivNegFloat
 
@@ -1584,14 +1330,10 @@ TEST(MathOps, DISABLED_FloorMod) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorMod(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorMod", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorMod
@@ -1608,14 +1350,10 @@ TEST(MathOps, DISABLED_FloorModBroadcasting) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorMod(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorMod", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorModBroadcasting
@@ -1634,13 +1372,10 @@ TEST(MathOps, DISABLED_FloorModNegInt) {
   AssignInputValues(A, nums);
   AssignInputValues(B, divs);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorMod(root, A, B);
-  vector<DataType> output_datatypes = {DT_INT32};
   std::vector<Output> sess_run_fetchoutputs = {R};
 
-  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorMod", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorModNegInt
@@ -1657,13 +1392,10 @@ TEST(MathOps, DISABLED_FloorModNegFloat) {
   AssignInputValues(A, nums);
   AssignInputValues(B, divs);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::FloorMod(root, A, B);
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
 
-  OpExecuter opexecuter(root, "FloorMod", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "FloorMod", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op FloorModNegFloat
@@ -1683,14 +1415,10 @@ TEST(MathOps, IsFinite) {
                             std::numeric_limits<float>::quiet_NaN(),
                             std::numeric_limits<float>::signaling_NaN()};
   AssignInputValues(A, values);
-  vector<int> static_input_indexes = {};
   auto R = ops::IsFinite(root, A);
 
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "IsFinite", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "IsFinite", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op IsFinite
@@ -1704,14 +1432,10 @@ TEST(MathOps, Log1D) {
 
   AssignInputValues(A, 1.4f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Log(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Log", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Log", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -1725,14 +1449,10 @@ TEST(MathOps, Log2D) {
 
   AssignInputValues(A, 3.5f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Log(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Log", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Log", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Log
@@ -1747,14 +1467,10 @@ TEST(MathOps, Log1p) {
 
   AssignInputValues(A, vals);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Log1p(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Log1p", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Log1p", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Log1p
@@ -1773,15 +1489,10 @@ TEST(MathOps, LogicalOr) {
   Tensor B(DT_BOOL, TensorShape({dim1, dim2}));
   AssignInputValues(B, v2);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::LogicalOr(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "LogicalOr", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "LogicalOr", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of LogicalOr
 
@@ -1795,15 +1506,10 @@ TEST(MathOps, LogicalNot) {
   Tensor A(DT_BOOL, TensorShape({dim1, dim2}));
   AssignInputValues(A, v1);
 
-  vector<int> static_input_indexes = {};
-
   auto R = ops::LogicalNot(root, A);
 
-  vector<DataType> output_datatypes = {DT_BOOL};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "LogicalNot", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "LogicalNot", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of LogicalNot
 
@@ -1819,15 +1525,11 @@ TEST(MathOps, MaxNegativeAxis) {
   // should be -rank <= axis < rank
   vector<int> axis_ = {-1};
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   for (auto const& axis : axis_) {
     Scope root = Scope::NewRootScope();
     auto R = ops::Max(root, A, axis);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Max", static_input_indexes, output_datatypes,
-                          sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Max", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -1844,15 +1546,11 @@ TEST(MathOps, MaxPositiveAxis) {
   // should be -rank <= axis < rank
   vector<int> axis_ = {0};
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   for (auto const& axis : axis_) {
     Scope root = Scope::NewRootScope();
     auto R = ops::Max(root, A, axis);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Max", static_input_indexes, output_datatypes,
-                          sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Max", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -1871,15 +1569,11 @@ TEST(MathOps, MinNegativeAxis) {
   // should be -rank <= axis < rank
   vector<int> axis_ = {-1};
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   for (auto const& axis : axis_) {
     Scope root = Scope::NewRootScope();
     auto R = ops::Min(root, A, axis);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Min", static_input_indexes, output_datatypes,
-                          sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Min", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -1896,15 +1590,11 @@ TEST(MathOps, MinPositiveAxis) {
   // should be -rank <= axis < rank
   vector<int> axis_ = {0};
 
-  vector<int> static_input_indexes = {1};
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   for (auto const& axis : axis_) {
     Scope root = Scope::NewRootScope();
     auto R = ops::Min(root, A, axis);
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Min", static_input_indexes, output_datatypes,
-                          sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Min", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -1923,14 +1613,10 @@ TEST(MathOps, Minimum) {
   AssignInputValuesRandom(A);
   AssignInputValuesRandom(B);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Minimum(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Minimum", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Minimum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Minimum
@@ -1947,14 +1633,10 @@ TEST(MathOps, MinimumBroadcasting) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Minimum(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Minimum", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Minimum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op MinimumBroadcasting
@@ -1971,14 +1653,10 @@ TEST(MathOps, MaximumBroadcasting) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Maximum(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Maximum", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Maximum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op MaximumBroadcasting
@@ -1993,14 +1671,10 @@ TEST(MathOps, Negate) {
 
   AssignInputValues(A, 16.5f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Negate(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Neg", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Neg", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of Test op Negate
@@ -2013,12 +1687,9 @@ TEST(MathOps, Pow1D) {
   Tensor B(DT_FLOAT, TensorShape({dim1}));
   AssignInputValues(A, 1.4f);
   AssignInputValues(B, 0.5f);
-  vector<int> static_input_indexes = {};
   auto R = ops::Pow(root, A, B);
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Pow", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Pow", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
 
@@ -2030,12 +1701,9 @@ TEST(MathOps, Pow2D) {
   Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
   AssignInputValues(A, -2.5f);
   AssignInputValues(B, 4.0f);
-  vector<int> static_input_indexes = {};
   auto R = ops::Pow(root, A, B);
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Pow", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Pow", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }
 
@@ -2046,12 +1714,9 @@ TEST(MathOps, Pow0D1D) {
   Tensor B(DT_FLOAT, TensorShape({5}));  // vector == rank 1 (1 axis)
   AssignInputValues(A, 2.1f);
   AssignInputValues(B, 4.1f);
-  vector<int> static_input_indexes = {};
   auto R = ops::Pow(root, A, B);
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Pow", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Pow", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Pow
 
@@ -2067,14 +1732,10 @@ TEST(MathOps, RealDiv) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::RealDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "RealDiv", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "RealDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op RealDiv
@@ -2091,14 +1752,10 @@ TEST(MathOps, RealDivBroadcasting) {
   AssignInputValues(A, 2.0f);
   AssignInputValues(B, 7.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::RealDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "RealDiv", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "RealDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op RealDivBroadcasting
@@ -2119,14 +1776,10 @@ TEST(MathOps, RealDivNonfinite) {
   AssignInputValues(A, dividend_vals);
   AssignInputValues(B, divisor_vals);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::RealDiv(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "RealDiv", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "RealDiv", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test RealDivNonfinite
@@ -2141,14 +1794,10 @@ TEST(MathOps, Reciprocal) {
 
   AssignInputValues(A, 2.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Reciprocal(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Reciprocal", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Reciprocal", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Reciprocal
@@ -2163,14 +1812,10 @@ TEST(MathOps, Relu) {
 
   AssignInputValues(A, 2.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Relu(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Relu", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Relu", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Relu
@@ -2185,14 +1830,10 @@ TEST(MathOps, Rsqrt) {
 
   AssignInputValues(A, 4.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Rsqrt(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Rsqrt", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Rsqrt", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Rsqrt
 
@@ -2205,14 +1846,10 @@ TEST(MathOps, Sign) {
   Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
   AssignInputValuesRandom<float>(A, -50, 50);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Sign(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Sign", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Sign", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Sign
 
@@ -2227,13 +1864,10 @@ TEST(MathOps, Sin) {
   AssignInputValues<float>(
       A, {0, -0, M_PI / 2, M_PI, 1.0, 3.8, 4.2, -3.9, -4.2, -1.0});
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Sin(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Sin", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Sin", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Sin
@@ -2249,13 +1883,10 @@ TEST(MathOps, Sinh) {
   AssignInputValues<float>(
       A, {0, -0, M_PI / 2, M_PI, 1.0, 3.8, 4.2, -3.9, -4.2, -1.0});
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Sinh(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Sinh", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Sinh", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Sinh
@@ -2270,12 +1901,9 @@ TEST(MathOps, Square) {
 
   AssignInputValues(A, 4.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Square(root, A);
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Square", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Square", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Square
 
@@ -2287,9 +1915,6 @@ TEST(MathOps, SqueezeNoAttributes) {
   shape_vector.push_back({10, 1, 5, 1});
   shape_vector.push_back({1, 1, 1, 1});
 
-  vector<int> static_input_indexes = {};
-  vector<DataType> output_datatypes = {DT_INT32};
-
   for (auto shape : shape_vector) {
     Scope root = Scope::NewRootScope();
 
@@ -2299,8 +1924,7 @@ TEST(MathOps, SqueezeNoAttributes) {
     auto R = ops::Squeeze(root, input);
 
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Squeeze", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Squeeze", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -2319,9 +1943,6 @@ TEST(MathOps, SqueezeWithAttributes) {
   shape_attributes_map.insert(
       pair<vector<int64>, gtl::ArraySlice<int>>({1, 1, 1, 1}, {0, 1, -2, -3}));
 
-  vector<int> static_input_indexes = {};
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   for (auto itr : shape_attributes_map) {
     Scope root = Scope::NewRootScope();
 
@@ -2337,8 +1958,7 @@ TEST(MathOps, SqueezeWithAttributes) {
     auto R = ops::Squeeze(root, input, attrs);
 
     std::vector<Output> sess_run_fetchoutputs = {R};
-    OpExecuter opexecuter(root, "Squeeze", static_input_indexes,
-                          output_datatypes, sess_run_fetchoutputs);
+    OpExecuter opexecuter(root, "Squeeze", sess_run_fetchoutputs);
 
     opexecuter.RunTest();
   }
@@ -2353,14 +1973,10 @@ TEST(MathOps, Sqrt) {
 
   AssignInputValues(A, 4.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Sqrt(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Sqrt", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Sqrt", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Sqrt
 
@@ -2375,14 +1991,11 @@ TEST(MathOps, SquaredDifference) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::SquaredDifference(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
 
-  OpExecuter opexecuter(root, "SquaredDifference", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "SquaredDifference", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op SquaredDifference
@@ -2399,14 +2012,10 @@ TEST(MathOps, SquaredDifferenceBroadcasting) {
   AssignInputValues(A, 7.5f);
   AssignInputValues(B, 5.2f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::SquaredDifference(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "SquaredDifference", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "SquaredDifference", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op SquaredDifferenceBroadcasting
@@ -2423,14 +2032,10 @@ TEST(MathOps, Xdivy) {
   AssignInputValues(A, 4.3f);
   AssignInputValues(B, 3.7f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Xdivy(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Xdivy", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -2448,14 +2053,10 @@ TEST(MathOps, XdivyZeroX) {
   AssignInputValues(B, std::vector<float>{2.0f, 1.2f, 4.2f, 8.9f, 0.0f, 0.0f,
                                           0.0f, 0.0f, 0.0f});
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Xdivy(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Xdivy", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }
@@ -2472,14 +2073,10 @@ TEST(MathOps, XdivyZeroXZeroY) {
   AssignInputValues(A, 0.0f);
   AssignInputValues(B, 0.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Xdivy(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Xdivy", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Xdivy", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Xdivy
 
@@ -2494,14 +2091,10 @@ TEST(MathOps, Tan) {
 
   AssignInputValues(A, 3.5f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Tan(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Tan", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Tan", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Tan
@@ -2517,14 +2110,10 @@ TEST(MathOps, Tanh) {
 
   AssignInputValues(A, 7.5f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Tanh(root, A);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Tanh", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Tanh", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Tanh
@@ -2541,14 +2130,10 @@ TEST(MathOps, UnsortedSegmentSum) {
   AssignInputValues(B, std::vector<int>{0, 1, 0});
   AssignInputValues(C, 2);
 
-  vector<int> static_input_indexes = {2};
   auto R = ops::UnsortedSegmentSum(root, A, B, C);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
@@ -2564,14 +2149,10 @@ TEST(MathOps, UnsortedSegmentSumIdxRange) {
   AssignInputValues(B, std::vector<int>{0, 1, 2, 3});
   AssignInputValues(C, 4);
 
-  vector<int> static_input_indexes = {2};
   auto R = ops::UnsortedSegmentSum(root, A, B, C);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
@@ -2587,14 +2168,10 @@ TEST(MathOps, UnsortedSegmentSumMissingIndices) {
   AssignInputValues(B, std::vector<int>{0, 1, 3, 4, 0});
   AssignInputValues(C, 5);
 
-  vector<int> static_input_indexes = {2};
   auto R = ops::UnsortedSegmentSum(root, A, B, C);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
@@ -2610,14 +2187,10 @@ TEST(MathOps, UnsortedSegmentSumSingleIndex) {
   AssignInputValues(B, std::vector<int>{0, 0, 0, 0, 0});
   AssignInputValues(C, 1);
 
-  vector<int> static_input_indexes = {2};
   auto R = ops::UnsortedSegmentSum(root, A, B, C);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
@@ -2633,14 +2206,10 @@ TEST(MathOps, UnsortedSegmentSumTwoDims) {
   AssignInputValues(B, std::vector<int>{0, 1, 0, 1, 0, 1});
   AssignInputValues(C, 2);
 
-  vector<int> static_input_indexes = {2};
   auto R = ops::UnsortedSegmentSum(root, A, B, C);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "UnsortedSegmentSum", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "UnsortedSegmentSum", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op UnsortedSegmentSum
@@ -2657,13 +2226,10 @@ TEST(MathOps, NotEqual) {
   AssignInputValues(A, 2.1f);
   AssignInputValues(B, 4.1f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::NotEqual(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_BOOL};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "NotEqual", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "NotEqual", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op NotEqual
@@ -2680,13 +2246,10 @@ TEST(MathOps, Mod) {
   AssignInputValues(A, 4.1f);
   AssignInputValues(B, 2.0f);
 
-  vector<int> static_input_indexes = {};
   auto R = ops::Mod(root, A, B);
 
-  vector<DataType> output_datatypes = {DT_FLOAT};
   std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "Mod", static_input_indexes, output_datatypes,
-                        sess_run_fetchoutputs);
+  OpExecuter opexecuter(root, "Mod", sess_run_fetchoutputs);
 
   opexecuter.RunTest();
 }  // end of test op Mod

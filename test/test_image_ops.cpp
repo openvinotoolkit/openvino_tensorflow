@@ -57,14 +57,8 @@ TEST(ImageOps, DISABLED_CropAndResize) {
   auto attr =
       ops::CropAndResize::Attrs().ExtrapolationValue(0.0).Method("bilinear");
 
-  vector<int> static_input_indexes = {};
   auto R = ops::CropAndResize(root, image, boxes, box_ind, crop_size, attr);
-  vector<DataType> output_datatypes = {DT_FLOAT};
-
-  std::vector<Output> sess_run_fetchoutputs = {R};
-  OpExecuter opexecuter(root, "CropAndResize", static_input_indexes,
-                        output_datatypes, sess_run_fetchoutputs);
-
+  OpExecuter opexecuter(root, "CropAndResize", {R});
   opexecuter.RunTest();
 }
 
