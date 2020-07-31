@@ -136,9 +136,7 @@ def run_ngtf_pytests(venv_dir, build_dir):
     command_executor(["pip", "install", "-U", "keras==2.3.1"])
     command_executor(["pip", "install", "-U", "psutil"])
 
-    cmd = 'python -m pytest ' + (
-        '--junitxml=%s/xunit_pytest.xml' %
-        build_dir) + " --ignore=" + build_dir + "/test/python/bfloat16"
+    cmd = 'python -m pytest ' + ('--junitxml=%s/xunit_pytest.xml' % build_dir)
     env = os.environ.copy()
     new_paths = venv_dir + '/bin/python3:' + os.path.abspath(
         build_dir) + ":" + os.path.abspath(axpy_dir) + ":" + os.path.abspath(
@@ -174,8 +172,7 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     command_executor(["pip", "install", "-U", "psutil"])
     command_executor([
         "python", "-m", "pytest",
-        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir),
-        "--ignore=" + artifacts_dir + "/test/python/bfloat16"
+        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
     os.chdir(root_pwd)
