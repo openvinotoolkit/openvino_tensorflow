@@ -1816,14 +1816,8 @@ static Status TranslateFusedMatMulOp(const Node* op,
       SaveNgOp(ng_op_map, op->name(),
                ConstructNgNode<ng::opset3::Relu>(op->name(), ng_add));
     } else if (fused_ops[1] == "Relu6") {
-      // TODO fill
-      auto constant_6 = ConstructNgNode<ng::opset3::Constant>(
-          op->name(), ng_add->get_element_type(), ng_add->get_shape(),
-          std::vector<std::string>(ng::shape_size(ng_add->get_shape()), "6"));
-      auto relu6_op = ConstructNgNode<ng::opset3::Minimum>(
-          op->name(), ConstructNgNode<ng::opset3::Relu>(op->name(), ng_add),
-          constant_6);
-      SaveNgOp(ng_op_map, op->name(), relu6_op);
+      SaveNgOp(ng_op_map, op->name(),
+               ConstructNgNode<ng::opset3::Clamp>(op->name(), ng_add, 0, 6));
     } else {
       return errors::Internal(
           "Expected activation to be Relu or Relu6 but got ", fused_ops[1]);
@@ -1962,18 +1956,6 @@ static Status TranslateFusedConv2DOp(const Node* op,
     return Status::OK();
   };
 
-  auto create_relu6 = [](const string& op_name,
-                         const shared_ptr<ng::Node>& ng_node) {
-    auto constant_6 = ConstructNgNode<ng::opset3::Constant>(
-        op_name, ng_node->get_element_type(), ng_node->get_shape(),
-        std::vector<std::string>(ng::shape_size(ng_node->get_shape()), "6"));
-    auto relu6_op = ConstructNgNode<ng::opset3::Minimum>(
-        op_name, ConstructNgNode<ng::opset3::Relu>(
-                     op_name + "_FusedConv2D_Relu", ng_node),
-        constant_6);
-    return relu6_op;
-  };
-
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
@@ -2013,7 +1995,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
       BatchToTensorflow(op->name(), is_nhwc, ng_relu);
       SaveNgOp(ng_op_map, op->name(), ng_relu);
     } else if (VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
-      shared_ptr<ng::Node> ng_relu6 = create_relu6(op->name(), ng_add);
+      shared_ptr<ng::Node> ng_relu6 = ConstructNgNode<ng::opset3::Clamp>(
+          op->name() + "_FusedConv2D_Relu6", ng_add, 0, 6);
       BatchToTensorflow(op->name(), is_nhwc, ng_relu6);
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
     } else {
@@ -2049,7 +2032,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
       BatchToTensorflow(op->name(), is_nhwc, ng_relu);
       SaveNgOp(ng_op_map, op->name(), ng_relu);
     } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
-      shared_ptr<ng::Node> ng_relu6 = create_relu6(op->name(), ng_batch_norm);
+      shared_ptr<ng::Node> ng_relu6 = ConstructNgNode<ng::opset3::Clamp>(
+          op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm, 0, 6);
       BatchToTensorflow(op->name(), is_nhwc, ng_relu6);
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
     } else {
@@ -3108,15 +3092,8 @@ static Status TranslateRelu6Op(const Node* op,
                                Builder::OpMap& ng_op_map) {
   shared_ptr<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input));
-
-  auto constant_6 = ConstructNgNode<ng::opset3::Constant>(
-      op->name(), ng_input->get_element_type(), ng_input->get_shape(),
-      std::vector<std::string>(ng::shape_size(ng_input->get_shape()), "6"));
-  auto relu6_op = ConstructNgNode<ng::opset3::Minimum>(
-      op->name(), ConstructNgNode<ng::opset3::Relu>(op->name(), ng_input),
-      constant_6);
-
-  SaveNgOp(ng_op_map, op->name(), relu6_op);
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ng::opset3::Clamp>(op->name(), ng_input, 0, 6));
   return Status::OK();
 }
 
