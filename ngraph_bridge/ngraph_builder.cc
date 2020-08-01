@@ -1501,6 +1501,7 @@ static Status TranslateDepthToSpaceOp(const Node* op,
             ng_axis_order_second_reshape.end(), 0);
   auto final_reshape = ConstructNgNode<ng::op::Reshape>(
       op->name(), transposed, ng_axis_order_second_reshape, ng_output_shape);
+
   SaveNgOp(ng_op_map, op->name(), final_reshape);
 
   return Status::OK();
@@ -1730,21 +1731,17 @@ static Status TranslateFusedBatchNormOp(
   std::shared_ptr<ng::Node> ng_batch_norm;
 
   ng_batch_norm = ConstructNgNode<ng::opset3::BatchNormInference>(
-      op->name(), tf_epsilon, ng_scale, ng_offset, ng_input, ng_mean,
-      ng_variance);
+      op->name(), ng_input, ng_scale, ng_offset, ng_mean, ng_variance,
+      tf_epsilon);
   BatchToTensorflow(op->name(), is_nhwc, ng_batch_norm);
   SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+  SaveNgOp(ng_op_map, op->name(), ng_mean);
+  SaveNgOp(ng_op_map, op->name(), ng_variance);
+  SaveNgOp(ng_op_map, op->name(), ng_mean);      // reserve_space_1
+  SaveNgOp(ng_op_map, op->name(), ng_variance);  // reserve_space_2
   if (is_v3) {
-    SaveNgOp(ng_op_map, op->name(), ng_mean);
-    SaveNgOp(ng_op_map, op->name(), ng_variance);
-    SaveNgOp(ng_op_map, op->name(), ng_mean);
-    SaveNgOp(ng_op_map, op->name(), ng_variance);
-    // FusedBatchNormV3 has 6 outputs (reserve_space_3)
-    shared_ptr<ng::Node> ng_reserved_3 =
-        ConstructNgNode<ngraph::opset3::Constant>(
-            op->name(), ng_mean->get_element_type(), ng::Shape{},
-            std::vector<std::string>{""});
-    SaveNgOp(ng_op_map, op->name(), ng_reserved_3);
+    // FusedBatchNormV3 has 6 outputs
+    SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
   }
   return Status::OK();
 }
@@ -3138,7 +3135,6 @@ static Status TranslateReshapeOp(
 
   auto ng_shape = ConstructNgNode<ng::opset3::Constant>(
       op->name(), ng::element::u64, ng::Shape{shape.size()}, shape);
-
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::opset3::Reshape>(
                                       op->name(), ng_input, ng_shape, false));
   return Status::OK();
@@ -3649,41 +3645,10 @@ static Status TranslateTileOp(
   std::vector<int64> multiples;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &multiples));
 
-  auto ng_input_shape = ng_input->get_shape();
-  if (ng_input_shape.size() != multiples.size()) {
-    return errors::InvalidArgument(
-        "dimension of input does not match length of multiples");
-  }
-  std::shared_ptr<ng::Node> ng_output = ng_input;
-  ng::Shape output_shape = ng_input_shape;
-  bool is_empty = false;
-  for (size_t i = 0; i < ng_input_shape.size(); i++) {
-    if (multiples[i] == 0) {
-      is_empty = true;
-    }
-    output_shape[i] = ng_input_shape[i] * multiples[i];
-  }
-  if (is_empty) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<ngraph::opset3::Constant>(
-                 op->name(), ng_input->get_element_type(), output_shape,
-                 std::vector<std::string>(ng::shape_size(output_shape), "0")));
-  } else {
-    for (size_t i = 0; i < ng_input_shape.size(); i++) {
-      if (multiples[i] < 0) {
-        return errors::InvalidArgument("Expected multiples[", i,
-                                       "] >= 0, but got ", multiples[i]);
-      }
-      vector<shared_ptr<ng::Node>> tmp_tensors;
-      for (int k = 0; k < multiples[i]; k++) {
-        tmp_tensors.push_back(ng_output);
-      }
-      auto ng_concat =
-          ConstructNgNode<ngraph::opset3::Concat>(op->name(), tmp_tensors, i);
-      ng_output = ng_concat;
-    }
-    SaveNgOp(ng_op_map, op->name(), ng_output);
-  }
+  auto ng_repeats = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), ng::element::i64, ng::Shape{multiples.size()}, multiples);
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ng::opset3::Tile>(op->name(), ng_input, ng_repeats));
   return Status::OK();
 }
 
@@ -3728,9 +3693,8 @@ static Status TranslateTopKV2Op(
 static Status TranslateTransposeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input, ng_permutation_op;
-  TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, &ng_input, &ng_permutation_op));
+  shared_ptr<ng::Node> ng_input, ng_permutation;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input, &ng_permutation));
 
   std::vector<int64> permutation;
   TF_RETURN_IF_ERROR(
@@ -3755,20 +3719,12 @@ static Status TranslateTransposeOp(
     }
   }
 
-  ng::AxisVector ng_axis_order;
-  ng_axis_order.reserve(permutation.size());
-
   NGRAPH_VLOG(3) << ng::join(permutation);
 
-  for (auto i : permutation) {
-    ng_axis_order.push_back(i);
-  }
-
-  NGRAPH_VLOG(3) << ng::join(ng_axis_order);
-
-  auto ng_node = ng::builder::numpy_transpose(ng_input, ng_axis_order);
-  Builder::SetTracingInfo(op->name(), ng_node);
-  SaveNgOp(ng_op_map, op->name(), ng_node);
+  auto input_order = ConstructNgNode<ng::opset3::Constant>(
+      op->name(), ng::element::u64, ng::Shape{permutation.size()}, permutation);
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::opset3::Transpose>(
+                                      op->name(), ng_input, input_order));
   return Status::OK();
 }
 
