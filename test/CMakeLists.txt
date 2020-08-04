@@ -95,7 +95,6 @@ set(SRC
     test_math_ops.cpp
     test_nn_ops.cpp
     test_array_ops.cpp
-    test_variable_ops.cpp
     test_momentum_op.cpp
     opexecuter.cpp
     test_thread_safe_queue.cc
