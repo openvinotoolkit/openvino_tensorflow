@@ -24,9 +24,7 @@ import glob
 import platform
 from distutils.sysconfig import get_python_lib
 
-#from tools.build_utils import load_venv, command_executor
 from tools.test_utils import *
-from tools.build_utils import download_repo
 
 
 def main():
@@ -41,56 +39,26 @@ def main():
         help="Builds and tests the examples.\n",
         action="store_true")
 
-    parser.add_argument(
-        '--plaidml_unit_tests_enable',
-        help="Builds and tests the examples on PLAIDML.\n",
-        action="store_true")
-
     arguments = parser.parse_args()
-
-    #-------------------------------
-    # Recipe
-    #-------------------------------
-
     root_pwd = os.getcwd()
 
-    # Constants
     build_dir = 'build_cmake'
     venv_dir = 'build_cmake/venv-tf-py3'
-    tf_src_dir = 'build_cmake/tensorflow'
+    artifacts_dir = os.path.join(build_dir, 'artifacts')
 
     # First run the C++ gtests
-    run_ngtf_gtests(build_dir, None)
-
-    # If the PLAIDML tests are requested, then run them as well
-    if (arguments.plaidml_unit_tests_enable):
-        os.environ['NGRAPH_TF_BACKEND'] = 'PLAIDML'
-        run_ngtf_gtests(build_dir, str(""))
-
-    os.environ['NGRAPH_TF_BACKEND'] = 'CPU'
+    run_ngtf_cpp_gtests(artifacts_dir, './', None)
 
     # Next run Python unit tests
     load_venv(venv_dir)
-    run_ngtf_pytests(venv_dir, build_dir)
+    run_ngtf_pytests_from_artifacts(artifacts_dir)
 
     if (arguments.test_examples):
         # Run the C++ example build/run test
-        run_cpp_example_test('build')
+        run_cpp_example_test('build_cmake')
 
-    if (not os.path.isdir(build_dir + '/tensorflow')):
-        download_repo(build_dir + "/tensorflow",
-                      "https://github.com/tensorflow/tensorflow.git", "v2.2.0")
-
-    # Next run the TensorFlow python tests
-    os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
-    run_tensorflow_pytests(venv_dir, build_dir, './', tf_src_dir)
-
-    # Finally run Resnet50 based training and inferences
-    if (platform.system() == 'Darwin'):
-        run_resnet50_forward_pass(build_dir)
-    else:
-        run_resnet50(build_dir)
-
+    # Finally run Resnet50
+    run_resnet50_infer_from_artifacts(artifacts_dir, 1, 1)
     os.chdir(root_pwd)
 
 

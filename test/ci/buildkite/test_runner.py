@@ -50,11 +50,6 @@ def main():
         action="store_true")
 
     parser.add_argument(
-        '--test_bazel_build',
-        help="Runs the bazel based build\n",
-        action="store_true")
-
-    parser.add_argument(
         '--test_resnet',
         help="Runs TensorFlow Python tests (Pytest based).\n",
         action="store_true")
@@ -99,8 +94,6 @@ def main():
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
-    elif (arguments.test_bazel_build):
-        run_bazel_build()
     elif (arguments.test_tf_python):
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
@@ -124,7 +117,7 @@ def main():
             if backend and 'INTERPRETER' in backend:
                 batch_size = 1
                 iterations = 1
-            run_resnet50_infer_from_artifacts('./', arguments.artifacts_dir,
+            run_resnet50_infer_from_artifacts(arguments.artifacts_dir,
                                               batch_size, iterations)
     else:
         raise Exception("No tests specified")
