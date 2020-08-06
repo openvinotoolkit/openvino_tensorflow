@@ -87,6 +87,7 @@ void OpExecuter::RunTest(float rtol, float atol) {
 
 // Uses tf_scope to execute on TF
 void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
+  // Deactivate nGraph to be able to run on TF
   DeactivateNGraph();
   ClientSession session(tf_scope_);
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
@@ -94,6 +95,8 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   for (size_t i = 0; i < tf_outputs.size(); i++) {
     NGRAPH_VLOG(5) << " TF op " << i << " " << tf_outputs[i].DebugString();
   }
+  // Activate nGraph again
+  ActivateNGraph();
 }
 
 // Sets NG backend before executing on NGTF
