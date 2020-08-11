@@ -161,6 +161,18 @@ Status LoadGraph(const string& graph_file_name,
 
 Status LoadGraphFromPbTxt(const string& pb_file, Graph* input_graph);
 
+template <typename T>
+size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
+  size_t count = 0;
+  for (auto op : f->get_ops()) {
+    if (ng::is_type<T>(op)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
 }  // namespace testing
 
 }  // namespace ngraph_bridge

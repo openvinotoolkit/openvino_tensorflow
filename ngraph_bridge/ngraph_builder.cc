@@ -40,13 +40,13 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/pass/transpose_folding.h"
+#include "ngraph_bridge/pass/transpose_sinking.h"
 
 using tensorflow::int32;
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 static bool VecStrCmp(const std::vector<string>& a,
@@ -3946,7 +3946,8 @@ Status Builder::TranslateGraph(
   // Apply additional passes on the nGraph function here.
   //
   ngraph::pass::Manager passes;
-  passes.register_pass<TransposeFolding>();
+  passes.register_pass<pass::TransposeFolding>();
+  passes.register_pass<pass::TransposeSinking>();
   passes.run_passes(ng_function);
 
   //
@@ -3960,5 +3961,4 @@ Status Builder::TranslateGraph(
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

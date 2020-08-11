@@ -25,6 +25,7 @@
 
 namespace tensorflow {
 namespace ngraph_bridge {
+namespace pass {
 
 // TODO: change to graph-rewrite pass
 class TransposeFolding : public ngraph::pass::FunctionPass {
@@ -35,5 +36,6 @@ class TransposeFolding : public ngraph::pass::FunctionPass {
   bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 };
 
+}  // namespace pass
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

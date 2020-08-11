@@ -30,6 +30,7 @@ using namespace std;
 
 namespace tensorflow {
 namespace ngraph_bridge {
+namespace pass {
 
 bool TransposeFolding::run_on_function(shared_ptr<ngraph::Function> f) {
   for (auto n1 : f->get_ordered_ops()) {
@@ -78,5 +79,6 @@ bool TransposeFolding::run_on_function(shared_ptr<ngraph::Function> f) {
   return true;
 }
 
+}  // namespace pass
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

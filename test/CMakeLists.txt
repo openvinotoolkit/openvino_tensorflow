@@ -97,6 +97,7 @@ set(SRC
     test_array_ops.cpp
     opexecuter.cpp
     test_thread_safe_queue.cc
+    pass/transpose_sinking_test.cpp
 )
 
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
