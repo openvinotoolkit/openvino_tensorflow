@@ -20,9 +20,9 @@
 #include <sstream>
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset3.hpp"
 
 #include "logging/ngraph_log.h"
+#include "ngraph_bridge/default_opset.h"
 #include "ngraph_bridge/pass/transpose_folding.h"
 #include "ngraph_bridge/version.h"
 
@@ -34,14 +34,14 @@ namespace pass {
 
 bool TransposeFolding::run_on_function(shared_ptr<ngraph::Function> f) {
   for (auto n1 : f->get_ordered_ops()) {
-    if (auto t1 = ngraph::as_type_ptr<ngraph::opset3::Transpose>(n1)) {
+    if (auto t1 = ngraph::as_type_ptr<opset::Transpose>(n1)) {
       // check if the next node is also a transpose
       auto n2 = t1->input_value(0).get_node_shared_ptr();
-      auto t2 = ngraph::as_type_ptr<ngraph::opset3::Transpose>(n2);
+      auto t2 = ngraph::as_type_ptr<opset::Transpose>(n2);
       if (t2) {
-        auto const1 = ngraph::as_type_ptr<ngraph::opset3::Constant>(
+        auto const1 = ngraph::as_type_ptr<opset::Constant>(
             n1->get_input_node_shared_ptr(1));
-        auto const2 = ngraph::as_type_ptr<ngraph::opset3::Constant>(
+        auto const2 = ngraph::as_type_ptr<opset::Constant>(
             n2->get_input_node_shared_ptr(1));
         if (const1 && const2) {
           // apply the permutations
@@ -62,9 +62,9 @@ bool TransposeFolding::run_on_function(shared_ptr<ngraph::Function> f) {
             // delete the second transpose first before replacing with the
             // combined transpose
             ngraph::replace_node(t2, t2->input_value(0).get_node_shared_ptr());
-            auto input_order = std::make_shared<ngraph::opset3::Constant>(
+            auto input_order = std::make_shared<opset::Constant>(
                 ngraph::element::u64, ngraph::Shape{perm_t2.size()}, perm_t2);
-            auto combined_node = std::make_shared<ngraph::opset3::Transpose>(
+            auto combined_node = std::make_shared<opset::Transpose>(
                 t1->input_value(0), input_order);
             ngraph::replace_node(t1, combined_node);
           }
