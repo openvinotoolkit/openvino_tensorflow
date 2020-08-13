@@ -22,7 +22,6 @@
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/dequantize_builder.hpp"
-#include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/quantize_builder.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -352,25 +351,6 @@ Builder::TF_NGRAPH_CONST_MAP() {
           {DataType::DT_BOOL,
            make_pair(MakeConstOp<bool, char>, ng::element::boolean)}};
   return the_map;
-}
-
-std::pair<std::shared_ptr<ng::Node>, std::shared_ptr<ng::Node>>
-Builder::PerformNgBroadcast(const string& prov_tag,
-                            std::shared_ptr<ng::Node> ng_lhs,
-                            std::shared_ptr<ng::Node> ng_rhs) {
-  // builder::numpy_broadcast is the only known builder that has the possibility
-  // that the output node is same as the input node
-  // So we take special care to check, before calling SetTracingInfo
-  std::shared_ptr<ng::Node> ng_lhs_new, ng_rhs_new;
-  std::tie(ng_lhs_new, ng_rhs_new) =
-      ng::builder::numpy_broadcast(std::make_pair(ng_lhs, ng_rhs));
-  if (ng_lhs_new != ng_lhs) {
-    Builder::SetTracingInfo(prov_tag, ng_lhs_new);
-  }
-  if (ng_rhs_new != ng_rhs) {
-    Builder::SetTracingInfo(prov_tag, ng_rhs_new);
-  }
-  return make_pair(ng_lhs_new, ng_rhs_new);
 }
 
 ng::AxisSet ConvertMaskToAxes(const int mask) {
@@ -3570,21 +3550,15 @@ static Status TranslateUnpackOp(const Node* op,
 static Status TranslateXdivyOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  shared_ptr<ng::Node> ng_input1, ng_input2;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_input1, &ng_input2));
-  std::tie(ng_input1, ng_input2) =
-      Builder::PerformNgBroadcast(op->name(), ng_input1, ng_input2);
-  ng::Shape input1_shape = ng_input1->get_shape();
-  std::vector<std::string> const_values(ng::shape_size(input1_shape), "0");
-  auto const_zero = ConstructNgNode<ng::op::Constant>(
-      op->name(), ng_input1->get_element_type(), input1_shape, const_values);
-  auto ng_is_zero =
-      ConstructNgNode<ng::op::Equal>(op->name(), ng_input1, const_zero);
-  auto ng_x_over_y =
-      ConstructNgNode<ng::op::Divide>(op->name(), ng_input1, ng_input2);
-  auto ng_xdivy = ConstructNgNode<ng::op::Select>(op->name(), ng_is_zero,
-                                                  ng_input1, ng_x_over_y);
-  SaveNgOp(ng_op_map, op->name(), ng_xdivy);
+  shared_ptr<ngraph::Node> ng_x, ng_y;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, &ng_x, &ng_y));
+  auto zero =
+      ConstructNgNode<opset::Constant>(op->name(), ng_x->get_element_type(),
+                                       ngraph::Shape{}, std::vector<int>({0}));
+  auto x_is_zero = ConstructNgNode<opset::Equal>(op->name(), ng_x, zero);
+  auto ng_xdivy = ConstructNgNode<opset::Divide>(op->name(), ng_x, ng_y);
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Select>(
+                                      op->name(), x_is_zero, ng_x, ng_xdivy));
   return Status::OK();
 }
 

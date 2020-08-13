@@ -137,10 +137,6 @@ class Builder {
     NGRAPH_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
   }
 
-  static std::pair<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>
-  PerformNgBroadcast(const string&, std::shared_ptr<ngraph::Node>,
-                     std::shared_ptr<ngraph::Node>);
-
   static const std::map<
       DataType,
       std::pair<std::function<Status(const Node*, ngraph::element::Type,
