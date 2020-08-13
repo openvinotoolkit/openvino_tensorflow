@@ -350,6 +350,59 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
   return Status::OK();
 }
 
+#if (CMAKE_BUILD_TYPE == Debug)
+// GDB Debug utility
+void debugger_print_ngfunc(const ngraph::Function& func) {
+  std::cout << "The ngfunc nodes for " << func.get_friendly_name()
+            << ", #results=" << func.get_results().size()
+            << ", #params=" << func.get_parameters().size()
+            << ", #ops=" << func.get_ops().size() << " ==>>\n";
+  for (auto aNodeShPtr : func.get_ordered_ops()) {
+    std::cout << aNodeShPtr->get_friendly_name() << " ("
+              << aNodeShPtr->get_name() << " / " << aNodeShPtr->get_type_name()
+              << "), ";
+  }
+  std::cout << "\n";
+
+  // (result,from) e.g. Result_353->Constant_673, Result_350->ngraph_output_1
+  std::map<std::string, std::string> m_map_result_to_ngnode;
+  auto& orig_ng_results = func.get_results();
+  for (auto aNodeShPtr : orig_ng_results) {
+    m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(
+        aNodeShPtr->get_friendly_name(), "UNKNOWN"));
+  }
+  for (const auto& node : func.get_ops()) {
+    auto outputs = node->outputs();  // std::vector<Output<Node>>
+    if (outputs.size() == 1) {
+      auto const& outHndl = outputs[0];
+      auto const& targetInputHndls = outHndl.get_target_inputs();
+      if (targetInputHndls.size() > 0) {
+        auto const& outNode = targetInputHndls.begin()->get_node();
+        if (m_map_result_to_ngnode.count(outNode->get_friendly_name()) == 0) {
+          continue;  // we are not interested, as it is not a Result_ node
+        }
+        if (outNode->is_output()) {
+          m_map_result_to_ngnode.erase(outNode->get_friendly_name());
+          m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(
+              outNode->get_friendly_name(), node->get_friendly_name()));
+        }
+      }
+    }
+  }
+  std::cout << "results ==> ";
+  for (auto const& pair : m_map_result_to_ngnode) {
+    std::cout << pair.first << "<-" << pair.second << ", ";
+  }
+  std::cout << "\n";
+}
+
+Status debugger_serialize_ngfunc(
+    const char* file_name,
+    const std::shared_ptr<ngraph::Function>& ng_function) {
+  return NgraphSerialize(std::string(file_name), ng_function);
+}
+#endif
+
 Status NgraphSerialize(const std::string& file_name,
                        const std::shared_ptr<ngraph::Function>& ng_function) {
   int json_indentation = 4;

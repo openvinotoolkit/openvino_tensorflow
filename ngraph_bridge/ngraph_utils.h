@@ -329,6 +329,14 @@ Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
 Status NgraphSerialize(const std::string&,
                        const std::shared_ptr<ngraph::Function>&);
 
+#if (CMAKE_BUILD_TYPE == Debug)
+// For gdb-like debugger help...
+// Serialize a ngraph function into a file
+Status debugger_serialize_ngfunc(const char*,
+                                 const std::shared_ptr<ngraph::Function>&);
+void debugger_print_ngfunc(const ngraph::Function&);
+#endif
+
 // Dump given string to file
 Status StringToFile(const std::string&, const std::string&,
                     bool sanitize_name = true);
