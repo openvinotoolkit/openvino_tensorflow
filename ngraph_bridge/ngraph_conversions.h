@@ -26,40 +26,50 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 template <size_t a, size_t b, size_t c, size_t d>
-void Transpose(std::shared_ptr<ngraph::Node>& ng_node) {
+void Transpose(ngraph::Output<ngraph::Node>& node) {
   static_assert(a < 4 && b < 4 && c < 4 && d < 4,
                 "Number of dimensions cannot exceed 4");
   static_assert(a != b && a != c && a != d && b != c && b != d && c != d,
                 "Dimensions indices cannot be equal");
-  auto& s = ng_node->get_shape();
+  auto& s = node.get_shape();
   ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
   ngraph::Shape transpose_order{a, b, c, d};
   NGRAPH_VLOG(3) << "transposing " << ngraph::join(s) << " to "
                  << ngraph::join(reshaped_shape) << "axis-order "
                  << ngraph::join(transpose_order);
-  auto ng_input_order = std::make_shared<opset::Constant>(
+  auto input_order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{transpose_order.size()},
       transpose_order);
-  ng_node = std::make_shared<opset::Transpose>(ng_node, ng_input_order);
+  node = std::make_shared<opset::Transpose>(node, input_order);
+}
+
+template <size_t a, size_t b, size_t c, size_t d>
+void Transpose(std::shared_ptr<ngraph::Node>& node) {
+  Transpose<a, b, c, d>(node->get_default_output());
 }
 
 template <size_t a, size_t b, size_t c, size_t d, size_t e>
-void Transpose3D(std::shared_ptr<ngraph::Node>& ng_node) {
+void Transpose3D(ngraph::Output<ngraph::Node>& node) {
   static_assert(a < 5 && b < 5 && c < 5 && d < 5 && e < 5,
                 "Number of dimensions cannot exceed 5");
   static_assert(a != b && a != c && a != d && a != e && b != c && b != d &&
                     b != e && c != d && c != e && d != e,
                 "Dimensions indices cannot be equal");
-  auto& s = ng_node->get_shape();
+  auto& s = node.get_shape();
   ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d], s[e]};
   ngraph::Shape transpose_order{a, b, c, d, e};
   NGRAPH_VLOG(3) << "transposing " << ngraph::join(s) << " to "
                  << ngraph::join(reshaped_shape) << "axis-order "
                  << ngraph::join(transpose_order);
-  auto ng_input_order = std::make_shared<opset::Constant>(
+  auto input_order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{transpose_order.size()},
       transpose_order);
-  ng_node = std::make_shared<opset::Transpose>(ng_node, ng_input_order);
+  node = std::make_shared<opset::Transpose>(node, input_order);
+}
+
+template <size_t a, size_t b, size_t c, size_t d, size_t e>
+void Transpose3D(std::shared_ptr<ngraph::Node>& node) {
+  Transpose3D<a, b, c, d, e>(node->get_default_output());
 }
 
 namespace detail {
@@ -69,7 +79,7 @@ void NhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[1] = src[2];
 }
 
-void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node);
+void NhwcToNGraph(ngraph::Output<ngraph::Node>& ng_node);
 
 template <typename T>
 void NdhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
@@ -78,7 +88,7 @@ void NdhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
   dst[2] = src[3];
 }
 
-void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node);
+void NdhwcToNGraph(ngraph::Output<ngraph::Node>& ng_node);
 
 template <typename T>
 void NchwToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
@@ -112,10 +122,10 @@ void NdhwcToNcdhw(const std::vector<T>& src, std::vector<size_t>& dst) {
 }
 
 void BatchToNGraph(const string& op_name, bool is_nhwc,
-                   std::shared_ptr<ngraph::Node>& ng_input);
+                   ngraph::Output<ngraph::Node>& ng_input);
 
 void BatchToNGraph3D(const string& op_name, bool is_ndhwc,
-                     std::shared_ptr<ngraph::Node>& ng_input);
+                     ngraph::Output<ngraph::Node>& ng_input);
 
 template <typename T>
 void BatchedOpParamToNGraph(bool is_nhwc, const std::vector<T>& src,
@@ -158,10 +168,10 @@ void BatchedOpParamReshape3D(bool is_ndhwc, const std::vector<T>& src,
 }
 
 void BatchToTensorflow(const string& op_name, bool is_nhwc,
-                       std::shared_ptr<ngraph::Node>& ng_node);
+                       ngraph::Output<ngraph::Node>& ng_node);
 
 void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
-                         std::shared_ptr<ngraph::Node>& ng_node);
+                         ngraph::Output<ngraph::Node>& ng_node);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

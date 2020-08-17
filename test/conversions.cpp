@@ -21,40 +21,38 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 TEST(conversions, transpose) {
-  std::shared_ptr<ng::Node> ng_node =
+  ng::Output<ng::Node> node =
       make_shared<ng::op::Parameter>(ng::element::f32, ng::Shape{2, 3, 4, 5});
-  Transpose<3, 2, 0, 1>(ng_node);
-  ASSERT_EQ(ng_node->get_shape(), (ng::Shape{5, 4, 2, 3}));
+  Transpose<3, 2, 0, 1>(node);
+  ASSERT_EQ(node.get_shape(), (ng::Shape{5, 4, 2, 3}));
 }
 
 TEST(conversions, batch_to_tensorflow_nchw) {
   auto shape = ng::Shape{2, 3, 4, 5};
-  std::shared_ptr<ng::Node> ng_node =
+  ngraph::Output<ng::Node> node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToTensorflow("tag", false, ng_node);
-  ASSERT_EQ(ng_node->get_shape(), shape);
+  BatchToTensorflow("tag", false, node);
+  ASSERT_EQ(node.get_shape(), shape);
 }
 
 TEST(conversions, batch_to_tensorflow_nhwc) {
   auto shape = ng::Shape{2, 3, 4, 5};
-  std::shared_ptr<ng::Node> ng_node =
+  ngraph::Output<ng::Node> node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToTensorflow("tag", true, ng_node);
-  ASSERT_EQ(ng_node->get_shape(), (ng::Shape{2, 4, 5, 3}));
+  BatchToTensorflow("tag", true, node);
+  ASSERT_EQ(node.get_shape(), (ng::Shape{2, 4, 5, 3}));
 }
 
 TEST(conversions, batch_to_ngraph_nchw) {
   auto shape = ng::Shape{2, 3, 4, 5};
-  std::shared_ptr<ng::Node> ng_node =
+  ngraph::Output<ng::Node> node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToNGraph("tag", false, ng_node);
-  ASSERT_EQ(ng_node->get_shape(), shape);
+  BatchToNGraph("tag", false, node);
+  ASSERT_EQ(node.get_shape(), shape);
 }
 
 TEST(conversions, param_to_ngraph_nchw) {
@@ -67,10 +65,10 @@ TEST(conversions, param_to_ngraph_nchw) {
 
 TEST(conversions, batch_to_ngraph_nhwc) {
   auto shape = ng::Shape{2, 3, 4, 5};
-  std::shared_ptr<ng::Node> ng_node =
+  ngraph::Output<ng::Node> node =
       make_shared<ng::op::Parameter>(ng::element::f32, shape);
-  BatchToNGraph("tag", true, ng_node);
-  ASSERT_EQ(ng_node->get_shape(), (ng::Shape{2, 5, 3, 4}));
+  BatchToNGraph("tag", true, node);
+  ASSERT_EQ(node.get_shape(), (ng::Shape{2, 5, 3, 4}));
 }
 
 TEST(conversions, param_to_ngraph_nhwc) {
@@ -82,7 +80,5 @@ TEST(conversions, param_to_ngraph_nhwc) {
 }
 
 }  // namespace testing
-
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

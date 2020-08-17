@@ -18,53 +18,51 @@
 #include "ngraph_bridge/ngraph_api.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace detail {
 
-void NhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Transpose<0, 3, 1, 2>(ng_node);
+void NhwcToNGraph(ngraph::Output<ngraph::Node>& node) {
+  Transpose<0, 3, 1, 2>(node);
 }
 
-void NdhwcToNGraph(std::shared_ptr<ngraph::Node>& ng_node) {
-  Transpose3D<0, 4, 1, 2, 3>(ng_node);
+void NdhwcToNGraph(ngraph::Output<ngraph::Node>& node) {
+  Transpose3D<0, 4, 1, 2, 3>(node);
 }
 }  // namespace detail
 
 void BatchToNGraph(const string& op_name, bool is_nhwc,
-                   std::shared_ptr<ngraph::Node>& ng_input) {
+                   ngraph::Output<ngraph::Node>& input) {
   if (is_nhwc) {
-    detail::NhwcToNGraph(ng_input);
-    Builder::SetTracingInfo(op_name, ng_input);
+    detail::NhwcToNGraph(input);
+    Builder::SetTracingInfo(op_name, input);
   }
 }
 
 void BatchToNGraph3D(const string& op_name, bool is_ndhwc,
-                     std::shared_ptr<ngraph::Node>& ng_input) {
+                     ngraph::Output<ngraph::Node>& input) {
   if (is_ndhwc) {
-    detail::NdhwcToNGraph(ng_input);
-    Builder::SetTracingInfo(op_name, ng_input);
+    detail::NdhwcToNGraph(input);
+    Builder::SetTracingInfo(op_name, input);
   }
 }
 
 void BatchToTensorflow(const string& op_name, bool is_nhwc,
-                       std::shared_ptr<ngraph::Node>& ng_node) {
+                       ngraph::Output<ngraph::Node>& node) {
   if (!is_nhwc) {
     return;
   }
-  Transpose<0, 2, 3, 1>(ng_node);
-  Builder::SetTracingInfo(op_name, ng_node);
+  Transpose<0, 2, 3, 1>(node);
+  Builder::SetTracingInfo(op_name, node);
 }
 
 void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
-                         std::shared_ptr<ngraph::Node>& ng_node) {
+                         ngraph::Output<ngraph::Node>& node) {
   if (!is_ndhwc) {
     return;
   }
-  Transpose3D<0, 2, 3, 4, 1>(ng_node);
-  Builder::SetTracingInfo(op_name, ng_node);
+  Transpose3D<0, 2, 3, 4, 1>(node);
+  Builder::SetTracingInfo(op_name, node);
 }
-}  // namespace ngraph_bridge
 
+}  // namespace ngraph_bridge
 }  // namespace tensorflow

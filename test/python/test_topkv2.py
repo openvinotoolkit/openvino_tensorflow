@@ -31,6 +31,7 @@ from common import NgraphTest
 
 class TestTopKV2(NgraphTest):
 
+    @pytest.mark.skip(reason="Needs upgrade to opset3")
     def test_topkv2_1d(self):
         input = [1.0, 5.0, 6.0, 12.0]
         p = tf.compat.v1.placeholder(dtype=tf.float32)
@@ -42,6 +43,7 @@ class TestTopKV2(NgraphTest):
         assert (
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
+    @pytest.mark.skip(reason="Needs upgrade to opset3")
     def test_topkv2_2d(self):
         input = [[40.0, 30.0, 20.0, 10.0], [10.0, 20.0, 15.0, 70.0]]
         p = tf.compat.v1.placeholder(dtype=tf.float32)
@@ -53,6 +55,7 @@ class TestTopKV2(NgraphTest):
         assert (
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
+    @pytest.mark.skip(reason="Needs upgrade to opset3")
     def test_topkv2_3d(self):
         input = [[[40.0, 30.0, 20.0], [20.0, 15.0, 70.0]],
                  [[45.0, 25.0, 43.0], [24.0, 12.0, 7.0]]]
