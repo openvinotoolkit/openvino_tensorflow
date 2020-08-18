@@ -56,7 +56,8 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
         auto element_type = constant->get_element_type();
         auto shape = constant->get_shape();
         auto param = std::make_shared<opset::Parameter>(element_type, shape);
-        ngraph::replace_node_update_name(node, param);
+        param->set_friendly_name(node->get_friendly_name());
+        ngraph::replace_node(node, param);
         // nGraph doesn't provide a way to set a parameter to an existing
         // function, so we clone the function here...
         func = make_shared<Function>(func->get_results(),

@@ -560,32 +560,6 @@ TEST(ArrayOps, Pad) {
 
 }  // end of op Pad
 
-// Test op: PreventGradient
-TEST(ArrayOps, PreventGradient) {
-  Scope scope_cpu = Scope::NewRootScope();
-
-  std::vector<std::vector<int64>> input_sizes;
-
-  input_sizes.push_back({2, 3, 4, 20});
-  input_sizes.push_back({10, 10, 10});
-  input_sizes.push_back({1, 5});
-  input_sizes.push_back({0});
-
-  for (auto const& input_size : input_sizes) {
-    Scope root = Scope::NewRootScope();
-
-    Tensor input_data(DT_FLOAT, TensorShape(input_size));
-    AssignInputValuesRandom<float>(input_data, -10.0, 20.0f);
-
-    auto R = ops::PreventGradient(root, input_data);
-    std::vector<Output> sess_run_fetchoutputs = {R};
-
-    OpExecuter opexecuter(root, "PreventGradient", sess_run_fetchoutputs);
-
-    opexecuter.RunTest();
-  }
-}  // end of op PreventGradient
-
 // Test op: QuantizeV2
 // Quantizes a tensor from float to i8
 TEST(ArrayOps, QuantizeV2i8) {
