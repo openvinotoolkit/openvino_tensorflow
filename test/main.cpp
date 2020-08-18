@@ -15,8 +15,12 @@
  *******************************************************************************/
 
 #include <dlfcn.h>
+#include <stdlib.h>
+#include <cctype>
 #include <chrono>
+#include <fstream>
 #include <iostream>
+#include <regex>
 
 #include "gtest/gtest.h"
 
@@ -30,7 +34,42 @@
 
 using namespace std;
 
+static void set_filters_from_file() {
+  char* pEnv = getenv("NGTF_GTEST_FILE");
+  if (!pEnv) return;
+  std::string filter_file = std::string(pEnv);
+  fstream fs;
+  fs.open(filter_file, ios::in);
+  if (fs.is_open()) {
+    std::string filters = "";
+    std::string line;
+    bool excluded_section = false;
+    while (getline(fs, line)) {
+      line = std::regex_replace(line, std::regex("^\\s+"), "");
+      line = std::regex_replace(line, std::regex("#.*$"), "");
+      line = std::regex_replace(line, std::regex("\\s+$"), "");
+      if (line.empty()) continue;
+      if (!excluded_section && line.find("[EXCLUDED]") == 0) {
+        if (filters.back() == ':') filters.pop_back();  // remove last :
+        filters += "-";
+        excluded_section = true;
+        continue;
+      }
+      if (excluded_section) {
+        if (line.at(0) == '-') line = line.erase(0, 1);
+      }
+      filters += line + ":";
+    }
+    fs.close();
+    if (filters.back() == ':') filters.pop_back();  // remove last :
+
+    ::testing::GTEST_FLAG(filter) = filters;
+  }
+}
+
 int main(int argc, char** argv) {
+  set_filters_from_file();
+
   ::testing::InitGoogleTest(&argc, argv);
 
   int rc = RUN_ALL_TESTS();
