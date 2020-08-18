@@ -65,7 +65,7 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
         auto ie_tensor = make_shared<IETensor>(element_type, shape);
         ie_tensor->write(constant->get_data_ptr(),
                          shape_size(shape) * element_type.size());
-        m_hoisted_params[param->get_name()] = ie_tensor;
+        m_hoisted_params[param->get_friendly_name()] = ie_tensor;
         NGRAPH_VLOG(1) << "Converted node " << constant << " to a parameter "
                        << param;
         param_replaced = true;
