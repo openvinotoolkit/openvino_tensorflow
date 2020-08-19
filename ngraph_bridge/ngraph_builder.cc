@@ -2444,27 +2444,15 @@ static Status TranslateShapeOp(const Node* op,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
 
-  // the shape of the input tensor which will be the value to the Constant Op
-  auto input_shape = ng_input.get_shape();
-
-  // the rank of the input tensor which will be the shape to the Constant Op
-  size_t rank = input_shape.size();
-
   DataType dtype;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "out_type", &dtype));
 
-  // the inputs to the Constant Op
   ng::element::Type type;
   TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &type));
 
-  auto shape = ng::Shape(1, rank);
-
-  std::vector<int> values(rank);
-  for (size_t i = 0; i < rank; i++) {
-    values[i] = input_shape[i];
-  }
+  // default output_type = element::i64
   SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Constant>(op->name(), type, shape, values));
+           ConstructNgNode<opset::ShapeOf>(op->name(), ng_input, type));
   return Status::OK();
 }
 
