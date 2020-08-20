@@ -42,9 +42,8 @@ class IE_Executable final : public Executable {
  private:
   InferenceEngine::CNNNetwork m_network;
   InferenceEngine::InferRequest m_infer_req;
-  // This map holds the parameters we insert for functions with no input
-  // parameters
-  unordered_map<string, shared_ptr<ngraph::runtime::Tensor>> m_hoisted_params;
+  // This holds the parameters we insert for functions with no input parameters
+  vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
   string m_device;
 };
 }

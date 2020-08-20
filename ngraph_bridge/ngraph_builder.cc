@@ -3305,11 +3305,9 @@ Status Builder::TranslateGraph(
 
     ng::Output<ng::Node> result;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, n, 0, result));
-
+    auto ng_result = ConstructNgNode<opset::Result>(n->name(), result);
     ng_result_list[index] =
-        ng::is_type<opset::Result>(result.get_node_shared_ptr())
-            ? ng::as_type_ptr<opset::Result>(result.get_node_shared_ptr())
-            : make_shared<opset::Result>(result);
+        ngraph::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
   }
 
   //
