@@ -21,8 +21,6 @@
 #include "tensorflow/core/lib/core/errors.h"
 
 #include "ngraph/builder/autobroadcast.hpp"
-#include "ngraph/builder/dequantize_builder.hpp"
-#include "ngraph/builder/quantize_builder.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/experimental/layers/interpolate.hpp"
