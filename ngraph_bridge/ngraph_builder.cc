@@ -2594,28 +2594,19 @@ static Status TranslateSplitOp(
 
   ng::Shape shape = ng_input.get_shape();
   int rank = shape.size();
-  std::vector<size_t> lower;
-  std::vector<size_t> upper;
-  for (int i = 0; i < rank; ++i) {
-    lower.push_back(0);
-    upper.push_back(shape[i]);
-  }
+
   std::vector<int> split_dim_vec;
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 0, static_input_map, &split_dim_vec));
   int split_dim = split_dim_vec[0] + (split_dim_vec[0] < 0 ? (int64)rank : 0);
-
-  int size = shape[split_dim] / num_split;
-  int cursor = 0;
+  auto ng_split_dim = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::u64, ng::Shape{}, split_dim);
+  auto ng_split = make_shared<opset::Split>(ng_input, ng_split_dim, num_split);
 
   for (int i = 0; i < num_split; ++i) {
-    lower[split_dim] = cursor;
-    cursor += size;
-    upper[split_dim] = cursor;
-
-    std::string output_name = op->name();
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::op::Slice>(
-                                        op->name(), ng_input, lower, upper));
+    auto out = ng_split->output(i);
+    Builder::SetTracingInfo(op->name(), out);
+    SaveNgOp(ng_op_map, op->name(), out);
   }
   return Status::OK();
 }
@@ -2623,35 +2614,31 @@ static Status TranslateSplitOp(
 static Status TranslateSplitVOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_input, ng_length, ng_split_dim;
+  ng::Output<ng::Node> ng_input, ng_split_length, ng_split_dim;
 
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
 
-  std::vector<int> lengths;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &lengths));
-
   ng::Shape shape = ng_input.get_shape();
   int rank = shape.size();
-  std::vector<size_t> lower(rank, 0);
-  std::vector<size_t> upper(shape);
 
   std::vector<int64> split_dim_vec;
-
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 2, static_input_map, &split_dim_vec));
-
   // there should be at least one element specified as axis and not more than
-  // one
-  // as axis is 0-D
+  // one as axis is 0-D
   if (split_dim_vec.size() != 1) {
     return errors::InvalidArgument(
         "split_dim_tensor must have "
         "exactly one element.");
   }
-
   TF_RETURN_IF_ERROR(CheckAxisDimInRange(split_dim_vec, rank));
-
   int split_dim = split_dim_vec[0] + (split_dim_vec[0] < 0 ? (int64)rank : 0);
+  ng_split_dim = ConstructNgNode<opset::Constant>(op->name(), ng::element::i32,
+                                                  ng::Shape{}, split_dim);
+
+  std::vector<int> split_lengths_vec;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 1, static_input_map, &split_lengths_vec));
 
   // length: Length of size_splits
   int length = 0;
@@ -2659,9 +2646,9 @@ static Status TranslateSplitVOp(
 
   // Find out the total length of the splits and locate -1 's index, if any
   bool has_one_neg = false;
-  for (size_t i = 0; i < lengths.size(); ++i) {
-    if (lengths[i] != -1) {
-      length += lengths[i];
+  for (size_t i = 0; i < split_lengths_vec.size(); ++i) {
+    if (split_lengths_vec[i] != -1) {
+      length += split_lengths_vec[i];
     } else {
       if (has_one_neg) {
         return errors::InvalidArgument("size_splits can only have one -1");
@@ -2674,25 +2661,27 @@ static Status TranslateSplitVOp(
 
   // Size splits must sum to the dimension of value along split_dim
   if (idx > 0) {
-    lengths[idx] = shape[split_dim] - length;
+    split_lengths_vec[idx] = shape[split_dim] - length;
   }
 
   if ((!has_one_neg && length != shape[split_dim]) ||
-      (has_one_neg && lengths[idx] < 0)) {
+      (has_one_neg && split_lengths_vec[idx] < 0)) {
     return errors::InvalidArgument(
         "The length of size_splits must sum to the value of the dimension "
         "along split_dim");
   }
 
-  int cursor = 0;
+  ng_split_length = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{split_lengths_vec.size()},
+      split_lengths_vec);
 
-  if (lengths.size() != 1) {
-    for (size_t i = 0; i < lengths.size(); ++i) {
-      lower[split_dim] = cursor;
-      cursor += lengths[i];
-      upper[split_dim] = cursor;
-      SaveNgOp(ng_op_map, op->name(), ConstructNgNode<ng::op::Slice>(
-                                          op->name(), ng_input, lower, upper));
+  if (split_lengths_vec.size() != 1) {
+    auto ng_split = make_shared<opset::VariadicSplit>(ng_input, ng_split_dim,
+                                                      ng_split_length);
+    for (size_t i = 0; i < split_lengths_vec.size(); ++i) {
+      auto out = ng_split->output(i);
+      Builder::SetTracingInfo(op->name(), out);
+      SaveNgOp(ng_op_map, op->name(), out);
     }
   } else {
     SaveNgOp(ng_op_map, op->name(), ng_input);
