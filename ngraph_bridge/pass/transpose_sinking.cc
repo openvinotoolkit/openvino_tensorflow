@@ -385,17 +385,6 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
   auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
       arg_transpose->input_value(1).get_node_shared_ptr());
   auto order = arg_transpose_order->get_axis_vector_val();
-  // we need the correct input shape to produce the right output shape
-  // we are going to create a label of the right input shape,
-  // so a new concat will have the right shape
-  auto def_order = ngraph::get_permutation_to_default_order(order);
-  auto input_shape =
-      ngraph::apply_permutation(arg_transpose->get_shape(), def_order);
-  auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
-      arg_transpose->get_element_type(), input_shape);
-
-  ngraph::NodeVector new_args;
-  new_args.push_back(dummy_correct_shape);
 
   for (size_t i = 1; i < n->get_input_size(); i++) {
     auto iarg = n->input_value(i);
@@ -409,21 +398,10 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
       materialize_shapes(n, reorders, transposes_to_delete, reuse_map);
       return;
     }
-
-    auto iinput_shape =
-        ngraph::apply_permutation(iarg_transpose->get_shape(), def_order);
-    auto idummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
-        iarg_transpose->get_element_type(), iinput_shape);
-    new_args.push_back(idummy_correct_shape);
   }
 
   auto new_axis = order.at(n->get_concatenation_axis());
-  auto new_concat = make_shared<opset::Concat>(new_args, new_axis);
-  // put back the original arguments
-  for (size_t i = 0; i < new_concat->get_input_size(); i++) {
-    ngraph::replace_node(new_args.at(i),
-                         n->input_value(i).get_node_shared_ptr());
-  }
+  auto new_concat = make_shared<opset::Concat>(n->input_values(), new_axis);
   NGRAPH_VLOG(4) << "Replacing " << n->get_name() << " with "
                  << new_concat->get_name();
   ngraph::replace_node(n, new_concat);
