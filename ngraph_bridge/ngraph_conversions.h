@@ -35,7 +35,7 @@ void Transpose(ngraph::Output<ngraph::Node>& node) {
   ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
   ngraph::Shape transpose_order{a, b, c, d};
   NGRAPH_VLOG(3) << "transposing " << ngraph::join(s) << " to "
-                 << ngraph::join(reshaped_shape) << "axis-order "
+                 << ngraph::join(reshaped_shape) << " axis-order "
                  << ngraph::join(transpose_order);
   auto input_order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{transpose_order.size()},
