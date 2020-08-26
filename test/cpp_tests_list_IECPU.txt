@@ -21,6 +21,7 @@ EncapsulateOp.AllocateNGInputTensors
 EncapsulateOp.AllocateNGOutputTensors
 OpByOpCapability.Backend
 MathOps.Sum
+MathOpsSumFixture.FullSet
 MathOps.Mean
 MathOps.ArgMaxNeg
 MathOps.ArgMaxPos

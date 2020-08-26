@@ -391,6 +391,70 @@ TEST(MathOps, Sum) {
   }
 }
 
+// BEGIN MathOpsSumFixture
+class MathOpsSumFixture : public ::testing::Test {
+ protected:
+  void SetUp() override {}
+  void TearDown() override {}
+  void TestWith(std::vector<int> tshpvec, std::vector<int> axisvec,
+                bool keep_dims) {
+    TensorShape tshp;
+    for (auto dim : tshpvec) {
+      tshp.AddDim(dim);
+    }
+    std::stringstream axisvec_ss;
+    std::copy(axisvec.begin(), axisvec.end(),
+              std::ostream_iterator<int>(axisvec_ss, ","));
+    std::cout << ">> Running test with: tensor-shape=" << tshp
+              << ", axis=" << axisvec_ss.str() << ", keep_dims=" << keep_dims
+              << endl;
+    Scope root = Scope::NewRootScope();
+    auto keep_dims_attr = ops::Sum::Attrs().KeepDims(keep_dims);
+
+    std::vector<int> vals = {1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6,
+                             1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6};
+    Tensor A(DT_INT32, TensorShape(tshp));
+    AssignInputValues<int>(A, vals);
+
+    Tensor B(DT_INT32, TensorShape({(int64)axisvec.size()}));
+    AssignInputValues<int>(B, axisvec);
+
+    auto R = ops::Sum(root, A, B, keep_dims_attr);
+    std::vector<Output> sess_run_fetchoutputs = {R};
+    OpExecuter opexecuter(root, "Sum", sess_run_fetchoutputs);
+    opexecuter.RunTest();
+  }
+};
+
+TEST_F(MathOpsSumFixture, LimitedSet1) {
+  TestWith({2, 3}, {1}, false);
+  TestWith({6, 2}, {0}, false);
+  TestWith({2, 4, 3}, {0}, false);
+}
+
+TEST_F(MathOpsSumFixture, FullSet) {
+  vector<vector<int>> tshapes = {{2, 3},         {2, 2, 3},    {6, 2},
+                                 {2, 4, 3},      {4, 3, 2, 1}, {1, 2, 3, 4},
+                                 {3, 1, 2, 4, 1}};
+  vector<bool> v_keep_dims = {true, false};
+  for (auto tshp : tshapes) {
+    vector<vector<int>> vv_axis;
+    for (auto ax = 0; ax < tshp.size(); ax++) {
+      vv_axis.push_back({ax});
+    }
+    for (auto v_axis : vv_axis) {
+      for (auto keep_dims : v_keep_dims) {
+        TestWith(tshp, v_axis, keep_dims);
+      }
+    }
+  }
+  // Add few more tests with axes-combos
+  TestWith({6, 2}, {0, 1}, false);
+  TestWith({6, 2}, {0, 1}, true);
+  TestWith({2, 4, 3}, {0, 1, 2}, false);
+}
+// END MathOpsSumFixture
+
 // Test op: Mean with & without keep dims & with both positive & negative axis
 TEST(MathOps, Mean) {
   int dim1 = 2;
