@@ -58,19 +58,9 @@ class NGraphEncapsulateImpl {
                          std::vector<const Tensor*>& static_input_map,
                          std::shared_ptr<Executable>& ng_exec);
 
-  // Allocate tensors for input arguments. Creates ngraph input tensors using
-  // tensorflow tensors required to execute ngraph function
-  Status AllocateNGInputTensors(
-      const std::vector<Tensor>& tf_input_tensors,
-      const std::shared_ptr<Executable>& ng_exec,
-      vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs);
-
-  // Allocate tensors for output results.  Creates ngraph output tensors using
-  // tensorflow tensors required to execute ngraph function
-  Status AllocateNGOutputTensors(
-      const std::vector<Tensor*>& tf_output_tensors,
-      const std::shared_ptr<Executable>& ng_exec,
-      vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs);
+  // Allocate nGraph tensors for given TF tensors
+  Status AllocateNGTensors(const std::vector<Tensor>& tf_tensors,
+                           vector<shared_ptr<ng::runtime::Tensor>>& ng_tensors);
 
   // Clear all maps with ng_exec as keys
   void ClearExecMaps();
@@ -89,7 +79,7 @@ class NGraphEncapsulateImpl {
 
   void SetNgraphCluster(const int& cluster) { m_ngraph_cluster = cluster; }
 
-  const int& GetFunctionCache() { return my_function_cache_depth_in_items; }
+  const int& GetFunctionCache() { return m_function_cache_depth_in_items; }
 
   const int& GetNumberOfOutputs() { return m_number_outputs; }
 
@@ -106,12 +96,6 @@ class NGraphEncapsulateImpl {
   void SetOpBackend(const string& backend_name) {
     m_op_backend_name = backend_name;
   }
-
-  bool GetLogCopies() { return log_copies; }
-
-  void SetLogCopies(bool value) { log_copies = value; }
-
-  const string GetCopyLog() { return copy_log_str.str(); }
 
   const std::vector<bool> GetStaticInputVector() { return m_input_is_static; }
 
@@ -147,17 +131,14 @@ class NGraphEncapsulateImpl {
   Graph m_graph;
 
  private:
-  int number_of_copies = 0;
   int m_ngraph_cluster{-1};
   int m_graph_id{-1};
-  int my_function_cache_depth_in_items = 16;
+  int m_function_cache_depth_in_items = 16;
   int m_number_outputs = -1;
   int m_number_inputs = -1;
   int my_instance_id{0};
   string m_op_backend_name;
   string m_name;
-  std::stringstream copy_log_str;
-  bool log_copies = false;
   std::vector<bool> m_input_is_static;
   std::list<std::string> m_lru;
   static int s_instance_count;
@@ -169,11 +150,9 @@ class NGraphEncapsulateImpl {
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
   std::unordered_map<std::shared_ptr<Executable>, std::string>
       m_serialized_ng_function_map;
-
-  int m_depth{2};  // TODO make this settable
 };
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
+
 #endif  // NGRAPH_TF_ENCAPSULATE_IMPL_H_

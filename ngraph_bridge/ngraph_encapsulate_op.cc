@@ -261,8 +261,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   int ng_input_tensor_size_in_bytes = 0;
   {
     NG_TRACE("Input: maybe create", name(), "");
-    OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGInputTensors(
-                            tf_input_tensors, ng_exec, ng_inputs));
+    OP_REQUIRES_OK(
+        ctx, ng_encap_impl_.AllocateNGTensors(tf_input_tensors, ng_inputs));
   }
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
@@ -271,8 +271,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   // Allocate tensors for the output results.
   vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
   int ng_output_tensor_size_in_bytes = 0;
-  std::vector<Tensor*> tf_output_tensors;
-  std::vector<std::pair<void*, shared_ptr<ng::runtime::Tensor>>> output_caches;
+  std::vector<Tensor> tf_output_tensors;
   {
     NG_TRACE("Output: maybe create", name(), "");
     for (auto i = 0; i < ng_exec->get_results().size(); i++) {
@@ -288,7 +287,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       TensorShape tf_shape(dims);
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
-      tf_output_tensors.push_back(output_tensor);
+      tf_output_tensors.push_back(*output_tensor);
 
       // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected.
@@ -302,8 +301,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                            "the element type expected by TensorFlow"));
     }
 
-    OP_REQUIRES_OK(ctx, ng_encap_impl_.AllocateNGOutputTensors(
-                            tf_output_tensors, ng_exec, ng_outputs));
+    OP_REQUIRES_OK(
+        ctx, ng_encap_impl_.AllocateNGTensors(tf_output_tensors, ng_outputs));
   }
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "

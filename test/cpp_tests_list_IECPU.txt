@@ -17,8 +17,6 @@ TFExec.SingleGraphOn2Threads
 TFExec.axpy
 tf_exec.BatchMatMul
 EncapsulateOp.GetNgExecutable
-EncapsulateOp.AllocateNGInputTensors
-EncapsulateOp.AllocateNGOutputTensors
 OpByOpCapability.Backend
 MathOps.Sum
 MathOpsSumFixture.FullSet

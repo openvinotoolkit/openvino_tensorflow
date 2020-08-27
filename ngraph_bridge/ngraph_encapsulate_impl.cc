@@ -17,7 +17,6 @@
 #include <mutex>
 #include <utility>
 
-#include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/function.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 #include "tensorflow/core/framework/graph.pb.h"
@@ -179,9 +178,9 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     const char* cache_depth_specified =
         std::getenv("NGRAPH_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
-      my_function_cache_depth_in_items = atoi(cache_depth_specified);
+      m_function_cache_depth_in_items = atoi(cache_depth_specified);
     }
-    if (m_ng_exec_map.size() >= my_function_cache_depth_in_items) {
+    if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
       m_ng_exec_map.erase(m_lru.back());
       m_serialized_ng_function_map.erase(evicted_ng_exec);
@@ -262,46 +261,22 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
   return Status::OK();
 }
 
-// Allocate tensors for input arguments. Creates ngraph input tensors using
-// tensorflow tensors required to execute ngraph function
-Status NGraphEncapsulateImpl::AllocateNGInputTensors(
-    const std::vector<Tensor>& tf_input_tensors,
-    const std::shared_ptr<Executable>& ng_exec,
-    vector<shared_ptr<ng::runtime::Tensor>>& ng_inputs) {
-  Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
-  for (int i = 0; i < tf_input_tensors.size(); i++) {
-    ng::Shape ng_shape(tf_input_tensors[i].shape().dims());
-    for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
-      ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);
+Status NGraphEncapsulateImpl::AllocateNGTensors(
+    const std::vector<Tensor>& tf_tensors,
+    vector<shared_ptr<ng::runtime::Tensor>>& ng_tensors) {
+  for (int i = 0; i < tf_tensors.size(); i++) {
+    ng::Shape ng_shape(tf_tensors[i].shape().dims());
+    for (int j = 0; j < tf_tensors[i].shape().dims(); ++j) {
+      ng_shape[j] = tf_tensors[i].shape().dim_size(j);
     }
     ng::element::Type ng_element_type;
-    TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(
-        tf_input_tensors[i].dtype(), &ng_element_type));
+    TF_RETURN_IF_ERROR(
+        TFDataTypeToNGraphElementType(tf_tensors[i].dtype(), &ng_element_type));
 
-    void* current_tf_ptr = (void*)DMAHelper::base(&tf_input_tensors[i]);
-    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-        op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
-    ng_inputs.push_back(current_ng_tensor);
-  }
-  return Status::OK();
-}
-
-// Allocate tensors for output results.  Creates ngraph output tensors using
-// tensorflow tensors required to execute ngraph function
-Status NGraphEncapsulateImpl::AllocateNGOutputTensors(
-    const std::vector<Tensor*>& output_tensors,
-    const std::shared_ptr<Executable>& ng_exec,
-    vector<shared_ptr<ng::runtime::Tensor>>& ng_outputs) {
-  Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
-  for (auto i = 0; i < ng_exec->get_results().size(); i++) {
-    auto ng_element = ng_exec->get_results()[i];
-    auto ng_shape = ng_element->get_shape();
-    auto ng_element_type = ng_element->get_element_type();
-
-    void* current_tf_ptr = DMAHelper::base(output_tensors[i]);
-    std::shared_ptr<ng::runtime::Tensor> current_ng_tensor =
-        op_backend->create_tensor(ng_element_type, ng_shape, current_tf_ptr);
-    ng_outputs.push_back(current_ng_tensor);
+    Backend* op_backend = BackendManager::GetBackend(m_op_backend_name);
+    std::shared_ptr<ng::runtime::Tensor> ng_tensor = op_backend->create_tensor(
+        ng_element_type, ng_shape, tf_tensors[i].data());
+    ng_tensors.push_back(ng_tensor);
   }
   return Status::OK();
 }
