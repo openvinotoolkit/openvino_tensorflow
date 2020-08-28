@@ -29,7 +29,7 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
-    : m_device{device} {
+    : m_device{device}, m_trivial_fn{nullptr} {
   NGRAPH_VLOG(2) << "Checking for unsupported ops in IE backend";
   const auto& opset = ngraph::get_opset3();
   for (const auto& node : func->get_ops()) {
@@ -38,6 +38,21 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
                      << node->get_type_info().name;
       THROW_IE_EXCEPTION << "Detected op not belonging to opset3!";
     }
+  }
+
+  NGRAPH_VLOG(2) << "Checking for trivial functions in IE backend";
+  bool trivial_fn = true;
+  for (auto result : func->get_results()) {
+    auto parent = result->input_value(0).get_node_shared_ptr();
+    trivial_fn &= ngraph::is_type<opset::Parameter>(parent) ||
+                  ngraph::is_type<opset::Constant>(parent);
+  }
+
+  if (trivial_fn) {
+    NGRAPH_VLOG(2) << "Function is trivial and can be short-circuited";
+    set_parameters_and_results(*func);
+    m_trivial_fn = func;
+    return;
   }
 
   NGRAPH_VLOG(2) << "Checking for function parameters in IE backend";
@@ -100,6 +115,12 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
 
 bool IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                          const vector<shared_ptr<runtime::Tensor>>& inputs) {
+  if (m_trivial_fn) {
+    NGRAPH_VLOG(2) << "Calling trivial IE function with inputs="
+                   << inputs.size() << " outputs=" << outputs.size();
+    return call_trivial(outputs, inputs);
+  }
+
   // Check if the number of inputs that the CNN network expects is equal to the
   // sum of the
   // inputs specified and the inputs we hoisted, if any.
@@ -139,6 +160,38 @@ bool IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
   }
 
   m_infer_req.Infer();
+  return true;
+}
+
+bool IE_Executable::call_trivial(
+    const vector<shared_ptr<runtime::Tensor>>& outputs,
+    const vector<shared_ptr<runtime::Tensor>>& inputs) {
+  // outputs are in the same order as results
+  auto results = m_trivial_fn->get_results();
+  for (int i = 0; i < outputs.size(); i++) {
+    auto parent = results[i]->input_value(0).get_node_shared_ptr();
+    if (ngraph::is_type<opset::Parameter>(parent)) {
+      auto param = ngraph::as_type_ptr<opset::Parameter>(parent);
+      auto index = m_trivial_fn->get_parameter_index(param);
+      if (index < 0) {
+        THROW_IE_EXCEPTION << "Input parameter " << param->get_friendly_name()
+                           << " not found in trivial function";
+      }
+      auto size = inputs[index]->get_size_in_bytes();
+      unsigned char* buf_ptr = new unsigned char[size];
+      inputs[index]->read(buf_ptr, size);
+      outputs[0]->write(buf_ptr, size);
+      delete buf_ptr;
+    } else if (ngraph::is_type<opset::Constant>(parent)) {
+      auto constant = ngraph::as_type_ptr<opset::Constant>(parent);
+      outputs[i]->write(constant->get_data_ptr(),
+                        shape_size(constant->get_shape()) *
+                            constant->get_element_type().size());
+    } else {
+      THROW_IE_EXCEPTION << "Expected constant or parameter feeding to a "
+                            "result in trivial function";
+    }
+  }
   return true;
 }
 }

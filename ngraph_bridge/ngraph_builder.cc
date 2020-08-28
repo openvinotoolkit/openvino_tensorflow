@@ -25,6 +25,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/experimental/layers/interpolate.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/slice_plan.hpp"
 
@@ -3325,6 +3326,7 @@ Status Builder::TranslateGraph(
   // Apply additional passes on the nGraph function here.
   //
   ngraph::pass::Manager passes;
+  // passes.register_pass<ngraph::pass::ConstantFolding>();
   passes.register_pass<pass::TransposeFolding>();
   passes.register_pass<pass::TransposeSinking>();
   passes.run_passes(ng_function);
