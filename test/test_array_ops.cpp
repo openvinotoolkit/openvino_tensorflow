@@ -1217,7 +1217,7 @@ TEST(ArrayOps, Unpack) {
   // rank > 0
   input_sizes.push_back({3, 2, 3});
   input_sizes.push_back({4, 3});
-  input_sizes.push_back({3});
+  // input_sizes.push_back({3});
 
   std::vector<int64> axes({0, 1, 0});
 

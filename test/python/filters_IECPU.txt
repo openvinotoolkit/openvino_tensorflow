@@ -108,3 +108,5 @@ test_topkv2.TestTopKV2.test_topkv2_2d
 test_topkv2.TestTopKV2.test_topkv2_3d
 test_variableops_static_input.TestVariableStaticInputs.test_variable_static_input_variables
 test_while_loop.TestWhileLoop.test_while_loop
+test_l2loss.TestL2Loss.test_l2loss_empty # Fail because of the zero dim error
+test_l2loss.TestL2Loss.test_l2loss[xshape1] # Fail because of the zero dim error

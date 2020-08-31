@@ -1849,20 +1849,24 @@ static Status TranslateL2LossOp(const Node* op,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
 
-  auto const_2 = ConstructNgNode<ng::op::Constant>(
-      op->name(), ng_input.get_element_type(), ng::Shape{},
-      std::vector<std::string>{"2"});
+  std::vector<float> val;
+  val.push_back(2.0);
+  auto const_2 = ConstructNgNode<opset::Constant>(
+      op->name(), ng_input.get_element_type(), ng::Shape{}, val[0]);
 
   auto ng_pow =
       ConstructNgNode<opset::Multiply>(op->name(), ng_input, ng_input);
 
   size_t input_rank = ng_input.get_shape().size();
-  ng::AxisSet axes;
+  std::vector<int64> axes;
   for (size_t i = 0; i < input_rank; ++i) {
-    axes.insert(i);
+    axes.push_back(i);
   }
 
-  auto ng_sum = ConstructNgNode<ng::op::Sum>(op->name(), ng_pow, axes);
+  auto ng_reduction_axes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{axes.size()}, axes);
+  auto ng_sum =
+      ConstructNgNode<opset::ReduceSum>(op->name(), ng_pow, ng_reduction_axes);
   auto ng_l2loss = ConstructNgNode<opset::Divide>(op->name(), ng_sum, const_2);
   SaveNgOp(ng_op_map, op->name(), ng_l2loss);
   return Status::OK();
@@ -2264,18 +2268,26 @@ static Status TranslatePackOp(const Node* op, const std::vector<const Tensor*>&,
     // along it
     ng::Shape extended_shape = input_shape;
     extended_shape.push_back(1);
+    auto ng_shape = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::u64, ng::Shape{extended_shape.size()},
+        extended_shape);
+
     for (size_t i = 0; i < ng_concat_inputs.size(); ++i) {
-      ng_concat_inputs[i] = ConstructNgNode<ng::op::Reshape>(
-          op->name(), ng_concat_inputs[i], ng_axis_order, extended_shape);
+      ng_concat_inputs[i] = ConstructNgNode<opset::Reshape>(
+          op->name(), ng_concat_inputs[i], ng_shape, false);
     }
     ng_axis_order.push_back(input_rank);
   }
 
-  auto concat = ConstructNgNode<ng::op::Concat>(op->name(), ng_concat_inputs,
-                                                concat_axis);
+  auto concat = ConstructNgNode<opset::Concat>(op->name(), ng_concat_inputs,
+                                               (size_t)concat_axis);
+
+  auto ng_output_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::u64, ng::Shape{output_shape.size()},
+      output_shape);
   SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<ng::op::Reshape>(op->name(), concat, ng_axis_order,
-                                            output_shape));
+           ConstructNgNode<opset::Reshape>(op->name(), concat, ng_output_shape,
+                                           false));
   return Status::OK();
 }
 
@@ -2946,7 +2958,7 @@ static Status TranslateUnpackOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &tf_num));
   int num_outputs = tf_num;
 
-  ng::Shape output_shape;
+  std::vector<int64> output_shape;
   for (size_t i = 0; i < input_rank; ++i) {
     if ((int)i != unpack_axis) {
       output_shape.push_back(input_shape[i]);
@@ -2958,20 +2970,30 @@ static Status TranslateUnpackOp(const Node* op,
     ng_axis_order.push_back(i);
   }
 
-  std::vector<size_t> lower_bound(input_rank, 0);
-  std::vector<size_t> upper_bound(input_rank);
+  std::vector<size_t> lower_bound_vec(input_rank, 0);
+  std::vector<size_t> upper_bound_vec(input_rank);
 
   for (size_t i = 0; i < input_rank; i++) {
-    upper_bound[i] = input_shape[i];
+    upper_bound_vec[i] = input_shape[i];
   }
 
   for (int i = 0; i < num_outputs; ++i) {
-    lower_bound[unpack_axis] = i;
-    upper_bound[unpack_axis] = i + 1;
-    auto slice = ConstructNgNode<ngraph::op::Slice>(op->name(), ng_input,
-                                                    lower_bound, upper_bound);
-    auto reshaped = ConstructNgNode<ng::op::Reshape>(
-        op->name(), slice, ng_axis_order, output_shape);
+    lower_bound_vec[unpack_axis] = i;
+    upper_bound_vec[unpack_axis] = i + 1;
+    auto lower_bound = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{lower_bound_vec.size()},
+        lower_bound_vec);
+    auto upper_bound = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{upper_bound_vec.size()},
+        upper_bound_vec);
+    auto slice = ConstructNgNode<opset::StridedSlice>(
+        op->name(), ng_input, lower_bound, upper_bound, std::vector<int64_t>{},
+        std::vector<int64_t>{});
+    auto ng_shape = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::u64, ng::Shape{output_shape.size()},
+        output_shape);
+    auto reshaped =
+        ConstructNgNode<opset::Reshape>(op->name(), slice, ng_shape, false);
     SaveNgOp(ng_op_map, op->name(), reshaped);
   }
   return Status::OK();
@@ -3074,7 +3096,6 @@ const static std::map<
         {"ArgMin", TranslateArgMinMaxOp<ng::op::ArgMin>},
         {"Asin", TranslateUnaryOp<opset::Asin>},
         {"Atan", TranslateUnaryOp<opset::Atan>},
-        {"Atan2", TranslateBinaryOp<ngraph::op::Atan2>},
         {"AvgPool", TranslateAvgPoolOp},
         {"BatchMatMul", TranslateBatchMatMulOp},
         {"BatchMatMulV2", TranslateBatchMatMulV2Op},

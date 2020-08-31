@@ -23,6 +23,7 @@ MathOps.Pow0D1D
 MathOps.SqueezeNoAttributes
 MathOps.NotEqual
 MathOpsSumFixture.FullSet
+NNOps.L2Loss
 NNOps.SoftmaxZeroDimTest1
 NNOps.SoftmaxZeroDimTest2
 ArrayOps.Slice

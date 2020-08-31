@@ -266,7 +266,6 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["ArgMin"] = SimpleConfirmationFunction();
     confirmation_function_map["Asin"] = SimpleConfirmationFunction();
     confirmation_function_map["Atan"] = SimpleConfirmationFunction();
-    confirmation_function_map["Atan2"] = SimpleConfirmationFunction();
     confirmation_function_map["AvgPool"] = SimpleConfirmationFunction();
     confirmation_function_map["BatchMatMul"] = SimpleConfirmationFunction();
     confirmation_function_map["BatchMatMulV2"] = SimpleConfirmationFunction();
@@ -432,7 +431,6 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["ArgMin"]["Tidx"] = NGraphIndexDTypes();
     type_constraint_map["Asin"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Atan"]["T"] = NGraphNumericDTypes();
-    type_constraint_map["Atan2"]["T"] = NGraphRealDTypes();
     type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
     type_constraint_map["BatchMatMul"]["T"] = NGraphNumericDTypes();
     type_constraint_map["BatchMatMulV2"]["T"] = NGraphNumericDTypes();
@@ -590,7 +588,6 @@ GetTFToNgOpMap() {
       {"ArgMin", {std::make_shared<ngraph::op::ArgMin>()}},
       {"Asin", {std::make_shared<opset::Asin>()}},
       {"Atan", {std::make_shared<opset::Atan>()}},
-      {"Atan2", {std::make_shared<ngraph::op::Atan2>()}},
       {"AvgPool", {std::make_shared<opset::AvgPool>()}},
       {"BatchMatMul",
        {std::make_shared<ngraph::op::BatchMatMulTranspose>(),
@@ -662,7 +659,7 @@ GetTFToNgOpMap() {
         std::make_shared<opset::LogicalAnd>()}},
       {"L2Loss",
        {constant, std::make_shared<opset::Multiply>(),
-        std::make_shared<ngraph::op::Sum>(),
+        std::make_shared<opset::ReduceSum>(),
         std::make_shared<opset::Divide>()}},
       {"LogSoftmax",
        {std::make_shared<ngraph::op::Broadcast>(),
@@ -701,8 +698,8 @@ GetTFToNgOpMap() {
        {std::make_shared<opset::NonMaxSuppression>(), constant}},
       {"OneHot", {std::make_shared<opset::OneHot>(), constant}},
       {"Pack",
-       {std::make_shared<ngraph::op::Concat>(),
-        std::make_shared<ngraph::op::Reshape>()}},
+       {constant, std::make_shared<opset::Concat>(),
+        std::make_shared<opset::Reshape>()}},
       {"Pad", {constant, std::make_shared<opset::Pad>()}},
       {"PadV2", {constant, std::make_shared<opset::Pad>()}},
       {"Pow", {std::make_shared<opset::Power>()}},
@@ -752,8 +749,8 @@ GetTFToNgOpMap() {
       {"UnsortedSegmentSum",
        {constant, std::make_shared<ngraph::op::ScatterAdd>()}},
       {"Unpack",
-       {std::make_shared<ngraph::op::Slice>(),
-        std::make_shared<ngraph::op::Reshape>()}},
+       {constant, std::make_shared<opset::StridedSlice>(),
+        std::make_shared<opset::Reshape>()}},
       {"ZerosLike", {constant}},
       {"NoOp", {}},
   };
