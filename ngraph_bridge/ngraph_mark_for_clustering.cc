@@ -214,6 +214,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["PadV2"] = SetStaticInputs({1, 2});
     set_attributes_map["Prod"] = SetStaticInputs({1});
     set_attributes_map["Reshape"] = SetStaticInputs({1});
+    set_attributes_map["Shape"] = SetStaticInputs({0});
     set_attributes_map["ScatterNd"] = SetStaticInputs({2});
     set_attributes_map["Slice"] = SetStaticInputs({1, 2});
     set_attributes_map["Split"] = SetStaticInputs({0});
@@ -713,7 +714,7 @@ GetTFToNgOpMap() {
       {"Select", {std::make_shared<opset::Select>()}},
       {"Reshape", {std::make_shared<opset::Reshape>()}},
       {"ScatterNd", {constant, std::make_shared<ngraph::op::ScatterNDAdd>()}},
-      {"Shape", {constant}},
+      {"Shape", {std::make_shared<opset::ShapeOf>()}},
       {"Sigmoid", {std::make_shared<opset::Sigmoid>()}},
       {"Sin", {std::make_shared<opset::Sin>()}},
       {"Sinh", {std::make_shared<opset::Sinh>()}},
