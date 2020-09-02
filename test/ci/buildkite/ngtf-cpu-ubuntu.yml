@@ -52,7 +52,7 @@
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
     
-    label: ":python: TensorFlow Pytest"
+    label: ":python: TensorFlow Pytest ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

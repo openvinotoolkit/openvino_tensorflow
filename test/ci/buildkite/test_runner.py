@@ -78,17 +78,15 @@ def main():
     if not arguments.artifacts_dir:
         raise Exception("Need to specify --artifacts_dir")
 
+    print("nGraph bridge Executor set to:", TestEnv.EXECUTOR())
     # Set the backend if specified
-    backend = 'CPU'
-    if 'NGRAPH_TF_BACKEND' in os.environ:
-        backend = os.environ['NGRAPH_TF_BACKEND']
-
-    print("nGraph bridge backend set to:", backend)
+    backend = TestEnv.BACKEND()
+    print("nGraph bridge Backend set to:", backend)
 
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
-        if 'INTERPRETER' in backend:
+        if backend == 'INTERPRETER':
             test_filter = str("-ArrayOps.Tile")
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
@@ -97,10 +95,9 @@ def main():
     elif (arguments.test_tf_python):
         os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
-            backend, './', arguments.artifacts_dir + '/tensorflow/python',
-            False)
+            './', arguments.artifacts_dir + '/tensorflow/python', False)
     elif (arguments.test_resnet):
-        if get_os_type() == 'Darwin':
+        if TestEnv.is_osx():
             run_resnet50_forward_pass_from_artifacts(
                 './', arguments.artifacts_dir, 1, 32)
         else:
@@ -109,12 +106,12 @@ def main():
             run_resnet50_from_artifacts('./', arguments.artifacts_dir,
                                         batch_size, iterations)
     elif (arguments.test_resnet50_infer):
-        if get_os_type() == 'Darwin':
-            raise Exception("RN50 inference test not supported on Darwin")
+        if TestEnv.is_osx():
+            raise Exception("RN50 inference test not supported on Darwin/OSX")
         else:
             batch_size = 128
             iterations = 10
-            if backend and 'INTERPRETER' in backend:
+            if backend == 'INTERPRETER':
                 batch_size = 1
                 iterations = 1
             run_resnet50_infer_from_artifacts(arguments.artifacts_dir,

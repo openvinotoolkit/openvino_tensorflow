@@ -29,12 +29,67 @@ from distutils.sysconfig import get_python_lib
 from tools.build_utils import load_venv, command_executor, apply_patch
 
 
-def get_os_type():
-    if platform.system() == 'Darwin':
-        return 'Darwin'
+# Abstract all Platform/OS specific information within this class
+class TestEnv:
 
-    if platform.linux_distribution():
-        return platform.linux_distribution()[0]
+    @staticmethod
+    def get_platform_type():
+        return platform.system()  # 'Linux', 'Windows', 'Darwin', or 'Java'
+
+    @staticmethod
+    def get_linux_type():
+        if platform.linux_distribution():
+            return platform.linux_distribution()[0]  # Ubuntu or CentOS
+        else:
+            return ''
+
+    @staticmethod
+    def get_platform_lib_dir():
+        lib_dir = 'lib'
+        if 'CentOS' in TestEnv.get_linux_type():
+            lib_dir = 'lib64'
+        return lib_dir
+
+    @staticmethod
+    def is_osx():
+        return platform.system() == 'Darwin'
+
+    @staticmethod
+    def is_mac():
+        return TestEnv.is_osx()
+
+    @staticmethod
+    def is_linux():
+        return platform.system() == 'Linux'
+
+    @staticmethod
+    def get_test_manifest_filename():
+        if ('NGRAPH_TF_TEST_MANIFEST' in os.environ):
+            return os.environ['NGRAPH_TF_TEST_MANIFEST']
+        else:
+            # test manifest files are named like this:
+            # tests_${PLATFORM}_${NGRAPH_TF_EXECUTOR}_${NGRAPH_TF_BACKEND}.txt
+            return 'tests_' + TestEnv.PLATFORM().lower(
+            ) + '_' + TestEnv.EXECUTOR().lower() + '_' + TestEnv.BACKEND(
+            ).lower() + '.txt'
+
+    @staticmethod
+    def PLATFORM():
+        return platform.system()  # 'Linux', 'Windows', 'Darwin', or 'Java'
+
+    @staticmethod
+    def EXECUTOR():
+        if ('NGRAPH_TF_EXECUTOR' in os.environ):
+            return os.environ['NGRAPH_TF_EXECUTOR']
+        else:
+            return 'ngraph'
+
+    @staticmethod
+    def BACKEND():
+        if 'NGRAPH_TF_BACKEND' in os.environ:
+            return os.environ['NGRAPH_TF_BACKEND']
+        else:
+            return 'CPU'
 
 
 def install_ngraph_bridge(artifacts_dir):
@@ -67,9 +122,7 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
         raise Exception("Artifacts directory doesn't exist: " + artifacts_dir)
 
     # First run the C++ gtests
-    lib_dir = 'lib'
-    if 'CentOS' in get_os_type():
-        lib_dir = 'lib64'
+    lib_dir = TestEnv.get_platform_lib_dir()
 
     os.environ['LD_LIBRARY_PATH'] = os.path.join(artifacts_dir, lib_dir)
     os.chdir(os.path.join(artifacts_dir, "test"))
@@ -109,8 +162,8 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     os.chdir(root_pwd)
 
 
-def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
-                                          tf_src_dir, xml_output):
+def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
+                                          xml_output):
     root_pwd = os.getcwd()
     ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
 
@@ -146,15 +199,10 @@ def run_tensorflow_pytests_from_artifacts(backend, ngraph_tf_src_dir,
     # Now run the TensorFlow python tests
     test_src_dir = os.path.join(ngraph_tf_src_dir, "test/python/tensorflow")
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
-    if get_os_type() == 'Darwin':
-        test_manifest_file = os.path.join(test_src_dir,
-                                          "python_tests_list_mac.txt")
-    else:
-        test_manifest_file = os.path.join(test_src_dir, "python_tests_list.txt")
-    if backend is not None:
-        if 'INTERPRETER' in backend:
-            test_manifest_file = os.path.join(test_src_dir,
-                                              "python_tests_list_int.txt")
+
+    test_manifest_file = TestEnv.get_test_manifest_filename()
+    if not os.path.isabs(test_manifest_file):
+        test_manifest_file = os.path.join(test_src_dir, test_manifest_file)
 
     test_xml_report = './junit_tensorflow_tests.xml'
 

@@ -28,9 +28,9 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
 
     usage: tf_unittest_runner.py [-h] --tensorflow_path TENSORFLOW_PATH
 
-    [--list_tests LIST_TESTS] [--run_test RUN_TEST]
+    [--list_tests TEST_PATTERN] [--list_tests_from_file MANIFEST_FILE]
 
-    [--run_tests_from_file RUN_TESTS_FROM_FILE]
+    [--run_test TEST_PATTERN]  [--run_tests_from_file MANIFEST_FILE]
 
     [--xml_report XML_REPORT] [--verbose]
       
@@ -38,38 +38,31 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
     
     --tensorflow_path TENSORFLOW_PATH
     
-    Specify the path to Tensorflow source code.
-    
-    Eg:/localdisk/skantama/tf-ngraph/tensorflow
+    Specify the path to Tensorflow source code. Eg: /localdisk/skantama/tf-ngraph/tensorflow
     
     
-    optional arguments:
+    optional arguments (choose one of these):
     
     -h, --help show this help message and exit
     
-    --list_tests LIST_TESTS
+    --list_tests TEST_PATTERN
+    Prints the list of test cases in this package. Eg: --list_tests math_ops_test.\*
+
+    --list_tests_from_file MANIFEST_FILE
+    Reads the test names/patterns specified in a manifest file and displays a consolidated list. Eg: --list_tests_from_file ./test/python/tensorflow/tests_common.txt
     
-    Prints the list of test cases in this package.
+    --run_test TEST_PATTERN
+    Runs the testcase and returns the output. Eg: --run_test math_ops_test.DivNoNanTest.\*
     
-    Eg:math_ops_test.*
-    
-    --run_test RUN_TEST Runs the testcase and returns the output.
-    
-    Eg:math_ops_test.DivNoNanTest.testBasic
-    
-    --run_tests_from_file RUN_TESTS_FROM_FILE
-    
-    Reads the test names specified in a file and runs
-    
-    them. Eg:--run_tests_from_file=tests_to_run.txt
+    --run_tests_from_file MANIFEST_FILE
+    Reads the test names specified in a file and runs them. Eg: --run_tests_from_file=/path/to/tests_list_file.txt
+    Please see comments in `tests_common.txt` to understand the accepted formats of the file.
 
     --xml_report XML_REPORT
-     
-     Generates results in xml file for jenkins to populate 
-     
-     in the test result. Need to specify xml file name
+    Generates results in xml file for jenkins to populate in the test result. Need to specify xml file name.
 
-  --verbose  Prints standard out if specified
+    --verbose
+    Prints standard out if specified
 
 
 ## How to run tests
