@@ -89,10 +89,10 @@ def main():
         return None, None
 
     if (arguments.list_tests_from_file):
-        test_list = read_tests_from_manifest(arguments.list_tests_from_file,
-                                             arguments.tensorflow_path)
+        test_list, skip_list = read_tests_from_manifest(
+            arguments.list_tests_from_file, arguments.tensorflow_path)
         print('\n'.join(test_list))
-        print('Total:', len(test_list))
+        print('Total:', len(test_list), 'Skipped:', len(skip_list))
         return None, None
 
     if (arguments.run_test):
@@ -117,7 +117,7 @@ def main():
         invalid_list = []
         start = time.time()
         list_of_tests = read_tests_from_manifest(arguments.run_tests_from_file,
-                                                 arguments.tensorflow_path)
+                                                 arguments.tensorflow_path)[0]
         test_results = run_test(list_of_tests, xml_report,
                                 (2 if arguments.verbose else 0))
         elapsed = time.time() - start
@@ -258,15 +258,20 @@ def list_tests(module_list, regex_input):
     return listtests, invalidtests
 
 
+global g_imported_files
+g_imported_files = []
+
+
 def read_tests_from_manifest(manifestfile, tensorflow_path):
     """
     Reads a file that has include & exclude patterns,
     Returns a list of leaf-level single testcase, no duplicates
     """
     list_of_tests = []
+    skipped_items = []
+    g_imported_files.append(manifestfile)
     with open(manifestfile) as fh:
         curr_section = ''
-        excluded_items = []  # this is temporary to each manifest
         for line in fh.readlines():
             line = line.split('#')[0].rstrip('\n').strip(' ')
             if line == '':
@@ -284,25 +289,31 @@ def read_tests_from_manifest(manifestfile, tensorflow_path):
                 if not os.path.isabs(line):
                     line = os.path.abspath(
                         os.path.dirname(manifestfile) + '/' + line)
-                list_of_tests.extend(
-                    read_tests_from_manifest(line, tensorflow_path))
+                if line in g_imported_files:
+                    sys.exit("ERROR: re-import of manifest " + line + " in " +
+                             manifestfile)
+                g_imported_files.append(line)
+                new_runs, new_skips = read_tests_from_manifest(
+                    line, tensorflow_path)
+                list_of_tests.extend(new_runs)
+                skipped_items.extend(new_skips)
                 continue
             if curr_section == 'run_section':
                 list_of_tests.extend(get_test_list(tensorflow_path, line)[0])
             if curr_section == 'skip_section':
-                excluded_items.extend(get_test_list(tensorflow_path, line)[0])
+                skipped_items.extend(get_test_list(tensorflow_path, line)[0])
         # remove dups
         list_of_tests = list(dict.fromkeys(list_of_tests))
-        excluded_items = list(dict.fromkeys(excluded_items))
+        skipped_items = list(dict.fromkeys(skipped_items))
         print()
-        for aTest in excluded_items:
+        for aTest in skipped_items:
             if aTest in list_of_tests:
                 #print('will exclude test:', aTest)
                 list_of_tests.remove(aTest)
-        print('\nTotal Tests To Be Run = {} (manifest = {})\n'.format(
-            len(list_of_tests), manifestfile))
+        print('\n#Tests to Run={}, Skip={} (manifest = {})\n'.format(
+            len(list_of_tests), len(skipped_items), manifestfile))
 
-    return list_of_tests
+    return list_of_tests, skipped_items
 
 
 def func_utrunner_testcase_run(return_dict, runner, aTest):
