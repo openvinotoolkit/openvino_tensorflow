@@ -149,7 +149,7 @@ static ConfirmationFunction FusedBatchNormConfirmationFunction() {
 
 // Check if op is supported by backend using is_supported API
 Status IsSupportedByBackend(
-    const Node* node, const Backend* op_backend,
+    const Node* node, const shared_ptr<Backend> op_backend,
     const std::map<std::string, std::set<shared_ptr<ng::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported) {
@@ -762,8 +762,8 @@ GetTFToNgOpMap() {
 //
 // Main entry point for the marking pass.
 //
-Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
-                         const string& current_backend) {
+Status MarkForClustering(Graph* graph,
+                         const std::set<string> skip_these_nodes) {
   const TypeConstraintMap& type_constraint_map = GetTypeConstraintMap();
 
   // confirmation_function_map is non-const unlike the other maps
@@ -821,13 +821,8 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
   std::unordered_map<string, int> fail_confirmation_histogram;
   std::unordered_map<string, int> fail_constraint_histogram;
   vector<Node*> nodes_marked_for_clustering;
-  string ng_backend_type;
-  // Create nGraph backend
-  BackendManager::GetCurrentlySetBackendName(&ng_backend_type);
-  // Create backend to query is_supported
-  TF_RETURN_IF_ERROR(BackendManager::CreateBackend(ng_backend_type));
-  Backend* op_backend = BackendManager::GetBackend(ng_backend_type);
 
+  shared_ptr<Backend> op_backend = BackendManager::GetBackend();
   for (auto node : graph->op_nodes()) {
     bool mark_for_clustering = false;
 
@@ -884,9 +879,11 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
                                               is_supported));
 
       if (!is_supported) {
+        string backend;
+        BackendManager::GetBackendName(backend);
         NGRAPH_VLOG(5) << "TF Op " << node->name() << " of type "
                        << node->type_string()
-                       << " is not supported by backend: " << ng_backend_type;
+                       << " is not supported by backend: " << backend;
         break;
       }
 
@@ -906,9 +903,6 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
     }
   }
 
-  // Release backend created to query is_supported
-  BackendManager::ReleaseBackend(ng_backend_type);
-
   if (config::IsLoggingPlacement()) {
     std::cout << "\n=============New sub-graph logs=============\n";
     // print summary for nodes failed to be marked
@@ -926,7 +920,6 @@ Status MarkForClustering(Graph* graph, const std::set<string> skip_these_nodes,
   for (auto node : nodes_marked_for_clustering) {
     // TODO(amprocte): move attr name to a constant
     node->AddAttr("_ngraph_marked_for_clustering", true);
-    SetNodeBackend(node, current_backend);
     auto it = set_attributes_map.find(node->type_string());
     if (it != set_attributes_map.end()) {
       TF_RETURN_IF_ERROR(it->second(node));
@@ -986,27 +979,10 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
   return Status::OK();
 }
 
-Status GetNodeBackend(const Node* node, string* backend_name) {
-  // TODO(amprocte): move attr name to a constant
-  NGRAPH_VLOG(5) << "Getting backend " << node->name();
-  TF_RETURN_IF_ERROR(
-      GetNodeAttr(node->attrs(), "_ngraph_backend", backend_name));
-  return Status::OK();
-}
-
-// Can be extended to check the TF Device placement and/or user specified
-// backend
-// and accordingly assign backend
-void SetNodeBackend(Node* node, const string& backend_name) {
-  NGRAPH_VLOG(5) << "Setting backend " << node->name() << " " << backend_name;
-  node->AddAttr("_ngraph_backend", backend_name);
-}
-
 void ResetMarkForClustering(Graph* graph) {
-  ClearAttribute(graph, {"_ngraph_marked_for_clustering", "_ngraph_backend",
-                         "_ngraph_static_inputs"});
+  ClearAttribute(graph,
+                 {"_ngraph_marked_for_clustering", "_ngraph_static_inputs"});
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

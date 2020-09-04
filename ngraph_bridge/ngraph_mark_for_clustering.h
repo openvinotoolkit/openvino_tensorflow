@@ -27,12 +27,11 @@
 namespace tensorflow {
 namespace ngraph_bridge {
 
-Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes,
-                         const string& current_backend);
+Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes);
 // remove marking, backend and static input nodes attributes
 void ResetMarkForClustering(Graph* graph);
 Status IsSupportedByBackend(
-    const Node* node, const Backend* op_backend,
+    const Node* node, shared_ptr<Backend> op_backend,
     const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported);
@@ -47,9 +46,6 @@ bool InputIsStatic(const Node* node, int index);
 
 // Returns the static input indexes of the graph in vector static_input_indexes
 Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes);
-
-Status GetNodeBackend(const Node* node, string* backend_name);
-void SetNodeBackend(Node* node, const string& backend_name);
 
 using SetAttributesFunction = std::function<Status(Node*)>;
 const std::map<std::string, SetAttributesFunction>& GetAttributeSetters();

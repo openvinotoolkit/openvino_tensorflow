@@ -26,9 +26,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 void ActivateNGraph() {
@@ -338,7 +336,7 @@ bool Compare(std::vector<string> desired, std::vector<string> actual) {
   return true;
 }
 
-tf::SessionOptions GetSessionOptions(const string& backend_name) {
+tf::SessionOptions GetSessionOptions() {
   tf::SessionOptions options;
   options.config.mutable_graph_options()
       ->mutable_optimizer_options()
@@ -353,10 +351,6 @@ tf::SessionOptions GetSessionOptions(const string& backend_name) {
                               ->add_custom_optimizers();
 
     custom_config->set_name("ngraph-optimizer");
-    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s(
-        backend_name);
-    (*custom_config->mutable_parameter_map())["device_id"].set_s("0");
-
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
         ->set_min_graph_nodes(-1);
@@ -368,9 +362,9 @@ tf::SessionOptions GetSessionOptions(const string& backend_name) {
   return options;
 }
 
-Status CreateSession(const string& graph_filename, const string& backend_name,
+Status CreateSession(const string& graph_filename,
                      unique_ptr<tf::Session>& session) {
-  auto options = GetSessionOptions(backend_name);
+  auto options = GetSessionOptions();
   return LoadGraph(graph_filename, &session, options);
 }
 

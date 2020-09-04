@@ -16,8 +16,6 @@
 
 #include "ngraph_bridge/ngraph_api.h"
 
-namespace ng = ngraph;
-
 namespace tensorflow {
 namespace ngraph_bridge {
 namespace config {
@@ -31,33 +29,29 @@ void ngraph_enable() { Enable(); }
 void ngraph_disable() { Disable(); }
 bool ngraph_is_enabled() { return IsEnabled(); }
 
-size_t ngraph_backends_len() { return BackendsLen(); }
+size_t ngraph_backends_len() {
+  const auto backends = ListBackends();
+  return backends.size();
+}
 
-bool ngraph_list_backends(char** backends, size_t backends_len) {
+bool ngraph_list_backends(char** backends) {
   const auto ngraph_backends = ListBackends();
-  if (backends_len != ngraph_backends.size()) {
-    return false;
-  }
-
-  for (size_t idx = 0; idx < backends_len; idx++) {
+  for (size_t idx = 0; idx < ngraph_backends.size(); idx++) {
     backends[idx] = strdup(ngraph_backends[idx].c_str());
   }
   return true;
 }
 
 bool ngraph_set_backend(const char* backend) {
-  if (SetBackend(string(backend)) != tensorflow::Status::OK()) {
-    return false;
-  }
-  return true;
+  return (SetBackend(string(backend)) == tensorflow::Status::OK());
 }
 
-extern bool ngraph_get_currently_set_backend_name(char** backend) {
-  string bend;
-  if (GetCurrentlySetBackendName(&bend) != tensorflow::Status::OK()) {
+extern bool ngraph_get_backend(char** backend) {
+  string b = GetBackend();
+  if (b == "") {
     return false;
   }
-  backend[0] = strdup(bend.c_str());
+  *backend = strdup(b.c_str());
   return true;
 }
 
@@ -70,7 +64,7 @@ extern void ngraph_set_disabled_ops(const char* op_type_list) {
 }
 
 extern const char* ngraph_get_disabled_ops() {
-  return ng::join(GetDisabledOps(), ",").c_str();
+  return ngraph::join(GetDisabledOps(), ",").c_str();
 }
 }
 
@@ -80,18 +74,18 @@ void Enable() { _is_enabled = true; }
 void Disable() { _is_enabled = false; }
 bool IsEnabled() { return _is_enabled; }
 
-size_t BackendsLen() { return BackendManager::GetNumOfSupportedBackends(); }
-
-vector<string> ListBackends() {
-  return BackendManager::GetSupportedBackendNames();
-}
+vector<string> ListBackends() { return BackendManager::GetSupportedBackends(); }
 
 Status SetBackend(const string& type) {
-  return BackendManager::SetBackendName(type);
+  return BackendManager::SetBackend(type);
 }
 
-Status GetCurrentlySetBackendName(string* backend_name) {
-  return BackendManager::GetCurrentlySetBackendName(backend_name);
+string GetBackend() {
+  string backend;
+  if (BackendManager::GetBackendName(backend) != Status::OK()) {
+    return "";
+  }
+  return backend;
 }
 
 void StartLoggingPlacement() { _is_logging_placement = true; }
@@ -104,7 +98,7 @@ bool IsLoggingPlacement() {
 std::set<string> GetDisabledOps() { return disabled_op_types; }
 
 void SetDisabledOps(string disabled_ops_str) {
-  auto disabled_ops_list = ng::split(disabled_ops_str, ',');
+  auto disabled_ops_list = ngraph::split(disabled_ops_str, ',');
   // In case string is '', then splitting yields ['']. So taking care that ['']
   // corresponds to empty set {}
   if (disabled_ops_list.size() >= 1 && disabled_ops_list[0] != "") {

@@ -41,45 +41,41 @@ namespace testing {
 
 TEST(TFExec, SingleGraphOn2Threads) {
   string graph_name = "test_axpy.pbtxt";
-  vector<string> backends{"CPU", "INTERPRETER"};
-  for (auto be : backends) {
-    unique_ptr<Session> session;
-    ASSERT_OK(CreateSession(graph_name, be, session));
+  unique_ptr<Session> session;
+  ASSERT_OK(CreateSession(graph_name, session));
 
-    auto worker = [&session](size_t thread_id) {
-      string inp_tensor_name_0{"x"};
-      string inp_tensor_name_1{"y"};
-      string out_tensor_name{"add"};
-      std::vector<Tensor> out_tensor_vals;
+  auto worker = [&session](size_t thread_id) {
+    string inp_tensor_name_0{"x"};
+    string inp_tensor_name_1{"y"};
+    string out_tensor_name{"add"};
+    std::vector<Tensor> out_tensor_vals;
 
-      for (int i = 0; i < 10; i++) {
-        Tensor inp_tensor_val(tensorflow::DT_FLOAT,
-                              tensorflow::TensorShape({2, 3}));
-        vector<float> in_vals(6, float(i));
-        AssignInputValues<float>(inp_tensor_val, in_vals);
-        Tensor out_tensor_expected_val(tensorflow::DT_FLOAT,
-                                       tensorflow::TensorShape({2, 3}));
-        vector<float> out_vals(6, 6.0 * float(i));
-        AssignInputValues<float>(out_tensor_expected_val, out_vals);
+    for (int i = 0; i < 10; i++) {
+      Tensor inp_tensor_val(tensorflow::DT_FLOAT,
+                            tensorflow::TensorShape({2, 3}));
+      vector<float> in_vals(6, float(i));
+      AssignInputValues<float>(inp_tensor_val, in_vals);
+      Tensor out_tensor_expected_val(tensorflow::DT_FLOAT,
+                                     tensorflow::TensorShape({2, 3}));
+      vector<float> out_vals(6, 6.0 * float(i));
+      AssignInputValues<float>(out_tensor_expected_val, out_vals);
 
-        std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
-            {inp_tensor_name_0, inp_tensor_val},
-            {inp_tensor_name_1, inp_tensor_val}};
+      std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
+          {inp_tensor_name_0, inp_tensor_val},
+          {inp_tensor_name_1, inp_tensor_val}};
 
-        NGRAPH_VLOG(5) << "thread_id: " << thread_id << " started: " << i;
-        ASSERT_OK(
-            session->Run(inputs, {out_tensor_name}, {}, &out_tensor_vals));
-        NGRAPH_VLOG(5) << "thread_id: " << thread_id << " finished: " << i;
-        Compare(out_tensor_vals, {out_tensor_expected_val});
-      }
-    };
+      NGRAPH_VLOG(5) << "thread_id: " << thread_id << " started: " << i;
+      ASSERT_OK(session->Run(inputs, {out_tensor_name}, {}, &out_tensor_vals));
+      NGRAPH_VLOG(5) << "thread_id: " << thread_id << " finished: " << i;
+      Compare(out_tensor_vals, {out_tensor_expected_val});
+    }
+  };
 
-    std::thread thread0(worker, 0);
-    std::thread thread1(worker, 1);
+  std::thread thread0(worker, 0);
+  std::thread thread1(worker, 1);
 
-    thread0.join();
-    thread1.join();
-  }
+  thread0.join();
+  thread1.join();
 }
 
 TEST(TFExec, hello_world) {
@@ -124,9 +120,6 @@ TEST(TFExec, axpy) {
                               ->add_custom_optimizers();
 
     custom_config->set_name("ngraph-optimizer");
-    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s("CPU");
-    (*custom_config->mutable_parameter_map())["device_id"].set_s("0");
-
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
         ->set_min_graph_nodes(-1);

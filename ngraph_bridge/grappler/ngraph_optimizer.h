@@ -72,13 +72,9 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
                 double) override;
 
  private:
-  std::string config_backend_name;
-  std::string config_device_id;
   std::unordered_map<std::string, std::string> config_map;
-  std::vector<string> compulsory_attrs = {"ngraph_backend", "device_id"};
 
   void DumpGraphs(Graph&, int, std::string, std::string);
-
   static int FreshIndex();
 
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);

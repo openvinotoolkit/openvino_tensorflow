@@ -35,21 +35,6 @@ class TestUpdateConfig(NgraphTest):
 
     @pytest.mark.skipif(
         not ngraph_bridge.is_grappler_enabled(), reason='Only for Grappler')
-    def test_update_config(self):
-        config = tf.compat.v1.ConfigProto()
-        config.allow_soft_placement = True
-        config_new = ngraph_bridge.update_config(config)
-        rewriter_options = config_new.graph_options.rewrite_options
-        ngraph_optimizer_name = rewriter_options.custom_optimizers[0].name
-        assert ngraph_optimizer_name == 'ngraph-optimizer'
-        ngraph_optimizer = rewriter_options.custom_optimizers[0]
-        ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
-        ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
-        assert config_new.__str__(
-        ) == 'allow_soft_placement: true\ngraph_options {\n  rewrite_options {\n    meta_optimizer_iterations: ONE\n    min_graph_nodes: -1\n    custom_optimizers {\n      name: "ngraph-optimizer"\n      parameter_map {\n        key: "device_id"\n        value {\n          s: ""\n        }\n      }\n      parameter_map {\n        key: "ice_cores"\n        value {\n          s: "12"\n        }\n      }\n      parameter_map {\n        key: "max_batch_size"\n        value {\n          s: "64"\n        }\n      }\n      parameter_map {\n        key: "ngraph_backend"\n        value {\n          s: "CPU"\n        }\n      }\n    }\n  }\n}\n'
-
-    @pytest.mark.skipif(
-        not ngraph_bridge.is_grappler_enabled(), reason='Only for Grappler')
     def test_update_config_adds_optimizer_only_once(self):
 
         # Helper function to count the number of occurances in a config

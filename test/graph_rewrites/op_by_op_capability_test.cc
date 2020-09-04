@@ -27,6 +27,7 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/default_opset.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_backend.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
@@ -57,43 +58,25 @@ TEST(OpByOpCapability, Backend) {
   TF_CHECK_OK(root.ToGraph(&graph));
 
   bool is_supported;
-  string ng_backend_type;
-  ASSERT_OK(BackendManager::GetCurrentlySetBackendName(&ng_backend_type));
+  auto backend = BackendManager::GetBackend();
+  ASSERT_NE(backend, nullptr);
 
-  // Map with all the backends, and what the boolean is_supported should be
-  std::map<std::string, bool> backend_map{{"CPU", true}, {"INTERPRETER", true}};
+  auto constant = ngraph::op::Constant::create(ngraph::element::f32,
+                                               ngraph::Shape{}, {2.0f});
+  std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>
+      TFtoNgraphOpMap{
+          {"Const", {constant}},
+          {"Add", {std::make_shared<opset::Add>()}},
+          {"Mul",
+           {std::make_shared<opset::Multiply>(),
+            std::make_shared<opset::Subtract>()}},
+      };
 
-  // Tests three cases of (Backend, is_supported=true/false)
-  // 1. CPU, true
-  // 2. INTERPRETER, true
-  // 3. NOP, false
-  for (auto it = backend_map.begin(); it != backend_map.end(); it++) {
-    ASSERT_OK(BackendManager::SetBackendName(it->first));
-    // Create nGraph backend
-    ASSERT_OK(BackendManager::CreateBackend(it->first));
-    Backend* backend = BackendManager::GetBackend(it->first);
-
-    // Create dummy node for Const as there is no default ctor yet
-    // TODO(Sindhu) Change this to default once this is added in nGraph
-    auto constant = ngraph::op::Constant::create(ngraph::element::f32,
-                                                 ngraph::Shape{}, {2.0f});
-    std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>
-        TFtoNgraphOpMap{
-            {"Const", {constant}},
-            {"Add", {std::make_shared<ngraph::op::Add>()}},
-            {"Mul",
-             {std::make_shared<ngraph::op::Multiply>(),
-              std::make_shared<ngraph::op::Subtract>()}},
-        };
-
-    for (auto node : graph.op_nodes()) {
-      ASSERT_OK(
-          IsSupportedByBackend(node, backend, TFtoNgraphOpMap, is_supported));
-      ASSERT_EQ(is_supported, it->second);
-    }
-    BackendManager::ReleaseBackend(it->first);
+  for (auto node : graph.op_nodes()) {
+    ASSERT_OK(
+        IsSupportedByBackend(node, backend, TFtoNgraphOpMap, is_supported));
+    ASSERT_EQ(is_supported, true);
   }
-  ASSERT_OK(BackendManager::SetBackendName(ng_backend_type));
 }
 }
 }

@@ -35,12 +35,6 @@ node {
   op: "Const"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
-    key: "_ngraph_backend"
-    value {
-      s: "INTERPRETER"
-    }
-  }
-  attr {
     key: "_ngraph_cluster"
     value {
       i: 0
@@ -89,12 +83,6 @@ node {
     }
   }
   attr {
-    key: "_ngraph_backend"
-    value {
-      s: "INTERPRETER"
-    }
-  }
-  attr {
     key: "_ngraph_cluster"
     value {
       i: 0
@@ -134,12 +122,6 @@ node {
     key: "T"
     value {
       type: DT_INT8
-    }
-  }
-  attr {
-    key: "_ngraph_backend"
-    value {
-      s: "INTERPRETER"
     }
   }
   attr {

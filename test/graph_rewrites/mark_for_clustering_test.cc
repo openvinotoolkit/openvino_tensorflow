@@ -28,9 +28,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 TEST(MarkForClustering, SimpleTest) {
@@ -73,19 +71,12 @@ TEST(MarkForClustering, SimpleTest) {
   g.AddEdge(source, Graph::kControlSlot, node2, Graph::kControlSlot);
   g.AddEdge(node4, Graph::kControlSlot, sink, Graph::kControlSlot);
 
-  const char* ng_backend_env_value = std::getenv("NGRAPH_TF_BACKEND");
-  string expected_backend{"CPU"};
-  if (ng_backend_env_value != nullptr) {
-    expected_backend = std::string(ng_backend_env_value);
-  }
-  ASSERT_OK(MarkForClustering(&g, {}, expected_backend));
+  ASSERT_OK(MarkForClustering(&g, {}));
 
   string backend;
   const set<string> nodes_expected_to_be_marked{"node1", "node2", "node3",
                                                 "node4"};
   for (auto node : g.op_nodes()) {
-    ASSERT_OK(GetNodeBackend(node, &backend));
-    ASSERT_EQ(backend, expected_backend);
     ASSERT_EQ(nodes_expected_to_be_marked.find(node->name()) !=
                   nodes_expected_to_be_marked.end(),
               NodeIsMarkedForClustering(node));
@@ -93,7 +84,6 @@ TEST(MarkForClustering, SimpleTest) {
 
   ResetMarkForClustering(&g);
   for (auto node : g.op_nodes()) {
-    ASSERT_NOT_OK(GetNodeBackend(node, &backend));
     ASSERT_FALSE(NodeIsMarkedForClustering(node));
   }
 }

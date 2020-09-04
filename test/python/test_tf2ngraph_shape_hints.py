@@ -80,11 +80,8 @@ def check_pbtxt_has_exec(pbtxt_filename, num_expected_execs):
 
 def helper(self, p0_shape, p1_shape, p0_actual_shape, p1_actual_shape,
            shapehints):
-    ng_device = ngraph_bridge.get_currently_set_backend_name()
-    if ng_device != "INTERPRETER":
-        print("Only INTERPRETER backend supports precompilation")
-        env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
-        self.unset_env_variable("NGRAPH_TF_BACKEND")
+    env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
+    self.set_env_variable("NGRAPH_TF_BACKEND", "INTERPRETER")
 
     inp0 = get_inputs(p0_actual_shape)
     inp1 = get_inputs(p1_actual_shape)
@@ -110,8 +107,7 @@ def helper(self, p0_shape, p1_shape, p0_actual_shape, p1_actual_shape,
     os.remove(temp_out_pbtxt_name)
     os.remove(json_name)
 
-    if ng_device != "INTERPRETER":
-        self.restore_env_variables(env_var_map)
+    self.restore_env_variables(env_var_map)
 
 
 # TODO: Add more test cases

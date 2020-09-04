@@ -32,7 +32,6 @@ from common import NgraphTest
 
 
 class TestOpDisableOperations(NgraphTest):
-
     # Initially nothing is disabled
     def test_disable_op_0(self):
         assert ngraph_bridge.get_disabled_ops() == b''
@@ -78,7 +77,7 @@ class TestOpDisableOperations(NgraphTest):
             assert False, 'Had expected test to raise error'
 
     def test_disable_3(self):
-        old_backend = ngraph_bridge.get_currently_set_backend_name()
+        old_backend = ngraph_bridge.get_backend()
         ngraph_bridge.set_backend('CPU')
         N = 1
         C = 4
@@ -128,4 +127,5 @@ class TestOpDisableOperations(NgraphTest):
             assert False, 'Had expected test to raise error, since conv2D is disabled in ngraph'
 
         # Clean up
+        ngraph_bridge.set_backend(old_backend)
         ngraph_bridge.set_disabled_ops('')

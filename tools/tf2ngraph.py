@@ -120,8 +120,6 @@ def update_config_to_include_custom_config(config, backend, device_id,
     rewriter_options.fail_on_optimizer_errors = True
     ngraph_optimizer = rewriter_options.custom_optimizers.add()
     ngraph_optimizer.name = "ngraph-optimizer"
-    ngraph_optimizer.parameter_map["ngraph_backend"].s = backend.encode()
-    ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
     for k in backend_optional_params:
         ngraph_optimizer.parameter_map[k].s = backend_optional_params[k].encode(
         )
@@ -263,7 +261,7 @@ def prepare_argparser(formats):
         required=False,
         default=None)
     parser.add_argument(
-        "--ng_backend", default='CPU', help="Ngraph backend. Eg, NNPI")
+        "--ng_backend", default='CPU', help="Ngraph backend. Eg, CPU")
     parser.add_argument("--device_id", default='', help="Device id. Eg, 0")
     parser.add_argument(
         "--config_file",

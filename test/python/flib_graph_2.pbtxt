@@ -151,18 +151,6 @@ node {
     }
   }
   attr {
-    key: "ngraph_backend"
-    value {
-      s: "CPU"
-    }
-  }
-  attr {
-    key: "ngraph_device_id"
-    value {
-      s: ""
-    }
-  }
-  attr {
     key: "ngraph_cluster"
     value {
       i: 1
@@ -248,12 +236,6 @@ library {
         }
       }
       attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
-        }
-      }
-      attr {
         key: "_ngraph_cluster"
         value {
           i: 1
@@ -286,12 +268,6 @@ library {
           list {
             s: "loc:@Variable_1"
           }
-        }
-      }
-      attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
         }
       }
       attr {
@@ -330,12 +306,6 @@ library {
         }
       }
       attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
-        }
-      }
-      attr {
         key: "_ngraph_cluster"
         value {
           i: 1
@@ -367,12 +337,6 @@ library {
         key: "_grappler:ArithmeticOptimizer:MinimizeBroadcasts"
         value {
           b: true
-        }
-      }
-      attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
         }
       }
       attr {
@@ -410,12 +374,6 @@ library {
         }
       }
       attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
-        }
-      }
-      attr {
         key: "_ngraph_cluster"
         value {
           i: 1
@@ -440,12 +398,6 @@ library {
         key: "T"
         value {
           type: DT_DOUBLE
-        }
-      }
-      attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
         }
       }
       attr {

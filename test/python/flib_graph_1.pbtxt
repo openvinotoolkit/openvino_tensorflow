@@ -97,18 +97,6 @@ node {
     }
   }
   attr {
-    key: "ngraph_backend"
-    value {
-      s: "CPU"
-    }
-  }
-  attr {
-    key: "ngraph_device_id"
-    value {
-      s: ""
-    }
-  }
-  attr {
     key: "ngraph_cluster"
     value {
       i: 0
@@ -187,12 +175,6 @@ library {
         }
       }
       attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
-        }
-      }
-      attr {
         key: "_ngraph_cluster"
         value {
           i: 0
@@ -221,12 +203,6 @@ library {
         }
       }
       attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
-        }
-      }
-      attr {
         key: "_ngraph_cluster"
         value {
           i: 0
@@ -251,12 +227,6 @@ library {
         key: "T"
         value {
           type: DT_FLOAT
-        }
-      }
-      attr {
-        key: "_ngraph_backend"
-        value {
-          s: "CPU"
         }
       }
       attr {

@@ -233,47 +233,6 @@ Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
                 "that is not supported");
           }
 
-          // get backend.
-          // TODO: these sections can be hoisted out of the main loop
-          std::string backend_name;
-          TF_RETURN_IF_ERROR(
-              GetNodeAttr(node->attrs(), "ngraph_backend", &backend_name));
-          std::string device_id;
-          TF_RETURN_IF_ERROR(
-              GetNodeAttr(node->attrs(), "ngraph_device_id", &device_id));
-          string op_backend_name;
-          try {
-            op_backend_name = BackendManager::GetBackendCreationString(
-                backend_name, device_id);
-          } catch (const std::exception& exp) {
-            return errors::Internal(
-                "Caught exception while creating backend string ", exp.what(),
-                "\n");
-          }
-          TF_RETURN_IF_ERROR(BackendManager::CreateBackend(
-              op_backend_name));  // Created a backend here. must free it
-          // TranslateGraph must be called AFTER CreateBackend because some TF
-          // ops like CNMS and gather use backend specific nodes
-          std::unordered_map<std::string, std::string> additional_attribute_map;
-          for (auto itr : node->attrs()) {
-            // Find the optional attributes to be sent to the backend.
-            // The optional attributes have '_ngraph_' appended to the start
-            // so we need to get rid of that and only send the remaining
-            // string
-            // since the backend will only look for that.
-            // '_ngraph_' is only appended for the bridge.
-            // For e.g. _ngraph_ice_cores --> ice_cores
-            if (itr.first.find("_ngraph_") != std::string::npos) {
-              // leave out _ngraph_aot_requested
-              if (itr.first.find("_ngraph_aot_requested") ==
-                  std::string::npos) {
-                additional_attribute_map.insert(
-                    {itr.first.substr(strlen("_ngraph_")), itr.second.s()});
-              }
-            }
-          }
-          BackendManager::SetConfig(op_backend_name, additional_attribute_map);
-
           // Backend has been created and setup. Now translate
           string signature;
           std::shared_ptr<ngraph::Function> ng_function;
@@ -287,7 +246,7 @@ Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
           // Translation done, now compile
           std::string ng_exec_str;
           TF_RETURN_IF_ERROR(NGraphEncapsulateImpl::GetCompiledString(
-              op_backend_name, ng_function, &ng_exec_str));
+              ng_function, &ng_exec_str));
 
           // Compilation done, now serialize and attach as attribute
           // ng function attached as debugging information
@@ -302,7 +261,6 @@ Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info) {
           // and for bridge
           performed_aot_on_enc.insert(node->name());
           NGRAPH_VLOG(5) << "Performed AOT on " << node->name();
-          BackendManager::ReleaseBackend(op_backend_name);
         }
       }
     }  // end of for (ShapeHintMap single_hint : node_shapes_hints_sets)
@@ -344,13 +302,7 @@ Status Encapsulator::AnalysisPass() {
       continue;
     }
 
-    string node_backend;
-    if (GetNodeBackend(node, &node_backend) != Status::OK()) {
-      continue;
-    }
-
     auto it = device_name_map.find(cluster_idx);
-
     if (it != device_name_map.end()) {
       if (it->second != node->assigned_device_name()) {
         std::stringstream ss_err;
@@ -366,24 +318,6 @@ Status Encapsulator::AnalysisPass() {
                      << " requested device to '" << node->assigned_device_name()
                      << "'";
       device_name_map[cluster_idx] = node->assigned_device_name();
-    }
-
-    auto itr = backend_name_map.find(cluster_idx);
-
-    if (itr != backend_name_map.end()) {
-      if (itr->second != node_backend) {
-        std::stringstream ss_err;
-        ss_err << "Node " << node->name() << " in cluster " << cluster_idx
-               << " has assigned backend " << node_backend
-               << " but another node with assigned backend " << it->second
-               << " has already been seen in the same cluster";
-
-        return errors::Internal(ss_err.str());
-      }
-    } else {
-      NGRAPH_VLOG(3) << "setting cluster " << cluster_idx
-                     << " requested backend to '" << node_backend << "'";
-      backend_name_map[cluster_idx] = node_backend;
     }
   }
 
@@ -653,8 +587,6 @@ Status Encapsulator::RewritePass(
   // Pass 3: Create encapsulation nodes for all clusters.
   for (auto& kv : device_name_map) {
     int cluster_idx = kv.first;
-    string cluster_backend = backend_name_map[cluster_idx];
-
     std::stringstream ss;
     ss << "ngraph_cluster_" << cluster_idx;
 
@@ -675,17 +607,13 @@ Status Encapsulator::RewritePass(
     }
 
     Node* n;
-    NodeBuilder nb =
-        NodeBuilder(encap_node_name, "NGraphEncapsulate")
-            .Attr("ngraph_cluster", cluster_idx)
-            .Attr("ngraph_backend",
-                  BackendManager::GetBackendAttributeValues(cluster_backend)
-                      .at("ngraph_backend"))
-            .Attr("Targuments", input_types)
-            .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-            .Attr("ngraph_graph_id", graph_id)
-            .Device(device_name_map[cluster_idx])
-            .Input(inputs);
+    NodeBuilder nb = NodeBuilder(encap_node_name, "NGraphEncapsulate")
+                         .Attr("ngraph_cluster", cluster_idx)
+                         .Attr("Targuments", input_types)
+                         .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+                         .Attr("ngraph_graph_id", graph_id)
+                         .Device(device_name_map[cluster_idx])
+                         .Input(inputs);
     if (!device_config.empty()) {
       NGRAPH_VLOG(3) << "Device config is not empty";
       for (auto const& i : device_config) {

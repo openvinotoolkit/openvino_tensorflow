@@ -76,16 +76,15 @@ Status InferenceEngine::LoadImage(const string& network,
   if (m_preload_images) {
     // Set the CPU as the backend before these ops
     string current_backend;
-    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::GetCurrentlySetBackendName(
-        &current_backend));
-    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackendName("CPU"));
+    TF_CHECK_OK(
+        tf::ngraph_bridge::BackendManager::GetBackendName(current_backend));
+    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackend("CPU"));
     std::vector<tf::Tensor> resized_tensors;
     TF_CHECK_OK(ReadTensorFromImageFile(
         m_image_files, m_input_height, m_input_width, m_input_mean, m_input_std,
         m_use_NCHW, m_input_channels, &resized_tensors));
     m_image_to_repeat = resized_tensors[0];
-    TF_CHECK_OK(
-        tf::ngraph_bridge::BackendManager::SetBackendName(current_backend));
+    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackend(current_backend));
   }
   // Now compile the graph if needed
   // This would be useful to detect errors early. For a graph
@@ -124,9 +123,6 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
                               ->add_custom_optimizers();
 
     custom_config->set_name("ngraph-optimizer");
-    (*custom_config->mutable_parameter_map())["ngraph_backend"].set_s(backend);
-    (*custom_config->mutable_parameter_map())["device_id"].set_s(dev_id);
-
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
         ->set_min_graph_nodes(-1);

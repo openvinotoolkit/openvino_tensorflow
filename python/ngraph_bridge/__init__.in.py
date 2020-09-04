@@ -41,8 +41,8 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import ctypes
 
 __all__ = [
-    'enable', 'disable', 'is_enabled', 'backends_len', 'list_backends',
-    'set_backend', 'get_currently_set_backend_name',
+    'enable', 'disable', 'is_enabled', 'list_backends',
+    'set_backend', 'get_backend',
     'start_logging_placement', 'stop_logging_placement',
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config',
@@ -114,10 +114,12 @@ def requested():
 
 if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     ngraph_bridge_lib.ngraph_list_backends.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_backend.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_set_backend.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_get_currently_set_backend_name.restype = ctypes.c_bool
+    ngraph_bridge_lib.ngraph_get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
+    ngraph_bridge_lib.ngraph_get_backend.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
     ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
@@ -130,23 +132,16 @@ if ngraph_classic_loaded:
     def enable():
         ngraph_bridge_lib.ngraph_enable()
 
-
     def disable():
         ngraph_bridge_lib.ngraph_disable()
-
 
     def is_enabled():
         return ngraph_bridge_lib.ngraph_is_enabled()
 
-
-    def backends_len():
-        return ngraph_bridge_lib.ngraph_backends_len()
-
-
     def list_backends():
-        len_backends = backends_len()
+        len_backends = ngraph_bridge_lib.ngraph_backends_len()
         result = (ctypes.c_char_p * len_backends)()
-        if not ngraph_bridge_lib.ngraph_list_backends(result, len_backends):
+        if not ngraph_bridge_lib.ngraph_list_backends(result):
             raise Exception("Expected " + str(len_backends) +
                             " backends, but got some  other number of backends")
         list_result = list(result)
@@ -160,12 +155,11 @@ if ngraph_classic_loaded:
         if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
             raise Exception("Backend " + backend + " unavailable.")
 
-    def get_currently_set_backend_name():
-        result = (ctypes.c_char_p * 1)()
-        if not ngraph_bridge_lib.ngraph_get_currently_set_backend_name(result):
+    def get_backend():
+        result = ctypes.c_char_p()
+        if not ngraph_bridge_lib.ngraph_get_backend(ctypes.byref(result)):
             raise Exception("Cannot get currently set backend")
-        list_result = list(result)
-        return list_result[0].decode("utf-8")
+        return result.value.decode("utf-8")
 
     def start_logging_placement():
         ngraph_bridge_lib.ngraph_start_logging_placement()

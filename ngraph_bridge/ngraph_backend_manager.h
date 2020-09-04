@@ -33,89 +33,36 @@
 #include "ngraph_bridge/ngraph_backend.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-struct _Backend {
-  shared_ptr<Backend> backend_ptr;
-  mutex backend_mutex;
-};
-
 class BackendManager {
  public:
-  // Returns the backend name currently set
-  // If env variable NGRAPH_TF_BACKEND is set it has precedence
-  // over the BackendManager backend ng_backend_name_
-  static Status GetCurrentlySetBackendName(string* backend);
-
   // Returns the nGraph supported backend names
-  static vector<string> GetSupportedBackendNames();
-
-  // Returns number of nGraph supported backends
-  static size_t GetNumOfSupportedBackends();
+  static vector<string> GetSupportedBackends();
 
   // Set the BackendManager backend ng_backend_name_
-  static Status SetBackendName(const string& backend_name);
+  static Status SetBackend(const string& backend_name = "CPU");
 
-  // Creates backend of backend_name type
-  static Status CreateBackend(const string& backend_name);
+  // Returns the currently set backend
+  static shared_ptr<Backend> GetBackend();
 
-  // Tries to create a backend using the backend_string
-  // which is a combination of backend_name:device_id
-  // Meant to check whether a backend (with or without device id)
-  // can be created or not
-  // For e.g CanCreateBackend("GPU") and CanCreateBackend("GPU:0")
-  static Status CanCreateBackend(const string& backend_string);
+  // Returns the currently set backend's name
+  static Status GetBackendName(string& backend_name);
 
-  static void ReleaseBackend(const string& backend_name);
-
-  static void SetConfig(const string& backend_name,
-                        const std::unordered_map<std::string, std::string>&
-                            additional_attributes_map);
-
-  // Returns a backend pointer of the type specified by the backend name
-  // The backend must have already been created (use CreateBackend(...))
-  static Backend* GetBackend(const string& backend_name);
-
-  // LockBackend
-  static void LockBackend(const string& backend_name);
-
-  // UnlockBackend
-  static void UnlockBackend(const string& backend_name);
-
-  // Given a string, splits the string into the backend name and other
-  // attributes
-  // This does not check whether the string corresponds to a valid backend
-  // For e.g.
-  // 1. GetBackendAttributeValues("CPU")
-  // returns {{"ngraph_backend", "CPU"}, {"_ngraph_device_config", ""}}
-  // 2. GetBackendAttributeValues("GPU:2")
-  // returns {{"ngraph_backend", "GPU"}, {"_ngraph_device_config", "2"}}
-  // 3. GetBackendAttributeValues("TEST:ME")
-  // returns {{"ngraph_backend", "TEST"}, {"_ngraph_device_config", "ME"}}
-  static unordered_map<string, string>
-  GetBackendAttributeValues(  // SplitBackendConfig
-      const string& backend_config);
-
-  // Given a backend name and device id
-  // joins them into a string to create ngraph backend
-  static string GetBackendCreationString(const string& backend_name,
-                                         const string& device_id);
+  static void SetConfig(const map<string, string>& config);
 
   ~BackendManager();
 
  private:
-  static string ng_backend_name_;  // currently set backend name
-  static mutex ng_backend_name_mutex_;
+  // Creates backend of backend_name type
+  static Status CreateBackend(shared_ptr<Backend>& backend,
+                              string& backend_name);
 
-  // map of cached backend objects
-  static map<string, std::unique_ptr<_Backend>> ng_backend_map_;
-  static mutex ng_backend_map_mutex_;
-
-  // Map of backends and their reference counts
-  static std::map<std::string, int> ref_count_each_backend_;
+  static shared_ptr<Backend> m_backend;
+  static string m_backend_name;
+  static mutex m_backend_mutex;
 };
 
 }  // namespace ngraph_bridge

@@ -54,7 +54,7 @@ extern tf::Status CheckTopLabel(const std::vector<tf::Tensor>& outputs,
 void PrintAvailableBackends() {
   // Get the list of backends
   auto supported_backends =
-      tf::ngraph_bridge::BackendManager::GetSupportedBackendNames();
+      tf::ngraph_bridge::BackendManager::GetSupportedBackends();
   vector<string> backends(supported_backends.begin(), supported_backends.end());
 
   cout << "Available backends: " << endl;
@@ -68,7 +68,7 @@ void PrintAvailableBackends() {
 tf::Status SetNGraphBackend(const string& backend_name) {
   // Select a backend
   tf::Status status =
-      tf::ngraph_bridge::BackendManager::SetBackendName(backend_name);
+      tf::ngraph_bridge::BackendManager::SetBackend(backend_name);
   return status;
 }
 

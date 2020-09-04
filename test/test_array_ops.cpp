@@ -219,9 +219,6 @@ TEST(ArrayOps, GatherNd3D) {
 }  // end of test op GatherND
 
 // Test op: Gather. vector indices
-// Test fails because of this error:
-// Not found: No attr named '_ngraph_backend' in NodeDef:
-// This is because op_executor does not go through mark_for_clustering
 TEST(ArrayOps, GatherV2Vector) {
   int dim = 5;
 

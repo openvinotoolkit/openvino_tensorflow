@@ -17,7 +17,6 @@
 #include "tensorflow/core/common_runtime/optimization_registry.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 // ------------------------------------------------------------------
@@ -28,8 +27,6 @@ REGISTER_OP("NGraphEncapsulate")
     .Attr("Tresults: list(type) >= 0")
     .Attr("ngraph_cluster: int")
     .Attr("ngraph_graph_id: int")
-    .Attr("ngraph_backend: string")
-    .Attr("ngraph_device_id: string")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 

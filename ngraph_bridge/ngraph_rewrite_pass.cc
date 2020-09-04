@@ -25,7 +25,6 @@
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
 #include "ngraph_bridge/ngraph_encapsulate_clusters.h"
@@ -35,7 +34,6 @@
 using namespace std;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 class NGraphRewritePass : public GraphOptimizationPass {
@@ -113,30 +111,12 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
-    // Get backend + its configurations
-    // to be attached to the nodes
-    // Precedence Order: Env Variable > BackendManager
-    std::unordered_map<std::string, std::string> config_map;
-    string backend_creation_string;
-    // GetCurrentlySetBackendName could return GPU:0 (not just GPU)
-    TF_RETURN_IF_ERROR(
-        BackendManager::GetCurrentlySetBackendName(&backend_creation_string));
-
-    // splits into {"ngraph_backend", "ngraph_device_id"}
-    config_map = BackendManager::GetBackendAttributeValues(
-        backend_creation_string);  // SplitBackendConfig
-    config_map.erase("ngraph_backend");
-
-    if ((std::getenv("NGRAPH_TF_LOG_0_DISABLED") == nullptr)) {
-      NGRAPH_VLOG(0) << "NGraph using backend: " << backend_creation_string;
-    }
-
     // Now Process the Graph
 
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
-    TF_RETURN_IF_ERROR(MarkForClustering(options.graph->get(), skip_these_nodes,
-                                         backend_creation_string));
+    TF_RETURN_IF_ERROR(
+        MarkForClustering(options.graph->get(), skip_these_nodes));
     if (DumpMarkedGraphs()) {
       DumpGraphs(options, idx, "marked", "Graph Marked for Clustering");
     }
@@ -156,6 +136,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // 4. Encapsulate clusters then, if requested, dump the graphs.
     FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
+    std::unordered_map<std::string, std::string> config_map;
     auto status = EncapsulateClusters(options.graph->get(), idx, fdeflib_new,
                                       config_map, {0, {}});
     if (status != Status::OK()) {

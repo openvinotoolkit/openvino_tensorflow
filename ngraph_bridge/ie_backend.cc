@@ -28,12 +28,15 @@ using namespace ngraph;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-IE_Backend::IE_Backend(const string& configuration_string) {
-  string config = configuration_string;
-  // Get device name, after colon if present: IE:CPU -> CPU
-  auto separator = config.find(":");
-  if (separator != config.npos) {
-    config = config.substr(separator + 1);
+IE_Backend::IE_Backend(const string& config) {
+  string device = config.substr(0, config.find(":"));
+  InferenceEngine::Core core;
+  auto devices = core.GetAvailableDevices();
+  // TODO: Handle multiple devices
+  if (find(devices.begin(), devices.end(), device) == devices.end()) {
+    stringstream ss;
+    ss << "Device '" << config << "' not found.";
+    throw runtime_error(ss.str());
   }
   m_device = config;
 }

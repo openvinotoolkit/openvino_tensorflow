@@ -18,20 +18,18 @@
 #define NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include <iostream>
-#include "tensorflow/core/graph/graph.h"
-
 #include "ngraph/ngraph.hpp"
+#include "tensorflow/core/graph/graph.h"
 
 #include "ngraph_bridge/ngraph_partial_shapes.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 typedef std::map<std::string, std::vector<int>> ShapeHintMap;
@@ -94,10 +92,6 @@ class Encapsulator {
   // A map from cluster indices to the expected device name for nodes
   // in that cluster.
   std::map<int, std::string> device_name_map;
-
-  // We *should* eventually have a way of monitoring the device and the backend
-  // together
-  std::map<int, std::string> backend_name_map;
 
   // As we build the graph we will be tracking the.. TODO(amprocte): finish
   // this comment.

@@ -9,10 +9,6 @@
 
 NGraphExecTest.Axpy8bit
 NGraphExecTest.MixedTensors
-BackendManager.SetBackend
-BackendManager.GetCurrentlySetBackendName
-BackendManager.CanCreateBackend
-OpByOpCapability.Backend
 MathOps.Sum
 MathOps.Mean
 MathOps.Ceil

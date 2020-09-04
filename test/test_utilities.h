@@ -150,9 +150,9 @@ void Compare(const Tensor& T1, const Tensor& T2,
 // Compares Tensors considering tolerance
 void Compare(Tensor& T1, Tensor& T2, float tol);
 
-tf::SessionOptions GetSessionOptions(const string& backend_name);
+tf::SessionOptions GetSessionOptions();
 
-Status CreateSession(const string& graph_filename, const string& backend_name,
+Status CreateSession(const string& graph_filename,
                      unique_ptr<tf::Session>& session);
 
 Status LoadGraph(const string& graph_file_name,

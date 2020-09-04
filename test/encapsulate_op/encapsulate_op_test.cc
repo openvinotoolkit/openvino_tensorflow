@@ -101,14 +101,9 @@ TEST(EncapsulateOp, GetNgExecutable) {
     }
   }
 
-  ng_encap_impl.SetOpBackend("CPU");
-  ASSERT_OK(BackendManager::CreateBackend(ng_encap_impl.GetOpBackend()));
-
   std::shared_ptr<Executable> ng_exec;
   ASSERT_OK(ng_encap_impl.GetNgExecutable(input_tensors, input_shapes,
                                           static_input_map, ng_exec));
-
-  BackendManager::ReleaseBackend("CPU");
 }
 
 // Test: Allocating ngraph tensors
@@ -120,11 +115,8 @@ TEST(EncapsulateOp, AllocateNGTensors) {
   auto f = make_shared<ngraph::Function>(make_shared<opset::Add>(A, B),
                                          ngraph::ParameterVector{A, B});
 
-  ng_encap_impl.SetOpBackend("CPU");
-  ASSERT_OK(BackendManager::CreateBackend(ng_encap_impl.GetOpBackend()));
-
   std::shared_ptr<Executable> ng_exec;
-  NGraphEncapsulateImpl::Compile(ng_encap_impl.GetOpBackend(), f, ng_exec);
+  NGraphEncapsulateImpl::Compile(f, ng_exec);
 
   std::vector<tensorflow::TensorShape> input_shapes;
   std::vector<tensorflow::Tensor> input_tensors;
@@ -141,9 +133,7 @@ TEST(EncapsulateOp, AllocateNGTensors) {
   }
 
   std::vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
-
   ASSERT_OK(ng_encap_impl.AllocateNGTensors(input_tensors, ng_inputs));
-  BackendManager::ReleaseBackend("CPU");
 }
 }
 }

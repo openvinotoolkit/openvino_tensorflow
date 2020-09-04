@@ -30,7 +30,6 @@
 #include "tensorflow/core/graph/graph_constructor.h"
 
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_backend.h"
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
@@ -54,26 +53,6 @@ int NGraphEncapsulateOp::s_instance_id = 0;
 //---------------------------------------------------------------------------
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx) {
-  // Set the backend type for the this NGraphEncapsulate Op
-  std::string ngraph_backend;
-  OP_REQUIRES_OK(ctx, ctx->GetAttr<string>("ngraph_backend", &ngraph_backend));
-  std::string ngraph_device_id;
-  OP_REQUIRES_OK(ctx,
-                 ctx->GetAttr<string>("ngraph_device_id", &ngraph_device_id));
-
-  // Concatenate the backend_name:device_id
-  string backend_name = BackendManager::GetBackendCreationString(
-      ngraph_backend, ngraph_device_id);
-
-  NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Create backend " << def().name()
-                 << "Backend: " << backend_name;
-  OP_REQUIRES_OK(ctx, BackendManager::CreateBackend(backend_name));
-
-  auto backend = BackendManager::GetBackend(backend_name);
-  OP_REQUIRES(ctx, backend != nullptr,
-              errors::Internal("Cannot get the backend object for backend: ",
-                               backend_name));
-
   NGRAPH_VLOG(1) << "Create Executor " << name();
   ng_encap_impl_.SetName(name());
 
@@ -183,12 +162,6 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   auto node_def = ctx->def();
   OP_REQUIRES_OK(ctx, ng_encap_impl_.ParseNodeAttributes(
                           node_def.attr(), &additional_attribute_map));
-
-  ng_encap_impl_.SetOpBackend(backend_name);
-
-  // SetConfig will be called for each EncapsulateOp
-  BackendManager::SetConfig(ng_encap_impl_.GetOpBackend(),
-                            additional_attribute_map);
 }
 
 //---------------------------------------------------------------------------
@@ -201,10 +174,6 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
   NG_TRACE(oss.str(), name(), "");
   NGRAPH_VLOG(2) << "~NGraphEncapsulateOp::" << name();
   ng_encap_impl_.ClearExecMaps();
-
-  // Release the backend
-  NGRAPH_VLOG(2) << "~NGraphEncapsulateOp():: ReleaseBackend";
-  BackendManager::ReleaseBackend(ng_encap_impl_.GetOpBackend());
 }
 
 //---------------------------------------------------------------------------
@@ -316,14 +285,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     NG_TRACE("Execute nGraph", name(), "");
     Timer execute_function;
     {
-      BackendManager::LockBackend(ng_encap_impl_.GetOpBackend());
       NGRAPH_VLOG(4)
           << "NGraphEncapsulateOp::Compute call starting for cluster "
           << ng_encap_impl_.GetNgraphCluster();
       try {
         ng_exec->call(ng_outputs, ng_inputs);
       } catch (const std::exception& exp) {
-        BackendManager::UnlockBackend(ng_encap_impl_.GetOpBackend());
         Status st = ng_encap_impl_.DumpNgFunction(
             "tf_function_error_" + ctx->op_kernel().name() + ".json", ng_exec);
         string status_string =
@@ -333,7 +300,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                              st.error_message()));
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       } catch (...) {
-        BackendManager::UnlockBackend(ng_encap_impl_.GetOpBackend());
         Status st = ng_encap_impl_.DumpNgFunction(
             "tf_function_error_" + ctx->op_kernel().name() + ".json", ng_exec);
         string status_string =
@@ -342,7 +308,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                              st.error_message()));
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       }
-      BackendManager::UnlockBackend(ng_encap_impl_.GetOpBackend());
     }
     time_execute_function = execute_function.ElapsedInMS();
   }

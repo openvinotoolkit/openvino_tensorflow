@@ -38,7 +38,6 @@
 using namespace std;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 //
@@ -98,18 +97,6 @@ struct Cluster {
   std::set<const Edge*> outgoing_edges;
 #endif
 };
-
-Status InitialiseNodeBackend(Node* node, string* backend) {
-  NGRAPH_VLOG(5) << "Initialize Node Backend " << node->name();
-  if (!HasNodeAttr(node->def(), "_ngraph_backend")) {
-    *backend = "HOST";
-    return Status::OK();
-  }
-  NGRAPH_VLOG(5) << "Should have been assigned Node Backend " << node->name();
-  TF_RETURN_IF_ERROR(GetNodeBackend(node, backend));
-  // TF_RETURN_IF_ERROR(GetNodeAttr(node->attrs(), "_ngraph_backend", backend));
-  return Status::OK();
-}
 
 Status CanContractEdgeBackendCheck(
     Edge* edge, const std::map<Node*, std::shared_ptr<Cluster>>& cluster_map,
@@ -339,14 +326,9 @@ Status AssignClusters(Graph* graph) {
     int new_index = gc.NewNode();
     cluster_map[node] = std::make_shared<Cluster>();
     cluster_map[node]->index = new_index;
-    string backend;
-    TF_RETURN_IF_ERROR(InitialiseNodeBackend(node, &backend));
-
-    cluster_map[node]->backend = backend;
     cluster_map[node]->nodes.insert(node);
     NGRAPH_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
-                   << node->name() << "[" << node->type_string() << "]"
-                   << " backend " << backend;
+                   << node->name() << "[" << node->type_string() << "]";
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
     // get predicate string for the node
@@ -822,5 +804,4 @@ void ResetAssignClusters(Graph* graph) {
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

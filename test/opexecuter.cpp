@@ -112,9 +112,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   ValidateGraph(graph, {"Const"});
 
   ActivateNGraph();
-  string backend_name;
-  TF_CHECK_OK(BackendManager::GetCurrentlySetBackendName(&backend_name));
-  tf::SessionOptions options = GetSessionOptions(backend_name);
+  tf::SessionOptions options = GetSessionOptions();
   ClientSession session(tf_scope_, options);
   try {
     session.Run(sess_run_fetchoutputs_, &ngraph_outputs);

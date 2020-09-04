@@ -44,12 +44,10 @@ class NGraphEncapsulateImpl {
                           std::vector<const Tensor*>& static_input_map,
                           std::stringstream& signature_ss);
 
-  static Status Compile(const std::string& backend_name,
-                        std::shared_ptr<ngraph::Function> ng_function,
+  static Status Compile(std::shared_ptr<ngraph::Function> ng_function,
                         std::shared_ptr<Executable>& ng_exec);
 
-  static Status GetCompiledString(const std::string& backend_name,
-                                  std::shared_ptr<ngraph::Function> ng_function,
+  static Status GetCompiledString(std::shared_ptr<ngraph::Function> ng_function,
                                   std::string* ng_exec_str);
 
   // Calls Compute Signature and gets ngraph executable
@@ -59,8 +57,9 @@ class NGraphEncapsulateImpl {
                          std::shared_ptr<Executable>& ng_exec);
 
   // Allocate nGraph tensors for given TF tensors
-  Status AllocateNGTensors(const std::vector<Tensor>& tf_tensors,
-                           vector<shared_ptr<ng::runtime::Tensor>>& ng_tensors);
+  Status AllocateNGTensors(
+      const std::vector<Tensor>& tf_tensors,
+      vector<shared_ptr<ngraph::runtime::Tensor>>& ng_tensors);
 
   // Clear all maps with ng_exec as keys
   void ClearExecMaps();
@@ -90,12 +89,6 @@ class NGraphEncapsulateImpl {
   void SetNumberOfInputs(const int& n) { m_number_inputs = n; }
 
   const int& GetInstanceId() { return my_instance_id; }
-
-  const string& GetOpBackend() { return m_op_backend_name; }
-
-  void SetOpBackend(const string& backend_name) {
-    m_op_backend_name = backend_name;
-  }
 
   const std::vector<bool> GetStaticInputVector() { return m_input_is_static; }
 
@@ -137,7 +130,6 @@ class NGraphEncapsulateImpl {
   int m_number_outputs = -1;
   int m_number_inputs = -1;
   int my_instance_id{0};
-  string m_op_backend_name;
   string m_name;
   std::vector<bool> m_input_is_static;
   std::list<std::string> m_lru;

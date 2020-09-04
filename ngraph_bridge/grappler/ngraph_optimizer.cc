@@ -27,7 +27,6 @@
 #include "tensorflow/core/platform/protobuf.h"
 
 #include "ngraph_bridge/grappler/ngraph_optimizer.h"
-#include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 
 #include <iostream>
@@ -40,38 +39,25 @@ namespace ngraph_bridge {
 Status NgraphOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
   const auto params = config->parameter_map();
-  for (size_t i = 0; i < compulsory_attrs.size(); i++) {
-    if (params.count(compulsory_attrs[i]) == 0) {
-      NGRAPH_VLOG(0) << "NGTF_OPTIMIZER: Compulsory attribute "
-                     << compulsory_attrs[i] << " not found.";
-      return errors::Internal("NGTF_OPTIMIZER: Missing compulsory attributes.");
-    }
-  }
-  config_backend_name = params.at("ngraph_backend").s();
-  config_device_id = params.at("device_id").s();
-  NGRAPH_VLOG(3) << "Backend name from config: " << config_backend_name;
   std::set<ShapeHintMap> shape_hints;
   // typedef std::map<std::string, std::vector<int>> ShapeHintMap;
   for (auto i : params) {
-    if (i.first != "ngraph_backend") {
-      // TODO: slightly hacky. The bridge reserves the right to use optional
-      // attributes whose names start with shape_hint
-      if (i.first.rfind("shape_hint", 0) != 0) {
-        config_map[(i.first == "device_id" ? "" : "_") +
-                   std::string("ngraph_") + i.first] = i.second.s();
-        NGRAPH_VLOG(3) << "Attribute: " << i.first
-                       << " Value: " << config_map["_ngraph_" + i.first];
-      } else {
-        ShapeHintMap hint;
-        for (auto k : i.second.func().attr().at("hint_body").func().attr()) {
-          vector<int> full_or_partial_shape;
-          for (auto dim : k.second.tensor().int_val()) {
-            full_or_partial_shape.push_back(dim);
-          }
-          hint[k.first] = full_or_partial_shape;
+    // TODO: slightly hacky. The bridge reserves the right to use optional
+    // attributes whose names start with shape_hint
+    if (i.first.rfind("shape_hint", 0) != 0) {
+      config_map["_ngraph_" + i.first] = i.second.s();
+      NGRAPH_VLOG(3) << "Attribute: " << i.first
+                     << " Value: " << config_map["_ngraph_" + i.first];
+    } else {
+      ShapeHintMap hint;
+      for (auto k : i.second.func().attr().at("hint_body").func().attr()) {
+        vector<int> full_or_partial_shape;
+        for (auto dim : k.second.tensor().int_val()) {
+          full_or_partial_shape.push_back(dim);
         }
-        shape_hints.insert(hint);
+        hint[k.first] = full_or_partial_shape;
       }
+      shape_hints.insert(hint);
     }
   }
   auto itr = params.find("aot_requested");
@@ -201,27 +187,8 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     DumpGraphs(graph, idx, "unmarked", "Unmarked Graph");
   }
 
-  // Get backend + its configurations, to be attached to the nodes
-  // using RewriteConfig
-  string backend_creation_string = BackendManager::GetBackendCreationString(
-      config_backend_name, config_device_id);
-
-  // Override from the env. for debugging purposes
-  if (std::getenv("NGRAPH_TF_BACKEND") != nullptr) {
-    backend_creation_string = std::getenv("NGRAPH_TF_BACKEND");
-  }
-
-  TF_RETURN_IF_ERROR(BackendManager::CanCreateBackend(backend_creation_string));
-  NGRAPH_VLOG(1) << "Setting backend from the RewriteConfig "
-                 << backend_creation_string;
-
-  if ((std::getenv("NGRAPH_TF_LOG_0_DISABLED") == nullptr)) {
-    NGRAPH_VLOG(0) << "NGraph using backend: " << backend_creation_string;
-  }
-
   // 1. Mark for clustering then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(
-      MarkForClustering(&graph, skip_these_nodes, backend_creation_string));
+  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes));
   if (DumpMarkedGraphs()) {
     DumpGraphs(graph, idx, "marked", "Graph Marked for Clustering");
   }

@@ -37,11 +37,7 @@ class TestRewriterConfigBackendSetting(NgraphTest):
     @pytest.mark.skipif(
         not ngraph_bridge.is_grappler_enabled(),
         reason='Rewriter config only works for grappler path')
-    @pytest.mark.parametrize(("backend",), (
-        ('CPU',),
-        ('INTERPRETER',),
-    ))
-    def test_config_updater_api(self, backend):
+    def test_config_updater_api(self):
         dim1 = 3
         dim2 = 4
         a = tf.compat.v1.placeholder(tf.float32, shape=(dim1, dim2), name='a')
@@ -56,22 +52,6 @@ class TestRewriterConfigBackendSetting(NgraphTest):
         rewriter_options.min_graph_nodes = -1
         ngraph_optimizer = rewriter_options.custom_optimizers.add()
         ngraph_optimizer.name = "ngraph-optimizer"
-        ngraph_optimizer.parameter_map["ngraph_backend"].s = backend.encode()
-        ngraph_optimizer.parameter_map["device_id"].s = b'0'
-        # TODO: This test will pass if grappler fails silently.
-        # Need to do something about that
-        backend_extra_params_map = {
-            'CPU': {
-                'device_config': ''
-            },
-            'INTERPRETER': {
-                'test_echo': '42',
-                'hello': '3'
-            }
-        }
-        extra_params = backend_extra_params_map[backend]
-        for k in extra_params:
-            ngraph_optimizer.parameter_map[k].s = extra_params[k].encode()
         config.MergeFrom(
             tf.compat.v1.ConfigProto(
                 graph_options=tf.compat.v1.GraphOptions(

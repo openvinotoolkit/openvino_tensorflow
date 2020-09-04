@@ -101,7 +101,7 @@ TEST(DeadnessCheck, livedead1) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -140,7 +140,7 @@ TEST(DeadnessCheck, DTestG1) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -191,7 +191,7 @@ TEST(DeadnessCheck, DTestG2) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -244,7 +244,7 @@ TEST(DeadnessCheck, DTestG3) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -310,7 +310,7 @@ TEST(DeadnessCheck, DISABLED_DTestG4) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -364,7 +364,7 @@ TEST(DeadnessCheck, DTestG4New) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
@@ -453,7 +453,7 @@ TEST(DeadnessCheck, DTestG5) {
 
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
-  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes, "CPU"));
+  ASSERT_OK(MarkForClustering(&graph, skip_these_nodes));
   ASSERT_OK(AssignClusters(&graph));
 
   std::map<std::string, Node*> node_map;
