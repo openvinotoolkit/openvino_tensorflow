@@ -14,9 +14,9 @@
 
   - wait
   - command: |
-      NGTF_GTEST_FILE=`pwd`/test/cpp_tests_list_IECPU.txt PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
+      PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
-    label: ":chrome: C++ Unit Test"
+    label: ":chrome: C++ Unit Test (GTest) ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

@@ -1,0 +1,24 @@
+# GTEST Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by .../test/main.cpp (Google Test)
+
+#  Follows --gtest_filter patterns:
+#    * --> all 
+#    MathOps.* --> all tests under MathOps class
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+
+###################################################
+[SKIP]
+# Specify tests/patterns/regex that should be excluded/skipped
+

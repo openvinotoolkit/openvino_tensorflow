@@ -1,0 +1,51 @@
+# GTEST Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by .../test/main.cpp (Google Test)
+
+#  Follows --gtest_filter patterns:
+#    * --> all 
+#    MathOps.* --> all tests under MathOps class
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+
+
+###################################################
+[SKIP]
+# Specify tests/patterns/regex that should be excluded/skipped
+
+NGraphExecTest.Axpy8bit
+NGraphExecTest.MixedTensors
+MathOps.Sum
+MathOps.Mean
+MathOps.Ceil
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.Pow0D1D
+MathOps.SqueezeNoAttributes
+MathOps.NotEqual
+MathOpsSumFixture.FullSet
+NNOps.L2Loss
+NNOps.SoftmaxZeroDimTest1
+NNOps.SoftmaxZeroDimTest2
+ArrayOps.Slice
+ArrayOps.StridedSliceTest1
+ArrayOps.Fill
+ArrayOps.Shape2D
+ArrayOps.Shape3D
+ArrayOps.SplitNegativeAxis
+ArrayOps.SplitPositiveAxis
+ArrayOps.SplitVNegSizeSplit
+ArrayOps.SplitVNegativeAxis
+ArrayOps.SplitVPositiveSizeSplits
+ArrayOps.Tile
