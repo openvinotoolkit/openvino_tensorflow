@@ -23,4 +23,5 @@ tests_common.txt
 # Specify tests/patterns/regex that should be excluded/skipped
 
 ArrayOps.Tile
+MathOps.ArgMin3D
 

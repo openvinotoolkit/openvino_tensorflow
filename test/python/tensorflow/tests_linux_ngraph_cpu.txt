@@ -26,10 +26,9 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-# None
-
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 
-# None
+argmax_op_test.ArgMaxTest.testEmpty
+argmax_op_test.ArgMaxTest.testInt64

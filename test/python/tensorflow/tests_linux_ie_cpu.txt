@@ -26,16 +26,23 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-# None
-
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
+#Fails with this error : TopKImpl - Incorrect input data/index values precision.
+#https://github.com/openvinotoolkit/openvino/blob/master/inference-engine/src/mkldnn_plugin/nodes/topk.cpp#L39
+#OV TopK expects data to be F32 or BF16 and index I32
+argmax_op_test.ArgMaxTest.testDefaultAxis 
+argmax_op_test.ArgMaxTest.testInt32
 
-argmax_op_test.ArgMaxTest.testDouble
-argmax_op_test.ArgMaxTest.testFloat
-argmax_op_test.ArgMaxTest.testFloatInt32Output
+argmax_op_test.ArgMaxTest.testFloat #Failed to set Blob with precision not corresponding to user output precision.
+argmax_op_test.ArgMaxTest.testInt64 #Unable to add a parameter to a function with no parameters!
+argmax_op_test.ArgMaxTest.testDouble #IE does not support f64 precision; fails with CF too
+
+#Fails with zero dim error; fails with CF too
 argmax_op_test.ArgMaxTest.testOutputEmpty
+argmax_op_test.ArgMaxTest.testEmpty
+
 array_ops_test.SnapshotOpTest.testInvertPermutation
 array_ops_test.StridedSliceTest.testDegenerateSlices
 array_ops_test.StridedSliceTest.testEllipsis
