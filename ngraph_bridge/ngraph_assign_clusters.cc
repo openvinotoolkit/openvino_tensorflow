@@ -91,29 +91,11 @@ namespace {
 struct Cluster {
   int index;
   std::set<tensorflow::Node*> nodes;
-  std::string backend;
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
   std::string predicate_string;
   std::set<const Edge*> outgoing_edges;
 #endif
 };
-
-Status CanContractEdgeBackendCheck(
-    Edge* edge, const std::map<Node*, std::shared_ptr<Cluster>>& cluster_map,
-    bool& is_backend_ok) {
-  Node* src = edge->src();
-  Node* dst = edge->dst();
-
-  string src_backend = cluster_map.at(src)->backend;
-  string dst_backend = cluster_map.at(dst)->backend;
-
-  if (src_backend == dst_backend) {
-    is_backend_ok = true;
-  } else {
-    is_backend_ok = false;
-  }
-  return Status::OK();
-}
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 // Returns the predicate of the merged cluster
@@ -420,21 +402,20 @@ Status AssignClusters(Graph* graph) {
   bool changed;
   bool collect_non_contracting_edge_info = false;  // Must init with false
 
-  // 7 exhaustive reasons why edges might non contract
+  // 6 exhaustive reasons why edges might non contract
   // The reasons are not mutually exclusive, but there is an order of priority
   // that makes them mutually exclusive
   enum EdgeNonContractionReasons {
     NOTANOP,      // edge connects to non-ops
     UNSUPPORTED,  // either the src or dst is an unsupported op
     DEADNESS,     // deadness criteria not met
-    BACKEND,      // different backends
     SAMECLUSTER,  // both ends lie in the same cluster
     STATICINPUT,  // static input in dst (not fed by const)
     PATHEXISTS    // base case reason. contraction causes cycles
   };
   static std::vector<string> reason_string(  // to convert the enum to string
-      {"NOTANOP", "UNSUPPORTED", "DEADNESS", "BACKEND", "SAMECLUSTER",
-       "STATICINPUT", "PATHEXISTS"});
+      {"NOTANOP", "UNSUPPORTED", "DEADNESS", "SAMECLUSTER", "STATICINPUT",
+       "PATHEXISTS"});
   // a cluster pair is the string "cluster1_id, cluster2_id"
   // Using string, because a pair won't hash unless implemented
   // Note that we store a vector of "reasons", because there could be multiple
@@ -525,24 +506,6 @@ Status AssignClusters(Graph* graph) {
         continue;
       }
 #endif
-
-      // check if the edge can be constracted with respect to backend
-      bool is_backend_ok = false;
-      TF_RETURN_IF_ERROR(
-          CanContractEdgeBackendCheck(edge, cluster_map, is_backend_ok));
-      if (!is_backend_ok) {
-        NGRAPH_VLOG(5) << "Skipping (backend not ok): " << src->name() << "["
-                       << edge->src_output() << "]@" << src_index << " -> "
-                       << dst->name() << "[" << edge->dst_input() << "]@"
-                       << dst_index;
-        if (collect_non_contracting_edge_info) {
-          log_reason(EdgeNonContractionReasons::BACKEND, edge);
-          cluster_separation_reason[get_string_key(src_index, dst_index)]
-              .push_back(EdgeNonContractionReasons::BACKEND);
-        }
-        // do not contract, src and dst node cannot be in the same cluster
-        continue;
-      }
 
       // Check if contracting the edge will lead to cycles
       // if not, MergeClusters
@@ -664,7 +627,7 @@ Status AssignClusters(Graph* graph) {
   NGRAPH_VLOG(2) << "Tagging done";
 
   if (config::IsLoggingPlacement()) {
-    int num_reasons = 7;  // the number of elements in the reasons enum
+    int num_reasons = 6;  // the number of elements in the reasons enum
     // histogram of reasons of non-contraction of clusters
     vector<int> reason_count_clusters(num_reasons, 0);
     vector<int> reason_count_encapsulates(num_reasons, 0);
