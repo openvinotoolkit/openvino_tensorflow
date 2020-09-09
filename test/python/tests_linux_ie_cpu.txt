@@ -1,27 +1,24 @@
-# ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-# ==============================================================================
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
 
-# Examples:
-# 'test_const_scalarval', # can specify just test-name, but make sure it's unique
-# 'TestBfloat16.test_conv2d_bfloat16', # better: specify class & test-name
-# 'test_bfloat16.TestBfloat16', # skip all tests of class TestBfloat16, defined in file/module test_bfloat16.py
-# 'test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]', # specify exact parameters
-# 'TestElementwiseOperations.test_maximum', # skip all parametrized-tests of function test_maximum in class TestElementwiseOperations
+# Read comments in tests_common.txt for allowed regex/patterns
 
-# Specify testcases to be skipped, all other tests will be run
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+# None
+
+###################################################
+[SKIP]
 
 test_api.TestNgraphAPI.test_set_backend_invalid
 test_api.TestNgraphAPI.test_stop_logging_placement

@@ -154,6 +154,11 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     # Next run the ngraph-tensorflow python tests
     command_executor(["pip", "install", "-U", "pytest"])
     command_executor(["pip", "install", "-U", "psutil"])
+
+    test_manifest_file = TestEnv.get_test_manifest_filename()
+    # export the env-var for pytest to process manifest in conftest.py
+    os.environ['NGRAPH_TF_TEST_MANIFEST'] = test_manifest_file
+
     command_executor([
         "python", "-m", "pytest",
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)

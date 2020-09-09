@@ -37,10 +37,9 @@
   - wait
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
-      PYTEST_SKIPFILTERS=`pwd`/test/python/filters_IECPU.txt PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
-    
-    label: ":python: nGraph Pytest"
+    label: ":python: nGraph Pytest ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

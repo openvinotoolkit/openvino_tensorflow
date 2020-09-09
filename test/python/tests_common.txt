@@ -1,0 +1,36 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
+
+# To see a list of active/skipped tests, run:
+# .../WS1/test/python$ python -m pytest --collect-only <optional-args-to-specify-tests>
+# e.g. .../WS1/test/python$ ROOT=/localdisk/WS1 PYTHONPATH=$ROOT:$ROOT/test/python:$ROOT/tools:$ROOT/examples:$ROOT/examples/mnist python -m pytest --collect-only test_elementwise_ops.py
+
+# Few examples of valid regex/pattern (dots, [] are treated literally, * for any match):
+# Genereal format: module.class.testfunc[param]
+# test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0] # specify exact parameters
+# *test_const_scalarval* # match substring in any module/class/testfunc
+# *.TestBfloat16.test_conv2d_bfloat16 # in any module, match by class TestBfloat16 & testfunc test_conv2d_bfloat16
+# test_bfloat16.TestBfloat16.* # all testfuncs of class TestBfloat16, defined in file/module test_bfloat16.py
+# *.TestElementwiseOperations.test_maximum* # all parametrized-tests of function test_maximum in class TestElementwiseOperations
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+# None
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+# by default, pytest includes all tests under current dir (or as per argument)
+
+###################################################
+[SKIP]
+
+test_bfloat16.TestBfloat16.test_matmul_bfloat16 # most backends do not support dtype bf16 for MatMul/Dot Op
+test_cnms.TestFloorOperations.test_cmns # Backend specific test
+test_conv2dbackpropinput.TestConv2DBackpropInput.test_nhwc # parameterized; Fails, needs debugging
+
