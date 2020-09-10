@@ -44,17 +44,12 @@ class NGraphEncapsulateImpl {
                           std::vector<const Tensor*>& static_input_map,
                           std::stringstream& signature_ss);
 
-  static Status Compile(std::shared_ptr<ngraph::Function> ng_function,
-                        std::shared_ptr<Executable>& ng_exec);
-
-  static Status GetCompiledString(std::shared_ptr<ngraph::Function> ng_function,
-                                  std::string* ng_exec_str);
-
   // Calls Compute Signature and gets ngraph executable
   Status GetNgExecutable(const std::vector<Tensor>& tf_input_tensors,
                          std::vector<TensorShape>& input_shapes,
                          std::vector<const Tensor*>& static_input_map,
-                         std::shared_ptr<Executable>& ng_exec);
+                         std::shared_ptr<Executable>& ng_exec,
+                         std::shared_ptr<ngraph::Function>& ng_function);
 
   // Allocate nGraph tensors for given TF tensors
   Status AllocateNGTensors(
@@ -63,8 +58,6 @@ class NGraphEncapsulateImpl {
 
   // Clear all maps with ng_exec as keys
   void ClearExecMaps();
-
-  Status DumpNgFunction(const string&, std::shared_ptr<Executable>);
 
   // Accessors(getters and setters) for the private data members of
   // NgraphEncapsulateImpl class
@@ -110,10 +103,6 @@ class NGraphEncapsulateImpl {
 
   void ClearNgExecMap() { m_ng_exec_map.clear(); }
 
-  void ClearNgExecSerializedFunctionCache() {
-    m_serialized_ng_function_map.clear();
-  }
-
   void SetName(string name) { m_name = name; }
 
   Status ParseNodeAttributes(
@@ -134,14 +123,8 @@ class NGraphEncapsulateImpl {
   std::vector<bool> m_input_is_static;
   std::list<std::string> m_lru;
   static int s_instance_count;
-  bool m_do_aot = false;
-  map<string, string> m_aot_functions;
-  map<string, string> m_aot_execs;
 
-  // ng_function, ng_executable, Output and Input Cache maps
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
-  std::unordered_map<std::shared_ptr<Executable>, std::string>
-      m_serialized_ng_function_map;
 };
 
 }  // namespace ngraph_bridge

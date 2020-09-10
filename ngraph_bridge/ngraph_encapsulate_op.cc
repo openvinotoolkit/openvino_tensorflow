@@ -41,7 +41,6 @@
 #include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
 namespace ngraph_bridge {
@@ -196,6 +195,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   std::vector<TensorShape> input_shapes;
   std::vector<const Tensor*> static_input_map;
   std::shared_ptr<Executable> ng_exec;
+  std::shared_ptr<ngraph::Function> ng_function;
+
   // TF input tensor
   std::vector<Tensor> tf_input_tensors;
   int step_id;
@@ -208,9 +209,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     step_id = ctx->step_id();
 
     // Get ngraph executable and inputs information
-    OP_REQUIRES_OK(
-        ctx, ng_encap_impl_.GetNgExecutable(tf_input_tensors, input_shapes,
-                                            static_input_map, ng_exec));
+    OP_REQUIRES_OK(ctx, ng_encap_impl_.GetNgExecutable(
+                            tf_input_tensors, input_shapes, static_input_map,
+                            ng_exec, ng_function));
 
     NGRAPH_VLOG(1) << " Step_ID: " << step_id;
     NGRAPH_VLOG(4)
@@ -226,7 +227,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   Timer create_or_lookup_tensors;
 
   // Allocate tensors for input arguments.
-  vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
+  vector<shared_ptr<ngraph::runtime::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
   {
     NG_TRACE("Input: maybe create", name(), "");
@@ -238,7 +239,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                     "for cluster "
                  << ng_encap_impl_.GetNgraphCluster();
   // Allocate tensors for the output results.
-  vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
+  vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs;
   int ng_output_tensor_size_in_bytes = 0;
   std::vector<Tensor> tf_output_tensors;
   {
@@ -260,7 +261,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
       // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected.
-      ng::element::Type expected_elem_type;
+      ngraph::element::Type expected_elem_type;
       OP_REQUIRES_OK(
           ctx, TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
                                              &expected_elem_type));
@@ -291,21 +292,19 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       try {
         ng_exec->call(ng_outputs, ng_inputs);
       } catch (const std::exception& exp) {
-        Status st = ng_encap_impl_.DumpNgFunction(
-            "tf_function_error_" + ctx->op_kernel().name() + ".json", ng_exec);
+        NgraphSerialize(
+            "tf_function_error_" + ctx->op_kernel().name() + ".json",
+            ng_function);
         string status_string =
             "Caught exception while executing nGraph computation: " +
-            string(exp.what()) +
-            (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                             st.error_message()));
+            string(exp.what());
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       } catch (...) {
-        Status st = ng_encap_impl_.DumpNgFunction(
-            "tf_function_error_" + ctx->op_kernel().name() + ".json", ng_exec);
+        NgraphSerialize(
+            "tf_function_error_" + ctx->op_kernel().name() + ".json",
+            ng_function);
         string status_string =
-            "Error in executing the nGraph computation." +
-            (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                             st.error_message()));
+            "Caught exception while executing nGraph computation.";
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       }
     }

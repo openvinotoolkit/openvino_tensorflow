@@ -102,21 +102,15 @@ TEST(EncapsulateOp, GetNgExecutable) {
   }
 
   std::shared_ptr<Executable> ng_exec;
-  ASSERT_OK(ng_encap_impl.GetNgExecutable(input_tensors, input_shapes,
-                                          static_input_map, ng_exec));
+  std::shared_ptr<ngraph::Function> ng_function;
+
+  ASSERT_OK(ng_encap_impl.GetNgExecutable(
+      input_tensors, input_shapes, static_input_map, ng_exec, ng_function));
 }
 
 // Test: Allocating ngraph tensors
 TEST(EncapsulateOp, AllocateNGTensors) {
   NGraphEncapsulateImpl ng_encap_impl;
-  ngraph::Shape shape{100};
-  auto A = make_shared<opset::Parameter>(ngraph::element::f32, shape);
-  auto B = make_shared<opset::Parameter>(ngraph::element::f32, shape);
-  auto f = make_shared<ngraph::Function>(make_shared<opset::Add>(A, B),
-                                         ngraph::ParameterVector{A, B});
-
-  std::shared_ptr<Executable> ng_exec;
-  NGraphEncapsulateImpl::Compile(f, ng_exec);
 
   std::vector<tensorflow::TensorShape> input_shapes;
   std::vector<tensorflow::Tensor> input_tensors;

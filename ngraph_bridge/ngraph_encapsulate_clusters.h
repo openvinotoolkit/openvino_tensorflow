@@ -27,15 +27,8 @@
 #include "ngraph/ngraph.hpp"
 #include "tensorflow/core/graph/graph.h"
 
-#include "ngraph_bridge/ngraph_partial_shapes.h"
-
 namespace tensorflow {
 namespace ngraph_bridge {
-
-typedef std::map<std::string, std::vector<int>> ShapeHintMap;
-
-// the integer represent AOT level requested.
-typedef std::pair<bool, std::set<ShapeHintMap>> AOTInfo;
 
 // TODO: an optimization would be to separate the analysis and rewriting passes
 // cleanly, so that analysis pass is run in mark_for_clustering, and its
@@ -45,12 +38,10 @@ typedef std::pair<bool, std::set<ShapeHintMap>> AOTInfo;
 
 /// Takes a TF graph where ngraph_cluster attributes has been marked in a
 /// preceeding pass (assign_clusters), then replaces TF subgraphs and inserts
-/// encapsulate ops in their place. Optionally can perform ahead of time
-/// compilation.
+/// encapsulate ops in their place.
 Status EncapsulateClusters(
-    Graph* graph, int graph_id, FunctionDefLibrary* fdeflib,
-    const std::unordered_map<std::string, std::string>& device_config,
-    const AOTInfo& aot_info);
+    Graph* graph, int graph_id,
+    const std::unordered_map<std::string, std::string>& device_config);
 
 // TODO Encapsulator is dependent on ClusterManager. They could be made
 // independent.
@@ -70,7 +61,7 @@ class Encapsulator {
   Status AnalysisPass();
   // Perform the actual graph surgery
   Status RewritePass(
-      FunctionDefLibrary* fdeflib, int graph_id,
+      int graph_id,
       const std::unordered_map<std::string, std::string>& device_config);
   // Returns the newly created cluster ids after AnalysisPass is done
   // Needed because ClusterManager (CM) might have contained old stuff,
@@ -111,32 +102,6 @@ class Encapsulator {
 
   static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot);
 };
-
-// Translates TF subgraph to ng function then compiles it
-Status PerformAOTOnEncapsulates(Graph* graph, const AOTInfo& aot_info);
-
-std::string HintAsString(ShapeHintMap single_hint);
-
-// Given a node, partialshape info from TF (present in the .pb itself) and a
-// shape hint, combine all that information
-PartialShape CombineNodeInfoAndHint(Node* node,
-                                    PartialShape partial_shape_from_node,
-                                    const ShapeHintMap& single_hint);
-
-// Given a TF graph, it scans it for inputs and finds what TF is saying about
-// their shapes (in the .pb itself)
-// Creates a map between input node names and PartialShape information we get
-// from the TF graph
-std::map<std::string, PartialShape> GetShapesFromTFInputnodes(
-    Graph* graph, const string& input_node_type);
-
-// Given an encapsulate node, and the input shapes,
-// performs TranslateGraph and returns an ng function and a signature
-Status PerformTranslation(Node* node,
-                          const std::map<std::string, std::vector<int>>&
-                              inputs_node_shapes_for_compilation,
-                          std::string& signature,
-                          std::shared_ptr<ngraph::Function>& ng_function);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

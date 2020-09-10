@@ -38,7 +38,6 @@
 #include <iomanip>
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 // Custom Grappler Optimizer for NGraph-TF
@@ -72,20 +71,18 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
                 double) override;
 
  private:
-  std::unordered_map<std::string, std::string> config_map;
+  std::unordered_map<std::string, std::string> m_config_map;
 
   void DumpGraphs(Graph&, int, std::string, std::string);
   static int FreshIndex();
 
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
   static mutex s_serial_counter_mutex;
-  AOTInfo aot_info;
 };
 
 int NgraphOptimizer::s_serial_counter = 0;
 mutex NgraphOptimizer::s_serial_counter_mutex;
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_NGRAPHOPTIMIZER_H_

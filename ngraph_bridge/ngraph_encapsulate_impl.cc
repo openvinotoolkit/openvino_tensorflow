@@ -38,15 +38,11 @@
 #include "ngraph_bridge/ngraph_utils.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
 // Ngraph Encapsulate Implementation class for EncapsulateOp class
-//---------------------------------------------------------------------------
-//  NGraphEncapsulateImpl::ctor
-//---------------------------------------------------------------------------
 NGraphEncapsulateImpl::NGraphEncapsulateImpl() : m_graph(OpRegistry::Global()) {
   my_instance_id = s_instance_count;
   s_instance_count++;
@@ -83,49 +79,20 @@ Status NGraphEncapsulateImpl::ComputeSignature(
   return Status::OK();
 }
 
-// Compiles the ngraph function and returns ngraph executable
-Status NGraphEncapsulateImpl::Compile(
-    std::shared_ptr<ngraph::Function> ng_function,
-    std::shared_ptr<Executable>& ng_exec) {
-  try {
-    auto backend = BackendManager::GetBackend();
-    ng_exec = backend->compile(ng_function);
-  } catch (const std::exception& ex) {
-    string fn_name = ng_function->get_friendly_name();
-    NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
-    return errors::Internal("Failed to compile ng_function: ", ex.what());
-  }
-  return Status::OK();
-}
-
-// Compiles the ngraph function and returns ngraph executable as a string
-Status NGraphEncapsulateImpl::GetCompiledString(
-    std::shared_ptr<ngraph::Function> ng_function, std::string* ng_exec_str) {
-  std::shared_ptr<Executable> ng_exec;
-  NGraphEncapsulateImpl::Compile(ng_function, ng_exec);
-  stringstream exec_dump;
-  ng_exec->save(exec_dump);
-  *ng_exec_str = exec_dump.str();
-  return Status::OK();
-}
-
 // Calls ComputeSignature and gets ngraph executable
 Status NGraphEncapsulateImpl::GetNgExecutable(
     const std::vector<Tensor>& tf_input_tensors,
     std::vector<TensorShape>& input_shapes,
     std::vector<const Tensor*>& static_input_map,
-    std::shared_ptr<Executable>& ng_exec) {
-  std::stringstream signature_ss;
-  string signature;
-
-  std::shared_ptr<ngraph::Function> ng_function;
-  std::shared_ptr<Executable> evicted_ng_exec;
+    std::shared_ptr<Executable>& ng_exec,
+    std::shared_ptr<ngraph::Function>& ng_function) {
   auto backend = BackendManager::GetBackend();
 
   // Compute Signature
+  std::stringstream signature_ss;
   TF_RETURN_IF_ERROR(ComputeSignature(tf_input_tensors, input_shapes,
                                       static_input_map, signature_ss));
-  signature = signature_ss.str();
+  string signature = signature_ss.str();
   NGRAPH_VLOG(5) << "Computed signature: " << signature;
   auto it = m_ng_exec_map.find(signature);
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
@@ -138,30 +105,17 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     MemoryProfile(vm0, rss0);
 
     NGRAPH_VLOG(1) << "Compilation cache miss: " << m_name;
-    string serialized_ng_func;
-    if (!m_do_aot) {
-      TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
-                                                 &m_graph, ng_function));
-      ng_function->set_friendly_name(m_name);
-      int json_indentation = 4;
-      serialized_ng_func = ngraph::serialize(ng_function, json_indentation);
-    } else {
-      auto itr = m_aot_functions.find(signature);
-      if (itr == m_aot_functions.end()) {
-        return errors::Internal(
-            "Expected to find AOT precompiled ng function of signature: ",
-            signature);
-      }
-      serialized_ng_func = itr->second;
-    }
+    TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
+                                               &m_graph, ng_function));
+    ng_function->set_friendly_name(m_name);
 
     // Serialize to nGraph if needed
     if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-      std::string file_name = "tf_function_" + m_name + ".json";
-      TF_RETURN_IF_ERROR(
-          StringToFile("tf_function_" + m_name + ".json", serialized_ng_func));
+      NgraphSerialize("tf_function_" + m_name + ".json", ng_function);
     }
+
     // Evict the cache if the number of elements exceeds the limit
+    std::shared_ptr<Executable> evicted_ng_exec;
     const char* cache_depth_specified =
         std::getenv("NGRAPH_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
@@ -170,7 +124,6 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
       m_ng_exec_map.erase(m_lru.back());
-      m_serialized_ng_function_map.erase(evicted_ng_exec);
 
       // Call delete function here for the erased func
       backend->remove_compiled_function(evicted_ng_exec);
@@ -179,47 +132,17 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     }  // cache eviction if cache size greater than cache depth
 
     NG_TRACE("Compile nGraph", m_name, "");
-    if (m_do_aot) {
-      auto itr = m_aot_execs.find(signature);
-      if (itr == m_aot_execs.end()) {
-        return errors::Internal(
-            "Requested AOT, but could not find string with the "
-            "signature: ",
-            signature);
-      }
-
-      try {
-        stringstream serialized_exec_read;
-        serialized_exec_read << (itr->second);
-        ng_exec = backend->load(serialized_exec_read);
-      } catch (const std::exception& exp) {
-        Status st = StringToFile("tf_function_error_" + m_name + ".json",
-                                 serialized_ng_func);
-        string status_string =
-            "Caught exception while compiling op_backend: " +
-            string(exp.what()) +
-            (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                             st.error_message()));
-        return errors::Internal(status_string);
-      } catch (...) {
-        Status st = StringToFile("tf_function_error_" + m_name + ".json",
-                                 serialized_ng_func);
-        string status_string =
-            "Error in compiling op_backend." +
-            (st.ok() ? "" : (" Also error in dumping serialized function: " +
-                             st.error_message()));
-        return errors::Internal(status_string);
-      }
-    } else {
-      TF_RETURN_IF_ERROR(NGraphEncapsulateImpl::Compile(ng_function, ng_exec));
+    try {
+      ng_exec = backend->compile(ng_function);
+    } catch (const std::exception& ex) {
+      string fn_name = ng_function->get_friendly_name();
+      NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
+      return errors::Internal("Failed to compile ng_function: ", ex.what());
     }
 
     SetNgExecMap(signature, ng_exec);
-
-    // caching ng_function to serialize to ngraph if needed
-    m_serialized_ng_function_map[ng_exec] = serialized_ng_func;
-
     m_lru.push_front(signature);
+
     // Memory after
     MemoryProfile(vm, rss);
     auto delta_vm_mem = vm - vm0;
@@ -245,18 +168,18 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
 
 Status NGraphEncapsulateImpl::AllocateNGTensors(
     const std::vector<Tensor>& tf_tensors,
-    vector<shared_ptr<ng::runtime::Tensor>>& ng_tensors) {
+    vector<shared_ptr<ngraph::runtime::Tensor>>& ng_tensors) {
   for (int i = 0; i < tf_tensors.size(); i++) {
-    ng::Shape ng_shape(tf_tensors[i].shape().dims());
+    ngraph::Shape ng_shape(tf_tensors[i].shape().dims());
     for (int j = 0; j < tf_tensors[i].shape().dims(); ++j) {
       ng_shape[j] = tf_tensors[i].shape().dim_size(j);
     }
-    ng::element::Type ng_element_type;
+    ngraph::element::Type ng_element_type;
     TF_RETURN_IF_ERROR(
         TFDataTypeToNGraphElementType(tf_tensors[i].dtype(), &ng_element_type));
 
     auto backend = BackendManager::GetBackend();
-    std::shared_ptr<ng::runtime::Tensor> ng_tensor =
+    std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
         backend->create_tensor(ng_element_type, ng_shape, tf_tensors[i].data());
     ng_tensors.push_back(ng_tensor);
   }
@@ -275,67 +198,20 @@ Status NGraphEncapsulateImpl::ParseNodeAttributes(
     // For e.g. _ngraph_ice_cores --> ice_cores
     if (itx.first.find("_ngraph_") != std::string::npos) {
       // TODO: decide what the node attributes should be.
-      // right now _ngraph_aot_ is used by aot, _ngraph_ is used for optional
-      // attributes
+      // right now _ngraph_ is used for optional attributes
       auto attr_name = itx.first;
       auto attr_value = itx.second.s();
-      if (attr_name.find("_ngraph_aot_") != std::string::npos) {
-        // The string is in the format: _ngraph_aot_ngexec_signature or
-        // _ngraph_aot_ngfunction_signature or _ngraph_aot_requested
-        // TODO: do not pass these 3 attributes to set_config of backend
-        if (attr_name.find("_ngraph_aot_ngexec_") != std::string::npos) {
-          m_aot_execs[ng::split(attr_name, '_')[4]] = attr_value;
-        } else if (attr_name.find("_ngraph_aot_ngfunction_") !=
-                   std::string::npos) {
-          // The other option is _ngraph_aot_ngfunction_
-          // No need to save or do anything with _ngraph_aot_ngfunction_. They
-          // are there for debugging only
-          m_aot_functions[ng::split(attr_name, '_')[4]] = attr_value;
-        } else if (attr_name.find("_ngraph_aot_requested") !=
-                   std::string::npos) {
-          m_do_aot = (attr_value == "1");
-          if (m_do_aot) {
-            NGRAPH_VLOG(1) << "Using AOT for encapsulate " +
-                                  to_string(m_ngraph_cluster);
-          }
-        } else {
-          return errors::Internal(
-              "Ngraph attribues beginning with _ngraph_aot_ "
-              "must be _ngraph_aot_ngexec_<signature> or "
-              "_ngraph_aot_ngfunction_<signature>. But got "
-              "attribute named: ",
-              itx.first);
-        }
-      } else {
-        NGRAPH_VLOG(4) << "Attribute: " << attr_name.substr(strlen("_ngraph_"))
-                       << " Value: " << attr_value;
-        additional_attribute_map->insert(
-            {attr_name.substr(strlen("_ngraph_")), attr_value});
-      }
+      NGRAPH_VLOG(4) << "Attribute: " << attr_name.substr(strlen("_ngraph_"))
+                     << " Value: " << attr_value;
+      additional_attribute_map->insert(
+          {attr_name.substr(strlen("_ngraph_")), attr_value});
     }
-  }
-  if (((m_aot_functions.size() > 0) || (m_aot_execs.size() > 0)) && !m_do_aot) {
-    return errors::Internal("The encapsulate ", m_name,
-                            " has ngraph functions or executables embedded "
-                            "in it, even though AOT was not requested.");
   }
   return Status::OK();
 }
 
-Status NGraphEncapsulateImpl::DumpNgFunction(
-    const string& file_name, std::shared_ptr<Executable> ng_exec) {
-  auto itr = m_serialized_ng_function_map.find(ng_exec);
-  if (itr == m_serialized_ng_function_map.end()) {
-    return errors::Internal(
-        "Did not find requested executable in map for exec->serialized ngraph "
-        "function when dumping ngraph function");
-  }
-  return StringToFile(file_name, itr->second);
-}
-
 void NGraphEncapsulateImpl::NGraphEncapsulateImpl::ClearExecMaps() {
   m_ng_exec_map.clear();
-  m_serialized_ng_function_map.clear();
 }
 
 }  // namespace ngraph_bridge

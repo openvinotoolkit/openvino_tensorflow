@@ -107,7 +107,6 @@ set(SRC
 
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
     list(APPEND SRC graph_rewrites/config_for_grappler_test.cc)
-    list(APPEND SRC graph_rewrites/partial_shapes_test.cc)
 endif()
 
 # The compile flag -DNDEBUG is required since

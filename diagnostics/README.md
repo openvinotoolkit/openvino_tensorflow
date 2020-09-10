@@ -102,22 +102,5 @@ Run the following for detailed help:
 * pbtxt to graphdef: ```from ngtf_graph_viewer import load_file; load_file(input_filename, input_binary=False)```
 * modify a graphdef's nodes names: ```from ngtf_graph_viewer import modify_node_names; modify_node_names(graph_def, node_map={"net1/node1":"e1/net1/node1"})```
 
-
-### Another way of protobuf visualization
-
-If you have a grappler build, the [tf2ngraph] script can be used to convert tensorflow graph to an ngraph enabled graph
-and dump it as a protobuf (`pb`).
-Tensorflow's [import_pb_to_tensorboard.py] script can then be used to view the dumped graph on `tensorboard`.
-
-### Example usage
-
-* python tf2ngraph --input_pbtxt test_axpy.pbtxt --output_nodes add --output_pb axpy_ngraph.pb --ng_backend CPU
-* Add `import ngraph_bridge` to [import_pb_to_tensorboard.py] script
-* `python import_pb_to_tensorboard.py --model_dir axpy_ngraph.pb --log_dir test/`
-* Launch Tensorboard by pointing it to the log directory : `tensorboard --logdir=test/`
-* Goto to the link to view `.pb` as a graph.
-
 [nGraph Library documentation]: https://ngraph.nervanasys.com/docs/latest/frameworks/generic-configs.html#activate-logtrace-related-environment-variables
 [ngtf_graph_viewer]: https://github.com/tensorflow/ngraph-bridge/blob/master/diagnostics/ngtf_graph_viewer.py
-[tf2ngraph]: https://github.com/tensorflow/ngraph-bridge/blob/master/tools/tf2ngraph.py
-[import_pb_to_tensorboard.py]: https://github.com/tensorflow/tensorflow/blob/8ddd4429f9f7b21c7dc9312f1bad0dbf5377c615/tensorflow/python/tools/import_pb_to_tensorboard.py

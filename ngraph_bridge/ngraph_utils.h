@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+#pragma once
+
 #ifndef NGRAPH_TF_BRIDGE_UTILS_H_
 #define NGRAPH_TF_BRIDGE_UTILS_H_
 

@@ -135,21 +135,16 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     // 4. Encapsulate clusters then, if requested, dump the graphs.
-    FunctionDefLibrary* fdeflib_new = new FunctionDefLibrary();
     std::unordered_map<std::string, std::string> config_map;
-    auto status = EncapsulateClusters(options.graph->get(), idx, fdeflib_new,
-                                      config_map, {0, {}});
+    auto status = EncapsulateClusters(options.graph->get(), idx, config_map);
     if (status != Status::OK()) {
-      delete (fdeflib_new);
       return status;
     }
-    // TODO: not using fdeflib_new in this path. Only grappler path uses it
-    delete (fdeflib_new);
+
     if (DumpEncapsulatedGraphs()) {
       DumpGraphs(options, idx, "encapsulated",
                  "Graph with Clusters Encapsulated");
     }
-
     return Status::OK();
   }
 };

@@ -21,7 +21,6 @@ import sys
 # expects tools to be present at this relative location. Need access to build_utils
 sys.path.insert(0, os.path.abspath('../../tools'))
 from build_utils import download_repo
-from tf2ngraph import get_gdef
 from log_parser import parse_logs, compare_parsed_values
 import atexit
 
@@ -214,10 +213,6 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed,
                             model_format = split_on_dot[1]
                         else:
                             assert False, "Unknown input format. Expected savedmodel, pb or pbtxt"
-                        # TODO: support checkpoint too later
-                        gdef = get_gdef(model_format,
-                                        sub_test_dir + '/' + model)
-                        # TODO: run Level1 tests on gdef. needs another json for that (one which specifies input shapes etc)
 
                     expected_json_file = sub_test_dir + '/expected.json'
                     expected_json_present = os.path.isfile(expected_json_file)
@@ -300,7 +295,6 @@ def run_test_suite(model_dir, configuration, disabled, print_parsed,
         command_executor.commands += '# Exiting. Done with tests in ' + model_dir.split(
             '/')[-1]
         return passed_tests, failed_tests, skipped_tests
-        # TODO: use gdef to run
         # TODO: add axpy test folders for pb. pbtxt and savedmodel
         # TODO integrate the if-else paths as much as possible
 
