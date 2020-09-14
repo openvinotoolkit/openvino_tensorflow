@@ -38,7 +38,7 @@ array_ops_test.SnapshotOpTest.testInvertPermutation
 
 # Test failing due to DT_INT16
 #array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
-array_ops_test.StridedSliceTest.testDegenerateSlices
+#array_ops_test.StridedSliceTest.testDegenerateSlices
 array_ops_test.StridedSliceTest.testEllipsis 
 array_ops_test.StridedSliceTest.testExpand 
 array_ops_test.StridedSliceTest.testExpandVariable 
@@ -528,9 +528,9 @@ slice_op_test.SliceTest.testComplex
 #slice_op_test.SliceTest.testEmpty # Unsupported op 'Tile'
 #slice_op_test.SliceTest.testGradientsAll  # Unsupported op 'Tile'
 slice_op_test.SliceTest.testInt32
-slice_op_test.SliceTest.testInvalidIndex
+#slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testRandom
-slice_op_test.SliceTest.testScalarInput
+#slice_op_test.SliceTest.testScalarInput
 slice_op_test.SliceTest.testSelectAll
 slice_op_test.SliceTest.testSimple
 slice_op_test.SliceTest.testSingleDimension

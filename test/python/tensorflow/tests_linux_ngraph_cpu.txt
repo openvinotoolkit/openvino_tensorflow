@@ -30,5 +30,8 @@ tests_common.txt
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 
+array_ops_test.StridedSliceTest.testDegenerateSlices
+slice_op_test.SliceTest.testInvalidIndex
+slice_op_test.SliceTest.testScalarInput
 argmax_op_test.ArgMaxTest.testEmpty
 argmax_op_test.ArgMaxTest.testInt64
