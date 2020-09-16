@@ -24,4 +24,5 @@ tests_common.txt
 
 ArrayOps.Tile
 MathOps.ArgMin3D
-
+ArrayOps.Shape2D # fails on ngraph-cpu with default NGRAPH_PASS_ENABLES="ConstantFolding:0"
+ArrayOps.Shape3D # fails on ngraph-cpu with default NGRAPH_PASS_ENABLES="ConstantFolding:0"

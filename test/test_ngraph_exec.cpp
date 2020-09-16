@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+#include <regex>
 #include "gtest/gtest.h"
 
+#include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
+#include "tensorflow/core/graph/graph_def_builder.h"
 #include "tensorflow/core/platform/env.h"
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_executable.h"
 #include "ngraph_bridge/ngraph_utils.h"
+
+#include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset.hpp"
+#include "ngraph_bridge/default_opset.h"
 
 #include "test/test_utilities.h"
 
@@ -122,6 +129,43 @@ class NGraphExecTest : public ::testing::Test {
     ActivateNGraph();
     return status;
   }
+
+  shared_ptr<Graph> attach_retval_node(Scope& scope, Graph* pgraph, Node* op,
+                                       int outidx = 0) {
+    Status s;
+    GraphDefBuilder::Options gdopts(pgraph, &s);
+    // ASSERT_OK(s);
+    if (!s.ok()) LOG(FATAL) << s.error_message();
+    string name = op->name() + "_retval" + to_string(outidx);
+    auto dtype = op->output_type(outidx);
+    NodeBuilder nbdlr(gdopts.WithName(name)
+                          .WithAttr("T", dtype)
+                          .WithAttr("index", outidx)
+                          .GetNameForOp(""),
+                      "_Retval", gdopts.op_registry());
+    nbdlr.Input(op, outidx).Attr("index", outidx);
+    auto ret = gdopts.FinalizeBuilder(&nbdlr);
+    if (ret == nullptr) LOG(FATAL) << "FinalizeBuilder failed!";
+    GraphDef gdef;
+    s = scope.ToGraphDef(&gdef);
+    if (!s.ok()) LOG(FATAL) << s.error_message();
+    GraphConstructorOptions gcopts;
+    gcopts.allow_internal_ops = true;
+    auto pgraph_new = make_shared<Graph>(pgraph->op_registry());
+    ConvertGraphDefToGraph(gcopts, gdef, pgraph_new.get());
+    return pgraph_new;
+  }
+
+  void expect_const_count_ngfunc(const Graph& g, int expected) {
+    std::vector<TensorShape> tf_input_shapes;
+    shared_ptr<ng::Function> func;
+    ASSERT_OK(TranslateTFGraphNoStatic(tf_input_shapes, g, func));
+    int numconst = 0;
+    for (const auto& node : func->get_ops()) {
+      if (ngraph::is_type<opset::Constant>(node)) numconst++;
+    }
+    ASSERT_EQ(numconst, expected);
+  };
 };
 
 TEST_F(NGraphExecTest, Axpy) {
@@ -362,6 +406,36 @@ TEST_F(NGraphExecTest, FindNumberOfNodesUtil2) {
   ASSERT_EQ(number_of_retvals, 3);
   ASSERT_EQ(number_of_add, 2);
   ASSERT_EQ(number_of_sub, 1);
+}
+
+TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
+  Graph input_graph(OpRegistry::Global());
+  ASSERT_OK(LoadGraph("test_graph1.pbtxt", &input_graph));
+
+  setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:1", true);
+  expect_const_count_ngfunc(input_graph, 1);
+
+  setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:0", true);
+  expect_const_count_ngfunc(input_graph, 3);
+}
+
+TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
+  Scope root = Scope::NewRootScope();
+  Graph* pgraph = root.graph();
+  Status s;
+  auto a = ops::Const(root, {{1, 2}, {2, 4}});
+  auto b = ops::Const(root, {{2, 2}, {1, 1}});
+  auto add1 = ops::Add(root, a, b);
+  auto c = ops::Const(root, {{0, 3}, {1, 1}});
+  auto add2 = ops::Add(root, add1, c);
+  // attach _Retval node
+  auto pgraph_new = attach_retval_node(root, pgraph, add2.node());
+
+  setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:1", true);
+  expect_const_count_ngfunc(*pgraph_new, 1);
+
+  setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:0", true);
+  expect_const_count_ngfunc(*pgraph_new, 3);
 }
 
 }  // namespace testing

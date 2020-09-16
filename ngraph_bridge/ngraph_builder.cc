@@ -25,6 +25,7 @@
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/slice_plan.hpp"
 
 #include "logging/ngraph_log.h"
@@ -3257,11 +3258,24 @@ Status Builder::TranslateGraph(
   //
   // Apply additional passes on the nGraph function here.
   //
-  ngraph::pass::Manager passes;
-  // passes.register_pass<ngraph::pass::ConstantFolding>();
-  passes.register_pass<pass::TransposeFolding>();
-  passes.register_pass<pass::TransposeSinking>();
-  passes.run_passes(ng_function);
+  {
+    ngraph::pass::Manager passes;
+    ngraph::pass::PassConfig pass_config;
+    // set/honor the defaults, unless specified via env var
+    auto set_default = [&pass_config](std::string pass, bool enable) {
+      auto enables_map = pass_config.get_enables();
+      if (enables_map.find(pass) == enables_map.end())
+        pass_config.set_pass_enable(pass, enable);
+    };
+    set_default("ConstantFolding", false);
+    set_default("TransposeSinking", true);
+
+    if (pass_config.get_pass_enable("ConstantFolding"))
+      passes.register_pass<ngraph::pass::ConstantFolding>();
+    if (pass_config.get_pass_enable("TransposeSinking"))
+      passes.register_pass<pass::TransposeSinking>();
+    passes.run_passes(ng_function);
+  }
 
   //
   // Request row-major layout on results.

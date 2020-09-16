@@ -22,3 +22,5 @@ tests_common.txt
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 
+ArrayOps.Shape2D # fails on ngraph-cpu with default NGRAPH_PASS_ENABLES="ConstantFolding:0"
+ArrayOps.Shape3D # fails on ngraph-cpu with default NGRAPH_PASS_ENABLES="ConstantFolding:0"
