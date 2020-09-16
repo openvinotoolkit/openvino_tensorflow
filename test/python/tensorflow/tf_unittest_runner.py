@@ -316,15 +316,12 @@ def func_utrunner_testcase_run(return_dict, runner, a_test):
     # This func runs in a separate process
     try:
         test_result = runner.run(a_test)
+        success = test_result.wasSuccessful()
         return_dict[a_test.id()] = {
-            'wasSuccessful':
-            test_result.wasSuccessful(),
-            'failures':
-            test_result.failures,
-            'errors':
-            test_result.errors,
-            'skipped': [('', test_result.skipped[0][1])] if
-            (test_result.skipped) else None
+            'wasSuccessful': success,
+            'failures': [] if (success) else [('', test_result.failures[0][1])],
+            'errors': [],
+            'skipped': []
         }
     except Exception as e:
         #print('DBG: func_utrunner_testcase_run test_result.errors', test_result.errors, '\n')
