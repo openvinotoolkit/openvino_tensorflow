@@ -40,12 +40,18 @@ IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     }
   }
 
+  // A trivial function is one of
+  //  1. constant function (Const -> Result)
+  //  2. identity function (Parameter -> Result)
+  //  3. zero function (* -> Zero)
   NGRAPH_VLOG(2) << "Checking for trivial functions in IE backend";
   bool trivial_fn = true;
   for (auto result : func->get_results()) {
     auto parent = result->input_value(0).get_node_shared_ptr();
+    auto& shape = result->get_shape();
     trivial_fn &= ngraph::is_type<opset::Parameter>(parent) ||
-                  ngraph::is_type<opset::Constant>(parent);
+                  ngraph::is_type<opset::Constant>(parent) ||
+                  count(shape.begin(), shape.end(), 0);
   }
 
   if (trivial_fn) {
@@ -169,6 +175,11 @@ bool IE_Executable::call_trivial(
   // outputs are in the same order as results
   auto results = m_trivial_fn->get_results();
   for (int i = 0; i < outputs.size(); i++) {
+    auto& shape = results[i]->get_shape();
+    if (count(shape.begin(), shape.end(), 0)) {
+      NGRAPH_VLOG(2) << "Skipping function with zero dim result...";
+      continue;
+    }
     auto parent = results[i]->input_value(0).get_node_shared_ptr();
     if (ngraph::is_type<opset::Parameter>(parent)) {
       auto param = ngraph::as_type_ptr<opset::Parameter>(parent);

@@ -48,7 +48,7 @@ class IE_Executable final : public Executable {
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
   // This keeps track of whether the original function was trivial: either a
-  // constant function or an identity function
+  // constant function, an identity function or a zero function
   shared_ptr<ngraph::Function> m_trivial_fn;
 };
 }

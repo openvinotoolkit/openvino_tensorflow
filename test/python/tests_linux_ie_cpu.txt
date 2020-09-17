@@ -20,8 +20,6 @@ tests_common.txt
 ###################################################
 [SKIP]
 
-test_api.TestNgraphAPI.test_set_backend_invalid
-test_api.TestNgraphAPI.test_stop_logging_placement
 test_bfloat16.TestBfloat16.test_conv2d_bfloat16
 test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
 test_elementwise_ops.TestElementwiseOperations.test_maximum[1.0--1.0-expected0]
@@ -54,16 +52,7 @@ test_elementwise_ops.TestElementwiseOperations.test_greater[v15-v25-expected5]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
-test_flib.TestFlibOperations.test_flib_1  # TBD
-test_fusedbatchnorm.TestFusedBatchNorm.test_fusedbatchnorm_inference_nchw
-test_fusedbatchnorm.TestFusedBatchNorm.test_fusedbatchnorm_inference_nhwc
 test_gathernd.TestGatherNDOperations.test_gather_nd
-test_log1p.TestLog1pOperations.test_log1p
-test_mnist_training.TestMnistTraining.test_mnist_training[adam]
-test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
-test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
-test_ngraph_serialize_flag.TestNgraphSerialize.test_ng_serialize_to_json
-test_op_disable.TestOpDisableOperations.test_disable_3  # TBD
 test_pad.TestPadOperations.test_pad1
 test_pad.TestPadOperations.test_pad2
 test_pad.TestPadOperations.test_pad3
@@ -77,11 +66,9 @@ test_resize_to_dynamic_shape.TestResizeToDynamicShape.test_resize_to_dynamic_sha
 test_select.TestSelect.test_select_complexshape1
 test_select.TestSelect.test_select_complexshape2
 test_select.TestSelect.test_select_complexshape3
-test_serialize_name.TestDumpingGraphs  # all tests in the class
 test_set_backend.TestSetBackend.test_set_backend
 test_slice.TestSliceOperations.test_strided_slice
 test_slice.TestSliceOperations.test_strided_slice_5
-test_slice.TestSliceOperations.test_strided_slice_zerodim
 test_slice.TestSliceOperations.test_incorrect_strided_slice
 test_split.TestSplitOperations.test_split_sizes[shape0-sizes0-1]
 test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]
@@ -95,7 +82,6 @@ test_squeeze.TestSqueezeOperations.test_squeeze[shape0-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
-test_tf2ngraph_script.Testtf2ngraph.test_contains_variables
 test_topkv2.TestTopKV2.test_topkv2_1d
 test_topkv2.TestTopKV2.test_topkv2_2d
 test_topkv2.TestTopKV2.test_topkv2_3d
