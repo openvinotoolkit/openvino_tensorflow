@@ -314,13 +314,12 @@ slice_op_test.SliceTest.testSimple
 slice_op_test.SliceTest.testSingleDimension
 slice_op_test.SliceTest.testSingleElementAll
 slice_op_test.SliceTest.testSliceOfSlice
-softmax_op_test.SoftmaxTest.testAlongFirstDimension
-softmax_op_test.SoftmaxTest.testAlongSecondDimension
-softmax_op_test.SoftmaxTest.testDimTooLarge
-softmax_op_test.SoftmaxTest.testDouble
-softmax_op_test.SoftmaxTest.testEmptyInput
-softmax_op_test.SoftmaxTest.testFloat
-softmax_op_test.SoftmaxTest.testHalf
+
+softmax_op_test.SoftmaxTest.testAlongFirstDimension #data doesn't exist; zero dim error with CF 
+softmax_op_test.SoftmaxTest.testAlongSecondDimension #data doesn't exist; zero dim error with CF 
+softmax_op_test.SoftmaxTest.testDimTooLarge #Cloned network doesn't contain all outputs; data doesn't exist with CF
+softmax_op_test.SoftmaxTest.testDouble #Can't convert type f64 to IE precision!; same with CF
+
 spacetodepth_op_test.SpaceToDepthTest.testBasic
 spacetodepth_op_test.SpaceToDepthTest.testBatchSize0
 sparse_xent_op_test.SparseXentTest.testDouble

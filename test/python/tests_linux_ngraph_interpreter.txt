@@ -23,3 +23,8 @@ tests_common.txt
 # INTERPRETER backend does not support dtype bf16 for Convolution op
 test_bfloat16.TestBfloat16.test_conv2d_bfloat16
 test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
+
+# INTERPRETER backend does not support Tile op
+test_mnist_training.TestMnistTraining.test_mnist_training[adam]
+test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
+test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
