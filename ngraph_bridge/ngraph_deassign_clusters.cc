@@ -37,7 +37,6 @@
 using namespace std;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 //
@@ -218,5 +217,4 @@ Status DeassignClusters(Graph* graph) {
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

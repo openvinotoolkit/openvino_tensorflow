@@ -68,7 +68,7 @@ class TestSelect(NgraphTest):
 
     def test_select_complexshape1(self):
         a = np.random.randint(2, size=[7])
-        x = np.random.uniform(0, 11, [7, 3, 2, 1])
+        x = np.random.randint(0, 11, [7, 3, 2, 1])
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
@@ -81,7 +81,7 @@ class TestSelect(NgraphTest):
 
     def test_select_complexshape2(self):
         a = np.random.randint(2, size=[7])
-        x = np.random.uniform(0, 11, [7, 3, 2, 7])
+        x = np.random.randint(0, 11, [7, 3, 2, 7])
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
@@ -94,7 +94,7 @@ class TestSelect(NgraphTest):
 
     def test_select_complexshape3(self):
         a = np.random.randint(2, size=[5])
-        x = np.random.uniform(0, 11, [5, 3, 1])
+        x = np.random.randint(0, 11, [5, 3, 1])
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)

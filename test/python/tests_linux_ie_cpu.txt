@@ -53,6 +53,9 @@ test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
 test_gathernd.TestGatherNDOperations.test_gather_nd
+test_mnist_training.TestMnistTraining.test_mnist_training[adam]
+test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
+test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
 test_pad.TestPadOperations.test_pad1
 test_pad.TestPadOperations.test_pad2
 test_pad.TestPadOperations.test_pad3

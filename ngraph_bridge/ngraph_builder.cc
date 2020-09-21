@@ -3087,7 +3087,7 @@ const static std::map<
         {"Reshape", TranslateReshapeOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"ScatterNd", TranslateScatterNdOp},
-        {"Select", TranslateSelectOp},
+        {"SelectV2", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateUnaryOp<opset::Sigmoid>},
         {"Sin", TranslateUnaryOp<opset::Sin>},
