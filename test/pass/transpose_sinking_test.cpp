@@ -250,6 +250,41 @@ TEST(TransposeSinking, Concat) {
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
 }
 
+TEST(TransposeSinking, Concat_DummyShape) {
+  // checks if Transpose is pushed through ng::opset3::Concat
+  ng::Shape shape1{4, 3, 3, 1};
+  ng::Shape shape2{4, 3, 3, 2};
+  ng::Shape shape3{4, 3, 3, 3};
+  ng::Shape shape4{4, 3, 3, 4};
+  auto to_nchw = std::make_shared<ng::opset3::Constant>(
+      ng::element::u64, ng::Shape{4}, ng::Shape{0, 3, 1, 2});
+  auto to_nhwc = std::make_shared<ng::opset3::Constant>(
+      ng::element::u64, ng::Shape{4}, ng::Shape{0, 2, 3, 1});
+
+  auto a1 = make_shared<ng::opset3::Parameter>(ng::element::i32, shape1);
+  auto a2 = make_shared<ng::opset3::Parameter>(ng::element::i32, shape2);
+  auto a3 = make_shared<ng::opset3::Parameter>(ng::element::i32, shape3);
+  auto a4 = make_shared<ng::opset3::Parameter>(ng::element::i32, shape4);
+  auto a1_transpose = make_shared<ng::opset3::Transpose>(a1, to_nchw);
+  auto a2_transpose = make_shared<ng::opset3::Transpose>(a2, to_nchw);
+  auto a3_transpose = make_shared<ng::opset3::Transpose>(a3, to_nchw);
+  auto a4_transpose = make_shared<ng::opset3::Transpose>(a4, to_nchw);
+  auto concat = make_shared<ng::opset3::Concat>(
+      ng::NodeVector{a1_transpose, a2_transpose, a3_transpose, a4_transpose},
+      1);
+  auto out = make_shared<ng::opset3::Transpose>(concat, to_nchw);
+  auto func = make_shared<ng::Function>(ng::OutputVector{out},
+                                        ng::ParameterVector{a1, a2, a3, a4});
+  ng::pass::Manager pass_manager;
+  pass_manager.register_pass<pass::TransposeSinking>();
+  pass_manager.run_passes(func);
+  size_t transpose_count = count_ops_of_type<ng::opset3::Transpose>(func);
+  ASSERT_EQ(1, transpose_count);
+  auto result = func->get_results().at(0)->get_argument(0);
+  ng::Shape expected_shape{4, 3, 10, 3};
+  ASSERT_EQ(result->get_output_shape(0), expected_shape);
+}
+
 // The Transpose should sink through Pad op but stopped by ReduceSum
 TEST(TransposeSinking, Pad) {
   ng::Shape shape_nhwc{100, 8, 8, 1};
