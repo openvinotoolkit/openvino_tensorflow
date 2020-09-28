@@ -179,45 +179,6 @@ TEST(ArrayOps, ExpandDims) {
 
 }  // end of test op ExpandDims
 
-// Test op:GatherND
-TEST(ArrayOps, GatherNd2D) {
-  int dim1 = 2;
-  int dim2 = 2;
-
-  Tensor indices(DT_INT32, TensorShape({2, 1}));
-  AssignInputValues<int>(indices, {0, 1});
-
-  Tensor params(DT_FLOAT, TensorShape({dim1, dim2}));
-  AssignInputValuesRandom(params);
-
-  Scope root = Scope::NewRootScope();
-  auto R = ops::GatherNd(root, params, indices);
-  std::vector<Output> sess_run_fetchoutputs = {R};
-
-  OpExecuter opexecuter(root, "GatherNd", sess_run_fetchoutputs);
-
-  opexecuter.RunTest();
-
-}  // end of test op GatherND
-
-// Test op:GatherND
-TEST(ArrayOps, GatherNd3D) {
-  Tensor indices(DT_INT32, TensorShape({2, 1, 1}));
-  AssignInputValues<int>(indices, {0, 1});
-
-  Tensor params(DT_FLOAT, TensorShape({2, 2, 2}));
-  AssignInputValuesRandom(params);
-
-  Scope root = Scope::NewRootScope();
-  auto R = ops::GatherNd(root, params, indices);
-  std::vector<Output> sess_run_fetchoutputs = {R};
-
-  OpExecuter opexecuter(root, "GatherNd", sess_run_fetchoutputs);
-
-  opexecuter.RunTest();
-
-}  // end of test op GatherND
-
 // Test op: Gather. vector indices
 TEST(ArrayOps, GatherV2Vector) {
   int dim = 5;

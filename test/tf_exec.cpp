@@ -170,63 +170,6 @@ TEST(TFExec, axpy) {
   }
 }
 
-TEST(tf_exec, BatchMatMul) {
-  Scope root = Scope::NewRootScope();
-
-  auto A = ops::Const(root, {-1.f, 2.f, 3.f, 4.f, -1.f, 2.f, 3.f, 4.f},
-                      TensorShape({2, 2, 2, 1}));
-  auto B = ops::Const(root, {1.f, 0.f, -1.f, -2.f, -1.f, 2.f, 3.f, 4.f},
-                      TensorShape({2, 2, 1, 2}));
-
-  Tensor X(DT_FLOAT, TensorShape({2, 3, 4, 5}));
-  auto X_flat = X.flat<float>();
-  for (int i = 0; i < X_flat.size(); i++) {
-    X_flat.data()[i] = -1.1f * i;
-  }
-  Tensor Y(DT_FLOAT, TensorShape({2, 3, 4, 5}));
-  auto Y_flat = Y.flat<float>();
-  for (int i = 0; i < Y_flat.size(); i++) {
-    Y_flat.data()[i] = -0.5f * i;
-  }
-
-  // Run on nGraph
-  auto R = ops::BatchMatMul(root.WithOpName("R"), A, B);
-  auto attrs_x = ops::BatchMatMul::Attrs().AdjX(true);
-  auto attrs_y = ops::BatchMatMul::Attrs().AdjY(true);
-  auto Z1 = ops::BatchMatMul(root.WithOpName("Z1"), X, Y, attrs_x);
-  auto Z2 = ops::BatchMatMul(root.WithOpName("Z2"), X, Y, attrs_y);
-
-  std::vector<Tensor> outputs_ng;
-  std::vector<Tensor> outputs_z1_ng;
-  std::vector<Tensor> outputs_z2_ng;
-
-  ActivateNGraph();
-  ClientSession session_ng(root);
-  ASSERT_OK(session_ng.Run({R}, &outputs_ng));
-  ASSERT_OK(session_ng.Run({Z1}, &outputs_z1_ng));
-  ASSERT_OK(session_ng.Run({Z2}, &outputs_z2_ng));
-
-  std::vector<Tensor> outputs_tf;
-  std::vector<Tensor> outputs_z1_tf;
-  std::vector<Tensor> outputs_z2_tf;
-
-  DeactivateNGraph();
-  ClientSession session_tf(root);
-  ASSERT_OK(session_tf.Run({R}, &outputs_tf));
-  ASSERT_OK(session_tf.Run({Z1}, &outputs_z1_tf));
-  ASSERT_OK(session_tf.Run({Z2}, &outputs_z2_tf));
-
-  // Check results for equality
-  ASSERT_EQ(outputs_ng[0].shape(), outputs_tf[0].shape());
-  ASSERT_EQ(outputs_z1_ng[0].shape(), outputs_z1_tf[0].shape());
-  ASSERT_EQ(outputs_z2_ng[0].shape(), outputs_z2_tf[0].shape());
-  Compare<float>(outputs_z1_ng[0], outputs_z1_tf[0]);
-  Compare<float>(outputs_z2_ng[0], outputs_z2_tf[0]);
-
-  // Activate NGraph : Otherwise the tests dont run through NGraph
-  ActivateNGraph();
-}
-
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

@@ -96,7 +96,6 @@ set(SRC
     graph_rewrites/op_by_op_capability_test.cc
     test_ngraph_data_cache.cpp
     test_utilities.cpp
-    test_image_ops.cpp
     test_math_ops.cpp
     test_nn_ops.cpp
     test_array_ops.cpp
