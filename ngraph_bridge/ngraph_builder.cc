@@ -1526,8 +1526,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
     TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon));
 
     auto ng_batch_norm = ConstructNgNode<opset::BatchNormInference>(
-        op->name() + "_FusedConv2D_BatchNorm", tf_epsilon, ng_scale, ng_offset,
-        ng_conv, ng_mean, ng_variance);
+        op->name() + "_FusedConv2D_BatchNorm", ng_conv, ng_scale, ng_offset,
+        ng_mean, ng_variance, tf_epsilon);
 
     if (VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"})) {
       auto ng_relu = ConstructNgNode<opset::Relu>(
