@@ -51,7 +51,7 @@ namespace ngraph_bridge {
 // NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
 
-static const int MIN_NONTRIVIAL_NODES = 2;
+static const int MIN_NONTRIVIAL_NODES = 6;
 
 unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
@@ -169,7 +169,6 @@ Status DeassignClusters(Graph* graph) {
 
   for (auto node : graph->nodes()) {
     int cluster_idx;
-
     if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
@@ -184,9 +183,9 @@ Status DeassignClusters(Graph* graph) {
 
     int non_trivial_count = 0;
 
+    std::unordered_set<std::string> trivial_ops = {"Const", "Identitiy"};
     for (auto node : nodes) {
-      // TODO(amprocte): less hard-coding here
-      if (node->type_string() != "Const" && node->type_string() != "Identity") {
+      if (trivial_ops.find(node->type_string()) == trivial_ops.end()) {
         non_trivial_count++;
       }
     }

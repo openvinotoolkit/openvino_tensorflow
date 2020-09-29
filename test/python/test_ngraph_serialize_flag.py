@@ -46,13 +46,10 @@ class TestNgraphSerialize(NgraphTest):
         out = tf.nn.l2_loss(tf.abs(x))
         values = np.random.rand(*xshape)
 
-        config = ngraph_bridge.update_config(tf.compat.v1.ConfigProto())
         ngraph_enable_serialize = os.environ.pop('NGRAPH_ENABLE_SERIALIZE',
                                                  None)
         os.environ['NGRAPH_ENABLE_SERIALIZE'] = '1'
-        ngraph_bridge.enable()
-        with tf.compat.v1.Session(config=config) as sess:
-            out = sess.run((out), feed_dict={x: values})
+        self.with_ngraph(lambda sess: sess.run(out, feed_dict={x: values}))
         os.environ.pop('NGRAPH_ENABLE_SERIALIZE', None)
         if ngraph_enable_serialize is not None:
             os.environ['NGRAPH_ENABLE_SERIALIZE'] = \
