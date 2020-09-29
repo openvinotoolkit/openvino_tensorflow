@@ -162,7 +162,13 @@ bool IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
     // Since IE has no "result" nodes, we set the blob corresponding to the
     // parent of this result node
     auto parent = results[i]->input_value(0).get_node_shared_ptr();
-    m_infer_req.SetBlob(parent->get_friendly_name(), tv->get_blob());
+    auto name = parent->get_friendly_name();
+    // if parent has multiple outputs, correctly identify the output feeding
+    // into this result
+    if (parent->outputs().size() > 1) {
+      name += "." + to_string(results[i]->input_value(0).get_index());
+    }
+    m_infer_req.SetBlob(name, tv->get_blob());
   }
 
   m_infer_req.Infer();
