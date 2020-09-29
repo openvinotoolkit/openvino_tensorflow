@@ -215,7 +215,6 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Prod"] = SetStaticInputs({1});
     set_attributes_map["Reshape"] = SetStaticInputs({1});
     set_attributes_map["Shape"] = SetStaticInputs({0});
-    set_attributes_map["ScatterNd"] = SetStaticInputs({2});
     set_attributes_map["Slice"] = SetStaticInputs({1, 2});
     set_attributes_map["Split"] = SetStaticInputs({0});
     set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
@@ -348,7 +347,6 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Relu6"] = SimpleConfirmationFunction();
     confirmation_function_map["Reshape"] = SimpleConfirmationFunction();
     confirmation_function_map["Rsqrt"] = SimpleConfirmationFunction();
-    confirmation_function_map["ScatterNd"] = SimpleConfirmationFunction();
     confirmation_function_map["SelectV2"] = SimpleConfirmationFunction();
     confirmation_function_map["Shape"] = SimpleConfirmationFunction();
     confirmation_function_map["Sigmoid"] = SimpleConfirmationFunction();
@@ -507,8 +505,6 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Reshape"]["T"] = NGraphDTypes();
     type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
     type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
-    type_constraint_map["ScatterNd"]["T"] = NGraphDTypes();
-    type_constraint_map["ScatterNd"]["Tindices"] = NGraphIndexDTypes();
     type_constraint_map["SelectV2"]["T"] = NGraphDTypes();
     type_constraint_map["Shape"]["T"] = NGraphDTypes();
     type_constraint_map["Shape"]["out_type"] = NGraphIndexDTypes();
@@ -689,7 +685,6 @@ GetTFToNgOpMap() {
       {"Rsqrt", {constant, std::make_shared<opset::Power>()}},
       {"SelectV2", {std::make_shared<opset::Select>()}},
       {"Reshape", {std::make_shared<opset::Reshape>()}},
-      {"ScatterNd", {constant, std::make_shared<ngraph::op::ScatterNDAdd>()}},
       {"Shape", {std::make_shared<opset::ShapeOf>()}},
       {"Sigmoid", {std::make_shared<opset::Sigmoid>()}},
       {"Sin", {std::make_shared<opset::Sin>()}},

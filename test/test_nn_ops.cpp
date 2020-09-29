@@ -548,8 +548,9 @@ TEST(NNOps, LogSoftmax) {
     std::vector<Output> sess_run_fetchoutputs = {R};
 
     OpExecuter opexecuter(root, "LogSoftmax", sess_run_fetchoutputs);
-
-    opexecuter.RunTest();
+    float rtol = static_cast<float>(1e-05);
+    float atol = static_cast<float>(1e-05);
+    opexecuter.RunTest(rtol, atol);
   }
 }
 
