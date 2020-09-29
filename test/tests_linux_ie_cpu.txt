@@ -38,8 +38,3 @@ MathOpsSumFixture.FullSet
 NNOps.L2Loss
 ArrayOps.Shape2D
 ArrayOps.Shape3D
-ArrayOps.SplitNegativeAxis
-ArrayOps.SplitPositiveAxis
-ArrayOps.SplitVNegSizeSplit
-ArrayOps.SplitVNegativeAxis
-ArrayOps.SplitVPositiveSizeSplits

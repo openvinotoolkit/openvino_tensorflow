@@ -50,7 +50,7 @@ class TestProductOperations(NgraphTest):
         # and only in that case it adds provenance tags
 
         inp = tf.compat.v1.placeholder(
-            tf.float64, shape=[1, 32, 32, 2], name='input')
+            tf.float32, shape=[1, 32, 32, 2], name='input')
         out_node = tf.add(tf.math.abs(inp, name="abs"), inp, name="add")
         self.with_ngraph(lambda sess: sess.run(
             out_node, feed_dict={inp: np.ones([1, 32, 32, 2])}))
@@ -60,8 +60,8 @@ class TestProductOperations(NgraphTest):
         # as opposed to test_provenance_for_no_effect_broadcast,
         # which is a dummy broadcast
         # so test that they are tagged appropriately
-        inp0 = tf.compat.v1.placeholder(tf.float64, shape=[2, 2], name='input0')
-        inp1 = tf.compat.v1.placeholder(tf.float64, shape=[2], name='input1')
+        inp0 = tf.compat.v1.placeholder(tf.float32, shape=[2, 2], name='input0')
+        inp1 = tf.compat.v1.placeholder(tf.float32, shape=[2], name='input1')
         out_node0 = inp0 / inp1
         out_node1 = inp1 / inp0
         self.with_ngraph(lambda sess: sess.run([out_node0, out_node1],

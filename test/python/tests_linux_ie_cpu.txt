@@ -73,13 +73,6 @@ test_set_backend.TestSetBackend.test_set_backend
 test_slice.TestSliceOperations.test_strided_slice
 test_slice.TestSliceOperations.test_strided_slice_5
 test_slice.TestSliceOperations.test_incorrect_strided_slice
-test_split.TestSplitOperations.test_split_sizes[shape0-sizes0-1]
-test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]
-test_split.TestSplitOperations.test_split_sizes[shape2-sizes2-1]
-test_split.TestSplitOperations.test_split_num[shape0-7-1]
-test_split.TestSplitOperations.test_split_num[shape1-1-0]
-test_split.TestSplitOperations.test_split_num[shape2-3-0]
-test_split.TestSplitOperations.test_split_outputs_order
 test_split.TestSplitOperations.test_split_cpu_one_output
 test_squeeze.TestSqueezeOperations.test_squeeze[shape0-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
