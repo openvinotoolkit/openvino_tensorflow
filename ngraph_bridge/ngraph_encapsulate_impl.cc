@@ -109,9 +109,8 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
                                                &m_graph, ng_function));
     ng_function->set_friendly_name(m_name);
 
-    // Serialize to nGraph if needed
-    if (std::getenv("NGRAPH_ENABLE_SERIALIZE") != nullptr) {
-      NgraphSerialize("tf_function_" + m_name + ".json", ng_function);
+    if (std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr) {
+      ngraph::plot_graph(ng_function, "tf_function_" + m_name + ".dot");
     }
 
     // Evict the cache if the number of elements exceeds the limit
@@ -135,9 +134,8 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     try {
       ng_exec = backend->compile(ng_function);
     } catch (const std::exception& ex) {
-      string fn_name = ng_function->get_friendly_name();
-      NgraphSerialize("tf_function_" + fn_name + ".json", ng_function);
-      return errors::Internal("Failed to compile ng_function: ", ex.what());
+      return errors::Internal("Failed to compile function " + m_name,
+                              ex.what());
     }
 
     SetNgExecMap(signature, ng_exec);

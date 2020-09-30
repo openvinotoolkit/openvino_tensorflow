@@ -179,7 +179,7 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
 // OpKernel::Compute
 //---------------------------------------------------------------------------
 void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
-  NGRAPH_VLOG(1) << "Compute using Executor " << name();
+  NGRAPH_VLOG(1) << "Compute using executor " << name();
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << ng_encap_impl_.GetInstanceId() << ": "
       << name();
@@ -187,8 +187,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   Timer compute_time;
   std::lock_guard<std::mutex> lock(m_compute_lock_);
+  int cluster_id = ng_encap_impl_.GetNgraphCluster();
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
-                 << ng_encap_impl_.GetNgraphCluster();
+                 << cluster_id;
   int time_func_create_or_lookup;
   Timer function_lookup_or_create;
 
@@ -216,13 +217,13 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     NGRAPH_VLOG(1) << " Step_ID: " << step_id;
     NGRAPH_VLOG(4)
         << "NGraphEncapsulateOp::Compute got ngraph executable for cluster "
-        << ng_encap_impl_.GetNgraphCluster();
+        << cluster_id;
 
     time_func_create_or_lookup = function_lookup_or_create.ElapsedInMS();
   }
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute got graph for cluster "
-                 << ng_encap_impl_.GetNgraphCluster();
+                 << cluster_id;
 
   Timer create_or_lookup_tensors;
 
@@ -237,7 +238,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   NGRAPH_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
                     "for cluster "
-                 << ng_encap_impl_.GetNgraphCluster();
+                 << cluster_id;
   // Allocate tensors for the output results.
   vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs;
   int ng_output_tensor_size_in_bytes = 0;
@@ -276,7 +277,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   }
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
-      << ng_encap_impl_.GetNgraphCluster();
+      << cluster_id;
 
   int time_create_or_lookup_tensors = create_or_lookup_tensors.ElapsedInMS();
 
@@ -288,23 +289,16 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     {
       NGRAPH_VLOG(4)
           << "NGraphEncapsulateOp::Compute call starting for cluster "
-          << ng_encap_impl_.GetNgraphCluster();
+          << cluster_id;
       try {
         ng_exec->call(ng_outputs, ng_inputs);
       } catch (const std::exception& exp) {
-        NgraphSerialize(
-            "tf_function_error_" + ctx->op_kernel().name() + ".json",
-            ng_function);
-        string status_string =
-            "Caught exception while executing nGraph computation: " +
-            string(exp.what());
+        string status_string = "Caught exception while executing cluster " +
+                               to_string(cluster_id) + string(exp.what());
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       } catch (...) {
-        NgraphSerialize(
-            "tf_function_error_" + ctx->op_kernel().name() + ".json",
-            ng_function);
         string status_string =
-            "Caught exception while executing nGraph computation.";
+            "Caught exception while executing cluster " + to_string(cluster_id);
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       }
     }

@@ -31,7 +31,6 @@
 
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/serializer.hpp"
 
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
@@ -44,7 +43,6 @@
 namespace ng = ngraph;
 using namespace std;
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 // Finds the complement of element_set
@@ -327,24 +325,10 @@ const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
 // Returns error if axis is out of range. Otherwise returns Status::OK().
 Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
 
-// Serialize a ngraph function into a file
-Status NgraphSerialize(const std::string&,
-                       const std::shared_ptr<ngraph::Function>&);
-
 #if (CMAKE_BUILD_TYPE == Debug)
 // For gdb-like debugger help...
-// Serialize a ngraph function into a file
-Status debugger_serialize_ngfunc(const char*,
-                                 const std::shared_ptr<ngraph::Function>&);
 void debugger_print_ngfunc(const ngraph::Function&);
 #endif
-
-// Dump given string to file
-Status StringToFile(const std::string&, const std::string&,
-                    bool sanitize_name = true);
-
-// Remove '/' from file name (which might appear due to say, tf scopes)
-string SanitizeFileName(const string file_name);
 
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);
@@ -383,7 +367,6 @@ bool DumpDeclusteredGraphs();
 bool DumpEncapsulatedGraphs();
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
 #endif
