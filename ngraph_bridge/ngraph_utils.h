@@ -325,11 +325,6 @@ const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
 // Returns error if axis is out of range. Otherwise returns Status::OK().
 Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
 
-#if (CMAKE_BUILD_TYPE == Debug)
-// For gdb-like debugger help...
-void debugger_print_ngfunc(const ngraph::Function&);
-#endif
-
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);
 

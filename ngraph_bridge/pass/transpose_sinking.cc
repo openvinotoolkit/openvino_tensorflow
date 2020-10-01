@@ -46,6 +46,39 @@ static ngraph::CoordinateDiff apply_permutation(ngraph::CoordinateDiff input,
   return output;
 }
 
+static bool is_output(shared_ptr<ngraph::Node> n) {
+#if defined(ENABLE_OPENVINO)
+  return ngraph::op::is_output(n);
+#else
+  return n->is_output();
+#endif
+}
+
+static bool is_unary_elementwise_arithmetic(shared_ptr<ngraph::Node> n) {
+#if defined(ENABLE_OPENVINO)
+  return ngraph::op::is_unary_elementwise_arithmetic(n);
+#else
+  return n->is_unary_elementwise_arithmetic();
+#endif
+}
+
+static bool is_binary_elementwise_arithmetic(shared_ptr<ngraph::Node> n) {
+#if defined(ENABLE_OPENVINO)
+  return ngraph::op::is_binary_elementwise_arithmetic(n);
+#else
+  return n->is_binary_elementwise_arithmetic();
+#endif
+}
+
+static ngraph::AxisVector permutation_to_default_order(
+    const ngraph::AxisVector& axis_order) {
+  ngraph::AxisVector out(axis_order.size());
+  for (size_t i = 0; i < axis_order.size(); i++) {
+    out.at(axis_order[i]) = i;
+  }
+  return out;
+}
+
 template <typename T>
 static string describe(shared_ptr<ngraph::Node> node) {
   // ensure that it's either a reshape or a transpose
@@ -203,8 +236,8 @@ static void convert_binary_to_default_order(
   auto right_const = ngraph::as_type_ptr<opset::Constant>(
       right_t->input_value(1).get_node_shared_ptr());
 
-  auto perm_to_def = ngraph::get_permutation_to_default_order(
-      right_const->get_axis_vector_val());
+  auto perm_to_def =
+      permutation_to_default_order(right_const->get_axis_vector_val());
 
   // if right input is being implicitly broadcasted, insert a reshape
   // instead of a transpose
@@ -355,7 +388,7 @@ static void sink_pad(
   // we need the correct input shape to produce the right output shape
   // we are going to create a label of the right input shape,
   // so a new pad will have the right shape
-  auto def_order = ngraph::get_permutation_to_default_order(order);
+  auto def_order = permutation_to_default_order(order);
   auto input_shape =
       ngraph::apply_permutation(arg_transpose->get_shape(), def_order);
   auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
@@ -392,7 +425,7 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
   // we need the correct input shape to produce the right output shape
   // we are going to create a label of the right input shape,
   // so a new concat will have the right shape
-  auto def_order = ngraph::get_permutation_to_default_order(order);
+  auto def_order = permutation_to_default_order(order);
   auto input_shape =
       ngraph::apply_permutation(arg_transpose->get_shape(), def_order);
   auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
@@ -456,15 +489,15 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
   for (auto n : f->get_ordered_ops()) {
     NGRAPH_VLOG(4) << "-----Start: Processing node----- " << n->get_name();
     // collect output shape of all Result nodes for a sanity check
-    if (n->is_output()) {
+    if (is_output(n)) {
       orig_result_out_shape[n->get_name()] = n->get_output_shape(0);
     }
 
     if (auto transpose = ngraph::as_type_ptr<opset::Transpose>(n)) {
       sink_transpose(transpose, reorders, transposes_to_delete);
-    } else if (n->is_unary_elementwise_arithmetic()) {
+    } else if (is_unary_elementwise_arithmetic(n)) {
       sink_unary(n, reorders, transposes_to_delete);
-    } else if (n->is_binary_elementwise_arithmetic()) {
+    } else if (is_binary_elementwise_arithmetic(n)) {
       sink_binary(n, reorders, transposes_to_delete);
     } else if (auto pad = ngraph::as_type_ptr<opset::Pad>(n)) {
       sink_pad(pad, reorders, transposes_to_delete);

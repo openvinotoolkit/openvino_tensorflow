@@ -72,9 +72,9 @@ TEST(TransposeSinking, EdgeSplitting) {
   ng::pass::Manager pass_manager;
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
-  ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
+  ASSERT_EQ(func->get_results().at(1)->input_value(0), sum);
   auto new_transpose = ng::as_type_ptr<ng::opset3::Transpose>(
-      func->get_results().at(0)->get_argument(0));
+      func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
   ASSERT_EQ(new_transpose->get_output_shape(0), shape_nchw);
 }
@@ -128,7 +128,7 @@ TEST(TransposeSinking, PoolAdd1) {
   size_t after_count = count_ops_of_type<ng::opset3::Transpose>(func);
   ASSERT_LE(before_count, after_count);
   auto new_transpose = ng::as_type_ptr<ng::opset3::Transpose>(
-      func->get_results().at(0)->get_argument(0));
+      func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
   ASSERT_EQ(new_transpose->get_output_shape(0), (ng::Shape{1, 3, 3, 1}));
 }
@@ -176,7 +176,7 @@ TEST(TransposeSinking, PoolAdd2) {
   size_t after_count = count_ops_of_type<ng::opset3::Transpose>(func);
   ASSERT_LE(after_count, before_count);
   auto new_transpose = ng::as_type_ptr<ng::opset3::Transpose>(
-      func->get_results().at(0)->get_argument(0));
+      func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
   ASSERT_EQ(new_transpose->get_output_shape(0), (ng::Shape{1, 3, 3, 1}));
 }
@@ -219,7 +219,7 @@ TEST(TransposeSinking, PoolAdd3) {
   size_t after_count = count_ops_of_type<ng::opset3::Transpose>(func);
   ASSERT_LE(after_count, before_count);
   auto new_transpose = ng::as_type_ptr<ng::opset3::Transpose>(
-      func->get_results().at(0)->get_argument(0));
+      func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
   ASSERT_EQ(new_transpose->get_output_shape(0), (ng::Shape{1, 3, 3, 1}));
 }
@@ -245,7 +245,7 @@ TEST(TransposeSinking, Concat) {
   pass_manager.run_passes(func);
   size_t transpose_count = count_ops_of_type<ng::opset3::Transpose>(func);
   ASSERT_EQ(0, transpose_count);
-  auto result = func->get_results().at(0)->get_argument(0);
+  auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
   ng::Shape expected_shape{32, 28, 28, 1};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
 }
@@ -280,7 +280,7 @@ TEST(TransposeSinking, Concat_DummyShape) {
   pass_manager.run_passes(func);
   size_t transpose_count = count_ops_of_type<ng::opset3::Transpose>(func);
   ASSERT_EQ(1, transpose_count);
-  auto result = func->get_results().at(0)->get_argument(0);
+  auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
   ng::Shape expected_shape{4, 3, 10, 3};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
 }
@@ -330,11 +330,11 @@ TEST(TransposeSinking, Pad) {
   pass_manager.run_passes(f);
   size_t after_count = count_ops_of_type<ng::opset3::Transpose>(f);
   ASSERT_LE(after_count, before_count);
-  auto result = f->get_results().at(0)->get_argument(0);
+  auto result = f->get_results().at(0)->input_value(0).get_node_shared_ptr();
   ng::Shape expected_shape{1, 1, 1, 1};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
   auto out = ng::as_type_ptr<ng::opset3::ReduceSum>(
-      f->get_results().at(0)->get_argument(0));
+      f->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(out);
 }
 
@@ -362,7 +362,7 @@ TEST(TransposeSinking, SimpleUnary) {
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
   size_t after_count = count_ops_of_type<ng::opset3::Transpose>(func);
-  ASSERT_EQ(func->get_results().at(0)->get_argument(0), absn2);
+  ASSERT_EQ(func->get_results().at(0)->input_value(0), absn2);
   EXPECT_NE(before_count, after_count);
   EXPECT_EQ(after_count, 0);
 }

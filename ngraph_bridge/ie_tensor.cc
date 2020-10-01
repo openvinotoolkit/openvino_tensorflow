@@ -20,6 +20,8 @@
 
 #include "ngraph/ngraph.hpp"
 
+#include "ie_layouts.h"
+#include "ie_precision.hpp"
 #include "ie_tensor.h"
 
 using namespace ngraph;
@@ -28,30 +30,9 @@ using namespace std;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-static InferenceEngine::Layout getLayoutByDims(size_t dims) {
-  switch (dims) {
-    case 0:
-      return InferenceEngine::Layout::SCALAR;
-    case 1:
-      return InferenceEngine::Layout::C;
-    case 2:
-      return InferenceEngine::Layout::NC;
-    case 3:
-      return InferenceEngine::Layout::CHW;
-    case 4:
-      return InferenceEngine::Layout::NCHW;
-    case 5:
-      return InferenceEngine::Layout::NCDHW;
-    case 6:
-      return InferenceEngine::Layout::GOIDHW;
-    default:
-      THROW_IE_EXCEPTION << "Can't convert dims " << dims << " to IE layout!";
-  }
-}
-
 static InferenceEngine::Precision getPrecision(
     const element::Type& element_type) {
-  switch (element_type.get_type_enum()) {
+  switch (element_type) {
     case element::Type_t::f32:
       return InferenceEngine::Precision::FP32;
     case element::Type_t::u8:
@@ -80,12 +61,10 @@ IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
     : runtime::Tensor(
           make_shared<descriptor::Tensor>(element_type, shape_, "")) {
-  m_descriptor->set_tensor_layout(
-      make_shared<descriptor::layout::DenseTensorLayout>(*m_descriptor));
-
   InferenceEngine::SizeVector shape = shape_;
   InferenceEngine::Precision precision = getPrecision(element_type);
-  InferenceEngine::Layout layout = getLayoutByDims(shape.size());
+  InferenceEngine::Layout layout =
+      InferenceEngine::TensorDesc::getLayoutByDims(shape);
 
   auto desc = InferenceEngine::TensorDesc(precision, shape, layout);
   auto size = shape_size(shape_) * element_type.size();

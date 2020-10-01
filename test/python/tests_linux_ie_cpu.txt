@@ -60,6 +60,8 @@ test_pad.TestPadOperations.test_pad1
 test_pad.TestPadOperations.test_pad2
 test_pad.TestPadOperations.test_pad3
 test_pad.TestPadOperations.test_pad4
+test_prod.TestProductOperations.test_prod[v10--1-expected0]
+test_prod.TestProductOperations.test_prod[v11-0-expected1]
 test_prod.TestProductOperations.test_prod[v15-axis5-expected5]
 test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
 test_prod.TestProductOperations.test_dynamic_axis_fallback[v10-0-expected0]

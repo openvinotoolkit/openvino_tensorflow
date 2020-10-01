@@ -21,7 +21,6 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/pass/pass_util.hpp"
 
 namespace tensorflow {
 namespace ngraph_bridge {

@@ -342,7 +342,7 @@ def main():
     # Build OpenVINO if required.
     if arguments.build_openvino_backend:
         if not arguments.use_prebuilt_openvino:
-            openvino_version = "releases/2020/4"
+            openvino_version = "3a720d188b25c5f11da093118631d6db7ed93c98"  #head commit as of Sep25 on releases/2021/1
             openvino_src_dir = "./openvino"
             download_repo(
                 "openvino",
@@ -352,6 +352,7 @@ def main():
 
             # Now build OpenVINO
             openvino_cmake_flags = [
+                "-DENABLE_V7_SERIALIZE=ON",
                 "-DENABLE_TESTS=OFF",
                 "-DENABLE_FUNCTIONAL_TESTS=OFF",
                 "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build

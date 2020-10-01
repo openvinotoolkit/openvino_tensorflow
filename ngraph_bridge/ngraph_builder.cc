@@ -20,8 +20,6 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
-#include "ngraph/builder/autobroadcast.hpp"
-#include "ngraph/op/experimental/layers/interpolate.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -95,7 +93,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
   node->set_friendly_name(op_name + "/" + node->get_name());
   node->add_provenance_tag(op_name);
   if (config::IsLoggingPlacement()) {
-    cout << "TF_to_NG: " << op_name << " --> " << node->get_name() << "\n";
+    cout << "TF_to_NG: " << op_name << " --> " << node << "\n";
   }
 }
 
@@ -1924,7 +1922,6 @@ static Status TranslateReduceOp(
 
   ng::Output<ng::Node> ng_node =
       create_ng_node(ng_input, ng_reduction_axes, tf_keep_dims);
-  Builder::SetTracingInfo(op->name(), ng_node);
 
   SaveNgOp(ng_op_map, op->name(), ng_node);
   return Status::OK();
@@ -2165,7 +2162,7 @@ static Status TranslateReshapeOp(
   NGRAPH_VLOG(3) << "Requested result shape: " << ng::join(shape);
 
   auto ng_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::u64, ng::Shape{shape.size()}, shape);
+      op->name(), ng::element::i64, ng::Shape{shape.size()}, shape);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Reshape>(
                                       op->name(), ng_input, ng_shape, false));
   return Status::OK();
