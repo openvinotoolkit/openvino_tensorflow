@@ -23,18 +23,30 @@ tests_common.txt
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 
+# [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 NGraphExecTest.Axpy8bit
+
 NGraphExecTest.MixedTensors
-MathOps.Sum
-MathOps.Mean
-MathOps.Ceil
+
+# mismatch between TF and NG outputs
+MathOps.Mean 
 MathOps.IsFinite
 MathOps.LogicalOr
 MathOps.LogicalNot
-MathOps.Pow0D1D
-MathOps.SqueezeNoAttributes
 MathOps.NotEqual
-MathOpsSumFixture.FullSet
+
+MathOps.Ceil # Unsupported primitive of type: Ceiling
+
+# The output blob size is not equal to the network output size
+MathOps.Pow0D1D
+
+# Const layer Squeeze/Constant_3544 has incorrect dimensions in the output data 0
+MathOps.SqueezeNoAttributes
+
+
+# Const/Const/Constant_1260 has zero dimension which is not allowed
 NNOps.L2Loss
+
+# data doesn't exist
 ArrayOps.Shape2D
 ArrayOps.Shape3D
