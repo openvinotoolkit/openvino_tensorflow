@@ -26,7 +26,6 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-
 ###################################################
 [SKIP]
 

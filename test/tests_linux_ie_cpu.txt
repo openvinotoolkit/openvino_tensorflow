@@ -17,14 +17,18 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-
-
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 NGraphExecTest.Axpy8bit
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
 
 NGraphExecTest.MixedTensors
 
@@ -34,6 +38,7 @@ MathOps.IsFinite
 MathOps.LogicalOr
 MathOps.LogicalNot
 MathOps.NotEqual
+MathOps.FloorModNegInt
 
 MathOps.Ceil # Unsupported primitive of type: Ceiling
 
@@ -50,3 +55,12 @@ NNOps.L2Loss
 # data doesn't exist
 ArrayOps.Shape2D
 ArrayOps.Shape3D
+
+# zero dimension
+ArrayOps.SplitVZeroSizeSplit
+ArrayOps.SplitVZeroSizeNegSplit
+
+MathOps.FloorModNegFloat #Floor_mod supports only I32 precision of inputs
+
+
+

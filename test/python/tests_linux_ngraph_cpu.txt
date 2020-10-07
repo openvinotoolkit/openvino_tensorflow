@@ -20,4 +20,5 @@ tests_common.txt
 ###################################################
 [SKIP]
 
-# None
+# CPU backend does not support dtype bf16 for MatMul/Dot Op
+test_bfloat16.TestBfloat16.test_matmul_bfloat16

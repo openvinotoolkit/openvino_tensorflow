@@ -115,8 +115,10 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   tf::SessionOptions options = GetSessionOptions();
   ClientSession session(tf_scope_, options);
   try {
-    session.Run(sess_run_fetchoutputs_, &ngraph_outputs);
-  } catch (...) {
+    ASSERT_EQ(Status::OK(),
+              session.Run(sess_run_fetchoutputs_, &ngraph_outputs));
+  } catch (const std::exception& e) {
+    NGRAPH_VLOG(0) << "Exception occured while running session " << e.what();
     EXPECT_TRUE(false);
   }
   for (size_t i = 0; i < ngraph_outputs.size(); i++) {

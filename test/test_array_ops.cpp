@@ -78,7 +78,7 @@ TEST(ArrayOps, DepthToSpaceNHWC) {
 }  // end of op DepthToSpaceNHWC
 
 // Test DepthToSpace with NCHW data format
-TEST(ArrayOps, DISABLED_DepthToSpaceNCHW) {
+TEST(ArrayOps, DepthToSpaceNCHW) {
   std::map<std::vector<int64>, int> input_map;
   input_map.insert(pair<std::vector<int64>, int>({1, 4, 1, 1}, 2));
   input_map.insert(pair<std::vector<int64>, int>({1, 250, 1, 1}, 5));
@@ -588,7 +588,7 @@ TEST(ArrayOps, SpaceToDepthNHWC) {
 }  // end of op SpaceToDepthNHWC
 
 // Test SpaceToDepth with NCHW data format
-TEST(ArrayOps, DISABLED_SpaceToDepthNCHW) {
+TEST(ArrayOps, SpaceToDepthNCHW) {
   std::map<std::vector<int64>, int> input_map;
   input_map.insert(pair<std::vector<int64>, int>({1, 1, 2, 2}, 2));
   input_map.insert(pair<std::vector<int64>, int>({1, 10, 5, 5}, 5));
@@ -826,7 +826,7 @@ TEST(ArrayOps, SplitVPositiveSizeSplits) {
 
 // Test SplitVZeroSizeSplit op
 // fails with opset3 upgrade on CPU/Interpreter
-TEST(ArrayOps, DISABLED_SplitVZeroSizeSplit) {
+TEST(ArrayOps, SplitVZeroSizeSplit) {
   std::vector<std::vector<int64>> input_shapes;
   input_shapes.push_back({1, 10});
 
@@ -857,7 +857,7 @@ TEST(ArrayOps, DISABLED_SplitVZeroSizeSplit) {
 
 // Test SplitVZeroSizeNegSplit op
 // fails with opset3 upgrade on CPU/Interpreter
-TEST(ArrayOps, DISABLED_SplitVZeroSizeNegSplit) {
+TEST(ArrayOps, SplitVZeroSizeNegSplit) {
   std::vector<std::vector<int64>> input_shapes;
   input_shapes.push_back({1, 10});
 

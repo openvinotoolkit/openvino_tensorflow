@@ -414,9 +414,11 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
 
   setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:1", true);
   expect_const_count_ngfunc(input_graph, 1);
+  unsetenv("NGRAPH_PASS_ENABLES");
 
   setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:0", true);
   expect_const_count_ngfunc(input_graph, 3);
+  unsetenv("NGRAPH_PASS_ENABLES");
 }
 
 TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
@@ -433,9 +435,11 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
 
   setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:1", true);
   expect_const_count_ngfunc(*pgraph_new, 1);
+  unsetenv("NGRAPH_PASS_ENABLES");
 
   setenv("NGRAPH_PASS_ENABLES", "ConstantFolding:0", true);
   expect_const_count_ngfunc(*pgraph_new, 3);
+  unsetenv("NGRAPH_PASS_ENABLES");
 }
 
 }  // namespace testing

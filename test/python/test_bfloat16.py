@@ -35,8 +35,6 @@ np.random.seed(5)
 
 class TestBfloat16(NgraphTest):
 
-    @pytest.mark.skip(
-        reason="CPU backend does not support dtype bf16 for MatMul/Dot Op")
     def test_matmul_bfloat16(self):
         a = tf.compat.v1.placeholder(tf.bfloat16, [2, 3], name='a')
         x = tf.compat.v1.placeholder(tf.bfloat16, [3, 4], name='x')
@@ -54,10 +52,6 @@ class TestBfloat16(NgraphTest):
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
     # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
-    @pytest.mark.skipif(
-        ngraph_bridge.get_backend() == "INTERPRETER",
-        reason=
-        "INTERPRETER backend does not support dtype bf16 for Convolution op")
     def test_conv2d_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
@@ -98,10 +92,6 @@ class TestBfloat16(NgraphTest):
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
     # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
-    @pytest.mark.skipif(
-        ngraph_bridge.get_backend() == "INTERPRETER",
-        reason=
-        "INTERPRETER backend does not support dtype bf16 for Convolution op")
     def test_conv2d_cast_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)

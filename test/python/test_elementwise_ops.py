@@ -123,7 +123,6 @@ class TestElementwiseOperations(NgraphTest):
         assert (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all()
         assert (self.with_ngraph(sess_fn) == expected).all()
 
-    @pytest.mark.skip(reason="Temporarily skipping for opset3 upgrade")
     @pytest.mark.parametrize(("v1", "v2", "expected"),
                              ((True, True, [True]), (True, False, ([False],)),
                               (1.0, -2.0, ([True],)), (False, 100, ([False],)),

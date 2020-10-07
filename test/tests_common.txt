@@ -24,3 +24,6 @@
 # Specify tests/patterns/regex that should be excluded/skipped
 
 # None
+# TF CPU does not support NCHW format for this op
+ArrayOps.DepthToSpaceNCHW
+ArrayOps.SpaceToDepthNCHW

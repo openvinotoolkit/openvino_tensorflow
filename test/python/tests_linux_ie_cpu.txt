@@ -52,6 +52,11 @@ test_elementwise_ops.TestElementwiseOperations.test_greater[v15-v25-expected5]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
 test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-True-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-False-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[1.0--2.0-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[False-100-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[v14-v24-expected4]
 test_select.TestSelect.test_select_complexshape1
 test_select.TestSelect.test_select_complexshape2
 test_select.TestSelect.test_select_complexshape3

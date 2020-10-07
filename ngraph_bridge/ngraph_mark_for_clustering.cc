@@ -293,7 +293,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Fill"] = SimpleConfirmationFunction();
     confirmation_function_map["Floor"] = SimpleConfirmationFunction();
     confirmation_function_map["FloorDiv"] = SimpleConfirmationFunction();
-    // confirmation_function_map["FloorMod"] = SimpleConfirmationFunction();
+    confirmation_function_map["FloorMod"] = SimpleConfirmationFunction();
     confirmation_function_map["FusedBatchNorm"] =
         FusedBatchNormConfirmationFunction();
     confirmation_function_map["FusedBatchNormV2"] =
@@ -347,6 +347,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Relu6"] = SimpleConfirmationFunction();
     confirmation_function_map["Reshape"] = SimpleConfirmationFunction();
     confirmation_function_map["Rsqrt"] = SimpleConfirmationFunction();
+    confirmation_function_map["Select"] = SimpleConfirmationFunction();
     confirmation_function_map["SelectV2"] = SimpleConfirmationFunction();
     confirmation_function_map["Shape"] = SimpleConfirmationFunction();
     confirmation_function_map["Sigmoid"] = SimpleConfirmationFunction();
@@ -445,7 +446,8 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
     type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
     type_constraint_map["FloorDiv"]["T"] = NGraphNumericDTypes();
-    // type_constraint_map["FloorMod"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["FloorMod"]["T"] = {
+        DT_INT32};  // IE only supports i32 for input
     type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
     // TODO (mingshan): FusedBatchNormV2, V3 supports DT_HALF,DT_BFLOAT16,
     // DT_FLOAT
@@ -505,6 +507,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Reshape"]["T"] = NGraphDTypes();
     type_constraint_map["Reshape"]["Tshape"] = NGraphIndexDTypes();
     type_constraint_map["Rsqrt"]["T"] = NGraphDTypes();
+    type_constraint_map["Select"]["T"] = NGraphDTypes();
     type_constraint_map["SelectV2"]["T"] = NGraphDTypes();
     type_constraint_map["Shape"]["T"] = NGraphDTypes();
     type_constraint_map["Shape"]["out_type"] = NGraphIndexDTypes();
@@ -607,7 +610,7 @@ GetTFToNgOpMap() {
       {"FloorDiv",
        {std::make_shared<opset::Divide>(), std::make_shared<opset::Floor>(),
         std::make_shared<ngraph::op::Broadcast>()}},
-      //{"FloorMod", {std::make_shared<opset::FloorMod>()}},
+      {"FloorMod", {std::make_shared<opset::FloorMod>()}},
       {"FusedBatchNorm", {std::make_shared<ngraph::op::BatchNormInference>()}},
       {"FusedBatchNormV2",
        {constant, std::make_shared<ngraph::op::BatchNormInference>(),
@@ -683,6 +686,7 @@ GetTFToNgOpMap() {
       {"Relu", {std::make_shared<opset::Relu>()}},
       {"Relu6", {std::make_shared<opset::Clamp>()}},
       {"Rsqrt", {constant, std::make_shared<opset::Power>()}},
+      {"Select", {std::make_shared<opset::Select>()}},
       {"SelectV2", {std::make_shared<opset::Select>()}},
       {"Reshape", {std::make_shared<opset::Reshape>()}},
       {"Shape", {std::make_shared<opset::ShapeOf>()}},

@@ -183,7 +183,7 @@ TEST(MathOps, AddN) {
 // Any with attribute KeepDims set to true
 // Fails with opset3 upgrade because there is no opset0
 // downgrade available for it in nGraph
-TEST(MathOps, DISABLED_AnyKeepDims) {
+TEST(MathOps, AnyKeepDims) {
   int dim1 = 2;
   int dim2 = 2;
   std::vector<bool> v = {true, true, true, true};
@@ -203,7 +203,7 @@ TEST(MathOps, DISABLED_AnyKeepDims) {
   opexecuter.RunTest();
 }
 
-TEST(MathOps, DISABLED_AnyNegativeAxis) {
+TEST(MathOps, AnyNegativeAxis) {
   int dim1 = 2;
   int dim2 = 3;
   std::vector<bool> v = {true, true, true, true, false, false};
@@ -221,7 +221,7 @@ TEST(MathOps, DISABLED_AnyNegativeAxis) {
   opexecuter.RunTest();
 }
 
-TEST(MathOps, DISABLED_AnyPositiveAxis) {
+TEST(MathOps, AnyPositiveAxis) {
   int dim1 = 3;
   int dim2 = 3;
   std::vector<bool> v = {true,  true, true,  true, false,
@@ -244,7 +244,7 @@ TEST(MathOps, DISABLED_AnyPositiveAxis) {
 // All with attribute KeepDims set to true
 // Fails with opset3 upgrade because there is no opset0
 // downgrade available for it in nGraph
-TEST(MathOps, DISABLED_AllKeepDims) {
+TEST(MathOps, AllKeepDims) {
   Scope root = Scope::NewRootScope();
   int dim1 = 2;
   int dim2 = 2;
@@ -266,7 +266,7 @@ TEST(MathOps, DISABLED_AllKeepDims) {
   opexecuter.RunTest();
 }
 
-TEST(MathOps, DISABLED_AllNegativeAxis) {
+TEST(MathOps, AllNegativeAxis) {
   Scope root = Scope::NewRootScope();
   int dim1 = 2;
   int dim2 = 3;
@@ -287,7 +287,7 @@ TEST(MathOps, DISABLED_AllNegativeAxis) {
   opexecuter.RunTest();
 }
 
-TEST(MathOps, DISABLED_AllPositiveAxis) {
+TEST(MathOps, AllPositiveAxis) {
   Scope root = Scope::NewRootScope();
   int dim1 = 3;
   int dim2 = 3;
@@ -907,16 +907,16 @@ TEST(MathOps, FloorDivNegFloat) {
 }  // end of test op FloorDivNegFloat
 
 // Test op: FloorMod
-TEST(MathOps, DISABLED_FloorMod) {
+TEST(MathOps, FloorMod) {
   Scope root = Scope::NewRootScope();
   int dim1 = 2;
   int dim2 = 2;
 
-  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
-  Tensor B(DT_FLOAT, TensorShape({dim1, dim2}));
+  Tensor A(DT_INT32, TensorShape({dim1, dim2}));
+  Tensor B(DT_INT32, TensorShape({dim1, dim2}));
 
-  AssignInputValues(A, 7.5f);
-  AssignInputValues(B, 5.2f);
+  AssignInputValues(A, 7);
+  AssignInputValues(B, 5);
 
   auto R = ops::FloorMod(root, A, B);
 
@@ -927,16 +927,16 @@ TEST(MathOps, DISABLED_FloorMod) {
 }  // end of test op FloorMod
 
 // Test op: FloorModBroadcasting
-TEST(MathOps, DISABLED_FloorModBroadcasting) {
+TEST(MathOps, FloorModBroadcasting) {
   Scope root = Scope::NewRootScope();
   int dim1 = 2;
   int dim2 = 2;
 
-  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
-  Tensor B(DT_FLOAT, TensorShape({dim1}));
+  Tensor A(DT_INT32, TensorShape({dim1, dim2}));
+  Tensor B(DT_INT32, TensorShape({dim1}));
 
-  AssignInputValues(A, 7.5f);
-  AssignInputValues(B, 5.2f);
+  AssignInputValues(A, 7);
+  AssignInputValues(B, 5);
 
   auto R = ops::FloorMod(root, A, B);
 
@@ -949,7 +949,7 @@ TEST(MathOps, DISABLED_FloorModBroadcasting) {
 // Test op: FloorModNegInt
 // Currently failing with TF produces {2,2}, NG produces {-8,-3}
 // Should enable when NGraph fixes the FloorMod
-TEST(MathOps, DISABLED_FloorModNegInt) {
+TEST(MathOps, FloorModNegInt) {
   Scope root = Scope::NewRootScope();
   vector<int> nums = {-8, -8};
   vector<int> divs = {10, 5};
@@ -968,7 +968,7 @@ TEST(MathOps, DISABLED_FloorModNegInt) {
   opexecuter.RunTest();
 }  // end of test op FloorModNegInt
 
-TEST(MathOps, DISABLED_FloorModNegFloat) {
+TEST(MathOps, FloorModNegFloat) {
   Scope root = Scope::NewRootScope();
 
   vector<float> nums = {-8.f, -8.f};

@@ -1220,23 +1220,6 @@ static Status TranslateFloorDivOp(
   return TranslateBinaryOp(op, static_input_map, ng_op_map, ng_bin_fn);
 }
 
-// static Status TranslateFloorModOp(
-//     const Node* op, const std::vector<const Tensor*>& static_input_map,
-//     Builder::OpMap& ng_op_map) {
-//   auto ng_floormod = [&op](ng::Output<ng::Node> ng_input1,
-//                            ng::Output<ng::Node> ng_input2) {
-//     auto floordiv = ConstructNgNode<opset::Floor>(
-//         op->name(),
-//         ConstructNgNode<opset::Divide>(op->name(), ng_input1,
-//         ng_input2));
-//     return ConstructNgNode<opset::Subtract>(
-//         op->name(), ng_input1,
-//         ConstructNgNode<opset::Multiply>(op->name(), floordiv,
-//         ng_input2));
-//   };
-//   return TranslateBinaryOp(op, static_input_map, ng_op_map, ng_floormod);
-// }
-
 static Status TranslateFusedBatchNormOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2825,6 +2808,7 @@ const static std::map<
         {"Relu6", TranslateRelu6Op},
         {"Reshape", TranslateReshapeOp},
         {"Rsqrt", TranslateRsqrtOp},
+        {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateUnaryOp<opset::Sigmoid>},
