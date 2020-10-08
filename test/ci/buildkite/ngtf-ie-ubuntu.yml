@@ -22,6 +22,15 @@
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
       name: ${BUILDKITE_AGENT_META_DATA_NAME}
 
+  - wait
+  - command: |
+      ./test/ci/buildkite/run_cppexample_infer.sh /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+    label: ":bar_chart: Example C++ Inference"
+    timeout_in_minutes: 5
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
   - wait 
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
