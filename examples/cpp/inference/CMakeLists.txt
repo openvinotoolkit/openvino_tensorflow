@@ -61,40 +61,15 @@ if (APPLE)
     add_definitions(-DTEST_SINGLE_INSTANCE)
 endif()
 
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    target_link_libraries(
-        ${APP_NAME} 
-        -Wl,--whole-archive
-            ngraph_bridge_static
-        -Wl,--no-whole-archive
-        ngraph_lib
-        lib_cpu_backend_static
-        lib_interpreter_backend_static 
-        ngraph_lib
-        dl
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        absl_synchronization
-        lib_dnnl
-        lib_iomp5
-        lib_mklml_intel
-    )
-else()
-    target_link_libraries(
-        ${APP_NAME}
-        ngraph_bridge
-        ngraph_lib
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        absl_synchronization
-    )
-endif()
+target_link_libraries(
+    ${APP_NAME}
+    ngraph_bridge
+    ngraph_lib
+    pthread
+    ${TensorFlow_FRAMEWORK_LIBRARY}
+    tensorflow_cc_lib
+    absl_synchronization
+)
 
 if (ENABLE_OPENVINO)
     target_link_libraries(${APP_NAME} ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
@@ -105,36 +80,15 @@ add_executable(
     ${APP_NAME_MULTI} ${SRC} infer_multiple_networks.cc
 )
 
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    target_link_libraries(
-        ${APP_NAME_MULTI} 
-        -Wl,--whole-archive
-            ngraph_bridge_static
-        -Wl,--no-whole-archive
-        ngraph_lib
-        lib_cpu_backend_static
-        lib_interpreter_backend_static 
-        ngraph_lib
-        dl
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        absl_synchronization
-        lib_dnnl
-        lib_iomp5
-        lib_mklml_intel
-    )
-else()
-    target_link_libraries(
-        ${APP_NAME_MULTI}
-        ngraph_bridge
-        ngraph_lib
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        absl_synchronization
-    )
-endif()
+target_link_libraries(
+    ${APP_NAME_MULTI}
+    ngraph_bridge
+    ngraph_lib
+    pthread
+    ${TensorFlow_FRAMEWORK_LIBRARY}
+    tensorflow_cc_lib
+    absl_synchronization
+)
 
 if (ENABLE_OPENVINO)
     target_link_libraries(${APP_NAME_MULTI} ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})

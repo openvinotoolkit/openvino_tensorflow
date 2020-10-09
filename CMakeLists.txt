@@ -132,20 +132,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_TF_CXX11_ABI}")
 endif()
 
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    set(LIBNGRAPH "libngraph.a")
-    set(LIBCPU_BACKEND_A "libcpu_backend.a")
-    set(LIBINTERPRETER_BACKEND_A "libinterpreter_backend.a")
-else()
-    set(LIBNGRAPH "libngraph.so")
-endif()
-
-# TODO[Sindhu]
-# Should make static library changes for APPLE 
-# after Ngraph makes required changes for Mac build
-
 if(APPLE)
     set(LIBNGRAPH "libngraph.dylib")
+else()
+    set(LIBNGRAPH "libngraph.so")
 endif(APPLE)
 
 # Build options
@@ -153,7 +143,6 @@ option(USE_PRE_BUILT_NGRAPH "Use pre-built nGraph located in NGRAPH_ARTIFACTS_DI
 option(NGRAPH_ARTIFACTS_DIR "Where would nGraph be installed after build" FALSE)
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
-option(NGRAPH_BRIDGE_STATIC_LIB_ENABLE "Enable build nGraph bridge static library" FALSE)
 option(ENABLE_OPENVINO "Build OpenVINO backend" FALSE)
 option(USE_PREBUILT_OPENVINO "Use prebuilt OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
 option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
@@ -271,10 +260,6 @@ if (NOT USE_PRE_BUILT_NGRAPH)
 endif()
 set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
 
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-endif()
-
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 else()
@@ -282,65 +267,12 @@ else()
 endif()
 
 set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
-
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    set(CPU_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBCPU_BACKEND_A})
-    set(INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBINTERPRETER_BACKEND_A})
-    set(LIB_DNNL_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libdnnl.so)
-    set(LIB_MKLML_INTEL_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libmklml_intel.so)
-    set(LIB_IOMP5_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/libiomp5.so)
-
-    add_library(ngraph_lib STATIC IMPORTED)
-    set_target_properties(
-        ngraph_lib
-        PROPERTIES IMPORTED_LOCATION
-        ${NGRAPH_IMPORTED_LOCATION}
-    )   
-
-    add_library(lib_cpu_backend_static STATIC IMPORTED)
-    set_target_properties(
-        lib_cpu_backend_static
-        PROPERTIES IMPORTED_LOCATION
-        ${CPU_BACKEND_IMPORTED_LOCATION_STATIC}
-    )
-
-    add_library(lib_interpreter_backend_static STATIC IMPORTED)
-    set_target_properties(
-        lib_interpreter_backend_static
-        PROPERTIES IMPORTED_LOCATION
-        ${INTERPRETER_BACKEND_IMPORTED_LOCATION_STATIC}
-    )
-
-    add_library(lib_dnnl SHARED IMPORTED)
-    set_target_properties(
-        lib_dnnl
-        PROPERTIES IMPORTED_LOCATION
-        ${LIB_DNNL_IMPORTED_LOCATION}
-    )
-
-    add_library(lib_mklml_intel SHARED IMPORTED)
-    set_target_properties(
-        lib_mklml_intel
-        PROPERTIES IMPORTED_LOCATION
-        ${LIB_MKLML_INTEL_IMPORTED_LOCATION}
-        IMPORTED_NO_SONAME 1
-    )
-
-    add_library(lib_iomp5 SHARED IMPORTED)
-    set_target_properties(
-        lib_iomp5
-        PROPERTIES IMPORTED_LOCATION
-        ${LIB_IOMP5_IMPORTED_LOCATION}
-    )
-
-else()
-    add_library(ngraph_lib SHARED IMPORTED)
-    set_target_properties(
-        ngraph_lib
-        PROPERTIES IMPORTED_LOCATION
-        ${NGRAPH_IMPORTED_LOCATION}
-    )
-endif()
+add_library(ngraph_lib SHARED IMPORTED)
+set_target_properties(
+    ngraph_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${NGRAPH_IMPORTED_LOCATION}
+)
 
 add_dependencies(ngraph_lib ext_ngraph)
 

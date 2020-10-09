@@ -79,12 +79,6 @@ Status BackendManager::GetBackendName(string& backend_name) {
 
 Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                                      string& backend_name) {
-// Register backends for static linking
-#if defined(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-  ngraph_register_cpu_backend();
-  ngraph_register_interpreter_backend();
-#endif
-
   const char* env = std::getenv("NGRAPH_TF_BACKEND");
   if (env != nullptr && strlen(env) > 0) {
     backend_name = string(env);

@@ -151,43 +151,17 @@ if (APPLE)
     set(NGRAPH_TF_CXX11_ABI 0)
 endif()
 
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    add_definitions(-DNGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_BRIDGE_STATIC_LIB_ENABLE)
-    target_link_libraries(gtest_ngtf
-        -Wl,--whole-archive
-            ngraph_bridge_static
-        -Wl,--no-whole-archive
-        ngraph_lib
-        lib_cpu_backend_static
-        lib_interpreter_backend_static 
-        ngraph_lib
-        dl
-        libgtest
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        tensorflow_ops_testutil
-        absl_synchronization
-        lib_dnnl
-        lib_iomp5
-        lib_mklml_intel
-    )
-else()
-    target_link_libraries(
-        gtest_ngtf
-        ngraph_bridge
-        ngraph_lib
-        libgtest
-        pthread
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        tensorflow_cc_lib
-        tensorflow_ops_testutil
-        absl_synchronization
-    )
-endif()
+target_link_libraries(
+    gtest_ngtf
+    ngraph_bridge
+    ngraph_lib
+    libgtest
+    pthread
+    ${TensorFlow_FRAMEWORK_LIBRARY}
+    tensorflow_cc_lib
+    tensorflow_ops_testutil
+    absl_synchronization
+)
 
 if (ENABLE_OPENVINO)
     target_link_libraries(gtest_ngtf ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
