@@ -192,6 +192,7 @@ def build_tensorflow(tf_version,
                      artifacts_dir,
                      target_arch,
                      verbosity,
+                     use_intel_tf,
                      target=""):
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()
@@ -238,6 +239,11 @@ def build_tensorflow(tf_version,
         "--config=nohdfs",
         "--config=nonccl",
     ]
+    if use_intel_tf:
+        print("Building Intel-Tensorflow")
+        cmd.extend([
+            "--config=mkl",
+        ])
     # Build the python package
     if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
         cmd.extend([
@@ -280,6 +286,7 @@ def build_tensorflow_cc(tf_version,
                         artifacts_dir,
                         target_arch,
                         verbosity,
+                        use_intel_tf,
                         tf_prebuilt=None):
     lib = "libtensorflow_cc.so.2"
     if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
@@ -293,6 +300,7 @@ def build_tensorflow_cc(tf_version,
         artifacts_dir,
         target_arch,
         verbosity,
+        use_intel_tf,
         target="//tensorflow:" + tf_cc_lib_name +
         " //tensorflow/core/kernels:ops_testutil")
 

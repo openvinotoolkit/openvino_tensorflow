@@ -41,6 +41,10 @@ def main():
         help=
         "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
         default="native")
+    parser.add_argument(
+        '--use_intel_tensorflow',
+        help="Build using Intel TensorFlow.",
+        action="store_true")
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
@@ -66,13 +70,17 @@ def main():
         call(["git", "pull"])
         os.chdir(pwd)
 
+    use_intel_tf = False
+    if arguments.use_intel_tensorflow != '':
+        use_intel_tf = True
+
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
-                     arguments.target_arch, False)
+                     arguments.target_arch, False, use_intel_tf)
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
-                        arguments.target_arch, False)
+                        arguments.target_arch, False, use_intel_tf)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')

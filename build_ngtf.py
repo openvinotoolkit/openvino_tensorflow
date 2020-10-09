@@ -55,6 +55,7 @@ def main():
     # Component versions
     ngraph_version = "94456090176ad6abda633b496b89cc16157ed4b0"  #add codegen support to cpu backend (#4679) ,May 26
     tf_version = "v2.2.0"
+    use_intel_tf = False
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -98,6 +99,11 @@ def main():
         default='',
         nargs='?',
         action="store")
+
+    parser.add_argument(
+        '--use_intel_tensorflow',
+        help="Build using Intel TensorFlow.",
+        action="store_true")
 
     parser.add_argument(
         '--use_prebuilt_ngraph',
@@ -306,13 +312,16 @@ def main():
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 
+            if arguments.use_intel_tensorflow != '':
+                use_intel_tf = True
+
             # Build TensorFlow
             build_tensorflow(tf_version, "tensorflow", artifacts_location,
-                             target_arch, verbosity)
+                             target_arch, verbosity, use_intel_tf)
 
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
-                                target_arch, verbosity)
+                                target_arch, verbosity, use_intel_tf)
 
             # Install tensorflow to our own virtual env
             # Note that if gcc 7.3 is used for building TensorFlow this flag
