@@ -47,7 +47,6 @@ __all__ = [
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
-    'is_openvino_enabled',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -127,7 +126,6 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
     ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
     ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
-    ngraph_bridge_lib.ngraph_tf_is_openvino_enabled.restype = ctypes.c_bool
 
     def enable():
         ngraph_bridge_lib.ngraph_enable()
@@ -176,9 +174,6 @@ if ngraph_classic_loaded:
     def is_grappler_enabled():
         return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
 
-    def is_openvino_enabled():
-        return ngraph_bridge_lib.ngraph_tf_is_openvino_enabled()
-
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled
         if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
@@ -224,4 +219,3 @@ if ngraph_classic_loaded:
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
     "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
-    "nGraph bridge using OpenVino: " + str(ngraph_bridge_lib.ngraph_tf_is_openvino_enabled())

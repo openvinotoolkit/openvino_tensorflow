@@ -28,9 +28,13 @@ message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
-set(SRC 
+set(SRC
+   ie_backend.cc
+   ie_executable.cc
+   ie_tensor.cc
    ngraph_api.cc
    ngraph_assign_clusters.cc
+   ngraph_backend.cc
    ngraph_builder.cc
    ngraph_backend_manager.cc
    ngraph_cluster_manager.cc
@@ -38,6 +42,7 @@ set(SRC
    ngraph_deassign_clusters.cc
    ngraph_encapsulate_clusters.cc
    ngraph_encapsulate_impl.cc
+   ngraph_executable.cc
    ops/ngraph_ops.cc
    ngraph_encapsulate_op.cc
    ngraph_mark_for_clustering.cc
@@ -51,6 +56,7 @@ set(SRC
    version.cc
 )
 
+message(STATUS "NGRAPH_TF_USE_GRAPPLER_OPTIMIZER: ${NGRAPH_TF_USE_GRAPPLER_OPTIMIZER}")
 if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)            
     list(REMOVE_ITEM SRC ngraph_rewrite_pass.cc)
     list(APPEND SRC grappler/ngraph_optimizer.cc)
@@ -58,20 +64,7 @@ if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
-message(STATUS "NGRAPH_TF_USE_GRAPPLER_OPTIMIZER: ${NGRAPH_TF_USE_GRAPPLER_OPTIMIZER}")
-
-if(ENABLE_OPENVINO)
-    list(APPEND SRC ngraph_executable.cc)
-    list(APPEND SRC ngraph_backend.cc)
-    list(APPEND SRC ie_executable.cc)
-    list(APPEND SRC ie_backend.cc)
-    list(APPEND SRC ie_tensor.cc)
-endif()
-
-message(STATUS "ENABLE_OPENVINO: ${ENABLE_OPENVINO}")
-
 add_library(${LIB_NAME} SHARED ${SRC})
-
 target_link_libraries(
         ${LIB_NAME}
         ngraph_logger 
@@ -80,11 +73,8 @@ target_link_libraries(
         absl_algorithm
         absl_container
         absl_strings
+        ${InferenceEngine_LIBRARIES}
     )
-
-if (ENABLE_OPENVINO)
-    target_link_libraries(${LIB_NAME} ${InferenceEngine_LIBRARIES})
-endif()
 
 target_compile_definitions( 
     ${LIB_NAME} PRIVATE
@@ -123,28 +113,21 @@ else()
 endif()
 
 # Install OpenVINO libraries
-if(ENABLE_OPENVINO)
-    set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
-    set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-    install(DIRECTORY ${IE_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
-    install(DIRECTORY ${TBB_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
-    if(USE_PREBUILT_OPENVINO)
-        file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/lib*" "${TBB_LIBS}/lib*")
-        foreach(LIB_FILE ${NGRAPH_LIB_FILES})
-            get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
-            get_filename_component(lib_file_name ${LIB_FILE} NAME)
-            if(${lib_file_name} MATCHES ".so*")
-                install(CODE "
-                execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
-                ")
-            endif()
-        endforeach()
-    endif()
-endif()
-
-#Install nbench if we built
-if(DEFINED NGRAPH_TOOLS_ENABLE)
-	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/bin/ DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
+set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
+set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
+install(DIRECTORY ${IE_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
+install(DIRECTORY ${TBB_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
+if(USE_PREBUILT_OPENVINO)
+    file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/lib*" "${TBB_LIBS}/lib*")
+    foreach(LIB_FILE ${NGRAPH_LIB_FILES})
+        get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
+        get_filename_component(lib_file_name ${LIB_FILE} NAME)
+        if(${lib_file_name} MATCHES ".so*")
+            install(CODE "
+            execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
+            ")
+        endif()
+    endforeach()
 endif()
 
 # Now create the Python pip package. The following variables are passed to the 

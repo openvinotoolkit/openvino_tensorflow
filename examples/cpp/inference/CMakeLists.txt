@@ -69,11 +69,8 @@ target_link_libraries(
     ${TensorFlow_FRAMEWORK_LIBRARY}
     tensorflow_cc_lib
     absl_synchronization
+    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
 )
-
-if (ENABLE_OPENVINO)
-    target_link_libraries(${APP_NAME} ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
-endif()
 
 set(APP_NAME_MULTI infer_multiple_networks)
 add_executable(
@@ -88,11 +85,8 @@ target_link_libraries(
     ${TensorFlow_FRAMEWORK_LIBRARY}
     tensorflow_cc_lib
     absl_synchronization
+    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
 )
-
-if (ENABLE_OPENVINO)
-    target_link_libraries(${APP_NAME_MULTI} ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
-endif()
 
 if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})

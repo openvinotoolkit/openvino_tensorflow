@@ -139,50 +139,17 @@ else()
 endif(APPLE)
 
 # Build options
-option(USE_PRE_BUILT_NGRAPH "Use pre-built nGraph located in NGRAPH_ARTIFACTS_DIR" FALSE)
-option(NGRAPH_ARTIFACTS_DIR "Where would nGraph be installed after build" FALSE)
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
-option(ENABLE_OPENVINO "Build OpenVINO backend" FALSE)
 option(USE_PREBUILT_OPENVINO "Use prebuilt OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
 option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
 
-if (ENABLE_OPENVINO)
-    add_definitions(-DENABLE_OPENVINO)
-    set(NGRAPH_ARTIFACTS_DIR ${OPENVINO_ARTIFACTS_DIR})
-    set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
-    find_package(InferenceEngine REQUIRED)
-    include_directories(${InferenceEngine_INCLUDE_DIRS})
-    if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
-        set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
-        find_package(TBB COMPONENTS tbb tbbmalloc)
-    endif()
-else()
-    if(USE_PRE_BUILT_NGRAPH)
-        if(NOT NGRAPH_ARTIFACTS_DIR)
-            message(
-                FATAL_ERROR
-                "USE_PRE_BUILT_NGRAPH is ON but NGRAPH_ARTIFACTS_DIR is missing"
-            )
-        endif()
-        # Check if the path specified is ABSOLUTE or RELATVE
-        if (NOT IS_ABSOLUTE ${NGRAPH_ARTIFACTS_DIR})
-            set(NGRAPH_ARTIFACTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/${NGRAPH_ARTIFACTS_DIR})
-        endif()
-
-        # Create absolute path for the directory
-        get_filename_component(
-            NGRAPH_ARTIFACTS_DIR
-            "${NGRAPH_ARTIFACTS_DIR}"
-            ABSOLUTE
-        )
-        if (NOT EXISTS ${NGRAPH_ARTIFACTS_DIR})
-            message(FATAL_ERROR
-                "nGraph artifacts directory doesn't exist: " ${NGRAPH_ARTIFACTS_DIR} )
-        endif()
-    else()
-        set(NGRAPH_ARTIFACTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph/ngraph_dist)
-    endif()
+set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
+find_package(InferenceEngine REQUIRED)
+include_directories(${InferenceEngine_INCLUDE_DIRS})
+if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
+    set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
+    find_package(TBB COMPONENTS tbb tbbmalloc)
 endif()
 
 message(STATUS "UNIT_TEST_TF_CC_DIR:        ${TF_PRE_BUILT_LOCATION}")
@@ -202,63 +169,11 @@ if(UNIT_TEST_TF_CC_DIR)
         message(FATAL_ERROR
             "TensorFlow pre-built directory doesn't exist: " ${TF_PRE_BUILT_LOCATION} )
     endif()
-
 endif()
-
-# Enable build target CPU features
-if (NOT DEFINED NGRAPH_TARGET_ARCH)
-    set(
-        NGRAPH_TARGET_ARCH
-        native
-        CACHE STRING "Target CPU architecture to build for.")
-endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
-
-if (NOT DEFINED NGRAPH_TUNE_ARCH)
-    set(
-        NGRAPH_TUNE_ARCH
-        native
-        CACHE STRING "Target CPU architecture to build for.")
-endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TARGET_ARCH}")
 
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
-
-message(STATUS "NGRAPH_ARTIFACTS_DIR:       ${NGRAPH_ARTIFACTS_DIR}")
-message(STATUS "USE_PRE_BUILT_NGRAPH:       ${USE_PRE_BUILT_NGRAPH}")
-message(STATUS "NGRAPH_TARGET_ARCH:         ${NGRAPH_TARGET_ARCH}")
-message(STATUS "NGRAPH_TUNE_ARCH:           ${NGRAPH_TUNE_ARCH}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
-
-# Find and build ngraph - if not using pre-built one
-if (NOT USE_PRE_BUILT_NGRAPH)
-    ExternalProject_Add(
-        ext_ngraph
-        GIT_REPOSITORY https://github.com/NervanaSystems/ngraph
-        GIT_TAG 94456090176ad6abda633b496b89cc16157ed4b0
-        CMAKE_ARGS 
-            -DNGRAPH_INSTALL_PREFIX=${NGRAPH_ARTIFACTS_DIR}
-            -DNGRAPH_USE_CXX_ABI=${TensorFlow_CXX_ABI}
-            -DNGRAPH_UNIT_TEST_ENABLE=FALSE
-            -DNGRAPH_TOOLS_ENABLE=${NGRAPH_TOOLS_ENABLE}
-            -DNGRAPH_DEX_ONLY=TRUE
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-            -DNGRAPH_GPU_ENABLE=${NGRAPH_GPU_ENABLE}
-            -DNGRAPH_DEBUG_ENABLE=${NGRAPH_DEBUG_ENABLE}
-            -DNGRAPH_TARGET_ARCH=${NGRAPH_TARGET_ARCH}
-            -DNGRAPH_TUNE_ARCH=${NGRAPH_TUNE_ARCH}
-        TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/tmp"
-        STAMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/stamp"
-        DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/download"
-        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/src"
-        BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ngraph/build"
-        BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -j ${NUM_MAKE_PROCESSES} ngraph
-        UPDATE_COMMAND ""
-        INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
-    )
-endif()
-set(NGRAPH_INSTALL_DIR ${NGRAPH_ARTIFACTS_DIR})
+message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
@@ -266,6 +181,7 @@ else()
     set(LIB "lib")
 endif()
 
+set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties(
@@ -273,8 +189,6 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION
     ${NGRAPH_IMPORTED_LOCATION}
 )
-
-add_dependencies(ngraph_lib ext_ngraph)
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
 INCLUDE_DIRECTORIES("${BASEPATH}")

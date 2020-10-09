@@ -34,9 +34,6 @@ int ngraph_tf_cxx11_abi_flag();
 // graph rewriting
 bool ngraph_tf_is_grappler_enabled();
 
-// Returns true when nGraph is using openvino
-bool ngraph_tf_is_openvino_enabled();
-
 // Returns the tensorflow version
 const char* tf_version();
 

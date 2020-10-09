@@ -46,30 +46,6 @@ static ngraph::CoordinateDiff apply_permutation(ngraph::CoordinateDiff input,
   return output;
 }
 
-static bool is_output(shared_ptr<ngraph::Node> n) {
-#if defined(ENABLE_OPENVINO)
-  return ngraph::op::is_output(n);
-#else
-  return n->is_output();
-#endif
-}
-
-static bool is_unary_elementwise_arithmetic(shared_ptr<ngraph::Node> n) {
-#if defined(ENABLE_OPENVINO)
-  return ngraph::op::is_unary_elementwise_arithmetic(n);
-#else
-  return n->is_unary_elementwise_arithmetic();
-#endif
-}
-
-static bool is_binary_elementwise_arithmetic(shared_ptr<ngraph::Node> n) {
-#if defined(ENABLE_OPENVINO)
-  return ngraph::op::is_binary_elementwise_arithmetic(n);
-#else
-  return n->is_binary_elementwise_arithmetic();
-#endif
-}
-
 static ngraph::AxisVector permutation_to_default_order(
     const ngraph::AxisVector& axis_order) {
   ngraph::AxisVector out(axis_order.size());
@@ -489,15 +465,15 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
   for (auto n : f->get_ordered_ops()) {
     NGRAPH_VLOG(4) << "-----Start: Processing node----- " << n->get_name();
     // collect output shape of all Result nodes for a sanity check
-    if (is_output(n)) {
+    if (ngraph::op::is_output(n)) {
       orig_result_out_shape[n->get_name()] = n->get_output_shape(0);
     }
 
     if (auto transpose = ngraph::as_type_ptr<opset::Transpose>(n)) {
       sink_transpose(transpose, reorders, transposes_to_delete);
-    } else if (is_unary_elementwise_arithmetic(n)) {
+    } else if (ngraph::op::is_unary_elementwise_arithmetic(n)) {
       sink_unary(n, reorders, transposes_to_delete);
-    } else if (is_binary_elementwise_arithmetic(n)) {
+    } else if (ngraph::op::is_binary_elementwise_arithmetic(n)) {
       sink_binary(n, reorders, transposes_to_delete);
     } else if (auto pad = ngraph::as_type_ptr<opset::Pad>(n)) {
       sink_pad(pad, reorders, transposes_to_delete);

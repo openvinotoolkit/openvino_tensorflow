@@ -161,11 +161,8 @@ target_link_libraries(
     tensorflow_cc_lib
     tensorflow_ops_testutil
     absl_synchronization
+    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
 )
-
-if (ENABLE_OPENVINO)
-    target_link_libraries(gtest_ngtf ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS})
-endif()
 
 # First install the libngraph_bridge.so and headers
 install(TARGETS gtest_ngtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  

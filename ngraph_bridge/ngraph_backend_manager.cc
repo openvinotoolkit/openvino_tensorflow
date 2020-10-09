@@ -16,10 +16,6 @@
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
 
-#if !defined(ENABLE_OPENVINO)
-#include "ngraph/runtime/backend_manager.hpp"
-#endif
-
 using namespace std;
 
 namespace tensorflow {
@@ -110,11 +106,7 @@ void BackendManager::SetConfig(const map<string, string>& config) {
 
 // Returns the nGraph supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
-#if !defined(ENABLE_OPENVINO)
-  return ngraph::runtime::BackendManager::get_registered_backends();
-#else
   return Backend::get_registered_devices();
-#endif
 }
 
 }  // namespace ngraph_bridge

@@ -29,10 +29,6 @@ using namespace std;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-#if !defined(ENABLE_OPENVINO)
-using Backend = ngraph::runtime::Backend;
-#else
-
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
@@ -178,8 +174,6 @@ class Backend {
   static std::mutex m_mtx;
   static std::string s_backend_shared_library_search_directory;
 };
-
-#endif
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

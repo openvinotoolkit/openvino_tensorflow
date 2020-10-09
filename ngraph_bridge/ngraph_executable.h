@@ -27,10 +27,6 @@ using namespace std;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-#if !defined(ENABLE_OPENVINO)
-using Executable = ngraph::runtime::Executable;
-#else
-
 class Executable {
  public:
   Executable();
@@ -182,8 +178,6 @@ class Executable {
   ngraph::ParameterVector m_parameters;
   ngraph::ResultVector m_results;
 };
-
-#endif
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

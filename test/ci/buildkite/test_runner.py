@@ -68,10 +68,6 @@ def main():
 
     arguments = parser.parse_args()
 
-    #-------------------------------
-    # Recipe
-    #-------------------------------
-
     root_pwd = os.getcwd()
 
     # Check for mandetary parameters
@@ -109,7 +105,7 @@ def main():
         else:
             batch_size = 128
             iterations = 10
-            if backend == 'INTERPRETER':
+            if backend != 'CPU':
                 batch_size = 1
                 iterations = 1
             run_resnet50_infer_from_artifacts(arguments.artifacts_dir,
