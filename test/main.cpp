@@ -160,21 +160,12 @@ class TestEnv {
       return std::string(env);
     }
     // test manifest files are named like this:
-    // tests_${PLATFORM}_${NGRAPH_TF_EXECUTOR}_${NGRAPH_TF_BACKEND}.txt
+    // tests_${PLATFORM}_${NGRAPH_TF_BACKEND}.txt
     return string("tests_") + str_tolower(TestEnv::PLATFORM()) + string("_") +
-           str_tolower(TestEnv::EXECUTOR()) + string("_") +
            str_tolower(TestEnv::BACKEND()) + string(".txt");
   }
 
   static string PLATFORM() { return get_platform_type(); }
-
-  static string EXECUTOR() {
-    char* env = getenv("NGRAPH_TF_EXECUTOR");
-    if (env) {
-      return std::string(env);
-    }
-    return "ngraph";
-  }
 
   static string BACKEND() {
     char* env = getenv("NGRAPH_TF_BACKEND");

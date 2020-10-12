@@ -74,7 +74,6 @@ def main():
     if not arguments.artifacts_dir:
         raise Exception("Need to specify --artifacts_dir")
 
-    print("nGraph bridge Executor set to:", TestEnv.EXECUTOR())
     # Set the backend if specified
     backend = TestEnv.BACKEND()
     print("nGraph bridge Backend set to:", backend)

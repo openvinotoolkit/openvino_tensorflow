@@ -15,7 +15,7 @@
   - command: |
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
-    label: ":chrome: C++ Unit Test (GTest) ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
+    label: ":chrome: nGraph-bridge C++ Tests ${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -24,7 +24,7 @@
   - wait
   - command: |
       ./test/ci/buildkite/run_cppexample_infer.sh /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
-    label: ":bar_chart: Example C++ Inference"
+    label: ":bar_chart: C++ Inference Example"
     timeout_in_minutes: 5
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -47,7 +47,7 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
-    label: ":python: nGraph Pytest ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
+    label: ":python:  Python Tests ${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -59,7 +59,7 @@
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
     
-    label: ":python: TensorFlow Pytest ${NGRAPH_TF_EXECUTOR}-${NGRAPH_TF_BACKEND}"
+    label: ":python: TF Python Tests ${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

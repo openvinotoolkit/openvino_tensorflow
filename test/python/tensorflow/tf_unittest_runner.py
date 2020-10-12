@@ -58,7 +58,7 @@ def main():
         '--list_tests_from_file',
         help=
         """Reads the test names/patterns specified in a manifest file and displays a consolidated list. 
-        Eg:--list_tests_from_file=tests_linux_ie_cpu.txt""")
+        Eg:--list_tests_from_file=tests_linux_cpu.txt""")
     optional.add_argument(
         '--run_test',
         help=

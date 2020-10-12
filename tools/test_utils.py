@@ -68,21 +68,13 @@ class TestEnv:
             return os.environ['NGRAPH_TF_TEST_MANIFEST']
         else:
             # test manifest files are named like this:
-            # tests_${PLATFORM}_${NGRAPH_TF_EXECUTOR}_${NGRAPH_TF_BACKEND}.txt
+            # tests_${PLATFORM}_${NGRAPH_TF_BACKEND}.txt
             return 'tests_' + TestEnv.PLATFORM().lower(
-            ) + '_' + TestEnv.EXECUTOR().lower() + '_' + TestEnv.BACKEND(
-            ).lower() + '.txt'
+            ) + '_' + TestEnv.BACKEND().lower() + '.txt'
 
     @staticmethod
     def PLATFORM():
         return platform.system()  # 'Linux', 'Windows', 'Darwin', or 'Java'
-
-    @staticmethod
-    def EXECUTOR():
-        if ('NGRAPH_TF_EXECUTOR' in os.environ):
-            return os.environ['NGRAPH_TF_EXECUTOR']
-        else:
-            return 'ngraph'
 
     @staticmethod
     def BACKEND():
