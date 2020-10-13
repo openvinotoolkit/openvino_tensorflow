@@ -262,18 +262,17 @@ def main():
                 ["pip", "install", "-U", "tensorflow==" + tf_version])
             cxx_abi = get_tf_cxxabi()
 
+            tf_src_dir = os.path.join(artifacts_location, "tensorflow")
+            print("TF_SRC_DIR: ", tf_src_dir)
+            # Download TF source for enabling TF python tests
+            pwd_now = os.getcwd()
+            os.chdir(artifacts_location)
+            print("DOWNLOADING TF: PWD", os.getcwd())
+            download_repo("tensorflow",
+                          "https://github.com/tensorflow/tensorflow.git",
+                          tf_version)
+            os.chdir(pwd_now)
             if not arguments.disable_cpp_api:
-                tf_src_dir = os.path.join(artifacts_location, "tensorflow")
-                print("TF_SRC_DIR: ", tf_src_dir)
-                # Download TF source
-                pwd_now = os.getcwd()
-                os.chdir(artifacts_location)
-                print("DOWNLOADING TF: PWD", os.getcwd())
-                download_repo("tensorflow",
-                              "https://github.com/tensorflow/tensorflow.git",
-                              tf_version)
-                os.chdir(pwd_now)
-
                 # Now build the libtensorflow_cc.so - the C++ library
                 build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
                                     target_arch, verbosity)
