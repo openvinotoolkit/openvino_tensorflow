@@ -256,6 +256,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     //
     confirmation_function_map["Abs"] = SimpleConfirmationFunction();
     confirmation_function_map["Acos"] = SimpleConfirmationFunction();
+    confirmation_function_map["Acosh"] = SimpleConfirmationFunction();
     confirmation_function_map["Add"] = SimpleConfirmationFunction();
     confirmation_function_map["AddN"] = SimpleConfirmationFunction();
     confirmation_function_map["AddV2"] = SimpleConfirmationFunction();
@@ -264,7 +265,9 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["ArgMax"] = SimpleConfirmationFunction();
     confirmation_function_map["ArgMin"] = SimpleConfirmationFunction();
     confirmation_function_map["Asin"] = SimpleConfirmationFunction();
+    confirmation_function_map["Asinh"] = SimpleConfirmationFunction();
     confirmation_function_map["Atan"] = SimpleConfirmationFunction();
+    confirmation_function_map["Atanh"] = SimpleConfirmationFunction();
     confirmation_function_map["AvgPool"] = SimpleConfirmationFunction();
     confirmation_function_map["BiasAdd"] = SimpleConfirmationFunction();
     confirmation_function_map["Cast"] = SimpleConfirmationFunction();
@@ -413,6 +416,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     //
     type_constraint_map["Abs"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Acos"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Acosh"]["T"] = NGraphRealDTypes();
     type_constraint_map["Add"]["T"] = NGraphNumericDTypes();
     type_constraint_map["AddN"]["T"] = NGraphNumericDTypes();
     type_constraint_map["AddV2"]["T"] = NGraphNumericDTypes();
@@ -423,7 +427,9 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["ArgMin"]["T"] = NGraphNumericDTypes();
     type_constraint_map["ArgMin"]["Tidx"] = NGraphIndexDTypes();
     type_constraint_map["Asin"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Asinh"]["T"] = NGraphRealDTypes();
     type_constraint_map["Atan"]["T"] = NGraphNumericDTypes();
+    type_constraint_map["Atanh"]["T"] = NGraphRealDTypes();
     type_constraint_map["AvgPool"]["T"] = NGraphNumericDTypes();
     type_constraint_map["BiasAdd"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Cast"]["SrcT"] = NGraphDTypes();
@@ -563,6 +569,7 @@ GetTFToNgOpMap() {
   static std::map<std::string, std::set<shared_ptr<ng::Node>>> TFtoNgraphOpMap{
       {"Abs", {std::make_shared<opset::Abs>()}},
       {"Acos", {std::make_shared<opset::Acos>()}},
+      {"Acosh", {std::make_shared<opset::Acosh>()}},
       {"Add", {std::make_shared<opset::Add>()}},
       {"AddN", {std::make_shared<opset::Add>()}},
       {"AddV2", {std::make_shared<opset::Add>()}},
@@ -575,7 +582,9 @@ GetTFToNgOpMap() {
        {std::make_shared<opset::TopK>(), std::make_shared<opset::Squeeze>(),
         constant}},
       {"Asin", {std::make_shared<opset::Asin>()}},
+      {"Asinh", {std::make_shared<opset::Asinh>()}},
       {"Atan", {std::make_shared<opset::Atan>()}},
+      {"Atanh", {std::make_shared<opset::Atanh>()}},
       {"AvgPool", {std::make_shared<opset::AvgPool>()}},
       {"BiasAdd",
        {constant, std::make_shared<opset::Add>(),
@@ -698,9 +707,7 @@ GetTFToNgOpMap() {
       {"Slice", {constant, std::make_shared<opset::StridedSlice>()}},
       {"Snapshot", {}},
       {"Softmax", {std::make_shared<opset::Softmax>()}},
-      {"Softplus",
-       {constant, std::make_shared<opset::Exp>(),
-        std::make_shared<opset::Log>(), std::make_shared<opset::Add>()}},
+      {"Softplus", {std::make_shared<opset::SoftPlus>()}},
       {"SpaceToDepth", {std::make_shared<opset::SpaceToDepth>()}},
       {"Split", {std::make_shared<opset::Split>(), constant}},
       {"SplitV", {std::make_shared<opset::VariadicSplit>(), constant}},

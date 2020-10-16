@@ -18,13 +18,13 @@
 #define NGRAPH_TF_BRIDGE_DEFAULT_OPSET_H_
 #pragma once
 
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opsets/opset4.hpp"
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-namespace opset = ngraph::opset3;
-namespace default_opset = ngraph::opset3;
+namespace opset = ngraph::opset4;
+namespace default_opset = ngraph::opset4;
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

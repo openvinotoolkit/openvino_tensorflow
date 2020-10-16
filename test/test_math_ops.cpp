@@ -101,6 +101,23 @@ TEST(MathOps, Acos2D) {
   opexecuter.RunTest();
 }  // end of test op Acos
 
+// Test op: Acosh
+TEST(MathOps, Acosh) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 3;
+  int dim2 = 5;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  auto R = ops::Acosh(root, A);
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Acosh", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Acosh
+
 // Test op: Add
 TEST(MathOps, Add) {
   Scope root = Scope::NewRootScope();
@@ -326,6 +343,23 @@ TEST(MathOps, Asin) {
   opexecuter.RunTest();
 }  // end of test op Asin
 
+// Test op: Asinh
+TEST(MathOps, Asinh) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 3;
+  int dim2 = 2;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1, dim2}));
+
+  AssignInputValuesRandom(A);
+
+  auto R = ops::Asinh(root, A);
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Asinh", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Asinh
+
 // Test op: Atan
 TEST(MathOps, Atan) {
   Scope root = Scope::NewRootScope();
@@ -341,6 +375,22 @@ TEST(MathOps, Atan) {
   OpExecuter opexecuter(root, "Atan", sess_run_fetchoutputs);
   opexecuter.RunTest();
 }  // end of test op Atan
+
+// Test op: Atanh
+TEST(MathOps, Atanh) {
+  Scope root = Scope::NewRootScope();
+  int dim1 = 4;
+
+  Tensor A(DT_FLOAT, TensorShape({dim1}));
+
+  AssignInputValuesRandom(A);
+
+  auto R = ops::Atanh(root, A);
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Atanh", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}  // end of test op Atanh
 
 // Test op: Cumsum
 TEST(MathOps, Cumsum) {

@@ -1645,21 +1645,6 @@ static Status TranslateLogSoftmaxOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateSoftplusOp(const Node* op,
-                                  const std::vector<const Tensor*>&,
-                                  Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_inp;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
-  auto ng_exp = ConstructNgNode<opset::Exp>(op->name(), ng_inp);
-  auto constant_1 = ConstructNgNode<opset::Constant>(
-      op->name(), ng_inp.get_element_type(), ng_inp.get_shape(),
-      std::vector<std::string>(ng::shape_size(ng_inp.get_shape()), "1"));
-  auto ng_output = ConstructNgNode<opset::Log>(
-      op->name(), ConstructNgNode<opset::Add>(op->name(), ng_exp, constant_1));
-  SaveNgOp(ng_op_map, op->name(), ng_output);
-  return Status::OK();
-}
-
 static Status TranslateMatMulOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -2726,6 +2711,7 @@ const static std::map<
     TRANSLATE_OP_MAP{
         {"Abs", TranslateUnaryOp<opset::Abs>},
         {"Acos", TranslateUnaryOp<opset::Acos>},
+        {"Acosh", TranslateUnaryOp<opset::Acosh>},
         {"Add", TranslateBinaryOp<opset::Add>},
         {"AddN", TranslateAddNOp},
         {"AddV2", TranslateBinaryOp<opset::Add>},
@@ -2734,7 +2720,9 @@ const static std::map<
         {"ArgMax", TranslateArgMaxOp},
         {"ArgMin", TranslateArgMinOp},
         {"Asin", TranslateUnaryOp<opset::Asin>},
+        {"Asinh", TranslateUnaryOp<opset::Asinh>},
         {"Atan", TranslateUnaryOp<opset::Atan>},
+        {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
@@ -2819,7 +2807,7 @@ const static std::map<
         {"Slice", TranslateSliceOp},
         {"Snapshot", TranslateIdentityOp},
         {"Softmax", TranslateSoftmaxOp},
-        {"Softplus", TranslateSoftplusOp},
+        {"Softplus", TranslateUnaryOp<opset::SoftPlus>},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
