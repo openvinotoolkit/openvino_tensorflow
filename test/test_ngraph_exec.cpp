@@ -27,7 +27,6 @@
 
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_executable.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
 #include "ngraph/ngraph.hpp"
@@ -68,40 +67,6 @@ class NGraphExecTest : public ::testing::Test {
                                                 nullptr);
     TF_RETURN_IF_ERROR(ngraph_bridge::Builder::TranslateGraph(
         tf_input_shapes, static_input_map, &input_graph, ng_function));
-    return Status::OK();
-  }
-
-  // Creates the tensor from backend of the same shape and data type as TF
-  // Tensor
-  // Copies data from TF Tensor to it
-  Status CreateTensorFromBackend(
-      const shared_ptr<Backend>& ng_backend, Tensor& tf_tensor,
-      shared_ptr<ngraph::runtime::Tensor>& ng_tensor) {
-    ng::element::Type ng_element_type;
-    TF_RETURN_IF_ERROR(
-        TFDataTypeToNGraphElementType(tf_tensor.dtype(), &ng_element_type));
-    ng::Shape ng_shape(tf_tensor.shape().dims());
-    for (int j = 0; j < tf_tensor.shape().dims(); ++j) {
-      ng_shape[j] = tf_tensor.shape().dim_size(j);
-    }
-    TF_RETURN_IF_ERROR(CreateTensorFromBackend(ng_backend, ng_element_type,
-                                               ng_shape, ng_tensor));
-    WriteNGTensor(ng_tensor, &tf_tensor);
-    return Status::OK();
-  }
-
-  // Creates the tensor from backend of the provided shape and data type
-  Status CreateTensorFromBackend(
-      const shared_ptr<Backend>& ng_backend,
-      const ng::element::Type& ng_element_type, const ng::Shape& ng_shape,
-      shared_ptr<ngraph::runtime::Tensor>& ng_tensor) {
-    try {
-      ng_tensor = ng_backend->create_tensor(ng_element_type, ng_shape);
-    } catch (const std::exception& exp) {
-      return errors::Internal(
-          "Failed to create tensor from backend. Got ngraph exception ",
-          exp.what());
-    }
     return Status::OK();
   }
 
@@ -294,88 +259,6 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   // Add the validation logic
   // TODO
   RestoreEnv(env_map);
-}
-
-TEST_F(NGraphExecTest, MixedTensors) {
-  Graph input_graph(OpRegistry::Global());
-  ASSERT_OK(LoadGraph("test_axpy_launchop.pbtxt", &input_graph));
-
-  // Create the inputs for this graph
-  DataType tf_dt = DT_FLOAT;
-  TensorShape tf_shape = TensorShape({2, 3});
-  int num_inputs = 2;
-
-  // Run Graph on TF: Expected output
-  Tensor x(tf_dt, tf_shape);
-  Tensor y(tf_dt, tf_shape);
-  AssignInputValues(x, 1.0f);
-  AssignInputValues(y, 1.0f);
-  std::vector<Tensor> tf_inputs = {x, y};
-  vector<Tensor> expected_outputs;
-  vector<pair<string, Tensor>> feed_dict = {{"x", x}, {"y", y}};
-  vector<string> out_node_names = {"add", "mul"};
-  ASSERT_OK(
-      RunGraphOnTF(input_graph, feed_dict, out_node_names, expected_outputs));
-
-  // Run on nGraph
-  // Translate Graph
-  std::vector<TensorShape> tf_input_shapes(num_inputs, tf_shape);
-  shared_ptr<ng::Function> ng_function;
-  ASSERT_OK(
-      TranslateTFGraphNoStatic(tf_input_shapes, input_graph, ng_function));
-
-  // Create the nGraph backend
-  auto backend = BackendManager::GetBackend();
-  ASSERT_NE(backend, nullptr);
-
-  // Compile the nGraph function.
-  auto exec = backend->compile(ng_function);
-
-  // Allocate ng tensors for inputs
-  vector<shared_ptr<ng::runtime::Tensor>> ng_inputs;
-  for (int i = 0; i < 2; ++i) {
-    shared_ptr<ng::runtime::Tensor> ng_input;
-    if (i % 2 == 0) {
-      ng_input = exec->create_input_tensor(i);
-      WriteNGTensor(ng_input, &tf_inputs[i]);
-    } else {
-      ASSERT_OK(CreateTensorFromBackend(backend, tf_inputs[i], ng_input));
-    }
-    ng_inputs.push_back(ng_input);
-  }
-
-  // Allocate tensor for the result(s)
-  vector<shared_ptr<ng::runtime::Tensor>> ng_outputs;
-
-  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
-    shared_ptr<ng::runtime::Tensor> ng_output;
-    if (i % 2 == 0) {
-      ng_output = exec->create_output_tensor(i);
-    } else {
-      auto shape = ng_function->get_output_shape(i);
-      auto elem_type = ng_function->get_output_element_type(i);
-      ASSERT_OK(CreateTensorFromBackend(backend, elem_type, shape, ng_output));
-    }
-    ng_outputs.push_back(ng_output);
-  }
-
-  // Execute the nGraph function.
-  exec->call(ng_outputs, ng_inputs);
-
-  // Actual Outputs
-  // Allocating TF Tensors and reading into them to compare the outputs
-  vector<Tensor> actual_outputs;
-
-  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
-    // Convert to tf tensor
-    Tensor output_tensor(tf_dt, tf_shape);
-    void* dst_ptr = DMAHelper::base(&output_tensor);
-    ng_outputs[i]->read(dst_ptr, output_tensor.TotalBytes());
-    actual_outputs.push_back(output_tensor);
-  }
-
-  // Comparing
-  Compare(expected_outputs, actual_outputs);
 }
 
 TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {

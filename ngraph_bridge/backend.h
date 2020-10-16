@@ -21,42 +21,35 @@
 
 #include "ngraph/ngraph.hpp"
 
-#include "ngraph_bridge/ie_executable.h"
+#include "ngraph_bridge/executable.h"
 #include "ngraph_bridge/ie_tensor.h"
-#include "ngraph_bridge/ngraph_backend.h"
-#include "ngraph_bridge/ngraph_executable.h"
 
 using namespace std;
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-class IE_Backend final : public Backend {
+class Backend {
  public:
-  IE_Backend(const string& configuration_string);
-  ~IE_Backend() override;
+  Backend(const string& configuration_string);
+  ~Backend();
 
   shared_ptr<Executable> compile(shared_ptr<ngraph::Function> func,
-                                 bool enable_performance_data = false) override;
-  void remove_compiled_function(std::shared_ptr<Executable> exec) override;
-  bool is_supported(const ngraph::Node& node) const override;
-  bool is_supported_property(const Property prop) const override;
+                                 bool enable_performance_data = false);
+  void remove_compiled_function(std::shared_ptr<Executable> exec);
+  bool is_supported(const ngraph::Node& node) const;
 
   shared_ptr<ngraph::runtime::Tensor> create_dynamic_tensor(
-      const ngraph::element::Type& type,
-      const ngraph::PartialShape& shape) override;
+      const ngraph::element::Type& type, const ngraph::PartialShape& shape);
 
   static vector<string> get_registered_devices();
 
-  shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
-
   shared_ptr<ngraph::runtime::Tensor> create_tensor(
-      const ngraph::element::Type& element_type,
-      const ngraph::Shape& shape) final override;
+      const ngraph::element::Type& element_type, const ngraph::Shape& shape);
 
   shared_ptr<ngraph::runtime::Tensor> create_tensor(
       const ngraph::element::Type& element_type, const ngraph::Shape& shape,
-      void* data) final override;
+      void* data);
 
   template <typename T>
   shared_ptr<ngraph::runtime::Tensor> create_tensor(ngraph::element::Type type,

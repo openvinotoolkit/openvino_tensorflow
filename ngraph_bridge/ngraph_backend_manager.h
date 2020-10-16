@@ -30,7 +30,7 @@
 #include "ngraph/ngraph.hpp"
 
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_backend.h"
+#include "ngraph_bridge/backend.h"
 
 using namespace std;
 
@@ -50,8 +50,6 @@ class BackendManager {
 
   // Returns the currently set backend's name
   static Status GetBackendName(string& backend_name);
-
-  static void SetConfig(const map<string, string>& config);
 
   ~BackendManager();
 

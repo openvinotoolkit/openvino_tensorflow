@@ -84,8 +84,7 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
     const std::vector<Tensor>& tf_input_tensors,
     std::vector<TensorShape>& input_shapes,
     std::vector<const Tensor*>& static_input_map,
-    std::shared_ptr<Executable>& ng_exec,
-    std::shared_ptr<ngraph::Function>& ng_function) {
+    std::shared_ptr<Executable>& ng_exec) {
   auto backend = BackendManager::GetBackend();
 
   // Compute Signature
@@ -99,6 +98,7 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
                  << m_ngraph_cluster;
 
   // Translate the TensorFlow graph to nGraph.
+  std::shared_ptr<ngraph::Function> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
     long vm, rss, vm0, rss0;
@@ -138,7 +138,7 @@ Status NGraphEncapsulateImpl::GetNgExecutable(
                               ex.what());
     }
 
-    SetNgExecMap(signature, ng_exec);
+    m_ng_exec_map[signature] = ng_exec;
     m_lru.push_front(signature);
 
     // Memory after

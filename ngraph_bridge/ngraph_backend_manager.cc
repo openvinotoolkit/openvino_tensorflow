@@ -81,7 +81,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
   }
 
   try {
-    backend = Backend::create(backend_name);
+    backend = make_shared<Backend>(backend_name);
   } catch (const std::exception& e) {
     return errors::Internal("Could not create backend of type ", backend_name,
                             ". Got exception: ", e.what());
@@ -93,15 +93,6 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 
   NGRAPH_VLOG(2) << "BackendManager::CreateBackend(): " << backend_name;
   return Status::OK();
-}
-
-void BackendManager::SetConfig(const map<string, string>& config) {
-  NGRAPH_VLOG(2) << "BackendManager::SetConfig() " << m_backend_name;
-  std::string error;
-  if (!m_backend->set_config(config, error)) {
-    NGRAPH_VLOG(2) << "BackendManager::SetConfig(): Could not set config. "
-                   << error;
-  }
 }
 
 // Returns the nGraph supported backend names

@@ -14,13 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ie_backend.h"
+#include "backend.h"
 
 #include <ie_core.hpp>
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset.hpp"
-
-#include "ngraph_bridge/ngraph_executable.h"
 
 using namespace std;
 using namespace ngraph;
@@ -28,7 +26,7 @@ using namespace ngraph;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-IE_Backend::IE_Backend(const string& config) {
+Backend::Backend(const string& config) {
   string device = config.substr(0, config.find(":"));
   InferenceEngine::Core core;
   auto devices = core.GetAvailableDevices();
@@ -41,10 +39,10 @@ IE_Backend::IE_Backend(const string& config) {
   m_device = config;
 }
 
-IE_Backend::~IE_Backend() { m_exec_map.clear(); }
+Backend::~Backend() { m_exec_map.clear(); }
 
-shared_ptr<Executable> IE_Backend::compile(shared_ptr<ngraph::Function> func,
-                                           bool) {
+shared_ptr<Executable> Backend::compile(shared_ptr<ngraph::Function> func,
+                                        bool) {
   shared_ptr<Executable> rc;
   {
     std::lock_guard<std::mutex> guard(m_exec_map_mutex);
@@ -55,7 +53,7 @@ shared_ptr<Executable> IE_Backend::compile(shared_ptr<ngraph::Function> func,
     }
   }
 
-  rc = make_shared<IE_Executable>(func, m_device);
+  rc = make_shared<Executable>(func, m_device);
   {
     std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     m_exec_map.insert({func, rc});
@@ -63,7 +61,7 @@ shared_ptr<Executable> IE_Backend::compile(shared_ptr<ngraph::Function> func,
   }
 }
 
-void IE_Backend::remove_compiled_function(shared_ptr<Executable> exec) {
+void Backend::remove_compiled_function(shared_ptr<Executable> exec) {
   std::lock_guard<std::mutex> guard(m_exec_map_mutex);
   for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it) {
     if (it->second == exec) {
@@ -73,7 +71,7 @@ void IE_Backend::remove_compiled_function(shared_ptr<Executable> exec) {
   }
 }
 
-bool IE_Backend::is_supported(const Node& node) const {
+bool Backend::is_supported(const Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
   // that the selected backend supports all opset3 ops
@@ -81,28 +79,22 @@ bool IE_Backend::is_supported(const Node& node) const {
   return opset.contains_op_type(&node);
 }
 
-bool IE_Backend::is_supported_property(const Property) const { return false; }
-
-shared_ptr<runtime::Tensor> IE_Backend::create_dynamic_tensor(
+shared_ptr<runtime::Tensor> Backend::create_dynamic_tensor(
     const element::Type& type, const PartialShape& shape) {
   return make_shared<IETensor>(type, shape);
 }
 
-vector<string> IE_Backend::get_registered_devices() {
+vector<string> Backend::get_registered_devices() {
   InferenceEngine::Core core;
   return core.GetAvailableDevices();
 }
 
-shared_ptr<runtime::Tensor> IE_Backend::create_tensor() {
-  throw runtime_error("IE_Backend::create_tensor() not supported");
-}
-
-shared_ptr<runtime::Tensor> IE_Backend::create_tensor(
+shared_ptr<runtime::Tensor> Backend::create_tensor(
     const element::Type& element_type, const Shape& shape) {
   return make_shared<IETensor>(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> IE_Backend::create_tensor(
+shared_ptr<runtime::Tensor> Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* data) {
   return make_shared<IETensor>(element_type, shape, data);
 }
