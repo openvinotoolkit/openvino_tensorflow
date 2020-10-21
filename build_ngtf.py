@@ -29,7 +29,8 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
             gcc_ver = get_gcc_version()
             if gcc_ver < '5.3.0':
                 raise Exception(
-                    "Need GCC 5.3.0 or newer to build using prebuilt TensorFlow\n"
+                    "Need GCC 5.3.0 or newer to build using prebuilt TensorFlow"
+                    " or Intel Tensorflow\n"
                     "Gcc version installed: " + gcc_ver + "\n"
                     "To build from source omit `use_prebuilt_tensorflow`")
     # Check cmake version
@@ -38,7 +39,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
         raise Exception("Need minimum cmake version 3.4\n"
                         "Got: " + '.'.join(cmake_ver))
 
-    if not use_tensorflow_from_location and not disable_cpp_api:
+    if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
         # Check bazel version
         bazel_kind, bazel_ver = get_bazel_version()
         got_correct_bazel_version = bazel_kind == 'Bazelisk version'
@@ -49,11 +50,10 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
 
 def main():
     '''
-    Builds TensorFlow, ngraph, and ngraph-tf for python 3
+    Builds TensorFlow, OpenVINO, and ngraph-tf for python 3
     '''
 
     # Component versions
-    ngraph_version = "94456090176ad6abda633b496b89cc16157ed4b0"  #add codegen support to cpu backend (#4679) ,May 26
     tf_version = "v2.2.0"
     use_intel_tf = False
 
@@ -97,7 +97,9 @@ def main():
 
     parser.add_argument(
         '--use_intel_tensorflow',
-        help="Build using Intel TensorFlow.",
+        help=
+        "Use Intel TensorFlow for either building from source or prebuilt, in \n"
+        + "conjunction with --use_prebuilt_tensorflow.",
         action="store_true")
 
     parser.add_argument(
@@ -145,7 +147,7 @@ def main():
     assert not (
         arguments.use_tensorflow_from_location != '' and
         arguments.use_prebuilt_tensorflow != ''
-    ), "\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
+    ), "\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\""
     "cannot be used together."
 
     version_check((arguments.use_prebuilt_tensorflow != ''),
@@ -216,6 +218,9 @@ def main():
     if arguments.use_prebuilt_tensorflow != '':
         tf_version = arguments.use_prebuilt_tensorflow
 
+    if arguments.use_intel_tensorflow != '':
+        use_intel_tf = True
+
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
     # this is set to 1
@@ -256,10 +261,15 @@ def main():
         os.chdir(cwd)
     else:
         if arguments.use_prebuilt_tensorflow != '':
-            print("Using existing TensorFlow version", tf_version)
-            # Install TensorFlow
-            command_executor(
-                ["pip", "install", "-U", "tensorflow==" + tf_version])
+            print("Using TensorFlow version", tf_version)
+            if use_intel_tf:
+                print("Install Intel Tensorflow")
+                command_executor(
+                    ["pip", "install", "-U", "intel-tensorflow==" + tf_version])
+            else:
+                print("Install native TensorFlow")
+                command_executor(
+                    ["pip", "install", "-U", "tensorflow==" + tf_version])
             cxx_abi = get_tf_cxxabi()
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
@@ -272,10 +282,6 @@ def main():
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
             os.chdir(pwd_now)
-            if not arguments.disable_cpp_api:
-                # Now build the libtensorflow_cc.so - the C++ library
-                build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
-                                    target_arch, verbosity)
         else:
             print("Building TensorFlow from source")
             # Download TensorFlow
@@ -284,9 +290,6 @@ def main():
                           tf_version)
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
-
-            if arguments.use_intel_tensorflow != '':
-                use_intel_tf = True
 
             # Build TensorFlow
             build_tensorflow(tf_version, "tensorflow", artifacts_location,
@@ -374,12 +377,12 @@ def main():
                 arguments.use_tensorflow_from_location + '/tensorflow')
         ])
     else:
-        if not arguments.disable_cpp_api:
+        if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
             print("TF_SRC_DIR: ", tf_src_dir)
             ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
     ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
-    if not arguments.disable_cpp_api:
+    if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
         ngraph_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
