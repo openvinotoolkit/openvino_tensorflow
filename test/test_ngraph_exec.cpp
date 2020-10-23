@@ -173,19 +173,10 @@ TEST_F(NGraphExecTest, Axpy) {
   auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
-  // Allocate tensor for the result(s)
-  vector<shared_ptr<ng::runtime::Tensor>> outputs;
-  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
-    auto shape = ng_function->get_output_shape(i);
-    auto elem_type = ng_function->get_output_element_type(i);
-    auto t_result = backend->create_tensor(elem_type, shape);
-    outputs.push_back(t_result);
-  }
-
   // Execute the nGraph function.
-  cout << "Calling nGraph function\n";
   auto exec = backend->compile(ng_function);
-  exec->call(outputs, {t_x, t_y});
+  vector<shared_ptr<ng::runtime::Tensor>> outputs;
+  exec->call({t_x, t_y}, outputs);
 
   for (size_t i = 0; i < ng_function->get_output_size(); i++) {
     DumpNGTensor<float>(cout, ng_function->get_output_op(i)->get_name(),
@@ -237,19 +228,10 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   auto t_y = backend->create_tensor(ng::element::i8, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
-  // Allocate tensor for the result(s)
-  vector<shared_ptr<ng::runtime::Tensor>> outputs;
-  for (size_t i = 0; i < ng_function->get_output_size(); i++) {
-    auto shape = ng_function->get_output_shape(i);
-    auto elem_type = ng_function->get_output_element_type(i);
-    auto t_result = backend->create_tensor(elem_type, shape);
-    outputs.push_back(t_result);
-  }
-
   // Execute the nGraph function.
-  cout << "Calling nGraph function\n";
   auto exec = backend->compile(ng_function);
-  exec->call(outputs, {t_x, t_y});
+  vector<shared_ptr<ng::runtime::Tensor>> outputs;
+  exec->call({t_x, t_y}, outputs);
 
   for (size_t i = 0; i < ng_function->get_output_size(); i++) {
     DumpNGTensor<int8>(cout, ng_function->get_output_op(i)->get_name(),

@@ -183,9 +183,9 @@ void Compare(Tensor& T1, Tensor& T2, float tol) {
   // Assert type
   ASSERT_EQ(T1.dtype(), T2.dtype()) << "Types of T1 and T2 did not match";
 
-  auto T_size = T1.flat<float>().size();
-  auto T1_data = T1.flat<float>().data();
-  auto T2_data = T2.flat<float>().data();
+  auto T_size = T1.unaligned_flat<float>().size();
+  auto T1_data = T1.unaligned_flat<float>().data();
+  auto T2_data = T2.unaligned_flat<float>().data();
   for (int k = 0; k < T_size; k++) {
     auto a = T1_data[k];
     auto b = T2_data[k];

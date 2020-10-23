@@ -30,7 +30,7 @@ using namespace std;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-static InferenceEngine::Precision getPrecision(
+static InferenceEngine::Precision toPrecision(
     const element::Type& element_type) {
   switch (element_type) {
     case element::Type_t::f32:
@@ -57,12 +57,39 @@ static InferenceEngine::Precision getPrecision(
   }
 }
 
+static const element::Type fromPrecision(
+    const InferenceEngine::Precision precision) {
+  switch (precision) {
+    case InferenceEngine::Precision::FP32:
+      return element::Type_t::f32;
+    case InferenceEngine::Precision::U8:
+      return element::Type_t::u8;
+    case InferenceEngine::Precision::I8:
+      return element::Type_t::i8;
+    case InferenceEngine::Precision::U16:
+      return element::Type_t::u16;
+    case InferenceEngine::Precision::I16:
+      return element::Type_t::i16;
+    case InferenceEngine::Precision::I32:
+      return element::Type_t::i32;
+    case InferenceEngine::Precision::U64:
+      return element::Type_t::u64;
+    case InferenceEngine::Precision::I64:
+      return element::Type_t::i64;
+    case InferenceEngine::Precision::BOOL:
+      return element::Type_t::boolean;
+    default:
+      THROW_IE_EXCEPTION << "Can't convert IE precision " << precision
+                         << " to nGraph type!";
+  }
+}
+
 IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
     : runtime::Tensor(
           make_shared<descriptor::Tensor>(element_type, shape_, "")) {
   InferenceEngine::SizeVector shape = shape_;
-  InferenceEngine::Precision precision = getPrecision(element_type);
+  InferenceEngine::Precision precision = toPrecision(element_type);
   InferenceEngine::Layout layout =
       InferenceEngine::TensorDesc::getLayoutByDims(shape);
 
@@ -127,6 +154,12 @@ IETensor::IETensor(const element::Type& element_type, const PartialShape& shape)
   throw runtime_error("partial shapes not supported.");
 }
 
+IETensor::IETensor(InferenceEngine::Blob::Ptr blob)
+    : runtime::Tensor(make_shared<descriptor::Tensor>(
+          fromPrecision(blob->getTensorDesc().getPrecision()),
+          Shape(blob->getTensorDesc().getDims()), "")),
+      m_blob(blob) {}
+
 IETensor::~IETensor() { m_blob->deallocate(); }
 
 void IETensor::write(const void* src, size_t bytes) {
@@ -135,7 +168,8 @@ void IETensor::write(const void* src, size_t bytes) {
     return;
   }
 
-  auto lm = m_blob->wmap();
+  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  auto lm = blob->wmap();
   uint8_t* output_ptr = lm.as<uint8_t*>();
   copy(src_ptr, src_ptr + bytes, output_ptr);
 }
@@ -146,13 +180,15 @@ void IETensor::read(void* dst, size_t bytes) const {
     return;
   }
 
-  auto lm = m_blob->rmap();
+  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  auto lm = blob->rmap();
   uint8_t* output_ptr = lm.as<uint8_t*>();
   copy(output_ptr, output_ptr + bytes, dst_ptr);
 }
 
 const void* IETensor::get_data_ptr() const {
-  auto lm = m_blob->rwmap();
+  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  auto lm = blob->rwmap();
   return lm.as<void*>();
 }
 }

@@ -37,12 +37,9 @@
 #include "test/test_utilities.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Test(TestCaseName, TestName)
@@ -446,29 +443,22 @@ class MathOpsSumFixture : public ::testing::Test {
  protected:
   void SetUp() override {}
   void TearDown() override {}
-  void TestWith(std::vector<int> tshpvec, std::vector<int> axisvec,
+  void TestWith(std::vector<int64> shape, std::vector<int64> axis,
                 bool keep_dims) {
-    TensorShape tshp;
-    for (auto dim : tshpvec) {
-      tshp.AddDim(dim);
-    }
-    std::stringstream axisvec_ss;
-    std::copy(axisvec.begin(), axisvec.end(),
-              std::ostream_iterator<int>(axisvec_ss, ","));
-    std::cout << ">> Running test with: tensor-shape=" << tshp
-              << ", axis=" << axisvec_ss.str() << ", keep_dims=" << keep_dims
-              << endl;
+    std::cout << ">> Running test with: tensor shape=[" << ngraph::join(shape)
+              << "], axis=[" << ngraph::join(axis)
+              << "], keep_dims=" << keep_dims << std::endl;
     Scope root = Scope::NewRootScope();
-    auto keep_dims_attr = ops::Sum::Attrs().KeepDims(keep_dims);
 
     std::vector<int> vals = {1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6,
                              1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6};
-    Tensor A(DT_INT32, TensorShape(tshp));
+    Tensor A(DT_INT32, TensorShape(shape));
     AssignInputValues<int>(A, vals);
 
-    Tensor B(DT_INT32, TensorShape({(int64)axisvec.size()}));
-    AssignInputValues<int>(B, axisvec);
+    Tensor B(DT_INT64, TensorShape({static_cast<int64>(axis.size())}));
+    AssignInputValues<int64>(B, axis);
 
+    auto keep_dims_attr = ops::Sum::Attrs().KeepDims(keep_dims);
     auto R = ops::Sum(root, A, B, keep_dims_attr);
     std::vector<Output> sess_run_fetchoutputs = {R};
     OpExecuter opexecuter(root, "Sum", sess_run_fetchoutputs);
@@ -483,18 +473,14 @@ TEST_F(MathOpsSumFixture, LimitedSet1) {
 }
 
 TEST_F(MathOpsSumFixture, FullSet) {
-  vector<vector<int>> tshapes = {{2, 3},         {2, 2, 3},    {6, 2},
-                                 {2, 4, 3},      {4, 3, 2, 1}, {1, 2, 3, 4},
-                                 {3, 1, 2, 4, 1}};
+  vector<vector<int64>> shapes = {{2, 3},         {2, 2, 3},    {6, 2},
+                                  {2, 4, 3},      {4, 3, 2, 1}, {1, 2, 3, 4},
+                                  {3, 1, 2, 4, 1}};
   vector<bool> v_keep_dims = {true, false};
-  for (auto tshp : tshapes) {
-    vector<vector<int>> vv_axis;
-    for (auto ax = 0; ax < tshp.size(); ax++) {
-      vv_axis.push_back({ax});
-    }
-    for (auto v_axis : vv_axis) {
+  for (auto shape : shapes) {
+    for (int64 i = 0; i < shape.size(); i++) {
       for (auto keep_dims : v_keep_dims) {
-        TestWith(tshp, v_axis, keep_dims);
+        TestWith(shape, {i}, keep_dims);
       }
     }
   }
