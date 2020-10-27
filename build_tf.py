@@ -86,7 +86,8 @@ def main():
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
     os.chdir("tensorflow")
 
-    copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None)
+    copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None,
+                         use_intel_tf)
 
     print('\033[1;35mTensorFlow Build finished\033[0m')
 

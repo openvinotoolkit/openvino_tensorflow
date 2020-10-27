@@ -342,7 +342,7 @@ def locate_tf_whl(tf_whl_loc):
     return tf_whl
 
 
-def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt):
+def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
     if (tf_version.startswith("v2.")):
         tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
         tf_cc_lib_name = 'libtensorflow_cc.so.2'
@@ -367,15 +367,27 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt):
     if tf_prebuilt is None:
         tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
         tf_cc_fmwk_file = "bazel-bin/tensorflow/" + tf_fmwk_lib_name
+        if use_intel_tf:
+            opm_lib_file = "bazel-tensorflow/external/mkl_linux/lib/libiomp5.so"
+            mkl_lib_file = "bazel-tensorflow/external/mkl_linux/lib/libmklml_intel.so"
     else:
         tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
         tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' + tf_fmwk_lib_name)
+        if use_intel_tf:
+            opm_lib_file = os.path.abspath(tf_prebuilt + '/libiomp5.so')
+            mkl_lib_file = os.path.abspath(tf_prebuilt + '/libmklml_intel.so')
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
 
     print("Copying %s to %s" % (tf_cc_fmwk_file, artifacts_dir))
     shutil.copy(tf_cc_fmwk_file, artifacts_dir)
+    if use_intel_tf:
+        print("Copying %s to %s" % (opm_lib_file, artifacts_dir))
+        shutil.copy(opm_lib_file, artifacts_dir)
+
+        print("Copying %s to %s" % (mkl_lib_file, artifacts_dir))
+        shutil.copy(mkl_lib_file, artifacts_dir)
 
     if tf_prebuilt is not None:
         tf_whl = locate_tf_whl(tf_prebuilt)
