@@ -2553,7 +2553,6 @@ static Status TranslateTopKV2Op(
   ng::Output<ng::Node> ng_values = ng_result->output(0);
   Builder::SetTracingInfo(op->name(), ng_values);
   ng::Output<ng::Node> ng_indices = ng_result->output(1);
-  NGRAPH_VLOG(0) << "ng_indices " << ng_indices;
   Builder::SetTracingInfo(op->name(), ng_indices);
 
   SaveNgOp(ng_op_map, op->name(), ng_values);

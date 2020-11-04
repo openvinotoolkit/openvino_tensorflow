@@ -206,3 +206,7 @@ reduction_ops_test.ReducedShapeTest.testZeros
 reduction_ops_test.MeanReductionTest.testGradient
 reduction_ops_test.MinReductionTest.testGradient
 reduction_ops_test.ReducedShapeTest.testNegAxes
+
+# Gradient tests fail with Intel TF
+relu_op_test.Relu6Test.testGradientFloat32
+pool_test.PoolingTest.testGradient3D

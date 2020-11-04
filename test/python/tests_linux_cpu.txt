@@ -19,6 +19,8 @@ tests_common.txt
 
 ###################################################
 [SKIP]
+# This test fails with Intel-TF; is added for reproducing the failure seen with TF py test
+test_maxpool3dgrad.TestMaxpool3DGrad.test_maxpool3d_grad
 
 # unsupported type
 test_bfloat16.TestBfloat16.test_conv2d_bfloat16

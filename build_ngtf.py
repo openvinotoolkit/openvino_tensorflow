@@ -97,9 +97,8 @@ def main():
 
     parser.add_argument(
         '--use_intel_tensorflow',
-        help=
-        "Use Intel TensorFlow for either building from source or prebuilt, in \n"
-        + "conjunction with --use_prebuilt_tensorflow.",
+        help="Use Intel TensorFlow for either building from source or in \n" +
+        "conjunction with --use_prebuilt_tensorflow or --use_tensorflow_from_location.",
         default='',
         action="store_true")
 
@@ -118,7 +117,7 @@ def main():
         '--use_tensorflow_from_location',
         help=
         "Use TensorFlow from a directory where it was already built and stored.\n"
-        "This location is expected to be populated by build_tf.py\n",
+        "NOTE: This location is expected to be populated by build_tf.py\n",
         action="store",
         default='')
 
