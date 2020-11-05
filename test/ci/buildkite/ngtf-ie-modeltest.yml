@@ -1,0 +1,28 @@
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      python3 build_ngtf.py ${BUILD_OPTIONS} \
+      --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
+      --use_tensorflow_from_location /localdisk/buildkite-agent/prebuilt_tensorflow_2_2_0
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
+    label: ":hammer_and_wrench: Build/Install ${NGRAPH_TF_BACKEND}"
+    timeout_in_minutes: 30
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}
+
+  - wait
+  - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      retcode=1
+      test/model_level_tests/models/TF_OV/run_infer_multiple.sh \
+        test/model_level_tests/models/TF_OV/models_cpu.txt \
+        /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
+        && retcode=0
+      cd /localdisk/buildkite/artifacts && rm -rf ./$BUILDKITE_BUILD_ID
+      if (( \$retcode > 0 )); then echo "Some model testing failed!"; exit 1; fi
+    label: ":bar_chart: Model Inference"
+    timeout_in_minutes: 30
+    agents:
+      queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
+      name: ${BUILDKITE_AGENT_META_DATA_NAME}

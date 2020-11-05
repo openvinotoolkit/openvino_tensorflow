@@ -1,0 +1,21 @@
+# Manifest of TF-OV models to run inference on
+# To be used in conjunction with script ./run_infer_multiple.sh
+# Syntax: model-name  image-name  'inference pattern to match'
+
+resnet_50  bike  'mountain bike, all-terrain bike'
+resnet_50_v1.5  bike  'mountain bike, all-terrain bike'
+resnet_50_v2  bike  'mountain bike, all-terrain bike'
+resnet_v1_50  bike  'mountain bike, all-terrain bike'
+resnet_v2_101  bike  'mountain bike, all-terrain bike'
+resnet_v2_152  bike  'mountain bike, all-terrain bike'
+resnet_v2_50  bike  'mountain bike, all-terrain bike'
+inception_v3  bike  'mountain bike, all-terrain bike'
+inception_v4  bike  'mountain bike, all-terrain bike'
+
+vgg_16  bike  'mountain bike, all-terrain bike, off-roader\s*( 11.'
+vgg_19  bike  'tricycle, trike, velocipede\s*( 10.'
+densenet_121  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.6'
+densenet_169  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
+densenet_201  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.7'
+
+# END
