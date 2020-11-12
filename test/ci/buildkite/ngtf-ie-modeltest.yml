@@ -15,8 +15,8 @@
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
       retcode=1
-      test/model_level_tests/models/TF_OV/run_infer_multiple.sh \
-        test/model_level_tests/models/TF_OV/models_cpu.txt \
+      test/models/tf_ov_model_zoo/run_infer_multiple.sh \
+        test/models/tf_ov_model_zoo/models_cpu.txt \
         /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
         && retcode=0
       cd /localdisk/buildkite/artifacts && rm -rf ./$BUILDKITE_BUILD_ID

@@ -1,1 +1,0 @@
-pip uninstall -y keras

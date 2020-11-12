@@ -1,2 +1,0 @@
-https://github.com/tensorflow/benchmarks.git
-ab01ecc2813208ed951bcc3b34aab59dbc62ac1c

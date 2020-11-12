@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 add_subdirectory(python)
-add_subdirectory(model_level_tests)
 
 if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
@@ -26,27 +25,11 @@ endif()
 install(
     DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python 
     DESTINATION ${CMAKE_INSTALL_PREFIX}/test
-    FILES_MATCHING PATTERN "*.py"
-)
-install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/test
-    FILES_MATCHING PATTERN "*.pbtxt"
-)
-install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/test
-    FILES_MATCHING PATTERN "*.pb"
-)
-install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/test
-    FILES_MATCHING PATTERN "tests_*.txt"
-)
-
-install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/model_level_tests
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/test
+    FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "*.pbtxt"
+    PATTERN "*.pb"
+    PATTERN "tests_*.txt"
 )
 
 # Get this location from the CMAKE variables passed during the cmake time

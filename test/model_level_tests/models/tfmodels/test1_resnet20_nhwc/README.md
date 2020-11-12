@@ -1,1 +1,0 @@
-This is a resnet20 training test in NHWC format

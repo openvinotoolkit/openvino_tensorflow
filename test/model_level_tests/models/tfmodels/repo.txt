@@ -1,2 +1,0 @@
-https://github.com/tensorflow/models.git
-v1.13.0
