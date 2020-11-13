@@ -321,6 +321,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["LogicalAnd"] = SimpleConfirmationFunction();
     confirmation_function_map["LogicalNot"] = SimpleConfirmationFunction();
     confirmation_function_map["LogicalOr"] = SimpleConfirmationFunction();
+    confirmation_function_map["LRN"] = SimpleConfirmationFunction();
     confirmation_function_map["MatMul"] = SimpleConfirmationFunction();
     confirmation_function_map["Max"] = SimpleConfirmationFunction();
     confirmation_function_map["Maximum"] = SimpleConfirmationFunction();
@@ -474,6 +475,10 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["LessEqual"]["T"] = NGraphDTypes();
     type_constraint_map["Log"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Log1p"]["T"] = NGraphRealDTypes();
+    type_constraint_map["LRN"]["T"] = {DT_FLOAT};  // other supported types are
+                                                   // DT_HALF & DT_BFLOAT16
+                                                   // which are both not
+                                                   // supported by IE
     // LogicalAnd and LogicalNot have no type attributes ("T", if it existed,
     // would always be bool).
     type_constraint_map["MatMul"]["T"] = NGraphNumericDTypes();
@@ -662,6 +667,7 @@ GetTFToNgOpMap() {
       {"LogicalAnd", {std::make_shared<opset::LogicalAnd>()}},
       {"LogicalNot", {std::make_shared<opset::LogicalNot>()}},
       {"LogicalOr", {std::make_shared<opset::LogicalOr>()}},
+      {"LRN", {std::make_shared<opset::LRN>()}},
       {"MatMul", {std::make_shared<opset::MatMul>()}},
       {"Max", {std::make_shared<opset::ReduceMax>(), constant}},
       {"Maximum", {std::make_shared<opset::Maximum>()}},

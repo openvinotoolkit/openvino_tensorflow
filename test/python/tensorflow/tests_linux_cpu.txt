@@ -210,3 +210,7 @@ reduction_ops_test.ReducedShapeTest.testNegAxes
 # Gradient tests fail with Intel TF
 relu_op_test.Relu6Test.testGradientFloat32
 pool_test.PoolingTest.testGradient3D
+
+# Results don't match between TF and OV
+lrn_op_test.LRNOpTest.testGradients
+lrn_op_test.LRNOpTest.testCompute

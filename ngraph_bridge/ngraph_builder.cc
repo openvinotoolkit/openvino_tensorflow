@@ -1616,6 +1616,37 @@ static Status TranslateLog1pOp(
       });
 }
 
+static Status TranslateLRNOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
+
+  float alpha;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "alpha", &alpha));
+  float beta;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "beta", &beta));
+  float bias;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "bias", &bias));
+  int64 depth_radius;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "depth_radius", &depth_radius));
+
+  // OV: Each input value is divided by (bias+(alpha/size)*sum(xi^2 for every xi
+  // in the local region))^beta
+  // TF: sqr_sum[a, b, c, d] = sum(input[a, b, c, d - depth_radius : d +
+  // depth_radius + 1] ** 2)
+  //     output = input / (bias + alpha * sqr_sum) ** beta
+  int64 size = depth_radius * 2 + 1;
+  alpha = alpha * size;
+  // nGraph expects the input to be in NCHW format
+  BatchToNGraph(op->name(), true, ng_inp);
+  auto ng_output = ConstructNgNode<opset::LRN>(op->name(), ng_inp, alpha, beta,
+                                               bias, (size_t)size);
+  BatchToTensorflow(op->name(), true, ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
 static Status TranslateLogSoftmaxOp(const Node* op,
                                     const std::vector<const Tensor*>&,
                                     Builder::OpMap& ng_op_map) {
@@ -2762,6 +2793,7 @@ const static std::map<
         {"LogicalAnd", TranslateBinaryOp<opset::LogicalAnd>},
         {"LogicalNot", TranslateUnaryOp<opset::LogicalNot>},
         {"LogicalOr", TranslateBinaryOp<opset::LogicalOr>},
+        {"LRN", TranslateLRNOp},
         {"MatMul", TranslateMatMulOp},
         {"Max", TranslateDirectReduceOp<opset::ReduceMax>},
         {"Maximum", TranslateBinaryOp<opset::Maximum>},

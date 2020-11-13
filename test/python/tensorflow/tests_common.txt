@@ -585,6 +585,9 @@ xent_op_test.XentTest.testWrapper
 xent_op_test.XentTest.testZeroDimension
 xent_op_test.XentTest.test_session
 
+lrn_op_test.LRNOpTest.testGradientsZeroInput
+lrn_op_test.LRNOpTest.test_session
+
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
