@@ -3010,21 +3010,20 @@ Status Builder::TranslateGraph(
     };
     set_default("ConstantFolding", false);
     set_default("TransposeSinking", true);
-
     if (pass_config.get_pass_enable("ConstantFolding"))
       passes.register_pass<ngraph::pass::ConstantFolding>();
     if (pass_config.get_pass_enable("TransposeSinking"))
       passes.register_pass<pass::TransposeSinking>();
     passes.run_passes(ng_function);
   }
-
+  NGRAPH_VLOG(5) << "Done with passes";
   //
   // Request row-major layout on results.
   //
   for (auto result : ng_function->get_results()) {
     result->set_needs_default_layout(true);
   }
-
+  NGRAPH_VLOG(5) << "Done with translations";
   return Status::OK();
 }
 
