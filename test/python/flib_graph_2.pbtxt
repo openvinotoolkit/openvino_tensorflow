@@ -126,7 +126,7 @@ node {
 }
 node {
   name: "ngraph_cluster_1"
-  op: "NGraphEncapsulate"
+  op: "_nGraphEncapsulate"
   input: "Variable_2/peek/_2"
   input: "Variable_1/peek/_3"
   input: "Variable/peek/_4"

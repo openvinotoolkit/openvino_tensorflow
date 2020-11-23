@@ -77,9 +77,6 @@ void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
 
 void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out);
 
-// Node-types that are executed on nGraph
-bool IsNGSupportedType(string node_type);
-
 bool IsProcessedByNgraphPass(Graph* g);
 
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc

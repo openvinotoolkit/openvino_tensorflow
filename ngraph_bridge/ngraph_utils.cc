@@ -33,10 +33,8 @@
 #include "ngraph_bridge/version.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 vector<int> FindComplement(const int& max_element,
@@ -104,12 +102,8 @@ std::string DebugNode(Node* node) {
 
 std::string PrintBool(bool var) { return (var ? "Yes" : "No"); }
 
-bool IsNGSupportedType(string node_type) {
-  return (node_type == "NGraphEncapsulate");
-};
-
 // Read from this ng_tensor into tf_tensor
-void ReadNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
+void ReadNGTensor(shared_ptr<ngraph::runtime::Tensor> ng_tensor,
                   Tensor* tf_tensor) {
   NG_TRACE("Tensor Read D2H", "", "");
   void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
@@ -118,7 +112,7 @@ void ReadNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
 }
 
 // Write into this ng_tensor from tf_tensor
-void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
+void WriteNGTensor(shared_ptr<ngraph::runtime::Tensor> ng_tensor,
                    Tensor* tf_tensor) {
   NG_TRACE("Tensor Write H2D", "", "");
   void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
@@ -200,49 +194,49 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
                                      ngraph::element::Type* ng_et) {
   switch (tf_dt) {
     case DataType::DT_FLOAT:
-      *ng_et = ng::element::f32;
+      *ng_et = ngraph::element::f32;
       break;
     case DataType::DT_DOUBLE:
-      *ng_et = ng::element::f64;
+      *ng_et = ngraph::element::f64;
       break;
     case DataType::DT_INT32:
-      *ng_et = ng::element::i32;
+      *ng_et = ngraph::element::i32;
       break;
     case DataType::DT_UINT8:
-      *ng_et = ng::element::u8;
+      *ng_et = ngraph::element::u8;
       break;
     case DataType::DT_INT8:
-      *ng_et = ng::element::i8;
+      *ng_et = ngraph::element::i8;
       break;
     case DataType::DT_UINT16:
-      *ng_et = ng::element::u16;
+      *ng_et = ngraph::element::u16;
       break;
     case DataType::DT_INT64:
-      *ng_et = ng::element::i64;
+      *ng_et = ngraph::element::i64;
       break;
     case DataType::DT_UINT32:
-      *ng_et = ng::element::u32;
+      *ng_et = ngraph::element::u32;
       break;
     case DataType::DT_UINT64:
-      *ng_et = ng::element::u64;
+      *ng_et = ngraph::element::u64;
       break;
     case DataType::DT_BOOL:
-      *ng_et = ng::element::boolean;
+      *ng_et = ngraph::element::boolean;
       break;
     case DataType::DT_QINT8:
-      *ng_et = ng::element::i8;
+      *ng_et = ngraph::element::i8;
       break;
     case DataType::DT_QUINT8:
-      *ng_et = ng::element::u8;
+      *ng_et = ngraph::element::u8;
       break;
     case DataType::DT_QINT32:
-      *ng_et = ng::element::i32;
+      *ng_et = ngraph::element::i32;
       break;
     case DataType::DT_BFLOAT16:
-      *ng_et = ng::element::bf16;
+      *ng_et = ngraph::element::bf16;
       break;
     case DataType::DT_HALF:
-      *ng_et = ng::element::f16;
+      *ng_et = ngraph::element::f16;
       break;
     default:
       return errors::Unimplemented("Unsupported TensorFlow data type: ",
@@ -362,7 +356,7 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
   std::string mem_in;
   getline(ifs, mem_in);
   if (mem_in != "") {
-    vector<string> mem_str = ng::split(mem_in, ' ');
+    vector<string> mem_str = ngraph::split(mem_in, ' ');
     vsize = std::stol(mem_str[22]);
     rss = std::stol(mem_str[23]);
 
@@ -467,9 +461,8 @@ bool DumpEncapsulatedGraphs() {
 bool IsProcessedByNgraphPass(Graph* g) {
   // TODO: place a dummy node as a marker
   // Current method may fail when graph has no encapsulates after first pass
-  // Also variable/optimizer change introduces other types of ng nodes
   for (Node* node : g->nodes()) {
-    if (node->type_string() == "NGraphEncapsulate") return true;
+    if (node->type_string() == "_nGraphEncapsulate") return true;
   }
   return false;
 }

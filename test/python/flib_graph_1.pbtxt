@@ -72,7 +72,7 @@ node {
 }
 node {
   name: "ngraph_cluster_0"
-  op: "NGraphEncapsulate"
+  op: "_nGraphEncapsulate"
   input: "Placeholder"
   input: "Placeholder_1"
   input: "Placeholder_2"

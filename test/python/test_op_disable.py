@@ -49,7 +49,7 @@ class TestOpDisableOperations(NgraphTest):
 
     # Test to see that exception is raised if sess.run is called with invalid op types
     @pytest.mark.parametrize(("invalid_op_list",), (('Add,_InvalidOp',),
-                                                    ('NGraphEncapsulate',)))
+                                                    ('_nGraphEncapsulate',)))
     def test_disable_op_2(self, invalid_op_list):
         # This test is disabled for grappler because grappler fails silently and
         # TF continues to run with the unoptimized graph

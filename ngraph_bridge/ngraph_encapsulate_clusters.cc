@@ -438,7 +438,7 @@ Status Encapsulator::RewritePass(
     }
 
     Node* n;
-    NodeBuilder nb = NodeBuilder(encap_node_name, "NGraphEncapsulate")
+    NodeBuilder nb = NodeBuilder(encap_node_name, "_nGraphEncapsulate")
                          .Attr("ngraph_cluster", cluster_idx)
                          .Attr("Targuments", input_types)
                          .Attr("Tresults", cluster_output_dt_map[cluster_idx])

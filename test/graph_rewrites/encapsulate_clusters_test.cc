@@ -149,7 +149,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
     int num_encapsulates = 0, num_tf_nodes = 0;
     for (auto itr : g->nodes()) {
       auto node_type = itr->type_string();
-      num_encapsulates += (node_type == "NGraphEncapsulate" ? 1 : 0);
+      num_encapsulates += (node_type == "_nGraphEncapsulate" ? 1 : 0);
       num_tf_nodes +=
           ((node_type == "Add" || node_type == "Const" || node_type == "Abs")
                ? 1
@@ -268,7 +268,7 @@ TEST(EncapsulateClusters, PopulateLibrary) {
   int num_tf_nodes = 0;
   for (auto itr : g.nodes()) {
     auto node_type = itr->type_string();
-    num_encapsulates += (node_type == "NGraphEncapsulate" ? 1 : 0);
+    num_encapsulates += (node_type == "_nGraphEncapsulate" ? 1 : 0);
     num_tf_nodes += ((node_type == "Add" || node_type == "Const") ? 1 : 0);
   }
 
