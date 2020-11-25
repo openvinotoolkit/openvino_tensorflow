@@ -69,14 +69,15 @@ TEST(TransposeSinking, EdgeSplitting) {
 
   auto func = make_shared<ngraph::Function>(ngraph::OutputVector{absn2, sum},
                                             ngraph::ParameterVector{a});
-  auto num_ops_before = func->get_ops().size();
+  size_t before_count = count_ops_of_type<opset::Transpose>(func);
 
   ngraph::pass::Manager pass_manager;
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
 
-  //   auto num_ops_after = func->get_ops().size();
-  //   ASSERT_EQ(num_ops_before, num_ops_after);
+  ASSERT_EQ(before_count, 1);
+  size_t after_count = count_ops_of_type<opset::Transpose>(func);
+  ASSERT_EQ(after_count, 2);
   ASSERT_EQ(func->get_results().at(1)->input_value(0), sum);
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
@@ -133,6 +134,7 @@ TEST(TransposeSinking, PoolAdd1) {
 
   size_t after_count = count_ops_of_type<opset::Transpose>(func);
   ASSERT_LE(before_count, after_count);
+  ASSERT_EQ(3, after_count);
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
@@ -177,12 +179,13 @@ TEST(TransposeSinking, PoolAdd2) {
   auto func = make_shared<ngraph::Function>(add2, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
-  size_t before_count = count_ops_of_type<opset::Transpose>(func);
+  size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 3
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
 
-  size_t after_count = count_ops_of_type<opset::Transpose>(func);
-  ASSERT_LE(after_count, before_count);
+  size_t after_count = count_ops_of_type<opset::Transpose>(func);  // 4
+  ASSERT_LE(before_count, after_count);
+  ASSERT_EQ(4, after_count);
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
@@ -292,7 +295,7 @@ TEST(TransposeSinking, Concat_DummyShape) {
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
 
-  size_t transpose_count = count_ops_of_type<opset::Transpose>(func);
+  size_t transpose_count = count_ops_of_type<opset::Transpose>(func);  // 1
   ASSERT_EQ(1, transpose_count);
   auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
   ngraph::Shape expected_shape{4, 3, 10, 3};
@@ -340,12 +343,12 @@ TEST(TransposeSinking, Pad) {
                                             ngraph::ParameterVector{a});
 
   ngraph::pass::Manager pass_manager;
-  size_t before_count = count_ops_of_type<opset::Transpose>(func);
+  size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 2
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
 
-  size_t after_count = count_ops_of_type<opset::Transpose>(func);
-  ASSERT_LE(after_count, before_count);
+  size_t after_count = count_ops_of_type<opset::Transpose>(func);  // 2
+  ASSERT_EQ(after_count, before_count);
   auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
   ngraph::Shape expected_shape{1, 1, 1, 1};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
@@ -373,12 +376,13 @@ TEST(TransposeSinking, SimpleUnary) {
 
   auto func = make_shared<ngraph::Function>(ngraph::OutputVector{absn2_t},
                                             ngraph::ParameterVector{a});
-  size_t before_count = count_ops_of_type<opset::Transpose>(func);
+  size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 2
+
   ngraph::pass::Manager pass_manager;
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
 
-  size_t after_count = count_ops_of_type<opset::Transpose>(func);
+  size_t after_count = count_ops_of_type<opset::Transpose>(func);  // 0
   ASSERT_EQ(func->get_results().at(0)->input_value(0), absn2);
   EXPECT_NE(before_count, after_count);
   EXPECT_EQ(after_count, 0);
@@ -441,13 +445,13 @@ TEST(TransposeSinking, MultiOutput) {
   auto add2 = make_shared<opset::Add>(transpose3, const2);
   auto add3 = make_shared<opset::Add>(add1, add2);
   auto func = make_shared<ngraph::Function>(add3, ngraph::ParameterVector{X});
-  ngraph::plot_graph(func, "before_TS_Multi.dot");
+
   ngraph::pass::Manager pass_manager;
-  size_t before_count = count_ops_of_type<opset::Transpose>(func);
+  size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 3
   pass_manager.register_pass<pass::TransposeSinking>();
   pass_manager.run_passes(func);
-  ngraph::plot_graph(func, "after_TS_Multi.dot");
-  size_t after_count = count_ops_of_type<opset::Transpose>(func);
+
+  size_t after_count = count_ops_of_type<opset::Transpose>(func);  // 4
   ASSERT_LE(before_count, after_count);
   ASSERT_EQ(4, after_count);
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
