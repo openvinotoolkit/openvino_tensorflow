@@ -74,104 +74,43 @@ void Transpose3D(std::shared_ptr<ngraph::Node>& node) {
 
 namespace detail {
 template <typename T>
-void NhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[1];
-  dst[1] = src[2];
-}
-
-void NhwcToNGraph(ngraph::Output<ngraph::Node>& ng_node);
-
-template <typename T>
-void NdhwcToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[1];
-  dst[1] = src[2];
-  dst[2] = src[3];
-}
-
-void NdhwcToNGraph(ngraph::Output<ngraph::Node>& ng_node);
-
-template <typename T>
-void NchwToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[2];
-  dst[1] = src[3];
+void NHWCtoHW(const std::vector<T>& src, std::vector<size_t>& dst) {
+  if (dst.size() >= 2) {
+    dst[0] = src[1];
+    dst[1] = src[2];
+  }
+  if (dst.size() >= 3) {
+    dst[2] = src[3];
+  }
 }
 
 template <typename T>
-void NcdhwToNGraph(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[2];
-  dst[1] = src[3];
-  dst[2] = src[4];
+void NCHWtoHW(const std::vector<T>& src, std::vector<size_t>& dst) {
+  if (dst.size() >= 2) {
+    dst[0] = src[2];
+    dst[1] = src[3];
+  }
+  if (dst.size() >= 3) {
+    dst[2] = src[4];
+  }
 }
+}
+
+void NHWCtoNCHW(const string& op_name, bool is_nhwc,
+                ngraph::Output<ngraph::Node>& ng_input);
+
+void NCHWtoNHWC(const string& op_name, bool is_nhwc,
+                ngraph::Output<ngraph::Node>& ng_node);
 
 template <typename T>
-void NhwcToNchw(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[0];
-  dst[1] = src[3];
-  dst[2] = src[1];
-  dst[3] = src[2];
-}
-
-template <typename T>
-void NdhwcToNcdhw(const std::vector<T>& src, std::vector<size_t>& dst) {
-  dst[0] = src[0];
-  dst[1] = src[4];
-  dst[2] = src[1];
-  dst[3] = src[2];
-  dst[4] = src[3];
-}
-}
-
-void BatchToNGraph(const string& op_name, bool is_nhwc,
-                   ngraph::Output<ngraph::Node>& ng_input);
-
-void BatchToNGraph3D(const string& op_name, bool is_ndhwc,
-                     ngraph::Output<ngraph::Node>& ng_input);
-
-template <typename T>
-void BatchedOpParamToNGraph(bool is_nhwc, const std::vector<T>& src,
-                            std::vector<size_t>& dst) {
+void NHWCtoHW(bool is_nhwc, const std::vector<T>& src,
+              std::vector<size_t>& dst) {
   if (is_nhwc) {
-    detail::NhwcToNGraph(src, dst);
+    detail::NHWCtoHW(src, dst);
   } else {
-    detail::NchwToNGraph(src, dst);
+    detail::NCHWtoHW(src, dst);
   }
 }
-
-template <typename T>
-void BatchedOpParam3DToNGraph(bool is_ndhwc, const std::vector<T>& src,
-                              std::vector<size_t>& dst) {
-  if (is_ndhwc) {
-    detail::NdhwcToNGraph(src, dst);
-  } else {
-    detail::NcdhwToNGraph(src, dst);
-  }
-}
-
-template <typename T>
-void BatchedOpParamReshape(bool is_nhwc, const std::vector<T>& src,
-                           std::vector<size_t>& dst) {
-  if (is_nhwc) {
-    detail::NhwcToNchw(src, dst);
-  } else {
-    dst = src;
-  }
-}
-
-template <typename T>
-void BatchedOpParamReshape3D(bool is_ndhwc, const std::vector<T>& src,
-                             std::vector<size_t>& dst) {
-  if (is_ndhwc) {
-    detail::NdhwcToNcdhw(src, dst);
-  } else {
-    dst = src;
-  }
-}
-
-void BatchToTensorflow(const string& op_name, bool is_nhwc,
-                       ngraph::Output<ngraph::Node>& ng_node);
-
-void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
-                         ngraph::Output<ngraph::Node>& ng_node);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

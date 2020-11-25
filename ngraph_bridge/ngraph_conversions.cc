@@ -19,49 +19,31 @@
 
 namespace tensorflow {
 namespace ngraph_bridge {
-namespace detail {
 
-void NhwcToNGraph(ngraph::Output<ngraph::Node>& node) {
-  Transpose<0, 3, 1, 2>(node);
-}
-
-void NdhwcToNGraph(ngraph::Output<ngraph::Node>& node) {
-  Transpose3D<0, 4, 1, 2, 3>(node);
-}
-}  // namespace detail
-
-void BatchToNGraph(const string& op_name, bool is_nhwc,
-                   ngraph::Output<ngraph::Node>& input) {
+void NHWCtoNCHW(const string& op_name, bool is_nhwc,
+                ngraph::Output<ngraph::Node>& node) {
   if (is_nhwc) {
-    detail::NhwcToNGraph(input);
-    Builder::SetTracingInfo(op_name, input);
+    auto rank = node.get_shape().size();
+    if (rank == 4) {
+      Transpose<0, 3, 1, 2>(node);
+    } else if (rank == 5) {
+      Transpose3D<0, 4, 1, 2, 3>(node);
+    }
+    Builder::SetTracingInfo(op_name, node);
   }
 }
 
-void BatchToNGraph3D(const string& op_name, bool is_ndhwc,
-                     ngraph::Output<ngraph::Node>& input) {
-  if (is_ndhwc) {
-    detail::NdhwcToNGraph(input);
-    Builder::SetTracingInfo(op_name, input);
+void NCHWtoNHWC(const string& op_name, bool is_nhwc,
+                ngraph::Output<ngraph::Node>& node) {
+  if (is_nhwc) {
+    auto rank = node.get_shape().size();
+    if (rank == 4) {
+      Transpose<0, 2, 3, 1>(node);
+    } else if (rank == 5) {
+      Transpose3D<0, 2, 3, 4, 1>(node);
+    }
+    Builder::SetTracingInfo(op_name, node);
   }
-}
-
-void BatchToTensorflow(const string& op_name, bool is_nhwc,
-                       ngraph::Output<ngraph::Node>& node) {
-  if (!is_nhwc) {
-    return;
-  }
-  Transpose<0, 2, 3, 1>(node);
-  Builder::SetTracingInfo(op_name, node);
-}
-
-void BatchToTensorflow3D(const string& op_name, bool is_ndhwc,
-                         ngraph::Output<ngraph::Node>& node) {
-  if (!is_ndhwc) {
-    return;
-  }
-  Transpose3D<0, 2, 3, 4, 1>(node);
-  Builder::SetTracingInfo(op_name, node);
 }
 
 }  // namespace ngraph_bridge
