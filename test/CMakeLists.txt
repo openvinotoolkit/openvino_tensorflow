@@ -77,7 +77,6 @@ set(SRC
     graph_rewrites/disable_ops_test.cc
     graph_rewrites/mark_for_clustering_test.cc
     graph_rewrites/op_by_op_capability_test.cc
-    test_ngraph_data_cache.cpp
     test_utilities.cpp
     test_math_ops.cpp
     test_nn_ops.cpp

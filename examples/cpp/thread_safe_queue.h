@@ -23,8 +23,8 @@
 #include "absl/synchronization/mutex.h"
 
 using namespace std;
-namespace tensorflow {
-namespace ngraph_bridge {
+
+namespace benchmark {
 
 template <typename T>
 class ThreadSafeQueue {
@@ -62,7 +62,6 @@ class ThreadSafeQueue {
   absl::Mutex m_mutex;
 };
 
-}  // namespace ngraph_bridge
-}  // namespace tensorflow
+}  // namespace benchmark
 
 #endif  // THREAD_SAFE_QUEUE_H_

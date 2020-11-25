@@ -136,7 +136,7 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
                                         "' expected ", file_size, " got ",
                                         data.size());
   }
-  output->scalar<string>()() = string(data);
+  output->scalar<tensorflow::tstring>()() = tensorflow::tstring(data);
   return Status::OK();
 }
 
@@ -300,6 +300,8 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
 //-----------------------------------------------------------------------------
 Status PrintTopLabels(const std::vector<Tensor>& outputs,
                       const string& labels_file_name) {
+  // Disable nGraph so that we run these using TensorFlow on CPU
+  tensorflow::ngraph_bridge::config::ngraph_disable();
   std::vector<string> labels;
   size_t label_count;
   Status read_labels_status =
@@ -317,7 +319,8 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
   for (int pos = 0; pos < how_many_labels; ++pos) {
     const int label_index = indices_flat(pos);
     const float score = scores_flat(pos);
-    LOG(INFO) << labels[label_index] << " (" << label_index << "): " << score;
+    std::cout << labels[label_index] << " (" << label_index << "): " << score
+              << "\n";
   }
   return Status::OK();
 }
@@ -328,6 +331,7 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
 //-----------------------------------------------------------------------------
 Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
                      bool* is_expected) {
+  tensorflow::ngraph_bridge::config::ngraph_disable();
   *is_expected = false;
   Tensor indices;
   Tensor scores;

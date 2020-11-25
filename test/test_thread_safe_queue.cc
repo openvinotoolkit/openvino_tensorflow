@@ -21,9 +21,9 @@
 #include "absl/time/time.h"
 #include "tensorflow/core/public/session.h"
 
+#include "../examples/cpp/thread_safe_queue.h"
 #include "gtest/gtest.h"
 #include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/thread_safe_queue.h"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ namespace ngraph_bridge {
 
 namespace testing {
 TEST(ThreadSafeQueue, Simple) {
-  ThreadSafeQueue<unique_ptr<Session>> queue;
+  benchmark::ThreadSafeQueue<unique_ptr<Session>> queue;
   typedef enum {
     INIT = 0,
     WAITING_FOR_ITEM,

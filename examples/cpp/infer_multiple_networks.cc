@@ -36,10 +36,10 @@
 #include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/thread_safe_queue.h"
 #include "ngraph_bridge/version.h"
 
 #include "inference_engine.h"
+#include "thread_safe_queue.h"
 
 using namespace std;
 namespace tf = tensorflow;
@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
   //
   // Add these sessions to the queue
   //
-  tf::ngraph_bridge::ThreadSafeQueue<unique_ptr<Session>> session_queue;
+  benchmark::ThreadSafeQueue<unique_ptr<Session>> session_queue;
   session_queue.Add(move(session_one));
   session_queue.Add(move(session_two));
   session_queue.Add(move(session_three));
