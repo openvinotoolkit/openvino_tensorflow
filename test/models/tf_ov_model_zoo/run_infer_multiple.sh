@@ -6,10 +6,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # read models & params from manifest
 MANIFEST=${SCRIPT_DIR}/models_cpu.txt
-[ -z $1 ] && MANIFEST=$1
+[ -z $1 ] || MANIFEST=$1
 
 WORKDIR=`pwd`
-[ -z $2 ] && WORKDIR=$2
+[ -z $2 ] || WORKDIR=$2
 cd ${WORKDIR} || ( echo "Not found: $WORKDIR !"; exit 1 )
 echo "Dir: ${WORKDIR}"
 

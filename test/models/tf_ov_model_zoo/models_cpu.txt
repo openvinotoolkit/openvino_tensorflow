@@ -12,10 +12,21 @@ resnet_v2_50  bike  'mountain bike, all-terrain bike'
 inception_v3  bike  'mountain bike, all-terrain bike'
 inception_v4  bike  'mountain bike, all-terrain bike'
 
+# alexnet  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
+cifarnet  bike  '.*'
+lenet  bike  '.*'
 vgg_16  bike  'mountain bike, all-terrain bike, off-roader\s*( 11.'
 vgg_19  bike  'tricycle, trike, velocipede\s*( 10.'
 densenet_121  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.6'
 densenet_169  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
 densenet_201  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.7'
+# fc_densenet_103  bike  '.*'
 
-# END
+mobilenet_v1  bike  '.*'
+mobilenet_v2  bike  '.*'
+# ssd_mobilenet_v1 
+# ssd_mobilenet_v1_fpn 
+# ssd_mobilenet_v2 
+# ssd_inception_v2 
+# ssd_resnet_50_fpn 
+# ssdlite_mobilenet_v2 
