@@ -453,9 +453,8 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Exp"]["T"] = NGraphNumericDTypes();
     type_constraint_map["ExpandDims"]["T"] = NGraphDTypes();
     type_constraint_map["Floor"]["T"] = NGraphNumericDTypes();
-    type_constraint_map["FloorDiv"]["T"] = NGraphNumericDTypes();
-    type_constraint_map["FloorMod"]["T"] = {
-        DT_INT32};  // IE only supports i32 for input
+    type_constraint_map["FloorDiv"]["T"] = {DT_FLOAT};
+    type_constraint_map["FloorMod"]["T"] = {DT_FLOAT};
     type_constraint_map["FusedBatchNorm"]["T"] = NGraphNumericDTypes();
     // TODO (mingshan): FusedBatchNormV2, V3 supports DT_HALF,DT_BFLOAT16,
     // DT_FLOAT
@@ -626,14 +625,14 @@ GetTFToNgOpMap() {
       {"Floor", {std::make_shared<opset::Floor>()}},
       {"FloorDiv",
        {std::make_shared<opset::Divide>(), std::make_shared<opset::Floor>(),
-        std::make_shared<ngraph::op::Broadcast>()}},
+        std::make_shared<opset::Broadcast>()}},
       {"FloorMod", {std::make_shared<opset::FloorMod>()}},
-      {"FusedBatchNorm", {std::make_shared<ngraph::op::BatchNormInference>()}},
+      {"FusedBatchNorm", {std::make_shared<opset::BatchNormInference>()}},
       {"FusedBatchNormV2",
-       {constant, std::make_shared<ngraph::op::BatchNormInference>(),
+       {constant, std::make_shared<opset::BatchNormInference>(),
         std::make_shared<opset::Transpose>()}},
       {"FusedBatchNormV3",
-       {constant, std::make_shared<ngraph::op::BatchNormInference>(),
+       {constant, std::make_shared<opset::BatchNormInference>(),
         std::make_shared<opset::Transpose>()}},
       {"Gather", {constant, std::make_shared<opset::Gather>()}},
       {"GatherV2", {constant, std::make_shared<opset::Gather>()}},

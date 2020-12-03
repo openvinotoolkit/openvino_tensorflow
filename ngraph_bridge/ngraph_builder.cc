@@ -1170,26 +1170,11 @@ static Status TranslateFillOp(
 static Status TranslateFloorDivOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  DataType dtype;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "T", &dtype));
-  auto int_types = NGraphIntDTypes();
-  std::function<ng::Output<ng::Node>(ng::Output<ng::Node>,
-                                     ng::Output<ng::Node>)>
-      ng_bin_fn;
-  if (std::find(int_types.begin(), int_types.end(), dtype) != int_types.end()) {
-    ng_bin_fn = [&op](ng::Output<ng::Node> ng_input1,
-                      ng::Output<ng::Node> ng_input2) {
-      return ConstructNgNode<opset::Divide>(op->name(), ng_input1, ng_input2);
-    };
-  } else {
-    ng_bin_fn = [&op](ng::Output<ng::Node> ng_input1,
-                      ng::Output<ng::Node> ng_input2) {
-      return ConstructNgNode<opset::Floor>(
-          op->name(),
-          ConstructNgNode<opset::Divide>(op->name(), ng_input1, ng_input2));
-    };
-  }
-  return TranslateBinaryOp(op, static_input_map, ng_op_map, ng_bin_fn);
+  auto floordiv_fn = [&op](ng::Output<ng::Node> x, ng::Output<ng::Node> y) {
+    return ConstructNgNode<opset::Floor>(
+        op->name(), ConstructNgNode<opset::Divide>(op->name(), x, y));
+  };
+  return TranslateBinaryOp(op, static_input_map, ng_op_map, floordiv_fn);
 }
 
 static Status TranslateFusedBatchNormOp(
@@ -2911,19 +2896,12 @@ Status Builder::TranslateGraph(
   //
   {
     ngraph::pass::Manager passes;
-    ngraph::pass::PassConfig pass_config;
-    // set/honor the defaults, unless specified via env var
-    auto set_default = [&pass_config](std::string pass, bool enable) {
-      auto enables_map = pass_config.get_enables();
-      if (enables_map.find(pass) == enables_map.end())
-        pass_config.set_pass_enable(pass, enable);
-    };
-    set_default("ConstantFolding", false);
-    set_default("TransposeSinking", true);
-    if (pass_config.get_pass_enable("ConstantFolding"))
+    if (GetEnv("TF_OV_CONSTANT_FOLDING") == "1") {
       passes.register_pass<ngraph::pass::ConstantFolding>();
-    if (pass_config.get_pass_enable("TransposeSinking"))
+    }
+    if (GetEnv("TF_OV_TRANSPOSE_SINKING") != "0") {
       passes.register_pass<pass::TransposeSinking>();
+    }
     passes.run_passes(ng_function);
   }
   NGRAPH_VLOG(5) << "Done with passes";

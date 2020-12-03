@@ -476,6 +476,14 @@ void ClearAttribute(Graph* g,
   }
 }
 
-}  // namespace ngraph_bridge
+string GetEnv(const char* env) {
+  const char* val = std::getenv(env);
+  if (val == nullptr) {
+    return "";
+  } else {
+    return string(val);
+  }
+}
 
+}  // namespace ngraph_bridge
 }  // namespace tensorflow

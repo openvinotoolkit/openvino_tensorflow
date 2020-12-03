@@ -329,7 +329,7 @@ def main():
             os.chdir(cwd)
 
     if not arguments.use_prebuilt_openvino:
-        openvino_version = "releases/2021/1"
+        openvino_version = "releases/2021/2"
         openvino_src_dir = "./openvino"
         download_repo(
             "openvino",
@@ -339,11 +339,13 @@ def main():
 
         # Now build OpenVINO
         openvino_cmake_flags = [
-            "-DENABLE_V7_SERIALIZE=ON",
+            "-DENABLE_V10_SERIALIZE=ON",
             "-DENABLE_TESTS=OFF",
             "-DENABLE_SAMPLES=OFF",
             "-DENABLE_FUNCTIONAL_TESTS=OFF",
             "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build
+            "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF",
+            "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
             "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
             "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
             + target_arch,
