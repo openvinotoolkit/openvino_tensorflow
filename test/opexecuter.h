@@ -83,8 +83,6 @@ class OpExecuter {
   Scope tf_scope_;
   const string test_op_type_;
   const std::vector<Output> sess_run_fetchoutputs_;
-
-  void ValidateGraph(const Graph& graph, const vector<string> allowed_nodes);
 };
 
 }  // namespace testing

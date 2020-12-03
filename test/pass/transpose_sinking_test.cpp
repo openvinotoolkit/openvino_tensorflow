@@ -22,6 +22,19 @@
 
 #include "gtest/gtest.h"
 
+#include "tensorflow/cc/client/client_session.h"
+#include "tensorflow/cc/ops/standard_ops.h"
+#include "tensorflow/core/common_runtime/dma_helper.h"
+#include "tensorflow/core/framework/graph.pb.h"
+#include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/tensor.h"
+#include "tensorflow/core/framework/tensor_types.h"
+#include "tensorflow/core/graph/algorithm.h"
+#include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/graph_constructor.h"
+#include "tensorflow/core/platform/env.h"
+#include "tensorflow/core/public/session.h"
+
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -49,7 +62,6 @@ TEST(TransposeSinking, PassProperty) {
       pass->get_property(ngraph::pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
 
-// TODO: Fix the test
 TEST(TransposeSinking, EdgeSplitting) {
   // checks if Transpose is pushed through opset::Abs, but stopped by
   // ReduceSum
@@ -562,6 +574,60 @@ TEST(TransposeSinking, AlexnetPattern) {
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
   ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 55, 55, 96}));
+}
+
+// End to end test for TransposeSinking with multi-output node
+TEST(TransposeSinking, MultiOutputConV) {
+  std::vector<std::vector<int64>> input_shapes;
+  input_shapes.push_back({1, 1, 1, 2});
+  // num_split : The number of ways to split. Must evenly divide
+  // value.shape[split_dim]
+  int64_t num_splits = 2;
+
+  // axis at which the dimension will be inserted
+  // should be -rank <= axis < rank
+  Tensor axis(DT_INT32, TensorShape({}));
+  AssignInputValues<int>(axis, 3);
+  for (auto const& shape : input_shapes) {
+    Scope root = Scope::NewRootScope();
+
+    Tensor input_data(DT_FLOAT, TensorShape(shape));
+    std::vector<float> input_vector = {0.1f, 1.7f};
+    AssignInputValues(input_data, input_vector);
+
+    auto R = ops::Split(root, axis, input_data, num_splits);
+
+    vector<int64> filter_size_HWIO = {1, 1, 1, 2};
+
+    std::vector<int> stride = {1, 1, 1, 1};
+    // Dilation rates > 1 not supported by TF on CPU
+    ops::Conv2D::Attrs op_attr_nhwc;
+    op_attr_nhwc = op_attr_nhwc.DataFormat("NHWC");
+    op_attr_nhwc = op_attr_nhwc.Dilations({1, 1, 1, 1});
+
+    string padding_type = "SAME";
+
+    Tensor filter1(DT_FLOAT, TensorShape(filter_size_HWIO));
+    std::vector<float> filter1_vector = {1.1f, 4.4f};
+    AssignInputValues<float>(filter1, filter1_vector);
+
+    auto C1 =
+        ops::Conv2D(root, R[0], filter1, stride, padding_type, op_attr_nhwc);
+
+    Tensor filter2(DT_FLOAT, TensorShape(filter_size_HWIO));
+    std::vector<float> filter2_vector = {1.9f, 5.4f};
+    AssignInputValues<float>(filter2, filter2_vector);
+
+    auto C2 =
+        ops::Conv2D(root, R[1], filter2, stride, padding_type, op_attr_nhwc);
+
+    auto A = ops::Add(root, C1, C2);
+
+    std::vector<Output> sess_run_fetchoutputs = {A};
+    OpExecuter opexecuter(root, "Split", sess_run_fetchoutputs);
+
+    opexecuter.RunTest();
+  }
 }
 
 }  // namespace testing

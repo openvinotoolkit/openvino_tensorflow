@@ -23,42 +23,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 namespace testing {
 
-// Validate that the graph has N allowed_nodes and 1 test_op_type node
-// Graph must look like this
-//
-// Const1     ConstN
-//   \    ...    /
-//    \         /
-//      Test_Op
-//
-// TODO check for vector allowed_nodes
-// when we allow other than "Const" node type as input
-// Make allowed_nodes const member of the class, use set
-void OpExecuter::ValidateGraph(const Graph& graph,
-                               const vector<string> allowed_nodes) {
-  NGRAPH_VLOG(5) << "Validate graph";
-  bool found_test_op = false;
-  Node* test_op = nullptr;
-  for (Node* node : graph.nodes()) {
-    if (node->IsSource() || node->IsSink()) {
-      continue;
-    } else if (node->type_string() == test_op_type_) {
-      // only one node of type test_op
-      ASSERT_FALSE(found_test_op) << "Only one op of type " << test_op_type_
-                                  << " should exist in the graph. Found nodes "
-                                  << node->name() << " and " << test_op->name();
-      found_test_op = true;
-      test_op = node;
-    } else {
-      ASSERT_TRUE(node->type_string() == allowed_nodes[0])
-          << "Op of type " << node->type_string()
-          << " not allowed in the graph. Found " << node->name();
-    }
-  }
-  ASSERT_TRUE(found_test_op) << "Not found test_op : " << test_op_type_;
-  NGRAPH_VLOG(5) << "Validate graph done";
-}  // namespace testing
-
 OpExecuter::OpExecuter(const Scope sc, const string test_op,
                        const vector<Output>& sess_run_fetchops)
     : tf_scope_(sc),
@@ -108,8 +72,6 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   if (std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr) {
     GraphToPbTextFile(&graph, "unit_test_tf_graph_" + test_op_type_ + ".pbtxt");
   }
-
-  ValidateGraph(graph, {"Const"});
 
   ActivateNGraph();
   tf::SessionOptions options = GetSessionOptions();
