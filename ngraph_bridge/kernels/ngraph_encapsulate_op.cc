@@ -240,6 +240,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     NG_TRACE("Input: maybe create", name(), "");
     // Allocate tensors for input arguments.
     for (int i = 0; i < tf_input_tensors.size(); i++) {
+      if (m_input_is_static[i]) {
+        NGRAPH_VLOG(2) << "Skipping static input " << i;
+        continue;
+      }
       ngraph::Shape ng_shape(tf_input_tensors[i].shape().dims());
       for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
         ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);

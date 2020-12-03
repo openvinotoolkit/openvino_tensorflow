@@ -74,10 +74,7 @@ test_resize_to_dynamic_shape.TestResizeToDynamicShape.test_resize_to_dynamic_sha
 test_shared_const.TestSharedConst.test_sharedconst1
 
 # cannot find blob with name <parameter>
-test_pad.TestPadOperations.test_pad1
 test_pad.TestPadOperations.test_pad2
-test_pad.TestPadOperations.test_pad3
-test_pad.TestPadOperations.test_pad4
 
 # incorrect number of input/output dims
 test_prod.TestProductOperations.test_prod[v10--1-expected0]
@@ -100,5 +97,3 @@ test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
 test_l2loss.TestL2Loss.test_l2loss[xshape1]
-
-test_variableops_static_input.TestVariableStaticInputs.test_variable_static_input_variables

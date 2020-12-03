@@ -30,7 +30,7 @@ namespace ngraph_bridge {
 
 Executable::Executable(shared_ptr<Function> func, string device)
     : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
-  NGRAPH_VLOG(2) << "Checking for unsupported ops in IE backend";
+  NGRAPH_VLOG(2) << "Checking for unsupported ops";
   const auto& opset = ngraph::get_opset4();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
@@ -40,11 +40,28 @@ Executable::Executable(shared_ptr<Function> func, string device)
     }
   }
 
+  NGRAPH_VLOG(2) << "Checking for unused parameters";
+  auto parameters = func->get_parameters();
+  ngraph::ParameterVector used_parameters;
+  for (int i = 0; i < parameters.size(); ++i) {
+    NGRAPH_VLOG(2) << parameters[i];
+    if (parameters[i]->get_users().size() == 0) {
+      NGRAPH_VLOG(2) << "Removing unused parameter "
+                     << parameters[i]->get_name();
+    } else {
+      used_parameters.push_back(parameters[i]);
+    }
+  }
+  if (parameters.size() != used_parameters.size()) {
+    func = make_shared<Function>(func->get_results(), used_parameters,
+                                 func->get_name());
+  }
+
   // A trivial function is one of
   //  1. constant function (Const -> Result)
   //  2. identity function (Parameter -> Result)
   //  3. zero function (* -> Zero)
-  NGRAPH_VLOG(2) << "Checking for trivial functions in IE backend";
+  NGRAPH_VLOG(2) << "Checking for trivial functions";
   bool trivial_fn = true;
   for (auto result : func->get_results()) {
     auto parent = result->input_value(0).get_node_shared_ptr();
@@ -60,7 +77,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
     return;
   }
 
-  NGRAPH_VLOG(2) << "Checking for function parameters in IE backend";
+  NGRAPH_VLOG(2) << "Checking for function parameters";
   if (func->get_parameters().size() == 0) {
     NGRAPH_VLOG(1) << "No parameters found in nGraph function!";
     // Try to find a node that can be converted into a "static input"
