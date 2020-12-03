@@ -7,6 +7,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # read models & params from manifest
 MANIFEST=${SCRIPT_DIR}/models_cpu.txt
 [ -z $1 ] || MANIFEST=$1
+[ -f "$MANIFEST" ] || ( echo "Manifest not found: $MANIFEST !"; exit 1 )
+MANIFEST="$(cd "$(dirname "$MANIFEST")"; pwd)/$(basename "$MANIFEST")" # absolute path
 
 WORKDIR=`pwd`
 [ -z $2 ] || WORKDIR=$2
