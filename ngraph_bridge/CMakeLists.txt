@@ -32,6 +32,7 @@ set(SRC
    backend.cc
    executable.cc
    ie_tensor.cc
+   kernels/ngraph_encapsulate_op.cc
    ngraph_api.cc
    ngraph_assign_clusters.cc
    ngraph_builder.cc
@@ -40,12 +41,10 @@ set(SRC
    ngraph_conversions.cc
    ngraph_deassign_clusters.cc
    ngraph_encapsulate_clusters.cc
-   ngraph_encapsulate_impl.cc
-   ngraph_encapsulate_op.cc
    ngraph_mark_for_clustering.cc
-   ngraph_register_stub_kernels.cc   
    ngraph_rewrite_pass.cc
    ngraph_utils.cc
+   ops/ngraph_encapsulate_op.cc
    pass/transpose_folding.cc
    pass/transpose_sinking.cc
    tf_graphcycles.cc

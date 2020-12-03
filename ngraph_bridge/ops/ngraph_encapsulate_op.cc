@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019-2020 Intel Corporation
+ * Copyright 2017-2020 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,35 +14,20 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_ENCAPSULATE_OP_H_
-#define NGRAPH_TF_ENCAPSULATE_OP_H_
-#pragma once
-
-#include <ostream>
-#include <vector>
-
-#include "tensorflow/core/framework/tensor_shape.h"
-#include "tensorflow/core/graph/graph.h"
-
-#include "logging/ngraph_log.h"
-#include "ngraph/ngraph.hpp"
-#include "ngraph_bridge/ngraph_encapsulate_impl.h"
+#include "tensorflow/core/common_runtime/optimization_registry.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-class NGraphEncapsulateOp : public OpKernel {
- public:
-  explicit NGraphEncapsulateOp(OpKernelConstruction* ctx);
-  ~NGraphEncapsulateOp() override;
-  void Compute(OpKernelContext* ctx) override;
-
- private:
-  static int s_instance_id;
-  NGraphEncapsulateImpl ng_encap_impl_;
-  std::mutex m_compute_lock_;
-};
+REGISTER_OP("_nGraphEncapsulate")
+    .Input("args: Targuments")
+    .Attr("Targuments: list(type) >= 0")
+    .Output("results: Tresults")
+    .Attr("Tresults: list(type) >= 0")
+    .Attr("ngraph_cluster: int")
+    .Attr("ngraph_graph_id: int")
+    .SetIsStateful()
+    .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_ENCAPSULATE_OP_H_

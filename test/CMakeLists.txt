@@ -69,7 +69,6 @@ set(SRC
     tf_exec.cpp
     padding.cpp
     conversions.cpp
-    encapsulate_op/encapsulate_op_test.cc
     graph_rewrites/assign_clusters.cc
     graph_rewrites/deadness_test.cc
     graph_rewrites/backend_manager_test.cc
