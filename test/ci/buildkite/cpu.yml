@@ -23,7 +23,7 @@
 
   - wait
   - command: |
-      ./test/ci/buildkite/run_cppexample_infer.sh /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
+      ./test/ci/buildkite/run_inception_v3.sh /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":bar_chart: C++ Inference Example"
     timeout_in_minutes: 5
     agents:

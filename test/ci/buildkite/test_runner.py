@@ -29,7 +29,7 @@ from tools.test_utils import *
 
 def main():
     '''
-    Tests nGraph-TensorFlow Python 3. This script needs to be run after 
+    Runs bridge tests. This script needs to be run after 
     running build_ngtf.py which builds the ngraph-tensorflow-bridge
     and installs it to a virtual environment that would be used by this script.
     '''
@@ -67,7 +67,6 @@ def main():
         action="store")
 
     arguments = parser.parse_args()
-
     root_pwd = os.getcwd()
 
     # Check for mandetary parameters
