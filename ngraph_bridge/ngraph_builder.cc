@@ -1291,6 +1291,24 @@ static Status TranslateFusedMatMulOp(const Node* op,
   return Status::OK();
 }
 
+// See .../tensorflow/include/tensorflow/cc/ops/array_ops.h
+// and .../openvino/ngraph/core/include/ngraph/op/gather.hpp
+static Status TranslateGatherOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_input_indices;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_input_indices));
+
+  auto ng_axis = ConstructNgNode<opset::Constant>(op->name(), ng::element::i64,
+                                                  ng::Shape{}, 0);
+
+  auto gather_op = ConstructNgNode<opset::Gather>(op->name(), ng_input,
+                                                  ng_input_indices, ng_axis);
+
+  SaveNgOp(ng_op_map, op->name(), gather_op);
+  return Status::OK();
+}
+
 static Status TranslateGatherV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2668,6 +2686,7 @@ const static std::map<
         {"FusedBatchNorm", TranslateFusedBatchNormOp},
         {"FusedBatchNormV2", TranslateFusedBatchNormOp},
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
+        {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedMatMul", TranslateFusedMatMulOp},

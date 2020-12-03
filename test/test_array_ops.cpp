@@ -179,6 +179,36 @@ TEST(ArrayOps, ExpandDims) {
 
 }  // end of test op ExpandDims
 
+TEST(ArrayOps, GatherVector) {
+  Tensor A(DT_FLOAT, TensorShape({5}));  // input
+  AssignInputValues<float>(A, {10.1, 20.2, 30.3, 40.4, 50.5});
+
+  Tensor B(DT_INT32, TensorShape({2}));  // indices
+  AssignInputValues<int>(B, {2, 1});
+
+  Scope root = Scope::NewRootScope();
+  auto R = ops::Gather(root, A, B);
+  std::vector<Output> sess_run_fetchoutputs = {R};
+
+  OpExecuter opexecuter(root, "Gather", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}
+
+TEST(ArrayOps, GatherTensor) {
+  Tensor A(DT_FLOAT, TensorShape({5, 5, 5, 5}));
+  AssignInputValuesRandom(A);
+
+  Tensor B(DT_INT32, TensorShape({10}));
+  AssignInputValues<int>(B, {0, 4, 2, 2, 3, 1, 3, 0, 3, 3});
+
+  Scope root = Scope::NewRootScope();
+  auto R = ops::Gather(root, A, B);
+  std::vector<Output> sess_run_fetchoutputs = {R};
+
+  OpExecuter opexecuter(root, "Gather", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}
+
 // Test op: Gather. vector indices
 TEST(ArrayOps, GatherV2Vector) {
   int dim = 5;

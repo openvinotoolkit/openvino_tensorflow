@@ -64,8 +64,6 @@ test_select.TestSelect.test_select_complexshape2
 test_select.TestSelect.test_select_complexshape3
 test_while_loop.TestWhileLoop.test_while_loop
 
-test_gathernd.TestGatherNDOperations.test_gather_nd
-
 # data doesn't exist
 test_mnist_training.TestMnistTraining.test_mnist_training[adam]
 test_mnist_training.TestMnistTraining.test_mnist_training[sgd]

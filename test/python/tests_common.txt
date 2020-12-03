@@ -32,10 +32,3 @@
 
 test_bfloat16.TestBfloat16.test_matmul_bfloat16 # most backends do not support dtype bf16 for MatMul/Dot Op
 test_conv2dbackpropinput.TestConv2DBackpropInput.test_nhwc # parameterized; Fails, needs debugging
-
-# Backend specific test
-test_gather.TestGatherOperations.test_gather_0
-test_gather.TestGatherOperations.test_gather_1
-test_gather.TestGatherOperations.test_gather_2
-test_gather.TestGatherOperations.test_gather_3
-test_gather.TestGatherOperations.test_gather_4

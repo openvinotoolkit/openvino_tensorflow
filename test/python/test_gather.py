@@ -35,6 +35,21 @@ class TestGatherOperations(NgraphTest):
     # Scalar indices
     def test_gather_0(self):
         val = tf.compat.v1.placeholder(tf.float32, shape=(5,))
+        out = tf.raw_ops.Gather(params=val, indices=1)
+
+        def run_test(sess):
+            return sess.run((out,),
+                            feed_dict={val: (10.0, 20.0, 30.0, 40.0, 50.0)})[0]
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+
+class TestGatherV2Operations(NgraphTest):
+
+    # Scalar indices
+    def test_gather_0(self):
+        val = tf.compat.v1.placeholder(tf.float32, shape=(5,))
         out = tf.gather(val, 1)
 
         def run_test(sess):
