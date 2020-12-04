@@ -3,7 +3,7 @@
   <img src="images/ngraph-logo.png">
 </p>
 
-# Intel(R) nGraph(TM) Compiler and Runtime for TensorFlow*
+# Intel® nGraph™ Compiler and Runtime for TensorFlow*
 
 This repository contains the code needed to enable Intel(R) nGraph(TM) Compiler and 
 runtime engine for TensorFlow. Use it to speed up your TensorFlow training and 
@@ -13,25 +13,25 @@ a variety of nGraph-enabled backends: CPU, and custom silicon like the
 [Intel(R) Nervana(TM) NNP](https://itpeernetwork.intel.com/inteldcisummit-artificial-intelligence/).
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/tensorflow/ngraph-bridge/blob/master/LICENSE)
-[![Build Status](https://badge.buildkite.com/180bbf814f1a884219849b4838cbda5fa1e03715e494185be3.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-ubuntu)
-[![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-centos)
-[![Build Status](https://badge.buildkite.com/0aeaff43e378d387a160d30083f203f7147f010e3fb15b01d1.svg?branch=master)](https://buildkite.com/ngraph/ngtf-cpu-ubuntu-binary-tf)
+[![Build Status](https://badge.buildkite.com/180bbf814f1a884219849b4838cbda5fa1e03715e494185be3.svg?branch=master)](https://buildkite.com/ngraph/cpu)
+[![Build Status](https://badge.buildkite.com/ae8d39ef4a18eb238b58ab0637fb97e85b86e85822a08b96d1.svg?branch=master)](https://buildkite.com/ngraph/models-cpu)
+[![Build Status](https://badge.buildkite.com/0aeaff43e378d387a160d30083f203f7147f010e3fb15b01d1.svg?branch=master)](https://buildkite.com/ngraph/cpu-intel-tf)
 
 
-#### *** This repository is currently undergoing heavy refactoring for optimization of inference use-cases. If you are looking for the latest stable baseline, please use the following tag: v0.22.0-rc4 (https://github.com/tensorflow/ngraph-bridge/tree/v0.22.0-rc4) ***
+#### *** This repository is currently undergoing heavy refactoring for optimization of inference use-cases. If you are looking for the latest stable baseline, please use the following tag: [v0.22.0-rc4](https://github.com/tensorflow/ngraph-bridge/tree/v0.22.0-rc4) ***
 
 ## Installation
 
-### Software requirements
+### Requirements
 
 |Using pre-built packages| Building from source|
 | -----------------------|-------------------|
 |Python 3| Python 3|
-|TensorFlow v2.2.0|GCC 7.3 (Ubuntu), Clang/LLVM (macOS)|
+|TensorFlow v2.2.0|GCC 7.5 (Ubuntu), Clang/LLVM (macOS)|
 |        |`cmake` 3.4 or higher|
 |        |Bazelisk|
 |        |`virtualenv` 16.0.0+|
-|        |`patchelf` (when building with OpenVINO backend)|
+|        |`patchelf`|
 
 ### Use pre-built packages
 
@@ -88,7 +88,7 @@ bazel:
         export PATH=$PATH:~/bin
         source ~/.bashrc   
 
-Install `cmake`, `virtualenv`, and `gcc 7.3`.
+Install `cmake`, `virtualenv`, and `gcc`.
 
 ##### Build an nGraph bridge
 
@@ -96,17 +96,12 @@ Once TensorFlow's dependencies are installed, clone the `ngraph-bridge` repo:
 
         git clone https://github.com/tensorflow/ngraph-bridge.git
         cd ngraph-bridge
-        git checkout v0.22.0-rc3
 
-Run the following Python script to build TensorFlow, nGraph, and the bridge. Use Python 3.5:
+Run the following Python script to build TensorFlow, nGraph, and the bridge. Use Python 3:
 
         python3 build_ngtf.py --use_prebuilt_tensorflow
 
 When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (i.e., the `ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`) are created in the `build_cmake/artifacts` directory. 
-
-Add the following flags to build OpenVINO backend (optional):
-
-        --build_openvino_backend
 
 For more build options:
         
@@ -200,7 +195,7 @@ This will print the following results:
 
 The above instructions are derived from the [TensorFlow C++ and Python Image Recognition Demo]. 
 
-All of the above commands are available in the [nGraph TensorFlow examples] directory. To classify your own images, modify the `infer_image.py` file in this directory.
+All of the above commands are available in the [examples] directory. To classify your own images, modify the `infer_image.py` file in this directory.
 
 ### Add runtime options for a CPU backend
 
@@ -272,23 +267,18 @@ improve it:
   accepted, your pull request will be merged to the repository.
 
 
-## About Intel(R) nGraph(TM)
+## About Intel® nGraph™
 
-See the full documentation here:  <https://ngraph.nervanasys.com/docs/latest>
- 
-[linux-based install instructions on the TensorFlow website]:https://www.tensorflow.org/install/install_linux
-[tensorflow]:https://github.com/tensorflow/tensorflow.git
-[open-source C++ library, compiler and runtime]: https://ngraph.nervanasys.com/docs/latest/
+See the [full documentation] here.
+
+[TensorFlow]:https://github.com/tensorflow/tensorflow.git
 [Github issues]: https://github.com/tensorflow/ngraph-bridge/issues
 [pull request]: https://github.com/tensorflow/ngraph-bridge/pulls
-[DSO]:http://csweb.cs.wfu.edu/~torgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
 [bazel version]: https://github.com/bazelbuild/bazel/releases/tag/0.25.2
 [TensorFlow configuration]: https://www.tensorflow.org/install/source
 [diagnostics]:diagnostics/README.md
 [examples]:examples/README.md
-[ops]:https://ngraph.nervanasys.com/docs/latest/ops/index.html
-[nGraph]:https://github.com/NervanaSystems/ngraph 
-[ngraph-bridge]:https://github.com/tensorflow/ngraph-bridge.git
+[nGraph]:https://docs.openvinotoolkit.org/latest/openvino_docs_nGraph_DG_Introduction.html
+[full documentation]:https://docs.openvinotoolkit.org/latest/openvino_docs_nGraph_DG_Introduction.html
 [frozen model]: https://www.tensorflow.org/guide/extend/model_files#freezing
 [TensorFlow C++ and Python Image Recognition Demo]: https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/label_image
-[nGraph TensorFlow examples]: https://github.com/tensorflow/ngraph-bridge/tree/master/examples
