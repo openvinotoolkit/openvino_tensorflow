@@ -398,65 +398,31 @@ std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
 
 void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
                 std::string filename_prefix, std::string title) {
+  if (!DumpAllGraphs()) {
+    return;
+  }
   // If we have a "main" graph, dump that.
   if (options.graph != nullptr) {
-    auto dot_filename = DotFilename(filename_prefix, idx);
     auto pbtxt_filename = PbtxtFilename(filename_prefix, idx);
-    NGRAPH_VLOG(0) << "Dumping main graph to " << dot_filename;
     NGRAPH_VLOG(0) << "Dumping main graph to " << pbtxt_filename;
-
-    GraphToDotFile(options.graph->get(), dot_filename, title);
     GraphToPbTextFile(options.graph->get(), pbtxt_filename);
   }
 
   // If we have partition graphs (we shouldn't), dump those.
   if (options.partition_graphs != nullptr) {
     int sub_idx = 0;
-
     for (auto& kv : *options.partition_graphs) {
-      auto dot_filename = DotFilename(filename_prefix, idx, sub_idx);
       auto pbtxt_filename = PbtxtFilename(filename_prefix, idx, sub_idx);
       NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                     << dot_filename;
-      NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
                      << pbtxt_filename;
-
       Graph* pg = kv.second.get();
-
-      GraphToDotFile(pg, dot_filename, title);
       GraphToPbTextFile(pg, pbtxt_filename);
-
       sub_idx++;
     }
   }
 }
 
-bool DumpAllGraphs() { return std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr; }
-
-bool DumpUnmarkedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_UNMARKED_GRAPHS") != nullptr;
-}
-
-bool DumpMarkedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_MARKED_GRAPHS") != nullptr;
-}
-
-bool DumpClusteredGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_CLUSTERED_GRAPHS") != nullptr;
-}
-
-bool DumpDeclusteredGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS") != nullptr;
-}
-
-bool DumpEncapsulatedGraphs() {
-  return DumpAllGraphs() ||
-         std::getenv("NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS") != nullptr;
-}
+bool DumpAllGraphs() { return GetEnv("TF_OV_DUMP_GRAPHS") == "1"; }
 
 bool IsProcessedByNgraphPass(Graph* g) {
   // TODO: place a dummy node as a marker

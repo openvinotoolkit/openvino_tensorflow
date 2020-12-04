@@ -342,13 +342,6 @@ void ClearAttribute(Graph*, const std::set<string>&);
 void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
                 std::string filename_prefix, std::string title);
 bool DumpAllGraphs();
-bool DumpPrecaptureGraphs();
-bool DumpCapturedGraphs();
-bool DumpUnmarkedGraphs();
-bool DumpMarkedGraphs();
-bool DumpClusteredGraphs();
-bool DumpDeclusteredGraphs();
-bool DumpEncapsulatedGraphs();
 
 string GetEnv(const char* env);
 

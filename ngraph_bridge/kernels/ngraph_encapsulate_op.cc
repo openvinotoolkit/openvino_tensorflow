@@ -419,7 +419,7 @@ Status NGraphEncapsulateOp::GetExecutable(
                                                &m_graph, ng_function));
     ng_function->set_friendly_name(m_name);
 
-    if (std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr) {
+    if (DumpAllGraphs()) {
       ngraph::plot_graph(ng_function, "tf_function_" + m_name + ".dot");
     }
 

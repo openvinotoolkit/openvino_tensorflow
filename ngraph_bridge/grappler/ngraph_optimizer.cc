@@ -50,7 +50,6 @@ Status NgraphOptimizer::Init(
 Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                  const tensorflow::grappler::GrapplerItem& item,
                                  GraphDef* output) {
-  NGRAPH_VLOG(3) << "NGTF_OPTIMIZER: Here at NgraphOptimizer ";
   NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: grappler item id " << item.id;
 
   // Convert the GraphDef to Graph
@@ -143,49 +142,29 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc] - currently
   //      part of the ngraph_rewrite_pass.cc to be executed after POST_REWRITE
   //
-  // Between phases, graph dumps (in both .dot and .pbtxt format) may be
-  // requested by setting the following environment variables:
-  //
-  //   NGRAPH_TF_DUMP_UNMARKED_GRAPHS=1      dumps graphs before phase 1
-  //   NGRAPH_TF_DUMP_MARKED_GRAPHS=1        dumps graphs after phase 1
-  //   NGRAPH_TF_DUMP_CLUSTERED_GRAPHS=1     dumps graphs after phase 2
-  //   NGRAPH_TF_DUMP_DECLUSTERED_GRAPHS=1   dumps graphs after phase 3
-  //   NGRAPH_TF_DUMP_ENCAPSULATED_GRAPHS=1  dumps graphs after phase 4
-  //   NGRAPH_TF_DUMP_GRAPHS=1               all of the above
-  //
 
   // If requested, dump unmarked graphs.
-  if (DumpUnmarkedGraphs()) {
-    DumpGraphs(graph, idx, "unmarked", "Unmarked Graph");
-  }
+  DumpGraphs(graph, idx, "unmarked", "Unmarked Graph");
 
   // 1. Mark for clustering then, if requested, dump the graphs.
   TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes));
-  if (DumpMarkedGraphs()) {
-    DumpGraphs(graph, idx, "marked", "Graph Marked for Clustering");
-  }
+  DumpGraphs(graph, idx, "marked", "Graph Marked for Clustering");
 
   // 2. Assign clusters then, if requested, dump the graphs.
   TF_RETURN_IF_ERROR(AssignClusters(&graph));
-  if (DumpClusteredGraphs()) {
-    DumpGraphs(graph, idx, "clustered", "Graph with Clusters Assigned");
-  }
+  DumpGraphs(graph, idx, "clustered", "Graph with Clusters Assigned");
 
   // 3. Deassign trivial clusters then, if requested, dump the graphs.
   TF_RETURN_IF_ERROR(DeassignClusters(&graph));
-  if (DumpDeclusteredGraphs()) {
-    DumpGraphs(graph, idx, "declustered",
-               "Graph with Trivial Clusters De-Assigned");
-  }
+  DumpGraphs(graph, idx, "declustered",
+             "Graph with Trivial Clusters De-Assigned");
 
   // 4. Encapsulate clusters then, if requested, dump the graphs.
   auto status = EncapsulateClusters(&graph, idx, m_config_map);
   if (status != Status::OK()) {
     return status;
   }
-  if (DumpEncapsulatedGraphs()) {
-    DumpGraphs(graph, idx, "encapsulated", "Graph with Clusters Encapsulated");
-  }
+  DumpGraphs(graph, idx, "encapsulated", "Graph with Clusters Encapsulated");
 
   // Convert the graph back to Graphdef
   graph.ToGraphDef(output);
