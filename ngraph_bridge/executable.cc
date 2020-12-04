@@ -34,12 +34,12 @@ namespace ngraph_bridge {
 Executable::Executable(shared_ptr<Function> func, string device)
     : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
   NGRAPH_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ngraph::get_opset4();
+  const auto& opset = ngraph::get_opset5();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
       NGRAPH_VLOG(0) << "UNSUPPORTED OP DETECTED: "
                      << node->get_type_info().name;
-      THROW_IE_EXCEPTION << "Detected op not belonging to opset3!";
+      THROW_IE_EXCEPTION << "Detected op not belonging to opset5!";
     }
   }
 
