@@ -20,7 +20,7 @@ vgg_19  bike  'tricycle, trike, velocipede\s*( 10.'
 densenet_121  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.6'
 densenet_169  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
 densenet_201  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.7'
-# fc_densenet_103  bike  '.*'
+fc_densenet_103  bike  '.*'
 
 mobilenet_v1  bike  '.*'
 mobilenet_v2  bike  '.*'

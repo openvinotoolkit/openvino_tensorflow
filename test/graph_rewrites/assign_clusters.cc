@@ -24,12 +24,9 @@
 #include "test/test_utilities.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Test that a "Const" fed to a static input is still coalesced with the
@@ -110,9 +107,9 @@ TEST(AssignClusters, Cone) {
   Tensor t(DT_FLOAT, TensorShape{2, 3});
 
   Node* node1;
-  ASSERT_OK(NodeBuilder("node1", "Const")
-                .Attr("dtype", DT_FLOAT)
-                .Attr("value", t)
+  ASSERT_OK(NodeBuilder("node1", "_Arg")
+                .Attr("T", DT_FLOAT)
+                .Attr("index", 0)
                 .Attr("_ngraph_marked_for_clustering", true)
                 .Finalize(&g, &node1));
 
@@ -169,7 +166,5 @@ TEST(AssignClusters, Cone) {
 }
 
 }  // namespace testing
-
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
