@@ -1873,60 +1873,25 @@ static Status TranslatePackOp(const Node* op, const std::vector<const Tensor*>&,
                               Builder::OpMap& ng_op_map) {
   TF_RETURN_IF_ERROR(ValidateInputCountMin(op, 1));
 
+  int32 tf_axis;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &tf_axis));
+  auto ng_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{1},
+      std::vector<int64>({tf_axis}));
+
   ng::OutputVector ng_concat_inputs;
   for (tensorflow::int32 i = 0; i < op->num_inputs(); ++i) {
     ng::Output<ng::Node> ng_input;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_input));
-    ng_concat_inputs.push_back(ng_input);
+    auto unsqueezed_input =
+        ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_axis);
+    ng_concat_inputs.push_back(unsqueezed_input);
   }
-
-  int32 tf_axis;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &tf_axis));
-  size_t input_rank = ng_concat_inputs[0].get_shape().size();
-
-  auto concat_axis = tf_axis;
-  if (concat_axis == -1) {
-    concat_axis = input_rank;
-  }
-
-  ng::Shape input_shape = ng_concat_inputs[0].get_shape();
-  ng::Shape output_shape(input_rank + 1);
 
   // if inputs shape is (2, 3, 4), and axis is 1, then we want
   // to create output_shape (2, num_inputs, 3, 4)
-  for (size_t i = 0; i < input_rank; ++i) {
-    output_shape[((int)i < concat_axis) ? i : i + 1] = input_shape[i];
-  }
-  output_shape[concat_axis] = op->num_inputs();
-
-  ng::AxisVector ng_axis_order(input_rank);
-  std::iota(ng_axis_order.begin(), ng_axis_order.end(), 0);
-
-  if ((size_t)concat_axis == input_rank) {
-    // need to add extra dimension before we concatenate
-    // along it
-    ng::Shape extended_shape = input_shape;
-    extended_shape.push_back(1);
-    auto ng_shape = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::u64, ng::Shape{extended_shape.size()},
-        extended_shape);
-
-    for (size_t i = 0; i < ng_concat_inputs.size(); ++i) {
-      ng_concat_inputs[i] = ConstructNgNode<opset::Reshape>(
-          op->name(), ng_concat_inputs[i], ng_shape, false);
-    }
-    ng_axis_order.push_back(input_rank);
-  }
-
-  auto concat = ConstructNgNode<opset::Concat>(op->name(), ng_concat_inputs,
-                                               (size_t)concat_axis);
-
-  auto ng_output_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::u64, ng::Shape{output_shape.size()},
-      output_shape);
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Reshape>(op->name(), concat, ng_output_shape,
-                                           false));
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Concat>(
+                                      op->name(), ng_concat_inputs, tf_axis));
   return Status::OK();
 }
 
@@ -2531,58 +2496,33 @@ static Status TranslateUnpackOp(const Node* op,
 
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
-
-  ng::Shape input_shape = ng_input.get_shape();
-  size_t input_rank = input_shape.size();
-
   int32 tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &tf_axis));
-  auto unpack_axis = tf_axis;
-  if (unpack_axis == -1) {
-    unpack_axis = input_rank - 1;
-  }
+  int32 num_outputs;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &num_outputs));
 
-  int32 tf_num;
-  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &tf_num));
-  int num_outputs = tf_num;
-
-  std::vector<int64> output_shape;
-  for (size_t i = 0; i < input_rank; ++i) {
-    if ((int)i != unpack_axis) {
-      output_shape.push_back(input_shape[i]);
-    }
-  }
-
-  ng::AxisVector ng_axis_order;
-  for (size_t i = 0; i < input_rank; i++) {
-    ng_axis_order.push_back(i);
-  }
-
-  std::vector<size_t> lower_bound_vec(input_rank, 0);
-  std::vector<size_t> upper_bound_vec(input_rank);
-
-  for (size_t i = 0; i < input_rank; i++) {
-    upper_bound_vec[i] = input_shape[i];
-  }
-
+  auto input_shape = ng_input.get_shape();
+  auto rank = input_shape.size();
   for (int i = 0; i < num_outputs; ++i) {
-    lower_bound_vec[unpack_axis] = i;
-    upper_bound_vec[unpack_axis] = i + 1;
-    auto lower_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{lower_bound_vec.size()},
-        lower_bound_vec);
-    auto upper_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{upper_bound_vec.size()},
-        upper_bound_vec);
+    std::vector<int64_t> begin(rank, 0);
+    std::vector<int64_t> end(rank, 0);
+    begin[tf_axis] = i;
+    end[tf_axis] = i + 1;
+    auto ng_begin = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{begin.size()}, begin);
+    auto ng_end = ConstructNgNode<opset::Constant>(op->name(), ng::element::i64,
+                                                   ng::Shape{end.size()}, end);
+    std::vector<int64_t> begin_mask(rank, 1);
+    begin_mask[tf_axis] = 0;
+    std::vector<int64_t> end_mask(rank, 1);
+    end_mask[tf_axis] = 0;
+    std::vector<int64_t> new_axis_mask(rank, 0);
+    std::vector<int64_t> shrink_axis_mask(rank, 0);
+    shrink_axis_mask[tf_axis] = 1;
     auto slice = ConstructNgNode<opset::StridedSlice>(
-        op->name(), ng_input, lower_bound, upper_bound, std::vector<int64_t>{},
-        std::vector<int64_t>{});
-    auto ng_shape = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::u64, ng::Shape{output_shape.size()},
-        output_shape);
-    auto reshaped =
-        ConstructNgNode<opset::Reshape>(op->name(), slice, ng_shape, false);
-    SaveNgOp(ng_op_map, op->name(), reshaped);
+        op->name(), ng_input, ng_begin, ng_end, begin_mask, end_mask,
+        new_axis_mask, shrink_axis_mask);
+    SaveNgOp(ng_op_map, op->name(), slice);
   }
   return Status::OK();
 }
