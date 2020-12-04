@@ -345,6 +345,8 @@ bool DumpAllGraphs();
 
 string GetEnv(const char* env);
 
+void SetEnv(const char* env, const char* val);
+
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 

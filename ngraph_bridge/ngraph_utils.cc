@@ -420,6 +420,10 @@ void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
       sub_idx++;
     }
   }
+  // enable shape info for nGraph graphs
+  SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
+  SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");
+  SetEnv("NGRAPH_VISUALIZE_TREE_IO", "1");
 }
 
 bool DumpAllGraphs() { return GetEnv("TF_OV_DUMP_GRAPHS") == "1"; }
@@ -450,6 +454,8 @@ string GetEnv(const char* env) {
     return string(val);
   }
 }
+
+void SetEnv(const char* env, const char* val) { setenv(env, val, 1); }
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
