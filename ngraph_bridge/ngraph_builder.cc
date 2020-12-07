@@ -1091,31 +1091,8 @@ static Status TranslateExpandDimsOp(
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input, ng_dim;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_dim));
-
-  std::vector<int64> dim_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &dim_vec));
-
-  if (dim_vec.size() != 1) {
-    return errors::InvalidArgument(
-        "The size of argument dim is not 1 for ExpandDims");
-  }
-
-  auto& shape = ng_input.get_shape();
-  if (dim_vec[0] < 0) {
-    // allow range [-rank(input) - 1, rank(input)]
-    // where -1 append new axis at the end
-    dim_vec[0] = shape.size() + dim_vec[0] + 1;
-  }
-  auto out_shape = shape;
-  out_shape.insert(out_shape.begin() + size_t(dim_vec[0]), 1);
-
-  auto ng_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::u64, ng::Shape{out_shape.size()}, out_shape);
-
-  ng::Output<ng::Node> ng_expand_dim =
-      ConstructNgNode<opset::Reshape>(op->name(), ng_input, ng_shape, false);
-
-  SaveNgOp(ng_op_map, op->name(), ng_expand_dim);
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dim));
   return Status::OK();
 }
 

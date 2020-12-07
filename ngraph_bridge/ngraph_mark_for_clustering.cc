@@ -616,7 +616,7 @@ GetTFToNgOpMap() {
        {std::make_shared<opset::GroupConvolution>(), constant}},
       {"Equal", {std::make_shared<opset::Equal>()}},
       {"Exp", {std::make_shared<opset::Exp>()}},
-      {"ExpandDims", {constant, std::make_shared<opset::Reshape>()}},
+      {"ExpandDims", {std::make_shared<opset::Unsqueeze>()}},
       {"Fill", {constant, std::make_shared<opset::Broadcast>()}},
       {"Floor", {std::make_shared<opset::Floor>()}},
       {"FloorDiv",
