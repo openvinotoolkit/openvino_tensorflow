@@ -1099,17 +1099,10 @@ static Status TranslateExpandDimsOp(
 static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_value, ng_unused;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_unused, ng_value));
-
-  std::vector<int64> dims_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 0, static_input_map, &dims_vec));
-
-  auto ng_output_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::i64, ng::Shape{dims_vec.size()}, dims_vec);
-
-  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Broadcast>(
-                                      op->name(), ng_value, ng_output_shape));
+  ng::Output<ng::Node> ng_value, ng_dims;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Broadcast>(op->name(), ng_value, ng_dims));
   return Status::OK();
 }
 
@@ -2387,36 +2380,8 @@ static Status TranslateTransposeOp(
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input, ng_permutation;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_permutation));
-
-  std::vector<int64> permutation;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 1, static_input_map, &permutation));
-
-  // Check to make sure that the permutation requested for transpose
-  // is valid for example:
-  // - it should not have duplicates,
-  // - it should have all the dimensions.
-
-  int ng_input_rank = ng_input.get_shape().size();
-  vector<bool> count(ng_input_rank, false);
-  for (auto p : permutation) {
-    if (0 <= p && p < ng_input_rank) {
-      count[p] = true;
-    }
-  }
-  for (int i = 0; i < ng_input_rank; i++) {
-    if (!count[i]) {
-      return errors::InvalidArgument(i, " is missing from {",
-                                     ng::join(permutation), "}.");
-    }
-  }
-
-  NGRAPH_VLOG(3) << ng::join(permutation);
-
-  auto input_order = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::u64, ng::Shape{permutation.size()}, permutation);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Transpose>(
-                                      op->name(), ng_input, input_order));
+                                      op->name(), ng_input, ng_permutation));
   return Status::OK();
 }
 

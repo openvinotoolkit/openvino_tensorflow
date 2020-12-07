@@ -322,7 +322,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         ng_exec->call(ng_inputs, ng_outputs);
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
-                               to_string(m_cluster_id) + string(exp.what());
+                               to_string(m_cluster_id) + ": " +
+                               string(exp.what());
         OP_REQUIRES(ctx, false, errors::Internal(status_string));
       } catch (...) {
         string status_string = "Caught exception while executing cluster " +
