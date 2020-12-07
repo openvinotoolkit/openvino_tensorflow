@@ -24,6 +24,9 @@ fc_densenet_103  bike  '.*'
 
 mobilenet_v1  bike  '.*'
 mobilenet_v2  bike  '.*'
+nasnet_mobile bike  '.*'
+nasnet_large  bike  '.*'
+
 # ssd_mobilenet_v1 
 # ssd_mobilenet_v1_fpn 
 # ssd_mobilenet_v2 
