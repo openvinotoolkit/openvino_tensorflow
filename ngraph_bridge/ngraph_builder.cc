@@ -1054,8 +1054,6 @@ static Status TranslateDepthwiseConv2dNativeOp(
   auto& ng_filter_shape = ng_filter.get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
-  Transpose<3, 2, 0, 1>(ng_filter);
-  Builder::SetTracingInfo(op->name(), ng_filter);
 
   NGRAPH_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
@@ -1065,55 +1063,26 @@ static Status TranslateDepthwiseConv2dNativeOp(
                        ng_strides, ng_dilations, ng_padding_below,
                        ng_padding_above);
 
-  // ng input shape is NCHW
-  auto& input_shape = ng_input.get_shape();
-  // ng filter shape is OIHW
-  auto& filter_shape = ng_filter.get_shape();
-  ng::OutputVector ng_args;
+  // H W I M -> H W I 1 M
+  auto filter_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::u64, ng::Shape{5},
+      ngraph::Shape{ng_filter_shape[0], ng_filter_shape[1], ng_filter_shape[2],
+                    1, ng_filter_shape[3]});
+  auto reshaped_filter = ConstructNgNode<opset::Reshape>(op->name(), ng_filter,
+                                                         filter_shape, false);
 
-  for (size_t i = 0; i < input_shape[1]; i++) {
-    const std::vector<size_t> lower_bound_vec{0, i, 0, 0};
-    const std::vector<size_t> upper_bound_vec{input_shape[0], i + 1,
-                                              input_shape[2], input_shape[3]};
-    auto lower_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{lower_bound_vec.size()},
-        lower_bound_vec);
-    auto upper_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{upper_bound_vec.size()},
-        upper_bound_vec);
-    auto ng_sliced_input = ConstructNgNode<opset::StridedSlice>(
-        op->name(), ng_input, lower_bound, upper_bound, std::vector<int64_t>{},
-        std::vector<int64_t>{});
+  // H W I 1 M -> I M 1 H W
+  auto order = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{5}, vector<int64>{2, 4, 3, 0, 1});
+  auto transposed_filter =
+      ConstructNgNode<opset::Transpose>(op->name(), reshaped_filter, order);
 
-    const std::vector<size_t> f_lower_bound_vec{0, i, 0, 0};
-    const std::vector<size_t> f_upper_bound_vec{
-        filter_shape[0], i + 1, filter_shape[2], filter_shape[3]};
-    auto f_lower_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{f_lower_bound_vec.size()},
-        f_lower_bound_vec);
-    auto f_upper_bound = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{f_upper_bound_vec.size()},
-        f_upper_bound_vec);
-    auto ng_sliced_filter = ConstructNgNode<opset::StridedSlice>(
-        op->name(), ng_filter, f_lower_bound, f_upper_bound,
-        std::vector<int64_t>{}, std::vector<int64_t>{});
+  auto ng_conv = ConstructNgNode<opset::GroupConvolution>(
+      op->name(), ng_input, transposed_filter, ng_strides, ng_padding_below,
+      ng_padding_above, ng_dilations);
 
-    NGRAPH_VLOG(3) << "depthwise conv 2d.";
-    NGRAPH_VLOG(3) << "sliced shape " << ng::join(ng_sliced_input.get_shape());
-    NGRAPH_VLOG(3) << "filter shape " << ng::join(ng_sliced_filter.get_shape());
-    auto ng_conv = ConstructNgNode<opset::Convolution>(
-        op->name(), ng_sliced_input, ng_sliced_filter, ng_strides,
-        ng_padding_below, ng_padding_above, ng_dilations);
-
-    ng_args.push_back(ng_conv);
-  }
-
-  size_t ng_concatenation_axis = 1;  // channel axis
-  auto ng_concat = ConstructNgNode<opset::Concat>(op->name(), ng_args,
-                                                  ng_concatenation_axis);
-
-  NCHWtoNHWC(op->name(), is_nhwc, ng_concat);
-  SaveNgOp(ng_op_map, op->name(), ng_concat);
+  NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
+  SaveNgOp(ng_op_map, op->name(), ng_conv);
   return Status::OK();
 }
 
