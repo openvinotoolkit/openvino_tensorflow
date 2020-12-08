@@ -180,28 +180,20 @@ int main(int argc, char** argv) {
       graph, image_files, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
 
-  string backend_name = "CPU";
-  if (std::getenv("NGRAPH_TF_BACKEND") != nullptr) {
-    backend_name = std::getenv("NGRAPH_TF_BACKEND");
-  }
-
   //
   // Create the sessions
   //
   map<Session*, string> session_db;
   unique_ptr<Session> session_one;
-  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, backend_name,
-                                                        "0", session_one));
+  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, session_one));
   session_db[session_one.get()] = "One";
 
   unique_ptr<Session> session_two;
-  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, backend_name,
-                                                        "0", session_two));
+  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, session_two));
   session_db[session_two.get()] = "Two";
 
   unique_ptr<Session> session_three;
-  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, backend_name,
-                                                        "0", session_three));
+  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, session_three));
   session_db[session_three.get()] = "Three";
   std::vector<Tensor> outputs;
   {

@@ -116,7 +116,8 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
     # First run the C++ gtests
     lib_dir = TestEnv.get_platform_lib_dir()
 
-    os.environ['LD_LIBRARY_PATH'] = os.path.join(artifacts_dir, lib_dir)
+    os.environ['LD_LIBRARY_PATH'] = os.getenv(
+        "LD_LIBRARY_PATH", "") + ':' + os.path.join(artifacts_dir, lib_dir)
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters

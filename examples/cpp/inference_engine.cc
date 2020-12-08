@@ -74,17 +74,11 @@ Status InferenceEngine::LoadImage(const string& network,
 
   // Preload the image is requested
   if (m_preload_images) {
-    // Set the CPU as the backend before these ops
-    string current_backend;
-    TF_CHECK_OK(
-        tf::ngraph_bridge::BackendManager::GetBackendName(current_backend));
-    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackend("CPU"));
     std::vector<tf::Tensor> resized_tensors;
     TF_CHECK_OK(ReadTensorFromImageFile(
         m_image_files, m_input_height, m_input_width, m_input_mean, m_input_std,
         m_use_NCHW, m_input_channels, &resized_tensors));
     m_image_to_repeat = resized_tensors[0];
-    TF_CHECK_OK(tf::ngraph_bridge::BackendManager::SetBackend(current_backend));
   }
   // Now compile the graph if needed
   // This would be useful to detect errors early. For a graph
@@ -103,8 +97,6 @@ InferenceEngine::~InferenceEngine() {
 }
 
 Status InferenceEngine::CreateSession(const string& graph_filename,
-                                      const string& backend,
-                                      const string& dev_id,
                                       unique_ptr<Session>& session) {
   SessionOptions options;
   options.config.mutable_graph_options()

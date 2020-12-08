@@ -1,0 +1,42 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
+
+# Read comments in tests_common.txt for allowed regex/patterns
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_linux_cpu.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+
+
+###################################################
+[SKIP]
+
+test_cast.TestCastOperations.test_cast_1d  # assert false
+test_cast.TestCastOperations.test_cast_2d  # assert False
+test_gather.TestGatherV2Operations.test_gather_3  # assert False
+test_l2loss.TestL2Loss.test_l2loss_empty  # Const layer L2Loss/Constant_40581 has incorrect dimensions in the output data
+test_log1p.TestLog1pOperations.test_log1p  # assert (0.40546513 == 0.4054651 or (False))
+test_logsoftmax.TestLogSoftmaxOperations.test_logsoftmax  # AssertionError -inf
+
+# implementation_map for N5cldnn6borderE could not find any implementation to match key
+test_pad.TestPadOperations.test_pad1
+test_pad.TestPadOperations.test_pad3
+test_pad.TestPadOperations.test_pad4
+
+# Error has occured for: select:SelectV2/Select_50854 / Best_kernel.empty()(true) should be false / Cannot find a proper kernel with this arguments
+test_select.TestSelect.test_select_scalar
+test_select.TestSelect.test_select_sameshape
+test_select.TestSelect.test_select_diffrank
+
+test_slice.TestSliceOperations.test_strided_slice_4  # AssertionError
+test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]  # AssertionError
+

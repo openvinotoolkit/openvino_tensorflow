@@ -59,15 +59,6 @@ void PrintAvailableBackends() {
   }
 }
 
-// Sets the specified backend. This backend must be set BEFORE running
-// the computation
-tf::Status SetNGraphBackend(const string& backend_name) {
-  // Select a backend
-  tf::Status status =
-      tf::ngraph_bridge::BackendManager::SetBackend(backend_name);
-  return status;
-}
-
 void PrintVersion() {
   // Tensorflow version info
   std::cout << "Tensorflow version: " << tensorflow::ngraph_bridge::tf_version()
@@ -155,12 +146,6 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  const char* backend = "CPU";
-  if (SetNGraphBackend(backend) != tf::Status::OK()) {
-    std::cout << "Error: Cannot set the backend: " << backend << std::endl;
-    return -1;
-  }
-
   std::cout << "Component versions\n";
   PrintVersion();
 
@@ -175,14 +160,8 @@ int main(int argc, char** argv) {
       graph, image_files, input_width, input_height, input_mean, input_std,
       input_layer, output_layer, use_NCHW, preload_images, input_channels));
 
-  string backend_name = "CPU";
-  if (std::getenv("NGRAPH_TF_BACKEND") != nullptr) {
-    backend_name = std::getenv("NGRAPH_TF_BACKEND");
-  }
-
   unique_ptr<Session> the_session;
-  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, backend_name,
-                                                        "0", the_session));
+  TF_CHECK_OK(benchmark::InferenceEngine::CreateSession(graph, the_session));
 
   Tensor next_image;
   std::vector<Tensor> outputs;

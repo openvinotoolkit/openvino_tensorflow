@@ -13,6 +13,8 @@
 
   - wait
   - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      LD_LIBRARY_PATH=${TF_LOCATION}/artifacts/tensorflow:/localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/lib \
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
     label: ":chrome: nGraph-bridge C++ Tests ${NGRAPH_TF_BACKEND}"
@@ -23,6 +25,8 @@
 
   - wait
   - command: |
+      source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
+      LD_LIBRARY_PATH=${TF_LOCATION}/artifacts/tensorflow:/localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/lib \
       ./test/ci/buildkite/run_inception_v3.sh /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID
     label: ":bar_chart: C++ Inference Example"
     timeout_in_minutes: 5
@@ -37,7 +41,7 @@
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
       
     label: ":gear: Install"
-    timeout_in_minutes: 30
+    timeout_in_minutes: 5
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
       name: ${BUILDKITE_AGENT_META_DATA_NAME}

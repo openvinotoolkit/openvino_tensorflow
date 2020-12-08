@@ -55,8 +55,7 @@ class InferenceEngine {
     return Status::OK();
   }
 
-  static Status CreateSession(const string& network, const string& backend,
-                              const string& dev_id,
+  static Status CreateSession(const string& network,
                               unique_ptr<Session>& session);
 
  private:

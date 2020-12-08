@@ -1,0 +1,71 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by .../test/python/tensorflow/tf_unittest_runner.py
+
+#  Few examples of valid regex/pattern (dots are treated literally):
+#    math_ops_test --> module
+#    *test* --> module (* means zero/more of anything)
+#    *test*.*test* --> module.class
+#    *_op_test*.*[Tt]est* --> e.g. pad_op_test.PadOpTest.testInputDims ([xy] means either x or y)
+#    math_ops_test.DivNoNanTest.testBasic --> module.class.testfunc
+#    math_ops_test.DivNoNanTest.* --> module.class.testfunc
+#    math_ops_test.D* --> module.class
+#    math_ops_test.* --> module.class
+#    math_*_test --> module
+#    math_*_*_test --> module
+#    math*_test --> module
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_linux_cpu.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+###################################################
+[SKIP]
+
+concat_op_test.ConcatOpTest.testConcatLargeNumberOfTensors # takes long in GPU
+scan_ops_test.CumsumTest.testLarge # takes very long in GPU
+
+# AssertionError
+array_ops_test.StridedSliceTest.testShrink
+conv_ops_test.Conv2DTest.testInputGradientKernelSizeMatchesInputSize
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideOne
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideThree
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideTwo
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo
+math_ops_test.ModTest.testFloat
+softmax_op_test.SoftmaxTest.testFloat
+softmax_op_test.SoftmaxTest.testHalf
+split_op_test.SplitOpTest.testSplitRows
+
+# Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
+conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
+
+# implementation_map for N5cldnn11convolutionE could not find any implementation to match key
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
+
+
+# Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
+# Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
+nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
+
