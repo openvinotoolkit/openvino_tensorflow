@@ -81,11 +81,6 @@ TEST(MarkForClustering, SimpleTest) {
                   nodes_expected_to_be_marked.end(),
               NodeIsMarkedForClustering(node));
   }
-
-  ResetMarkForClustering(&g);
-  for (auto node : g.op_nodes()) {
-    ASSERT_FALSE(NodeIsMarkedForClustering(node));
-  }
 }
 }
 }

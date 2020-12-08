@@ -42,9 +42,7 @@ namespace ng = ngraph;
 namespace tf = tensorflow;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Activate and Deactivate NGraph
@@ -80,6 +78,74 @@ void PrintTensor(const Tensor& T1);
 void PrintTensorAllValues(
     const Tensor& T1,
     int64 max_entries);  // print max_entries of elements in the Tensor
+
+// Get a scalar value from a tensor, optionally at an element offset
+template <typename T>
+static T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
+                             size_t element_offset = 0) {
+  T result;
+  t->read(&result, sizeof(T));
+  return result;
+}
+
+// Prints the tensor to the given output stream
+// TODO: internally convert ng types to cpptypes
+// so that users do not have to specify the template arg T
+template <typename T>
+std::ostream& DumpNGTensor(std::ostream& s, const string& name,
+                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
+  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
+  const ngraph::Shape& shape = t->get_shape();
+  s << "Tensor<" << name << ": ";
+  auto type = t->get_element_type();
+  bool T_is_integral = std::is_integral<T>::value;
+  bool type_is_integral = type.is_integral();
+  if (type_is_integral != T_is_integral) {
+    std::stringstream err_msg;
+    err_msg << "Tensor type " << type << " is"
+            << (type_is_integral ? " " : " not ")
+            << "integral but passed template is"
+            << (T_is_integral ? " " : " not ") << "integral";
+    throw std::invalid_argument(err_msg.str());
+  }
+
+  for (size_t i = 0; i < shape.size(); ++i) {
+    s << shape.at(i);
+    if (i + 1 < shape.size()) {
+      s << ", ";
+    }
+  }
+  size_t pos = 0;
+  s << ">{";
+  size_t rank = shape.size();
+  if (rank == 0) {
+    s << GetScalarFromTensor<T>(t, pos++);
+  } else if (rank <= 2) {
+    s << "[";
+    for (size_t i = 0; i < shape.at(0); ++i) {
+      if (rank == 1) {
+        s << GetScalarFromTensor<T>(t, pos++);
+      } else if (rank == 2) {
+        s << "[";
+        for (size_t j = 0; j < shape.at(1); ++j) {
+          s << GetScalarFromTensor<T>(t, pos++);
+
+          if (j + 1 < shape.at(1)) {
+            s << ", ";
+          }
+        }
+        s << "]";
+      }
+      if (i + 1 < shape.at(0)) {
+        s << ", ";
+      }
+    }
+    s << "]";
+  }
+  // TODO: extend for > 2 rank
+  s << "}";
+  return s;
+}
 
 std::vector<string> ConvertToString(const std::vector<tensorflow::Tensor>);
 
@@ -174,9 +240,7 @@ size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
 }
 
 }  // namespace testing
-
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_TESTUTILITIES_H_

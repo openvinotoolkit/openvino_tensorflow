@@ -72,8 +72,6 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
 
  private:
   std::unordered_map<std::string, std::string> m_config_map;
-
-  void DumpGraphs(Graph&, int, std::string, std::string);
   static int FreshIndex();
 
   static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);

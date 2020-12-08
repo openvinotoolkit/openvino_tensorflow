@@ -42,6 +42,16 @@ namespace tensorflow {
 namespace ngraph_bridge {
 namespace testing {
 
+static int FindNumberOfNodes(const Graph* graph, const string op_type) {
+  int count = 0;
+  for (auto node : graph->nodes()) {
+    if (node->type_string() == op_type) {
+      count++;
+    }
+  }
+  return count;
+}
+
 class NGraphExecTest : public ::testing::Test {
  protected:
   // Loads the .pbtxt into a graph object

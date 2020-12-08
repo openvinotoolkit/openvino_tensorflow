@@ -22,7 +22,6 @@
 #include "tensorflow/core/framework/graph.pb.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 class NGraphClusterManager {
@@ -37,7 +36,6 @@ class NGraphClusterManager {
 };
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
 #endif

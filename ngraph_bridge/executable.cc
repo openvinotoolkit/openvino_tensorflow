@@ -128,10 +128,10 @@ Executable::Executable(shared_ptr<Function> func, string device)
   InferenceEngine::Core ie;
   std::map<string, string> options;
 
-  if (DumpAllGraphs()) {
+  if (util::DumpAllGraphs()) {
     auto& name = m_network.getName();
     m_network.serialize(name + ".xml", name + ".bin");
-    ngraph::plot_graph(func, "tf_function_" + name + "_ie.dot");
+    util::DumpNGGraph(func, "tf_function_" + name + "_ie");
     options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
         "ie_" + m_device + "_" + name;
   }

@@ -64,6 +64,20 @@ static Status ValidateInputCountMin(const Node* op, tensorflow::int32 count) {
   }
   return Status::OK();
 }
+
+// Check to make sure the axis dimension for reduction are in within range.
+// Returns error if axis is out of range. Otherwise returns Status::OK().
+static Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
+  for (auto i : axes) {
+    if (i < (int)-rank || i >= (int)rank) {
+      return errors::InvalidArgument("Axis Dimension is out of range. Got ", i,
+                                     ", should be in range [-", rank, ", ",
+                                     rank, ")");
+    }
+  }
+  return Status::OK();
+}
+
 //
 // Helper for storing ops in ng_op_map.
 // For most of the cases, op would have one output so
@@ -296,6 +310,123 @@ static Status GetStaticInputVector(
   return Status::OK();
 }
 
+// Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
+// Extract values from a Const op to `values`. Returns true if succeeds.
+//
+// Modified with an extra `VecT` parameter to handle the case where the type
+// in the vector does not match TensorFlow's notion of what the C++ type
+// should be (e.g. when T is `bool`, we actually need a vector of `char` for
+// compatibility with nGraph).
+template <typename T, typename VecT = T>
+static Status ValuesFromConstNode(const NodeDef& node,
+                                  TensorShapeProto* const_tensor_shape,
+                                  std::vector<VecT>* values) {
+  if (node.op() != "Const") {
+    return errors::InvalidArgument("Node not a Const");
+  }
+
+  if (node.attr().at("dtype").type() != DataTypeToEnum<T>::value) {
+    std::stringstream ss;
+    ss << "Invalid data type defined for Const. Defined: "
+       << node.attr().at("dtype").type();
+    return errors::InvalidArgument(ss.str());
+  }
+
+  // TensorProto represents the content of the tensor in either <type>_val or
+  // tensor_content.
+  const TensorProto& tensor = node.attr().at("value").tensor();
+  typename checkpoint::SaveTypeTraits<T>::RepeatedField* tensor_values =
+      checkpoint::MutableTensorProtoData<T>(const_cast<TensorProto*>(&tensor));
+
+  const TensorShapeProto& shape = tensor.tensor_shape();
+  *const_tensor_shape = shape;
+  if (!tensor_values->empty() && tensor.has_tensor_shape()) {
+    // When tensor_shape is set, theoretically the representation of the data
+    // could be compressed. So, before copying values to the returned vector,
+    // make sure no compression happens.
+    if (shape.dim_size() == 1 && shape.dim(0).size() == tensor_values->size()) {
+      values->insert(values->end(), tensor_values->begin(),
+                     tensor_values->end());
+      return Status::OK();
+    }
+  }
+
+  const auto tensor_content_size = tensor.tensor_content().size();
+  CHECK_EQ(0, tensor_content_size % sizeof(VecT))
+      << " tensor_content_size (" << tensor_content_size
+      << ") is not a multiple of " << sizeof(VecT);
+
+  // If tensor_content_size is zero, we'll have to take the values from
+  // int_val, float_val, etc.
+  if (tensor_content_size == 0) {
+    int64 n_elements = 1;
+    for (auto i = 0; i < shape.dim_size(); i++) {
+      if (shape.dim(i).size() < 0) {
+        return errors::InvalidArgument(
+            "Const node has empty tensor and an unknown dimension size");
+      }
+      n_elements *= shape.dim(i).size();
+    }
+    values->resize(n_elements);
+
+    auto val_lastsaved = (T)0;  // cast
+
+    for (auto i = 0; i < n_elements; i++) {
+      auto& tensor = node.attr().at("value").tensor();
+      auto dt = node.attr().at("dtype").type();
+      int64 val_size = 0;
+      auto val_i = (T)0;  // cast
+      switch (dt) {
+        // TODO(amprocte/NGRAPH-2502): there are more element types to support
+        // here
+        case DT_INT32:
+          val_size = tensor.int_val_size();
+          if (val_size > 0) val_i = tensor.int_val()[i];
+          break;
+        case DT_INT64:
+          val_size = tensor.int64_val_size();
+          if (val_size > 0) val_i = tensor.int64_val()[i];
+          break;
+        case DT_FLOAT:
+          val_size = tensor.float_val_size();
+          if (val_size > 0) val_i = tensor.float_val()[i];
+          break;
+        case DT_BOOL:
+          val_size = tensor.bool_val_size();
+          if (val_size > 0) val_i = tensor.bool_val()[i];
+          break;
+        case DT_DOUBLE:
+          val_size = tensor.double_val_size();
+          if (val_size > 0) val_i = tensor.double_val()[i];
+          break;
+        default:
+          NGRAPH_VLOG(0)
+              << "Const node has empty tensor and we don't know how to "
+                 "handle this element type";
+          NGRAPH_VLOG(0) << node.DebugString();
+          NGRAPH_VLOG(0) << shape.DebugString();
+          return errors::Unimplemented("Encountered unknown element type ",
+                                       DataType_Name(dt),
+                                       " on an empty tensor");
+      }
+      if (val_size == 0) {
+        return errors::InvalidArgument("Empty values vector");
+      } else if (i < val_size) {
+        (*values)[i] = val_i;
+        val_lastsaved = val_i;
+      } else {
+        (*values)[i] = val_lastsaved;
+      }
+    }
+  } else {
+    values->resize(tensor_content_size / sizeof(VecT));
+    port::CopyToArray(tensor.tensor_content(),
+                      reinterpret_cast<char*>(values->data()));
+  }
+
+  return Status::OK();
+}
+
 // Helper for Builder::TranslateGraph ("Const" op)
 template <typename T, typename VecT = T>
 static Status MakeConstOp(const Node* op, ng::element::Type et,
@@ -309,7 +440,7 @@ static Status MakeConstOp(const Node* op, ng::element::Type et,
   TensorShape const_shape(shape_proto);
 
   ng::Shape ng_shape;
-  TF_RETURN_IF_ERROR(TFTensorShapeToNGraphShape(const_shape, &ng_shape));
+  TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(const_shape, &ng_shape));
 
   ng_node =
       ConstructNgNode<opset::Constant>(op->name(), et, ng_shape, const_values);
@@ -501,7 +632,7 @@ static Status TranslateArgMinMax(
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "output_type", &dtype));
 
   ng::element::Type ng_et;
-  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
 
   auto ng_k = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i64, ng::Shape{}, std::vector<int64>({1}));
@@ -652,7 +783,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "DstT", &dtype));
 
   ng::element::Type ng_et;
-  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
 
   try {
     SaveNgOp(ng_op_map, op->name(),
@@ -1978,7 +2109,7 @@ static Status TranslateShapeOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "out_type", &dtype));
 
   ng::element::Type type;
-  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &type));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
 
   // default output_type = element::i64
   SaveNgOp(ng_op_map, op->name(),
@@ -1996,7 +2127,7 @@ static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
 
   // Size has an attribute to specify output, int32 or int64
   ng::element::Type type;
-  TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &type));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
 
   auto ng_input_shape = ng_input.get_shape();
   int64 result = 1;
@@ -2650,10 +2781,11 @@ Status Builder::TranslateGraph(
     }
 
     ng::element::Type ng_et;
-    TF_RETURN_IF_ERROR(TFDataTypeToNGraphElementType(dtype, &ng_et));
+    TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
 
     ng::Shape ng_shape;
-    TF_RETURN_IF_ERROR(TFTensorShapeToNGraphShape(inputs[index], &ng_shape));
+    TF_RETURN_IF_ERROR(
+        util::TFTensorShapeToNGraphShape(inputs[index], &ng_shape));
 
     string prov_tag;
     GetNodeAttr(parm->attrs(), "_prov_tag", &prov_tag);
@@ -2732,10 +2864,10 @@ Status Builder::TranslateGraph(
   //
   {
     ngraph::pass::Manager passes;
-    if (GetEnv("TF_OV_CONSTANT_FOLDING") == "1") {
+    if (util::GetEnv("TF_OV_CONSTANT_FOLDING") == "1") {
       passes.register_pass<ngraph::pass::ConstantFolding>();
     }
-    if (GetEnv("TF_OV_TRANSPOSE_SINKING") != "0") {
+    if (util::GetEnv("TF_OV_TRANSPOSE_SINKING") != "0") {
       passes.register_pass<pass::TransposeSinking>();
     }
     passes.run_passes(ng_function);

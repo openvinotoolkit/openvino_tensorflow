@@ -28,8 +28,6 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes);
-// remove marking, backend and static input nodes attributes
-void ResetMarkForClustering(Graph* graph);
 Status IsSupportedByBackend(
     const Node* node, std::shared_ptr<Backend> op_backend,
     const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
@@ -59,6 +57,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap();
 
 const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
 GetTFToNgOpMap();
+
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 

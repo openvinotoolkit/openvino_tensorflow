@@ -29,6 +29,12 @@ namespace tensorflow {
 namespace ngraph_bridge {
 namespace testing {
 
+void ResetMarkForClustering(tensorflow::Graph* graph) {
+  for (auto node : graph->nodes()) {
+    node->ClearAttr("_ngraph_marked_for_clustering");
+  }
+}
+
 // Set using C API, get using C API
 TEST(DisableOps, SimpleSettingAndGetting1) {
   char disabled_list[] = "Add,Sub";
@@ -176,6 +182,7 @@ TEST(DisableOps, DisableTest) {
   // Clean up
   config::ngraph_set_disabled_ops("");
 }
-}
-}
-}
+
+}  // namespace testing
+}  // namespace ngraph_bridge
+}  // namespace tensorflow

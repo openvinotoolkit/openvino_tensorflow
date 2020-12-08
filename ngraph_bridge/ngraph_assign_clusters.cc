@@ -681,7 +681,7 @@ Status AssignClusters(Graph* graph) {
            "assigned an encapsulate)\n";
     for (auto it : cluster_separation_reason) {
       num_non_contracted += it.second.size();
-      auto cluster_id_vector = ng::split(it.first, ',');
+      auto cluster_id_vector = ngraph::split(it.first, ',');
       // function to find if this cluster became an ngraph_cluster
       // returns ngraph_cluster id if yes, else returns -1
       auto find_in_map = [&cluster_to_encapsulate, &cluster_id_vector](int x) {
@@ -719,7 +719,7 @@ Status AssignClusters(Graph* graph) {
                  to_string(dst_encapsulate) + "] predicate: " +
                  std::get<1>(deadness_predicates_tpl) +
                  " Neighbours predicates: " +
-                 ng::join(std::get<2>(deadness_predicates_tpl)) + "\n");
+                 ngraph::join(std::get<2>(deadness_predicates_tpl)) + "\n");
           }
         }
         reason_count_clusters[inner_itr]++;
@@ -791,10 +791,6 @@ Status GetNodeCluster(const Node* node, int* cluster) {
     *cluster = -1;
   }
   return s;
-}
-
-void ResetAssignClusters(Graph* graph) {
-  ClearAttribute(graph, {"_ngraph_cluster"});
 }
 
 }  // namespace ngraph_bridge

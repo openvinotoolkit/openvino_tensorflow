@@ -36,103 +36,17 @@ using namespace std;
 
 namespace tensorflow {
 namespace ngraph_bridge {
+namespace util {
 
-vector<int> FindComplement(const int& max_element,
-                           const vector<int>& element_set) {
-  vector<int> superset(max_element);
-  iota(begin(superset), end(superset), 0);
-
-  return FindComplement(superset, element_set);
-}
-
-// Finds the complement of element_set
-// From the superset
-// Finds: superset - element_set
-// Assumes superset and element_superset are sorted
-vector<int> FindComplement(const vector<int>& superset,
-                           const vector<int>& element_set) {
-  // max size of complement is superset
-  vector<int> complement(superset.size());
-  vector<int>::iterator it = set_difference(
-      superset.begin(), superset.begin() + superset.size(), element_set.begin(),
-      element_set.begin() + element_set.size(), complement.begin());
-  complement.resize(it - complement.begin());
-  return complement;
-}
-
-int FindNumberOfNodes(const Graph* graph, const string op_type) {
-  int count = 0;
-  for (auto node : graph->nodes()) {
-    if (node->type_string() == op_type) {
-      count++;
-    }
+template <typename T>
+static void TensorDataToStream(std::ostream& ostream, int64 n_elements,
+                               const char* data) {
+  const T* data_T = reinterpret_cast<const T*>(data);
+  for (size_t i = 0; i < n_elements; i++) {
+    ostream << data_T[i] << ",";
   }
-
-  return count;
 }
 
-Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
-                                        bool& is_copy_log_enabled) {
-  const char* copy_env_var = std::getenv("NGRAPH_TF_LOG_TENSOR_COPIES");
-  if (copy_env_var == nullptr) {
-    is_copy_log_enabled = false;
-    return Status::OK();
-  }
-  int test_graph_id;
-  try {
-    test_graph_id = stoi(string(copy_env_var));
-  } catch (const std::invalid_argument& ia) {
-    return errors::InvalidArgument(
-        "Invalid argument for NGRAPH_TF_LOG_TENSOR_COPIES. Exception: ",
-        ia.what());
-  }
-  // if -1 copies are logged for all graphs
-  is_copy_log_enabled = (test_graph_id == -1 || test_graph_id == graph_id);
-  return Status::OK();
-}
-
-void PrintTFTensor(Tensor& T1) {
-  NGRAPH_VLOG(4) << "all tensor values" << (T1).SummarizeValue(64) << endl;
-}
-std::string DebugNode(Node* node) {
-  std::string temp = node->name();
-  temp += "[" + node->type_string() + "]";
-  return temp;
-}
-
-std::string PrintBool(bool var) { return (var ? "Yes" : "No"); }
-
-// Read from this ng_tensor into tf_tensor
-void ReadNGTensor(shared_ptr<ngraph::runtime::Tensor> ng_tensor,
-                  Tensor* tf_tensor) {
-  NG_TRACE("Tensor Read D2H", "", "");
-  void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
-  ng_tensor->read(tf_src_ptr, ng_tensor->get_element_count() *
-                                  ng_tensor->get_element_type().size());
-}
-
-// Write into this ng_tensor from tf_tensor
-void WriteNGTensor(shared_ptr<ngraph::runtime::Tensor> ng_tensor,
-                   Tensor* tf_tensor) {
-  NG_TRACE("Tensor Write H2D", "", "");
-  void* tf_src_ptr = (void*)DMAHelper::base(tf_tensor);
-  ng_tensor->write(tf_src_ptr, ng_tensor->get_element_count() *
-                                   ng_tensor->get_element_type().size());
-}
-
-void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out) {
-  auto node_def = ctx->def();
-  out << "Node name: " << node_def.name() << " Op: " << node_def.op() << "\n";
-  out << "Inputs: " << node_def.input().size() << "\n    ";
-  for (const std::string& input : node_def.input()) {
-    out << input << "\n    ";
-  }
-  out << "\n";
-}
-
-//---------------------------------------------------------------------------
-//  TensorToStream
-//---------------------------------------------------------------------------
 Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
   const char* data = tensor.tensor_data().data();
   int64 n_elements = tensor.NumElements();
@@ -262,8 +176,8 @@ Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
   return Status::OK();
 }
 
-void print_node_histogram(const std::unordered_map<string, int>& histogram,
-                          bool sorted) {
+void PrintNodeHistogram(const std::unordered_map<string, int>& histogram,
+                        bool sorted) {
   int histogram_size = histogram.size();
   if (histogram_size == 0) {
     std::cout << "None";
@@ -283,65 +197,7 @@ void print_node_histogram(const std::unordered_map<string, int>& histogram,
                 << (endelem ? " " : ",");
     }
   }
-}
-
-const gtl::ArraySlice<DataType>& NGraphDTypes() {
-  static gtl::ArraySlice<DataType> result{
-      DT_FLOAT, DT_INT8,   DT_INT16,   DT_INT32,  DT_INT64,
-      DT_UINT8, DT_UINT16, DT_UINT32,  DT_UINT64, DT_BOOL,
-      DT_QINT8, DT_QUINT8, DT_BFLOAT16};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphNumericDTypes() {
-  static gtl::ArraySlice<DataType> result{
-      DT_FLOAT, DT_INT8,   DT_INT16,  DT_INT32,  DT_INT64,
-      DT_UINT8, DT_UINT16, DT_UINT32, DT_UINT64, DT_BFLOAT16};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphNumericAndQuantizedDTypes() {
-  static gtl::ArraySlice<DataType> result{
-      DT_FLOAT,  DT_INT8,   DT_INT16,  DT_INT32, DT_INT64, DT_UINT8,
-      DT_UINT16, DT_UINT32, DT_UINT64, DT_QINT8, DT_QUINT8};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphIndexDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_INT32, DT_INT64};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphIntDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_INT8, DT_UINT16, DT_INT16,
-                                          DT_INT32, DT_INT64};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_QINT8, DT_QUINT8};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphRealDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_FLOAT, DT_DOUBLE, DT_BFLOAT16};
-  return result;
-}
-
-const gtl::ArraySlice<DataType>& NGraphBiasDTypes() {
-  static gtl::ArraySlice<DataType> result{DT_FLOAT, DT_QINT32};
-  return result;
-}
-
-Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
-  for (auto i : axes) {
-    if (i < (int)-rank || i >= (int)rank) {
-      return errors::InvalidArgument("Axis Dimension is out of range. Got ", i,
-                                     ", should be in range [-", rank, ", ",
-                                     rank, ")");
-    }
-  }
-  return Status::OK();
+  std::cout << std::endl;
 }
 
 void MemoryProfile(long& vm_usage, long& resident_set) {
@@ -367,83 +223,41 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
   }
 }
 
-std::string DotFilename(std::string kind, int idx) {
-  return GraphFilenamePrefix(kind, idx) + ".dot";
-}
-
-std::string DotFilename(std::string kind, int idx, int sub_idx) {
-  return GraphFilenamePrefix(kind, idx, sub_idx) + ".dot";
-}
-
-std::string PbtxtFilename(std::string kind, int idx) {
-  return GraphFilenamePrefix(kind, idx) + ".pbtxt";
-}
-
-std::string PbtxtFilename(std::string kind, int idx, int sub_idx) {
-  return GraphFilenamePrefix(kind, idx, sub_idx) + ".pbtxt";
-}
-
-std::string GraphFilenamePrefix(std::string kind, int idx) {
-  std::stringstream ss;
-  ss << kind << "_" << std::setfill('0') << std::setw(4) << idx;
-  return ss.str();
-}
-
-std::string GraphFilenamePrefix(std::string kind, int idx, int sub_idx) {
-  std::stringstream ss;
-  ss << GraphFilenamePrefix(kind, idx) << "_" << std::setfill('0')
-     << std::setw(4) << sub_idx;
-  return ss.str();
-}
-
-void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
-                std::string filename_prefix, std::string title) {
+void DumpTFGraph(tensorflow::Graph* graph, int idx,
+                 std::string filename_prefix) {
   if (!DumpAllGraphs()) {
     return;
   }
-  // If we have a "main" graph, dump that.
-  if (options.graph != nullptr) {
-    auto pbtxt_filename = PbtxtFilename(filename_prefix, idx);
-    NGRAPH_VLOG(0) << "Dumping main graph to " << pbtxt_filename;
-    GraphToPbTextFile(options.graph->get(), pbtxt_filename);
+
+  std::stringstream ss;
+  ss << filename_prefix << "_" << std::setfill('0') << std::setw(4) << idx;
+  auto filename = ss.str() + ".pbtxt";
+  NGRAPH_VLOG(0) << "Dumping graph to " << filename;
+  GraphToPbTextFile(graph, filename);
+}
+
+void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
+                 const string filename_prefix) {
+  if (!DumpAllGraphs()) {
+    return;
   }
 
-  // If we have partition graphs (we shouldn't), dump those.
-  if (options.partition_graphs != nullptr) {
-    int sub_idx = 0;
-    for (auto& kv : *options.partition_graphs) {
-      auto pbtxt_filename = PbtxtFilename(filename_prefix, idx, sub_idx);
-      NGRAPH_VLOG(0) << "Dumping subgraph " << sub_idx << " to "
-                     << pbtxt_filename;
-      Graph* pg = kv.second.get();
-      GraphToPbTextFile(pg, pbtxt_filename);
-      sub_idx++;
-    }
-  }
   // enable shape info for nGraph graphs
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_IO", "1");
+  ngraph::plot_graph(function, filename_prefix + ".dot");
 }
 
 bool DumpAllGraphs() { return GetEnv("TF_OV_DUMP_GRAPHS") == "1"; }
 
-bool IsProcessedByNgraphPass(Graph* g) {
+bool IsAlreadyProcessed(Graph* g) {
   // TODO: place a dummy node as a marker
   // Current method may fail when graph has no encapsulates after first pass
   for (Node* node : g->nodes()) {
     if (node->type_string() == "_nGraphEncapsulate") return true;
   }
   return false;
-}
-
-void ClearAttribute(Graph* g,
-                    const std::set<string>& attributes_to_be_cleared) {
-  for (auto node : g->nodes()) {
-    for (const auto& attr : attributes_to_be_cleared) {
-      node->ClearAttr(attr);
-    }
-  }
 }
 
 string GetEnv(const char* env) {
@@ -457,5 +271,6 @@ string GetEnv(const char* env) {
 
 void SetEnv(const char* env, const char* val) { setenv(env, val, 1); }
 
+}  // namespace util
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

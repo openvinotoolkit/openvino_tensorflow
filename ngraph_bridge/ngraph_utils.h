@@ -40,242 +40,17 @@
 #define NG_TRACE(name, category, args) \
   ngraph::event::Duration dx__ { (name), (category), (args) }
 
-namespace ng = ngraph;
 using namespace std;
+
 namespace tensorflow {
 namespace ngraph_bridge {
+namespace util {
 
-// Finds the complement of element_set
-// Given the max_element
-// Finds: {0,1,...,max_element-1} - element_set
-// Assumes element_set is sorted
-vector<int> FindComplement(const int& max_element,
-                           const vector<int>& element_set);
+bool IsAlreadyProcessed(Graph* g);
 
-// Finds the complement of element_set
-// From the superset
-// Finds: superset - element_set
-// Assumes superset and element_superset are sorted
-vector<int> FindComplement(const vector<int>& element_superset,
-                           const vector<int>& element_set);
-
-int FindNumberOfNodes(const Graph* graph, const string op_type);
-
-Status IsNgraphTFLogTensorCopiesEnabled(int graph_id,
-                                        bool& is_copy_log_enabled);
-
-void PrintTFTensor(Tensor& T1);
-std::string DebugNode(Node* node);
-
-// Read from this ng_tensor into tf_tensor
-void ReadNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor, Tensor* tf_tensor);
-std::string PrintBool(bool var);
-
-// Write into this ng_tensor from tf_tensor
-void WriteNGTensor(shared_ptr<ng::runtime::Tensor> ng_tensor,
-                   Tensor* tf_tensor);
-
-void SummarizeOp(OpKernelConstruction* ctx, std::ostream& out);
-
-bool IsProcessedByNgraphPass(Graph* g);
-
-// Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
-// Extract values from a Const op to `values`. Returns true if succeeds.
-//
-// Modified with an extra `VecT` parameter to handle the case where the type
-// in the vector does not match TensorFlow's notion of what the C++ type
-// should be (e.g. when T is `bool`, we actually need a vector of `char` for
-// compatibility with nGraph).
-template <typename T, typename VecT = T>
-Status ValuesFromConstNode(const NodeDef& node,
-                           TensorShapeProto* const_tensor_shape,
-                           std::vector<VecT>* values) {
-  if (node.op() != "Const") {
-    return errors::InvalidArgument("Node not a Const");
-  }
-
-  if (node.attr().at("dtype").type() != DataTypeToEnum<T>::value) {
-    std::stringstream ss;
-    ss << "Invalid data type defined for Const. Defined: "
-       << node.attr().at("dtype").type();
-    return errors::InvalidArgument(ss.str());
-  }
-
-  // TensorProto represents the content of the tensor in either <type>_val or
-  // tensor_content.
-  const TensorProto& tensor = node.attr().at("value").tensor();
-  typename checkpoint::SaveTypeTraits<T>::RepeatedField* tensor_values =
-      checkpoint::MutableTensorProtoData<T>(const_cast<TensorProto*>(&tensor));
-
-  const TensorShapeProto& shape = tensor.tensor_shape();
-  *const_tensor_shape = shape;
-  if (!tensor_values->empty() && tensor.has_tensor_shape()) {
-    // When tensor_shape is set, theoretically the representation of the data
-    // could be compressed. So, before copying values to the returned vector,
-    // make sure no compression happens.
-    if (shape.dim_size() == 1 && shape.dim(0).size() == tensor_values->size()) {
-      values->insert(values->end(), tensor_values->begin(),
-                     tensor_values->end());
-      return Status::OK();
-    }
-  }
-
-  const auto tensor_content_size = tensor.tensor_content().size();
-  CHECK_EQ(0, tensor_content_size % sizeof(VecT))
-      << " tensor_content_size (" << tensor_content_size
-      << ") is not a multiple of " << sizeof(VecT);
-
-  // If tensor_content_size is zero, we'll have to take the values from
-  // int_val, float_val, etc.
-  if (tensor_content_size == 0) {
-    int64 n_elements = 1;
-    for (auto i = 0; i < shape.dim_size(); i++) {
-      if (shape.dim(i).size() < 0) {
-        return errors::InvalidArgument(
-            "Const node has empty tensor and an unknown dimension size");
-      }
-      n_elements *= shape.dim(i).size();
-    }
-    values->resize(n_elements);
-
-    auto val_lastsaved = (T)0;  // cast
-
-    for (auto i = 0; i < n_elements; i++) {
-      auto& tensor = node.attr().at("value").tensor();
-      auto dt = node.attr().at("dtype").type();
-      int64 val_size = 0;
-      auto val_i = (T)0;  // cast
-      switch (dt) {
-        // TODO(amprocte/NGRAPH-2502): there are more element types to support
-        // here
-        case DT_INT32:
-          val_size = tensor.int_val_size();
-          if (val_size > 0) val_i = tensor.int_val()[i];
-          break;
-        case DT_INT64:
-          val_size = tensor.int64_val_size();
-          if (val_size > 0) val_i = tensor.int64_val()[i];
-          break;
-        case DT_FLOAT:
-          val_size = tensor.float_val_size();
-          if (val_size > 0) val_i = tensor.float_val()[i];
-          break;
-        case DT_BOOL:
-          val_size = tensor.bool_val_size();
-          if (val_size > 0) val_i = tensor.bool_val()[i];
-          break;
-        case DT_DOUBLE:
-          val_size = tensor.double_val_size();
-          if (val_size > 0) val_i = tensor.double_val()[i];
-          break;
-        default:
-          NGRAPH_VLOG(0)
-              << "Const node has empty tensor and we don't know how to "
-                 "handle this element type";
-          NGRAPH_VLOG(0) << node.DebugString();
-          NGRAPH_VLOG(0) << shape.DebugString();
-          return errors::Unimplemented("Encountered unknown element type ",
-                                       DataType_Name(dt),
-                                       " on an empty tensor");
-      }
-      if (val_size == 0) {
-        return errors::InvalidArgument("Empty values vector");
-      } else if (i < val_size) {
-        (*values)[i] = val_i;
-        val_lastsaved = val_i;
-      } else {
-        (*values)[i] = val_lastsaved;
-      }
-    }
-  } else {
-    values->resize(tensor_content_size / sizeof(VecT));
-    port::CopyToArray(tensor.tensor_content(),
-                      reinterpret_cast<char*>(values->data()));
-  }
-
-  return Status::OK();
-}
-
-// Get a scalar value from a tensor, optionally at an element offset
-template <typename T>
-T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
-                      size_t element_offset = 0) {
-  T result;
-  t->read(&result, sizeof(T));
-  return result;
-}
-
-// // Descending sort the map based on the value
-void print_node_histogram(const std::unordered_map<string, int>&,
-                          bool sorted = true);
-
-// Prints the tensor to the given output stream
-// TODO: internally convert ng types to cpptypes
-// so that users do not have to specify the template arg T
-template <typename T>
-std::ostream& DumpNGTensor(std::ostream& s, const string& name,
-                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
-  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
-  const ngraph::Shape& shape = t->get_shape();
-  s << "Tensor<" << name << ": ";
-  auto type = t->get_element_type();
-  bool T_is_integral = std::is_integral<T>::value;
-  bool type_is_integral = type.is_integral();
-  if (type_is_integral != T_is_integral) {
-    std::stringstream err_msg;
-    err_msg << "Tensor type " << type << " is"
-            << (type_is_integral ? " " : " not ")
-            << "integral but passed template is"
-            << (T_is_integral ? " " : " not ") << "integral";
-    throw std::invalid_argument(err_msg.str());
-  }
-
-  for (size_t i = 0; i < shape.size(); ++i) {
-    s << shape.at(i);
-    if (i + 1 < shape.size()) {
-      s << ", ";
-    }
-  }
-  size_t pos = 0;
-  s << ">{";
-  size_t rank = shape.size();
-  if (rank == 0) {
-    s << GetScalarFromTensor<T>(t, pos++);
-  } else if (rank <= 2) {
-    s << "[";
-    for (size_t i = 0; i < shape.at(0); ++i) {
-      if (rank == 1) {
-        s << GetScalarFromTensor<T>(t, pos++);
-      } else if (rank == 2) {
-        s << "[";
-        for (size_t j = 0; j < shape.at(1); ++j) {
-          s << GetScalarFromTensor<T>(t, pos++);
-
-          if (j + 1 < shape.at(1)) {
-            s << ", ";
-          }
-        }
-        s << "]";
-      }
-      if (i + 1 < shape.at(0)) {
-        s << ", ";
-      }
-    }
-    s << "]";
-  }
-  // TODO: extend for > 2 rank
-  s << "}";
-  return s;
-}
-
-template <typename T>
-static void TensorDataToStream(std::ostream& ostream, int64 n_elements,
-                               const char* data) {
-  const T* data_T = reinterpret_cast<const T*>(data);
-  for (size_t i = 0; i < n_elements; i++) {
-    ostream << data_T[i] << ",";
-  }
-}
+// Descending sort the map based on the value
+void PrintNodeHistogram(const std::unordered_map<string, int>&,
+                        bool sorted = true);
 
 Status TensorToStream(std::ostream& ostream, const Tensor& tensor);
 
@@ -290,63 +65,24 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
 Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
                                   ngraph::Shape* ng_shape);
 
-// Returns an ArraySlice containing all TensorFlow dtypes supported by the
-// nGraph bridge.
-const gtl::ArraySlice<DataType>& NGraphDTypes();
-
-// Returns an ArraySlice containing all *numeric* TensorFlow dtypes supported
-// by the nGraph bridge.
-const gtl::ArraySlice<DataType>& NGraphNumericDTypes();
-
-// Returns an ArraySlice containing all numeric and quantized TensorFlow dtypes
-// supported by the nGraph bridge.
-const gtl::ArraySlice<DataType>& NGraphNumericAndQuantizedDTypes();
-
-// Returns an ArraySlice containing all data types that can be used for
-// axis/tensor indices.
-const gtl::ArraySlice<DataType>& NGraphIndexDTypes();
-
-// Returns an ArraySlice containing all data integer types.
-const gtl::ArraySlice<DataType>& NGraphIntDTypes();
-
-// Returns an ArraySlice containing supported data types in the quantized domain
-const gtl::ArraySlice<DataType>& NGraphSupportedQuantizedDTypes();
-
-// Returns an ArraySlice containing supported real/non-integer data types
-const gtl::ArraySlice<DataType>& NGraphRealDTypes();
-
-// Returns an ArraySlice containing supported bias types for custom quant op
-const gtl::ArraySlice<DataType>& NGraphBiasDTypes();
-
-// Check to make sure the axis dimension for reduction are in within range.
-// Returns error if axis is out of range. Otherwise returns Status::OK().
-Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank);
-
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);
 
-std::string DotFilename(std::string, int);
-
-std::string DotFilename(std::string kind, int idx, int sub_idx);
-
-std::string PbtxtFilename(std::string, int);
-
-std::string PbtxtFilename(std::string kind, int idx, int sub_idx);
-
-std::string GraphFilenamePrefix(std::string, int);
-
-std::string GraphFilenamePrefix(std::string, int, int);
-
-void ClearAttribute(Graph*, const std::set<string>&);
-
-void DumpGraphs(const GraphOptimizationPassOptions& options, int idx,
-                std::string filename_prefix, std::string title);
+// Check if we're supposed to dump graphs
 bool DumpAllGraphs();
+// Dump TF graphs in .pbtxt format
+void DumpTFGraph(tensorflow::Graph* graph, int idx, string filename_prefix);
+// Dump nGraph graphs in .dot format
+void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
+                 const string filename_prefix);
 
+// Get an environment variable
 string GetEnv(const char* env);
 
+// Set the environment variable env with val
 void SetEnv(const char* env, const char* val);
 
+}  // namespace util
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 
