@@ -97,7 +97,8 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 
 // Returns the nGraph supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
-  return Backend::get_registered_devices();
+  InferenceEngine::Core core;
+  return core.GetAvailableDevices();
 }
 
 }  // namespace ngraph_bridge

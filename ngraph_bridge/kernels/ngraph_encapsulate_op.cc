@@ -254,8 +254,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
       auto backend = BackendManager::GetBackend();
       std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
-          backend->create_tensor(ng_element_type, ng_shape,
-                                 tf_input_tensors[i].data());
+          make_shared<IETensor>(ng_element_type, ng_shape,
+                                tf_input_tensors[i].data());
       ng_inputs.push_back(ng_tensor);
     }
   }
@@ -434,9 +434,6 @@ Status NGraphEncapsulateOp::GetExecutable(
     if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
       m_ng_exec_map.erase(m_lru.back());
-
-      // Call delete function here for the erased func
-      backend->remove_compiled_function(evicted_ng_exec);
 
       m_lru.pop_back();
     }  // cache eviction if cache size greater than cache depth

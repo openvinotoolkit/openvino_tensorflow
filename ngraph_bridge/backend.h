@@ -32,40 +32,13 @@ namespace ngraph_bridge {
 class Backend {
  public:
   Backend(const string& configuration_string);
-  ~Backend();
+  ~Backend() {}
 
   shared_ptr<Executable> compile(shared_ptr<ngraph::Function> func,
                                  bool enable_performance_data = false);
-  void remove_compiled_function(std::shared_ptr<Executable> exec);
   bool is_supported(const ngraph::Node& node) const;
 
-  shared_ptr<ngraph::runtime::Tensor> create_dynamic_tensor(
-      const ngraph::element::Type& type, const ngraph::PartialShape& shape);
-
-  static vector<string> get_registered_devices();
-
-  shared_ptr<ngraph::runtime::Tensor> create_tensor(
-      const ngraph::element::Type& element_type, const ngraph::Shape& shape);
-
-  shared_ptr<ngraph::runtime::Tensor> create_tensor(
-      const ngraph::element::Type& element_type, const ngraph::Shape& shape,
-      void* data);
-
-  template <typename T>
-  shared_ptr<ngraph::runtime::Tensor> create_tensor(ngraph::element::Type type,
-                                                    ngraph::Shape shape,
-                                                    T* data) {
-    auto tensor = make_shared<IETensor>(type, shape);
-    size_t size = shape_size(shape);
-    tensor->write(data, size * sizeof(T));
-    return tensor;
-  }
-
  private:
-  std::mutex m_exec_map_mutex;
-  std::unordered_map<std::shared_ptr<ngraph::Function>,
-                     std::shared_ptr<Executable>>
-      m_exec_map;
   string m_device;
 };
 }

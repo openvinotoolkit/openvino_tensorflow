@@ -39,36 +39,9 @@ Backend::Backend(const string& config) {
   m_device = config;
 }
 
-Backend::~Backend() { m_exec_map.clear(); }
-
 shared_ptr<Executable> Backend::compile(shared_ptr<ngraph::Function> func,
                                         bool) {
-  shared_ptr<Executable> rc;
-  {
-    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
-    auto it = m_exec_map.find(func);
-    if (it != m_exec_map.end()) {
-      rc = it->second;
-      return rc;
-    }
-  }
-
-  rc = make_shared<Executable>(func, m_device);
-  {
-    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
-    m_exec_map.insert({func, rc});
-    return rc;
-  }
-}
-
-void Backend::remove_compiled_function(shared_ptr<Executable> exec) {
-  std::lock_guard<std::mutex> guard(m_exec_map_mutex);
-  for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it) {
-    if (it->second == exec) {
-      m_exec_map.erase(it);
-      break;
-    }
-  }
+  return make_shared<Executable>(func, m_device);
 }
 
 bool Backend::is_supported(const Node& node) const {
@@ -79,24 +52,5 @@ bool Backend::is_supported(const Node& node) const {
   return opset.contains_op_type(&node);
 }
 
-shared_ptr<runtime::Tensor> Backend::create_dynamic_tensor(
-    const element::Type& type, const PartialShape& shape) {
-  return make_shared<IETensor>(type, shape);
-}
-
-vector<string> Backend::get_registered_devices() {
-  InferenceEngine::Core core;
-  return core.GetAvailableDevices();
-}
-
-shared_ptr<runtime::Tensor> Backend::create_tensor(
-    const element::Type& element_type, const Shape& shape) {
-  return make_shared<IETensor>(element_type, shape);
-}
-
-shared_ptr<runtime::Tensor> Backend::create_tensor(
-    const element::Type& element_type, const Shape& shape, void* data) {
-  return make_shared<IETensor>(element_type, shape, data);
-}
-}
-}
+}  // namespace ngraph_bridge
+}  // namespace tensorflow

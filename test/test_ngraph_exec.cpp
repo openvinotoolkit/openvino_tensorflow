@@ -166,11 +166,11 @@ TEST_F(NGraphExecTest, Axpy) {
     ng_shape_y[i] = y.shape().dim_size(i);
   }
 
-  auto t_x = backend->create_tensor(ng::element::f32, ng_shape_x);
+  auto t_x = make_shared<IETensor>(ng::element::f32, ng_shape_x);
   float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
   t_x->write(&v_x, sizeof(v_x));
 
-  auto t_y = backend->create_tensor(ng::element::f32, ng_shape_y);
+  auto t_y = make_shared<IETensor>(ng::element::f32, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
   // Execute the nGraph function.
@@ -221,11 +221,11 @@ TEST_F(NGraphExecTest, Axpy8bit) {
     ng_shape_y[i] = y.shape().dim_size(i);
   }
 
-  auto t_x = backend->create_tensor(ng::element::i8, ng_shape_x);
+  auto t_x = make_shared<IETensor>(ng::element::i8, ng_shape_x);
   int8 v_x[2][2] = {{1, 1}, {1, 1}};
   t_x->write(&v_x, sizeof(v_x));
 
-  auto t_y = backend->create_tensor(ng::element::i8, ng_shape_y);
+  auto t_y = make_shared<IETensor>(ng::element::i8, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
   // Execute the nGraph function.
