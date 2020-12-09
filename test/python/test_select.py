@@ -110,16 +110,16 @@ class TestWhere(NgraphTest):
     env_map = None
 
     def __init__(self):
-        self.store_env_variables(['TF_OV_CONSTANT_FOLDING'])
+        env_map = self.store_env_variables(['TF_OV_CONSTANT_FOLDING'])
         self.set_env_variable('TF_OV_CONSTANT_FOLDING', '1')
 
     def __del__(self):
         self.restore_env_variables(env_map)
 
     def test_where(self):
-        a = np.random.random(size=[2, 2]).astype(np.float32)
+        a = np.array([1.1, 3.0], [2.2, 4.4]).astype(np.float32)
         p = tf.compat.v1.placeholder(dtype=tf.float32, shape=(2, 2))
-        out = tf.where(tf.equal(p, 3))
+        out = tf.where(tf.equal(p, 3.0))
 
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
