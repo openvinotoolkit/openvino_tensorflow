@@ -24,6 +24,9 @@ elif [ "${BUILDKITE_PIPELINE_NAME}" == "cpu-intel-tf" ]; then
 elif [ "${BUILDKITE_PIPELINE_NAME}" == "gpu" ]; then
    export NGRAPH_TF_BACKEND=GPU
    PIPELINE_STEPS+=" ${SCRIPT_DIR}/cpu.yml "
+elif [ "${BUILDKITE_PIPELINE_NAME}" == "models-gpu" ]; then
+   export NGRAPH_TF_BACKEND=GPU
+   PIPELINE_STEPS+=" ${SCRIPT_DIR}/models-cpu.yml "
 else
    PIPELINE_STEPS+=" ${SCRIPT_DIR}/${BUILDKITE_PIPELINE_NAME}.yml "
 fi
