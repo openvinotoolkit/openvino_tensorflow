@@ -70,24 +70,22 @@ def main():
         call(["git", "pull"])
         os.chdir(pwd)
 
-    use_intel_tf = False
-    if arguments.use_intel_tensorflow != '':
-        use_intel_tf = True
-
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
-                     arguments.target_arch, False, use_intel_tf)
+                     arguments.target_arch, False,
+                     arguments.use_intel_tensorflow)
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
-                        arguments.target_arch, False, use_intel_tf)
+                        arguments.target_arch, False,
+                        arguments.use_intel_tensorflow)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
     os.chdir("tensorflow")
 
     copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None,
-                         use_intel_tf)
+                         arguments.use_intel_tensorflow)
 
     print('\033[1;35mTensorFlow Build finished\033[0m')
 

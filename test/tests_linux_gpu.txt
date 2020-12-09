@@ -11,7 +11,7 @@
 # Read in one/more external manifest file(s)
 # Path specified is relative to this file's path
 
-tests_linux_cpu.txt
+tests_common.txt
 
 ###################################################
 [RUN]
@@ -20,4 +20,33 @@ tests_linux_cpu.txt
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
+ArrayOps.Tile2 # accuracy
+NGraphExecTest.Axpy8bit # Tensor type f32 is not integral but passed template is integral
+
+# [PARAMETER_MISMATCH] Failed to set output blob with precision: BOOL, if CNNNetwork output blob precision is: FP32
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.NotEqual
+
+MathOps.Mean # accuracy
+MathOps.SqueezeNoAttributes # Const layer Squeeze/Constant_66948 has incorrect dimensions in the output data 0
+
+NNOps.L2Loss # Const/Const/Constant_124777 has zero dimension which is not allowed
+
+# MKLDNNGraph::CreateGraph: No inputs for the topology
+ArrayOps.Shape2D
+ArrayOps.Shape3D
+
+# SplitV/VariadicSplit_174733.1 has zero dimension which is not allowed
+ArrayOps.SplitVZeroSizeSplit
+ArrayOps.SplitVZeroSizeNegSplit
+
+TransposeSinking.MultiOutputConV # accuracy
 

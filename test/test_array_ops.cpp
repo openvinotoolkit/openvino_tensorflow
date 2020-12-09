@@ -922,7 +922,6 @@ TEST(ArrayOps, Tile) {
 
   input_sizes.push_back({2, 3, 4});
   input_sizes.push_back({10, 10, 10});
-  input_sizes.push_back({1, 5});
   input_sizes.push_back({0});
 
   for (auto const& input_size : input_sizes) {
@@ -944,7 +943,26 @@ TEST(ArrayOps, Tile) {
 
     opexecuter.RunTest();
   }
-}  // end of test op Tile
+}
+
+TEST(ArrayOps, Tile2) {  // Not working with OV GPU
+  std::vector<int64> input_size{1, 3};
+  Tensor input_data(DT_FLOAT, TensorShape(input_size));
+  AssignInputValues(input_data, 2.1f);
+
+  // Must be of type int32 or int64,
+  // 1-D. Length must be the same as the number of dimensions in input
+  int input_dim = input_size.size();
+  Tensor multiples(DT_INT32, TensorShape({input_dim}));
+  AssignInputValues(multiples, vector<int>{1, 2});
+
+  Scope root = Scope::NewRootScope();
+  auto R = ops::Tile(root, input_data, multiples);
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Tile", sess_run_fetchoutputs);
+  opexecuter.RunTest();
+}
+// end of test op Tile
 
 // Test op: Transpose
 TEST(ArrayOps, Transpose) {

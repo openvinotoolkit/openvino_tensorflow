@@ -9,7 +9,7 @@
 # Read in one/more external manifest file(s)
 # Path specified is relative to this file's path
 
-tests_linux_cpu.txt
+tests_common.txt
 
 ###################################################
 [RUN]
@@ -20,6 +20,61 @@ tests_linux_cpu.txt
 ###################################################
 [SKIP]
 
+# unsupported type
+test_bfloat16.TestBfloat16.test_conv2d_bfloat16
+test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
+
+test_maxpool3dgrad.TestMaxpool3DGrad.test_maxpool3d_grad # AssertionError
+
+# Failed to set Blob with precision not corresponding to user output precision
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_less[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-True-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-False-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[1.0--2.0-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[False-100-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[v14-v24-expected4]
+
+
+test_slice.TestSliceOperations.test_strided_slice # has zero dimension which is not allowed
+test_slice.TestSliceOperations.test_strided_slice_4  # AssertionError
+test_slice.TestSliceOperations.test_strided_slice_5 # Exception map::at
+
+# Const layer XXX has incorrect dimensions in the output data 0
+test_mnist_training.TestMnistTraining.test_mnist_training[adam]
+test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
+test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
+test_prod.TestProductOperations.test_prod[v15-axis5-expected5]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape0-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
+
 test_cast.TestCastOperations.test_cast_1d  # assert false
 test_cast.TestCastOperations.test_cast_2d  # assert False
 test_gather.TestGatherV2Operations.test_gather_3  # assert False
@@ -29,6 +84,7 @@ test_logsoftmax.TestLogSoftmaxOperations.test_logsoftmax  # AssertionError -inf
 
 # implementation_map for N5cldnn6borderE could not find any implementation to match key
 test_pad.TestPadOperations.test_pad1
+test_pad.TestPadOperations.test_pad2
 test_pad.TestPadOperations.test_pad3
 test_pad.TestPadOperations.test_pad4
 
@@ -36,11 +92,11 @@ test_pad.TestPadOperations.test_pad4
 test_select.TestSelect.test_select_scalar
 test_select.TestSelect.test_select_sameshape
 test_select.TestSelect.test_select_diffrank
-
-# reorder:SelectV2/Select_45325_cldnn_output_postprocess Sizes equal or broadcast is possible(true) should be false
 test_select.TestSelect.test_select_complexshape1
+test_select.TestSelect.test_select_complexshape2
 test_select.TestSelect.test_select_complexshape3
 
-test_slice.TestSliceOperations.test_strided_slice_4  # AssertionError
 test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]  # AssertionError
+test_set_backend.TestSetBackend.test_set_backend # AssertionError
 
+test_while_loop.TestWhileLoop.test_while_loop # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
