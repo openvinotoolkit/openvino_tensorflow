@@ -37,6 +37,10 @@ test_select.TestSelect.test_select_scalar
 test_select.TestSelect.test_select_sameshape
 test_select.TestSelect.test_select_diffrank
 
+# reorder:SelectV2/Select_45325_cldnn_output_postprocess Sizes equal or broadcast is possible(true) should be false
+test_select.TestSelect.test_select_complexshape1
+test_select.TestSelect.test_select_complexshape3
+
 test_slice.TestSliceOperations.test_strided_slice_4  # AssertionError
 test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]  # AssertionError
 

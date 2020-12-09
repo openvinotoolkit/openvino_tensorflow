@@ -67,8 +67,8 @@ class TestSelect(NgraphTest):
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
     def test_select_complexshape1(self):
-        a = np.random.randint(2, size=[7])
-        x = np.random.randint(0, 11, [7, 3, 2, 1])
+        a = np.random.random(size=[7]).astype(np.float32)
+        x = np.random.random(size=[7, 3, 2, 1]).astype(np.float32)
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
@@ -80,8 +80,8 @@ class TestSelect(NgraphTest):
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
     def test_select_complexshape2(self):
-        a = np.random.randint(2, size=[7])
-        x = np.random.randint(0, 11, [7, 3, 2, 7])
+        a = np.random.random(size=[7]).astype(np.float32)
+        x = np.random.random(size=[7, 3, 2, 7]).astype(np.float32)
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
@@ -93,11 +93,66 @@ class TestSelect(NgraphTest):
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
     def test_select_complexshape3(self):
-        a = np.random.randint(2, size=[5])
-        x = np.random.randint(0, 11, [5, 3, 1])
+        a = np.random.random(size=[5]).astype(np.float32)
+        x = np.random.random(size=[5, 3, 1]).astype(np.float32)
 
         p = tf.compat.v1.placeholder(dtype=tf.bool)
         out = tf.where(p, x, x)
+
+        def run_test(sess):
+            return (sess.run(out, feed_dict={p: a}))
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+
+class TestWhere(NgraphTest):
+    env_map = None
+
+    def __init__(self):
+        self.store_env_variables(['TF_OV_CONSTANT_FOLDING'])
+        self.set_env_variable('TF_OV_CONSTANT_FOLDING', '1')
+
+    def __del__(self):
+        self.restore_env_variables(env_map)
+
+    def test_where(self):
+        a = np.random.random(size=[2, 2]).astype(np.float32)
+        p = tf.compat.v1.placeholder(dtype=tf.float32, shape=(2, 2))
+        out = tf.where(tf.equal(p, 3))
+
+        def run_test(sess):
+            return sess.run(out, feed_dict={p: a})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    def test_where_scalar(self):
+        a = [1.5]
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
+        out = tf.where(p)
+
+        def run_test(sess):
+            return sess.run(out, feed_dict={p: a})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    def test_where_bool(self):
+        a = [True, False, False, True, False]
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
+        out = tf.where(p)
+
+        def run_test(sess):
+            return sess.run(out, feed_dict={p: a})
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    def test_where_complexshape1(self):
+        a = np.random.random(size=[7]).astype(np.float32)
+        p = tf.compat.v1.placeholder(dtype=tf.bool)
+        out = tf.where(p)
 
         def run_test(sess):
             return (sess.run(out, feed_dict={p: a}))

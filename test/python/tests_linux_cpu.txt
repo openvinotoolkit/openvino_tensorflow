@@ -59,9 +59,6 @@ test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-False-expec
 test_elementwise_ops.TestElementwiseOperations.test_logical_and[1.0--2.0-expected2]
 test_elementwise_ops.TestElementwiseOperations.test_logical_and[False-100-expected3]
 test_elementwise_ops.TestElementwiseOperations.test_logical_and[v14-v24-expected4]
-test_select.TestSelect.test_select_complexshape1
-test_select.TestSelect.test_select_complexshape2
-test_select.TestSelect.test_select_complexshape3
 test_while_loop.TestWhileLoop.test_while_loop
 
 # data doesn't exist

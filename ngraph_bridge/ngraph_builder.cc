@@ -2581,6 +2581,20 @@ static Status TranslateSelectOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateWhereOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_cond;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_cond));
+  auto non_zero = ConstructNgNode<opset::NonZero>(op->name(), ng_cond);
+  auto transpose_order = ConstructNgNode<opset::Constant>(
+      op->name(), ngraph::element::i64, ngraph::Shape{2},
+      std::vector<int64_t>({1, 0}));
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Transpose>(
+                                      op->name(), non_zero, transpose_order));
+  return Status::OK();
+}
+
 static Status TranslateZerosLikeOp(const Node* op,
                                    const std::vector<const Tensor*>&,
                                    Builder::OpMap& ng_op_map) {
@@ -2717,6 +2731,7 @@ const static std::map<
         {"TopKV2", TranslateTopKV2Op},
         {"Transpose", TranslateTransposeOp},
         {"Unpack", TranslateUnpackOp},
+        {"Where", TranslateWhereOp},
         {"Xdivy", TranslateXdivyOp},
         {"ZerosLike", TranslateZerosLikeOp}};
 

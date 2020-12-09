@@ -245,6 +245,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Sum"] = SetStaticInputs({1});
     set_attributes_map["TopKV2"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
+    set_attributes_map["Where"] = SetStaticInputs({0});
     initialized = true;
   }
   return set_attributes_map;
@@ -413,6 +414,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     };
     confirmation_function_map["Transpose"] = SimpleConfirmationFunction();
     confirmation_function_map["Unpack"] = SimpleConfirmationFunction();
+    confirmation_function_map["Where"] = SimpleConfirmationFunction();
     confirmation_function_map["Xdivy"] = SimpleConfirmationFunction();
     confirmation_function_map["ZerosLike"] = SimpleConfirmationFunction();
     initialized = true;
@@ -578,6 +580,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Transpose"]["T"] = NGraphDTypes();
     type_constraint_map["Transpose"]["Tperm"] = NGraphIndexDTypes();
     type_constraint_map["Unpack"]["T"] = NGraphDTypes();
+    type_constraint_map["Where"]["T"] = NGraphDTypes();
     type_constraint_map["Xdivy"]["T"] = NGraphRealDTypes();
     type_constraint_map["ZerosLike"]["T"] = NGraphNumericDTypes();
     initialized = true;
@@ -753,6 +756,9 @@ GetTFToNgOpMap() {
           {"Tile", {std::make_shared<opset::Tile>()}},
           {"TopKV2", {std::make_shared<opset::TopK>(), constant}},
           {"Transpose", {std::make_shared<opset::Transpose>()}},
+          {"Where",
+           {std::make_shared<opset::NonZero>(),
+            std::make_shared<opset::Transpose>()}},
           {"Xdivy",
            {constant, std::make_shared<opset::Divide>(),
             std::make_shared<opset::Equal>(),
