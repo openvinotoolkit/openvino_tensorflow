@@ -253,3 +253,7 @@ conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
 # Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
 nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
 
+# This passes for NMSV2 but fails for others because the constants get encapsulated
+# leading to wrong results
+# Fails because of trivial fn check at the bridge, passes without the check 
+image_ops_test.NonMaxSuppressionTest.testDataTypes

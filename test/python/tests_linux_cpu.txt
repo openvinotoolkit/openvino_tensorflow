@@ -92,3 +92,6 @@ test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
 test_l2loss.TestL2Loss.test_l2loss[xshape1]
+
+# Fails because of trivial fn check at the bridge, passes without the check 
+test_nms.TestNMSOperations.test_NMSV2

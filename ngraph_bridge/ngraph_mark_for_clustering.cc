@@ -232,7 +232,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Mean"] = SetStaticInputs({1});
     set_attributes_map["Min"] = SetStaticInputs({1});
     set_attributes_map["MirrorPad"] = SetStaticInputs({1});
-    set_attributes_map["NonMaxSuppressionV4"] = SetStaticInputs({2, 3, 4});
+    set_attributes_map["NonMaxSuppressionV2"] = SetStaticInputs({2});
     set_attributes_map["OneHot"] = SetStaticInputs({1});
     set_attributes_map["Pad"] = SetStaticInputs({1});
     set_attributes_map["PadV2"] = SetStaticInputs({1, 2});
@@ -358,7 +358,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Mod"] = SimpleConfirmationFunction();
     confirmation_function_map["Neg"] = SimpleConfirmationFunction();
     confirmation_function_map["NotEqual"] = SimpleConfirmationFunction();
-    confirmation_function_map["NonMaxSuppressionV4"] =
+    confirmation_function_map["NonMaxSuppressionV2"] =
         SimpleConfirmationFunction();
     confirmation_function_map["NoOp"] = SimpleConfirmationFunction();
     confirmation_function_map["OneHot"] = SimpleConfirmationFunction();
@@ -523,7 +523,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["Mod"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Neg"]["T"] = NGraphNumericDTypes();
     type_constraint_map["NotEqual"]["T"] = NGraphDTypes();
-    type_constraint_map["NonMaxSuppressionV4"]["T"] = {
+    type_constraint_map["NonMaxSuppressionV2"]["T"] = {
         DT_FLOAT};  // TF allows half too
     type_constraint_map["OneHot"]["T"] = NGraphDTypes();
     type_constraint_map["Pack"]["T"] = NGraphDTypes();
@@ -711,8 +711,10 @@ GetTFToNgOpMap() {
           {"Mod", {std::make_shared<opset::Mod>()}},
           {"Neg", {std::make_shared<opset::Negative>()}},
           {"NotEqual", {std::make_shared<opset::NotEqual>()}},
-          {"NonMaxSuppressionV4",
-           {std::make_shared<opset::NonMaxSuppression>(), constant}},
+          {"NonMaxSuppressionV2",
+           {std::make_shared<opset::NonMaxSuppression>(), constant,
+            std::make_shared<opset::Unsqueeze>(),
+            std::make_shared<opset::StridedSlice>()}},
           {"OneHot", {std::make_shared<opset::OneHot>(), constant}},
           {"Pack",
            {constant, std::make_shared<opset::Concat>(),

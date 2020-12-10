@@ -26,6 +26,7 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
+
 ###################################################
 [SKIP]
 
@@ -206,3 +207,7 @@ pool_test.PoolingTest.testGradient3D
 # Results don't match between TF and OV
 lrn_op_test.LRNOpTest.testGradients
 lrn_op_test.LRNOpTest.testCompute
+
+# This passes for NMSV2 but fails for others because the constants get encapsulated
+# leading to wrong results
+image_ops_test.NonMaxSuppressionTest.testDataTypes

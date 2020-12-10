@@ -586,6 +586,10 @@ xent_op_test.XentTest.test_session
 lrn_op_test.LRNOpTest.testGradientsZeroInput
 lrn_op_test.LRNOpTest.test_session
 
+image_ops_test.NonMaxSuppressionTest.test_session
+image_ops_test.NonMaxSuppressionTest.testInvalidShape
+image_ops_test.NonMaxSuppressionTest.testDataTypes
+
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped

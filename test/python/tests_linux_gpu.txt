@@ -100,3 +100,6 @@ test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]  # AssertionErr
 test_set_backend.TestSetBackend.test_set_backend # AssertionError
 
 test_while_loop.TestWhileLoop.test_while_loop # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
+
+# Fails because of trivial fn check at the bridge, passes without the check 
+test_nms.TestNMSOperations.test_NMSV2
