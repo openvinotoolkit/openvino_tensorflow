@@ -1220,10 +1220,14 @@ static Status TranslateDepthwiseConv2dNativeOp(
 static Status TranslateExpandDimsOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_input, ng_dim;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_dim));
+  ng::Output<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  std::vector<int64> dims;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &dims));
+  auto ng_dims = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ngraph::Shape{dims.size()}, dims);
   SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dim));
+           ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dims));
   return Status::OK();
 }
 

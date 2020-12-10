@@ -559,7 +559,7 @@ Status AssignClusters(Graph* graph) {
   for (auto node : graph->op_nodes()) {
     // TODO: Other nodes (such as those with static inputs) may also require
     // deassignment here
-    if (node->type_string() == "Const") {
+    if (node->type_string() == "Const" && NodeIsMarkedForClustering(node)) {
       auto src_index = cluster_map.at(node)->index;
       NGRAPH_VLOG(2) << "Cluster index of constant node " << node->name()
                      << ": " << src_index << endl;
@@ -726,8 +726,8 @@ Status AssignClusters(Graph* graph) {
       }  // end of the for over each cluster pair's reason vector
 
       if (deadness_string != "") {
-        std::cout << "Deadness predicates information\n";
-        std::cout << deadness_string;
+        NGRAPH_VLOG(3) << "Deadness predicates information\n";
+        NGRAPH_VLOG(3) << deadness_string;
       }
 
       if (pair_has_reason) {
