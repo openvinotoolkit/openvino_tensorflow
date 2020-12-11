@@ -27,6 +27,7 @@ import shutil
 import glob
 import platform
 import shlex
+from sysconfig import get_paths
 
 
 def get_tf_cxxabi():
@@ -586,3 +587,33 @@ def get_bazel_version():
     version = version_info[1].strip()
     version_tuple = version.split('.')
     return bazel_kind, version_tuple
+
+
+def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+                   artifacts_location, debug_enabled, verbosity):
+    install_location = os.path.join(artifacts_location, "openvino")
+    print("INSTALL location: " + artifacts_location)
+
+    # Now build OpenVINO
+    openvino_cmake_flags = [
+        "-DENABLE_V10_SERIALIZE=ON",
+        "-DENABLE_TESTS=OFF",
+        "-DENABLE_SAMPLES=OFF",
+        "-DENABLE_FUNCTIONAL_TESTS=OFF",
+        "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build
+        "-DENABLE_GNA=OFF",
+        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF",
+        "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
+        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
+        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
+        target_arch,
+        "-DENABLE_CPPLINT=OFF",
+        "-DENABLE_SPEECH_DEMO=FALSE",
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DCMAKE_INSTALL_PREFIX=" + install_location
+    ]
+
+    if debug_enabled:
+        openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+
+    cmake_build(build_dir, openvino_src_dir, openvino_cmake_flags, verbosity)

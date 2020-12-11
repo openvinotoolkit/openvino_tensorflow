@@ -112,7 +112,7 @@ set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/inte
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
 install(DIRECTORY ${IE_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
 install(DIRECTORY ${TBB_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
-if(USE_PREBUILT_OPENVINO)
+if(USE_OPENVINO_FROM_LOCATION)
     file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/lib*" "${TBB_LIBS}/lib*")
     foreach(LIB_FILE ${NGRAPH_LIB_FILES})
         get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)

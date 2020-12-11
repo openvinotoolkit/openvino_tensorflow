@@ -56,13 +56,14 @@ def main():
     # Component versions
     tf_version = "v2.2.0"
     use_intel_tf = False
+    openvino_version = "releases/2021/2"
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
         '--debug_build',
-        help="Builds a debug version of the nGraph components\n",
+        help="Builds a debug version of the components\n",
         action="store_true")
 
     parser.add_argument(
@@ -75,13 +76,6 @@ def main():
         help=
         "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
     )
-
-    parser.add_argument(
-        '--use_prebuilt_openvino',
-        type=str,
-        help=
-        "Skip building OpenVINO and use the pre-built version from the specified directory.\n",
-        action="store")
 
     parser.add_argument(
         '--use_prebuilt_tensorflow',
@@ -118,6 +112,14 @@ def main():
         help=
         "Use TensorFlow from a directory where it was already built and stored.\n"
         "NOTE: This location is expected to be populated by build_tf.py\n",
+        action="store",
+        default='')
+
+    parser.add_argument(
+        '--use_openvino_from_location',
+        help=
+        "Use OpenVINO from a directory where it was already built and stored.\n"
+        "NOTE: This location is expected to be populated by build_ov.py\n",
         action="store",
         default='')
 
@@ -328,39 +330,25 @@ def main():
             copy_tf_to_artifacts(tf_version, dst_dir, None, use_intel_tf)
             os.chdir(cwd)
 
-    if not arguments.use_prebuilt_openvino:
-        openvino_version = "releases/2021/2"
-        openvino_src_dir = "./openvino"
+    if arguments.use_openvino_from_location != "":
+        print("Using OpenVINO from " + arguments.use_openvino_from_location)
+    else:
+        print("Building OpenVINO from source")
+        print(
+            "NOTE: OpenVINO python module is not built when building from source."
+        )
+
+        # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
             openvino_version,
             submodule_update=True)
+        openvino_src_dir = os.path.join(os.getcwd(), "openvino")
+        print("OV_SRC_DIR: ", openvino_src_dir)
 
-        # Now build OpenVINO
-        openvino_cmake_flags = [
-            "-DENABLE_V10_SERIALIZE=ON",
-            "-DENABLE_TESTS=OFF",
-            "-DENABLE_SAMPLES=OFF",
-            "-DENABLE_FUNCTIONAL_TESTS=OFF",
-            "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build
-            "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF",
-            "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
-            "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-            "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
-            + target_arch,
-            "-DENABLE_CPPLINT=OFF",
-            "-DENABLE_SPEECH_DEMO=FALSE",
-            "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
-            "-DCMAKE_INSTALL_PREFIX=" + os.path.join(artifacts_location,
-                                                     "openvino")
-        ]
-
-        if arguments.debug_build:
-            openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
-
-        cmake_build(build_dir, openvino_src_dir, openvino_cmake_flags,
-                    verbosity)
+        build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+                       artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the bridge
     ngraph_tf_cmake_flags = [
@@ -369,12 +357,12 @@ def main():
     ]
 
     openvino_artifacts_dir = ""
-    if not arguments.use_prebuilt_openvino:
+    if arguments.use_openvino_from_location == '':
         openvino_artifacts_dir = os.path.join(artifacts_location, "openvino")
     else:
         openvino_artifacts_dir = os.path.abspath(
-            arguments.use_prebuilt_openvino)
-        ngraph_tf_cmake_flags.extend(["-DUSE_PREBUILT_OPENVINO=TRUE"])
+            arguments.use_openvino_from_location)
+        ngraph_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
 
     ngraph_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])

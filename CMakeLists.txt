@@ -141,7 +141,7 @@ endif(APPLE)
 # Build options
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
-option(USE_PREBUILT_OPENVINO "Use prebuilt OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
+option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
 option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
 
 set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
