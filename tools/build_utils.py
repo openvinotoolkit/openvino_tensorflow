@@ -596,19 +596,13 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
 
     # Now build OpenVINO
     openvino_cmake_flags = [
-        "-DENABLE_V10_SERIALIZE=ON",
-        "-DENABLE_TESTS=OFF",
-        "-DENABLE_SAMPLES=OFF",
-        "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=OFF",  # TODO: Fix OpenVINO VPU build
-        "-DENABLE_GNA=OFF",
-        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF",
-        "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
+        "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
+        "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
+        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
+        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
-        target_arch,
-        "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE",
+        target_arch, "-DENABLE_CPPLINT=OFF", "-DENABLE_SPEECH_DEMO=FALSE",
         "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DCMAKE_INSTALL_PREFIX=" + install_location
     ]
