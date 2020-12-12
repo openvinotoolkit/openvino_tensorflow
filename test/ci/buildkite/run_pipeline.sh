@@ -8,6 +8,7 @@ echo "BUILDKITE_AGENT_META_DATA_NAME: ${BUILDKITE_AGENT_META_DATA_NAME}"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 export TF_LOCATION=/localdisk/buildkite-agent/prebuilt_tensorflow_2_2_0
+export OV_LOCATION=/localdisk/buildkite-agent/prebuilt_openvino_2021_2/artifacts/openvino
 export NGRAPH_TF_BACKEND=CPU
 
 # Always run setup for now
