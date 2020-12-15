@@ -116,7 +116,8 @@ cd ${LOCALSTORE}/demo
 NUM_ITER=20
 export NGRAPH_TF_LOG_PLACEMENT=1
 export NGRAPH_TF_VLOG_LEVEL=-1
-./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" 2>&1 > ${TMPFILE}
+device=${NGRAPH_TF_BACKEND:-"CPU"}
+./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" $device 2>&1 > ${TMPFILE}
 ret_code=$?
 if (( $ret_code == 0 )); then
     echo

@@ -4,8 +4,11 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+device=${NGRAPH_TF_BACKEND:-"CPU"}
+device="${device,,}" # lowercase
+MODELFILENAME=models_${device}.txt
 # read models & params from manifest
-MANIFEST=${SCRIPT_DIR}/models_cpu.txt
+MANIFEST=${SCRIPT_DIR}/${MODELFILENAME}
 [ -z $1 ] || MANIFEST=$1
 [ -f "$MANIFEST" ] || ( echo "Manifest not found: $MANIFEST !"; exit 1 )
 MANIFEST="$(cd "$(dirname "$MANIFEST")"; pwd)/$(basename "$MANIFEST")" # absolute path
