@@ -630,6 +630,20 @@ TEST(TransposeSinking, MultiOutputConV) {
   }
 }
 
+TEST(TransposeSinking, MultiUser) {
+  Scope root = Scope::NewRootScope();
+  Tensor input(DT_FLOAT, TensorShape({4, 2, 2, 1}));
+  AssignInputValuesRandom(input);
+
+  auto input_transpose = ops::Transpose(root, input, {0, 3, 1, 2});
+  auto sqrt = ops::Sqrt(root, input_transpose);
+  auto sqrt_transpose = ops::Transpose(root, sqrt, {0, 2, 3, 1});
+  auto add = ops::Add(root, sqrt, sqrt_transpose);
+
+  OpExecuter opexecuter(root, "MultiUser", {add});
+  opexecuter.RunTest();
+}
+
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

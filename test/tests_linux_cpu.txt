@@ -60,9 +60,3 @@ ArrayOps.SplitVZeroSizeSplit
 ArrayOps.SplitVZeroSizeNegSplit
 
 MathOps.FloorModNegFloat #Floor_mod supports only I32 precision of inputs
-
-# The following test is a reproducer for the Alexnet accuracy issue related to TS
-TransposeSinking.MultiOutputConV
-
-
-

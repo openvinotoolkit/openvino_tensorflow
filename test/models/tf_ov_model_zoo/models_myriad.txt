@@ -12,7 +12,7 @@ resnet_v2_50  bike  'mountain bike, all-terrain bike'
 inception_v3  bike  'mountain bike, all-terrain bike'
 inception_v4  bike  'mountain bike, all-terrain bike'
 
-# alexnet  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
+alexnet  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
 cifarnet  bike  '.*'
 lenet  bike  '.*'
 vgg_16  bike  'mountain bike, all-terrain bike, off-roader\s*( 11.'

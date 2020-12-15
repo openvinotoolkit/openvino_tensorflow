@@ -35,8 +35,7 @@ namespace tensorflow {
 namespace ngraph_bridge {
 namespace pass {
 
-using TransposeMap = unordered_map<shared_ptr<ngraph::Node>,
-                                   vector<shared_ptr<opset::Transpose>>>;
+using TransposeMap = unordered_map<string, shared_ptr<opset::Transpose>>;
 
 static ngraph::CoordinateDiff apply_permutation(ngraph::CoordinateDiff input,
                                                 ngraph::AxisVector order) {
@@ -79,38 +78,41 @@ static string describe(shared_ptr<ngraph::Node> node) {
 }
 
 static shared_ptr<opset::Transpose> make_transpose(
-    shared_ptr<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
-  auto ng_input_order = std::make_shared<opset::Constant>(
+    ngraph::Output<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
+  auto order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{input_order.size()}, input_order);
-  auto transpose = make_shared<opset::Transpose>(arg, ng_input_order);
+  auto transpose = make_shared<opset::Transpose>(arg, order);
   NGRAPH_VLOG(4) << "Make Transpose " << describe<opset::Transpose>(transpose);
   return transpose;
 }
 
 static shared_ptr<opset::Reshape> make_reshape(
-    shared_ptr<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
-  auto ng_input_order = std::make_shared<opset::Constant>(
+    ngraph::Output<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
+  auto order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{input_order.size()}, input_order);
-  auto transpose = make_shared<opset::Reshape>(arg, ng_input_order, false);
+  auto transpose = make_shared<opset::Reshape>(arg, order, false);
   NGRAPH_VLOG(4) << "Make Reshape " << describe<opset::Reshape>(transpose);
   return transpose;
 }
 
 static void write_transposemap(TransposeMap& reorders,
-                               shared_ptr<ngraph::Node> target,
+                               ngraph::Output<ngraph::Node> target,
                                shared_ptr<opset::Transpose> transpose) {
-  NGRAPH_VLOG(4) << "Write TransposeMap[" << target->get_name()
+  auto name =
+      target.get_node()->get_name() + "." + to_string(target.get_index());
+  NGRAPH_VLOG(4) << "Write TransposeMap[" << name
                  << "] = " << describe<opset::Transpose>(transpose);
-  reorders[target].push_back(transpose);
+  reorders[name] = transpose;
 }
 
 static shared_ptr<opset::Transpose> read_transposemap(
     TransposeMap& reorders, ngraph::Output<ngraph::Node> target) {
-  auto transpose = reorders.at(target.get_node_shared_ptr());
-  NGRAPH_VLOG(4) << "Read TransposeMap[" << target.get_node()->get_name()
-                 << "]  -> "
-                 << describe<opset::Transpose>(transpose[target.get_index()]);
-  return transpose[target.get_index()];
+  auto name =
+      target.get_node()->get_name() + "." + to_string(target.get_index());
+  auto transpose = reorders[name];
+  NGRAPH_VLOG(4) << "Read TransposeMap[" << name << "]  -> "
+                 << describe<opset::Transpose>(transpose);
+  return transpose;
 }
 
 static shared_ptr<opset::Transpose> combine_transposes(
@@ -124,8 +126,7 @@ static shared_ptr<opset::Transpose> combine_transposes(
       ngraph::apply_permutation(default_order, t1_const->get_axis_vector_val());
   auto perm_t2 =
       ngraph::apply_permutation(perm_t1, t2_const->get_axis_vector_val());
-  auto combined =
-      make_transpose(t2->input_value(0).get_node_shared_ptr(), perm_t2);
+  auto combined = make_transpose(t2->input_value(0), perm_t2);
   NGRAPH_VLOG(4) << "Combining " << describe<opset::Transpose>(t1) << " and "
                  << describe<opset::Transpose>(t2) << " into "
                  << describe<opset::Transpose>(combined);
@@ -174,12 +175,9 @@ static void mark_transpose_for_deletion(
 static shared_ptr<opset::Transpose> create_default_transpose(
     ngraph::Output<ngraph::Node> n) {
   auto default_order = ngraph::get_default_order(n.get_shape());
-  auto ng_input_order = std::make_shared<opset::Constant>(
+  auto order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{default_order.size()}, default_order);
-  auto default_transpose = make_shared<opset::Transpose>(n, ng_input_order);
-  NGRAPH_VLOG(4) << "Default transpose: "
-                 << describe<opset::Transpose>(default_transpose);
-  return default_transpose;
+  return make_shared<opset::Transpose>(n, order);
 }
 
 // convert_binary_to_default_order is used when one of the arguments
@@ -191,7 +189,7 @@ static void convert_binary_to_default_order(
     shared_ptr<ngraph::Node> binary, const ngraph::Input<ngraph::Node>& input,
     ngraph::Output<ngraph::Node> right, TransposeMap& reorders,
     set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
-  auto left = input.get_source_output().get_node_shared_ptr();
+  auto left = input.get_source_output();
   auto right_t = read_transposemap(reorders, right);
   auto right_const = ngraph::as_type_ptr<opset::Constant>(
       right_t->input_value(1).get_node_shared_ptr());
@@ -202,7 +200,7 @@ static void convert_binary_to_default_order(
   // if right input is being implicitly broadcasted, insert a reshape
   // instead of a transpose
   shared_ptr<ngraph::Node> new_node;
-  auto left_shape = left->get_shape();
+  auto left_shape = left.get_shape();
   if (left_shape.size() < perm_to_def.size()) {
     left_shape.insert(left_shape.begin(),
                       perm_to_def.size() - left_shape.size(), 1);
@@ -229,28 +227,24 @@ static void materialize_shapes(
   // For each node, create a default transpose for
   // each of the outputs and store in the map
   for (auto& it : n->outputs()) {
-    NGRAPH_VLOG(4) << "Handling node with " << n->get_output_size()
-                   << " output/s.";
-    write_transposemap(reorders, n, create_default_transpose(it));
+    write_transposemap(reorders, it, create_default_transpose(it));
   }
 
   for (size_t i = 0; i < n->input_values().size(); i++) {
     // materialize all pending transposes, flush pending transposes
     auto arg = n->input_value(i);
-    if (reorders.count(arg.get_node_shared_ptr()) != 0) {
-      auto arg_transpose = read_transposemap(reorders, arg);
-      NGRAPH_VLOG(4) << "Materializing "
-                     << describe<opset::Transpose>(arg_transpose) << " for "
-                     << arg.get_node_shared_ptr()->get_name();
-      mark_transpose_for_deletion(arg_transpose, transposes_to_delete);
-      auto arg_shape = arg.get_shape();
-      auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
-          arg_transpose->input_value(1).get_node_shared_ptr());
-      if (arg_transpose_order->get_axis_vector_val() !=
-          get_default_order(arg.get_shape())) {
-        // Insert if arg needs to be transposed.
-        insert_transpose(n, arg_transpose, i);
-      }
+    auto arg_transpose = read_transposemap(reorders, arg);
+    NGRAPH_VLOG(4) << "Materializing "
+                   << describe<opset::Transpose>(arg_transpose) << " for "
+                   << arg.get_node_shared_ptr()->get_name();
+    mark_transpose_for_deletion(arg_transpose, transposes_to_delete);
+    auto arg_shape = arg.get_shape();
+    auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
+        arg_transpose->input_value(1).get_node_shared_ptr());
+    if (arg_transpose_order->get_axis_vector_val() !=
+        get_default_order(arg.get_shape())) {
+      // Insert if arg needs to be transposed.
+      insert_transpose(n, arg_transpose, i);
     }
   }
 }
@@ -276,8 +270,7 @@ static void sink_transpose(
 static void sink_unary(
     shared_ptr<ngraph::Node> n, TransposeMap& reorders,
     set<shared_ptr<ngraph::Node>>& /* transposes_to_delete */) {
-  auto in = n->input_value(0);
-  auto arg_transpose = read_transposemap(reorders, in);
+  auto arg_transpose = read_transposemap(reorders, n->input_value(0));
   NGRAPH_VLOG(4) << "Propagating " << describe<opset::Transpose>(arg_transpose)
                  << " for " << n->get_name();
   write_transposemap(reorders, n, arg_transpose);
@@ -452,7 +445,7 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
 
   // STEP 1 : Sink or Swim transposes away for op clusters
   for (auto n : f->get_ordered_ops()) {
-    NGRAPH_VLOG(4) << "-----Start: Processing node----- " << n->get_name();
+    NGRAPH_VLOG(4) << "Processing " << n->get_name();
     // collect output shape of all Result nodes for a sanity check
     if (ngraph::op::is_output(n)) {
       orig_result_out_shape[n->get_name()] = n->get_output_shape(0);
@@ -470,7 +463,6 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
     } else {
       materialize_shapes(n, reorders, transposes_to_delete);
     }
-    NGRAPH_VLOG(4) << "-----End: Processing node----- " << n->get_name();
   }
 
   // STEP 2: purge all the transposes we either sunk or swam.
