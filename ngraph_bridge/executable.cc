@@ -48,8 +48,9 @@ Executable::Executable(shared_ptr<Function> func, string device)
   auto parameters = func->get_parameters();
   ngraph::ParameterVector used_parameters;
   for (int i = 0; i < parameters.size(); ++i) {
-    NGRAPH_VLOG(2) << parameters[i];
+    NGRAPH_VLOG(3) << parameters[i];
     if (parameters[i]->get_users().size() == 0) {
+      m_skipped_inputs.push_back(i);
       NGRAPH_VLOG(2) << "Removing unused parameter "
                      << parameters[i]->get_name();
     } else {
@@ -157,9 +158,9 @@ bool Executable::call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   // sum of the
   // inputs specified and the inputs we hoisted, if any.
   InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
-  if (input_info.size() != (inputs.size() + m_hoisted_params.size())) {
+  if (input_info.size() > (inputs.size() + m_hoisted_params.size())) {
     throw runtime_error("Function inputs (" + to_string(input_info.size()) +
-                        ") number differ from number of given inputs (" +
+                        ") number greater than number of given inputs (" +
                         to_string(inputs.size() + m_hoisted_params.size()) +
                         ")");
   }
@@ -167,14 +168,29 @@ bool Executable::call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   //  Prepare input blobs
   auto func = m_network.getFunction();
   auto parameters = func->get_parameters();
+  int j = 0;
   for (int i = 0; i < inputs.size(); i++) {
+    if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
+        m_skipped_inputs.end()) {
+      continue;
+    }
+    auto input_name = parameters[j++]->get_friendly_name();
+    if (input_info.find(input_name) == input_info.end()) {
+      NGRAPH_VLOG(1) << "Skipping unused input " << input_name;
+      continue;
+    }
     shared_ptr<IETensor> tv = static_pointer_cast<IETensor>(inputs[i]);
-    m_infer_req.SetBlob(parameters[i]->get_friendly_name(), tv->get_blob());
+    m_infer_req.SetBlob(input_name, tv->get_blob());
   }
 
   for (const auto& it : m_hoisted_params) {
+    auto input_name = it.first;
+    if (input_info.find(input_name) == input_info.end()) {
+      NGRAPH_VLOG(1) << "Skipping unused hoisted param " << input_name;
+      continue;
+    }
     shared_ptr<IETensor> tv = static_pointer_cast<IETensor>(it.second);
-    m_infer_req.SetBlob(it.first, tv->get_blob());
+    m_infer_req.SetBlob(input_name, tv->get_blob());
   }
 
   InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();

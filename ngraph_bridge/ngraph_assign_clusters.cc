@@ -725,11 +725,6 @@ Status AssignClusters(Graph* graph) {
         reason_count_clusters[inner_itr]++;
       }  // end of the for over each cluster pair's reason vector
 
-      if (deadness_string != "") {
-        NGRAPH_VLOG(3) << "Deadness predicates information\n";
-        NGRAPH_VLOG(3) << deadness_string;
-      }
-
       if (pair_has_reason) {
         std::cout << src_encapsulate << "->" << dst_encapsulate << ": ";
         for (int reason_id = 0; reason_id < num_reasons; reason_id++) {

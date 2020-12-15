@@ -50,6 +50,7 @@ class Executable {
   string m_device;
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
+  vector<int> m_skipped_inputs;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
   shared_ptr<ngraph::Function> m_trivial_fn;
