@@ -51,8 +51,6 @@ namespace ngraph_bridge {
 // NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
 
-static const int MIN_NONTRIVIAL_NODES = 6;
-
 unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
 
@@ -189,7 +187,14 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    if (non_trivial_count < MIN_NONTRIVIAL_NODES) {
+    int min_non_trivial_nodes = 6;
+    if (std::getenv("TF_OV_MIN_NONTRIVIAL_NODES") != nullptr) {
+      min_non_trivial_nodes =
+          std::stoi(std::getenv("TF_OV_MIN_NONTRIVIAL_NODES"));
+    }
+    NGRAPH_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
+
+    if (non_trivial_count < min_non_trivial_nodes) {
       NGRAPH_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
         NGRAPH_VLOG(2) << "Busting node: " << node->name() << " ["
