@@ -114,8 +114,8 @@ IMGFILE="${LOCALSTORE}/demo/images/${IMAGE}"
 if [ ! -f "${IMGFILE}" ]; then echo "Cannot find image ${IMGFILE} !"; exit 1; fi
 cd ${LOCALSTORE}/demo
 NUM_ITER=20
-export NGRAPH_TF_LOG_PLACEMENT=1
-export NGRAPH_TF_VLOG_LEVEL=-1
+[ -z "$NGRAPH_TF_LOG_PLACEMENT" ] && export NGRAPH_TF_LOG_PLACEMENT=1
+[ -z "$NGRAPH_TF_VLOG_LEVEL" ] && export NGRAPH_TF_VLOG_LEVEL=-1
 device=${NGRAPH_TF_BACKEND:-"CPU"}
 ./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" $device 2>&1 > ${TMPFILE}
 ret_code=$?

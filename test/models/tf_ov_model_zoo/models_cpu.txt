@@ -1,6 +1,6 @@
 # Manifest of TF-OV models to run inference on
 # To be used in conjunction with script ./run_infer_multiple.sh
-# Syntax: model-name  image-name  'inference pattern to match'
+# Syntax: [env-vars] model-name  image-name  'inference pattern to match'
 
 resnet_50  bike  'mountain bike, all-terrain bike'
 resnet_50_v1.5  bike  'mountain bike, all-terrain bike'
@@ -27,9 +27,10 @@ mobilenet_v2  bike  '.*'
 nasnet_mobile bike  '.*'
 nasnet_large  bike  '.*'
 
-# ssd_mobilenet_v1 
-# ssd_mobilenet_v1_fpn 
-# ssd_mobilenet_v2 
-# ssd_inception_v2 
-# ssd_resnet_50_fpn 
-# ssdlite_mobilenet_v2 
+# ssd_mobilenet_v1  bike  '.*'
+# ssd_mobilenet_v1_fpn  bike  '.*'
+# ssd_mobilenet_v2  bike  '.*'
+# ssd_inception_v2  bike  '.*'
+# ssd_resnet_50_fpn  bike  '.*'
+# ssdlite_mobilenet_v2  bike  '.*'
+
