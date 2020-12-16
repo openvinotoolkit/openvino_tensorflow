@@ -74,6 +74,7 @@
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet50_infer
     label: ":bar_chart: ResNet50 Inference"
+    if: "'${NGRAPH_TF_BACKEND}' != 'MYRIAD'"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

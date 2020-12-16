@@ -1,0 +1,68 @@
+# GTEST Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by .../test/main.cpp (Google Test)
+
+#  Follows --gtest_filter patterns:
+#    * --> all 
+#    MathOps.* --> all tests under MathOps class
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+###################################################
+[SKIP]
+# Specify tests/patterns/regex that should be excluded/skipped
+
+# [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
+NGraphExecTest.Axpy8bit
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
+
+NGraphExecTest.MixedTensors
+
+# mismatch between TF and NG outputs
+MathOps.Mean 
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.NotEqual
+MathOps.FloorModNegInt
+
+MathOps.Ceil # Unsupported primitive of type: Ceiling
+
+# The output blob size is not equal to the network output size
+MathOps.Pow0D1D
+
+# Const layer Squeeze/Constant_3544 has incorrect dimensions in the output data 0
+MathOps.SqueezeNoAttributes
+
+# Const/Const/Constant_1260 has zero dimension which is not allowed
+NNOps.L2Loss
+
+# data doesn't exist
+ArrayOps.Shape2D
+ArrayOps.Shape3D
+
+# zero dimension
+ArrayOps.SplitVZeroSizeSplit
+ArrayOps.SplitVZeroSizeNegSplit
+
+MathOps.FloorModNegFloat #Floor_mod supports only I32 precision of inputs
+
+# The following test is a reproducer for the Alexnet accuracy issue related to TS
+TransposeSinking.MultiOutputConV
+
+
+

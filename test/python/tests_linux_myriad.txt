@@ -1,0 +1,28 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
+
+# Read comments in tests_common.txt for allowed regex/patterns
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+
+###################################################
+[SKIP]
+
+test*
+
+###################################################
+[RUN]
+
+test_api.*
+test_cast.*
+test_const.*
+test_conv2D_KernelChecks.*
+test_conv2dbackpropinput.*
+

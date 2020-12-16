@@ -59,7 +59,7 @@ get_artifacts ${LABELS} "https://storage.googleapis.com/download.tensorflow.org/
 echo
 echo "Checking inference result..."
 ret_code=1
-grep 'military uniform (653): 0.834' tmp_output && echo "TEST PASSED" && ret_code=0
+grep -E 'military uniform \(653\): (0.8|0.9)' tmp_output && echo "TEST PASSED" && ret_code=0
 rm tmp_output
 
 exit $((ret_code))

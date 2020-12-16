@@ -1,0 +1,38 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by .../test/python/tensorflow/tf_unittest_runner.py
+
+#  Few examples of valid regex/pattern (dots are treated literally):
+#    math_ops_test --> module
+#    *test* --> module (* means zero/more of anything)
+#    *test*.*test* --> module.class
+#    *_op_test*.*[Tt]est* --> e.g. pad_op_test.PadOpTest.testInputDims ([xy] means either x or y)
+#    math_ops_test.DivNoNanTest.testBasic --> module.class.testfunc
+#    math_ops_test.DivNoNanTest.* --> module.class.testfunc
+#    math_ops_test.D* --> module.class
+#    math_ops_test.* --> module.class
+#    math_*_test --> module
+#    math_*_*_test --> module
+#    math*_test --> module
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+###################################################
+[SKIP]
+
+
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+argmax_op_test.ArgMaxTest.testDouble
+argmax_op_test.ArgMaxTest.testOutputEmpty
+array_ops_test.ShapeSizeRankTest.testDenseShape
+array_ops_test.ShapeSizeRankTest.testSizeDtype
+array_ops_test.SnapshotOpTest.testInvertPermutation
+array_ops_test.StridedSliceTest.testDegenerateSlices
+
