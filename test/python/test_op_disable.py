@@ -75,3 +75,18 @@ class TestOpDisableOperations(NgraphTest):
                 ngraph_bridge.set_disabled_ops('')
                 return
             assert False, 'Had expected test to raise error'
+
+    def test_disable_op_env(self):
+        op_list = 'Select,Where'
+        ngraph_bridge.set_disabled_ops(op_list)
+        assert ngraph_bridge.get_disabled_ops() == op_list.encode("utf-8")
+
+        env_map = self.store_env_variables('TF_OV_DISABLED_OPS')
+        env_list = 'Squeeze'
+        self.set_env_variable('TF_OV_DISABLED_OPS', env_list)
+        assert ngraph_bridge.get_disabled_ops() == env_list.encode("utf-8")
+        self.unset_env_variable('TF_OV_DISABLED_OPS')
+        self.restore_env_variables(env_map)
+
+        # Clean up
+        ngraph_bridge.set_disabled_ops('')
