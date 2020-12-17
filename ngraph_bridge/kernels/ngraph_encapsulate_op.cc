@@ -414,9 +414,8 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     NGRAPH_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
-                                               &m_graph, ng_function));
-    ng_function->set_friendly_name(m_name);
-    util::DumpNGGraph(ng_function, "tf_function_" + m_name);
+                                               &m_graph, m_name, ng_function));
+    util::DumpNGGraph(ng_function, m_name);
 
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;

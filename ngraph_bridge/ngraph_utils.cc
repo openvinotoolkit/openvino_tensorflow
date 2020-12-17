@@ -223,30 +223,29 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
   }
 }
 
-void DumpTFGraph(tensorflow::Graph* graph, int idx,
-                 std::string filename_prefix) {
+void DumpTFGraph(tensorflow::Graph* graph, int idx, std::string filename) {
   if (!DumpAllGraphs()) {
     return;
   }
 
   std::stringstream ss;
-  ss << filename_prefix << "_" << std::setfill('0') << std::setw(4) << idx;
-  auto filename = ss.str() + ".pbtxt";
-  NGRAPH_VLOG(0) << "Dumping graph to " << filename;
-  GraphToPbTextFile(graph, filename);
+  ss << filename << "_" << std::setfill('0') << std::setw(4) << idx;
+  NGRAPH_VLOG(0) << "Dumping TF graph to " << ss.str() + ".pbtxt";
+  GraphToPbTextFile(graph, ss.str() + ".pbtxt");
 }
 
 void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
-                 const string filename_prefix) {
+                 const string filename) {
   if (!DumpAllGraphs()) {
     return;
   }
 
+  NGRAPH_VLOG(0) << "Dumping nGraph graph to " << filename + ".dot";
   // enable shape info for nGraph graphs
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_IO", "1");
-  ngraph::plot_graph(function, filename_prefix + ".dot");
+  ngraph::plot_graph(function, filename + ".dot");
 }
 
 bool DumpAllGraphs() { return GetEnv("TF_OV_DUMP_GRAPHS") == "1"; }

@@ -2736,7 +2736,8 @@ const static std::map<
 Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
-    const Graph* input_graph, shared_ptr<ng::Function>& ng_function) {
+    const Graph* input_graph, const string name,
+    shared_ptr<ng::Function>& ng_function) {
   //
   // We will visit ops in topological order.
   //
@@ -2870,7 +2871,8 @@ Status Builder::TranslateGraph(
   //
   // Create the nGraph function.
   //
-  ng_function = make_shared<ng::Function>(ng_result_list, ng_parameter_list);
+  ng_function =
+      make_shared<ng::Function>(ng_result_list, ng_parameter_list, name);
 
   //
   // Apply additional passes on the nGraph function here.

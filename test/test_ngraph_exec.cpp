@@ -76,7 +76,8 @@ class NGraphExecTest : public ::testing::Test {
     std::vector<const Tensor*> static_input_map(tf_input_shapes.size(),
                                                 nullptr);
     TF_RETURN_IF_ERROR(ngraph_bridge::Builder::TranslateGraph(
-        tf_input_shapes, static_input_map, &input_graph, ng_function));
+        tf_input_shapes, static_input_map, &input_graph, "test_ngraph_exec",
+        ng_function));
     return Status::OK();
   }
 

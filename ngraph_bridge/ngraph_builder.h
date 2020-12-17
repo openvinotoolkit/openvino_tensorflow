@@ -32,7 +32,7 @@ class Builder {
   static Status TranslateGraph(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
-      std::shared_ptr<ngraph::Function>& ng_function);
+      const string name, std::shared_ptr<ngraph::Function>& ng_function);
 
   using OpMap = std::unordered_map<std::string,
                                    std::vector<ngraph::Output<ngraph::Node>>>;

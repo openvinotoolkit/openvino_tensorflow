@@ -59,7 +59,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
   }
   if (parameters.size() != used_parameters.size()) {
     func = make_shared<Function>(func->get_results(), used_parameters,
-                                 func->get_name());
+                                 func->get_friendly_name());
   }
 
   // A trivial function is one of
@@ -103,8 +103,9 @@ Executable::Executable(shared_ptr<Function> func, string device)
         ngraph::replace_node(node, param);
         // nGraph doesn't provide a way to set a parameter to an existing
         // function, so we clone the function here...
-        func = make_shared<Function>(func->get_results(),
-                                     ParameterVector{param}, func->get_name());
+        func =
+            make_shared<Function>(func->get_results(), ParameterVector{param},
+                                  func->get_friendly_name());
         auto ie_tensor = make_shared<IETensor>(element_type, shape);
         ie_tensor->write(constant->get_data_ptr(),
                          shape_size(shape) * element_type.size());
@@ -131,11 +132,11 @@ Executable::Executable(shared_ptr<Function> func, string device)
   std::map<string, string> options;
 
   if (util::DumpAllGraphs()) {
-    auto& name = m_network.getName();
+    auto& name = m_function->get_friendly_name();
     m_network.serialize(name + ".xml", name + ".bin");
-    util::DumpNGGraph(func, "tf_function_" + name + "_ie");
+    util::DumpNGGraph(func, name + "_executable");
     options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
-        "ie_" + m_device + "_" + name;
+        name + "_IE_" + m_device;
   }
 
   NGRAPH_VLOG(2) << "Loading IE CNN network to device " << m_device;
