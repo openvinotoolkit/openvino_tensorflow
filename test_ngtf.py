@@ -33,29 +33,19 @@ def main():
     running build_ngtf.py which builds the ngraph-tensorflow-bridge
     and installs it to a virtual environment that would be used by this script.
     '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--test_examples',
-        help="Builds and tests the examples.\n",
-        action="store_true")
-
-    arguments = parser.parse_args()
     root_pwd = os.getcwd()
 
     build_dir = 'build_cmake'
     venv_dir = 'build_cmake/venv-tf-py3'
     artifacts_dir = os.path.join(build_dir, 'artifacts')
 
+    load_venv(venv_dir)
+
     # First run the C++ gtests
     run_ngtf_cpp_gtests(artifacts_dir, './', None)
 
     # Next run Python unit tests
-    load_venv(venv_dir)
     run_ngtf_pytests_from_artifacts(artifacts_dir)
-
-    if (arguments.test_examples):
-        # Run the C++ example build/run test
-        run_cpp_example_test('build_cmake')
 
     # Finally run Resnet50
     run_resnet50_infer_from_artifacts(artifacts_dir, 1, 1)
