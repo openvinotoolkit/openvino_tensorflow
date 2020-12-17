@@ -96,8 +96,8 @@ bool IsLoggingPlacement() {
 }
 
 std::set<string> GetDisabledOps() {
-  if (std::getenv("TF_OV_DISABLED_OPS") != nullptr) {
-    string disabled_ops_str = std::getenv("TF_OV_DISABLED_OPS");
+  if (std::getenv("NGRAPH_TF_DISABLED_OPS") != nullptr) {
+    string disabled_ops_str = std::getenv("NGRAPH_TF_DISABLED_OPS");
     SetDisabledOps(disabled_ops_str);
   }
   return disabled_op_types;

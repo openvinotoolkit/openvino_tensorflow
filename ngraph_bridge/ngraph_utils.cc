@@ -248,7 +248,7 @@ void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
   ngraph::plot_graph(function, filename + ".dot");
 }
 
-bool DumpAllGraphs() { return GetEnv("TF_OV_DUMP_GRAPHS") == "1"; }
+bool DumpAllGraphs() { return GetEnv("NGRAPH_TF_DUMP_GRAPHS") == "1"; }
 
 bool IsAlreadyProcessed(Graph* g) {
   // TODO: place a dummy node as a marker

@@ -188,9 +188,9 @@ Status DeassignClusters(Graph* graph) {
     }
 
     int min_non_trivial_nodes = 6;
-    if (std::getenv("TF_OV_MIN_NONTRIVIAL_NODES") != nullptr) {
+    if (std::getenv("NGRAPH_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
       min_non_trivial_nodes =
-          std::stoi(std::getenv("TF_OV_MIN_NONTRIVIAL_NODES"));
+          std::stoi(std::getenv("NGRAPH_TF_MIN_NONTRIVIAL_NODES"));
     }
     NGRAPH_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
 

@@ -1361,9 +1361,9 @@ TEST(MathOps, RangeFloat) {
   std::vector<Output> sess_run_fetchoutputs = {R};
   OpExecuter opexecuter(root, "Range", sess_run_fetchoutputs);
 
-  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
   opexecuter.RunTest();
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 }
 
 TEST(MathOps, RangeInt) {
@@ -1382,9 +1382,9 @@ TEST(MathOps, RangeInt) {
   std::vector<Output> sess_run_fetchoutputs = {R};
   OpExecuter opexecuter(root, "Range", sess_run_fetchoutputs);
 
-  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
   opexecuter.RunTest();
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 }  // end of test op Range
 
 // Test op: RealDiv

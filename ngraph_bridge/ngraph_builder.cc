@@ -2949,10 +2949,10 @@ Status Builder::TranslateGraph(
   //
   {
     ngraph::pass::Manager passes;
-    if (util::GetEnv("TF_OV_CONSTANT_FOLDING") == "1") {
+    if (util::GetEnv("NGRAPH_TF_CONSTANT_FOLDING") == "1") {
       passes.register_pass<ngraph::pass::ConstantFolding>();
     }
-    if (util::GetEnv("TF_OV_TRANSPOSE_SINKING") != "0") {
+    if (util::GetEnv("NGRAPH_TF_TRANSPOSE_SINKING") != "0") {
       passes.register_pass<pass::TransposeSinking>();
     }
     passes.run_passes(ng_function);

@@ -288,13 +288,13 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
   Graph input_graph(OpRegistry::Global());
   ASSERT_OK(LoadGraph("test_graph1.pbtxt", &input_graph));
 
-  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
   expect_const_count_ngfunc(input_graph, 1);
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 
-  setenv("TF_OV_CONSTANT_FOLDING", "0", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "0", true);
   expect_const_count_ngfunc(input_graph, 3);
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 }
 
 TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
@@ -309,13 +309,13 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
   // attach _Retval node
   auto pgraph_new = attach_retval_node(root, pgraph, add2.node());
 
-  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
   expect_const_count_ngfunc(*pgraph_new, 1);
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 
-  setenv("TF_OV_CONSTANT_FOLDING", "0", true);
+  setenv("NGRAPH_TF_CONSTANT_FOLDING", "0", true);
   expect_const_count_ngfunc(*pgraph_new, 3);
-  unsetenv("TF_OV_CONSTANT_FOLDING");
+  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
 }
 
 }  // namespace testing
