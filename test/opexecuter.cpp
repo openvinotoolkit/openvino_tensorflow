@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "test/opexecuter.h"
+
 #include <cstdlib>
+
+#include "logging/tf_graph_writer.h"
+#include "ngraph_bridge/ngraph_builder.h"
+#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "ngraph_bridge/ngraph_utils.h"
+#include "test/opexecuter.h"
 
 using namespace std;
 namespace ng = ngraph;

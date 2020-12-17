@@ -14,27 +14,30 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_bridge/ngraph_api.h"
+#include "tensorflow/core/lib/core/errors.h"
+
+#include "api.h"
+#include "backend_manager.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
-namespace config {
+namespace api {
 
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
 static std::set<std::string> disabled_op_types{};
 
 extern "C" {
-void ngraph_enable() { Enable(); }
-void ngraph_disable() { Disable(); }
-bool ngraph_is_enabled() { return IsEnabled(); }
+void enable() { Enable(); }
+void disable() { Disable(); }
+bool is_enabled() { return IsEnabled(); }
 
-size_t ngraph_backends_len() {
+size_t backends_len() {
   const auto backends = ListBackends();
   return backends.size();
 }
 
-bool ngraph_list_backends(char** backends) {
+bool list_backends(char** backends) {
   const auto ngraph_backends = ListBackends();
   for (size_t idx = 0; idx < ngraph_backends.size(); idx++) {
     backends[idx] = strdup(ngraph_backends[idx].c_str());
@@ -42,11 +45,9 @@ bool ngraph_list_backends(char** backends) {
   return true;
 }
 
-bool ngraph_set_backend(const char* backend) {
-  return (SetBackend(string(backend)) == tensorflow::Status::OK());
-}
+bool set_backend(const char* backend) { return SetBackend(string(backend)); }
 
-extern bool ngraph_get_backend(char** backend) {
+extern bool get_backend(char** backend) {
   string b = GetBackend();
   if (b == "") {
     return false;
@@ -55,15 +56,15 @@ extern bool ngraph_get_backend(char** backend) {
   return true;
 }
 
-void ngraph_start_logging_placement() { StartLoggingPlacement(); }
-void ngraph_stop_logging_placement() { StopLoggingPlacement(); }
-bool ngraph_is_logging_placement() { return IsLoggingPlacement(); }
+void start_logging_placement() { StartLoggingPlacement(); }
+void stop_logging_placement() { StopLoggingPlacement(); }
+bool is_logging_placement() { return IsLoggingPlacement(); }
 
-extern void ngraph_set_disabled_ops(const char* op_type_list) {
+extern void set_disabled_ops(const char* op_type_list) {
   SetDisabledOps(std::string(op_type_list));
 }
 
-extern const char* ngraph_get_disabled_ops() {
+extern const char* get_disabled_ops() {
   return ngraph::join(GetDisabledOps(), ",").c_str();
 }
 }
@@ -76,8 +77,8 @@ bool IsEnabled() { return _is_enabled; }
 
 vector<string> ListBackends() { return BackendManager::GetSupportedBackends(); }
 
-Status SetBackend(const string& type) {
-  return BackendManager::SetBackend(type);
+bool SetBackend(const string& type) {
+  return (BackendManager::SetBackend(type) == Status::OK());
 }
 
 string GetBackend() {
@@ -119,6 +120,6 @@ void SetDisabledOps(set<string> disabled_ops_set) {
   disabled_op_types = disabled_ops_set;
 }
 
-}  // namespace config
+}  // namespace api
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

@@ -35,9 +35,9 @@
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
+#include "api.h"
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
@@ -277,7 +277,7 @@ Status Encapsulator::AnalysisPass() {
           std::make_tuple(src->id(), edge->src_output(), dt));
     }
 
-    if (config::IsLoggingPlacement()) {
+    if (api::IsLoggingPlacement()) {
       if (edge_is_arg && edge_is_retval) {
         count_both_arg_retval++;
       } else {
@@ -290,7 +290,7 @@ Status Encapsulator::AnalysisPass() {
     }
   }
 
-  if (config::IsLoggingPlacement()) {
+  if (api::IsLoggingPlacement()) {
     int computed_edge_number = count_arg + count_retval +
                                count_both_arg_retval + count_free +
                                count_encapsulated;

@@ -21,9 +21,9 @@
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
 
+#include "api.h"
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_deassign_clusters.h"
@@ -87,7 +87,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // we will not do anything; all subsequent
     // passes become a no-op.
     bool ngraph_not_enabled =
-        (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+        (!api::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
     bool already_processed = util::IsAlreadyProcessed(graph);
     if (!already_processed && ngraph_not_enabled) {
       NGRAPH_VLOG(0) << "NGraph is available but disabled.";

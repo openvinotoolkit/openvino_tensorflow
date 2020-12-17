@@ -25,7 +25,6 @@
 #include "tensorflow/core/protobuf/rewriter_config.pb.h"
 #include "tensorflow/core/public/session.h"
 
-#include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/version.h"
 
 using tensorflow::SessionOptions;
@@ -109,7 +108,7 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
 
   // The following is related to Grappler - which we are turning off
   // Until we get a library fully running
-  if (tf::ngraph_bridge::ngraph_tf_is_grappler_enabled()) {
+  if (tf::ngraph_bridge::is_grappler_enabled()) {
     auto* custom_config = options.config.mutable_graph_options()
                               ->mutable_rewrite_options()
                               ->add_custom_optimizers();

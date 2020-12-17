@@ -80,7 +80,7 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "ngraph_bridge/ngraph_api.h"
+#include "ngraph_bridge/api.h"
 
 // These are all common classes it's handy to reference with no namespace.
 // using tensorflow::Flag;
@@ -231,14 +231,14 @@ Status ReadTensorFromImageFile(const std::vector<string>& file_names,
   // tf::Status status =
   //   tf::ngraph_bridge::BackendManager::SetBackendName(backend_name);
 
-  tensorflow::ngraph_bridge::config::ngraph_disable();
+  tensorflow::ngraph_bridge::api::disable();
   std::unique_ptr<tensorflow::Session> session(
       tensorflow::NewSession(tensorflow::SessionOptions()));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(
       session->Run({inputs}, {file_names.size() > 1 ? output_name : "output_0"},
                    {}, out_tensors));
-  tensorflow::ngraph_bridge::config::ngraph_enable();
+  tensorflow::ngraph_bridge::api::enable();
 
   return Status::OK();
 }
@@ -301,7 +301,7 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
 Status PrintTopLabels(const std::vector<Tensor>& outputs,
                       const string& labels_file_name) {
   // Disable nGraph so that we run these using TensorFlow on CPU
-  tensorflow::ngraph_bridge::config::ngraph_disable();
+  tensorflow::ngraph_bridge::api::disable();
   std::vector<string> labels;
   size_t label_count;
   Status read_labels_status =
@@ -331,7 +331,7 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
 //-----------------------------------------------------------------------------
 Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
                      bool* is_expected) {
-  tensorflow::ngraph_bridge::config::ngraph_disable();
+  tensorflow::ngraph_bridge::api::disable();
   *is_expected = false;
   Tensor indices;
   Tensor scores;

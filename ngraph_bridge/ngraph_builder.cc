@@ -26,9 +26,9 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/slice_plan.hpp"
 
+#include "api.h"
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/ngraph_conversions.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
@@ -105,7 +105,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
   node->add_provenance_tag(op_name);
-  if (config::IsLoggingPlacement()) {
+  if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << "\n";
   }
 }

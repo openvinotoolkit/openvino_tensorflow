@@ -33,7 +33,7 @@
 #include "tensorflow/core/util/command_line_flags.h"
 
 #include "inference_engine.h"
-#include "ngraph_bridge/ngraph_backend_manager.h"
+#include "ngraph_bridge/backend_manager.h"
 #include "ngraph_bridge/ngraph_timer.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/version.h"
@@ -64,16 +64,14 @@ void PrintVersion() {
   std::cout << "Tensorflow version: " << tensorflow::ngraph_bridge::tf_version()
             << std::endl;
   // nGraph Bridge version info
-  std::cout << "Bridge version: " << tf::ngraph_bridge::ngraph_tf_version()
+  std::cout << "Bridge version: " << tf::ngraph_bridge::version() << std::endl;
+  std::cout << "nGraph version: " << tf::ngraph_bridge::ngraph_version()
             << std::endl;
-  std::cout << "nGraph version: " << tf::ngraph_bridge::ngraph_lib_version()
+  std::cout << "CXX11_ABI Used: " << tf::ngraph_bridge::cxx11_abi_flag()
             << std::endl;
-  std::cout << "CXX11_ABI Used: "
-            << tf::ngraph_bridge::ngraph_tf_cxx11_abi_flag() << std::endl;
   std::cout << "Grappler Enabled? "
-            << (tf::ngraph_bridge::ngraph_tf_is_grappler_enabled()
-                    ? std::string("Yes")
-                    : std::string("No"))
+            << (tf::ngraph_bridge::is_grappler_enabled() ? std::string("Yes")
+                                                         : std::string("No"))
             << std::endl;
   PrintAvailableBackends();
 }

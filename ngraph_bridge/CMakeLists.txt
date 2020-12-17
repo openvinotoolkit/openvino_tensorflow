@@ -29,14 +29,14 @@ message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 set(SRC
+   api.cc
    backend.cc
+   backend_manager.cc
    executable.cc
    ie_tensor.cc
    kernels/ngraph_encapsulate_op.cc
-   ngraph_api.cc
    ngraph_assign_clusters.cc
    ngraph_builder.cc
-   ngraph_backend_manager.cc
    ngraph_cluster_manager.cc
    ngraph_conversions.cc
    ngraph_deassign_clusters.cc
@@ -97,8 +97,6 @@ message(STATUS "NGTF_INSTALL_LIB_DIR: ${NGTF_INSTALL_LIB_DIR}")
 
 # First install the libngraph_bridge.so and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${NGTF_INSTALL_LIB_DIR}")  
-
-install(FILES ngraph_backend_manager.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # Next install all the other prerequisites
 if(OS_VERSION STREQUAL "\"centos\"")

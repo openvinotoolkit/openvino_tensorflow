@@ -21,7 +21,7 @@
 
 #include "ngraph/ngraph.hpp"
 
-#include "ngraph_bridge/version.h"
+#include "version.h"
 
 // nGraph-TensorFlow bridge uses semantic versioning: see http://semver.org/
 
@@ -49,9 +49,11 @@ extern "C" const char* get_ngraph_version_string();
 
 namespace tensorflow {
 namespace ngraph_bridge {
-const char* ngraph_tf_version() { return (NG_TF_VERSION_STRING); }
-const char* ngraph_lib_version() { return get_ngraph_version_string(); }
-int ngraph_tf_cxx11_abi_flag() {
+
+const char* version() { return (NG_TF_VERSION_STRING); }
+const char* ngraph_version() { return get_ngraph_version_string(); }
+
+int cxx11_abi_flag() {
 #ifdef _GLIBCXX_USE_CXX11_ABI
   return _GLIBCXX_USE_CXX11_ABI;
 #else
@@ -59,7 +61,7 @@ int ngraph_tf_cxx11_abi_flag() {
 #endif
 }
 
-bool ngraph_tf_is_grappler_enabled() {
+bool is_grappler_enabled() {
 #if defined(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
   return true;
 #else

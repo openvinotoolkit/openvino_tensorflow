@@ -14,7 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_bridge/ngraph_backend_manager.h"
+#include "backend_manager.h"
+#include "logging/ngraph_log.h"
 
 using namespace std;
 
@@ -49,7 +50,7 @@ shared_ptr<Backend> BackendManager::GetBackend() {
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
-      NGRAPH_VLOG(1) << "Failed to get backend: " << status.error_message();
+      NGRAPH_VLOG(0) << "Failed to get backend: " << status.error_message();
       throw errors::Internal("Failed to get backend: ", status.error_message());
     }
   }
@@ -62,7 +63,7 @@ Status BackendManager::GetBackendName(string& backend_name) {
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
-      NGRAPH_VLOG(1) << "Failed to get backend name: "
+      NGRAPH_VLOG(0) << "Failed to get backend name: "
                      << status.error_message();
       return errors::Internal("Failed to get backend name: ",
                               status.error_message());
@@ -95,7 +96,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
   return Status::OK();
 }
 
-// Returns the nGraph supported backend names
+// Returns the supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
   InferenceEngine::Core core;
   return core.GetAvailableDevices();

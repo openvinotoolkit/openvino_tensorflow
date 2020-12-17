@@ -17,20 +17,15 @@
 // The backend manager class is a singelton class that interfaces with the
 // bridge to provide necessary backend
 
-#ifndef NGRAPH_TF_BRIDGE_BACKEND_MANAGER_H_
-#define NGRAPH_TF_BRIDGE_BACKEND_MANAGER_H_
+#pragma once
 
-#include <atomic>
 #include <mutex>
-#include <ostream>
+#include <string>
 #include <vector>
 
 #include "tensorflow/core/lib/core/errors.h"
 
-#include "ngraph/ngraph.hpp"
-
-#include "logging/ngraph_log.h"
-#include "ngraph_bridge/backend.h"
+#include "backend.h"
 
 using namespace std;
 
@@ -65,6 +60,3 @@ class BackendManager {
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif
-// NGRAPH_TF_BRIDGE_BACKEND_MANAGER_H

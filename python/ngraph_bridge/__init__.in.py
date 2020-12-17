@@ -112,34 +112,34 @@ def requested():
     })
 
 if ngraph_classic_loaded:
-    ngraph_bridge_lib.ngraph_is_enabled.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
-    ngraph_bridge_lib.ngraph_list_backends.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_set_backend.argtypes = [ctypes.c_char_p]
-    ngraph_bridge_lib.ngraph_set_backend.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
-    ngraph_bridge_lib.ngraph_get_backend.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_is_logging_placement.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_tf_version.restype = ctypes.c_char_p
-    ngraph_bridge_lib.ngraph_lib_version.restype = ctypes.c_char_p
-    ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag.restype = ctypes.c_int
-    ngraph_bridge_lib.ngraph_tf_is_grappler_enabled.restype = ctypes.c_bool
-    ngraph_bridge_lib.ngraph_set_disabled_ops.argtypes = [ctypes.c_char_p]
-    ngraph_bridge_lib.ngraph_get_disabled_ops.restype = ctypes.c_char_p
+    ngraph_bridge_lib.is_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
+    ngraph_bridge_lib.list_backends.restype = ctypes.c_bool
+    ngraph_bridge_lib.set_backend.argtypes = [ctypes.c_char_p]
+    ngraph_bridge_lib.set_backend.restype = ctypes.c_bool
+    ngraph_bridge_lib.get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
+    ngraph_bridge_lib.get_backend.restype = ctypes.c_bool
+    ngraph_bridge_lib.is_logging_placement.restype = ctypes.c_bool
+    ngraph_bridge_lib.tf_version.restype = ctypes.c_char_p
+    ngraph_bridge_lib.ngraph_version.restype = ctypes.c_char_p
+    ngraph_bridge_lib.cxx11_abi_flag.restype = ctypes.c_int
+    ngraph_bridge_lib.is_grappler_enabled.restype = ctypes.c_bool
+    ngraph_bridge_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
+    ngraph_bridge_lib.get_disabled_ops.restype = ctypes.c_char_p
 
     def enable():
-        ngraph_bridge_lib.ngraph_enable()
+        ngraph_bridge_lib.enable()
 
     def disable():
-        ngraph_bridge_lib.ngraph_disable()
+        ngraph_bridge_lib.disable()
 
     def is_enabled():
-        return ngraph_bridge_lib.ngraph_is_enabled()
+        return ngraph_bridge_lib.is_enabled()
 
     def list_backends():
-        len_backends = ngraph_bridge_lib.ngraph_backends_len()
+        len_backends = ngraph_bridge_lib.backends_len()
         result = (ctypes.c_char_p * len_backends)()
-        if not ngraph_bridge_lib.ngraph_list_backends(result):
+        if not ngraph_bridge_lib.list_backends(result):
             raise Exception("Expected " + str(len_backends) +
                             " backends, but got some  other number of backends")
         list_result = list(result)
@@ -150,33 +150,33 @@ if ngraph_classic_loaded:
         return backend_list
 
     def set_backend(backend):
-        if not ngraph_bridge_lib.ngraph_set_backend(backend.encode("utf-8")):
+        if not ngraph_bridge_lib.set_backend(backend.encode("utf-8")):
             raise Exception("Backend " + backend + " unavailable.")
 
     def get_backend():
         result = ctypes.c_char_p()
-        if not ngraph_bridge_lib.ngraph_get_backend(ctypes.byref(result)):
+        if not ngraph_bridge_lib.get_backend(ctypes.byref(result)):
             raise Exception("Cannot get currently set backend")
         return result.value.decode("utf-8")
 
     def start_logging_placement():
-        ngraph_bridge_lib.ngraph_start_logging_placement()
+        ngraph_bridge_lib.start_logging_placement()
 
     def stop_logging_placement():
-        ngraph_bridge_lib.ngraph_stop_logging_placement()
+        ngraph_bridge_lib.stop_logging_placement()
 
     def is_logging_placement():
-        return ngraph_bridge_lib.ngraph_is_logging_placement()
+        return ngraph_bridge_lib.is_logging_placement()
 
     def cxx11_abi_flag():
-        return ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()
+        return ngraph_bridge_lib.cxx11_abi_flag()
 
     def is_grappler_enabled():
-        return ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()
+        return ngraph_bridge_lib.is_grappler_enabled()
 
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled
-        if(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()):
+        if(ngraph_bridge_lib.is_grappler_enabled()):
             opt_name = 'ngraph-optimizer'
             # If the config already has ngraph-optimizer, then do not update it
             if config.HasField('graph_options'):
@@ -190,7 +190,6 @@ if ngraph_classic_loaded:
             rewriter_options.min_graph_nodes=-1
             ngraph_optimizer = rewriter_options.custom_optimizers.add()
             ngraph_optimizer.name = opt_name
-            ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
             ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
             config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
             # For reference, if we want to provide configuration support(backend parameters)
@@ -200,7 +199,6 @@ if ngraph_classic_loaded:
             # rewriter_options.min_graph_nodes=-1
             # ngraph_optimizer = rewriter_options.custom_optimizers.add()
             # ngraph_optimizer.name = "ngraph-optimizer"
-            # ngraph_optimizer.parameter_map["ngraph_backend"].s = backend_name.encode()
             # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
             # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
             # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
@@ -208,14 +206,14 @@ if ngraph_classic_loaded:
         return config
 
     def set_disabled_ops(unsupported_ops):
-        ngraph_bridge_lib.ngraph_set_disabled_ops(unsupported_ops.encode("utf-8"))
+        ngraph_bridge_lib.set_disabled_ops(unsupported_ops.encode("utf-8"))
 
     def get_disabled_ops():
-        return ngraph_bridge_lib.ngraph_get_disabled_ops()
+        return ngraph_bridge_lib.get_disabled_ops()
 
     __version__ = \
-    "nGraph bridge version: " + str(ngraph_bridge_lib.ngraph_tf_version()) + "\n" + \
-    "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_lib_version()) + "\n" + \
+    "nGraph bridge version: " + str(ngraph_bridge_lib.version()) + "\n" + \
+    "nGraph version used for this build: " + str(ngraph_bridge_lib.ngraph_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
-    "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.ngraph_tf_cxx11_abi_flag()) + "\n" \
-    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.ngraph_tf_is_grappler_enabled()) + "\n" \
+    "CXX11_ABI flag used for this build: " + str(ngraph_bridge_lib.cxx11_abi_flag()) + "\n" \
+    "nGraph bridge built with Grappler: " + str(ngraph_bridge_lib.is_grappler_enabled()) + "\n" \

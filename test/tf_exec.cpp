@@ -114,7 +114,7 @@ TEST(TFExec, axpy) {
       ->mutable_rewrite_options()
       ->set_constant_folding(tf::RewriterConfig::OFF);
 
-  if (ngraph_tf_is_grappler_enabled()) {
+  if (is_grappler_enabled()) {
     auto* custom_config = options.config.mutable_graph_options()
                               ->mutable_rewrite_options()
                               ->add_custom_optimizers();

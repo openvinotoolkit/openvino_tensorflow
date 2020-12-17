@@ -26,6 +26,7 @@
 #include "tensorflow/core/grappler/utils.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "ngraph_bridge/api.h"
 #include "ngraph_bridge/grappler/ngraph_optimizer.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 
@@ -67,7 +68,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
   // we will not do anything; all subsequent passes become a no-op.
   bool ngraph_not_enabled =
-      (!config::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+      (!api::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
   bool already_processed = util::IsAlreadyProcessed(&graph);
   if (!already_processed && ngraph_not_enabled) {
     NGRAPH_VLOG(0) << "NGraph is available but disabled.";
@@ -99,7 +100,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // Find a list of nodes that are of the types that are disabled
   std::set<string> disabled_nodes;
-  std::set<string> disabled_ops_set = config::GetDisabledOps();
+  std::set<string> disabled_ops_set = api::GetDisabledOps();
   for (auto itr : graph.nodes()) {
     if (disabled_ops_set.find(itr->type_string()) != disabled_ops_set.end()) {
       disabled_nodes.insert(itr->name());

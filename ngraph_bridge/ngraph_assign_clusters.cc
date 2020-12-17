@@ -26,8 +26,8 @@
 #include "tensorflow/core/platform/protobuf.h"
 #include "tensorflow/core/util/device_name_utils.h"
 
+#include "api.h"
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_api.h"
 #include "ngraph_bridge/ngraph_assign_clusters.h"
 #include "ngraph_bridge/ngraph_cluster_manager.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
@@ -541,7 +541,7 @@ Status AssignClusters(Graph* graph) {
       }
     }
 
-    if (!changed && config::IsLoggingPlacement()) {
+    if (!changed && api::IsLoggingPlacement()) {
       // This will be entered only once if logging is enabled
       // When entered, it will force the do-while to run one last time,
       // collecting information
@@ -647,7 +647,7 @@ Status AssignClusters(Graph* graph) {
       // TODO(amprocte): move attr name to a constant
       node->AddAttr("_ngraph_cluster", (int)cluster_idx);
 
-      if (config::IsLoggingPlacement()) {
+      if (api::IsLoggingPlacement()) {
         // map from cluster id to ngraph_cluster id
         cluster_to_encapsulate[cluster->index] = cluster_idx;
       }
@@ -657,7 +657,7 @@ Status AssignClusters(Graph* graph) {
   }
   NGRAPH_VLOG(2) << "Tagging done";
 
-  if (config::IsLoggingPlacement()) {
+  if (api::IsLoggingPlacement()) {
     int num_reasons = 6;  // the number of elements in the reasons enum
     // histogram of reasons of non-contraction of clusters
     vector<int> reason_count_clusters(num_reasons, 0);

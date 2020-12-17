@@ -16,9 +16,9 @@
 
 #include "tensorflow/core/graph/graph.h"
 
+#include "api.h"
+#include "backend_manager.h"
 #include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_api.h"
-#include "ngraph_bridge/ngraph_backend_manager.h"
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/ngraph_version_utils.h"
@@ -807,8 +807,7 @@ Status MarkForClustering(Graph* graph,
 
   static bool initialized = false;
 
-  std::set<string> disabled_ops_set_current = config::GetDisabledOps();
-
+  std::set<string> disabled_ops_set_current = api::GetDisabledOps();
   bool op_set_support_has_changed =
       disabled_ops_set_current != disabled_ops_set;
 
@@ -920,7 +919,7 @@ Status MarkForClustering(Graph* graph,
     }
   }
 
-  if (config::IsLoggingPlacement()) {
+  if (api::IsLoggingPlacement()) {
     std::cout << "\n=============New sub-graph logs=============\n";
     // print summary for nodes failed to be marked
     std::cout << "NGTF_SUMMARY: Op_not_supported: ";
