@@ -310,6 +310,49 @@ static Status GetStaticInputVector(
   return Status::OK();
 }
 
+static Status GetStaticInputNode(
+    const Node* op, int64 input_index,
+    const std::vector<const Tensor*>& static_input_map, DataType dt,
+    ng::Output<ng::Node>& node_) {
+  ng::element::Type type;
+  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dt, &type));
+  switch (dt) {
+    case DataType::DT_FLOAT: {
+      std::vector<float> vec_float;
+      TF_RETURN_IF_ERROR(
+          GetStaticInputVector(op, input_index, static_input_map, &vec_float));
+      node_ = ConstructNgNode<opset::Constant>(op->name(), type, ng::Shape{},
+                                               vec_float[0]);
+    } break;
+    case DataType::DT_DOUBLE: {
+      std::vector<double> vec_double;
+      TF_RETURN_IF_ERROR(
+          GetStaticInputVector(op, input_index, static_input_map, &vec_double));
+      node_ = ConstructNgNode<opset::Constant>(op->name(), type, ng::Shape{},
+                                               vec_double[0]);
+    } break;
+    case DataType::DT_INT32: {
+      std::vector<int32> vec_i32;
+      TF_RETURN_IF_ERROR(
+          GetStaticInputVector(op, input_index, static_input_map, &vec_i32));
+      node_ = ConstructNgNode<opset::Constant>(op->name(), type, ng::Shape{},
+                                               vec_i32[0]);
+    } break;
+    case DataType::DT_INT64: {
+      std::vector<int64> vec_i64;
+      TF_RETURN_IF_ERROR(
+          GetStaticInputVector(op, input_index, static_input_map, &vec_i64));
+      node_ = ConstructNgNode<opset::Constant>(op->name(), type, ng::Shape{},
+                                               vec_i64[0]);
+    } break;
+    default:
+      return errors::Internal("GetStaticInputNode: TF data type ",
+                              DataType_Name(dt), " not supported.");
+      break;
+  }
+  return Status::OK();
+}
+
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
 // Extract values from a Const op to `values`. Returns true if succeeds.
 //
@@ -2015,6 +2058,32 @@ static Status TranslatePadOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateRangeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_start, ng_stop, ng_step;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_start, ng_stop, ng_step));
+
+  DataType start_type = op->input_type(0);
+  DataType stop_type = op->input_type(1);
+  DataType step_type = op->input_type(2);
+  ng::element::Type out_type;
+  TF_RETURN_IF_ERROR(
+      util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
+  ng::Output<ng::Node> start_node, stop_node, step_node;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputNode(op, 0, static_input_map, start_type, start_node));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputNode(op, 1, static_input_map, stop_type, stop_node));
+  TF_RETURN_IF_ERROR(
+      GetStaticInputNode(op, 2, static_input_map, step_type, step_node));
+  auto ng_range = ConstructNgNode<opset::Range>(op->name(), start_node,
+                                                stop_node, step_node, out_type);
+
+  SaveNgOp(ng_op_map, op->name(), ng_range);
+  return Status::OK();
+}
+
 static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
                               Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input;
@@ -2694,6 +2763,7 @@ const static std::map<
         // PreventGradient is just Identity in dataflow terms, so reuse that.
         {"PreventGradient", TranslateIdentityOp},
         {"Prod", TranslateDirectReduceOp<opset::ReduceProd>},
+        {"Range", TranslateRangeOp},
         {"Rank", TranslateRankOp},
         {"RealDiv", TranslateBinaryOp<opset::Divide>},
         {"Reciprocal", TranslateReciprocalOp},

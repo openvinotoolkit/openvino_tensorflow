@@ -245,6 +245,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Sum"] = SetStaticInputs({1});
     set_attributes_map["TopKV2"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
+    set_attributes_map["Range"] = SetStaticInputs({0, 1, 2});
     initialized = true;
   }
   return set_attributes_map;
@@ -367,6 +368,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap() {
     confirmation_function_map["Pow"] = SimpleConfirmationFunction();
     confirmation_function_map["PreventGradient"] = SimpleConfirmationFunction();
     confirmation_function_map["Prod"] = SimpleConfirmationFunction();
+    confirmation_function_map["Range"] = SimpleConfirmationFunction();
     confirmation_function_map["Rank"] = SimpleConfirmationFunction();
     confirmation_function_map["RealDiv"] = SimpleConfirmationFunction();
     confirmation_function_map["Reciprocal"] = SimpleConfirmationFunction();
@@ -535,6 +537,7 @@ const TypeConstraintMap& GetTypeConstraintMap() {
     type_constraint_map["PreventGradient"]["T"] = NGraphDTypes();
     type_constraint_map["Prod"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Prod"]["Tidx"] = NGraphIndexDTypes();
+    type_constraint_map["Range"]["Tidx"] = NGraphNumericDTypes();
     type_constraint_map["Rank"]["T"] = NGraphNumericDTypes();
     type_constraint_map["RealDiv"]["T"] = NGraphNumericDTypes();
     type_constraint_map["Reciprocal"]["T"] = NGraphNumericDTypes();
@@ -723,6 +726,7 @@ GetTFToNgOpMap() {
           {"PadV2", {constant, std::make_shared<opset::Pad>()}},
           {"Pow", {std::make_shared<opset::Power>()}},
           {"Prod", {std::make_shared<opset::ReduceProd>(), constant}},
+          {"Range", {std::make_shared<opset::Range>()}},
           {"Rank", {constant}},
           {"RealDiv", {std::make_shared<opset::Divide>()}},
           {"Reciprocal", {constant, std::make_shared<opset::Power>()}},

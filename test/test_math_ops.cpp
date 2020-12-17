@@ -1344,6 +1344,49 @@ TEST(MathOps, Pow0D1D) {
   opexecuter.RunTest();
 }  // end of test op Pow
 
+// Test op: Range
+TEST(MathOps, RangeFloat) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor start(DT_FLOAT, TensorShape({}));  // scalar == rank 0 (no axes)
+  Tensor limit(DT_FLOAT, TensorShape({}));  // scalar == rank 0 (no axes)
+  Tensor delta(DT_FLOAT, TensorShape({}));  // scalar == rank 0 (no axes)
+
+  AssignInputValues(start, 2.0f);
+  AssignInputValues(limit, 7.5f);
+  AssignInputValues(delta, 1.5f);
+
+  auto R = ops::Range(root, start, limit, delta);
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Range", sess_run_fetchoutputs);
+
+  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  opexecuter.RunTest();
+  unsetenv("TF_OV_CONSTANT_FOLDING");
+}
+
+TEST(MathOps, RangeInt) {
+  Scope root = Scope::NewRootScope();
+
+  Tensor start(DT_INT32, TensorShape({}));  // scalar == rank 0 (no axes)
+  Tensor limit(DT_INT32, TensorShape({}));  // scalar == rank 0 (no axes)
+  Tensor delta(DT_INT32, TensorShape({}));  // scalar == rank 0 (no axes)
+
+  AssignInputValues(start, 2);
+  AssignInputValues(limit, 7);
+  AssignInputValues(delta, 1);
+
+  auto R = ops::Range(root, start, limit, delta);
+
+  std::vector<Output> sess_run_fetchoutputs = {R};
+  OpExecuter opexecuter(root, "Range", sess_run_fetchoutputs);
+
+  setenv("TF_OV_CONSTANT_FOLDING", "1", true);
+  opexecuter.RunTest();
+  unsetenv("TF_OV_CONSTANT_FOLDING");
+}  // end of test op Range
+
 // Test op: RealDiv
 TEST(MathOps, RealDiv) {
   Scope root = Scope::NewRootScope();

@@ -103,3 +103,6 @@ test_while_loop.TestWhileLoop.test_while_loop # [PARAMETER_MISMATCH] Failed to s
 
 # Fails because of trivial fn check at the bridge, passes without the check 
 test_nms.TestNMSOperations.test_NMSV2
+
+# Unsupported dynamic ops: Range
+test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]

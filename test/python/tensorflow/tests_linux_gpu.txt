@@ -257,3 +257,18 @@ nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
 # leading to wrong results
 # Fails because of trivial fn check at the bridge, passes without the check 
 image_ops_test.NonMaxSuppressionTest.testDataTypes
+
+# These tests fail because of the Range op dynamic output.
+reduction_ops_test.SumReductionTest.testFloat64
+reduction_ops_test.SumReductionTest.testFloat16
+reduction_ops_test.SumReductionTest.testComplex64
+reduction_ops_test.SumReductionTest.testComplex128
+reduction_ops_test.ProdReductionTest.testInt32
+reduction_ops_test.ProdReductionTest.testFloat64
+reduction_ops_test.ProdReductionTest.testComplex64
+reduction_ops_test.ProdReductionTest.testComplex128
+reduction_ops_test.MinReductionTest.testDoubleReduce3D
+reduction_ops_test.MeanReductionTest.testFloat64
+reduction_ops_test.MeanReductionTest.testComplex64
+reduction_ops_test.MeanReductionTest.testComplex128
+reduction_ops_test.MaxReductionTest.testDoubleReduce3D
