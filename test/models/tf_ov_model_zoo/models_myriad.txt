@@ -20,15 +20,16 @@ vgg_19  bike  '.*'
 densenet_121  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.6'
 densenet_169  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.8'
 densenet_201  bike  'mountain bike, all-terrain bike, off-roader\s*( 0.7'
+# fc_densenet_103  bike  '.*'
 
 mobilenet_v1  bike  '.*'
 mobilenet_v2  bike  '.*'
 nasnet_mobile bike  '.*'
 nasnet_large  bike  '.*'
 
-# ssd_mobilenet_v1 
-# ssd_mobilenet_v1_fpn 
-# ssd_mobilenet_v2 
-# ssd_inception_v2 
-# ssd_resnet_50_fpn 
-# ssdlite_mobilenet_v2 
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,Gather" TF_OV_MIN_NONTRIVIAL_NODES=50] ssd_mobilenet_v1  bike  '.*'
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,GatherV2" TF_OV_MIN_NONTRIVIAL_NODES=40] ssd_mobilenet_v1_fpn  bike  '.*'
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,Gather" TF_OV_MIN_NONTRIVIAL_NODES=50] ssd_mobilenet_v2  bike  '.*'
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,Gather" TF_OV_MIN_NONTRIVIAL_NODES=50] ssd_inception_v2  bike  '.*'
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,GatherV2" TF_OV_MIN_NONTRIVIAL_NODES=40] ssd_resnet_50_fpn  bike  '.*'
+# [TF_OV_DISABLED_OPS="Squeeze,Greater,Gather" TF_OV_MIN_NONTRIVIAL_NODES=50] ssdlite_mobilenet_v2  bike  '.*'
