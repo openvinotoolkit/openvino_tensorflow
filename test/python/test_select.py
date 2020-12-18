@@ -109,12 +109,12 @@ class TestSelect(NgraphTest):
 class TestWhere(NgraphTest):
     env_map = None
 
-    def __init__(self):
-        env_map = self.store_env_variables(['NGRAPH_TF_CONSTANT_FOLDING'])
+    def setup_method(self):
+        self.env_map = self.store_env_variables(['NGRAPH_TF_CONSTANT_FOLDING'])
         self.set_env_variable('NGRAPH_TF_CONSTANT_FOLDING', '1')
 
-    def __del__(self):
-        self.restore_env_variables(env_map)
+    def teardown_method(self):
+        self.restore_env_variables(self.env_map)
 
     def test_where(self):
         a = np.array([1.1, 3.0], [2.2, 4.4]).astype(np.float32)

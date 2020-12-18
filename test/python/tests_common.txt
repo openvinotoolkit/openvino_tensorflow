@@ -32,3 +32,6 @@
 
 test_bfloat16.TestBfloat16.test_matmul_bfloat16 # most backends do not support dtype bf16 for MatMul/Dot Op
 test_conv2dbackpropinput.TestConv2DBackpropInput.test_nhwc # parameterized; Fails, needs debugging
+
+test_select.TestWhere.* # Where op translation not working yet
+

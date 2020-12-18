@@ -44,7 +44,10 @@ def pattern_to_regex(pattern):
     pattern = re.sub(r'\*', '.*', pattern)
     # special case for M.C.F when it possibly matches with parameterized tests
     if pattern_noparam.count('.') == 2 and no_param:
-        pattern = '^' + pattern + r'\[.*'
+        if no_param:
+            pattern = '^' + pattern + '$'
+        else:
+            pattern = '^' + pattern + r'\[.*'
     if pattern_noparam.count('.') == 0:
         pattern = '^' + pattern + r'\..*\..*' + '$'
     if pattern_noparam.count('.') == 1:

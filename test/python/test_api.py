@@ -45,8 +45,8 @@ class TestNgraphAPI(NgraphTest):
         except:
             error_thrown = True
         ngraph_bridge.set_backend(current_backend)
-        assert error_thrown
         self.restore_env_variables(env_var_map)
+        assert error_thrown
 
     def test_list_backends(self):
         assert len(ngraph_bridge.list_backends())
