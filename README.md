@@ -107,19 +107,13 @@ For more build options:
         
         python3 build_ngtf.py --help
 
-Test the installation:
-      
-        python3 test_ngtf.py
-
-This command runs all C++ and Python unit tests from the `ngraph-bridge` source tree. It also runs various TensorFlow Python tests using nGraph.
-
 To use the `ngraph-tensorflow-bridge`, activate the following `virtualenv` to start using nGraph with TensorFlow. 
 
         source build_cmake/venv-tf-py3/bin/activate
  
 Alternatively, you can also install the TensorFlow and nGraph bridge outside of a `virtualenv`. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifacts/tensorflow` directories, respectively.
 
-Select the help option of `build_ngtf.py` script to learn more about various build options and how to build other backends. 
+Select the help option of `build_ngtf.py` script to learn more about various build options. 
 
 Verify that `ngraph-bridge` installed correctly:
 
@@ -134,13 +128,17 @@ This will produce something like this:
         TensorFlow version used for this build: v2.2.0-0-2b96f3662b
         CXX11_ABI flag used for this build: 1
         nGraph bridge built with Grappler: False
-        nGraph bridge built with Variables and Optimizers Enablement: False
-
 
 
 Note: The version of the ngraph-tensorflow-bridge is not going to be exactly 
 the same as when you build from source. This is due to delay in the source 
-release and publishing the corresponding Python wheel. 
+release and publishing the corresponding Python wheel.
+
+Test the installation:
+
+        python3 test_ngtf.py
+
+This command runs all C++ and Python unit tests from the `ngraph-bridge` source tree. It also runs various TensorFlow Python tests using nGraph.
 
 ### Build and run nGraph in Docker
 
@@ -149,41 +147,16 @@ See [this README](/tools) if you want to use Docker.
 
 ## Classify an image
 
-Once you have installed nGraph bridge, you can use TensorFlow to train a neural network or run inference using a trained model. 
-
-Use TensorFlow with nGraph to classify an image using a [frozen model]. 
-
-Download the Inception v3 trained model and labels file:
-
-    wget https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz
-
-Extract the frozen model and labels file from the tarball:
-
-    tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz
-
-Download the image file: 
-
-    wget https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/data/grace_hopper.jpg
-
-Download the TensorFlow script:
-
-   wget https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/label_image.py
-
-Modify the downloaded TensorFlow script to run TensorFlow with nGraph optimizations:
+Once you have installed nGraph bridge, you can use TensorFlow to train a neural network or run inference using a trained model.
+The only change required to a scipt is adding
 
     import ngraph_bridge
-    ...
-    config = tf.compat.v1.ConfigProto()
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
-    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
 
-Run the classification:
+Use `infer_image.py` in the [examples] directory to classify an image.
 
-    python label_image.py --graph inception_v3_2016_08_28_frozen.pb \
-        --image grace_hopper.jpg --input_layer=input \
-        --output_layer=InceptionV3/Predictions/Reshape_1 \
-        --input_height=299 --input_width=299 \
-        --labels imagenet_slim_labels.txt 
+Note: The script downloads the inceptionV3 model and sample image.
+
+    python examples/infer_image.py
 
 This will print the following results:
 
@@ -193,24 +166,7 @@ This will print the following results:
     pickelhaube 0.008008157
     bulletproof vest 0.005350913
 
-The above instructions are derived from the [TensorFlow C++ and Python Image Recognition Demo]. 
-
-All of the above commands are available in the [examples] directory. To classify your own images, modify the `infer_image.py` file in this directory.
-
-### Add runtime options for a CPU backend
-
-Adding runtime options for a CPU backend applies to training and inference.
-
-By default nGraph runs with a CPU backend. To get the best performance of the CPU backend, add the following option:
-
-    OMP_NUM_THREADS=<num_cores> KMP_AFFINITY=granularity=fine,compact,1,0 \ 
-    python label_image.py --graph inception_v3_2016_08_28_frozen.pb 
-        --image grace_hopper.jpg --input_layer=input \
-        --output_layer=InceptionV3/Predictions/Reshape_1 \
-        --input_height=299 --input_width=299 \
-        --labels imagenet_slim_labels.txt 
-
-Where `<num_cores>` equals the number of cores in your processor. 
+To classify your own images, modify the `infer_image.py` file.
 
 #### Measure the time
 nGraph is a Just In Time (JIT) compiler meaning that the TensorFlow computation graph is compiled to nGraph during the first instance of the execution. From the second time onwards, the execution speeds up significantly. 
