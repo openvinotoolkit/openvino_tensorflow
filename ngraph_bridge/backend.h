@@ -34,9 +34,9 @@ class Backend {
   Backend(const string& configuration_string);
   ~Backend() {}
 
-  shared_ptr<Executable> compile(shared_ptr<ngraph::Function> func,
+  shared_ptr<Executable> Compile(shared_ptr<ngraph::Function> func,
                                  bool enable_performance_data = false);
-  bool is_supported(const ngraph::Node& node) const;
+  bool IsSupported(const ngraph::Node& node) const;
 
  private:
   string m_device;

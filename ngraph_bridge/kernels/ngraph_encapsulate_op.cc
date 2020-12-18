@@ -262,7 +262,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   // Allocate tensors for the output results.
 
-  auto results = ng_exec->get_results();
+  auto results = ng_exec->GetResults();
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(results.size(),
                                                               nullptr);
   std::vector<int> dyn_shape_tensors;
@@ -315,7 +315,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
           << "NGraphEncapsulateOp::Compute call starting for cluster "
           << m_cluster_id;
       try {
-        ng_exec->call(ng_inputs, ng_outputs);
+        ng_exec->Call(ng_inputs, ng_outputs);
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
@@ -433,7 +433,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     NG_TRACE("Compile nGraph", m_name, "");
     try {
-      ng_exec = backend->compile(ng_function);
+      ng_exec = backend->Compile(ng_function);
     } catch (const std::exception& ex) {
       return errors::Internal("Failed to compile function " + m_name + ": ",
                               ex.what());

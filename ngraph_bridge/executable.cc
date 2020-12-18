@@ -147,12 +147,12 @@ Executable::Executable(shared_ptr<Function> func, string device)
   m_infer_req = exe_network.CreateInferRequest();
 }
 
-bool Executable::call(const vector<shared_ptr<runtime::Tensor>>& inputs,
+bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
                       vector<shared_ptr<runtime::Tensor>>& outputs) {
   if (m_trivial_fn) {
     NGRAPH_VLOG(2) << "Calling trivial IE function with inputs="
                    << inputs.size() << " outputs=" << outputs.size();
-    return call_trivial(inputs, outputs);
+    return CallTrivial(inputs, outputs);
   }
 
   // Check if the number of inputs that the CNN network expects is equal to the
@@ -236,8 +236,8 @@ bool Executable::call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   return true;
 }
 
-bool Executable::call_trivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
-                              vector<shared_ptr<runtime::Tensor>>& outputs) {
+bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
+                             vector<shared_ptr<runtime::Tensor>>& outputs) {
   // outputs are in the same order as results
   auto results = m_trivial_fn->get_results();
   if (outputs.size() == 0 && results.size() > 0) {

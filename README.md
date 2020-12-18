@@ -148,7 +148,7 @@ See [this README](/tools) if you want to use Docker.
 ## Classify an image
 
 Once you have installed nGraph bridge, you can use TensorFlow to train a neural network or run inference using a trained model.
-The only change required to a scipt is adding
+The only change required to a script is adding
 
     import ngraph_bridge
 

@@ -189,7 +189,7 @@ Status IsSupportedByBackend(
   // Loop through the ngraph op list to query
   for (auto it = ng_op->second.begin(); it != ng_op->second.end(); it++) {
     // Pass ngraph node to check if backend supports this op
-    auto ret = op_backend->is_supported(**it);
+    auto ret = op_backend->IsSupported(**it);
     if (!ret) {
       is_supported = false;
       return Status::OK();

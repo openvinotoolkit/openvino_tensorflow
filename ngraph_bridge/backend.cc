@@ -39,12 +39,12 @@ Backend::Backend(const string& config) {
   m_device = config;
 }
 
-shared_ptr<Executable> Backend::compile(shared_ptr<ngraph::Function> func,
+shared_ptr<Executable> Backend::Compile(shared_ptr<ngraph::Function> func,
                                         bool) {
   return make_shared<Executable>(func, m_device);
 }
 
-bool Backend::is_supported(const Node& node) const {
+bool Backend::IsSupported(const Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
   // that the selected backend supports all opset5 ops

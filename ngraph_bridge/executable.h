@@ -34,16 +34,16 @@ class Executable {
  public:
   Executable(shared_ptr<ngraph::Function> func, string device);
   ~Executable() {}
-  bool call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
+  bool Call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
             vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
 
-  const ngraph::ResultVector& get_results() {
+  const ngraph::ResultVector& GetResults() {
     return m_function->get_results();
   };
 
  private:
-  bool call_trivial(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
-                    vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
+  bool CallTrivial(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
+                   vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
 
   InferenceEngine::CNNNetwork m_network;
   InferenceEngine::InferRequest m_infer_req;
