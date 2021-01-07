@@ -37,6 +37,10 @@ GraphDef* NGraphClusterManager::GetClusterGraph(size_t idx) {
   return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
 }
 
+size_t NGraphClusterManager::NumberOfClusters() {
+  return s_cluster_graphs.size();
+}
+
 void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
 
 }  // namespace ngraph_bridge

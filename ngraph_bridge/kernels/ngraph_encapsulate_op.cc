@@ -207,6 +207,13 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   int time_func_create_or_lookup;
   Timer function_lookup_or_create;
 
+  bool multi_req_execution = false;
+  if (std::getenv("NGRAPH_TF_ENABLE_BATCHING") &&
+      NGraphClusterManager::NumberOfClusters() == 1) {
+    NGRAPH_VLOG(2) << "Batching is enabled" << name();
+    multi_req_execution = true;
+  }
+
   // TF input tensor
   std::vector<Tensor> tf_input_tensors;
   std::shared_ptr<Executable> ng_exec;
@@ -278,7 +285,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
 
     // Create the TF output tensor
-    auto ng_shape = ng_element->get_shape();
+    auto ng_shape = ng_exec->GetOutputShape(i);
     TensorShape tf_shape;
     for (auto dim : ng_shape) {
       tf_shape.AddDim(dim);
@@ -315,7 +322,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
           << "NGraphEncapsulateOp::Compute call starting for cluster "
           << m_cluster_id;
       try {
-        ng_exec->Call(ng_inputs, ng_outputs);
+        ng_exec->Call(ng_inputs, ng_outputs, multi_req_execution);
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
