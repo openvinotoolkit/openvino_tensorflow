@@ -1,21 +1,13 @@
-*** test_util.py	2020-01-15 15:44:13.595859904 -0800
---- updated_test_util.py	2020-01-15 15:49:19.401821997 -0800
-***************
-*** 2905,2911 ****
-            rewriter_config_pb2.RewriterConfig.OFF)
-        config.graph_options.rewrite_options.pin_to_host_optimization = (
-            rewriter_config_pb2.RewriterConfig.OFF)
-!       return config
-  
-      return ErrorLoggingSession(graph=graph, config=prepare_config(config))
-  
---- 2905,2913 ----
-            rewriter_config_pb2.RewriterConfig.OFF)
-        config.graph_options.rewrite_options.pin_to_host_optimization = (
-            rewriter_config_pb2.RewriterConfig.OFF)
-!       import ngraph_bridge
-!       config_new = ngraph_bridge.update_config(config)
-!       return config_new
-  
-      return ErrorLoggingSession(graph=graph, config=prepare_config(config))
-  
+--- test_util.py	2020-12-22 14:33:06.758700689 -0800
++++ updated_test_util.py	2021-01-04 10:31:39.382524408 -0800
+@@ -3121,7 +3121,9 @@
+           rewriter_config_pb2.RewriterConfig.OFF)
+       config.graph_options.rewrite_options.pin_to_host_optimization = (
+           rewriter_config_pb2.RewriterConfig.OFF)
+-      return config
++      import ngraph_bridge
++      config_new = ngraph_bridge.update_config(config)
++      return config_new
+ 
+     return ErrorLoggingSession(graph=graph, config=prepare_config(config))
+ 

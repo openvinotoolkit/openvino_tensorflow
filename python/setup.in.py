@@ -62,6 +62,6 @@ setup(
     package_data= package_data_dict,
     cmdclass={'bdist_wheel': BinaryBdistWheel},
     install_requires=[
-        "tensorflow==2.2.0",
+        "tensorflow==2.3.0",
     ],
 )

@@ -54,7 +54,7 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.2.0"
+    tf_version = "v2.3.0"
     use_intel_tf = False
     openvino_version = "releases/2021/2"
 

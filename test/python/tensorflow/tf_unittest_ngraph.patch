@@ -1,12 +1,10 @@
-*** test_util.py	2020-01-15 15:44:13.595859904 -0800
---- updated_test_util.py	2020-01-15 15:32:11.630592207 -0800
-***************
-*** 1767,1772 ****
---- 1767,1773 ----
-      self._threads = []
-      self._tempdir = None
-      self._cached_session = None
-+     import ngraph_bridge
-  
-    def setUp(self):
-      self._ClearCachedSession()
+--- test_util.py	2020-12-22 14:33:06.758700689 -0800
++++ updated_test_util.py	2021-01-04 10:18:50.659475354 -0800
+@@ -1940,6 +1940,7 @@
+     self._tempdir = None
+     self._cached_session = None
+     self._test_start_time = None
++    import ngraph_bridge
+ 
+   def setUp(self):
+     self._ClearCachedSession()

@@ -7,7 +7,7 @@ echo "BUILDKITE_AGENT_META_DATA_NAME: ${BUILDKITE_AGENT_META_DATA_NAME}"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-export TF_LOCATION=/localdisk/buildkite-agent/prebuilt_tensorflow_2_2_0
+export TF_LOCATION=/localdisk/buildkite-agent/prebuilt_tensorflow_2_3_0
 export OV_LOCATION=/localdisk/buildkite-agent/prebuilt_openvino_2021_2/artifacts/openvino
 export NGRAPH_TF_BACKEND=CPU
 
@@ -20,7 +20,7 @@ elif [ "${BUILDKITE_PIPELINE_NAME}" == "cpu" ]; then
    PIPELINE_STEPS+=" ${SCRIPT_DIR}/cpu.yml "
 elif [ "${BUILDKITE_PIPELINE_NAME}" == "cpu-intel-tf" ]; then
    export BUILD_OPTIONS=--use_intel_tensorflow
-   export TF_LOCATION=/localdisk/buildkite-agent/prebuilt_intel_tensorflow
+   export TF_LOCATION=/localdisk/buildkite-agent/prebuilt_intel_tensorflow_2_3_0
    PIPELINE_STEPS+=" ${SCRIPT_DIR}/cpu.yml "
 elif [ "${BUILDKITE_PIPELINE_NAME}" == "gpu" ]; then
    export NGRAPH_TF_BACKEND=GPU
