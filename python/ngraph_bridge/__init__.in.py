@@ -120,7 +120,7 @@ if ngraph_classic_loaded:
     ngraph_bridge_lib.get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     ngraph_bridge_lib.get_backend.restype = ctypes.c_bool
     ngraph_bridge_lib.is_logging_placement.restype = ctypes.c_bool
-    ngraph_bridge_lib.tf_version.restype = ctypes.c_char_p
+    ngraph_bridge_lib.version.restype = ctypes.c_char_p
     ngraph_bridge_lib.ngraph_version.restype = ctypes.c_char_p
     ngraph_bridge_lib.cxx11_abi_flag.restype = ctypes.c_int
     ngraph_bridge_lib.is_grappler_enabled.restype = ctypes.c_bool
