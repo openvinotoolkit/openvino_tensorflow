@@ -135,8 +135,10 @@ Executable::Executable(shared_ptr<Function> func, string device)
     auto& name = m_function->get_friendly_name();
     m_network.serialize(name + ".xml", name + ".bin");
     util::DumpNGGraph(func, name + "_executable");
-    options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
-        name + "_IE_" + m_device;
+    if (m_device == "CPU") {
+      options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
+          name + "_IE_" + m_device;
+    }
   }
 
   NGRAPH_VLOG(2) << "Loading IE CNN network to device " << m_device;
