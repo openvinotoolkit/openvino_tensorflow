@@ -31,6 +31,8 @@
 #include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_utils.h"
 
+#include "ocm/include/ocm_nodes_checker.h"
+
 using namespace std;
 
 namespace tensorflow {
@@ -104,7 +106,30 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
-    TF_RETURN_IF_ERROR(MarkForClustering(graph, skip_these_nodes));
+    // TF_RETURN_IF_ERROR(MarkForClustering(graph, skip_these_nodes));
+
+    // OCM bypassing the MarkForClustering function call
+    const char* device_id =  std::getenv("NGRAPH_TF_BACKEND");
+    if (device_id==nullptr){
+      device_id = "CPU";
+    }
+    std::string ov_version = "2021_1";
+    ocm::Framework_Names fName = ocm::Framework_Names::TF;
+    ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
+    std::vector<void *> nodes_list = FC.MarkSupportedNodes();
+
+    // cast back the nodes in the TF format and mark the nodes for clustering (moved out from MarkForClustering function)
+    const std::map<std::string, SetAttributesFunction>& set_attributes_map = GetAttributeSetters();
+    for (auto void_node : nodes_list) {
+    // TODO(amprocte): move attr name to a constant
+      tensorflow::Node* node = (tensorflow::Node *)void_node;
+      node->AddAttr("_ngraph_marked_for_clustering", true);
+      auto it = set_attributes_map.find(node->type_string());
+      if (it != set_attributes_map.end()) {
+        it->second(node);
+      }
+    }
+    
     util::DumpTFGraph(graph, idx, "marked");
 
     // 2. Assign clusters then, if requested, dump the graphs.

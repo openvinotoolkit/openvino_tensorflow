@@ -198,6 +198,7 @@ add_subdirectory(third-party)
 add_subdirectory(logging)
 add_subdirectory(ngraph_bridge)
 add_subdirectory(tools)
+add_subdirectory(ocm/OCM)
 
 # The following targets depend on the Tensorflow source code directory
 # Get the absolute file name for the source

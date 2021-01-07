@@ -143,6 +143,7 @@ target_link_libraries(
     tensorflow_ops_testutil
     absl_synchronization
     ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+    ocm
 )
 
 # First install the libngraph_bridge.so and headers

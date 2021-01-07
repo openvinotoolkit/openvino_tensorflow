@@ -69,6 +69,7 @@ target_link_libraries(
         absl_container
         absl_strings
         ${InferenceEngine_LIBRARIES}
+        ocm
     )
 
 target_compile_definitions( 
@@ -109,6 +110,7 @@ endif()
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
 install(DIRECTORY ${IE_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/libocm.so DESTINATION "${NGTF_INSTALL_LIB_DIR}")
 install(DIRECTORY ${TBB_LIBS} DESTINATION "${NGTF_INSTALL_LIB_DIR}" )
 if(USE_OPENVINO_FROM_LOCATION)
     file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/lib*" "${TBB_LIBS}/lib*")
