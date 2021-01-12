@@ -2,7 +2,7 @@
 # This script is used by BuildKite CI to fetch/run multiple models from a curated model-repo for OV-IE integration project
 # Invoke locally: .../run_infer_multiple.sh [ -m ./models_cpu.txt ]  [ -d .../working_dir ]
 
-usage() { echo "Usage: $0 [-m .../manifest.txt] [-d .../working_dir]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-m .../manifest.txt] [-d .../working_dir] [-b YES]" 1>&2; exit 1; }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 WORKDIR=`pwd`
@@ -11,11 +11,13 @@ device="${device,,}" # lowercase
 MODELFILENAME=models_${device}.txt
 # read models & params from manifest
 MANIFEST=${SCRIPT_DIR}/${MODELFILENAME}
+BENCHMARK="NO" # YES or NO
 
-while getopts “:m:d:h” opt; do
+while getopts “:m:b:d:h” opt; do
   case $opt in
     m) MANIFEST=${OPTARG} ;;
     d) WORKDIR=${OPTARG} ;;
+    b) BENCHMARK=${OPTARG} ;;
     h) usage ;;
     *) usage ;;
   esac
@@ -40,7 +42,7 @@ while read -r line; do
     eval args=($line) && declare -p args >/dev/null # params might have quoted strings with spaces
     echo; echo Running model: "${args[@]}" ...
     retcode=1
-    env "${envs[@]}" "${SCRIPT_DIR}/run_infer_single.sh" "${args[@]}" && retcode=0; finalretcode=$((finalretcode+retcode))
+    env "${envs[@]}" "${SCRIPT_DIR}/run_infer_single.sh" "${args[@]}" "${BENCHMARK}" && retcode=0; finalretcode=$((finalretcode+retcode))
     (( $retcode == 1 )) && failed_models+=("${args[0]}")
 done < "$MANIFEST"
 

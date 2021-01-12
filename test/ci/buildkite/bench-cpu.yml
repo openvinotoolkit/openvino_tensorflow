@@ -16,9 +16,10 @@
   - wait
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate
+      export INTEL_OPENVINO_DIR=${OV_LOCATION}
       retcode=1
       test/models/tf_ov_model_zoo/run_infer_multiple.sh \
-        -d /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID \
+        -d /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID -b YES \
         && retcode=0
       cd /localdisk/buildkite/artifacts && rm -rf ./$BUILDKITE_BUILD_ID
       if (( \$retcode > 0 )); then echo "Some model testing failed!"; exit 1; fi
