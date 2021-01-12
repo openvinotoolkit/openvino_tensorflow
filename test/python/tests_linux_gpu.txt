@@ -97,7 +97,6 @@ test_select.TestSelect.test_select_complexshape2
 test_select.TestSelect.test_select_complexshape3
 
 test_split.TestSplitOperations.test_split_sizes[shape1-sizes1-0]  # AssertionError
-test_set_backend.TestSetBackend.test_set_backend # AssertionError
 
 test_while_loop.TestWhileLoop.test_while_loop # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 

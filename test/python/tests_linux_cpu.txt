@@ -78,8 +78,6 @@ test_prod.TestProductOperations.test_prod[v15-axis5-expected5]
 test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
 test_prod.TestProductOperations.test_dynamic_axis_fallback[v10-0-expected0]
 
-test_set_backend.TestSetBackend.test_set_backend
-
 # Segmentation fault
 test_slice.TestSliceOperations.test_strided_slice
 

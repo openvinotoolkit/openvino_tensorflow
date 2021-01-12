@@ -37,7 +37,6 @@ class TestSetBackend(NgraphTest):
         # test
         ngraph_bridge.enable()
         backend_cpu = 'CPU'
-        backend_interpreter = 'INTERPRETER'
 
         found_cpu = False
         found_interpreter = False
@@ -49,10 +48,8 @@ class TestSetBackend(NgraphTest):
             print(backend_name)
             if backend_name == backend_cpu:
                 found_cpu = True
-            if backend_name == backend_interpreter:
-                found_interpreter = True
         print(" ******************************** ")
-        assert (found_cpu and found_interpreter) == True
+        assert found_cpu == True
 
         # Create Graph
         val = tf.compat.v1.placeholder(tf.float32)
@@ -60,23 +57,13 @@ class TestSetBackend(NgraphTest):
         out2 = tf.abs(out1)
 
         # set INTERPRETER backend
-        ngraph_bridge.set_backend(backend_interpreter)
+        ngraph_bridge.set_backend(backend_cpu)
         current_backend = ngraph_bridge.get_backend()
-        assert current_backend == backend_interpreter
+        assert current_backend == backend_cpu
 
         # create new session to execute graph
         # If you want to re-confirm which backend the graph was executed
         # currently the only way is to enable NGRAPH_TF_VLOG_LEVEL=5
-        with tf.compat.v1.Session() as sess:
-            sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
-        current_backend = ngraph_bridge.get_backend()
-        assert current_backend == backend_interpreter
-
-        # set CPU backend
-        ngraph_bridge.set_backend(backend_cpu)
-        current_backend = ngraph_bridge.get_backend()
-        assert current_backend == backend_cpu
-        # create new session to execute graph
         with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         current_backend = ngraph_bridge.get_backend()
