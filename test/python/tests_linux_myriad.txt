@@ -15,14 +15,166 @@ tests_common.txt
 ###################################################
 [SKIP]
 
-test*
+# Unsupported layer type "Abs"
+test_abs.TestAbsOperations.*
+test_provenance_tags_attachment.TestProductOperations.test_provenance_for_no_effect_broadcast
+
+# Param has unexpected layout C
+test_biasadd.TestBiasAddOperations.* 
+test_conv2d.TestConv2D.test_conv2d_multiply
+test_fusedConv2D.TestFusedConv2D.*
+test_fusedMatMul.TestFusedMatMul.*
+test_nms.TestNMSOperations.test_NMSV2
+test_mnist_training.TestMnistTraining.test_mnist_training[adam]
+test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
+test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
+
+# to queue inference: NC_ERROR
+test_depthwiseconv2d.TestDepthwiseConv2dOperations.test_depthwise_conv2d[tensor_in_sizes2-filter_in_sizes2-VALID]
+test_depthwiseconv2d.TestDepthwiseConv2dOperations.test_depthwise_conv2d[tensor_in_sizes2-filter_in_sizes2-VALID]
+test_provenance_tags_attachment.TestProductOperations.test_provenance_for_broadcast_with_effect
+
+# Failed to set Blob with precision not corresponding to user output precision
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_less[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v15-v25-expected5]
+
+# types check error: output #0 has type FP16, but one of [S32] is expected
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-True-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-False-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[1.0--2.0-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[False-100-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
+
+# input #0 has type S32, but one of [FP16] is expected
+test_while_loop.TestWhileLoop.test_while_loop
+
+# gets stuck; needs to manually stopped
+test_floor.TestFloorOperations.*
+test_select.TestSelect.test_select_scalar
+test_tanh.TestTanhOp.test_tanh_1d[1.4-0.8853516482022625]
+test_tanh.TestTanhOp.test_tanh_1d[0.5-0.46211715726000974]
+test_tanh.TestTanhOp.test_tanh_1d[-0.3--0.2913126124515909]
+
+# Output blob size is not equal network output size (1!=0)
+test_gather.TestGatherOperations.test_gather_0
+test_gather.TestGatherV2Operations.test_gather_0
+test_l2loss.TestL2Loss.test_l2loss[xshape0]
+
+# Const layer Constant_1277 has incorrect dimensions in the output data 0
+test_l2loss.TestL2Loss.test_l2loss[xshape1]
+
+# Input blob size is not equal network input size (1!=0)
+test_l2loss.TestL2Loss.test_l2loss_empty
+
+# AssertionError
+test_log1p.TestLog1pOperations.test_log1p
+test_logsoftmax.TestLogSoftmaxOperations.test_logsoftmax
+test_select.TestSelect.test_select_sameshape
+test_select.TestSelect.test_select_diffrank
+test_select.TestSelect.test_select_complexshape1
+test_select.TestSelect.test_select_complexshape2
+test_select.TestSelect.test_select_complexshape3
+
+# Failed to compile layer "Pad_165": AssertionFailed: layer->pads_begin.size() == 4
+test_pad.TestPadOperations.test_pad1
+test_pad.TestPadOperations.test_pad2
+test_pad.TestPadOperations.test_pad3
+test_pad.TestPadOperations.test_pad4
+test_shared_const.TestSharedConst.test_sharedconst1 
+
+# unsupported layer type "ReduceProd"
+test_prod.TestProductOperations.test_prod[v10--1-expected0] 
+test_prod.TestProductOperations.test_prod[v11-0-expected1]
+test_prod.TestProductOperations.test_prod[v12-0-expected2]
+test_prod.TestProductOperations.test_prod[v13--2-expected3]
+test_prod.TestProductOperations.test_prod[v14-axis4-expected4]
+test_prod.TestProductOperations.test_dynamic_axis_fallback[v10-0-expected0]
+test_prod.TestProductOperations.test_keep_dims_fallback[v10-1-expected0]
+
+# Const layer Prod/Constant_3686 has incorrect dimensions in the output data 0
+test_prod.TestProductOperations.test_prod[v15-axis5-expected5]
+
+# Unsupported dynamic ops: Range
+test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
+
+# Requested output shape is incompatible with input shape
+test_resize_to_dynamic_shape.TestResizeToDynamicShape.test_resize_to_dynamic_shape
+
+# TypeError: data type not understood
+test_select.TestWhere.test_where
+
+# ndarray was 16 bytes but TF_Tensor was 8 bytes
+test_select.TestWhere.test_where_bool
+test_select.TestWhere.test_where_complexshape1
+
+# double free or corruption (fasttop)
+test_select.TestWhere.test_where_scalar
+
+# AssertionError
+test_set_backend.TestSetBackend.test_set_backend
+test_sigmoid.TestSigmoid.test_sigmoid
+test_softmax.*
+test_softplus.TestSoftplus.test_softplus
+test_split.TestSplitOperations.test_split_sizes[shape0-sizes0-1]
+test_split.TestSplitOperations.test_split_sizes[shape0-sizes0-1]
+test_split.TestSplitOperations.test_split_sizes[shape0-sizes0-1]
+test_split.TestSplitOperations.test_split_num[shape0-7-1]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape2-axis2]
+test_stack.*
+
+# The input tensor's dimension pointed by the 'axis' has to be a multiple of the 'num_splits'
+test_split.TestSplitOperations.test_split_num[shape2-3-0]
+
+# unsupported layer type "Sign"
+test_sign.*
+
+# Failed to reshape Network: Slice_2/StridedSlice_161 has zero dimension which is not allowed
+test_slice.TestSliceOperations.test_slice
+test_slice.TestSliceOperations.test_strided_slice
+
+# StridedSlice failed: negative stride is not supported
+test_slice.TestSliceOperations.test_strided_slice_2
+test_slice.TestSliceOperations.test_strided_slice_3
+test_slice.TestSliceOperations.test_strided_slice_4
+
+# StridedSlice failed: shrink_axis_mask parameter is not supported
+test_slice.TestSliceOperations.test_strided_slice_5
+
+# Const layer Squeeze/Constant_3085 has incorrect dimensions in the output data 0
+test_squeeze.TestSqueezeOperations.test_squeeze[shape0-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None] 
+test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None] 
+test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
+
+# No OpKernel was registered to support Op 'Conv2D' used by node Conv2D
+test_bfloat16.TestBfloat16.test_conv2d_bfloat16
+test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
 
 ###################################################
 [RUN]
-
-test_api.*
-test_cast.*
-test_const.*
-test_conv2D_KernelChecks.*
-test_conv2dbackpropinput.*
 
