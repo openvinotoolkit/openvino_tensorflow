@@ -34,7 +34,7 @@ class BinaryBdistWheel(bdist_wheel):
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
-with open(@README_DOC@, "r") as fh:
+with open(@README_DOC@, "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 # The following is filled in my cmake - essentially a list of library
