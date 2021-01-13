@@ -20,19 +20,345 @@
 # Read in one/more external manifest file(s)
 # Path specified is relative to this file's path
 
+tests_common.txt
 ###################################################
 [SKIP]
 
+# has zero dimension which is not allowed
+argmax_op_test.ArgMaxTest.testEmpty
+identity_bijector_test.IdentityBijectorTest.testScalarCongruency
+math_ops_test.LogSumExpTest.testUnderflow
+math_ops_test.LogSumExpTest.testReduceLogSumExp
+math_ops_test.LogSumExpTest.testOverflow
+reduction_ops_test.AllReductionTest.testEmpty
+reduction_ops_test.AnyReductionTest.testEmpty
+reduction_ops_test.MaxReductionTest.testEmptyGradients
+reduction_ops_test.MeanReductionTest.testDegenerate
+reduction_ops_test.MinReductionTest.testEmptyGradients
+reduction_ops_test.SumReductionTest.testDegenerate
+reduction_ops_test.ProdReductionTest.testDegenerate
+reduction_ops_test.ReducedShapeTest.testSimple
+reduction_ops_test.ReducedShapeTest.testZeros
+slice_op_test.SliceTest.testSliceMatrixDim0
+softmax_op_test.SoftmaxTest.testAlongFirstDimension
 
+# Output blob size is not equal network output size (1!=0)
+argmax_op_test.ArgMaxTest.testFloat
+argmax_op_test.ArgMaxTest.testFloatInt32Output
+reduction_ops_test.MinReductionTest.testAxesType
+reduction_ops_test.SumReductionTest.testAxesType
+
+# types check error: input #0 has type S32, but one of [FP16] is expected
+argmax_op_test.ArgMaxTest.testDefaultAxis
+argmax_op_test.ArgMaxTest.testInt32
+reduction_ops_test.MaxReductionTest.testAxesType
+reduction_ops_test.MaxReductionTest.testGradient
+reduction_ops_test.MaxReductionTest.testGradient4
+reduction_ops_test.MeanReductionTest.testAxesType
+reduction_ops_test.MinReductionTest.testGradient
+reduction_ops_test.MinReductionTest.testGradient4
+softmax_op_test.SoftmaxTest.testDimTooLarge
+
+#  Unable to add a parameter to a function with no parameterss
+argmax_op_test.ArgMaxTest.testInt64
+cast_op_test.CastOpTest.testIntToFloatBoundary
+math_ops_test.AddNTest.testInt
+math_ops_test.AddNTest.testInt32
+one_hot_op_test.OneHotTest.testInt64Batch
+one_hot_op_test.OneHotTest.testInt64Basic
+reduction_ops_test.SumReductionTest.testHighRank
+transpose_op_test.TransposeTest.testInt64
+transpose_op_test.TransposeTest.test1D
+
+# Can not init Myriad device: NC_ERROR
+array_ops_test.StridedSliceTest.testEllipsis 
+array_ops_test.StridedSliceTest.testOptimizedCases
+array_ops_test.StridedSliceGradTest.testInt64Indices
+array_ops_test.ShapeSizeRankTest.testSparseShape
+cast_op_test.CastOpTest.testBasic 
+cast_op_test.CastOpTest.testSmallValues
+concat_op_test.ConcatOpTest.testGradientsSimple
+concat_op_test.ConcatOpTest.testGradientsLastDim 
+concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad_UnknownInputDim 
+concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim2Grad 
+concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2Filter 
+conv_ops_test.Conv2DTest.testConv2D2x2Filter2x1Dilation 
+conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2 
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2 
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
+conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
+cwise_ops_unary_test.UnaryOpTest.testGradGrad
+gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
+math_ops_test.ModTest.testFloat
+math_ops_test.XdivyTest.testXdivyWithZeroBroadcast
+math_ops_test.XdivyTest.testXdivyNoZero
+math_ops_test.SquaredDifferenceTest.testSquaredDifference
+nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape1
+nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
+nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
+one_hot_op_test.OneHotTest.testPrefixDimOverflow
+pool_test.PoolingTest.testGradient1D
+pool_test.PoolingTest.testGradient2D
+pool_test.PoolingTest.testGradient3D
+pool_test.PoolingTest.testPool1D
+pool_test.PoolingTest.testPool2D 
+pool_test.PoolingTest.testPool3D
+pooling_ops_3d_test.PoolingTest.testMaxPool3dSamePadding
+pooling_ops_3d_test.PoolingTest.testMaxPool3dSamePaddingDifferentStrides
+pooling_ops_3d_test.PoolingTest.testMaxPool3dValidPadding
+relu_op_test.Relu6Test.testGradientFloat32
+relu_op_test.ReluTest.testGradGradFloat32
+relu_op_test.ReluTest.testGradientFloat16
+relu_op_test.ReluTest.testGradientFloat32
+spacetodepth_op_test.SpaceToDepthTest.testBasic
+
+# shrink_axis_mask parameter is not supported
+array_ops_test.StridedSliceTest.testExpand 
+array_ops_test.StridedSliceTest.testExpandVariable
+array_ops_test.StridedSliceTest.testShrink
+gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
+slice_op_test.SliceTest.testSingleDimension
+
+# Input blob size is not equal network input size (1!=0)
+array_ops_test.StridedSliceTest.testTensorIndexing
+cast_op_test.CastOpTest.testCastToTypeOfVariable
+identity_bijector_test.IdentityBijectorTest.testBijector
+math_ops_test.AddNTest.testPartials
+reduction_ops_test.MaxReductionTest.testGradient2
+reduction_ops_test.MaxReductionTest.testGradient3
+reduction_ops_test.MeanReductionTest.testGradient
+reduction_ops_test.MinReductionTest.testGradient2
+reduction_ops_test.MinReductionTest.testGradient3
+reduction_ops_test.SumReductionTest.testGradient
+reduction_ops_test.ReducedShapeTest.testNegAxes
+relu_op_test.ReluTest.testGradientScalar
+sparse_xent_op_test.SparseXentTest.testHighDim
+sparse_xent_op_test.SparseXentTest.testHighDim2
+sparse_xent_op_test.SparseXentTest.testVector
+split_op_test.SplitOpTest.testListOfScalarTensors
+xent_op_test.XentTest.testGradient
+xent_op_test.XentTest.testGradientLabelWithV2
+xent_op_test.XentTest.testZeroDimension
+
+# Unsupported type
+cast_op_test.CastOpTest.testBfloat16 
+
+# AssertionError: Arrays are not equal
+cast_op_test.CastOpTest.testRandom
+concat_op_test.ConcatOpTest.testConcatLargeNumberOfTensors 
+concat_op_test.ConcatOpTest.testGradientsRandom
+concat_op_test.ConcatOpTest.testGradientsFirstDim 
+concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim 
+concat_op_test.ConcatOpTest.testHStack 
+concat_op_test.ConcatOpTest.testVStack 
+concat_op_test.ConcatOpTest.testRefType
+math_ops_test.ReduceTest.testReduceExplicitAxes
+slice_op_test.SliceTest.testSelectAll
+slice_op_test.SliceTest.testComplex
+slice_op_test.SliceTest.testSingleElementAll
+split_op_test.SplitOpTest.testIdentity
+split_op_test.SplitOpTest.testSplitDim0
+split_op_test.SplitOpTest.testSplitCols
+split_op_test.SplitOpTest.testRandom
+transpose_op_test.TransposeTest.testPermType
+transpose_op_test.TransposeTest.testInt32
+lrn_op_test.LRNOpTest.testGradientsZeroInput
+
+# Argument shapes are inconsistent; they must have the same rank, and must have equal dimension everywhere except on the concatenation axis
+concat_op_test.ConcatOpTest.testConcatAxisType
+split_op_test.SplitOpTest.testGradientsAll
+
+
+# Failed to read output from FIFO: UNKNOWN MVNC STATUS
+concat_op_test.ConcatOpTest.testConcatNegativeAxis 
+
+# Crop layer gradients/concat_grad/Slice_1/StridedSlice_174 has incorrect dimensions in the output data 0
+concat_op_test.ConcatOpTest.testGradientsNegativeAxis 
+
+# invalid number of inputs: 2u
+conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
+conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize 
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne 
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree 
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo 
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne 
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree 
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
+
+#  AssertionFailed: inputs.size() == 1
+conv_ops_test.Conv2DTest.testInputGradientKernelSizeMatchesInputSize
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideOne 
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideThree
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideTwo 
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne 
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree 
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo 
+
+# AssertionError: 
+# Not equal to tolerance rtol=1e-06, atol=1e-06
+conv_ops_3d_test.Conv3DTest.testConv3DStrides
+cwise_ops_unary_test.UnaryOpTest.testFloatTanhEdge
+math_ops_test.Xlog1pyTest.testXlog1pyWithZeroBroadcast
+math_ops_test.Xlog1pyTest.testXlog1pyNoNeg1
+pool_test.PoolingTest.testPoolSimple
+softmax_op_test.SoftmaxTest.testLargeDims
+softmax_op_test.SoftmaxTest.testHalf
+softmax_op_test.SoftmaxTest.testFloat
+softmax_op_test.SoftmaxTest.test3DTensorAsInputNoReshape
+softmax_op_test.SoftmaxTest.test3DTensorAsInput
+topk_op_test.TopKTest.testLargeSort
+topk_op_test.TopKTest.testLargeTopK
+topk_op_test.TopKTest.testMediumTopK
+topk_op_test.TopKTest.testTop2
+
+# number of biases must equal to number of output channels per group,but: channels per group=3, biases=1
+conv_ops_3d_test.Conv3DTest.testConv3DStride3
+conv_ops_3d_test.Conv3DTest.testConv3D2x2x2FilterStride2Same
+conv_ops_3d_test.Conv3DTest.testConv3D2x2x2FilterStride2
+conv_ops_3d_test.Conv3DTest.testConv3D2x2x2Filter
+conv_ops_3d_test.Conv3DTest.testConv3D1x1x1Filter
+conv_ops_3d_test.Conv3DTest.testInputGradientKernelSizeMatchesInputSize 
+conv_ops_3d_test.Conv3DTest.testInputGradientSamePaddingDifferentStrides 
+conv_ops_3d_test.Conv3DTest.testInputGradientSamePaddingStrideThree 
+conv_ops_3d_test.Conv3DTest.testInputGradientSamePaddingStrideTwo 
+conv_ops_3d_test.Conv3DTest.testInputGradientValidPaddingStrideOne 
+conv_ops_3d_test.Conv3DTest.testInputGradientValidPaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testInputGradientValidPaddingStrideTwo
+conv_ops_3d_test.Conv3DTest.testKernelSizeMatchesInputSize
+conv3d_transpose_test.Conv3DTransposeTest.testGradient
+
+# AssertionError: 1.2864583 not less than 0.005
+conv_ops_3d_test.Conv3DTest.testInputGradientSamePaddingStrideOne
+
+# Requested output shape Shape{3, 2, 3, 2, 2, 1} is incompatible with input shape Shape{1, 2, 3, 4}
+depthtospace_op_test.DepthToSpaceTest.testAgainstTranspose
+
+# !!! RUNTIME ERROR !!! Test exited with code: -11
+math_ops_test.AddNTest.testGrad 
+math_ops_test.DivAndModTest.testFloorDivGrad
+
+# [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
+math_ops_test.DivAndModTest.testConsistent
+
+#  output #0 has type S32, but one of [FP16] is expected
+math_ops_test.LogSumExpTest.testReductionIndices2
+math_ops_test.LogSumExpTest.testReductionIndices
+math_ops_test.LogSumExpTest.testKeepDims
+math_ops_test.LogSumExpTest.testInfinity
+
+# dynamic node of type Range ver. 4
+math_ops_test.ReduceTest.testReduceAllDims
+reduction_ops_test.AllReductionTest.testAll3D
+reduction_ops_test.AnyReductionTest.testAll3D
+reduction_ops_test.MaxReductionTest.testDoubleReduce3D
+reduction_ops_test.MaxReductionTest.testFloatReduce3D
+reduction_ops_test.MaxReductionTest.testInt64Reduce3D
+reduction_ops_test.MaxReductionTest.testInfinity
+reduction_ops_test.MeanReductionTest.testFloat64
+reduction_ops_test.MeanReductionTest.testFloat32
+reduction_ops_test.MeanReductionTest.testComplex64
+reduction_ops_test.MeanReductionTest.testComplex128
+reduction_ops_test.MeanReductionTest.testInfinity
+reduction_ops_test.MeanReductionTest.testInt32
+reduction_ops_test.MinReductionTest.testFloatReduce3D
+reduction_ops_test.MinReductionTest.testDoubleReduce3D
+reduction_ops_test.MinReductionTest.testInfinity
+reduction_ops_test.SumReductionTest.testFloat16
+reduction_ops_test.SumReductionTest.testComplex64
+reduction_ops_test.SumReductionTest.testComplex128
+reduction_ops_test.SumReductionTest.testFloat64
+reduction_ops_test.SumReductionTest.testInfinity
+reduction_ops_test.SumReductionTest.testInt32
+reduction_ops_test.ProdReductionTest.testInt32
+reduction_ops_test.ProdReductionTest.testInfinity
+reduction_ops_test.ProdReductionTest.testFloat64
+reduction_ops_test.ProdReductionTest.testFloat32
+reduction_ops_test.ProdReductionTest.testComplex64
+reduction_ops_test.ProdReductionTest.testComplex128
+
+# Incorrect precision f64!
+math_ops_test.XdivyTest.testXdivyWithZero
+softmax_op_test.SoftmaxTest.testDouble
+softmax_op_test.SoftmaxTest.test1DTensorAsInputNoReshape
+softmax_op_test.SoftmaxTest.test1DTensorAsInput
+
+# AssertionFailed: data->_producerEdge == nullptr
+nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig2
+xent_op_test.XentTest.testWrapper
+
+# OneHot operation has a form that is not supported. should be converted to OneHotIE operation.
+one_hot_op_test.OneHotTest.testFloatBasic
+one_hot_op_test.OneHotTest.testFloatBatch
+one_hot_op_test.OneHotTest.testInt32Basic
+one_hot_op_test.OneHotTest.testInt32Batch
+one_hot_op_test.OneHotTest.testSingleValueGiven
+one_hot_op_test.OneHotTest.testSimpleCases
+
+# types check error: input #0 has type FP16, but one of [S32] is expected
+one_hot_op_test.OneHotTest.testIndicesTypes
+
+# ReduceAnd expects that data types of input with index 0 and output with index 0 are the same, but it is S32 and FP16
+reduction_ops_test.AllReductionTest.testAxesType
+
+#  unsupported layer type "ReduceOr"
+reduction_ops_test.AnyReductionTest.testAxesType
+
+# Input data must either have at least one consumer (but got zero) or be a shape data.
+concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim0Grad 
+reduction_ops_test.ProdReductionTest.testGradientWithZeros
+reduction_ops_test.ProdReductionTest.testEmptyGradients
+slice_op_test.SliceTest.testGradientsAll
+softmax_op_test.SoftmaxTest.testAlongSecondDimension
+
+# unsupported layer type "ReduceProd"
+reduction_ops_test.ProdReductionTest.testAxesType
+topk_op_test.TopKTest.testTopKGradients
+
+# Incorrect precision f64!
+relu_op_test.ReluTest.testGradGradFloat64
+
+# unsupported layer type "CumSum"
+scan_ops_test.CumsumTest.test1D
+scan_ops_test.CumsumTest.test2D
+scan_ops_test.CumsumTest.test3D
+scan_ops_test.CumsumTest.testAxisType
+scan_ops_test.CumsumTest.testLarge
+
+# unexpected layout BLOCKED
+scan_ops_test.CumsumTest.test6D
+
+# Input rank plus number of new axis has to be at least the size of Lower and Upper bounds vector.
+slice_op_test.SliceTest.testScalarInput
+slice_op_test.SliceTest.testInvalidIndex
+
+# Failed to read output from FIFO: UNKNOWN MVNC STATUS
+slice_op_test.SliceTest.testSimple
+
+# Check 'begin >= -(int64_t(input_shape[i_in])) && begin < int64_t(input_shape[i_in])' failed at ngraph/core/src/slice_plan.cpp:130
+slice_op_test.SliceTest.testSliceOfSlice
+
+# Failed to reshape Network: Check 'dimension_at_axis % m_num_splits == 0' failed at ngraph/core/src/op/split.cpp:80
+split_op_test.SplitOpTest.testSplitRows
+
+# The length of size_splits must sum to the value of the dimension along split_dim
+split_op_test.SplitOpTest.testSpecialCasesVariable
+
+# Failed to reshape Network: Check 'sum_of_splits == data_shape[axis].get_length()' failed at ngraph/core/src/op/variadic_split.cpp:121
+split_op_test.SplitOpTest.testShapeInference
+
+# Check 'num_boxes_boxes.same_scheme(num_boxes_scores)' failed at ngraph/core/src/op/non_max_suppression.cpp:814
+image_ops_test.NonMaxSuppressionTest.testDataTypes
 
 ###################################################
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-argmax_op_test.ArgMaxTest.testDouble
-argmax_op_test.ArgMaxTest.testOutputEmpty
-array_ops_test.ShapeSizeRankTest.testDenseShape
-array_ops_test.ShapeSizeRankTest.testSizeDtype
-array_ops_test.SnapshotOpTest.testInvertPermutation
-array_ops_test.StridedSliceTest.testDegenerateSlices
-
+# commented in common
+one_hot_op_test.OneHotTest.testDoubleBatch
+sparse_xent_op_test.SparseXentTest.testInvalidLabel
+sparse_xent_op_test.SparseXentTest.testLabelsPlaceholderScalar

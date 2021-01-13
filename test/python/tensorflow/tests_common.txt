@@ -56,13 +56,6 @@ array_ops_test.ShapeSizeRankTest.testDenseShape
 array_ops_test.ShapeSizeRankTest.testSizeDtype
 array_ops_test.ShapeSizeRankTest.testSparseShape
 
-bias_op_test.BiasAddTest.testEmpty 
-#This test was commented out when upgrading from tf 1.13 to tf 1.14rc0
-#bias_op_test.BiasAddTest.testEmptyGradient
-bias_op_test.BiasAddTest.testFloatTypes 
-#bias_op_test.BiasAddTest.testGradientTensor4D
-#bias_op_test.BiasAddTest.testIntTypes 
-
 #bitwise_ops_test.BitwiseOpTest.testBinaryOps
 
 cast_op_test.CastOpTest.testBasic 
@@ -182,7 +175,6 @@ conv_ops_test.DepthwiseConv2DTest.testConv2D2x2Filter
 constant_op_test.ConstantTest.testDouble 
 constant_op_test.ConstantTest.testInt32
 constant_op_test.ConstantTest.testInt64
-constant_op_test.ConstantTest.testDouble
 
 cwise_ops_unary_test.UnaryOpTest.testComplex128Basic
 cwise_ops_unary_test.UnaryOpTest.testComplex64Basic
@@ -228,7 +220,6 @@ gather_nd_op_test.GatherNdTest.testUnknownIndices
 gather_nd_op_test.GatherNdTest.test_session
 
 # Note that all these test will pass on CPU (except testUInt32AndUInt64), because on CPU gather falls back to TF
-# In case of NNPI all except the last pass. But CI wont be tracking it because CI runs on CPU backend only
 gather_op_test.GatherTest.testBadAxis
 #gather_op_test.GatherTest.testBadIndicesCPU ...failing with ngraph error The start corner is out of bounds at axis 0
 #gather_op_test.GatherTest.testEmptySlices  ...failure in backend due to int64
@@ -255,9 +246,6 @@ identity_bijector_test.IdentityBijectorTest.testBijector
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency 
 
 math_grad_test.SquaredDifferenceOpTest.testGrad
-
-math_ops_test.AccumulateNTest.testInt
-math_ops_test.AccumulateNTest.testFloat
 
 math_ops_test.AddNTest.testFloat 
 math_ops_test.AddNTest.testGrad 
@@ -298,10 +286,6 @@ math_ops_test.Xlog1pyTest.testXlog1pyWithZeroBroadcast
 nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig2
 #nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig3
 #nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig4
-nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradShape1
-nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradShape2
-nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradShape4
-#nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradShape5
 nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape1
 nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
 nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape5
@@ -340,15 +324,6 @@ pool_test.PoolingTest.testPool3D
 pool_test.PoolingTest.testPoolNC
 pool_test.PoolingTest.testPoolSimple 
 pool_test.PoolingTest.test_session
-
-pooling_test.Pooling1DTest.test_averagepooling_1d 
-pooling_test.Pooling1DTest.test_maxpooling_1d 
-
-pooling_test.Pooling2DTest.test_averagepooling_2d 
-pooling_test.Pooling2DTest.test_maxpooling_2d 
-
-pooling_test.Pooling3DTest.test_averagepooling_3d 
-pooling_test.Pooling3DTest.test_maxpooling_3d
 
 pooling_ops_3d_test.PoolingTest.testMaxPool3dSamePadding
 pooling_ops_3d_test.PoolingTest.testMaxPool3dSamePaddingDifferentStrides
