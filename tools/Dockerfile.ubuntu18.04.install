@@ -14,34 +14,17 @@
 #  limitations under the License.
 # ==============================================================================
 
+ARG tensorflow_version
 ARG base_image
-
 FROM $base_image as base
-ARG ngtf_build_options
 
-RUN git clone https://github.com/tensorflow/ngraph-bridge.git /ngraph-bridge
-
-WORKDIR /ngraph-bridge
-
-RUN echo "Using build options: $ngtf_build_options" && ./build_ngtf.py $ngtf_build_options
-
-FROM ubuntu:18.04
-
-ENV PATH="/ngraph-bridge/build_cmake/venv-tf-py3/bin:$PATH"
-
-RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
-    git \
-    python3-distutils \
-    python3-pip \
-    unzip \
-    vim \
-    wget \
-    zip
+FROM tensorflow/tensorflow:$tensorflow_version
 
 # Copy virtual environment from the previous layer
-COPY --from=base /ngraph-bridge/build_cmake/venv-tf-py3 /ngraph-bridge/build_cmake/venv-tf-py3
+COPY --from=base /ngraph-bridge/build_cmake/python/dist /ngraph-bridge/whl/
 
 # Copy ngraph-bridge examples
 COPY --from=base /ngraph-bridge/examples /examples
 
+RUN pip install /ngraph-bridge/whl/ngraph_tensorflow_bridge-*.whl
 RUN python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"

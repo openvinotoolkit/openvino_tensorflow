@@ -73,12 +73,9 @@ details.
 
 Install the following requirements before building the `ngraph-bridge`. 
 
-TensorFlow uses a build system called "bazel". For the current version of `bazel`, 
-use [bazel version].
+Install [Bazelisk](https://github.com/bazelbuild/bazelisk):
 
-Install `bazelisk`:
-
-        wget https://github.com/bazelbuild/bazelisk/releases/download/v1.5.0/bazelisk-linux-amd64
+        wget https://github.com/bazelbuild/bazelisk/releases/download/v1.7.4/bazelisk-linux-amd64
         mv bazelisk-linux-amd64 ~/bin/bazel
         chmod +x ~/bin/bazel
 
@@ -90,7 +87,7 @@ bazel:
 
 Install `cmake`, `virtualenv`, and `gcc`.
 
-##### Build an nGraph bridge
+##### Build nGraph bridge
 
 Once TensorFlow's dependencies are installed, clone the `ngraph-bridge` repo:
 
