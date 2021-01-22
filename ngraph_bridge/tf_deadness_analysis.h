@@ -38,8 +38,8 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.h
  *******************************************************************************/
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
-#ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
-#define NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
+
+#pragma once
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
@@ -115,8 +115,6 @@ class DeadnessAnalysis {
 };
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK

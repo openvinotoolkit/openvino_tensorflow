@@ -14,8 +14,6 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_BRIDGE_ASSIGN_CLUSTERS_H_
-#define NGRAPH_TF_BRIDGE_ASSIGN_CLUSTERS_H_
 #pragma once
 
 #include "tensorflow/core/graph/graph.h"
@@ -28,5 +26,3 @@ Status GetNodeCluster(const Node* node, int* cluster);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif  // NGRAPH_TF_BRIDGE_ASSIGN_CLUSTERS_H_

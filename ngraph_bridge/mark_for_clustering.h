@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#pragma once
 
-#ifndef NGRAPH_TF_MARK_FOR_CLUSTERING_H_
-#define NGRAPH_TF_MARK_FOR_CLUSTERING_H_
+#pragma once
 
 #include "tensorflow/core/graph/graph.h"
 
-#include "ngraph/ngraph.hpp"
-
 #include "backend.h"
+#include "ngraph/ngraph.hpp"
 
 namespace tensorflow {
 namespace ngraph_bridge {
@@ -60,5 +57,3 @@ GetTFToNgOpMap();
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif  // NGRAPH_TF_MARK_FOR_CLUSTERING_H_

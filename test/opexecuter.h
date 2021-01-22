@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_OPEXECUTER_H_
-#define NGRAPH_TF_BRIDGE_OPEXECUTER_H_
+
+#pragma once
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
@@ -83,5 +83,3 @@ class OpExecuter {
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif  // NGRAPH_TF_BRIDGE_OPEXECUTER_H_

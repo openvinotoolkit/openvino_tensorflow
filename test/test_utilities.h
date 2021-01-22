@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
-#define NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
+
+#pragma once
 
 #include "gtest/gtest.h"
 
@@ -242,5 +242,3 @@ size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
 }  // namespace testing
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif  // NGRAPH_TF_BRIDGE_TESTUTILITIES_H_

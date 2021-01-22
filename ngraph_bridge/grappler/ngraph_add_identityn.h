@@ -15,21 +15,15 @@
  *******************************************************************************/
 #pragma once
 
-#ifndef NGRAPH_TF_ADD_IDENTITYN_H_
-#define NGRAPH_TF_ADD_IDENTITYN_H_
-
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
 
 #include "logging/ngraph_log.h"
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 Status AddIdentityN(Graph* graph, std::set<string> skip_these_nodes);
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_ADD_IDENTITYN_H_

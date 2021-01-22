@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef _INFERENCE_ENGINE_H_
-#define _INFERENCE_ENGINE_H_
+
+#pragma once
 
 #include <unistd.h>
 #include <chrono>
@@ -79,4 +79,3 @@ class InferenceEngine {
   Tensor m_image_to_repeat;
 };
 }  // namespace benchmark
-#endif  // _INFERENCE_ENGINE_H_

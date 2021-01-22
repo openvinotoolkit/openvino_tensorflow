@@ -14,8 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_LOG_H_
-#define NGRAPH_LOG_H_
+#pragma once
 
 #include <string>
 #include "tensorflow/core/lib/core/status.h"
@@ -32,5 +31,3 @@ class NGraphLogMessage : public tensorflow::internal::LogMessage {
 #define NGRAPH_VLOG(lvl)      \
   if (NGRAPH_VLOG_IS_ON(lvl)) \
   ::tensorflow::internal::LogMessage(__FILE__, __LINE__, tensorflow::INFO)
-
-#endif  // NGRAPH_LOG_H_

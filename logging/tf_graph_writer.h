@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef TF_GRAPH_WRITER_H_
-#define TF_GRAPH_WRITER_H_
+
+#pragma once
 
 #include <ostream>
 
@@ -47,7 +47,4 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
                          const std::string& title);
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow
-
-#endif  // TF_GRAPH_WRITER_H_

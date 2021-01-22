@@ -14,8 +14,6 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef THREAD_SAFE_QUEUE_H_
-#define THREAD_SAFE_QUEUE_H_
 #pragma once
 
 #include <queue>
@@ -63,5 +61,3 @@ class ThreadSafeQueue {
 };
 
 }  // namespace benchmark
-
-#endif  // THREAD_SAFE_QUEUE_H_

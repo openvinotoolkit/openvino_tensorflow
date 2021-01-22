@@ -21,8 +21,7 @@ File: tensorflow/tensorflow/compiler/jit/graphcycles/graphcycles.h
 
 *******************************************************************************/
 
-#ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
-#define NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
+#pragma once
 
 // GraphCycles detects the introduction of a cycle into a directed
 // graph that is being built up incrementally.
@@ -140,4 +139,3 @@ class GraphCycles {
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-#endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_

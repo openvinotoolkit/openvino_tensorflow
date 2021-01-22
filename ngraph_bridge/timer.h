@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_TIMER_H_
-#define NGRAPH_TF_BRIDGE_TIMER_H_
+
+#pragma once
 
 #include <unistd.h>
 #include <chrono>
@@ -60,5 +60,3 @@ class Timer {
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif  // NGRAPH_TF_BRIDGE_TIMER_H_

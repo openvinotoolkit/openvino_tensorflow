@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_CLUSTER_MANAGER_H_
-#define NGRAPH_CLUSTER_MANAGER_H_
+
+#pragma once
 
 #include <mutex>
 #include <vector>
@@ -37,5 +37,3 @@ class ClusterManager {
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif

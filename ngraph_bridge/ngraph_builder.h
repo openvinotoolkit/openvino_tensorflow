@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_BUILDER_H_
-#define NGRAPH_TF_BRIDGE_BUILDER_H_
+
+#pragma once
 
 #include <ostream>
 #include <vector>
@@ -77,5 +77,3 @@ class Builder {
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-
-#endif

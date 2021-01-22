@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#pragma once
 
-#ifndef NGRAPH_TF_NGRAPHOPTIMIZER_H_
-#define NGRAPH_TF_NGRAPHOPTIMIZER_H_
+#pragma once
 
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #include "tensorflow/core/framework/op.h"
@@ -76,4 +74,3 @@ mutex NgraphOptimizer::s_serial_counter_mutex;
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_NGRAPHOPTIMIZER_H_
