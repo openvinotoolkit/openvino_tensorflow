@@ -29,8 +29,8 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
 
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/version.h"
+#include "utils.h"
+#include "version.h"
 
 using namespace std;
 

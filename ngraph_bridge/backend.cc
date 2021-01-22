@@ -18,7 +18,6 @@
 
 #include <ie_core.hpp>
 #include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
 
 using namespace std;
 using namespace ngraph;

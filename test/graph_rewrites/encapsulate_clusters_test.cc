@@ -18,13 +18,12 @@
 
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
+#include "ngraph_bridge/cluster_manager.h"
+#include "ngraph_bridge/encapsulate_clusters.h"
 #include "ngraph_bridge/version.h"
 #include "test/test_utilities.h"
 
 using namespace std;
-namespace ng = ngraph;
 
 namespace tensorflow {
 namespace ngraph_bridge {
@@ -48,7 +47,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   auto num_graphs_in_cluster_manager = []() {
     int num = 0;
     while (true) {
-      if (NGraphClusterManager::GetClusterGraph(num) == nullptr) {
+      if (ClusterManager::GetClusterGraph(num) == nullptr) {
         break;
       } else {
         num++;
@@ -56,7 +55,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
     }
     return num;
   };
-  NGraphClusterManager::EvictAllClusters();
+  ClusterManager::EvictAllClusters();
   ASSERT_EQ(num_graphs_in_cluster_manager(), 0);
   Graph g(OpRegistry::Global());
 
@@ -65,7 +64,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   t_input_1.flat<int32>().data()[0] = 3;
   t_input_1.flat<int32>().data()[1] = 2;
 
-  int cluster_idx_0 = NGraphClusterManager::NewCluster();
+  int cluster_idx_0 = ClusterManager::NewCluster();
   ;
 
   Node* node1;
@@ -76,7 +75,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
                 .Attr("_ngraph_cluster", cluster_idx_0)
                 .Finalize(&g, &node1));
 
-  int cluster_idx_1 = NGraphClusterManager::NewCluster();
+  int cluster_idx_1 = ClusterManager::NewCluster();
   ASSERT_EQ(num_graphs_in_cluster_manager(), 2);
 
   Node* node2;
@@ -116,14 +115,14 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
 
   // Initially ClusterManager is empty
   for (int i = 0; i < 2; i++) {
-    ASSERT_EQ(NGraphClusterManager::GetClusterGraph(i)->node_size(), 0);
+    ASSERT_EQ(ClusterManager::GetClusterGraph(i)->node_size(), 0);
   }
   ASSERT_OK(enc.AnalysisPass());
   // After AnalysisPass ClusterManager is populated
   // const and retval
-  ASSERT_EQ(NGraphClusterManager::GetClusterGraph(0)->node_size(), 2);
+  ASSERT_EQ(ClusterManager::GetClusterGraph(0)->node_size(), 2);
   // arg, const, add and retval
-  ASSERT_EQ(NGraphClusterManager::GetClusterGraph(1)->node_size(), 4);
+  ASSERT_EQ(ClusterManager::GetClusterGraph(1)->node_size(), 4);
   // But the graph structure stays same. No rewriting yet
   ASSERT_EQ(g.num_edges(), 7);
   ASSERT_EQ(g.num_op_nodes(), 4);
@@ -134,9 +133,9 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   set<int> expected{0, 1};
   ASSERT_EQ(newly_created_cluster_ids, expected);
 
-  auto subgraph_0 = NGraphClusterManager::GetClusterGraph(0);
-  auto subgraph_1 = NGraphClusterManager::GetClusterGraph(1);
-  auto subgraph_2 = NGraphClusterManager::GetClusterGraph(2);
+  auto subgraph_0 = ClusterManager::GetClusterGraph(0);
+  auto subgraph_1 = ClusterManager::GetClusterGraph(1);
+  auto subgraph_2 = ClusterManager::GetClusterGraph(2);
   // Assert that there are only 2 subgraphs
   ASSERT_EQ(subgraph_2, nullptr);
 
@@ -201,8 +200,8 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   // After RewritePass, the number of clusters is still 2 and it contains
   // populated graphdefs
   ASSERT_EQ(num_graphs_in_cluster_manager(), 2);
-  ASSERT_EQ(NGraphClusterManager::GetClusterGraph(0)->node_size(), 2);
-  ASSERT_EQ(NGraphClusterManager::GetClusterGraph(1)->node_size(), 4);
+  ASSERT_EQ(ClusterManager::GetClusterGraph(0)->node_size(), 2);
+  ASSERT_EQ(ClusterManager::GetClusterGraph(1)->node_size(), 4);
 
   // The graph structure should have changed after RewritePass
   ASSERT_EQ(g.num_edges(), 6);
@@ -212,7 +211,7 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
 
 // const(0) ---> add(0) <---const(0)
 TEST(EncapsulateClusters, PopulateLibrary) {
-  NGraphClusterManager::EvictAllClusters();
+  ClusterManager::EvictAllClusters();
   Graph g(OpRegistry::Global());
 
   Tensor t_input_0(DT_FLOAT, TensorShape{2, 3});
@@ -220,7 +219,7 @@ TEST(EncapsulateClusters, PopulateLibrary) {
   t_input_1.flat<int32>().data()[0] = 3;
   t_input_1.flat<int32>().data()[1] = 2;
 
-  int cluster_idx = NGraphClusterManager::NewCluster();
+  int cluster_idx = ClusterManager::NewCluster();
 
   Node* node1;
   ASSERT_OK(NodeBuilder("node1", "Const")

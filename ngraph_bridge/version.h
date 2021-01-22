@@ -15,8 +15,15 @@
  *******************************************************************************/
 #pragma once
 
+#include "tensorflow/core/public/version.h"
+
 namespace tensorflow {
 namespace ngraph_bridge {
+
+#define TF_VERSION_GEQ(REQ_TF_MAJ_VER, REQ_TF_MIN_VER) \
+  ((TF_MAJOR_VERSION > REQ_TF_MAJ_VER) ||              \
+   ((TF_MAJOR_VERSION == REQ_TF_MAJ_VER) &&            \
+    (TF_MINOR_VERSION >= REQ_TF_MIN_VER)))
 
 extern "C" {
 // Returns the ngraph-tensorflow bridge version

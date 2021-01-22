@@ -44,8 +44,8 @@
 
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_utils.h"
 #include "ngraph_bridge/pass/transpose_sinking.h"
+#include "ngraph_bridge/utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
 

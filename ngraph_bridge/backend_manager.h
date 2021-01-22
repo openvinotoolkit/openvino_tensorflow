@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "tensorflow/core/lib/core/errors.h"
+#include "tensorflow/core/lib/core/status.h"
 
 #include "backend.h"
 

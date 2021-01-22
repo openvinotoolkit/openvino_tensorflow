@@ -13,14 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
-#define NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
 
-#include "tensorflow/core/public/version.h"
+#include "cluster_manager.h"
 
-#define TF_VERSION_GEQ(REQ_TF_MAJ_VER, REQ_TF_MIN_VER) \
-  ((TF_MAJOR_VERSION > REQ_TF_MAJ_VER) ||              \
-   ((TF_MAJOR_VERSION == REQ_TF_MAJ_VER) &&            \
-    (TF_MINOR_VERSION >= REQ_TF_MIN_VER)))
+using namespace std;
 
-#endif  // NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
+namespace tensorflow {
+namespace ngraph_bridge {
+
+// Static initializers
+std::vector<GraphDef*> ClusterManager::s_cluster_graphs;
+std::mutex ClusterManager::s_cluster_graphs_mutex;
+
+size_t ClusterManager::NewCluster() {
+  std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
+
+  size_t new_idx = s_cluster_graphs.size();
+  s_cluster_graphs.push_back(new GraphDef());
+  return new_idx;
+}
+
+GraphDef* ClusterManager::GetClusterGraph(size_t idx) {
+  std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
+  return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
+}
+
+void ClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
+
+}  // namespace ngraph_bridge
+}  // namespace tensorflow

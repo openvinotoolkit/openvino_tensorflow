@@ -14,6 +14,10 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include "tensorflow/core/lib/core/errors.h"
+
+#include <ie_core.hpp>
+
 #include "backend_manager.h"
 #include "logging/ngraph_log.h"
 

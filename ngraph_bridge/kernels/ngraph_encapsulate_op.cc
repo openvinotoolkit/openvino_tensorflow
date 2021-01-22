@@ -31,11 +31,12 @@
 
 #include "logging/ngraph_log.h"
 #include "ngraph_bridge/backend_manager.h"
+#include "ngraph_bridge/cluster_manager.h"
+#include "ngraph_bridge/ie_tensor.h"
+#include "ngraph_bridge/mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_timer.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/timer.h"
+#include "ngraph_bridge/utils.h"
 
 using namespace std;
 
@@ -99,7 +100,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   NGRAPH_VLOG(1) << "NGraphEncapsulateOp: " << m_cluster_id
                  << " Name: " << name();
 
-  GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
+  GraphDef* graph_def = ClusterManager::GetClusterGraph(m_cluster_id);
   if (graph_def == nullptr) {
     string flib_key = "ngraph_cluster_" + to_string(m_cluster_id);
     // Read graphdef from function library
@@ -109,7 +110,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OP_REQUIRES(
         ctx, fdef != nullptr,
         errors::Internal("Did not find graphdef for encapsulate ", flib_key,
-                         " in NGraphClusterManager or function library"));
+                         " in ClusterManager or function library"));
     // TODO: how to convert from functiondef to graphdef. Anything easier?
     std::unique_ptr<FunctionBody> fnbody;
     const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {

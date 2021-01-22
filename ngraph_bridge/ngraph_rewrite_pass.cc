@@ -22,14 +22,14 @@
 #include "tensorflow/core/graph/graph.h"
 
 #include "api.h"
+#include "assign_clusters.h"
+#include "cluster_manager.h"
+#include "deassign_clusters.h"
+#include "encapsulate_clusters.h"
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_deassign_clusters.h"
-#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "mark_for_clustering.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -60,10 +60,10 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 //
 // The pass has several phases, each executed in the below sequence:
 //
-//   1. Marking [ngraph_mark_for_clustering.cc]
-//   2. Cluster Assignment [ngraph_assign_clusters.cc]
-//   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
-//   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc]
+//   1. Marking [mark_for_clustering.cc]
+//   2. Cluster Assignment [assign_clusters.cc]
+//   3. Cluster Deassignment [deassign_clusters.cc]
+//   4. Cluster Encapsulation [encapsulate_clusters.cc]
 
 class NGraphEncapsulationPass : public NGraphRewritePass {
  public:
@@ -96,7 +96,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
                             (already_processed ? "graph is already preprocessed"
                                                : "ngraph is disabled");
-      NGraphClusterManager::EvictAllClusters();
+      ClusterManager::EvictAllClusters();
       return Status::OK();
     }
 

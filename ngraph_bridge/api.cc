@@ -14,8 +14,6 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "tensorflow/core/lib/core/errors.h"
-
 #include "api.h"
 #include "backend_manager.h"
 

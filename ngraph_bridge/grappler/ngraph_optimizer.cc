@@ -26,9 +26,15 @@
 #include "tensorflow/core/grappler/utils.h"
 #include "tensorflow/core/platform/protobuf.h"
 
+#include "ngraph_add_identityn.h"
 #include "ngraph_bridge/api.h"
-#include "ngraph_bridge/grappler/ngraph_optimizer.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
+#include "ngraph_bridge/assign_clusters.h"
+#include "ngraph_bridge/cluster_manager.h"
+#include "ngraph_bridge/deassign_clusters.h"
+#include "ngraph_bridge/encapsulate_clusters.h"
+#include "ngraph_bridge/mark_for_clustering.h"
+#include "ngraph_bridge/utils.h"
+#include "ngraph_optimizer.h"
 
 #include <iostream>
 
@@ -77,7 +83,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
                           (already_processed ? "graph is already preprocessed"
                                              : "ngraph is disabled");
-    NGraphClusterManager::EvictAllClusters();
+    ClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
   }
@@ -137,10 +143,10 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   //
   // The part has several phases, each executed in sequence:
   //
-  //   1. Marking [ngraph_mark_for_clustering.cc]
-  //   2. Cluster Assignment [ngraph_assign_clusters.cc]
-  //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
-  //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc] - currently
+  //   1. Marking [mark_for_clustering.cc]
+  //   2. Cluster Assignment [assign_clusters.cc]
+  //   3. Cluster Deassignment [deassign_clusters.cc]
+  //   4. Cluster Encapsulation [encapsulate_clusters.cc] - currently
   //      part of the ngraph_rewrite_pass.cc to be executed after POST_REWRITE
   //
 

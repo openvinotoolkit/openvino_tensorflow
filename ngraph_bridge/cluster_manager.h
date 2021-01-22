@@ -13,31 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_bridge/ngraph_cluster_manager.h"
+#ifndef NGRAPH_CLUSTER_MANAGER_H_
+#define NGRAPH_CLUSTER_MANAGER_H_
 
-using namespace std;
+#include <mutex>
+#include <vector>
+
+#include "tensorflow/core/framework/graph.pb.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-// Static initializers
-std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
-std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
+class ClusterManager {
+ public:
+  static size_t NewCluster();
+  static tensorflow::GraphDef* GetClusterGraph(size_t idx);
+  static void EvictAllClusters();
 
-size_t NGraphClusterManager::NewCluster() {
-  std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
-
-  size_t new_idx = s_cluster_graphs.size();
-  s_cluster_graphs.push_back(new GraphDef());
-  return new_idx;
-}
-
-GraphDef* NGraphClusterManager::GetClusterGraph(size_t idx) {
-  std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
-  return idx < s_cluster_graphs.size() ? s_cluster_graphs[idx] : nullptr;
-}
-
-void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
+ private:
+  static std::vector<tensorflow::GraphDef*> s_cluster_graphs;
+  static std::mutex s_cluster_graphs_mutex;
+};
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
+
+#endif

@@ -34,8 +34,8 @@
 
 #include "inference_engine.h"
 #include "ngraph_bridge/backend_manager.h"
-#include "ngraph_bridge/ngraph_timer.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/timer.h"
+#include "ngraph_bridge/utils.h"
 #include "ngraph_bridge/version.h"
 
 using namespace std;

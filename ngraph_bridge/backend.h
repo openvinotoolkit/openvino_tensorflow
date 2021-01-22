@@ -22,7 +22,6 @@
 #include "ngraph/ngraph.hpp"
 
 #include "ngraph_bridge/executable.h"
-#include "ngraph_bridge/ie_tensor.h"
 
 using namespace std;
 

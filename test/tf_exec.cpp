@@ -29,7 +29,7 @@
 #include "tensorflow/core/public/session.h"
 
 #include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/utils.h"
 #include "ngraph_bridge/version.h"
 #include "test/test_utilities.h"
 

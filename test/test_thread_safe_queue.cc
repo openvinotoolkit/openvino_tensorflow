@@ -23,7 +23,7 @@
 
 #include "../examples/cpp/thread_safe_queue.h"
 #include "gtest/gtest.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/utils.h"
 
 using namespace std;
 

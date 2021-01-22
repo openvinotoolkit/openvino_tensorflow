@@ -36,7 +36,7 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.cc
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_bridge/ngraph_utils.h"
+#include "utils.h"
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
 
 #include "tensorflow/core/graph/algorithm.h"
@@ -60,7 +60,6 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.cc
 // Predicate equality has to hold over all possible assignments to these
 // uninterpreted symbols.
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 namespace {

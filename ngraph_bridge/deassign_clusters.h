@@ -13,29 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_LIBRARY_MANAGER_H_
-#define NGRAPH_LIBRARY_MANAGER_H_
 
-#include <mutex>
-#include <vector>
+#ifndef NGRAPH_TF_BRIDGE_DEASSIGN_CLUSTERS_H_
+#define NGRAPH_TF_BRIDGE_DEASSIGN_CLUSTERS_H_
+#pragma once
 
-#include "tensorflow/core/framework/graph.pb.h"
+#include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-class NGraphClusterManager {
- public:
-  static size_t NewCluster();
-  static tensorflow::GraphDef* GetClusterGraph(size_t idx);
-  static void EvictAllClusters();
-
- private:
-  static std::vector<tensorflow::GraphDef*> s_cluster_graphs;
-  static std::mutex s_cluster_graphs_mutex;
-};
+Status DeassignClusters(Graph* graph);
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
 
-#endif
+#endif  // NGRAPH_TF_BRIDGE_DEASSIGN_CLUSTERS_H_

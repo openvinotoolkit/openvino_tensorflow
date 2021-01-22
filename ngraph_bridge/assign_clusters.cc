@@ -27,13 +27,13 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
+#include "assign_clusters.h"
+#include "cluster_manager.h"
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/tf_deadness_analysis.h"
-#include "ngraph_bridge/tf_graphcycles.h"
+#include "mark_for_clustering.h"
+#include "tf_deadness_analysis.h"
+#include "tf_graphcycles.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -598,7 +598,7 @@ Status AssignClusters(Graph* graph) {
       continue;
     }
 
-    size_t cluster_idx = NGraphClusterManager::NewCluster();
+    size_t cluster_idx = ClusterManager::NewCluster();
 
     for (auto node : cluster->nodes) {
       if (NGRAPH_VLOG_IS_ON(5)) {

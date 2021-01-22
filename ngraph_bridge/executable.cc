@@ -15,15 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
 
 #include <ie_plugin_config.hpp>
 
+#include "default_opset.h"
+#include "executable.h"
+#include "ie_tensor.h"
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/executable.h"
-#include "ngraph_bridge/ie_tensor.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "utils.h"
 
 using namespace std;
 using namespace ngraph;

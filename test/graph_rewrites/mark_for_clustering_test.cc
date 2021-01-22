@@ -20,8 +20,8 @@
 #include "tensorflow/core/graph/node_builder.h"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/mark_for_clustering.h"
+#include "ngraph_bridge/utils.h"
 #include "test/test_utilities.h"
 
 using namespace std;

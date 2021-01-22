@@ -27,13 +27,13 @@
 #include "ngraph/slice_plan.hpp"
 
 #include "api.h"
+#include "default_opset.h"
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_conversions.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/pass/transpose_sinking.h"
+#include "mark_for_clustering.h"
+#include "ngraph_builder.h"
+#include "ngraph_conversions.h"
+#include "pass/transpose_sinking.h"
+#include "utils.h"
 
 using tensorflow::int32;
 using namespace std;

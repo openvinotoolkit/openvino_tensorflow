@@ -14,14 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "tensorflow/core/graph/graph.h"
-
+#include "mark_for_clustering.h"
 #include "api.h"
 #include "backend_manager.h"
-#include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/ngraph_version_utils.h"
+#include "default_opset.h"
+#include "utils.h"
 
 using namespace std;
 

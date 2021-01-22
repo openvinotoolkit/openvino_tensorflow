@@ -26,11 +26,11 @@
 #include "tensorflow/core/platform/env.h"
 
 #include "ngraph_bridge/backend_manager.h"
+#include "ngraph_bridge/ie_tensor.h"
 #include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/utils.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
 #include "ngraph_bridge/default_opset.h"
 
 #include "test/test_utilities.h"

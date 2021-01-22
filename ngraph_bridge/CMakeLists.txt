@@ -30,24 +30,24 @@ message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 #-----------------------------------------------------------------------------------------------
 set(SRC
    api.cc
+   assign_clusters.cc
    backend.cc
    backend_manager.cc
+   cluster_manager.cc
+   deassign_clusters.cc
+   encapsulate_clusters.cc
    executable.cc
    ie_tensor.cc
    kernels/ngraph_encapsulate_op.cc
-   ngraph_assign_clusters.cc
+   mark_for_clustering.cc
    ngraph_builder.cc
-   ngraph_cluster_manager.cc
    ngraph_conversions.cc
-   ngraph_deassign_clusters.cc
-   ngraph_encapsulate_clusters.cc
-   ngraph_mark_for_clustering.cc
    ngraph_rewrite_pass.cc
-   ngraph_utils.cc
    ops/ngraph_encapsulate_op.cc
    pass/transpose_sinking.cc
    tf_graphcycles.cc
    tf_deadness_analysis.cc
+   utils.cc
    version.cc
 )
 

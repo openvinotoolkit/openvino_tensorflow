@@ -30,9 +30,9 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "ngraph_bridge/assign_clusters.h"
+#include "ngraph_bridge/mark_for_clustering.h"
+#include "ngraph_bridge/utils.h"
 #include "test/test_utilities.h"
 
 #if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)

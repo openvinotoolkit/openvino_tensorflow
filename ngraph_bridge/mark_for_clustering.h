@@ -22,7 +22,7 @@
 
 #include "ngraph/ngraph.hpp"
 
-#include "ngraph_bridge/backend.h"
+#include "backend.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {

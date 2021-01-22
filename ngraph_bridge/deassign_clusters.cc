@@ -28,11 +28,11 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
+#include "assign_clusters.h"
+#include "deassign_clusters.h"
 #include "logging/ngraph_log.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_deassign_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "mark_for_clustering.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ namespace tensorflow {
 namespace ngraph_bridge {
 
 //
-// The clustering pass of ngraph_assign_clusters.cc sometimes generates many
+// The clustering pass of assign_clusters.cc sometimes generates many
 // small, trivial clusters. In this pass, we simply deassign (i.e., remove the
 // _ngraph_cluster and _ngraph_marked_for_clustering attributes) any such
 // trivial clusters. For now, "trivial" just means that there are not at least

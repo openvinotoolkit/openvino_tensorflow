@@ -36,15 +36,15 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
+#include "assign_clusters.h"
+#include "cluster_manager.h"
+#include "encapsulate_clusters.h"
 #include "logging/ngraph_log.h"
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/version.h"
+#include "mark_for_clustering.h"
+#include "ngraph_builder.h"
+#include "utils.h"
+#include "version.h"
 
 using namespace std;
 
@@ -88,15 +88,15 @@ Status EncapsulateClusters(
   // make sure we can construct a graph from it.
   if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
     for (auto& cluster_idx : newly_created_cluster_ids) {
-      TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
-          *NGraphClusterManager::GetClusterGraph(cluster_idx),
-          *OpRegistry::Global()));
+      TF_RETURN_IF_ERROR(
+          graph::ValidateGraphDef(*ClusterManager::GetClusterGraph(cluster_idx),
+                                  *OpRegistry::Global()));
 
       Graph g(OpRegistry::Global());
       GraphConstructorOptions opts;
       opts.allow_internal_ops = true;
       TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
-          opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
+          opts, *ClusterManager::GetClusterGraph(cluster_idx), &g));
 
       std::stringstream ss;
       ss << "ngraph_cluster_" << cluster_idx;
@@ -221,7 +221,7 @@ Status Encapsulator::AnalysisPass() {
       ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
       string output_name = ss.str();
       auto new_output_node_def =
-          NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+          ClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
       new_output_node_def->set_name(output_name);
       new_output_node_def->set_op("_Retval");
       edge_is_retval = true;
@@ -260,7 +260,7 @@ Status Encapsulator::AnalysisPass() {
       string input_prov_tag = src->name();
 
       auto new_input_node_def =
-          NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
+          ClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
       new_input_node_def->set_name(new_input_name);
       new_input_node_def->set_op("_Arg");
       edge_is_arg = true;
@@ -382,8 +382,7 @@ Status Encapsulator::AnalysisPass() {
     }
     // ...end code copied and pasted (and modified) from graph.cc
 
-    auto node_def =
-        NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+    auto node_def = ClusterManager::GetClusterGraph(cluster_idx)->add_node();
     *node_def = original_def;
     for (auto& input : *(node_def->mutable_input())) {
       TensorId tensor_id = ParseTensorName(input);
@@ -457,8 +456,7 @@ Status Encapsulator::RewritePass(
     // Find Static Inputs And Add as an attribute
     vector<int> static_input_indexes;
     GraphDef* gdef_for_current_encapsulate;
-    gdef_for_current_encapsulate =
-        NGraphClusterManager::GetClusterGraph(cluster_idx);
+    gdef_for_current_encapsulate = ClusterManager::GetClusterGraph(cluster_idx);
     if (gdef_for_current_encapsulate == nullptr) {
       return errors::Internal(
           "Did not find encapsulated graph in cluster manager for node ",

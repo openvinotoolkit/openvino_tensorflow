@@ -23,8 +23,6 @@
 
 #include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/backend_manager.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
 #include "test/test_utilities.h"
 
 using namespace std;
