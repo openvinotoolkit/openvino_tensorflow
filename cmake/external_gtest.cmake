@@ -45,10 +45,11 @@ endif()
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef")
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef ${CMAKE_CXX_FLAGS}")
 else()
-    set(GTEST_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
+    set(GTEST_CXX_FLAGS "${CMAKE_ORIGINAL_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 endif()
+message(STATUS "Compile Flags for gtest dir: ${GTEST_CXX_FLAGS}")
 
 #Build for ninja
 SET(GTEST_PATHS ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}

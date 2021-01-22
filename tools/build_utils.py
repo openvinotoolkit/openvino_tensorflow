@@ -194,6 +194,7 @@ def build_tensorflow(tf_version,
                      target_arch,
                      verbosity,
                      use_intel_tf,
+                     cxx_abi,
                      target=""):
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()
@@ -255,6 +256,8 @@ def build_tensorflow(tf_version,
             "--config=v1",
         ])
 
+    cmd.extend(["--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
+
     # If target is not specified, we assume default TF wheel build
     if target == '':
         target = "//tensorflow/tools/pip_package:build_pip_package"
@@ -288,6 +291,7 @@ def build_tensorflow_cc(tf_version,
                         target_arch,
                         verbosity,
                         use_intel_tf,
+                        cxx_abi,
                         tf_prebuilt=None):
     lib = "libtensorflow_cc.so.2"
     if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
@@ -302,6 +306,7 @@ def build_tensorflow_cc(tf_version,
         target_arch,
         verbosity,
         use_intel_tf,
+        cxx_abi,
         target="//tensorflow:" + tf_cc_lib_name +
         " //tensorflow/core/kernels:ops_testutil")
 

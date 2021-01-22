@@ -70,15 +70,16 @@ def main():
         call(["git", "pull"])
         os.chdir(pwd)
 
+    cxx_abi = "0"
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
-                     arguments.use_intel_tensorflow)
+                     arguments.use_intel_tensorflow, cxx_abi)
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
                         arguments.target_arch, False,
-                        arguments.use_intel_tensorflow)
+                        arguments.use_intel_tensorflow, cxx_abi)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')

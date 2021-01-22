@@ -23,7 +23,7 @@ import argparse
 def main():
     openvino_version = "releases/2021/2"
     build_dir = 'build_cmake'
-    cxx_abi = "1"
+    cxx_abi = "0"
     print("openVINO version: ", openvino_version)
 
     # Command line parser options
