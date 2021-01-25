@@ -26,7 +26,6 @@
 #include "tensorflow/core/protobuf/config.pb.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
 #include "test/test_utilities.h"
 
 using namespace std;

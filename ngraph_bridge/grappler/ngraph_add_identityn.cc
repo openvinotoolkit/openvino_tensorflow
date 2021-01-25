@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_bridge/grappler/ngraph_add_identityn.h"
+
+#include "tensorflow/core/graph/node_builder.h"
+
+#include "ngraph_add_identityn.h"
+#include "ngraph_bridge/log.h"
 
 using namespace std;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
 
 Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
@@ -83,5 +86,4 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
 }
 
 }  // namespace ngraph_bridge
-
 }  // namespace tensorflow

@@ -29,7 +29,6 @@
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/assign_clusters.h"
 #include "ngraph_bridge/mark_for_clustering.h"
 #include "ngraph_bridge/utils.h"

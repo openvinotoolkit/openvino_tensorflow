@@ -31,7 +31,6 @@
 #include "tensorflow/core/public/session.h"
 
 #include <cmath>
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"

@@ -26,8 +26,7 @@
 #include "cluster_manager.h"
 #include "deassign_clusters.h"
 #include "encapsulate_clusters.h"
-#include "logging/ngraph_log.h"
-#include "logging/tf_graph_writer.h"
+#include "log.h"
 #include "mark_for_clustering.h"
 #include "utils.h"
 

@@ -32,6 +32,7 @@
 #include "ngraph_bridge/cluster_manager.h"
 #include "ngraph_bridge/deassign_clusters.h"
 #include "ngraph_bridge/encapsulate_clusters.h"
+#include "ngraph_bridge/log.h"
 #include "ngraph_bridge/mark_for_clustering.h"
 #include "ngraph_bridge/utils.h"
 #include "ngraph_optimizer.h"

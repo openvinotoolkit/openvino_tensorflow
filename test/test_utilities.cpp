@@ -14,16 +14,15 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "test/test_utilities.h"
 #include <assert.h>
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
-#include "logging/ngraph_log.h"
+
+#include "ngraph_bridge/log.h"
+#include "test_utilities.h"
 
 using namespace std;
-
-namespace ng = ngraph;
 
 namespace tensorflow {
 namespace ngraph_bridge {

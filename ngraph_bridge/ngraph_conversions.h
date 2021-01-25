@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "logging/ngraph_log.h"
+#include "log.h"
 #include "ngraph_bridge/default_opset.h"
 #include "ngraph_bridge/ngraph_builder.h"
 

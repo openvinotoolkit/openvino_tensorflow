@@ -23,9 +23,6 @@
 #include "tensorflow/core/graph/node_builder.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer.h"
 
-#include "logging/ngraph_log.h"
-#include "logging/tf_graph_writer.h"
-
 #include <iomanip>
 
 namespace tensorflow {

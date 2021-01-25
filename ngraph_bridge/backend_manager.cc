@@ -19,7 +19,7 @@
 #include <ie_core.hpp>
 
 #include "backend_manager.h"
-#include "logging/ngraph_log.h"
+#include "log.h"
 
 using namespace std;
 

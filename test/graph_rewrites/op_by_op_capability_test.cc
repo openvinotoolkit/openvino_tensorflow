@@ -26,7 +26,6 @@
 #include "tensorflow/core/protobuf/config.pb.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/backend_manager.h"
 #include "ngraph_bridge/default_opset.h"
 #include "ngraph_bridge/mark_for_clustering.h"

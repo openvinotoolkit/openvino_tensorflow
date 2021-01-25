@@ -62,7 +62,6 @@ endif()
 add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries(
         ${LIB_NAME}
-        ngraph_logger 
         ${TensorFlow_FRAMEWORK_LIBRARY} 
         ngraph_lib
         absl_algorithm

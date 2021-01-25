@@ -42,7 +42,6 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/util.hpp"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/default_opset.h"
 #include "ngraph_bridge/pass/transpose_sinking.h"
 #include "ngraph_bridge/utils.h"

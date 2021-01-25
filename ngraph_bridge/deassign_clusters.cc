@@ -30,7 +30,7 @@
 #include "api.h"
 #include "assign_clusters.h"
 #include "deassign_clusters.h"
-#include "logging/ngraph_log.h"
+#include "log.h"
 #include "mark_for_clustering.h"
 #include "utils.h"
 

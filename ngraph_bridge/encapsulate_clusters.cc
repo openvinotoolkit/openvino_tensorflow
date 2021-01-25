@@ -39,8 +39,7 @@
 #include "assign_clusters.h"
 #include "cluster_manager.h"
 #include "encapsulate_clusters.h"
-#include "logging/ngraph_log.h"
-#include "logging/tf_graph_writer.h"
+#include "log.h"
 #include "mark_for_clustering.h"
 #include "ngraph_builder.h"
 #include "utils.h"
@@ -98,13 +97,7 @@ Status EncapsulateClusters(
       TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
           opts, *ClusterManager::GetClusterGraph(cluster_idx), &g));
 
-      std::stringstream ss;
-      ss << "ngraph_cluster_" << cluster_idx;
-      std::string filename_prefix = ss.str();
-
-      GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
-      GraphToDotFile(&g, filename_prefix + ".dot",
-                     "nGraph Cluster Dump: " + filename_prefix);
+      util::DumpTFGraph(&g, cluster_idx, "ngraph_cluster_");
     }
   }
 

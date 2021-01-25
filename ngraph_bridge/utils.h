@@ -30,8 +30,7 @@
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/ngraph.hpp"
 
-#include "logging/ngraph_log.h"
-#include "logging/tf_graph_writer.h"
+#include "log.h"
 
 // Activates event logging until the end of the current code-block scoping;
 // Automatically writes log data as soon as the the current scope expires.

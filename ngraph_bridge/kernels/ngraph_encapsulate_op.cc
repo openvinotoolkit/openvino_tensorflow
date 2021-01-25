@@ -29,10 +29,10 @@
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/graph/graph.h"
 
-#include "logging/ngraph_log.h"
 #include "ngraph_bridge/backend_manager.h"
 #include "ngraph_bridge/cluster_manager.h"
 #include "ngraph_bridge/ie_tensor.h"
+#include "ngraph_bridge/log.h"
 #include "ngraph_bridge/mark_for_clustering.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/timer.h"

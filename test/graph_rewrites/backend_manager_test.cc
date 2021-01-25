@@ -21,7 +21,6 @@
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/backend_manager.h"
 #include "test/test_utilities.h"
 

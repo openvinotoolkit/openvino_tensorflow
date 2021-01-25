@@ -16,7 +16,6 @@
 
 #include <cstdlib>
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/ngraph_builder.h"
 #include "ngraph_bridge/utils.h"
 #include "test/opexecuter.h"
@@ -72,11 +71,6 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
 void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
-
-  // For debug
-  if (std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr) {
-    GraphToPbTextFile(&graph, "unit_test_tf_graph_" + test_op_type_ + ".pbtxt");
-  }
 
   ActivateNGraph();
   tf::SessionOptions options = GetSessionOptions();

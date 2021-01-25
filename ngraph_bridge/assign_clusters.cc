@@ -29,7 +29,7 @@
 #include "api.h"
 #include "assign_clusters.h"
 #include "cluster_manager.h"
-#include "logging/ngraph_log.h"
+#include "log.h"
 #include "mark_for_clustering.h"
 #include "tf_deadness_analysis.h"
 #include "tf_graphcycles.h"

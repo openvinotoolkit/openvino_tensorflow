@@ -18,7 +18,6 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/assign_clusters.h"
 #include "ngraph_bridge/utils.h"
 #include "test/test_utilities.h"

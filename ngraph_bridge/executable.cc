@@ -21,7 +21,7 @@
 #include "default_opset.h"
 #include "executable.h"
 #include "ie_tensor.h"
-#include "logging/ngraph_log.h"
+#include "log.h"
 #include "utils.h"
 
 using namespace std;

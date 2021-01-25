@@ -16,17 +16,41 @@
 
 #pragma once
 
+#include <sstream>
 #include <string>
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/macros.h"
 
-class NGraphLogMessage : public tensorflow::internal::LogMessage {
+namespace tensorflow {
+namespace ngraph_bridge {
+
+class LogMessage : public tensorflow::internal::LogMessage {
  public:
-  static tensorflow::int64 MinNGraphVLogLevel();
+  static tensorflow::int64 MinNGraphVLogLevel() {
+    const char* vlog_level = std::getenv("NGRAPH_TF_VLOG_LEVEL");
+    if (vlog_level == nullptr) {
+      return 0;
+    }
+
+    // Ideally we would use env_var / safe_strto64, but it is
+    // hard to use here without pulling in a lot of dependencies,
+    // so we use std:istringstream instead
+    std::string min_log_level(vlog_level);
+    std::istringstream ss(min_log_level);
+    tensorflow::int64 level;
+    if (!(ss >> level)) {
+      // Invalid vlog level setting, set level to default (0)
+      level = 0;
+    }
+    return level;
+  }
 };
 
-#define NGRAPH_VLOG_IS_ON(lvl) ((lvl) <= NGraphLogMessage::MinNGraphVLogLevel())
+}  // namespace ngraph_bridge
+}  // namespace tensorflow
+
+#define NGRAPH_VLOG_IS_ON(lvl) ((lvl) <= LogMessage::MinNGraphVLogLevel())
 
 #define NGRAPH_VLOG(lvl)      \
   if (NGRAPH_VLOG_IS_ON(lvl)) \

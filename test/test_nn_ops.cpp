@@ -29,7 +29,6 @@
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
-#include "logging/tf_graph_writer.h"
 #include "ngraph_bridge/utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
@@ -38,9 +37,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-
 namespace ngraph_bridge {
-
 namespace testing {
 
 // Test(TestCaseName, TestName)

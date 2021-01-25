@@ -28,7 +28,7 @@
 
 #include "api.h"
 #include "default_opset.h"
-#include "logging/ngraph_log.h"
+#include "log.h"
 #include "mark_for_clustering.h"
 #include "ngraph_builder.h"
 #include "ngraph_conversions.h"
