@@ -247,13 +247,13 @@ def build_tensorflow(tf_version,
             "--config=mkl",
         ])
     # Build the python package
-    if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
-        cmd.extend([
-            "--config=v2",
-        ])
-    elif (tf_version.startswith("v1.") or tf_version.startswith("1.")):
+    if (tf_version.startswith("v1.") or tf_version.startswith("1.")):
         cmd.extend([
             "--config=v1",
+        ])
+    else:
+        cmd.extend([
+            "--config=v2",
         ])
 
     cmd.extend(["--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
@@ -293,10 +293,8 @@ def build_tensorflow_cc(tf_version,
                         use_intel_tf,
                         cxx_abi,
                         tf_prebuilt=None):
-    lib = "libtensorflow_cc.so.2"
-    if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
-        tf_cc_lib_name = "libtensorflow_cc.so.2"
-    elif (tf_version.startswith("v1.") or tf_version.startswith("1.")):
+    tf_cc_lib_name = "libtensorflow_cc.so.2"
+    if (tf_version.startswith("v1.") or tf_version.startswith("1.")):
         tf_cc_lib_name = "libtensorflow_cc.so.1"
 
     build_tensorflow(
@@ -349,16 +347,14 @@ def locate_tf_whl(tf_whl_loc):
 
 
 def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
-    if (tf_version.startswith("v2.")):
-        tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
-        tf_cc_lib_name = 'libtensorflow_cc.so.2'
-    elif (tf_version.startswith("v1.")):
+    tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
+    tf_cc_lib_name = 'libtensorflow_cc.so.2'
+    if (tf_version.startswith("v1.")):
         tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
         tf_cc_lib_name = 'libtensorflow_cc.so.1'
     if (platform.system() == 'Darwin'):
-        if (tf_version.startswith("v2.")):
-            tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
-        elif (tf_version.startswith("v1.")):
+        tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+        if (tf_version.startswith("v1.")):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
