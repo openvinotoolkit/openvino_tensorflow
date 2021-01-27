@@ -24,11 +24,18 @@ while getopts “:m:b:d:h” opt; do
 done
 shift $((OPTIND-1))
 
+#==============================================================================
+#==============================================================================
+
 [ -f "$MANIFEST" ] || ( echo "Manifest not found: $MANIFEST !"; exit 1 )
 MANIFEST="$(cd "$(dirname "$MANIFEST")"; pwd)/$(basename "$MANIFEST")" # absolute path
 
 cd ${WORKDIR} || ( echo "Not found: $WORKDIR !"; exit 1 )
 echo "Dir: ${WORKDIR}"
+CSVFILE=benchmark_avg_infer_msec.csv
+[ -f "$CSVFILE" ] && rm $CSVFILE
+CSVFILE2=benchmark_infer_speedup.csv
+[ -f "$CSVFILE2" ] && rm $CSVFILE2
 
 failed_models=()
 finalretcode=0
@@ -45,6 +52,18 @@ while read -r line; do
     env "${envs[@]}" "${SCRIPT_DIR}/run_infer_single.sh" "${args[@]}" "${BENCHMARK}" && retcode=0; finalretcode=$((finalretcode+retcode))
     (( $retcode == 1 )) && failed_models+=("${args[0]}")
 done < "$MANIFEST"
+
+if [ "$BENCHMARK" == "YES" ] && [ -f "$CSVFILE" ]; then
+  if [ "${BUILDKITE}" == "true" ]; then
+    buildkite-agent artifact upload "benchmark*.csv"
+    pip install numpy pandas matplotlib
+    python ${SCRIPT_DIR}/gen_plot.py --csv $CSVFILE --ylabel "msec (Lower is Faster)" --title "Average Inference Time"
+    python ${SCRIPT_DIR}/gen_plot.py --csv $CSVFILE2 --ylabel "Speedup (Higher is Faster)" --title "Inference Speedup wrt Stock-TF"
+    buildkite-agent artifact upload "benchmark*.png"
+  else
+    echo; echo "CSV Info..."; cat $CSVFILE
+  fi
+fi
 
 if (( $finalretcode > 0 )); then
     echo; echo "$finalretcode model(s) testing failed!"

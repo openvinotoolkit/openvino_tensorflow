@@ -38,6 +38,12 @@ else
 fi
 LOCALSTORE=${LOCALSTORE_PREFIX}/$(basename $REPO)
 
+function pip_install {
+    pattern_with_ver=$1
+    pattern=$(echo $pattern_with_ver | cut -d"=" -f1)
+    pip list 2>/dev/null | grep -E "^$pattern " 2>&1 >/dev/null; (($?==0)) || pip install $pattern_with_ver;
+}
+
 function gen_frozen_models {
     script=$1
 
@@ -86,6 +92,9 @@ function get_model_repo {
     
     if [ "${BENCHMARK}" == "YES" ]; then
         if [ ! -f "${LOCALSTORE}/IR/${MODEL}_batch1.xml" ] || [ ! -f "${LOCALSTORE}/IR/${MODEL}_batch1.bin" ]; then
+            pip_install networkx
+            pip_install defusedxml
+            pip_install test-generator==0.1.1
             opv_root=${INTEL_OPENVINO_DIR:-"/opt/intel/openvino"}
             mo_tf_path="${opv_root}/deployment_tools/model_optimizer/mo_tf.py"
             [ -f "${mo_tf_path}" ] || ( echo "${mo_tf_path} not found!"; exit 1 )
@@ -104,10 +113,10 @@ function print_infer_times {
     INFER_TIME_FIRST_ITER="?"
     if (( $NUM_ITER > 1 )); then
         INFER_TIME_FIRST_ITER=$( grep "Inf Execution Time" ${TMPFILE} | head -n 1 | rev | cut -d' ' -f 1 | rev )
-        INFER_TIME_FIRST_ITER=$( printf %.04f ${INFER_TIME_FIRST_ITER} )
+        INFER_TIME_FIRST_ITER=$( printf %.03f ${INFER_TIME_FIRST_ITER} )
     fi
     INFER_TIME=$(get_average_infer_time "${WARMUP_ITERS}" "${TMPFILE}")
-    echo INFER_TIME Avg of $((NUM_ITER - WARMUP_ITERS)) iters = ${INFER_TIME} seconds, 1st = ${INFER_TIME_FIRST_ITER}
+    echo INFER_TIME Avg of $((NUM_ITER - WARMUP_ITERS)) iters = ${INFER_TIME} ms, 1st = ${INFER_TIME_FIRST_ITER} sec
 }
 
 function get_average_infer_time {
@@ -123,15 +132,9 @@ function get_average_infer_time {
         ((count++))
     done
     (( count > $num_warmup_iters )) && total=$(echo $total-$warmup_iters_time | bc )
-    avg=$(echo "scale=4; $total / $count" | bc)
-    avg=$( printf %.04f $avg )
+    avg=$(echo "scale=6; $total * 1000 / $count" | bc) # msecs
+    avg=$( printf %.3f $avg ) # show xx.yyy msecs
     echo $avg
-}
-
-function pip_install {
-    pattern_with_ver=$1
-    pattern=$(echo $pattern_with_ver | cut -d"=" -f1)
-    pip list 2>/dev/null | grep -E "^$pattern " 2>&1 >/dev/null; (($?==0)) || pip install $pattern_with_ver;
 }
 
 function run_bench_stocktf {
@@ -183,16 +186,32 @@ function run_bench_stockov {
     popd >/dev/null
 }
 
+function run_bench_tfov {
+    initdir=`pwd`
+    cd ${LOCALSTORE}/demo
+    TMPFILE=${WORKDIR}/tmp_output$$
+    INFER_TIME_TFOV="?"
+    ./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" $device 2>&1 > ${TMPFILE}
+    ret_code=$?
+    if (( $ret_code == 0 )); then
+        echo
+        echo "TF-OV-Bridge: Checking inference result (warmups=$WARMUP_ITERS) ..."
+        ret_code=1
+        INFER_PATTERN=$( echo $INFER_PATTERN | sed -e 's/"/\\\\"/g' )
+        grep "${INFER_PATTERN}" ${TMPFILE} >/dev/null && echo "TEST PASSED" && ret_code=0
+        print_infer_times $NUM_ITER $WARMUP_ITERS "${TMPFILE}"
+        INFER_TIME_TFOV=$INFER_TIME
+    fi
+    echo
+    grep -oP "^NGTF_SUMMARY: (Number|Nodes|Size).*" ${TMPFILE}
+    rm ${TMPFILE}
+    cd ${initdir}
+}
+
 ################################################################################
 ################################################################################
 
 pip_install Pillow
-if [ "${BENCHMARK}" == "YES" ]; then
-    # For Stock-OV mo_tf.py called within get_model_repo
-    pip_install networkx
-    pip_install defusedxml
-    pip_install test-generator==0.1.1
-fi
 
 cd ${LOCALSTORE_PREFIX} || exit 1
 get_model_repo
@@ -212,39 +231,35 @@ else
     [ -z "$NGRAPH_TF_VLOG_LEVEL" ] && export NGRAPH_TF_VLOG_LEVEL=-1
 fi
 
-cd ${LOCALSTORE}/demo
-TMPFILE=${WORKDIR}/tmp_output$$
-INFER_TIME_TFOV="?"
-./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" $device 2>&1 > ${TMPFILE}
-ret_code=$?
-if (( $ret_code == 0 )); then
-    echo
-    echo "TF-OV-Bridge: Checking inference result (warmups=$WARMUP_ITERS) ..."
-    ret_code=1
-    INFER_PATTERN=$( echo $INFER_PATTERN | sed -e 's/"/\\\\"/g' )
-    grep "${INFER_PATTERN}" ${TMPFILE} >/dev/null && echo "TEST PASSED" && ret_code=0
-    print_infer_times $NUM_ITER $WARMUP_ITERS "${TMPFILE}"
-    INFER_TIME_TFOV=$INFER_TIME
+if [ "${BUILDKITE}" == "true" ]; then
+    prefix_pass="--- ... result: \033[33mpassed\033[0m :white_check_mark:"
+    prefix_fail="--- ... result: \033[33mfailed\033[0m :x:"
+else
+    prefix_pass=" ... result: passed"
+    prefix_fail=" ... result: failed"
 fi
-echo
-grep -oP "^NGTF_SUMMARY: (Number|Nodes|Size).*" ${TMPFILE}
-rm ${TMPFILE}
 
+INFER_TIME_TFOV="?"; run_bench_tfov
 if [ "${BENCHMARK}" == "YES" ]; then
     INFER_TIME_STOCKTF="?"; run_bench_stocktf
     INFER_TIME_STOCKOV="?"; run_bench_stockov
-fi
-
-if [ "${BUILDKITE}" == "true" ]; then
+    str_bench_info_hdr="Model,Stock-TF,OV,TF-OV"
+    str_bench_info_row="${MODEL},${INFER_TIME_STOCKTF},${INFER_TIME_STOCKOV},${INFER_TIME_TFOV}"
+    stockov_speedup=$(echo "scale=2; $INFER_TIME_STOCKTF/$INFER_TIME_STOCKOV" | bc )
+    tfov_speedup=$(echo "scale=2; $INFER_TIME_STOCKTF/$INFER_TIME_TFOV" | bc )
+    str_bench_info2_row="${MODEL},1,$stockov_speedup,$tfov_speedup"
+    echo -e "${prefix_pass} Stock-TF ${INFER_TIME_STOCKTF}, OV ${INFER_TIME_STOCKOV}, TF-OV ${INFER_TIME_TFOV}"
+    CSVFILE=${WORKDIR}/benchmark_avg_infer_msec.csv
+    [ -f "$CSVFILE" ] || echo "$str_bench_info_hdr" > $CSVFILE
+    echo "$str_bench_info_row" >> $CSVFILE
+    CSVFILE=${WORKDIR}/benchmark_infer_speedup.csv
+    [ -f "$CSVFILE" ] || echo "$str_bench_info_hdr" > $CSVFILE
+    echo "$str_bench_info2_row" >> $CSVFILE
+else
     if [ "${ret_code}" == "0" ]; then
-        if [ "${BENCHMARK}" == "YES" ]; then
-            echo -e "--- ... result: \033[33mpassed\033[0m :white_check_mark: Stock-TF ${INFER_TIME_STOCKTF}, Stock-OV ${INFER_TIME_STOCKOV}, TFOV ${INFER_TIME_TFOV}"
-        else
-            echo -e "--- ... result: \033[33mpassed\033[0m :white_check_mark: ${INFER_TIME_TFOV}"
-        fi
+        echo -e "${prefix_pass} ${INFER_TIME_TFOV}"
     else
-        echo -e "--- ... result: \033[33mfailed\033[0m :x:"
+        echo -e "${prefix_fail}"
     fi
+    exit $((ret_code))
 fi
-
-exit $((ret_code))
