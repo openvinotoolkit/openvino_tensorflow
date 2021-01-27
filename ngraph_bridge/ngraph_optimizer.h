@@ -34,7 +34,7 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
   NgraphOptimizer() = default;
   ~NgraphOptimizer() override = default;
 
-  string name() const override { return "NgraphOptimizer"; };
+  string name() const override { return "ngraph-optimizer"; };
 
   bool UsesFunctionLibrary() const override { return true; }
 
@@ -60,14 +60,7 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
 
  private:
   std::unordered_map<std::string, std::string> m_config_map;
-  static int FreshIndex();
-
-  static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
-  static mutex s_serial_counter_mutex;
 };
-
-int NgraphOptimizer::s_serial_counter = 0;
-mutex NgraphOptimizer::s_serial_counter_mutex;
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow

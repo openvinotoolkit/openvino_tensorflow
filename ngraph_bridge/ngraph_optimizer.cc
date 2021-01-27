@@ -15,8 +15,8 @@
  *******************************************************************************/
 
 #include <iomanip>
+#include <iostream>
 
-#include "absl/synchronization/mutex.h"
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
 #include "tensorflow/core/grappler/clusters/cluster.h"
@@ -26,23 +26,82 @@
 #include "tensorflow/core/grappler/utils.h"
 #include "tensorflow/core/platform/protobuf.h"
 
-#include "ngraph_add_identityn.h"
-#include "ngraph_bridge/api.h"
-#include "ngraph_bridge/assign_clusters.h"
-#include "ngraph_bridge/cluster_manager.h"
-#include "ngraph_bridge/deassign_clusters.h"
-#include "ngraph_bridge/encapsulate_clusters.h"
-#include "ngraph_bridge/log.h"
-#include "ngraph_bridge/mark_for_clustering.h"
-#include "ngraph_bridge/utils.h"
+#include "api.h"
+#include "assign_clusters.h"
+#include "cluster_manager.h"
+#include "deassign_clusters.h"
+#include "encapsulate_clusters.h"
+#include "log.h"
 #include "ngraph_optimizer.h"
-
-#include <iostream>
+#include "ngraph_rewrite_pass.h"
 
 using namespace std;
 
 namespace tensorflow {
 namespace ngraph_bridge {
+
+Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
+  for (auto node : input_graph->op_nodes()) {
+    bool fetch_node = false;
+    bool ref_type = false;
+    fetch_node = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
+    if (fetch_node) {
+      NGRAPH_VLOG(5) << "ngraph-optimizer: Fetch Node " << node->name();
+      // Check the number of outputs of the 'fetch_node'
+      // Only move further to create an IdentityN node
+      // if it is greater than 0
+      // Also, make sure that none of the output types is
+      // a ref type because IdentityN does not support
+      // an input of type ref type
+      if (node->num_outputs()) {
+        std::vector<NodeBuilder::NodeOut> inputs;
+        std::vector<DataType> input_types;
+        for (int i = 0; i < node->num_outputs(); i++) {
+          if (IsRefType(node->output_type(i))) {
+            NGRAPH_VLOG(5) << "ngraph-optimizer: "
+                           << "Datatype for the node output"
+                           << " at index " << i << " is ref type";
+            ref_type = true;
+            break;
+          }
+          input_types.push_back(node->output_type(i));
+          inputs.push_back(NodeBuilder::NodeOut(node, i));
+        }
+
+        if (ref_type) {
+          NGRAPH_VLOG(5)
+              << "ngraph-optimizer: Cannot construct an IdentityN node";
+          continue;
+        }
+
+        NGRAPH_VLOG(5) << "ngraph-optimizer: Creating an IdentityN node";
+        Node* identityN_node;
+        TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "IdentityN")
+                               .Attr("T", input_types)
+                               .Input(inputs)
+                               .Device(node->assigned_device_name())
+                               .Finalize(input_graph, &identityN_node));
+
+        identityN_node->set_assigned_device_name(node->assigned_device_name());
+
+        // Rename the skip node
+        // Get a new name for the node with the given prefix
+        // We will use the 'original-node-name_ngraph' as the prefix
+        string new_name = input_graph->NewName(node->name() + "_ngraph");
+        // TODO: Use (guaranteed) unique name here
+        node->set_name(new_name);
+        NGRAPH_VLOG(5) << "ngraph-optimizer: New name for fetch node "
+                       << node->name();
+      } else {
+        NGRAPH_VLOG(5) << "ngraph-optimizer: num outputs "
+                       << node->num_outputs();
+        NGRAPH_VLOG(5)
+            << "ngraph-optimizer: Cannot construct an IdentityN node";
+      }
+    }
+  }
+  return Status::OK();
+}
 
 Status NgraphOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
@@ -58,7 +117,7 @@ Status NgraphOptimizer::Init(
 Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                  const tensorflow::grappler::GrapplerItem& item,
                                  GraphDef* output) {
-  NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: grappler item id " << item.id;
+  NGRAPH_VLOG(5) << "ngraph-optimizer: grappler item id " << item.id;
 
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
@@ -66,28 +125,6 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   opts.expect_device_spec = true;
   Graph graph(OpRegistry::Global());
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
-
-  // For filename generation purposes, grab a fresh index. This is just an
-  // arbitrary integer to avoid filename collisions resulting from subsequent
-  // runs of this pass.
-  int idx = FreshIndex();
-
-  // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
-  // we will not do anything; all subsequent passes become a no-op.
-  bool ngraph_not_enabled =
-      (!api::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
-  bool already_processed = util::IsAlreadyProcessed(&graph);
-  if (!already_processed && ngraph_not_enabled) {
-    NGRAPH_VLOG(0) << "NGraph is available but disabled.";
-  }
-  if (ngraph_not_enabled || already_processed) {
-    NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                          (already_processed ? "graph is already preprocessed"
-                                             : "ngraph is disabled");
-    ClusterManager::EvictAllClusters();
-    graph.ToGraphDef(output);
-    return Status::OK();
-  }
 
   // TODO: Find out a better way to preserve feed nodes, init_ops and
   // keep_ops instead of just skipping those from clustering.
@@ -139,39 +176,8 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                            nodes_to_add_identity_to.end());
   std::set<string>& skip_these_nodes = nodes_to_preserve;
 
-  //
-  // Encapsulation: Part that rewrites the graph for nGraph operation.
-  //
-  // The part has several phases, each executed in sequence:
-  //
-  //   1. Marking [mark_for_clustering.cc]
-  //   2. Cluster Assignment [assign_clusters.cc]
-  //   3. Cluster Deassignment [deassign_clusters.cc]
-  //   4. Cluster Encapsulation [encapsulate_clusters.cc] - currently
-  //      part of the ngraph_rewrite_pass.cc to be executed after POST_REWRITE
-  //
-
-  // If requested, dump unmarked graphs.
-  util::DumpTFGraph(&graph, idx, "unmarked");
-
-  // 1. Mark for clustering then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes));
-  util::DumpTFGraph(&graph, idx, "marked");
-
-  // 2. Assign clusters then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(AssignClusters(&graph));
-  util::DumpTFGraph(&graph, idx, "clustered");
-
-  // 3. Deassign trivial clusters then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(DeassignClusters(&graph));
-  util::DumpTFGraph(&graph, idx, "declustered");
-
-  // 4. Encapsulate clusters then, if requested, dump the graphs.
-  auto status = EncapsulateClusters(&graph, idx, m_config_map);
-  if (status != Status::OK()) {
-    return status;
-  }
-  util::DumpTFGraph(&graph, idx, "encapsulated");
+  NGraphRewritePass rwp;
+  rwp.Rewrite(&graph, skip_these_nodes, m_config_map);
 
   // Convert the graph back to Graphdef
   graph.ToGraphDef(output);
@@ -182,11 +188,6 @@ void NgraphOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
                                const tensorflow::grappler::GrapplerItem& item,
                                const GraphDef& optimize_output, double result) {
   // no-op
-}
-
-int NgraphOptimizer::FreshIndex() {
-  mutex_lock l(s_serial_counter_mutex);
-  return s_serial_counter++;
 }
 
 REGISTER_GRAPH_OPTIMIZER_AS(NgraphOptimizer, "ngraph-optimizer");

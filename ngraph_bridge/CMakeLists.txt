@@ -52,10 +52,8 @@ set(SRC
 )
 
 message(STATUS "NGRAPH_TF_USE_GRAPPLER_OPTIMIZER: ${NGRAPH_TF_USE_GRAPPLER_OPTIMIZER}")
-if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)            
-    list(REMOVE_ITEM SRC ngraph_rewrite_pass.cc)
-    list(APPEND SRC grappler/ngraph_optimizer.cc)
-    list(APPEND SRC grappler/ngraph_add_identityn.cc)
+if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
+    list(APPEND SRC ngraph_optimizer.cc)
     add_definitions(-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 

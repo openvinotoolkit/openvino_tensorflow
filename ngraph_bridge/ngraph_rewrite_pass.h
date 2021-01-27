@@ -13,14 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 #pragma once
 
-#include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/common_runtime/optimization_registry.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
 
-Status AddIdentityN(Graph* graph, std::set<string> skip_these_nodes);
+class NGraphRewritePass : public GraphOptimizationPass {
+ public:
+  NGraphRewritePass() = default;
+  ~NGraphRewritePass() override = default;
+
+  Status Rewrite(Graph* graph, std::set<string> skip_these_nodes = {},
+                 std::unordered_map<std::string, std::string> = {});
+  Status Run(const GraphOptimizationPassOptions& options);
+
+ private:
+  // Returns a fresh "serial number" to avoid filename collisions in the graph
+  // dumps.
+  static int FreshIndex() {
+    mutex_lock l(s_serial_counter_mutex);
+    return s_serial_counter++;
+  }
+
+  static int s_serial_counter GUARDED_BY(s_serial_counter_mutex);
+  static mutex s_serial_counter_mutex;
+};
 
 }  // namespace ngraph_bridge
 }  // namespace tensorflow
