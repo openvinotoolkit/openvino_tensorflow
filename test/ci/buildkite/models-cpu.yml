@@ -5,7 +5,7 @@
       --use_tensorflow_from_location ${TF_LOCATION} \
       --use_openvino_from_location ${OV_LOCATION}
 
-      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.3.0-cp36-cp36m-linux_x86_64.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/${TF_WHL}
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/ngraph_tensorflow_bridge-*.whl
     label: ":hammer_and_wrench: Build/Install ${NGRAPH_TF_BACKEND}"
     timeout_in_minutes: 30

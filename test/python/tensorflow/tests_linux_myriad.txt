@@ -41,6 +41,7 @@ reduction_ops_test.ReducedShapeTest.testSimple
 reduction_ops_test.ReducedShapeTest.testZeros
 slice_op_test.SliceTest.testSliceMatrixDim0
 softmax_op_test.SoftmaxTest.testAlongFirstDimension
+softmax_op_test.SoftmaxTest.testEmptyInput
 
 # Output blob size is not equal network output size (1!=0)
 argmax_op_test.ArgMaxTest.testFloat

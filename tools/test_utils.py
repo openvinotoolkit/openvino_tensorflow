@@ -95,7 +95,7 @@ def install_ngraph_bridge(artifacts_dir):
         raise Exception("Error getting the ngraph-tf wheel file")
 
     ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
-    command_executor(["pip", "install", "-U", ng_whl])
+    command_executor(["pip", "install", "--no-deps", "-U", ng_whl])
 
 
 def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
