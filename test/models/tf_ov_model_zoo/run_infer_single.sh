@@ -223,7 +223,7 @@ if [ "${BENCHMARK}" == "YES" ]; then
     WARMUP_ITERS=5
     export NGRAPH_TF_VLOG_LEVEL=-1
 else
-    NUM_ITER=20
+    NUM_ITER=1
     WARMUP_ITERS=1
     [ -z "$NGRAPH_TF_LOG_PLACEMENT" ] && export NGRAPH_TF_LOG_PLACEMENT=1
     [ -z "$NGRAPH_TF_VLOG_LEVEL" ] && export NGRAPH_TF_VLOG_LEVEL=-1
