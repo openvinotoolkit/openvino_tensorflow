@@ -31,6 +31,9 @@ COMMIT=d12f2d57 # 2021-Jan-06
 
 WORKDIR=`pwd`
 
+opv_root=${INTEL_OPENVINO_DIR:-"/opt/intel/openvino"}
+export INTEL_OPENVINO_DIR="${opv_root}"
+
 if [ "${BUILDKITE}" == "true" ]; then
     LOCALSTORE_PREFIX=/localdisk/buildkite/artifacts
 else
@@ -95,10 +98,8 @@ function get_model_repo {
             pip_install networkx
             pip_install defusedxml
             pip_install test-generator==0.1.1
-            opv_root=${INTEL_OPENVINO_DIR:-"/opt/intel/openvino"}
-            mo_tf_path="${opv_root}/deployment_tools/model_optimizer/mo_tf.py"
+            mo_tf_path="${INTEL_OPENVINO_DIR}/deployment_tools/model_optimizer/mo_tf.py"
             [ -f "${mo_tf_path}" ] || ( echo "${mo_tf_path} not found!"; exit 1 )
-            export INTEL_OPENVINO_DIR="${opv_root}"
             ./model_factory/generate_ir.sh ${MODEL} 1 || exit 1
         fi
     fi
@@ -164,13 +165,12 @@ function run_bench_stockov {
     virtualenv -p python3 $VENVTMP
     source $VENVTMP/bin/activate
     pip_install opencv-python
-    pip_install openvino==2021.2
 
     cd ${LOCALSTORE}/demo
     TMPFILE=${WORKDIR}/tmp_output$$
-    pythonlib=$(echo $(dirname $(which python3))/../lib)
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${INTEL_OPENVINO_DIR}/deployment_tools/inference_engine/lib/intel64:$pythonlib \
-        ./run_ov_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER $device 2>&1 > ${TMPFILE}
+
+    source ${INTEL_OPENVINO_DIR}/bin/setupvars.sh
+    ./run_ov_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER $device 2>&1 > ${TMPFILE}
     ret_code=$?
     if (( $ret_code == 0 )); then
         echo
