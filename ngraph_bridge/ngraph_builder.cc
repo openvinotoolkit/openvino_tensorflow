@@ -1457,6 +1457,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
                                      Builder::OpMap& ng_op_map) {
   int num_args;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_args", &num_args));
+  NGRAPH_VLOG(3) << "num_args: " << num_args;
 
   std::vector<string> fused_ops;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "fused_ops", &fused_ops));
@@ -1558,7 +1559,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
       return errors::InvalidArgument(
           "FusedConv2DBiasAdd has incompatible num_args");
     }
-  } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+  } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
+             VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
     if (num_args != 2) {
       return errors::InvalidArgument(
           "FusedConv2DBiasAddAdd has incompatible num_args");
