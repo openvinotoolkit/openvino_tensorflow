@@ -113,9 +113,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     if (device_id==nullptr){
       device_id = "CPU";
     }
-    std::string ov_version = "2021_1";
+    std::string ov_version = "2021.2";
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
+    std::set<std::string> disabled_ops_set = api::GetDisabledOps();
+    FC.SetDisabledOps(disabled_ops_set);
     std::vector<void *> nodes_list = FC.MarkSupportedNodes();
 
     // cast back the nodes in the TF format and mark the nodes for clustering (moved out from MarkForClustering function)
