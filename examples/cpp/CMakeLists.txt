@@ -33,11 +33,18 @@ include_directories(${TensorFlow_SRC_DIR}/bazel-genfiles)
 include_directories(${TensorFlow_SRC_DIR}/bazel-bin)
 
 add_library(tensorflow_cc_lib SHARED IMPORTED)
-set_target_properties(
+message(${TensorFlow_VERSION})
+if(NOT(TensorFlow_VERSION LESS 2.0))
+    set_target_properties(
+        tensorflow_cc_lib
+        PROPERTIES IMPORTED_LOCATION
+        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2)
+else()
+    set_target_properties(
     tensorflow_cc_lib
     PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2
-)
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1)
+endif()
 
 set(SRC
     inference_engine.h

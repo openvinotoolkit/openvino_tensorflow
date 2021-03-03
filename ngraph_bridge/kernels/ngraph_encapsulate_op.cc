@@ -256,9 +256,15 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                               tf_input_tensors[i].dtype(), &ng_element_type));
 
       auto backend = BackendManager::GetBackend();
-      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
-          make_shared<IETensor>(ng_element_type, ng_shape,
+      #if TF_VERSION < 2
+        std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+            make_shared<IETensor>(ng_element_type, ng_shape,
+                                (void*)DMAHelper::base(&tf_input_tensors[i]));
+      #else
+        std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+            make_shared<IETensor>(ng_element_type, ng_shape,
                                 tf_input_tensors[i].data());
+      #endif
       ng_inputs.push_back(ng_tensor);
     }
   }
@@ -304,8 +310,13 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         ctx, ng_element_type == expected_elem_type,
         errors::Internal("Element type inferred by nGraph does not match "
                          "the element type expected by TensorFlow"));
-    ng_outputs[i] =
+    #if TF_VERSION < 2
+      ng_outputs[i] =
+        make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
+    #else
+      ng_outputs[i] =
         make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
+    #endif
   }
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "

@@ -260,6 +260,7 @@ def main():
         # This function copies the .so files from
         # use_tensorflow_from_location/artifacts/tensorflow to
         # artifacts/tensorflow
+        tf_version = get_tf_version()
         copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                              use_intel_tf)
         os.chdir(cwd)
@@ -393,6 +394,8 @@ def main():
     ])
 
     # Now build the bridge
+    print(ngraph_tf_cmake_flags)
+    print(verbosity)
     ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
                                 ngraph_tf_src_dir, venv_dir,
                                 ngraph_tf_cmake_flags, verbosity)
