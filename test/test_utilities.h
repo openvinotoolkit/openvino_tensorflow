@@ -26,7 +26,7 @@
 #include "tensorflow/core/public/session.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph_bridge/version.h"
+#include "openvino_tensorflow/version.h"
 
 // Define useful macros used by others
 #if !defined(ASSERT_OK)

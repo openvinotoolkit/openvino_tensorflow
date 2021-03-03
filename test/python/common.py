@@ -30,7 +30,7 @@ __all__ = ['LIBNGRAPH_BRIDGE', 'NgraphTest']
 
 _ext = 'dylib' if platform.system() == 'Darwin' else 'so'
 
-LIBNGRAPH_BRIDGE = 'libngraph_bridge.' + _ext
+LIBNGRAPH_BRIDGE = 'libopenvino_tensorflow.' + _ext
 
 
 class NgraphTest(object):

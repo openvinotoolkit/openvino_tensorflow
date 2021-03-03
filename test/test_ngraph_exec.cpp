@@ -25,13 +25,13 @@
 #include "tensorflow/core/graph/graph_def_builder.h"
 #include "tensorflow/core/platform/env.h"
 
-#include "ngraph_bridge/backend_manager.h"
-#include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/ovtf_builder.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset.hpp"
-#include "ngraph_bridge/default_opset.h"
+#include "openvino_tensorflow/default_opset.h"
 
 #include "test/test_utilities.h"
 

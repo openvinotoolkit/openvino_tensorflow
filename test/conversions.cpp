@@ -15,7 +15,7 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_bridge/ngraph_conversions.h"
+#include "openvino_tensorflow/layout_conversions.h"
 
 using namespace std;
 

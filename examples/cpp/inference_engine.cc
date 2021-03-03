@@ -25,7 +25,7 @@
 #include "tensorflow/core/protobuf/rewriter_config.pb.h"
 #include "tensorflow/core/public/session.h"
 
-#include "ngraph_bridge/version.h"
+#include "openvino_tensorflow/version.h"
 
 using tensorflow::SessionOptions;
 using tensorflow::RewriterConfig;

@@ -364,7 +364,7 @@ def main():
         openvino_artifacts_dir = os.path.abspath(
             arguments.use_openvino_from_location)
         ngraph_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
-
+    print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     ngraph_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
 

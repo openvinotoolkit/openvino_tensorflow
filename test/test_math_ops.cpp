@@ -32,7 +32,7 @@
 
 #include <cmath>
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
 

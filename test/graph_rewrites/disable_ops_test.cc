@@ -18,8 +18,8 @@
 
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "ngraph_bridge/api.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "openvino_tensorflow/api.h"
+#include "openvino_tensorflow/mark_for_clustering.h"
 #include "test/test_utilities.h"
 
 using namespace std;

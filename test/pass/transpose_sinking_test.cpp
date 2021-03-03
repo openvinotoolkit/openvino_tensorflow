@@ -43,9 +43,9 @@
 #include "ngraph/util.hpp"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/default_opset.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/pass/transpose_sinking.h"
+#include "openvino_tensorflow/default_opset.h"
+#include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/pass/transpose_sinking.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
 

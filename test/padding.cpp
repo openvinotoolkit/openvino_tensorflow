@@ -15,7 +15,7 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_bridge/ngraph_builder.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 
 using namespace std;
 

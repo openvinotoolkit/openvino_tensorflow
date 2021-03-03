@@ -33,10 +33,10 @@
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "ngraph_bridge/backend_manager.h"
-#include "ngraph_bridge/ngraph_timer.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/version.h"
+#include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/ovtf_timer.h"
+#include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/version.h"
 
 #include "inference_engine.h"
 #include "thread_safe_queue.h"

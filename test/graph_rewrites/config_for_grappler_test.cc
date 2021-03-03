@@ -27,8 +27,8 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/mark_for_clustering.h"
 #include "test/test_utilities.h"
 
 using namespace std;
