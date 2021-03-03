@@ -23,7 +23,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace api {
 
 extern "C" {
@@ -63,5 +63,5 @@ extern void SetDisabledOps(std::set<string>);
 extern void SetDisabledOps(string);
 
 }  // namespace api
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -26,7 +26,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Test that a "Const" fed to a static input is still coalesced with the
@@ -154,5 +154,5 @@ TEST(AssignClusters, Cone) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

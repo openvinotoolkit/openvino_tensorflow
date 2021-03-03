@@ -39,7 +39,7 @@ namespace ng = ngraph;
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 namespace testing {
 
@@ -1052,5 +1052,5 @@ TEST(ArrayOps, ZerosLike) {
 }  // end of test op ZerosLike
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

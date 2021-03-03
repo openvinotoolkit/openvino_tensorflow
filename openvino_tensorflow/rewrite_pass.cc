@@ -36,7 +36,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class NGraphRewritePass : public GraphOptimizationPass {
  public:
@@ -85,7 +85,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 
-    // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
+    // If ngraph is disabled via openvino_tensorflow api or NGRAPH_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
     bool ngraph_not_enabled =
@@ -154,8 +154,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
   }
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 0,
-                      ngraph_bridge::NGraphEncapsulationPass);
+                      openvino_tensorflow::NGraphEncapsulationPass);
 }  // namespace tensorflow

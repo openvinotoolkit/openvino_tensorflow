@@ -21,12 +21,12 @@
 #include "ngraph/opsets/opset5.hpp"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 namespace opset = ngraph::opset5;
 namespace default_opset = ngraph::opset5;
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif

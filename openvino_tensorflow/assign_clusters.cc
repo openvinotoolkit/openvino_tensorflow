@@ -38,7 +38,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 //
 // The clustering pass performs a greedy search for groups of nGraph-marked ops
@@ -757,5 +757,5 @@ Status GetNodeCluster(const Node* node, int* cluster) {
   return s;
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

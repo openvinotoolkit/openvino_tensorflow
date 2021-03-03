@@ -23,7 +23,7 @@
 #include "ngraph/ngraph.hpp"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class IETensor : public ngraph::runtime::Tensor {
  public:
@@ -70,5 +70,5 @@ class IETensorBuffer : public TensorBuffer {
   size_t size_;
   std::shared_ptr<IETensor> tensor_;
 };
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

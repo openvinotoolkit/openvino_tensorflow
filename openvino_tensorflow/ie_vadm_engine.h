@@ -26,7 +26,7 @@
 #include "openvino_tensorflow/ie_backend_engine.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class IE_VADM_Engine : public IE_Backend_Engine {
  public:
@@ -52,7 +52,7 @@ class IE_VADM_Engine : public IE_Backend_Engine {
  private:
   int m_orig_batch_size;
 };
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow
 
 #endif  // IE_VADM_ENGINE_H_

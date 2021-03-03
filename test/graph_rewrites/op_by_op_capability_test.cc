@@ -37,7 +37,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Test to verify if the set backend supports all the ops in a graph
@@ -78,5 +78,5 @@ TEST(OpByOpCapability, Backend) {
   }
 }
 }
-}
-}
+}// namespace openvino_tensorflow 
+}// namespace tensorflow

@@ -25,7 +25,7 @@
 #include "ngraph/ngraph.hpp"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class Builder {
  public:
@@ -75,7 +75,7 @@ class Builder {
                              const ngraph::Output<ngraph::Node> ng_node);
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif

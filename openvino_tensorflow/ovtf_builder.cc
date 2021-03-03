@@ -40,7 +40,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 static bool VecStrCmp(const std::vector<string>& a,
                       const std::vector<string>& b) {
@@ -3004,5 +3004,5 @@ Status Builder::TranslateGraph(
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

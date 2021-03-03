@@ -24,7 +24,7 @@ using namespace std;
 using namespace ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Backend::Backend(const string& config) {
   string device = config.substr(0, config.find(":"));
@@ -52,5 +52,5 @@ bool Backend::IsSupported(const Node& node) const {
   return opset.contains_op_type(&node);
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

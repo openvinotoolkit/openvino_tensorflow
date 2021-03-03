@@ -35,7 +35,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status NgraphOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
@@ -65,7 +65,7 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If ngraph is disabled via ngraph_bridge api or NGRAPH_TF_DISABLE is set
+  // If ngraph is disabled via openvino_tensorflow api or NGRAPH_TF_DISABLE is set
   // we will not do anything; all subsequent passes become a no-op.
   bool ngraph_not_enabled =
       (!api::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
@@ -184,5 +184,5 @@ int NgraphOptimizer::FreshIndex() {
 
 REGISTER_GRAPH_OPTIMIZER_AS(NgraphOptimizer, "ngraph-optimizer");
 
-}  // end namespace ngraph_bridge
+}  // end namespace openvino_tensorflow
 }  // end namespace tensorflow

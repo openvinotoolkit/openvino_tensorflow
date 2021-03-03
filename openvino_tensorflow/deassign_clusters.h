@@ -22,11 +22,11 @@
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status DeassignClusters(Graph* graph);
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_DEASSIGN_CLUSTERS_H_

@@ -37,7 +37,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 //
 // The clustering pass of ngraph_assign_clusters.cc sometimes generates many
@@ -219,5 +219,5 @@ Status DeassignClusters(Graph* graph) {
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

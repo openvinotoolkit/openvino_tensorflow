@@ -21,7 +21,7 @@
 #include "openvino_tensorflow/ie_utils.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 IE_Basic_Engine::IE_Basic_Engine(InferenceEngine::CNNNetwork ie_network,
                                  std::string device)
@@ -76,5 +76,5 @@ void IE_Basic_Engine::infer(
 
   // return true;
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

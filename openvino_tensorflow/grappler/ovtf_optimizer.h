@@ -37,7 +37,7 @@
 #include <iomanip>
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // Custom Grappler Optimizer for NGraph-TF
 class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
@@ -80,6 +80,6 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
 int NgraphOptimizer::s_serial_counter = 0;
 mutex NgraphOptimizer::s_serial_counter_mutex;
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_NGRAPHOPTIMIZER_H_

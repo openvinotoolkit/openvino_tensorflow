@@ -32,7 +32,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace pass {
 
 using TransposeMap = unordered_map<string, shared_ptr<opset::Transpose>>;
@@ -496,5 +496,5 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
 }
 
 }  // namespace pass
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

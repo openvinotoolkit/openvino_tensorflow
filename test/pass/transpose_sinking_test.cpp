@@ -51,7 +51,7 @@
 
 using namespace std;
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 TEST(TransposeSinking, PassProperty) {
@@ -645,5 +645,5 @@ TEST(TransposeSinking, MultiUser) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -103,7 +103,7 @@ endif()
 # installed is located in the same level as the tensorflow directory
 # site-packages/
 #     /ngraph
-#       libngraph_bridge.so
+#       libopenvino_tensorflow.so
 #       ...
 #     /tensorflow
 #       libtensorflow_framework.so.1

@@ -16,7 +16,7 @@
 #pragma once
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 extern "C" {
 // Returns the ngraph-tensorflow bridge version
@@ -38,5 +38,5 @@ bool is_grappler_enabled();
 const char* tf_version();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

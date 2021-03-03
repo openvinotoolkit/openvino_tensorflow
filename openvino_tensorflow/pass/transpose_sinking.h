@@ -21,7 +21,7 @@
 #include "ngraph/util.hpp"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace pass {
 
 class TransposeSinking : public ngraph::pass::FunctionPass {
@@ -33,5 +33,5 @@ class TransposeSinking : public ngraph::pass::FunctionPass {
 };
 
 }  // namespace pass
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -28,7 +28,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 TEST(MarkForClustering, SimpleTest) {
@@ -83,5 +83,5 @@ TEST(MarkForClustering, SimpleTest) {
   }
 }
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

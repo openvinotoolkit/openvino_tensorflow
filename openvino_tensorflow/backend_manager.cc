@@ -20,7 +20,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 shared_ptr<Backend> BackendManager::m_backend;
 string BackendManager::m_backend_name;
@@ -102,5 +102,5 @@ vector<string> BackendManager::GetSupportedBackends() {
   return core.GetAvailableDevices();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

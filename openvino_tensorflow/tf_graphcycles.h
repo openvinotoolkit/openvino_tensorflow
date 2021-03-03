@@ -53,7 +53,7 @@ File: tensorflow/tensorflow/compiler/jit/graphcycles/graphcycles.h
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // NOTE!!!
 // For now a copy of this is forked to net/plaque. If you
@@ -138,6 +138,6 @@ class GraphCycles {
   TF_DISALLOW_COPY_AND_ASSIGN(GraphCycles);
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 #endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_

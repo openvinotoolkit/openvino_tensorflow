@@ -23,7 +23,7 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 template <size_t a, size_t b, size_t c, size_t d>
 void Transpose(ngraph::Output<ngraph::Node>& node) {
@@ -112,7 +112,7 @@ void NHWCtoHW(bool is_nhwc, const std::vector<T>& src,
   }
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_CONVERSIONS_H_

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include "ngraph_bridge/grappler/ngraph_add_identityn.h"
+#include "openvino_tensorflow/grappler/ngraph_add_identityn.h"
 
 using namespace std;
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
   for (auto node : input_graph->op_nodes()) {
@@ -82,6 +82,6 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow

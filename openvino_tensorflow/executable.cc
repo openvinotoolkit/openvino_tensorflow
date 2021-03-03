@@ -32,7 +32,7 @@ using namespace std;
 using namespace ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Executable::Executable(shared_ptr<Function> func, string device)
     : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
@@ -347,5 +347,5 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
   }
   return true;
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

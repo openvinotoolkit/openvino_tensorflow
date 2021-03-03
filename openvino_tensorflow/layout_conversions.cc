@@ -17,7 +17,7 @@
 #include "openvino_tensorflow/layout_conversions.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 void NHWCtoNCHW(const string& op_name, bool is_nhwc,
                 ngraph::Output<ngraph::Node>& node) {
@@ -45,5 +45,5 @@ void NCHWtoNHWC(const string& op_name, bool is_nhwc,
   }
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -20,7 +20,7 @@
 #include "openvino_tensorflow/ie_vadm_engine.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 IE_VADM_Engine::IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network)
     : IE_Backend_Engine(ie_network, "HDDL"),
@@ -161,5 +161,5 @@ void IE_VADM_Engine::infer(
     param_blobs[i]->deallocate();
   }
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

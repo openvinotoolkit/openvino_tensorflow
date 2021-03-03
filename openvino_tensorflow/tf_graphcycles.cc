@@ -47,7 +47,7 @@ File: tensorflow/tensorflow/compiler/jit/graphcycles/graphcycles.cc
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 namespace {
 
@@ -417,5 +417,5 @@ std::unordered_set<int32> GraphCycles::Predecessors(int32 node) {
   return rep_->nodes_[node]->in;
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

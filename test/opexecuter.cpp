@@ -26,7 +26,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 OpExecuter::OpExecuter(const Scope sc, const string test_op,
@@ -96,5 +96,5 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

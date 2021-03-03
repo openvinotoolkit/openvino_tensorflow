@@ -35,7 +35,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace util {
 
 template <typename T>
@@ -271,5 +271,5 @@ string GetEnv(const char* env) {
 void SetEnv(const char* env, const char* val) { setenv(env, val, 1); }
 
 }  // namespace util
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

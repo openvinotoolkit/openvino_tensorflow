@@ -26,7 +26,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 void ActivateNGraph() {
@@ -403,5 +403,5 @@ void AssignInputValues(Tensor& A, int8 x) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -22,7 +22,7 @@
 #include "tensorflow/core/framework/graph.pb.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class NGraphClusterManager {
  public:
@@ -36,7 +36,7 @@ class NGraphClusterManager {
   static std::mutex s_cluster_graphs_mutex;
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif

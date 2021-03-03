@@ -20,7 +20,7 @@
 #include "backend_manager.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace api {
 
 static bool _is_enabled = true;
@@ -121,5 +121,5 @@ void SetDisabledOps(set<string> disabled_ops_set) {
 }
 
 }  // namespace api
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

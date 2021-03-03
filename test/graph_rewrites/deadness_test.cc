@@ -39,7 +39,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 /*******************************************************************************
@@ -436,6 +436,6 @@ TEST(DeadnessCheck, DTestG5) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK

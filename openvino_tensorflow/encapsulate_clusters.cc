@@ -49,7 +49,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 //
 // For each cluster K in the input graph, the encapsulation pass takes the set
@@ -575,5 +575,5 @@ Status Encapsulator::GetNewClusterIDs(set<int>& result) {
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

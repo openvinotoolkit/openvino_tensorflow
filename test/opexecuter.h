@@ -37,7 +37,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 class OpExecuter {
@@ -81,7 +81,7 @@ class OpExecuter {
 };
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_OPEXECUTER_H_

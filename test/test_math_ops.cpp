@@ -39,7 +39,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Test(TestCaseName, TestName)
@@ -1826,5 +1826,5 @@ TEST(MathOps, Mod) {
 }  // end of test op Mod
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }

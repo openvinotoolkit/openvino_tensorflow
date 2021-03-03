@@ -40,7 +40,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class NGraphEncapsulateOp : public OpKernel {
  public:
@@ -483,9 +483,9 @@ Status NGraphEncapsulateOp::GetExecutable(
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 REGISTER_KERNEL_BUILDER(Name("_nGraphEncapsulate").Device(DEVICE_CPU),
-                        ngraph_bridge::NGraphEncapsulateOp);
+                        openvino_tensorflow::NGraphEncapsulateOp);
 
 }  // namespace tensorflow

@@ -36,7 +36,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 TEST(TFExec, SingleGraphOn2Threads) {
@@ -171,5 +171,5 @@ TEST(TFExec, axpy) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

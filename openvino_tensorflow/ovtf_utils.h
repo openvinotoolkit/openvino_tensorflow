@@ -43,7 +43,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace util {
 
 bool IsAlreadyProcessed(Graph* g);
@@ -83,7 +83,7 @@ string GetEnv(const char* env);
 void SetEnv(const char* env, const char* val);
 
 }  // namespace util
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif

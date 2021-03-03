@@ -35,7 +35,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // This test can only be run when nGraph-bridge is built with grappler
@@ -198,5 +198,5 @@ TEST(GrapplerConfig, RConfig5) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

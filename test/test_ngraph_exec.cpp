@@ -39,7 +39,7 @@ using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 static int FindNumberOfNodes(const Graph* graph, const string op_type) {
@@ -75,7 +75,7 @@ class NGraphExecTest : public ::testing::Test {
     // Translate the Graph: Create ng_function
     std::vector<const Tensor*> static_input_map(tf_input_shapes.size(),
                                                 nullptr);
-    TF_RETURN_IF_ERROR(ngraph_bridge::Builder::TranslateGraph(
+    TF_RETURN_IF_ERROR(openvino_tensorflow::Builder::TranslateGraph(
         tf_input_shapes, static_input_map, &input_graph, "test_ngraph_exec",
         ng_function));
     return Status::OK();
@@ -319,5 +319,5 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

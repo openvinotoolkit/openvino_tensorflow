@@ -46,7 +46,7 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.h
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 // This analyzes a TensorFlow graph to identify nodes which may have partially
 // dead inputs (i.e. these nodes may have some dead inputs and some alive
 // inputs).
@@ -117,7 +117,7 @@ class DeadnessAnalysis {
   static const std::string TRUE_PRED_STRING;
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
 

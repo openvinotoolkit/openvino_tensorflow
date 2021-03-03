@@ -29,7 +29,7 @@ using namespace ngraph;
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 
 
@@ -140,5 +140,5 @@ const void* IETensor::get_data_ptr() const {
   auto lm = blob->rwmap();
   return lm.as<void*>();
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

@@ -48,7 +48,7 @@
 extern "C" const char* get_ngraph_version_string();
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 const char* version() { return (NG_TF_VERSION_STRING); }
 const char* ngraph_version() { return get_ngraph_version_string(); }
@@ -71,5 +71,5 @@ bool is_grappler_enabled() {
 
 const char* tf_version() { return (TF_VERSION_STRING); }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -21,12 +21,12 @@
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status AssignClusters(Graph* graph);
 Status GetNodeCluster(const Node* node, int* cluster);
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_ASSIGN_CLUSTERS_H_

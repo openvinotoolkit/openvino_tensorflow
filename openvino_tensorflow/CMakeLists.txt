@@ -99,7 +99,7 @@ endif()
 
 message(STATUS "NGTF_INSTALL_LIB_DIR: ${NGTF_INSTALL_LIB_DIR}")
 
-# First install the libngraph_bridge.so and headers
+# First install the libopenvino_tensorflow.so and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${NGTF_INSTALL_LIB_DIR}")  
 
 # Next install all the other prerequisites

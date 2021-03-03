@@ -50,7 +50,7 @@ extern tf::Status CheckTopLabel(const std::vector<tf::Tensor>& outputs,
 void PrintAvailableBackends() {
   // Get the list of backends
   auto supported_backends =
-      tf::ngraph_bridge::BackendManager::GetSupportedBackends();
+      tf::openvino_tensorflow::BackendManager::GetSupportedBackends();
   vector<string> backends(supported_backends.begin(), supported_backends.end());
 
   cout << "Available backends: " << endl;
@@ -61,16 +61,16 @@ void PrintAvailableBackends() {
 
 void PrintVersion() {
   // Tensorflow version info
-  std::cout << "Tensorflow version: " << tensorflow::ngraph_bridge::tf_version()
+  std::cout << "Tensorflow version: " << tensorflow::openvino_tensorflow::tf_version()
             << std::endl;
   // nGraph Bridge version info
-  std::cout << "Bridge version: " << tf::ngraph_bridge::version() << std::endl;
-  std::cout << "nGraph version: " << tf::ngraph_bridge::ngraph_version()
+  std::cout << "Bridge version: " << tf::openvino_tensorflow::version() << std::endl;
+  std::cout << "nGraph version: " << tf::openvino_tensorflow::ngraph_version()
             << std::endl;
-  std::cout << "CXX11_ABI Used: " << tf::ngraph_bridge::cxx11_abi_flag()
+  std::cout << "CXX11_ABI Used: " << tf::openvino_tensorflow::cxx11_abi_flag()
             << std::endl;
   std::cout << "Grappler Enabled? "
-            << (tf::ngraph_bridge::is_grappler_enabled() ? std::string("Yes")
+            << (tf::openvino_tensorflow::is_grappler_enabled() ? std::string("Yes")
                                                          : std::string("No"))
             << std::endl;
   PrintAvailableBackends();
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     // Call it onces to get the nGraph compilation done
     TF_CHECK_OK(inference_engine.GetNextImage(next_image));
     // Run inference once. This will trigger a compilation
-    tf::ngraph_bridge::Timer compilation_time;
+    tf::openvino_tensorflow::Timer compilation_time;
     TF_CHECK_OK(the_session->Run({{input_layer, next_image}}, {output_layer},
                                  {}, &outputs));
     compilation_time.Stop();
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
     oss << "Worker_" << worker_id;
     for (int i = 0; i < iteration_count; i++) {
       NG_TRACE(oss.str(), to_string(i), "");
-      tf::ngraph_bridge::Timer iteration_timer;
+      tf::openvino_tensorflow::Timer iteration_timer;
       // Get the image
       Tensor next_image;
       TF_CHECK_OK(inference_engine.GetNextImage(next_image));
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
     }
   };
 
-  tf::ngraph_bridge::Timer benchmark_timer;
+  tf::openvino_tensorflow::Timer benchmark_timer;
   std::thread thread0(worker, 0);
   std::thread thread1(worker, 1);
   std::thread thread2(worker, 2);

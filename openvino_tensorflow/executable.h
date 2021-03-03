@@ -28,7 +28,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // A Inference Engine executable object produced by compiling an nGraph
 // function.
@@ -69,5 +69,5 @@ class Executable {
   shared_ptr<ngraph::Function> m_function;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
 };
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

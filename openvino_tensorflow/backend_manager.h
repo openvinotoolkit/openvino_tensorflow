@@ -30,7 +30,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class BackendManager {
  public:
@@ -58,5 +58,5 @@ class BackendManager {
   static mutex m_backend_mutex;
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

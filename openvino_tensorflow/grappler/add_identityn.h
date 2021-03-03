@@ -25,11 +25,11 @@
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status AddIdentityN(Graph* graph, std::set<string> skip_these_nodes);
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_ADD_IDENTITYN_H_

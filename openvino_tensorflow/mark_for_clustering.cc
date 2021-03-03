@@ -26,7 +26,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 static const gtl::ArraySlice<DataType>& NGraphDTypes() {
   static gtl::ArraySlice<DataType> result{
@@ -995,5 +995,5 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
   return Status::OK();
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

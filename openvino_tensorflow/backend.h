@@ -27,7 +27,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class Backend {
  public:
@@ -41,5 +41,5 @@ class Backend {
  private:
   string m_device;
 };
-}
+}//end namespace openvino_tensorflow
 }

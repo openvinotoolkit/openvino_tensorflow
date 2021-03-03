@@ -61,7 +61,7 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.cc
 // uninterpreted symbols.
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 namespace {
 // Represents a logical predicate, used as described in the algorithm overview
@@ -530,7 +530,7 @@ DeadnessAnalysis::~DeadnessAnalysis() {}
 // Same as the True predicate used in AndPredicate
 /*static*/ const std::string DeadnessAnalysis::TRUE_PRED_STRING = "#true";
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
 #endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK

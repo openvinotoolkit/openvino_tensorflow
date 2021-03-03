@@ -26,7 +26,7 @@
 #include "openvino_tensorflow/ie_backend_engine.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class IE_Basic_Engine : public IE_Backend_Engine {
  public:
@@ -45,7 +45,7 @@ class IE_Basic_Engine : public IE_Backend_Engine {
     return m_func->get_results()[i]->get_shape();
   };
 };
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow
 
 #endif  // IE_BASIC_ENGINE_H_

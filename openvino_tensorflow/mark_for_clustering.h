@@ -25,7 +25,7 @@
 #include "openvino_tensorflow/backend.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes);
 Status IsSupportedByBackend(
@@ -58,7 +58,7 @@ const std::map<std::string, ConfirmationFunction>& GetConfirmationMap();
 const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
 GetTFToNgOpMap();
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_MARK_FOR_CLUSTERING_H_

@@ -25,7 +25,7 @@
 #include <thread>
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 class Timer {
  public:
@@ -58,7 +58,7 @@ class Timer {
   bool m_stopped{false};
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_TIMER_H_

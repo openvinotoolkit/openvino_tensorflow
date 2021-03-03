@@ -18,7 +18,7 @@
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // Static initializers
 std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
@@ -43,5 +43,5 @@ size_t NGraphClusterManager::NumberOfClusters() {
 
 void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

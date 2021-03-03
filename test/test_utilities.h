@@ -42,7 +42,7 @@ namespace ng = ngraph;
 namespace tf = tensorflow;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Activate and Deactivate NGraph
@@ -240,7 +240,7 @@ size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_TESTUTILITIES_H_

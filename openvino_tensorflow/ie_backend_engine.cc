@@ -20,7 +20,7 @@
 #include "openvino_tensorflow/ie_utils.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 IE_Backend_Engine::IE_Backend_Engine(InferenceEngine::CNNNetwork ie_network,
                                      std::string device)
@@ -100,5 +100,5 @@ void IE_Backend_Engine::disable_multi_req_execution() {
 std::shared_ptr<ngraph::Function> IE_Backend_Engine::get_func() {
   return m_func;
 }
-}
-}
+}// namespace openvino_tensorflow
+}// namespace tensorflow

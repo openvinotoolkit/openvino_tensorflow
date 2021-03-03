@@ -28,7 +28,7 @@
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // TODO: an optimization would be to separate the analysis and rewriting passes
 // cleanly, so that analysis pass is run in mark_for_clustering, and its
@@ -103,7 +103,7 @@ class Encapsulator {
   static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot);
 };
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
