@@ -394,8 +394,6 @@ def main():
     ])
 
     # Now build the bridge
-    print(ngraph_tf_cmake_flags)
-    print(verbosity)
     ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
                                 ngraph_tf_src_dir, venv_dir,
                                 ngraph_tf_cmake_flags, verbosity)
