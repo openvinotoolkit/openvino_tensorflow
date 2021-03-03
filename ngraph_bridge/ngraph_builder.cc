@@ -1747,6 +1747,23 @@ static Status TranslateLogSoftmaxOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateLeakyReluOp(const Node* op,
+                                 const std::vector<const Tensor*>&,
+                                 Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
+  float alpha = 0.0;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "alpha", &alpha));
+
+  auto ng_alpha = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::f32, ng::Shape{1}, alpha);
+
+  auto ng_output = ConstructNgNode<opset::PRelu>(op->name(), ng_inp, ng_alpha);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
+
 static Status TranslateMatMulOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -2288,6 +2305,24 @@ static Status TranslateSoftmaxOp(const Node* op,
   return Status::OK();
 }
 
+// TODO: Change the translation back to unary softplus
+// after resolving mish fusion issue 
+static Status TranslateSoftPlusOp(const Node* op,
+                                    const std::vector<const Tensor*>&,
+                                    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
+  auto exp = ConstructNgNode<opset::Exp>(op->name(), ng_inp);
+  auto add_const = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::f32, ng::Shape{1}, 1);
+
+  auto add = ConstructNgNode<opset::Add>(op->name(), exp, add_const);
+  auto ng_output = ConstructNgNode<opset::Log>(op->name(), add);
+
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
 // Translate SpaceToDepthOp
 static Status TranslateSpaceToDepthOp(const Node* op,
                                       const std::vector<const Tensor*>&,
@@ -2729,6 +2764,7 @@ const static std::map<
         {"IsFinite", TranslateIsFiniteOp},
         {"L2Loss", TranslateL2LossOp},
         {"LogSoftmax", TranslateLogSoftmaxOp},
+	{"LeakyRelu", TranslateLeakyReluOp},
         {"Less", TranslateBinaryOp<opset::Less>},
         {"LessEqual", TranslateBinaryOp<opset::LessEqual>},
         {"Log", TranslateUnaryOp<opset::Log>},
@@ -2782,7 +2818,7 @@ const static std::map<
         {"Slice", TranslateSliceOp},
         {"Snapshot", TranslateIdentityOp},
         {"Softmax", TranslateSoftmaxOp},
-        {"Softplus", TranslateUnaryOp<opset::SoftPlus>},
+        {"Softplus", TranslateSoftPlusOp},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
