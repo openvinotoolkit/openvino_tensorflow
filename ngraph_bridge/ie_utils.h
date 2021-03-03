@@ -26,6 +26,9 @@
 #include <vector>
 
 #include <ie_core.hpp>
+#include "ngraph/ngraph.hpp"
+
+using namespace ngraph;
 
 class IE_Utils {
  public:
@@ -101,6 +104,59 @@ class IE_Utils {
       default:
         THROW_IE_EXCEPTION << "Can't create IE blob for type "
                            << precision.name();
+    }
+  }
+
+  static InferenceEngine::Precision toPrecision(
+      const element::Type& element_type) {
+    switch (element_type) {
+      case element::Type_t::f32:
+        return InferenceEngine::Precision::FP32;
+      case element::Type_t::u8:
+        return InferenceEngine::Precision::U8;
+      case element::Type_t::i8:
+        return InferenceEngine::Precision::I8;
+      case element::Type_t::u16:
+        return InferenceEngine::Precision::U16;
+      case element::Type_t::i16:
+        return InferenceEngine::Precision::I16;
+      case element::Type_t::i32:
+        return InferenceEngine::Precision::I32;
+      case element::Type_t::u64:
+        return InferenceEngine::Precision::U64;
+      case element::Type_t::i64:
+        return InferenceEngine::Precision::I64;
+      case element::Type_t::boolean:
+        return InferenceEngine::Precision::BOOL;
+      default:
+        THROW_IE_EXCEPTION << "Can't convert type " << element_type
+                          << " to IE precision!";
+    }
+  }
+  static const element::Type fromPrecision(
+      const InferenceEngine::Precision precision) {
+    switch (precision) {
+      case InferenceEngine::Precision::FP32:
+        return element::Type_t::f32;
+      case InferenceEngine::Precision::U8:
+        return element::Type_t::u8;
+      case InferenceEngine::Precision::I8:
+        return element::Type_t::i8;
+      case InferenceEngine::Precision::U16:
+        return element::Type_t::u16;
+      case InferenceEngine::Precision::I16:
+        return element::Type_t::i16;
+      case InferenceEngine::Precision::I32:
+        return element::Type_t::i32;
+      case InferenceEngine::Precision::U64:
+        return element::Type_t::u64;
+      case InferenceEngine::Precision::I64:
+        return element::Type_t::i64;
+      case InferenceEngine::Precision::BOOL:
+        return element::Type_t::boolean;
+      default:
+        THROW_IE_EXCEPTION << "Can't convert IE precision " << precision
+                          << " to nGraph type!";
     }
   }
 };

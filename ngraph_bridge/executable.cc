@@ -131,7 +131,6 @@ Executable::Executable(shared_ptr<Function> func, string device)
   NGRAPH_VLOG(2) << "Creating IE CNN network using nGraph function";
   m_network = InferenceEngine::CNNNetwork(func);
 
-  InferenceEngine::Core ie;
   std::map<string, string> options;
 
   if (util::DumpAllGraphs()) {
@@ -142,12 +141,47 @@ Executable::Executable(shared_ptr<Function> func, string device)
         name + "_IE_" + m_device;
   }
 
-  //NGRAPH_VLOG(2) << "Loading IE CNN network to device " << m_device;
+  auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {
+    // Since IE has no "result" nodes, we set the blob corresponding to the
+    // parent of this result node
+    auto parent = node->input_value(0).get_node_shared_ptr();
+    auto name = parent->get_friendly_name();
+    // if parent has multiple outputs, correctly identify the output feeding
+    // into this result
+    if (parent->outputs().size() > 1) {
+      name += "." + to_string(node->input_value(0).get_index());
+    }
+    return name;
+  };
+  auto get_output_dtype = [](std::shared_ptr<ngraph::Node> node) {
+    auto parent = node->input_value(0).get_node_shared_ptr();
+    auto dtype = parent->get_output_element_type(0);
+    return dtype;
+  };
 
-  //// Load network to the plugin (m_device) and create an infer request
-  //InferenceEngine::ExecutableNetwork exe_network =
-  //    ie.LoadNetwork(m_network, m_device, options);
-  //m_infer_req = exe_network.CreateInferRequest();
+  std::unordered_map<std::string, element::Type> output_dt_map;
+
+  auto results = func->get_results();
+  for (int i = 0; i < results.size(); i++) {
+    auto output_name = get_output_name(results[i]);
+    auto dtype = get_output_dtype(results[i]);
+
+    output_dt_map[output_name] = dtype;
+  }
+
+  auto outputInfo = m_network.getOutputsInfo();
+  for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter){
+    auto out_name = iter->first;
+    auto it = output_dt_map.find(out_name);
+
+    if(it == output_dt_map.end()){
+
+      THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name << " doesn't exist";
+    }
+    auto precision = IE_Utils::toPrecision(it->second);
+    iter->second->setPrecision(precision);
+  }
+
   NGRAPH_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
     m_ie_engine = make_shared<IE_VADM_Engine>(m_network);
