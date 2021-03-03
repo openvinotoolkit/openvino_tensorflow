@@ -18,6 +18,7 @@
 
 #include "ngraph_bridge/ie_backend_engine.h"
 #include "ngraph_bridge/ie_utils.h"
+#include "backend_manager.h"
 
 namespace tensorflow {
 namespace ngraph_bridge {
@@ -54,9 +55,8 @@ void IE_Backend_Engine::load_network() {
     }
   }
 
-  InferenceEngine::Core ie;
   // Load network to the plugin (m_device)
-  m_exe_network = ie.LoadNetwork(m_network, m_device, config);
+  m_exe_network = BackendManager::GetGlobalContext().ie_core.LoadNetwork(m_network, m_device, config);
   m_network_ready = true;
 }
 

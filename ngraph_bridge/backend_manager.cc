@@ -14,6 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include "contexts.h"
 #include "backend_manager.h"
 #include "logging/ngraph_log.h"
 
@@ -26,8 +27,21 @@ shared_ptr<Backend> BackendManager::m_backend;
 string BackendManager::m_backend_name;
 mutex BackendManager::m_backend_mutex;
 
+static unique_ptr<GlobalContext> g_global_context;
+
 BackendManager::~BackendManager() {
   NGRAPH_VLOG(2) << "BackendManager::~BackendManager()";
+}
+
+GlobalContext& BackendManager::GetGlobalContext() {
+
+  if(!g_global_context)
+    g_global_context = unique_ptr<GlobalContext>(new GlobalContext);
+  return *g_global_context;
+}
+
+void BackendManager::ReleaseGlobalContext() {
+  g_global_context.reset();
 }
 
 Status BackendManager::SetBackend(const string& backend_name) {
