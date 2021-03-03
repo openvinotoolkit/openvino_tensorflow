@@ -34,33 +34,6 @@ using namespace ngraph;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-//Duplicate code, can be put in a utils file
-static InferenceEngine::Precision toPrecision(
-    const element::Type& element_type) {
-  switch (element_type) {
-    case element::Type_t::f32:
-      return InferenceEngine::Precision::FP32;
-    case element::Type_t::u8:
-      return InferenceEngine::Precision::U8;
-    case element::Type_t::i8:
-      return InferenceEngine::Precision::I8;
-    case element::Type_t::u16:
-      return InferenceEngine::Precision::U16;
-    case element::Type_t::i16:
-      return InferenceEngine::Precision::I16;
-    case element::Type_t::i32:
-      return InferenceEngine::Precision::I32;
-    case element::Type_t::u64:
-      return InferenceEngine::Precision::U64;
-    case element::Type_t::i64:
-      return InferenceEngine::Precision::I64;
-    case element::Type_t::boolean:
-      return InferenceEngine::Precision::BOOL;
-    default:
-      THROW_IE_EXCEPTION << "Can't convert type " << element_type
-                         << " to IE precision!";
-  }
-}
 Executable::Executable(shared_ptr<Function> func, string device)
     : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
   NGRAPH_VLOG(2) << "Checking for unsupported ops";
@@ -158,7 +131,6 @@ Executable::Executable(shared_ptr<Function> func, string device)
   NGRAPH_VLOG(2) << "Creating IE CNN network using nGraph function";
   m_network = InferenceEngine::CNNNetwork(func);
 
-  InferenceEngine::Core ie;
   std::map<string, string> options;
 
   if (util::DumpAllGraphs()) {
@@ -169,7 +141,6 @@ Executable::Executable(shared_ptr<Function> func, string device)
         name + "_IE_" + m_device;
   }
 
-  //Reusable code
   auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {
     // Since IE has no "result" nodes, we set the blob corresponding to the
     // parent of this result node
@@ -183,8 +154,6 @@ Executable::Executable(shared_ptr<Function> func, string device)
     return name;
   };
   auto get_output_dtype = [](std::shared_ptr<ngraph::Node> node) {
-    // Since IE has no "result" nodes, we set the blob corresponding to the
-    // parent of this result node
     auto parent = node->input_value(0).get_node_shared_ptr();
     auto dtype = parent->get_output_element_type(0);
     return dtype;
@@ -207,17 +176,12 @@ Executable::Executable(shared_ptr<Function> func, string device)
 
     if(it == output_dt_map.end()){
 
-      //Fixme: Need to add exception
-      std::cout << "ERROR OUTPUT MISMATCH " << std::endl;
+      THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name << " doesn't exist";
     }
-    auto precision = toPrecision(it->second);
+    auto precision = IE_Utils::toPrecision(it->second);
     iter->second->setPrecision(precision);
   }
 
-  //// Load network to the plugin (m_device) and create an infer request
-  //InferenceEngine::ExecutableNetwork exe_network =
-  //    ie.LoadNetwork(m_network, m_device, options);
-  //m_infer_req = exe_network.CreateInferRequest();
   NGRAPH_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
     m_ie_engine = make_shared<IE_VADM_Engine>(m_network);

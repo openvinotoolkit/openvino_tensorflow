@@ -23,6 +23,7 @@
 #include "ie_layouts.h"
 #include "ie_precision.hpp"
 #include "ie_tensor.h"
+#include "ie_utils.h"
 
 using namespace ngraph;
 using namespace std;
@@ -30,66 +31,14 @@ using namespace std;
 namespace tensorflow {
 namespace ngraph_bridge {
 
-static InferenceEngine::Precision toPrecision(
-    const element::Type& element_type) {
-  switch (element_type) {
-    case element::Type_t::f32:
-      return InferenceEngine::Precision::FP32;
-    case element::Type_t::u8:
-      return InferenceEngine::Precision::U8;
-    case element::Type_t::i8:
-      return InferenceEngine::Precision::I8;
-    case element::Type_t::u16:
-      return InferenceEngine::Precision::U16;
-    case element::Type_t::i16:
-      return InferenceEngine::Precision::I16;
-    case element::Type_t::i32:
-      return InferenceEngine::Precision::I32;
-    case element::Type_t::u64:
-      return InferenceEngine::Precision::U64;
-    case element::Type_t::i64:
-      return InferenceEngine::Precision::I64;
-    case element::Type_t::boolean:
-      return InferenceEngine::Precision::BOOL;
-    default:
-      THROW_IE_EXCEPTION << "Can't convert type " << element_type
-                         << " to IE precision!";
-  }
-}
 
-static const element::Type fromPrecision(
-    const InferenceEngine::Precision precision) {
-  switch (precision) {
-    case InferenceEngine::Precision::FP32:
-      return element::Type_t::f32;
-    case InferenceEngine::Precision::U8:
-      return element::Type_t::u8;
-    case InferenceEngine::Precision::I8:
-      return element::Type_t::i8;
-    case InferenceEngine::Precision::U16:
-      return element::Type_t::u16;
-    case InferenceEngine::Precision::I16:
-      return element::Type_t::i16;
-    case InferenceEngine::Precision::I32:
-      return element::Type_t::i32;
-    case InferenceEngine::Precision::U64:
-      return element::Type_t::u64;
-    case InferenceEngine::Precision::I64:
-      return element::Type_t::i64;
-    case InferenceEngine::Precision::BOOL:
-      return element::Type_t::boolean;
-    default:
-      THROW_IE_EXCEPTION << "Can't convert IE precision " << precision
-                         << " to nGraph type!";
-  }
-}
 
 IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
     : runtime::Tensor(
           make_shared<descriptor::Tensor>(element_type, shape_, "")) {
   InferenceEngine::SizeVector shape = shape_;
-  InferenceEngine::Precision precision = toPrecision(element_type);
+  InferenceEngine::Precision precision = IE_Utils::toPrecision(element_type);
   InferenceEngine::Layout layout =
       InferenceEngine::TensorDesc::getLayoutByDims(shape);
 
@@ -156,7 +105,7 @@ IETensor::IETensor(const element::Type& element_type, const PartialShape& shape)
 
 IETensor::IETensor(InferenceEngine::Blob::Ptr blob)
     : runtime::Tensor(make_shared<descriptor::Tensor>(
-          fromPrecision(blob->getTensorDesc().getPrecision()),
+          IE_Utils::fromPrecision(blob->getTensorDesc().getPrecision()),
           Shape(blob->getTensorDesc().getDims()), "")),
       m_blob(blob) {}
 
