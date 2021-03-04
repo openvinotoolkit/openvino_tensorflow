@@ -18,16 +18,16 @@
 
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "ngraph_bridge/ngraph_cluster_manager.h"
-#include "ngraph_bridge/ngraph_encapsulate_clusters.h"
-#include "ngraph_bridge/version.h"
+#include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/encapsulate_clusters.h"
+#include "openvino_tensorflow/version.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Test that calls the functions of encapsulator in the wrong order

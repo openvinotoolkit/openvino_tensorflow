@@ -25,7 +25,7 @@
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 // GraphToDot
 // Transforms a TensorFlow graph to a DOT file for rendering with graphviz
@@ -46,7 +46,7 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
                          const std::string& dot_filename,
                          const std::string& title);
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
 

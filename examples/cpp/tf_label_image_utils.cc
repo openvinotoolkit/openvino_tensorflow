@@ -80,7 +80,7 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 
-#include "ngraph_bridge/api.h"
+#include "openvino_tensorflow/api.h"
 
 // These are all common classes it's handy to reference with no namespace.
 // using tensorflow::Flag;
@@ -229,16 +229,16 @@ Status ReadTensorFromImageFile(const std::vector<string>& file_names,
   // network. But for now we're just disabling nGraph
   // as for some of the devices, these Ops are not implemented
   // tf::Status status =
-  //   tf::ngraph_bridge::BackendManager::SetBackendName(backend_name);
+  //   tf::openvino_tensorflow::BackendManager::SetBackendName(backend_name);
 
-  tensorflow::ngraph_bridge::api::disable();
+  tensorflow::openvino_tensorflow::api::disable();
   std::unique_ptr<tensorflow::Session> session(
       tensorflow::NewSession(tensorflow::SessionOptions()));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(
       session->Run({inputs}, {file_names.size() > 1 ? output_name : "output_0"},
                    {}, out_tensors));
-  tensorflow::ngraph_bridge::api::enable();
+  tensorflow::openvino_tensorflow::api::enable();
 
   return Status::OK();
 }
@@ -301,7 +301,7 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
 Status PrintTopLabels(const std::vector<Tensor>& outputs,
                       const string& labels_file_name) {
   // Disable nGraph so that we run these using TensorFlow on CPU
-  tensorflow::ngraph_bridge::api::disable();
+  tensorflow::openvino_tensorflow::api::disable();
   std::vector<string> labels;
   size_t label_count;
   Status read_labels_status =
@@ -331,7 +331,7 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
 //-----------------------------------------------------------------------------
 Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
                      bool* is_expected) {
-  tensorflow::ngraph_bridge::api::disable();
+  tensorflow::openvino_tensorflow::api::disable();
   *is_expected = false;
   Tensor indices;
   Tensor scores;

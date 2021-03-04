@@ -71,7 +71,7 @@ endif()
 
 target_link_libraries(
     ${APP_NAME}
-    ngraph_bridge
+    openvino_tensorflow
     ngraph_lib
     pthread
     ${TensorFlow_FRAMEWORK_LIBRARY}
@@ -87,7 +87,7 @@ add_executable(
 
 target_link_libraries(
     ${APP_NAME_MULTI}
-    ngraph_bridge
+    openvino_tensorflow
     ngraph_lib
     pthread
     ${TensorFlow_FRAMEWORK_LIBRARY}

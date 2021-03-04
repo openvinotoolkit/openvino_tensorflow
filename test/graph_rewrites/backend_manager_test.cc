@@ -22,16 +22,16 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/backend_manager.h"
-#include "ngraph_bridge/ngraph_assign_clusters.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/mark_for_clustering.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 #define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
@@ -96,5 +96,5 @@ TEST(BackendManager, GetBackendName) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

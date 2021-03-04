@@ -36,7 +36,7 @@ using namespace std;
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 //-----------------------------------------------------------------------------
 // GraphToPbTextFile
@@ -239,6 +239,6 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
   GraphToDotFile(&input_graph, dot_filename, title);
 }
 
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 
 }  // namespace tensorflow

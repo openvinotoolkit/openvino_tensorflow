@@ -17,16 +17,16 @@
 #include <cstdlib>
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "openvino_tensorflow/ovtf_builder.h"
+#include "openvino_tensorflow/mark_for_clustering.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 OpExecuter::OpExecuter(const Scope sc, const string test_op,
@@ -96,5 +96,5 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

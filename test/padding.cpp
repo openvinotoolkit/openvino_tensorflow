@@ -15,12 +15,12 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_bridge/ngraph_builder.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // valid padding is a noop
@@ -63,5 +63,5 @@ TEST(padding, indivisible) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

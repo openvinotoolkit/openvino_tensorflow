@@ -18,15 +18,15 @@
 
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "ngraph_bridge/api.h"
-#include "ngraph_bridge/ngraph_mark_for_clustering.h"
+#include "openvino_tensorflow/api.h"
+#include "openvino_tensorflow/mark_for_clustering.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 namespace ng = ngraph;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 void ResetMarkForClustering(tensorflow::Graph* graph) {
@@ -184,5 +184,5 @@ TEST(DisableOps, DisableTest) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

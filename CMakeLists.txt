@@ -103,7 +103,7 @@ endif()
 # installed is located in the same level as the tensorflow directory
 # site-packages/
 #     /ngraph
-#       libngraph_bridge.so
+#       libopenvino_tensorflow.so
 #       ...
 #     /tensorflow
 #       libtensorflow_framework.so.1
@@ -196,7 +196,7 @@ INCLUDE_DIRECTORIES("${BASEPATH}")
 # Add the directories to be built
 add_subdirectory(third-party)
 add_subdirectory(logging)
-add_subdirectory(ngraph_bridge)
+add_subdirectory(openvino_tensorflow)
 add_subdirectory(tools)
 add_subdirectory(ocm/OCM)
 

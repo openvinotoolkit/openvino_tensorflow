@@ -100,7 +100,7 @@ endif()
 # The compile flag -DNDEBUG is required since
 # tensorflow::Core::RefCounted is error prone as explained here:
 # https://github.com/tensorflow/tensorflow/issues/17316
-# Also, the ngraph_bridge code when compiled has this flag enabled(https://github.com/tensorflow/ngraph-bridge/blob/018c010df44a51a988c6a2d009e6210506b4d96f/ngraph_bridge/CMakeLists.txt#L26)
+# Also, the openvino_tensorflow code when compiled has this flag enabled(https://github.com/tensorflow/ngraph-bridge/blob/018c010df44a51a988c6a2d009e6210506b4d96f/openvino_tensorflow/CMakeLists.txt#L26)
 # hence the error seen while testing the custom op does not show up there.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DNDEBUG")
 
@@ -142,7 +142,7 @@ endif()
 
 target_link_libraries(
     gtest_ngtf
-    ngraph_bridge
+    openvino_tensorflow
     ngraph_lib
     libgtest
     pthread
@@ -154,7 +154,7 @@ target_link_libraries(
     ocm
 )
 
-# First install the libngraph_bridge.so and headers
+# First install the libopenvino_tensorflow.so and headers
 install(TARGETS gtest_ngtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)

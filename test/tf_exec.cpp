@@ -28,15 +28,15 @@
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
-#include "ngraph_bridge/ngraph_builder.h"
-#include "ngraph_bridge/ngraph_utils.h"
-#include "ngraph_bridge/version.h"
+#include "openvino_tensorflow/ovtf_builder.h"
+#include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/version.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 TEST(TFExec, SingleGraphOn2Threads) {
@@ -171,5 +171,5 @@ TEST(TFExec, axpy) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

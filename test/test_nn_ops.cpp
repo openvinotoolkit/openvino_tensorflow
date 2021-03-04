@@ -30,7 +30,7 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
 
@@ -39,7 +39,7 @@ namespace ng = ngraph;
 
 namespace tensorflow {
 
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 
 namespace testing {
 
@@ -779,5 +779,5 @@ TEST(NNOps, BiasAdd) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow

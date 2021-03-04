@@ -32,14 +32,14 @@
 
 #include <cmath>
 #include "logging/tf_graph_writer.h"
-#include "ngraph_bridge/ngraph_utils.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 // Test(TestCaseName, TestName)
@@ -1826,5 +1826,5 @@ TEST(MathOps, Mod) {
 }  // end of test op Mod
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }

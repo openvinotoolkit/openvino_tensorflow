@@ -15,12 +15,12 @@
  *******************************************************************************/
 #include "gtest/gtest.h"
 
-#include "ngraph_bridge/ngraph_conversions.h"
+#include "openvino_tensorflow/layout_conversions.h"
 
 using namespace std;
 
 namespace tensorflow {
-namespace ngraph_bridge {
+namespace openvino_tensorflow {
 namespace testing {
 
 TEST(conversions, transpose) {
@@ -79,5 +79,5 @@ TEST(conversions, param_to_ngraph_nhwc) {
 }
 
 }  // namespace testing
-}  // namespace ngraph_bridge
+}  // namespace openvino_tensorflow
 }  // namespace tensorflow
