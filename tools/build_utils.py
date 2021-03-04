@@ -471,12 +471,12 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     command_executor(make_cmd)
 
     os.chdir(os.path.join("python", "dist"))
-    ngtf_wheel_files = glob.glob("ngraph_tensorflow_bridge-*.whl")
+    ngtf_wheel_files = glob.glob("openvino_tensorflow_add_on-*.whl")
     if (len(ngtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
         for whl in ngtf_wheel_files:
             print("Existing Wheel: " + whl)
-        raise Exception("Error getting the ngraph-tf wheel file")
+        raise Exception("Error getting the openvino_tensorflow_add_on wheel file")
 
     output_wheel = ngtf_wheel_files[0]
     print("OUTPUT WHL FILE: %s" % output_wheel)
@@ -507,8 +507,8 @@ def install_ngraph_tf(tf_version, venv_dir, ngtf_pip_whl):
     print('TensorFlow version: ', tf.__version__)
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)
-    import ngraph_bridge
-    print(ngraph_bridge.__version__)
+    import openvino_tensorflow
+    print(openvino_tensorflow.__version__)
 
 
 def download_repo(target_name, repo, version, submodule_update=False):

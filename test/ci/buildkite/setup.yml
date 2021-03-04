@@ -1,5 +1,5 @@
 env:
-  NGRAPH_TF_BACKEND: ${NGRAPH_TF_BACKEND:-CPU}
+  OPENVINO_TF_BACKEND: ${OPENVINO_TF_BACKEND:-CPU}
 
 steps:
   - command: |

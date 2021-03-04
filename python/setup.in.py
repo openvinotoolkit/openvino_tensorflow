@@ -45,19 +45,19 @@ ng_data_list = [
 
 # This is the contents of the Package Data
 package_data_dict = {}
-package_data_dict['ngraph_bridge'] = ng_data_list
+package_data_dict['openvino_tensorflow'] = ng_data_list
 
 import tensorflow as tf
 tf_version = "tensorflow==" + tf.__version__
 
 setup(
-    name='ngraph_tensorflow_bridge',
+    name='openvino_tensorflow_add_on',
     version='0.23.0rc0',
-    description='Intel nGraph compiler and runtime for TensorFlow',
+    description='Intel OpenVINO Add On for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/tensorflow/ngraph-bridge',
-    packages=['ngraph_bridge'],
+    packages=['openvino_tensorflow'],
     author='Intel Corporation',
     license='Apache License, Version 2.0',
     platforms='Ubuntu 16.04, macOS Sierra',

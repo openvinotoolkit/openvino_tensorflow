@@ -30,7 +30,7 @@
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/protobuf.h"
 
-#include "ngraph_log.h"
+#include "ovtf_log.h"
 
 using namespace std;
 

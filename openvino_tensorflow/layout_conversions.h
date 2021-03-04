@@ -14,11 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_BRIDGE_CONVERSIONS_H_
-#define NGRAPH_TF_BRIDGE_CONVERSIONS_H_
+#ifndef OPENVINO_TF_BRIDGE_CONVERSIONS_H_
+#define OPENVINO_TF_BRIDGE_CONVERSIONS_H_
 #pragma once
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/ovtf_builder.h"
 
@@ -115,4 +115,4 @@ void NHWCtoHW(bool is_nhwc, const std::vector<T>& src,
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_BRIDGE_CONVERSIONS_H_
+#endif  // OPENVINO_TF_BRIDGE_CONVERSIONS_H_

@@ -58,7 +58,7 @@ static const gtl::ArraySlice<DataType>& NGraphRealDTypes() {
 // and either rejects the placement request, or tags it with suitable metadata.
 //
 // For now we assume that every node has nGraph placement requested, unless the
-// environment variable NGRAPH_TF_DISABLE is set. (TODO(amprocte): implement
+// environment variable OPENVINO_TF_DISABLE is set. (TODO(amprocte): implement
 // something better.)
 //
 // Each TensorFlow op supported by nGraph has a "confirmation function"

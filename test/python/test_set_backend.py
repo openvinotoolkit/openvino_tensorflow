@@ -28,11 +28,11 @@ class TestSetBackend(NgraphTest):
 
     def test_set_backend(self):
         # store env variables
-        # when testing on backends like GPU the tests are run with NGRAPH_TF_BACKEND
+        # when testing on backends like GPU the tests are run with OPENVINO_TF_BACKEND
         # by storing and restoring the env_variables we run the tests independent of the backend set
-        # currently we store and restore only the NGRAPH_TF_BACKEND
-        env_var_map = self.store_env_variables(["NGRAPH_TF_BACKEND"])
-        self.unset_env_variable("NGRAPH_TF_BACKEND")
+        # currently we store and restore only the OPENVINO_TF_BACKEND
+        env_var_map = self.store_env_variables(["OPENVINO_TF_BACKEND"])
+        self.unset_env_variable("OPENVINO_TF_BACKEND")
 
         # test
         ngraph_bridge.enable()
@@ -66,7 +66,7 @@ class TestSetBackend(NgraphTest):
 
         # create new session to execute graph
         # If you want to re-confirm which backend the graph was executed
-        # currently the only way is to enable NGRAPH_TF_VLOG_LEVEL=5
+        # currently the only way is to enable OPENVINO_TF_VLOG_LEVEL=5
         with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         current_backend = ngraph_bridge.get_backend()

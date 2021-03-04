@@ -30,7 +30,7 @@ from common import NgraphTest
 
 # Uncomment for debugging; Also add -s in command like, e.g.
 # (venv-tf-py3) [build_cmake]$
-# NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_VLOG_LEVEL=6 pytest -s -k test_const_scalarval ../test/python/test_const.py
+# OPENVINO_TF_LOG_PLACEMENT=1 OPENVINO_TF_VLOG_LEVEL=6 pytest -s -k test_const_scalarval ../test/python/test_const.py
 import logging
 logging.basicConfig(level=logging.DEBUG)
 

@@ -65,7 +65,7 @@ add_executable(
 )
 
 if (APPLE)
-    set(NGRAPH_TF_CXX11_ABI 0)
+    set(OPENVINO_TF_CXX11_ABI 0)
     add_definitions(-DTEST_SINGLE_INSTANCE)
 endif()
 
@@ -96,8 +96,8 @@ target_link_libraries(
     ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
 )
 
-if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
 else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()

@@ -64,11 +64,11 @@ class TestEnv:
 
     @staticmethod
     def get_test_manifest_filename():
-        if ('NGRAPH_TF_TEST_MANIFEST' in os.environ):
-            return os.environ['NGRAPH_TF_TEST_MANIFEST']
+        if ('OPENVINO_TF_TEST_MANIFEST' in os.environ):
+            return os.environ['OPENVINO_TF_TEST_MANIFEST']
         else:
             # test manifest files are named like this:
-            # tests_${PLATFORM}_${NGRAPH_TF_BACKEND}.txt
+            # tests_${PLATFORM}_${OPENVINO_TF_BACKEND}.txt
             return 'tests_' + TestEnv.PLATFORM().lower(
             ) + '_' + TestEnv.BACKEND().lower() + '.txt'
 
@@ -78,8 +78,8 @@ class TestEnv:
 
     @staticmethod
     def BACKEND():
-        if 'NGRAPH_TF_BACKEND' in os.environ:
-            return os.environ['NGRAPH_TF_BACKEND']
+        if 'OPENVINO_TF_BACKEND' in os.environ:
+            return os.environ['OPENVINO_TF_BACKEND']
         else:
             return 'CPU'
 
@@ -150,7 +150,7 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
     # export the env-var for pytest to process manifest in conftest.py
-    os.environ['NGRAPH_TF_TEST_MANIFEST'] = test_manifest_file
+    os.environ['OPENVINO_TF_TEST_MANIFEST'] = test_manifest_file
 
     command_executor([
         "python", "-m", "pytest",
@@ -208,7 +208,7 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
     num_cores = int(psutil.cpu_count(logical=False))
     print("OMP_NUM_THREADS: %s " % str(num_cores))
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
-    os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
+    os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
     cmd = [
         "python", test_script, "--tensorflow_path", tf_src_dir,

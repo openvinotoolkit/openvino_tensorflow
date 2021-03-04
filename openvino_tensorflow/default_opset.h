@@ -14,8 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_BRIDGE_DEFAULT_OPSET_H_
-#define NGRAPH_TF_BRIDGE_DEFAULT_OPSET_H_
+#ifndef OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_
+#define OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_
 #pragma once
 
 #include "ngraph/opsets/opset5.hpp"
@@ -29,4 +29,4 @@ namespace default_opset = ngraph::opset5;
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif
+#endif // OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_

@@ -65,10 +65,10 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If ngraph is disabled via openvino_tensorflow api or NGRAPH_TF_DISABLE is set
+  // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is set
   // we will not do anything; all subsequent passes become a no-op.
   bool ngraph_not_enabled =
-      (!api::IsEnabled()) || (std::getenv("NGRAPH_TF_DISABLE") != nullptr);
+      (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
   bool already_processed = util::IsAlreadyProcessed(&graph);
   if (!already_processed && ngraph_not_enabled) {
     NGRAPH_VLOG(0) << "NGraph is available but disabled.";

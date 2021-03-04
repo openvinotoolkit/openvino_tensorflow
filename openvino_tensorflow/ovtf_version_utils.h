@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
-#define NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
+#ifndef OPENVINO_TF_BRIDGE_VERSION_UTILS_H_
+#define OPENVINO_TF_BRIDGE_VERSION_UTILS_H_
 
 #include "tensorflow/core/public/version.h"
 
@@ -23,4 +23,4 @@
    ((TF_MAJOR_VERSION == REQ_TF_MAJ_VER) &&            \
     (TF_MINOR_VERSION >= REQ_TF_MIN_VER)))
 
-#endif  // NGRAPH_TF_BRIDGE_VERSION_UTILS_H_
+#endif  // OPENVINO_TF_BRIDGE_VERSION_UTILS_H_

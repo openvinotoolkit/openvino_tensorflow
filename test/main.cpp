@@ -155,12 +155,12 @@ class TestEnv {
   }
 
   static string get_test_manifest_filename() {
-    char* env = getenv("NGRAPH_TF_TEST_MANIFEST");
+    char* env = getenv("OPENVINO_TF_TEST_MANIFEST");
     if (env) {
       return std::string(env);
     }
     // test manifest files are named like this:
-    // tests_${PLATFORM}_${NGRAPH_TF_BACKEND}.txt
+    // tests_${PLATFORM}_${OPENVINO_TF_BACKEND}.txt
     return string("tests_") + str_tolower(TestEnv::PLATFORM()) + string("_") +
            str_tolower(TestEnv::BACKEND()) + string(".txt");
   }
@@ -168,7 +168,7 @@ class TestEnv {
   static string PLATFORM() { return get_platform_type(); }
 
   static string BACKEND() {
-    char* env = getenv("NGRAPH_TF_BACKEND");
+    char* env = getenv("OPENVINO_TF_BACKEND");
     if (env) {
       return std::string(env);
     }

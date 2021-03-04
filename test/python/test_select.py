@@ -110,8 +110,8 @@ class TestWhere(NgraphTest):
     env_map = None
 
     def setup_method(self):
-        self.env_map = self.store_env_variables(['NGRAPH_TF_CONSTANT_FOLDING'])
-        self.set_env_variable('NGRAPH_TF_CONSTANT_FOLDING', '1')
+        self.env_map = self.store_env_variables(['OPENVINO_TF_CONSTANT_FOLDING'])
+        self.set_env_variable('OPENVINO_TF_CONSTANT_FOLDING', '1')
 
     def teardown_method(self):
         self.restore_env_variables(self.env_map)

@@ -27,23 +27,23 @@ it correctly to capture all logs.
 ### A full dump
 
 To get a **full** dump use the following set of flags
-```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 NGRAPH_TF_VLOG_LEVEL=5 NGRAPH_TF_LOG_PLACEMENT=1 NGRAPH_TF_DUMP_CLUSTERS=1 NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
+```NGRAPH_ENABLE_SERIALIZE=1 NGRAPH_CPU_TRACING=1 OPENVINO_TF_VLOG_LEVEL=5 OPENVINO_TF_LOG_PLACEMENT=1 OPENVINO_TF_DUMP_CLUSTERS=1 OPENVINO_TF_DUMP_GRAPHS=1 python run_TF_network.py > log.txt 2>&1```
 
 
 ## Debug flags
 
 |Name                          |Description                            |
 |------------------------------|---------------------------------------|
-| `NGRAPH_TF_VLOG_LEVEL=5`     | Generate ngraph-tf logging info for different passes|
-| `NGRAPH_TF_LOG_PLACEMENT=1`  | Generate op placement log at stdout   |
-| `NGRAPH_TF_DUMP_CLUSTERS=1`  | Dump Encapsulated TF Graphs `ngraph_cluster_<cluster_num>` |
-| `NGRAPH_TF_DUMP_GRAPHS=1`    | Dump TF graphs for different passes: precapture, capture, unmarked, marked, clustered, declustered, encapsulated |
+| `OPENVINO_TF_VLOG_LEVEL=5`     | Generate ngraph-tf logging info for different passes|
+| `OPENVINO_TF_LOG_PLACEMENT=1`  | Generate op placement log at stdout   |
+| `OPENVINO_TF_DUMP_CLUSTERS=1`  | Dump Encapsulated TF Graphs `ngraph_cluster_<cluster_num>` |
+| `OPENVINO_TF_DUMP_GRAPHS=1`    | Dump TF graphs for different passes: precapture, capture, unmarked, marked, clustered, declustered, encapsulated |
 | `TF_CPP_MIN_VLOG_LEVEL=1`    | Enable TF CPP logs                    |
 |
 
 ### Visualizing encapsulates using TB
 
-* Run your script with this flag: ```NGRAPH_TF_DUMP_GRAPHS=1 python run_TF_network.py```
+* Run your script with this flag: ```OPENVINO_TF_DUMP_GRAPHS=1 python run_TF_network.py```
 * Change directory to this diagnostics folder
 * Run this script to parse the dumped graphs to know which encapsulate a node belongs to. At this step nodemap.pkl is created: ```python get_node_encapsulate_map.py ./path/to/folder/where/run_TF_network.py/exists/where/the/dumps/were/created/in/the/last/step/ nodemap.pkl```
 * Modify the graphdef and dump TB file in ```./vis``` using encapsulate information in ```nodemap.pkl```: ```python ngtf_graph_viewer.py -c nodemap.pkl ./path/to/original_network_pbtxtfile.pbtxt ./vis```. If you do not have the pbtxt of the original tensorflow graph, you can dump it from your script using [write_graph](https://www.tensorflow.org/api_docs/python/tf/train/write_graph)

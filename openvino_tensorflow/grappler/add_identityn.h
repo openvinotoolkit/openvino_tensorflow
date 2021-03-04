@@ -15,13 +15,13 @@
  *******************************************************************************/
 #pragma once
 
-#ifndef NGRAPH_TF_ADD_IDENTITYN_H_
-#define NGRAPH_TF_ADD_IDENTITYN_H_
+#ifndef OPENVINO_TF_ADD_IDENTITYN_H_
+#define OPENVINO_TF_ADD_IDENTITYN_H_
 
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/node_builder.h"
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 
 namespace tensorflow {
 
@@ -32,4 +32,4 @@ Status AddIdentityN(Graph* graph, std::set<string> skip_these_nodes);
 }  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_ADD_IDENTITYN_H_
+#endif  // OPENVINO_TF_ADD_IDENTITYN_H_
