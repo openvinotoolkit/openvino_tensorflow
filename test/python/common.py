@@ -57,17 +57,17 @@ class NgraphTest(object):
         config = ngraph_bridge.update_config(config)
 
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
-            'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
+            'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-        os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
+        os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
         ngraph_bridge.enable()
         with tf.compat.v1.Session(config=config) as sess:
             retval = l(sess)
 
-        os.environ.pop('NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
+        os.environ.pop('OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         if ngraph_tf_disable_deassign_clusters is not None:
-            os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
+            os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
                 ngraph_tf_disable_deassign_clusters
 
         return retval
@@ -76,14 +76,14 @@ class NgraphTest(object):
         if config is None:
             config = tf.compat.v1.ConfigProto()
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
-            'NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS', None)
+            'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         ngraph_bridge.disable()
         with tf.compat.v1.Session(config=config) as sess:
             retval = l(sess)
 
         if ngraph_tf_disable_deassign_clusters is not None:
-            os.environ['NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
+            os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
                 ngraph_tf_disable_deassign_clusters
 
         return retval

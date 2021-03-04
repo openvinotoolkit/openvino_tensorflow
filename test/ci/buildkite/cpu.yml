@@ -17,7 +17,7 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_cpp
-    label: ":chrome: nGraph-bridge C++ Tests ${NGRAPH_TF_BACKEND}"
+    label: ":chrome: nGraph-bridge C++ Tests ${OPENVINO_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -50,7 +50,7 @@
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_python
-    label: ":python:  Python Tests ${NGRAPH_TF_BACKEND}"
+    label: ":python:  Python Tests ${OPENVINO_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -62,7 +62,7 @@
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_tf_python
     
-    label: ":python: TF Python Tests ${NGRAPH_TF_BACKEND}"
+    label: ":python: TF Python Tests ${OPENVINO_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}
@@ -74,7 +74,7 @@
       PYTHONPATH=`pwd` python3 test/ci/buildkite/test_runner.py \
         --artifacts /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID --test_resnet50_infer
     label: ":bar_chart: ResNet50 Inference"
-    if: "'${NGRAPH_TF_BACKEND}' != 'MYRIAD'"
+    if: "'${OPENVINO_TF_BACKEND}' != 'MYRIAD'"
     timeout_in_minutes: 30
     agents:
       queue: ${BUILDKITE_AGENT_META_DATA_QUEUE}

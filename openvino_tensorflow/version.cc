@@ -62,7 +62,7 @@ int cxx11_abi_flag() {
 }
 
 bool is_grappler_enabled() {
-#if defined(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
+#if defined(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
   return true;
 #else
   return false;

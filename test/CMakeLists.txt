@@ -16,8 +16,8 @@
 
 add_subdirectory(python)
 
-if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
 else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()
@@ -93,7 +93,7 @@ set(SRC
     pass/transpose_sinking_test.cpp
 )
 
-if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
+if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     list(APPEND SRC graph_rewrites/config_for_grappler_test.cc)
 endif()
 
@@ -137,7 +137,7 @@ add_custom_command(
 )
 
 if (APPLE)
-    set(NGRAPH_TF_CXX11_ABI 0)
+    set(OPENVINO_TF_CXX11_ABI 0)
 endif()
 
 target_link_libraries(

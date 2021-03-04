@@ -27,7 +27,7 @@
 #include "ngraph/slice_plan.hpp"
 
 #include "api.h"
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/layout_conversions.h"
@@ -2985,10 +2985,10 @@ Status Builder::TranslateGraph(
   //
   {
     ngraph::pass::Manager passes;
-    if (util::GetEnv("NGRAPH_TF_CONSTANT_FOLDING") == "1") {
+    if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
       passes.register_pass<ngraph::pass::ConstantFolding>();
     }
-    if (util::GetEnv("NGRAPH_TF_TRANSPOSE_SINKING") != "0") {
+    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") != "0") {
       passes.register_pass<pass::TransposeSinking>();
     }
     passes.run_passes(ng_function);

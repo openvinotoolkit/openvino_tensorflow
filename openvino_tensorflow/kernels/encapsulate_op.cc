@@ -29,7 +29,7 @@
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/graph/graph_constructor.h"
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/cluster_manager.h"
@@ -208,7 +208,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   Timer function_lookup_or_create;
 
   bool multi_req_execution = false;
-  if (std::getenv("NGRAPH_TF_ENABLE_BATCHING") &&
+  if (std::getenv("OPENVINO_TF_ENABLE_BATCHING") &&
       NGraphClusterManager::NumberOfClusters() == 1) {
     NGRAPH_VLOG(2) << "Batching is enabled" << name();
     multi_req_execution = true;
@@ -366,7 +366,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   long vm, rss;
   util::MemoryProfile(vm, rss);
-  NGRAPH_VLOG(1) << "NGRAPH_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
+  NGRAPH_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
                  << " Step_ID: " << step_id << " Cluster: " << name()
                  << " Input Tensors created: "
                  << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
@@ -378,7 +378,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
       << m_cluster_id;
-  NGRAPH_VLOG(1) << "NGRAPH_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
+  NGRAPH_VLOG(1) << "OPENVINO_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
                  << " Step_ID: " << step_id << " Cluster: " << name()
                  << " Time-Compute: " << compute_time.ElapsedInMS()
                  << " Function-Create-or-Lookup: " << time_func_create_or_lookup
@@ -438,7 +438,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;
     const char* cache_depth_specified =
-        std::getenv("NGRAPH_TF_FUNCTION_CACHE_ITEM_DEPTH");
+        std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
       m_function_cache_depth_in_items = atoi(cache_depth_specified);
     }
@@ -464,7 +464,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     util::MemoryProfile(vm, rss);
     auto delta_vm_mem = vm - vm0;
     auto delta_res_mem = rss - rss0;
-    NGRAPH_VLOG(1) << "NGRAPH_TF_CACHE_PROFILE: OP_ID: " << m_cluster_id
+    NGRAPH_VLOG(1) << "OPENVINO_TF_CACHE_PROFILE: OP_ID: " << m_cluster_id
                    << " Cache length: " << m_ng_exec_map.size()
                    << " Cluster: " << m_name << " Delta VM: " << delta_vm_mem
                    << " Delta RSS: " << delta_res_mem

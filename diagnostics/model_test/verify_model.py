@@ -43,7 +43,7 @@ def set_os_env(select_device):
         assert select_device[:
                              7] == "NGRAPH_", "Expecting device name to start with NGRAPH_"
         back_end = select_device.split("NGRAPH_")
-        os.environ['NGRAPH_TF_BACKEND'] = back_end[1]
+        os.environ['OPENVINO_TF_BACKEND'] = back_end[1]
 
 
 def calculate_output(param_dict, select_device, input_example):

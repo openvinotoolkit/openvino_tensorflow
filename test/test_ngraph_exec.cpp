@@ -145,7 +145,7 @@ class NGraphExecTest : public ::testing::Test {
 };
 
 TEST_F(NGraphExecTest, Axpy) {
-  auto env_map = StoreEnv({"NGRAPH_TF_BACKEND"});
+  auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
   SetBackendUsingEnvVar("CPU");
 
   Graph input_graph(OpRegistry::Global());
@@ -200,7 +200,7 @@ TEST_F(NGraphExecTest, Axpy) {
 }
 
 TEST_F(NGraphExecTest, Axpy8bit) {
-  auto env_map = StoreEnv({"NGRAPH_TF_BACKEND"});
+  auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
   SetBackendUsingEnvVar("CPU");
 
   Graph input_graph(OpRegistry::Global());
@@ -288,13 +288,13 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
   Graph input_graph(OpRegistry::Global());
   ASSERT_OK(LoadGraph("test_graph1.pbtxt", &input_graph));
 
-  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
+  setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", true);
   expect_const_count_ngfunc(input_graph, 1);
-  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
+  unsetenv("OPENVINO_TF_CONSTANT_FOLDING");
 
-  setenv("NGRAPH_TF_CONSTANT_FOLDING", "0", true);
+  setenv("OPENVINO_TF_CONSTANT_FOLDING", "0", true);
   expect_const_count_ngfunc(input_graph, 3);
-  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
+  unsetenv("OPENVINO_TF_CONSTANT_FOLDING");
 }
 
 TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
@@ -309,13 +309,13 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
   // attach _Retval node
   auto pgraph_new = attach_retval_node(root, pgraph, add2.node());
 
-  setenv("NGRAPH_TF_CONSTANT_FOLDING", "1", true);
+  setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", true);
   expect_const_count_ngfunc(*pgraph_new, 1);
-  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
+  unsetenv("OPENVINO_TF_CONSTANT_FOLDING");
 
-  setenv("NGRAPH_TF_CONSTANT_FOLDING", "0", true);
+  setenv("OPENVINO_TF_CONSTANT_FOLDING", "0", true);
   expect_const_count_ngfunc(*pgraph_new, 3);
-  unsetenv("NGRAPH_TF_CONSTANT_FOLDING");
+  unsetenv("OPENVINO_TF_CONSTANT_FOLDING");
 }
 
 }  // namespace testing

@@ -15,8 +15,8 @@
  *******************************************************************************/
 #pragma once
 
-#ifndef NGRAPH_TF_BRIDGE_UTILS_H_
-#define NGRAPH_TF_BRIDGE_UTILS_H_
+#ifndef OPENVINO_TF_BRIDGE_UTILS_H_
+#define OPENVINO_TF_BRIDGE_UTILS_H_
 
 #include <fstream>
 #include <ostream>
@@ -32,7 +32,7 @@
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/ngraph.hpp"
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "logging/tf_graph_writer.h"
 
 // Activates event logging until the end of the current code-block scoping;
@@ -86,4 +86,4 @@ void SetEnv(const char* env, const char* val);
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif
+#endif // OPENVINO_TF_BRIDGE_UTILS_H_

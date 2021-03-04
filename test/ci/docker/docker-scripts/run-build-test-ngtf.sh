@@ -27,7 +27,7 @@
 #
 # General environment variables that are passed through to the docker container:
 #
-# NGRAPH_TF_BACKEND
+# OPENVINO_TF_BACKEND
 # PLAIDML_EXPERIMENTAL
 # PLAIDML_DEVICE_IDS
 
@@ -45,8 +45,8 @@ if [ -z "${NG_TF_TEST_PLAIDML}" ] ; then
 fi
 
 # Report on any recognized passthrough variables
-if [ ! -z "${NGRAPH_TF_BACKEND}" ] ; then
-    echo "NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+if [ ! -z "${OPENVINO_TF_BACKEND}" ] ; then
+    echo "OPENVINO_TF_BACKEND=${OPENVINO_TF_BACKEND}"
 fi
 if [ ! -z "${PLAIDML_EXPERIMENTAL}" ] ;  then
     echo "PLAIDML_EXPERIMENTAL=${PLAIDML_EXPERIMENTAL}"
@@ -190,9 +190,9 @@ if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
     echo  "===== Run test_ngtf.py with PlaidML at ${xtime} ====="
     echo  ' '
 
-    NGRAPH_TF_BACKEND=PLAIDML
+    OPENVINO_TF_BACKEND=PLAIDML
 
-    echo "NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+    echo "OPENVINO_TF_BACKEND=${OPENVINO_TF_BACKEND}"
 
     cd "${bridge_dir}"
     echo "Running: ./test_ngtf.py --plaidml_unit_tests_enable"

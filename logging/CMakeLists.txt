@@ -24,7 +24,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 set(SRC 
-   ngraph_log.cc
+   ovtf_log.cc
    tf_graph_writer.cc
 )
 
@@ -45,10 +45,10 @@ target_compile_definitions(
 set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Installation
-if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
 else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()
 
-install(FILES ngraph_log.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(FILES ovtf_log.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

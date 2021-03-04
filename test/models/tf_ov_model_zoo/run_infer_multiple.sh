@@ -6,7 +6,7 @@ usage() { echo "Usage: $0 [-m .../manifest.txt] [-d .../working_dir]" 1>&2; exit
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 WORKDIR=`pwd`
-device=${NGRAPH_TF_BACKEND:-"CPU"}
+device=${OPENVINO_TF_BACKEND:-"CPU"}
 device="${device,,}" # lowercase
 MODELFILENAME=models_${device}.txt
 # read models & params from manifest

@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 #include "backend_manager.h"
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 
 using namespace std;
 
@@ -76,7 +76,7 @@ Status BackendManager::GetBackendName(string& backend_name) {
 
 Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                                      string& backend_name) {
-  const char* env = std::getenv("NGRAPH_TF_BACKEND");
+  const char* env = std::getenv("OPENVINO_TF_BACKEND");
   if (env != nullptr && strlen(env) > 0) {
     backend_name = string(env);
   }

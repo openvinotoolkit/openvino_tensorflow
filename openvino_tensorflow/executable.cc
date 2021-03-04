@@ -19,7 +19,7 @@
 
 #include <ie_plugin_config.hpp>
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_tensor.h"

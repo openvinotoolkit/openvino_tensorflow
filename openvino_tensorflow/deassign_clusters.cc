@@ -28,7 +28,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/assign_clusters.h"
 #include "openvino_tensorflow/deassign_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
@@ -48,7 +48,7 @@ namespace openvino_tensorflow {
 // "Identity".
 //
 // For unit testing purposes, this pass can be bypassed by setting
-// NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS=1.
+// OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
 
 unordered_map<string, int> deassigned_histogram;
@@ -149,7 +149,7 @@ Status DeassignClusters(Graph* graph) {
   num_nodes_marked_before_deassign = 0;  // reset for every TF graph
   deassigned_histogram.clear();          // reset the histogram
 
-  if (std::getenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS") != nullptr) {
+  if (std::getenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS") != nullptr) {
     // still need to calculate num_nodes_marked_before_deassign
     for (auto node : graph->nodes()) {
       int cluster_idx;
@@ -188,9 +188,9 @@ Status DeassignClusters(Graph* graph) {
     }
 
     int min_non_trivial_nodes = 6;
-    if (std::getenv("NGRAPH_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
+    if (std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
       min_non_trivial_nodes =
-          std::stoi(std::getenv("NGRAPH_TF_MIN_NONTRIVIAL_NODES"));
+          std::stoi(std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES"));
     }
     NGRAPH_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
 

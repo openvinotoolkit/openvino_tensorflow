@@ -35,7 +35,7 @@
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "test/test_utilities.h"
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
 using namespace std;
 
 namespace tensorflow {
@@ -438,4 +438,4 @@ TEST(DeadnessCheck, DTestG5) {
 }  // namespace testing
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
-#endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK
+#endif  // OPENVINO_TF_DISABLE_DEADNESS_CHECK

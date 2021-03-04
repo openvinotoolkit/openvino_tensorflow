@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "ngraph_log.h"
+#include "ovtf_log.h"
 #include <cstdlib>
 
 using namespace std;
@@ -42,6 +42,6 @@ tensorflow::int64 LogLevelStrToInt(const char* tf_env_var_val) {
 }  // namespace
 
 tensorflow::int64 NGraphLogMessage::MinNGraphVLogLevel() {
-  const char* tf_env_var_val = std::getenv("NGRAPH_TF_VLOG_LEVEL");
+  const char* tf_env_var_val = std::getenv("OPENVINO_TF_VLOG_LEVEL");
   return LogLevelStrToInt(tf_env_var_val);
 }

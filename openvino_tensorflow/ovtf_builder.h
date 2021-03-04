@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_BUILDER_H_
-#define NGRAPH_TF_BRIDGE_BUILDER_H_
+#ifndef OPENVINO_TF_BRIDGE_BUILDER_H_
+#define OPENVINO_TF_BRIDGE_BUILDER_H_
 
 #include <ostream>
 #include <vector>
@@ -70,7 +70,7 @@ class Builder {
   // The next 2 are not guaranteed to be present for all nodes.
   // But when present they are correct and agree with provenance tags
   // 2. Attaches friendly names.
-  // 3. Prints a log if NGRAPH_TF_LOG_PLACEMENT=1
+  // 3. Prints a log if OPENVINO_TF_LOG_PLACEMENT=1
   static void SetTracingInfo(const std::string& op_name,
                              const ngraph::Output<ngraph::Node> ng_node);
 };
@@ -78,4 +78,4 @@ class Builder {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif
+#endif // OPENVINO_TF_BRIDGE_BUILDER_H_

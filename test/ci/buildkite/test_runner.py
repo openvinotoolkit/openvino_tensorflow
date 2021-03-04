@@ -80,12 +80,12 @@ def main():
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
-        os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
+        os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
         run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
     elif (arguments.test_tf_python):
-        os.environ['NGRAPH_TF_LOG_0_DISABLED'] = '1'
+        os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
             './', arguments.artifacts_dir + '/tensorflow/python', False)
     elif (arguments.test_resnet):
