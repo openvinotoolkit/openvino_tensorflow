@@ -52,11 +52,19 @@ include_directories(${TensorFlow_SRC_DIR}/bazel-bin)
 
 add_library(tensorflow_cc_lib SHARED IMPORTED)
 add_library(tensorflow_ops_testutil SHARED IMPORTED)
-set_target_properties(
-    tensorflow_cc_lib
-    PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2
-)
+
+if(NOT(TensorFlow_VERSION LESS 2.0))
+    set_target_properties(
+        tensorflow_cc_lib
+        PROPERTIES IMPORTED_LOCATION
+            ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2)
+else()
+    set_target_properties(
+        tensorflow_cc_lib
+        PROPERTIES IMPORTED_LOCATION
+            ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1)
+endif()
+
 set_target_properties(
     tensorflow_ops_testutil
     PROPERTIES IMPORTED_LOCATION

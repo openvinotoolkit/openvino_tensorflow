@@ -260,6 +260,7 @@ def main():
         # This function copies the .so files from
         # use_tensorflow_from_location/artifacts/tensorflow to
         # artifacts/tensorflow
+        tf_version = get_tf_version()
         copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                              use_intel_tf)
         os.chdir(cwd)

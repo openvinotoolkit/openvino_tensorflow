@@ -29,6 +29,9 @@ import platform
 import shlex
 from sysconfig import get_paths
 
+def get_tf_version():
+    import tensorflow as tf
+    return tf.__version__
 
 def get_tf_cxxabi():
     import tensorflow as tf
@@ -344,10 +347,10 @@ def locate_tf_whl(tf_whl_loc):
 
 
 def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
-    if (tf_version.startswith("v2.")):
+    if (tf_version.startswith("v2.") or (tf_version.startswith("2."))):
         tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
         tf_cc_lib_name = 'libtensorflow_cc.so.2'
-    elif (tf_version.startswith("v1.")):
+    elif (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
         tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
         tf_cc_lib_name = 'libtensorflow_cc.so.1'
     if (platform.system() == 'Darwin'):

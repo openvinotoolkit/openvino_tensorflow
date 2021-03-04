@@ -47,6 +47,9 @@ ng_data_list = [
 package_data_dict = {}
 package_data_dict['ngraph_bridge'] = ng_data_list
 
+import tensorflow as tf
+tf_version = "tensorflow==" + tf.__version__
+
 setup(
     name='ngraph_tensorflow_bridge',
     version='0.23.0rc0',
@@ -62,6 +65,6 @@ setup(
     package_data= package_data_dict,
     cmdclass={'bdist_wheel': BinaryBdistWheel},
     install_requires=[
-        "tensorflow==2.2.0",
+        tf_version,
     ],
 )
