@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_TIMER_H_
-#define NGRAPH_TF_BRIDGE_TIMER_H_
+#ifndef OPENVINO_TF_BRIDGE_TIMER_H_
+#define OPENVINO_TF_BRIDGE_TIMER_H_
 
 #include <unistd.h>
 #include <chrono>
@@ -61,4 +61,4 @@ class Timer {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_BRIDGE_TIMER_H_
+#endif  // OPENVINO_TF_BRIDGE_TIMER_H_

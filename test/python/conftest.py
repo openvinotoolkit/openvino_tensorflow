@@ -147,13 +147,13 @@ def attach_run_markers():
 
 # PyTestHook: ahead of command line option parsing
 def pytest_cmdline_preparse(args):
-    if 'NGRAPH_TF_TEST_MANIFEST' in os.environ:
+    if 'OPENVINO_TF_TEST_MANIFEST' in os.environ:
         args[:] = ["-m", 'temp_run_via_manifest'] + args
 
 
 # PyTestHook: called at early stage of pytest setup
 def pytest_configure(config):
-    if 'NGRAPH_TF_TEST_MANIFEST' in os.environ:
+    if 'OPENVINO_TF_TEST_MANIFEST' in os.environ:
         pytest.tests_to_skip = set()
         pytest.tests_to_run = set()
         pytest.g_imported_files = set()
@@ -173,9 +173,9 @@ def pytest_configure(config):
 # PyTestHook: called after collection has been performed, but
 # we may modify or re-order the items in-place
 def pytest_collection_modifyitems(items):
-    if 'NGRAPH_TF_TEST_MANIFEST' in os.environ:
+    if 'OPENVINO_TF_TEST_MANIFEST' in os.environ:
         # Get list of tests to run/skip
-        filename = os.path.abspath(os.environ['NGRAPH_TF_TEST_MANIFEST'])
+        filename = os.path.abspath(os.environ['OPENVINO_TF_TEST_MANIFEST'])
         pytest.all_test_items = items
         print('\nChecking manifest...')
         pytest.tests_to_run, pytest.tests_to_skip = read_tests_from_manifest(

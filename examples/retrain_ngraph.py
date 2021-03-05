@@ -154,7 +154,7 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import tensorflow_hub as hub
 
-import ngraph_bridge
+import openvino_tensorflow
 
 FLAGS = None
 
@@ -1093,7 +1093,7 @@ def main(_):
     # Set the cofigureation suitable for nGraph
     config = tf.compat.v1.ConfigProto()
     config.inter_op_parallelism_threads = 2
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
             config=config_ngraph_enabled, graph=graph) as sess:

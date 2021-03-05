@@ -19,7 +19,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 
 using namespace std;
 
@@ -30,13 +30,13 @@ namespace openvino_tensorflow {
 namespace testing {
 
 void ActivateNGraph() {
-  setenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
-  unsetenv("NGRAPH_TF_DISABLE");
+  setenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
+  unsetenv("OPENVINO_TF_DISABLE");
 }
 
 void DeactivateNGraph() {
-  unsetenv("NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS");
-  setenv("NGRAPH_TF_DISABLE", "1", 1);
+  unsetenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS");
+  setenv("OPENVINO_TF_DISABLE", "1", 1);
 }
 
 // EnvVariable Utilities
@@ -83,20 +83,20 @@ void RestoreEnv(const unordered_map<string, string>& map) {
   }
 }
 
-// NGRAPH_TF_BACKEND related
-bool IsNGraphTFBackendSet() { return IsEnvVariableSet("NGRAPH_TF_BACKEND"); }
+// OPENVINO_TF_BACKEND related
+bool IsNGraphTFBackendSet() { return IsEnvVariableSet("OPENVINO_TF_BACKEND"); }
 
-string GetBackendFromEnvVar() { return GetEnvVariable("NGRAPH_TF_BACKEND"); }
+string GetBackendFromEnvVar() { return GetEnvVariable("OPENVINO_TF_BACKEND"); }
 
-void UnsetBackendUsingEnvVar() { UnsetEnvVariable("NGRAPH_TF_BACKEND"); }
+void UnsetBackendUsingEnvVar() { UnsetEnvVariable("OPENVINO_TF_BACKEND"); }
 
 void SetBackendUsingEnvVar(const string& backend_name) {
-  SetEnvVariable("NGRAPH_TF_BACKEND", backend_name);
+  SetEnvVariable("OPENVINO_TF_BACKEND", backend_name);
 }
 
 // Generating Seed for PseudoRandomNumberGenerator
 unsigned int GetSeedForRandomFunctions() {
-  const string& env_name = "NGRAPH_TF_SEED";
+  const string& env_name = "OPENVINO_TF_SEED";
   unsigned int seed = static_cast<unsigned>(time(0));
   if (!IsEnvVariableSet(env_name)) {
     NGRAPH_VLOG(5) << "Got seed " << seed;

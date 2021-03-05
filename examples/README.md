@@ -1,6 +1,6 @@
 # Bridge examples
 
-Simple! Just add `import ngraph_bridge` after [building] it.
+Simple! Just add `import openvino_tensorflow` after [building] it.
 
 The simplest `hello-world` example can be found in [axpy.py]. For other 
 real-world examples, see the instructions below to run `tf_cnn_benchmarks` and 
@@ -28,7 +28,7 @@ easy-to-read implementations, see the [TensorFlow Official Models].
     cd benchmarks/scripts/tf_cnn_benchmarks/
 
 Next, enable nGraph by editing the `convnet_builder.py` and adding 
-`import ngraph_bridge` right after the `import tensorflow` line.
+`import openvino_tensorflow` right after the `import tensorflow` line.
 
 ### Train for a few iterations:
 
@@ -69,7 +69,7 @@ tutorials on, `inceptionv3`.
 # Keras models:
 
 Keras (with Tensorflow backend) should also work out-of-the-box with nGraph, 
-once one adds ```import ngraph_bridge``` to the script. [Example](https://github.com/tensorflow/ngraph-bridge/blob/master/examples/keras_sample.py)
+once one adds ```import openvino_tensorflow``` to the script. [Example](https://github.com/tensorflow/ngraph-bridge/blob/master/examples/keras_sample.py)
 
 
 

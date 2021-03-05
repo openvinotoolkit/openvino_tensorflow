@@ -6,7 +6,7 @@ index 5e8db1e5..74f20cf0 100644
  from absl import flags
  
  import tensorflow as tf
-+import ngraph_bridge
++import openvino_tensorflow
  
  from object_detection import model_hparams
  from object_detection import model_lib

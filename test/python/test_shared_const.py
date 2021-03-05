@@ -25,7 +25,7 @@ import numpy as np
 
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
-import ngraph_bridge
+import openvino_tensorflow
 from common import NgraphTest
 
 np.random.seed(5)
@@ -40,7 +40,7 @@ class TestSharedConst(NgraphTest):
         # static input to it and is not used by the op directly
         # but is used to create 2 new Consts.
 
-        ngraph_bridge.set_disabled_ops('Abs')
+        openvino_tensorflow.set_disabled_ops('Abs')
         input_data1 = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
         paddings = tf.compat.v1.constant([[2, 1], [2, 2]])
 
@@ -58,4 +58,4 @@ class TestSharedConst(NgraphTest):
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 
         # Clean up
-        ngraph_bridge.set_disabled_ops('')
+        openvino_tensorflow.set_disabled_ops('')

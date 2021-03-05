@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
 

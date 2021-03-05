@@ -93,12 +93,12 @@ void StartLoggingPlacement() { _is_logging_placement = true; }
 void StopLoggingPlacement() { _is_logging_placement = false; }
 bool IsLoggingPlacement() {
   return _is_enabled && (_is_logging_placement ||
-                         std::getenv("NGRAPH_TF_LOG_PLACEMENT") != nullptr);
+                         std::getenv("OPENVINO_TF_LOG_PLACEMENT") != nullptr);
 }
 
 std::set<string> GetDisabledOps() {
-  if (std::getenv("NGRAPH_TF_DISABLED_OPS") != nullptr) {
-    string disabled_ops_str = std::getenv("NGRAPH_TF_DISABLED_OPS");
+  if (std::getenv("OPENVINO_TF_DISABLED_OPS") != nullptr) {
+    string disabled_ops_str = std::getenv("OPENVINO_TF_DISABLED_OPS");
     SetDisabledOps(disabled_ops_str);
   }
   return disabled_op_types;

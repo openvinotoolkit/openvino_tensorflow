@@ -32,7 +32,7 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import argparse
 import numpy as np
-import ngraph_bridge
+import openvino_tensorflow
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3

@@ -14,8 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
-#ifndef NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
-#define NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
+#ifndef OPENVINO_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
+#define OPENVINO_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
 #pragma once
 
 #include <iostream>
@@ -106,4 +106,4 @@ class Encapsulator {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_
+#endif  // OPENVINO_TF_BRIDGE_ENCAPSULATE_CLUSTERS_H_

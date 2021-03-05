@@ -24,7 +24,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/util.hpp"
 
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"

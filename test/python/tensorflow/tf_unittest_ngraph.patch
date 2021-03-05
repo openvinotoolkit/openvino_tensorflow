@@ -6,7 +6,7 @@
       self._threads = []
       self._tempdir = None
       self._cached_session = None
-+     import ngraph_bridge
++     import openvino_tensorflow
   
     def setUp(self):
       self._ClearCachedSession()

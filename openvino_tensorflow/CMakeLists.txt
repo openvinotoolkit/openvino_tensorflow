@@ -54,12 +54,12 @@ set(SRC
    ie_vadm_engine.cc
 )
 
-message(STATUS "NGRAPH_TF_USE_GRAPPLER_OPTIMIZER: ${NGRAPH_TF_USE_GRAPPLER_OPTIMIZER}")
-if(NGRAPH_TF_USE_GRAPPLER_OPTIMIZER)            
+message(STATUS "OPENVINO_TF_USE_GRAPPLER_OPTIMIZER: ${OPENVINO_TF_USE_GRAPPLER_OPTIMIZER}")
+if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)            
     list(REMOVE_ITEM SRC rewrite_pass.cc)
     list(APPEND SRC grappler/ovtf_optimizer.cc)
     list(APPEND SRC grappler/add_identityn.cc)
-    add_definitions(-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER)
+    add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
@@ -85,8 +85,8 @@ target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
 #------------------------------------------------------------------------------
 #installation 
 #------------------------------------------------------------------------------
-if (DEFINED NGRAPH_TF_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${NGRAPH_TF_INSTALL_PREFIX})
+if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
 else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()

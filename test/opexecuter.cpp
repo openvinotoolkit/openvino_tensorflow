@@ -44,12 +44,12 @@ void OpExecuter::RunTest(float rtol, float atol) {
   ExecuteOnTF(tf_outputs);
 
   // Override the test result tolerance
-  if (std::getenv("NGRAPH_TF_UTEST_RTOL") != nullptr) {
-    rtol = std::atof(std::getenv("NGRAPH_TF_UTEST_RTOL"));
+  if (std::getenv("OPENVINO_TF_UTEST_RTOL") != nullptr) {
+    rtol = std::atof(std::getenv("OPENVINO_TF_UTEST_RTOL"));
   }
 
-  if (std::getenv("NGRAPH_TF_UTEST_ATOL") != nullptr) {
-    atol = std::atof(std::getenv("NGRAPH_TF_UTEST_ATOL"));
+  if (std::getenv("OPENVINO_TF_UTEST_ATOL") != nullptr) {
+    atol = std::atof(std::getenv("OPENVINO_TF_UTEST_ATOL"));
   }
 
   Compare(tf_outputs, ngraph_outputs, rtol, atol);
@@ -75,7 +75,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
 
   // For debug
-  if (std::getenv("NGRAPH_TF_DUMP_GRAPHS") != nullptr) {
+  if (std::getenv("OPENVINO_TF_DUMP_GRAPHS") != nullptr) {
     GraphToPbTextFile(&graph, "unit_test_tf_graph_" + test_op_type_ + ".pbtxt");
   }
 

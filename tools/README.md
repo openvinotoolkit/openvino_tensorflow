@@ -67,7 +67,7 @@ To run nGraph in Docker, choose one of two ways to create your container:
 #### Normal mode of operations
 The normal mode of operation of `ngrph_bridge` is:
 ```
-import ngraph_bridge
+import openvino_tensorflow
 
 in0, in1, out0 = construct_network()
 sess = tf.Session()
@@ -82,11 +82,11 @@ The "normal" mode latches onto `Tensorflow` operations by registering `GraphOpti
 
 A sample script will look like:
 ```
-import ngraph_bridge
+import openvino_tensorflow
 
 in0, in1, out0 = construct_network()
-sess = tf.Session(config=ngraph_bridge.update_config(tf.ConfigProto()))
+sess = tf.Session(config=openvino_tensorflow.update_config(tf.ConfigProto()))
 result = sess.run(out0, feed_dict = {in0:[2,3], in1:[4,5]})
 ```
 
-Notice the new line introduced here wrt the "normal" path. `config_updated = ngraph_bridge.update_config(config)` must now be passed during session construction to ensure `NgraphOptimizer` `grappler` pass is enabled. Without `grappler` build, we use `GraphOptimizationPass`, in which case just `import ngraph_bridge` was enough to plug in `ngraph`. But in a `grappler` build, the config needs to be modified to enable the pass that will plugin `ngraph`. Like the "normal" path, in this script too the graph rewriting and actual execution happen when `session.run` is called.
+Notice the new line introduced here wrt the "normal" path. `config_updated = openvino_tensorflow.update_config(config)` must now be passed during session construction to ensure `NgraphOptimizer` `grappler` pass is enabled. Without `grappler` build, we use `GraphOptimizationPass`, in which case just `import openvino_tensorflow` was enough to plug in `ngraph`. But in a `grappler` build, the config needs to be modified to enable the pass that will plugin `ngraph`. Like the "normal" path, in this script too the graph rewriting and actual execution happen when `session.run` is called.

@@ -353,7 +353,7 @@ def main():
 
     # Next build CMAKE options for the bridge
     ngraph_tf_cmake_flags = [
-        "-DNGRAPH_TF_INSTALL_PREFIX=" + artifacts_location,
+        "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
         "-DCMAKE_CXX_FLAGS=-march=" + target_arch,
     ]
 
@@ -389,7 +389,7 @@ def main():
         ])
 
     ngraph_tf_cmake_flags.extend([
-        "-DNGRAPH_TF_USE_GRAPPLER_OPTIMIZER=" +
+        "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
         flag_string_map[arguments.use_grappler_optimizer]
     ])
 
@@ -445,8 +445,8 @@ def main():
 
     if arguments.use_grappler_optimizer:
         import tensorflow as tf
-        import ngraph_bridge
-        if not ngraph_bridge.is_grappler_enabled():
+        import openvino_tensorflow
+        if not openvino_tensorflow.is_grappler_enabled():
             raise Exception(
                 "Build failed: 'use_grappler_optimizer' specified but not used")
 

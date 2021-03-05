@@ -18,7 +18,7 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import argparse
 import numpy as np
-import ngraph_bridge
+import openvino_tensorflow
 from google.protobuf import text_format
 import json
 import os
@@ -36,14 +36,14 @@ def createFolder(directory):
 def set_os_env(select_device):
     if select_device == 'CPU':
         # run on TF only
-        ngraph_bridge.disable()
+        openvino_tensorflow.disable()
     else:
-        if not ngraph_bridge.is_enabled():
-            ngraph_bridge.enable()
+        if not openvino_tensorflow.is_enabled():
+            openvino_tensorflow.enable()
         assert select_device[:
                              7] == "NGRAPH_", "Expecting device name to start with NGRAPH_"
         back_end = select_device.split("NGRAPH_")
-        os.environ['NGRAPH_TF_BACKEND'] = back_end[1]
+        os.environ['OPENVINO_TF_BACKEND'] = back_end[1]
 
 
 def calculate_output(param_dict, select_device, input_example):
@@ -80,7 +80,7 @@ def calculate_output(param_dict, select_device, input_example):
 
     config = tf.compat.v1.ConfigProto(
         inter_op_parallelism_threads=1, allow_soft_placement=True)
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     sess = tf.compat.v1.Session(config=config_ngraph_enabled)
     set_os_env(select_device)

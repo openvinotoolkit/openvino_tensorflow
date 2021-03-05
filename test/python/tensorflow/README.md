@@ -70,7 +70,7 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
  - `--tensorflow_path` is a required argument and must be passed to
    specify the location of Tensorflow source code
  
- -  NGRAPH_TF_DISABLE_DEASSIGN_CLUSTERS=1 should be set always, else ops might not land
+ -  OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1 should be set always, else ops might not land
     on ngraph due to reassignment of singleton clusters
     
  -  To get a list of test modules available in Tensorflow, use bazel query
@@ -91,5 +91,5 @@ tf_unittest_runner is primarily used to run tensorflow python unit tests using n
    
  -  List of tests to run can be listed in a text file and pass the file name 
      to  argument `--run_tests_from_file` to run. 
- -  To verify the Op placement on ngraph while running the tests set NGRAPH_TF_LOG_PLACEMENT=1 
+ -  To verify the Op placement on ngraph while running the tests set OPENVINO_TF_LOG_PLACEMENT=1 
 

@@ -19,7 +19,7 @@ import pytest
 import getpass
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
-import ngraph_bridge
+import openvino_tensorflow
 
 import numpy as np
 from common import NgraphTest
@@ -71,7 +71,7 @@ class TestMnistTraining(NgraphTest):
         tf.compat.v1.reset_default_graph()
 
         # disable ngraph-tf
-        ngraph_bridge.disable()
+        openvino_tensorflow.disable()
         tf_loss_values, tf_test_accuracy = train_mnist_cnn(FLAGS)
         tf_values = tf_loss_values + [tf_test_accuracy]
 

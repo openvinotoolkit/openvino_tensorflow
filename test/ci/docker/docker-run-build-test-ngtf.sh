@@ -28,7 +28,7 @@
 #
 # General environment variables that are passed through to the docker container:
 #
-# NGRAPH_TF_BACKEND
+# OPENVINO_TF_BACKEND
 # PLAIDML_EXPERIMENTAL
 # PLAIDML_DEVICE_IDS
 
@@ -77,8 +77,8 @@ if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
 fi
 
 # Set up passthrough environment variables
-if [ ! -z "${NGRAPH_TF_BACKEND}" ] ; then
-  optional_env="${optional_env} --env NGRAPH_TF_BACKEND=${NGRAPH_TF_BACKEND}"
+if [ ! -z "${OPENVINO_TF_BACKEND}" ] ; then
+  optional_env="${optional_env} --env OPENVINO_TF_BACKEND=${OPENVINO_TF_BACKEND}"
 fi
 if [ ! -z "${PLAIDML_EXPERIMENTAL}" ] ; then
   optional_env="${optional_env} --env PLAIDML_EXPERIMENTAL=${PLAIDML_EXPERIMENTAL}"

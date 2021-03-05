@@ -39,7 +39,7 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.h
 
 #include "openvino_tensorflow/ovtf_utils.h"
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
 #ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #define NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #include "tensorflow/core/graph/graph.h"
@@ -122,4 +122,4 @@ class DeadnessAnalysis {
 }  // namespace tensorflow
 
 #endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
-#endif  // NGRAPH_TF_DISABLE_DEADNESS_CHECK
+#endif  // OPENVINO_TF_DISABLE_DEADNESS_CHECK

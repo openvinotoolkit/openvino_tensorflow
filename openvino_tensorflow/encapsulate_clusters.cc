@@ -36,7 +36,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "logging/tf_graph_writer.h"
 #include "openvino_tensorflow/assign_clusters.h"
 #include "openvino_tensorflow/ovtf_builder.h"
@@ -84,9 +84,9 @@ Status EncapsulateClusters(
   TF_RETURN_IF_ERROR(enc.GetNewClusterIDs(newly_created_cluster_ids));
 
   // Pass 9 (optional, only run if environment variable
-  // NGRAPH_TF_DUMP_CLUSTERS is set): validate the graph def, and
+  // OPENVINO_TF_DUMP_CLUSTERS is set): validate the graph def, and
   // make sure we can construct a graph from it.
-  if (std::getenv("NGRAPH_TF_DUMP_CLUSTERS")) {
+  if (std::getenv("OPENVINO_TF_DUMP_CLUSTERS")) {
     for (auto& cluster_idx : newly_created_cluster_ids) {
       TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
           *NGraphClusterManager::GetClusterGraph(cluster_idx),

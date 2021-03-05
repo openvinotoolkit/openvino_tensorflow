@@ -27,7 +27,7 @@
 #include "tensorflow/core/util/device_name_utils.h"
 
 #include "api.h"
-#include "logging/ngraph_log.h"
+#include "logging/ovtf_log.h"
 #include "openvino_tensorflow/assign_clusters.h"
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
@@ -91,13 +91,13 @@ namespace {
 struct Cluster {
   int index;
   std::set<tensorflow::Node*> nodes;
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   std::string predicate_string;
   std::set<const Edge*> outgoing_edges;
 #endif
 };
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
 // Returns the predicate of the merged cluster
 // If Src Predicate is TRUE then merged cluster gets the dst predicate
 // WARNING : This function does not do any checks
@@ -260,7 +260,7 @@ void MergeClusters(Edge* edge,
                  << dst->name() << "[" << dst->type_string() << " , "
                  << edge->dst_input() << "]@" << dst_index;
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   string src_predicate = cluster_map[src]->predicate_string;
   string dst_predicate = cluster_map[dst]->predicate_string;
   NGRAPH_VLOG(5) << "Src pred: " << src_predicate
@@ -294,7 +294,7 @@ void MergeClusters(Edge* edge,
 Status AssignClusters(Graph* graph) {
   std::map<Node*, std::shared_ptr<Cluster>> cluster_map;
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   std::unique_ptr<DeadnessAnalysis> deadness_analyzer;
   TF_RETURN_IF_ERROR(DeadnessAnalysis::Run(*graph, &deadness_analyzer));
   // This map is used only for error checking
@@ -312,7 +312,7 @@ Status AssignClusters(Graph* graph) {
     NGRAPH_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
                    << node->name() << "[" << node->type_string() << "]";
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
     // get predicate string for the node
     string pred_string;
     TF_RETURN_IF_ERROR(deadness_analyzer->GetNodePredicate(*node, pred_string));
@@ -473,7 +473,7 @@ Status AssignClusters(Graph* graph) {
         continue;
       }
 
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
       // check if the edge can be contracted with respect to deadness
       bool is_deadness_ok = false;
       TF_RETURN_IF_ERROR(
@@ -571,7 +571,7 @@ Status AssignClusters(Graph* graph) {
         has_ngraph_ops = true;
 
 // Some sanity checks for deadness
-#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
         TF_RETURN_IF_ERROR(CheckNodeClusterAssignmentWRTDeadness(
             node, nodes_predicate_map, cluster_map));
 #endif

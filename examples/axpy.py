@@ -28,7 +28,7 @@ tf.compat.v1.disable_eager_execution()
 from tensorflow.python.client import timeline
 import json
 
-import ngraph_bridge
+import openvino_tensorflow
 
 print("TensorFlow version: ", tf.version.GIT_VERSION, tf.version.VERSION)
 
@@ -50,7 +50,7 @@ config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
-config_ngraph_enabled = ngraph_bridge.update_config(config)
+config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
 # Create session and run
 with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:

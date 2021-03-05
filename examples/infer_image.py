@@ -41,7 +41,7 @@ import argparse
 import os
 import numpy as np
 import tensorflow as tf
-import ngraph_bridge
+import openvino_tensorflow
 import time
 from subprocess import check_output, call
 import shlex
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     output_operation = graph.get_operation_by_name(output_name)
 
     config = tf.compat.v1.ConfigProto()
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
             graph=graph, config=config_ngraph_enabled) as sess:

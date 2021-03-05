@@ -70,12 +70,12 @@ def main():
     if (len(ngtf_wheel_files) != 1):
         raise ("Multiple Python whl files exist. Please remove old wheels")
 
-    ngraph_bridge_wheel = ngtf_wheel_files[0]
+    openvino_tensorflow_wheel = ngtf_wheel_files[0]
 
-    print("NGRAPH Wheel: ", ngraph_bridge_wheel)
+    print("NGRAPH Wheel: ", openvino_tensorflow_wheel)
     command_executor([
         os.path.join(arguments.python_location, "pip"), "install", "-U",
-        ngraph_bridge_wheel
+        openvino_tensorflow_wheel
     ])
 
     # Print the version information
@@ -84,8 +84,8 @@ def main():
     command_executor([
         python_exe, "-c", "\"import tensorflow as tf; " +
         "print('TensorFlow version: ',tf.__version__);" +
-        "import ngraph_bridge; print(ngraph_bridge.__version__)" +
-        ";print(ngraph_bridge.list_backends())\n\""
+        "import openvino_tensorflow; print(openvino_tensorflow.__version__)" +
+        ";print(openvino_tensorflow.list_backends())\n\""
     ])
 
     # Next is to go to the model directory

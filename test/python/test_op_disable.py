@@ -25,7 +25,7 @@ tf.compat.v1.disable_eager_execution()
 from tensorflow.python.ops import nn_ops
 import os
 import numpy as np
-import ngraph_bridge
+import openvino_tensorflow
 import sys
 
 from common import NgraphTest
@@ -34,18 +34,18 @@ from common import NgraphTest
 class TestOpDisableOperations(NgraphTest):
     # Initially nothing is disabled
     def test_disable_op_0(self):
-        assert ngraph_bridge.get_disabled_ops() == b''
+        assert openvino_tensorflow.get_disabled_ops() == b''
 
     # Note it is possible to set an invalid op name (as long as mark_for_clustering is not called)
     @pytest.mark.parametrize(("op_list",), (('Add',), ('Add,Sub',), ('',),
                                             ('_InvalidOp',)))
     def test_disable_op_1(self, op_list):
-        ngraph_bridge.set_disabled_ops(op_list)
-        assert ngraph_bridge.get_disabled_ops() == op_list.encode("utf-8")
+        openvino_tensorflow.set_disabled_ops(op_list)
+        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
         # Running get_disabled_ops twice to see nothing has changed between 2 consecutive calls
-        assert ngraph_bridge.get_disabled_ops() == op_list.encode("utf-8")
+        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
         # Clean up
-        ngraph_bridge.set_disabled_ops('')
+        openvino_tensorflow.set_disabled_ops('')
 
     # Test to see that exception is raised if sess.run is called with invalid op types
     @pytest.mark.parametrize(("invalid_op_list",), (('Add,_InvalidOp',),
@@ -55,8 +55,8 @@ class TestOpDisableOperations(NgraphTest):
         # TF continues to run with the unoptimized graph
         # Note, tried setting fail_on_optimizer_errors, but grappler still failed silently
         # TODO: enable this test for grappler as well.
-        if (not ngraph_bridge.is_grappler_enabled()):
-            ngraph_bridge.set_disabled_ops(invalid_op_list)
+        if (not openvino_tensorflow.is_grappler_enabled()):
+            openvino_tensorflow.set_disabled_ops(invalid_op_list)
             a = tf.compat.v1.placeholder(tf.int32, shape=(5,))
             b = tf.constant(np.ones((5,)), dtype=tf.int32)
             c = a + b
@@ -72,21 +72,21 @@ class TestOpDisableOperations(NgraphTest):
                 res = self.with_ngraph(run_test)
             except:
                 # Clean up
-                ngraph_bridge.set_disabled_ops('')
+                openvino_tensorflow.set_disabled_ops('')
                 return
             assert False, 'Had expected test to raise error'
 
     def test_disable_op_env(self):
         op_list = 'Select,Where'
-        ngraph_bridge.set_disabled_ops(op_list)
-        assert ngraph_bridge.get_disabled_ops() == op_list.encode("utf-8")
+        openvino_tensorflow.set_disabled_ops(op_list)
+        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
 
-        env_map = self.store_env_variables('NGRAPH_TF_DISABLED_OPS')
+        env_map = self.store_env_variables('OPENVINO_TF_DISABLED_OPS')
         env_list = 'Squeeze'
-        self.set_env_variable('NGRAPH_TF_DISABLED_OPS', env_list)
-        assert ngraph_bridge.get_disabled_ops() == env_list.encode("utf-8")
-        self.unset_env_variable('NGRAPH_TF_DISABLED_OPS')
+        self.set_env_variable('OPENVINO_TF_DISABLED_OPS', env_list)
+        assert openvino_tensorflow.get_disabled_ops() == env_list.encode("utf-8")
+        self.unset_env_variable('OPENVINO_TF_DISABLED_OPS')
         self.restore_env_variables(env_map)
 
         # Clean up
-        ngraph_bridge.set_disabled_ops('')
+        openvino_tensorflow.set_disabled_ops('')

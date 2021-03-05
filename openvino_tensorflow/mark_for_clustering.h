@@ -15,8 +15,8 @@
  *******************************************************************************/
 #pragma once
 
-#ifndef NGRAPH_TF_MARK_FOR_CLUSTERING_H_
-#define NGRAPH_TF_MARK_FOR_CLUSTERING_H_
+#ifndef OPENVINO_TF_MARK_FOR_CLUSTERING_H_
+#define OPENVINO_TF_MARK_FOR_CLUSTERING_H_
 
 #include "tensorflow/core/graph/graph.h"
 
@@ -61,4 +61,4 @@ GetTFToNgOpMap();
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_MARK_FOR_CLUSTERING_H_
+#endif  // OPENVINO_TF_MARK_FOR_CLUSTERING_H_

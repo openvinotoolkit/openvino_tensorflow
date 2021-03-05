@@ -18,7 +18,7 @@ set -u
 # limitations under the License.
 # ******************************************************************************
 
-declare SRC_DIRS=${1:-ngraph_bridge examples test logging tools diagnostics python}
+declare SRC_DIRS=${1:-openvino_tensorflow examples test logging tools diagnostics python}
 
 # NOTE: The results of `clang-format` depend _both_ of the following factors:
 # - The `.clang-format` file, and

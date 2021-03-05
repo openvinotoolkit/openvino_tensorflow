@@ -39,7 +39,7 @@ from keras.datasets import mnist
 from keras.utils.np_utils import to_categorical
 
 import tensorflow as tf
-import ngraph_bridge
+import openvino_tensorflow
 tf.compat.v1.disable_eager_execution()
 import numpy as np
 
@@ -133,7 +133,7 @@ def train_mnist_cnn(FLAGS):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=4)
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:

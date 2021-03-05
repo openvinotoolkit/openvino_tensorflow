@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_OPEXECUTER_H_
-#define NGRAPH_TF_BRIDGE_OPEXECUTER_H_
+#ifndef OPENVINO_TF_BRIDGE_OPEXECUTER_H_
+#define OPENVINO_TF_BRIDGE_OPEXECUTER_H_
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
@@ -84,4 +84,4 @@ class OpExecuter {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_BRIDGE_OPEXECUTER_H_
+#endif  // OPENVINO_TF_BRIDGE_OPEXECUTER_H_

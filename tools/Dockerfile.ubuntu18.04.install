@@ -17,17 +17,17 @@
 ARG base_image
 
 FROM $base_image as base
-ARG ngtf_build_options
+ARG ovtf_build_options
 
-RUN git clone https://github.com/tensorflow/ngraph-bridge.git /ngraph-bridge
+RUN git clone --recursive https://github.com/openvinotoolkit/openvino_tensorflow.git /openvino_tensorflow
 
-WORKDIR /ngraph-bridge
+WORKDIR /openvino_tensorflow
 
-RUN echo "Using build options: $ngtf_build_options" && ./build_ngtf.py $ngtf_build_options
+RUN echo "Using build options: $ovtf_build_options" && ./build_ovtf.py $ovtf_build_options
 
 FROM ubuntu:18.04
 
-ENV PATH="/ngraph-bridge/build_cmake/venv-tf-py3/bin:$PATH"
+ENV PATH="/openvino_tensorflow/build_cmake/venv-tf-py3/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     git \
@@ -39,9 +39,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     zip
 
 # Copy virtual environment from the previous layer
-COPY --from=base /ngraph-bridge/build_cmake/venv-tf-py3 /ngraph-bridge/build_cmake/venv-tf-py3
+COPY --from=base /openvino_tensorflow/build_cmake/venv-tf-py3 /openvino_tensorflow/build_cmake/venv-tf-py3
 
-# Copy ngraph-bridge examples
-COPY --from=base /ngraph-bridge/examples /examples
+# Copy openvino_tensorflow examples
+COPY --from=base /openvino_tensorflow/examples /examples
 
-RUN python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import ngraph_bridge; print(ngraph_bridge.__version__)"
+RUN python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);import openvino_tensorflow; print(openvino_tensorflow.__version__)"

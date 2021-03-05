@@ -42,7 +42,7 @@ These tests test the Backend Handling by the bridge.
 
 // Test SetBackendAPI
 TEST(BackendManager, SetBackend) {
-  auto env_map = StoreEnv({"NGRAPH_TF_BACKEND"});
+  auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
 
   ASSERT_OK(BackendManager::SetBackend("CPU"));
   string backend;
@@ -51,13 +51,13 @@ TEST(BackendManager, SetBackend) {
   ASSERT_NOT_OK(BackendManager::SetBackend("temp"));
 
   // Clean Up
-  // If NGRAPH_TF_BACKEND was set, set it back
+  // If OPENVINO_TF_BACKEND was set, set it back
   RestoreEnv(env_map);
 }
 
 // Test GetBackend API
 TEST(BackendManager, GetBackendName) {
-  auto env_map = StoreEnv({"NGRAPH_TF_BACKEND"});
+  auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
 
   ASSERT_OK(BackendManager::SetBackend("CPU"));
   string backend;
@@ -91,7 +91,7 @@ TEST(BackendManager, GetBackendName) {
   UnsetBackendUsingEnvVar();
   ASSERT_OK(BackendManager::SetBackend("CPU"));
   // restore
-  // If NGRAPH_TF_BACKEND was set, set it back
+  // If OPENVINO_TF_BACKEND was set, set it back
   RestoreEnv(env_map);
 }
 

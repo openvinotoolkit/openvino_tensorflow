@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#ifndef NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
-#define NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
+#ifndef OPENVINO_TF_BRIDGE_TESTUTILITIES_H_
+#define OPENVINO_TF_BRIDGE_TESTUTILITIES_H_
 
 #include "gtest/gtest.h"
 
@@ -67,7 +67,7 @@ string GetEnvVariable(const string& env_var_name);
 void UnsetEnvVariable(const string& env_var_name);
 void SetEnvVariable(const string& env_var_name, const string& env_var_val);
 
-// NGRAPH_TF_BACKEND related
+// OPENVINO_TF_BACKEND related
 bool IsNGraphTFBackendSet();
 string GetBackendFromEnvVar();
 void UnsetBackendUsingEnvVar();
@@ -243,4 +243,4 @@ size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TF_BRIDGE_TESTUTILITIES_H_
+#endif  // OPENVINO_TF_BRIDGE_TESTUTILITIES_H_
