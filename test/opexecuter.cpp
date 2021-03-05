@@ -44,12 +44,14 @@ void OpExecuter::RunTest(float rtol, float atol) {
   ExecuteOnTF(tf_outputs);
 
   // Override the test result tolerance
-  if (std::getenv("OPENVINO_TF_UTEST_RTOL") != nullptr) {
-    rtol = std::atof(std::getenv("OPENVINO_TF_UTEST_RTOL"));
+  const char* rtol_char_ptr = std::getenv("OPENVINO_TF_UTEST_RTOL");
+  if (rtol_char_ptr!= nullptr) {
+    rtol = std::atof(rtol_char_ptr);
   }
 
-  if (std::getenv("OPENVINO_TF_UTEST_ATOL") != nullptr) {
-    atol = std::atof(std::getenv("OPENVINO_TF_UTEST_ATOL"));
+  const char* atol_char_ptr = std::getenv("OPENVINO_TF_UTEST_ATOL");
+  if (atol_char_ptr != nullptr) {
+    atol = std::atof(atol_char_ptr);
   }
 
   Compare(tf_outputs, ngraph_outputs, rtol, atol);

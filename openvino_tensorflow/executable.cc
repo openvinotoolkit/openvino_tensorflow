@@ -326,7 +326,7 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
       unsigned char* buf_ptr = new unsigned char[size];
       inputs[index]->read(buf_ptr, size);
       outputs[i]->write(buf_ptr, size);
-      delete buf_ptr;
+      delete[] buf_ptr;
     } else if (ngraph::is_type<opset::Constant>(parent)) {
       NGRAPH_VLOG(2) << "Calling constant -> result function...";
       auto constant = ngraph::as_type_ptr<opset::Constant>(parent);
