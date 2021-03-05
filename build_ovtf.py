@@ -445,8 +445,8 @@ def main():
 
     if arguments.use_grappler_optimizer:
         import tensorflow as tf
-        import ngraph_bridge
-        if not ngraph_bridge.is_grappler_enabled():
+        import openvino_tensorflow
+        if not openvino_tensorflow.is_grappler_enabled():
             raise Exception(
                 "Build failed: 'use_grappler_optimizer' specified but not used")
 

@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 
-import ngraph_bridge
+import openvino_tensorflow
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import numpy as np

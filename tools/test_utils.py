@@ -84,17 +84,17 @@ class TestEnv:
             return 'CPU'
 
 
-def install_ngraph_bridge(artifacts_dir):
-    ngtf_wheel_files = glob.glob(artifacts_dir +
-                                 "/ngraph_tensorflow_bridge-*.whl")
+def install_openvino_tensorflow(artifacts_dir):
+    ovtf_wheel_files = glob.glob(artifacts_dir +
+                                 "/openvino_tensorflow_add_on-*.whl")
 
-    if (len(ngtf_wheel_files) != 1):
+    if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
-        for whl in ngtf_wheel_files:
+        for whl in ovtf_wheel_files:
             print("Existing Wheel: " + whl)
         raise Exception("Error getting the ngraph-tf wheel file")
 
-    ng_whl = os.path.join(artifacts_dir, ngtf_wheel_files[0])
+    ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
     command_executor(["pip", "install", "-U", ng_whl])
 
 
@@ -133,7 +133,7 @@ def run_ngtf_pytests_from_artifacts(artifacts_dir):
     root_pwd = os.getcwd()
 
     artifacts_dir = os.path.abspath(artifacts_dir)
-    install_ngraph_bridge(artifacts_dir)
+    install_openvino_tensorflow(artifacts_dir)
 
     test_dir = os.path.join(artifacts_dir, "test")
     test_dir = os.path.join(test_dir, "python")
@@ -166,14 +166,14 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
     ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
 
     # Check to see if we need to apply the patch for Grappler
-    import ngraph_bridge
+    import openvino_tensorflow
     patch_file_name = "test/python/tensorflow/tf_unittest_ngraph" + (
         "_with_grappler"
-        if ngraph_bridge.is_grappler_enabled() else "") + ".patch"
+        if openvino_tensorflow.is_grappler_enabled() else "") + ".patch"
     patch_file = os.path.abspath(
         os.path.join(ngraph_tf_src_dir, patch_file_name))
 
-    # Next patch the TensorFlow so that the tests run using ngraph_bridge
+    # Next patch the TensorFlow so that the tests run using openvino_tensorflow
     pwd = os.getcwd()
 
     # Go to the location of TesorFlow install directory
@@ -226,7 +226,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     root_pwd = os.getcwd()
     artifact_dir = os.path.abspath(artifact_dir)
     ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
-    install_ngraph_bridge(artifact_dir)
+    install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
@@ -237,8 +237,8 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # benchmark_cnn.patch will only work for the CPU backend
     patch_file = os.path.abspath(
         os.path.join(ngraph_tf_src_dir, "test/grappler/benchmark_cnn.patch"))
-    import ngraph_bridge
-    if ngraph_bridge.is_grappler_enabled():
+    import openvino_tensorflow
+    if openvino_tensorflow.is_grappler_enabled():
         print("Patching repo using: %s" % patch_file)
         apply_patch(patch_file)
 
@@ -246,9 +246,9 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
 
     # junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
 
-    # Update the script by adding `import ngraph_bridge`
+    # Update the script by adding `import openvino_tensorflow`
     with open('convnet_builder.py', 'a') as outfile:
-        call(['echo', 'import ngraph_bridge'], stdout=outfile)
+        call(['echo', 'import openvino_tensorflow'], stdout=outfile)
 
     # Setup the env flags
     import psutil
@@ -293,7 +293,7 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
     if not os.path.exists(artifact_dir):
         raise Exception("Can't find artifact dir: " + artifact_dir)
     if (len(glob.glob(artifact_dir + "/ngraph_tensorflow_bridge-*.whl")) == 0):
-        install_ngraph_bridge(artifact_dir)
+        install_openvino_tensorflow(artifact_dir)
 
     # Check/download pretrained model
     pretrained_models_dir = os.path.abspath(

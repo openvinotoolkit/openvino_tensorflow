@@ -28,13 +28,13 @@ tf.compat.v1.disable_eager_execution()
 from tensorflow.core.protobuf import rewriter_config_pb2
 
 from common import NgraphTest
-import ngraph_bridge
+import openvino_tensorflow
 
 
 class TestUpdateConfig(NgraphTest):
 
     @pytest.mark.skipif(
-        not ngraph_bridge.is_grappler_enabled(), reason='Only for Grappler')
+        not openvino_tensorflow.is_grappler_enabled(), reason='Only for Grappler')
     def test_update_config_adds_optimizer_only_once(self):
 
         # Helper function to count the number of occurances in a config
@@ -50,7 +50,7 @@ class TestUpdateConfig(NgraphTest):
         # a real world non-empty initial ConfigProto
         config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
         assert count_ng_optimizers(config) == 0
-        config_new_1 = ngraph_bridge.update_config(config)
-        config_new_2 = ngraph_bridge.update_config(config_new_1)
+        config_new_1 = openvino_tensorflow.update_config(config)
+        config_new_2 = openvino_tensorflow.update_config(config_new_1)
         assert count_ng_optimizers(config) == count_ng_optimizers(
             config_new_1) == count_ng_optimizers(config_new_2) == 1

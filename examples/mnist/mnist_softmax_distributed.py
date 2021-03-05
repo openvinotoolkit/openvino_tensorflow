@@ -36,7 +36,7 @@ from keras.datasets import mnist
 from keras.utils.np_utils import to_categorical
 
 import tensorflow as tf
-import ngraph_bridge
+import openvino_tensorflow
 import tensorflow.compat.v1 as tf
 tf.compat.v1.disable_eager_execution()
 import numpy as np
@@ -96,7 +96,7 @@ def run_mnist(_):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=1)
-    config_ngraph_enabled = ngraph_bridge.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     #config.graph_options.optimizer_options.global_jit_level = jit_level
     run_metadata = tf.compat.v1.RunMetadata()

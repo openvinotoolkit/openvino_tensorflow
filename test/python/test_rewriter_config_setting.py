@@ -27,7 +27,7 @@ import shutil
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 from tensorflow.core.protobuf import rewriter_config_pb2
-import ngraph_bridge
+import openvino_tensorflow
 
 from common import NgraphTest
 
@@ -35,7 +35,7 @@ from common import NgraphTest
 class TestRewriterConfigBackendSetting(NgraphTest):
 
     @pytest.mark.skipif(
-        not ngraph_bridge.is_grappler_enabled(),
+        not openvino_tensorflow.is_grappler_enabled(),
         reason='Rewriter config only works for grappler path')
     def test_config_updater_api(self):
         dim1 = 3

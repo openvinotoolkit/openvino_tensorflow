@@ -6,7 +6,7 @@ index 8a42641f..025142d5 100644
  
  import math
  import tensorflow as tf
-+import ngraph_bridge
++import openvino_tensorflow
  
  from datasets import dataset_factory
  from nets import nets_factory

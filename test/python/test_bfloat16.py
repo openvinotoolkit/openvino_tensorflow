@@ -28,7 +28,7 @@ tf.compat.v1.disable_eager_execution()
 import os
 import sys
 from common import NgraphTest
-import ngraph_bridge
+import openvino_tensorflow
 
 np.random.seed(5)
 

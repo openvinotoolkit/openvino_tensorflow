@@ -24,13 +24,13 @@ from tensorflow.core.protobuf import rewriter_config_pb2
 
 from google.protobuf import text_format
 
-import ngraph_bridge
+import openvino_tensorflow
 
-__all__ = ['LIBNGRAPH_BRIDGE', 'NgraphTest']
+__all__ = ['LIBOPENVINO_TENSORFLOW', 'NgraphTest']
 
 _ext = 'dylib' if platform.system() == 'Darwin' else 'so'
 
-LIBNGRAPH_BRIDGE = 'libopenvino_tensorflow.' + _ext
+LIBOPENVINO_TENSORFLOW = 'libopenvino_tensorflow.' + _ext
 
 
 class NgraphTest(object):
@@ -54,13 +54,13 @@ class NgraphTest(object):
         if config is None:
             config = tf.compat.v1.ConfigProto()
         # TODO: Stop grappler on failure (Add fail_on_optimizer_errors=True)
-        config = ngraph_bridge.update_config(config)
+        config = openvino_tensorflow.update_config(config)
 
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
-        ngraph_bridge.enable()
+        openvino_tensorflow.enable()
         with tf.compat.v1.Session(config=config) as sess:
             retval = l(sess)
 
@@ -78,7 +78,7 @@ class NgraphTest(object):
         ngraph_tf_disable_deassign_clusters = os.environ.pop(
             'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-        ngraph_bridge.disable()
+        openvino_tensorflow.disable()
         with tf.compat.v1.Session(config=config) as sess:
             retval = l(sess)
 

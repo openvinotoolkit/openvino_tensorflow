@@ -25,7 +25,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.tools.optimize_for_inference_lib import optimize_for_inference
 from tensorflow.python.framework import dtypes
-import ngraph_bridge
+import openvino_tensorflow
 
 INPUTS = 'input_tensor'
 OUTPUTS = 'softmax_tensor'
@@ -102,7 +102,7 @@ class RN50Graph:
 
         # Run without nGraph first
         print("Run inference (without nGraph)")
-        ngraph_bridge.disable()
+        openvino_tensorflow.disable()
         data_sess = tf.compat.v1.Session(graph=data_graph, config=config)
         infer_sess = tf.compat.v1.Session(graph=infer_graph, config=config)
 
@@ -132,7 +132,7 @@ class RN50Graph:
 
         # Run with nGraph now
         print("Run inference (with nGraph)")
-        ngraph_bridge.enable()
+        openvino_tensorflow.enable()
 
         data_sess = tf.compat.v1.Session(graph=data_graph, config=config)
         infer_sess = tf.compat.v1.Session(graph=infer_graph, config=config)

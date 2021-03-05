@@ -21,27 +21,27 @@
 # BASE_DOCKERFILE      Dockerfile to use to build the base env container
 # BASE_IMAGE_NAME      Image name for the base env container
 # BASE_IMAGE_TAG       Image tag for the base env container
-# NGTF_DOCKERFILE      Dockerfile to use to build/install NGTF container
-# NGTF_IMAGE_NAME      Image name for the NGTF container
-# NGTF_IMAGE_TAG       Image tag for the NGTF container
+# OVTF_DOCKERFILE      Dockerfile to use to build/install OVTF container
+# OVTF_IMAGE_NAME      Image name for the OVTF container
+# OVTF_IMAGE_TAG       Image tag for the OVTF container
 
 # Set vars for the base image
 BASE_DOCKERFILE='Dockerfile.ubuntu18.04'
-BASE_IMAGE_NAME='ngraph-bridge'
+BASE_IMAGE_NAME='openvino_tensorflow'
 BASE_IMAGE_TAG='devel'
 
-# Set vars for the ngtf image
-NGTF_DOCKERFILE='Dockerfile.ubuntu18.04.install'
-NGTF_IMAGE_NAME='ngraph-bridge'
-NGTF_IMAGE_TAG='ngtf'
-NGTF_BUILD_OPTIONS=$1
+# Set vars for the ovtf image
+OVTF_DOCKERFILE='Dockerfile.ubuntu18.04.install'
+OVTF_IMAGE_NAME='openvino_tensorflow'
+OVTF_IMAGE_TAG='ovtf'
+OVTF_BUILD_OPTIONS=$1
 
-echo "docker_build_and_install_ngtf is building the following:"
+echo "docker_build_and_install_ovtf is building the following:"
 echo "    Base Dockerfile:             ${BASE_DOCKERFILE}"
 echo "    Base Image name/tag:         ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
-echo "    nGraph TF Dockerfile:        ${NGTF_DOCKERFILE}"
-echo "    nGraph TF Image name/tag:    ${NGTF_IMAGE_NAME}:${NGTF_IMAGE_TAG}"
-echo "    nGraph TF build options:     ${NGTF_BUILD_OPTIONS}"
+echo "    nGraph TF Dockerfile:        ${OVTF_DOCKERFILE}"
+echo "    nGraph TF Image name/tag:    ${OVTF_IMAGE_NAME}:${OVTF_IMAGE_TAG}"
+echo "    nGraph TF build options:     ${OVTF_BUILD_OPTIONS}"
 
 # If proxy settings are detected in the environment, make sure they are
 # included on the docker-build command-line.  This mirrors a similar system
@@ -78,17 +78,17 @@ else
 fi
 
 # Pass through any build options
-if [ ! -z "${NGTF_BUILD_OPTIONS}" ] ; then
-    DOCKER_NGTF_BUILD_OPTIONS="--build-arg ngtf_build_options='${NGTF_BUILD_OPTIONS}'"
+if [ ! -z "${OVTF_BUILD_OPTIONS}" ] ; then
+    DOCKER_OVTF_BUILD_OPTIONS="--build-arg ovtf_build_options='${OVTF_BUILD_OPTIONS}'"
 else
-    DOCKER_NGTF_BUILD_OPTIONS=' '
+    DOCKER_OVTF_BUILD_OPTIONS=' '
 fi
 
-# Use the base docker image to run the build_ngtf.py script and install ngraph and TF
+# Use the base docker image to run the build_ovtf.py script and install ngraph and TF
 dbuild_cmd="docker build --rm=true \
-${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} ${DOCKER_NGTF_BUILD_OPTIONS} \
+${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} ${DOCKER_OVTF_BUILD_OPTIONS} \
 --build-arg base_image=${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG} \
--f=${NGTF_DOCKERFILE} -t=${NGTF_IMAGE_NAME}:${NGTF_IMAGE_TAG} ."
+-f=${OVTF_DOCKERFILE} -t=${OVTF_IMAGE_NAME}:${OVTF_IMAGE_TAG} ."
 
 echo "Docker build command for nGraph TF image: ${dbuild_cmd}"
 alias dbuild=$dbuild_cmd
@@ -97,9 +97,9 @@ dbuild_result=$?
 
 if [ $dbuild_result = 0 ] ; then
     echo ' '
-    echo "Successfully created docker image with ngtf installed: ${NGTF_IMAGE_NAME}:${NGTF_IMAGE_TAG}"
+    echo "Successfully created docker image with ovtf installed: ${OVTF_IMAGE_NAME}:${OVTF_IMAGE_TAG}"
 else
     echo ' '
-    echo "Docker image with ngtf build reported an error (exit code ${dbuild_result})"
+    echo "Docker image with ovtf build reported an error (exit code ${dbuild_result})"
     exit 1
 fi

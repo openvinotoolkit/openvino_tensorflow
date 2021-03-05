@@ -13,8 +13,8 @@
             rewriter_config_pb2.RewriterConfig.OFF)
         config.graph_options.rewrite_options.pin_to_host_optimization = (
             rewriter_config_pb2.RewriterConfig.OFF)
-!       import ngraph_bridge
-!       config_new = ngraph_bridge.update_config(config)
+!       import openvino_tensorflow
+!       config_new = openvino_tensorflow.update_config(config)
 !       return config_new
   
       return ErrorLoggingSession(graph=graph, config=prepare_config(config))
