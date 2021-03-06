@@ -67,15 +67,15 @@ class InferenceEngine {
 
   // Image related info
   std::vector<string> m_image_files;
-  int m_input_width;
-  int m_input_height;
-  float m_input_mean;
-  float m_input_std;
+  int m_input_width=0;
+  int m_input_height=0;
+  float m_input_mean=0.0;
+  float m_input_std=0.0;
   string m_input_layer;
   string m_output_layer;
-  bool m_use_NCHW;
-  bool m_preload_images;
-  int m_input_channels;
+  bool m_use_NCHW=false;
+  bool m_preload_images=true;
+  int m_input_channels=3;
   Tensor m_image_to_repeat;
 };
 }  // namespace benchmark
