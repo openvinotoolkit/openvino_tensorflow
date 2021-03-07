@@ -36,7 +36,7 @@ echo "Running TensorFlow unit tests"
 echo "--------------------------------------------------------------------------"
 
 export GTEST_OUTPUT="xml:${BUILD_DIR}/xunit_gtest.xml"
-./gtest_ngtf 
+./gtest_ovtf 
 
 pushd python
 # We need to explictly run python here, since "pytest" is also a shell script,

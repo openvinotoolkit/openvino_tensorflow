@@ -3,19 +3,9 @@ set -e
 set -u
 
 # ******************************************************************************
-# Copyright 2017-2020 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
 declare SRC_DIRS=${1:-openvino_tensorflow examples test logging tools diagnostics python}
@@ -95,7 +85,7 @@ for ROOT_SUBDIR in ${SRC_DIRS}; do
     fi
 done
 
-# Format py files at root (build_ngtf.py, build_tf.py, test_ngtf.py etc)
+# Format py files at root (build_ovtf.py, build_tf.py, test_ovtf.py etc)
 for SRC_FILE in $(find . -maxdepth 1  -name '*.py' -print); do
     python3 -m yapf -i -p --style google --no-local-style "${SRC_FILE}"
 done

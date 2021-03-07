@@ -1,19 +1,9 @@
 # ==============================================================================
-#  Copyright 2019-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
-"""nGraph TensorFlow bridge bfloat16 matmul operation test
+"""Openvino Tensorflow bfloat16 matmul operation test
 
 """
 from __future__ import absolute_import
@@ -51,7 +41,7 @@ class TestBfloat16(NgraphTest):
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
-    # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
+    # For an ideal run on TF, we need to run on vanilla TF w/o importing openvino_tensorflow
     def test_conv2d_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)
@@ -91,7 +81,7 @@ class TestBfloat16(NgraphTest):
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
-    # For an ideal run on TF, we need to run on vanilla TF w/o importing ngraph-bridge
+    # For an ideal run on TF, we need to run on vanilla TF w/o importing openvino_tensorflow
     def test_conv2d_cast_bfloat16(self):
         # Graph
         input_shape_nhwc = (1, 4, 4, 1)

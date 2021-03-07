@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
 # ==============================================================================
-#  Copyright 2019-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 import argparse
@@ -98,14 +88,14 @@ def install_openvino_tensorflow(artifacts_dir):
     command_executor(["pip", "install", "-U", ng_whl])
 
 
-def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
+def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
     root_pwd = os.getcwd()
     artifacts_dir = os.path.abspath(artifacts_dir)
     log_dir = os.path.abspath(log_dir)
 
     # Check if we can run C++ tests
-    if not os.path.exists(os.path.join(artifacts_dir, "test/gtest_ngtf")):
-        print("gtest_ngtf not found. Skipping C++ unit tests...")
+    if not os.path.exists(os.path.join(artifacts_dir, "test/gtest_ovtf")):
+        print("gtest_ovtf not found. Skipping C++ unit tests...")
         return
 
     os.environ['GTEST_OUTPUT'] = 'xml:%s/xunit_gtest.xml' % log_dir
@@ -121,15 +111,15 @@ def run_ngtf_cpp_gtests(artifacts_dir, log_dir, filters):
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters
-        cmd = ['./gtest_ngtf', gtest_filters]
+        cmd = ['./gtest_ovtf', gtest_filters]
     else:
-        cmd = ['./gtest_ngtf']
+        cmd = ['./gtest_ovtf']
 
     command_executor(cmd)
     os.chdir(root_pwd)
 
 
-def run_ngtf_pytests_from_artifacts(artifacts_dir):
+def run_ovtf_pytests_from_artifacts(artifacts_dir):
     root_pwd = os.getcwd()
 
     artifacts_dir = os.path.abspath(artifacts_dir)

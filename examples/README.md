@@ -69,12 +69,12 @@ tutorials on, `inceptionv3`.
 # Keras models:
 
 Keras (with Tensorflow backend) should also work out-of-the-box with nGraph, 
-once one adds ```import openvino_tensorflow``` to the script. [Example](https://github.com/tensorflow/ngraph-bridge/blob/master/examples/keras_sample.py)
+once one adds ```import openvino_tensorflow``` to the script. [Example](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/examples/keras_sample.py)
 
 
 
-[building]:https://github.com/tensorflow/ngraph-bridge/blob/master/README.md
-[axpy.py]:https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
+[building]:https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md
+[axpy.py]:https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/examples/axpy.py
 [High-Performance Models Guide]:https://www.tensorflow.org/performance/performance_models 
 [TensorFlow Performance Guide]: https://www.tensorflow.org/performance/performance_guide
 [TensorFlow Official Models]:https://github.com/tensorflow/models/tree/master/official

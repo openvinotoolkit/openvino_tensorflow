@@ -1,19 +1,9 @@
 #!  /bin/bash
 
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 # Script parameters:
@@ -22,8 +12,8 @@
 #
 # Script environment variable parameters:
 #
-# NG_TF_BUILD_OPTIONS  Optional: additional build options for build_ngtf.py
-# NG_TF_TEST_OPTIONS   Optional: additional test options for test_ngtf.py
+# NG_TF_BUILD_OPTIONS  Optional: additional build options for build_ovtf.py
+# NG_TF_TEST_OPTIONS   Optional: additional test options for test_ovtf.py
 # NG_TF_TEST_PLAIDML   Optional: run additional testing on PlaidML backend
 #
 # General environment variables that are passed through to the docker container:
@@ -58,7 +48,7 @@ fi
 # container
 bridge_dir="$(realpath ../../..)"
 
-bridge_mountpoint='/home/dockuser/ngraph-tf'
+bridge_mountpoint='/home/dockuser/openvino-tf'
 tf_mountpoint='/home/dockuser/tensorflow'
 
 # Set up a bunch of volume mounts

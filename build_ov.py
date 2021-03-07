@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 from tools.build_utils import *
@@ -77,8 +67,8 @@ def main():
 
     print('\033[1;35mOpenVINO Build finished\033[0m')
 
-    print('When building ngraph-bridge using this prebuilt OpenVINO, use:')
-    print('\033[3;34mpython3 build_ngtf.py --use_openvino_from_location ' +
+    print('When building Openvino_Tensorflow using this prebuilt OpenVINO, use:')
+    print('\033[3;34mpython3 build_ovtf.py --use_openvino_from_location ' +
           os.path.abspath(arguments.output_dir) + '/artifacts/openvino' +
           '\033[1;0m')
 
@@ -89,10 +79,10 @@ if __name__ == '__main__':
     # Build OV once
     # ./build_ov.py --output_dir /prebuilt/ov/dir
     #
-    # Reuse OV in different ngraph-bridge builds
+    # Reuse OV in different openvino_tensorflow builds
     # mkdir ngtf_1; cd ngtf_1
-    # git clone https://github.com/tensorflow/ngraph-bridge.git
-    # ./build_ngtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino
+    # git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+    # ./build_ovtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino
     # cd ..; mkdir ngtf_2; cd ngtf_2
-    # git clone https://github.com/tensorflow/ngraph-bridge.git
-    # ./build_ngtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino
+    # git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+    # ./build_ovtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino

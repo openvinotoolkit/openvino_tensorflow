@@ -1,17 +1,7 @@
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 from __future__ import absolute_import
@@ -83,7 +73,7 @@ except TypeError:
 
 # print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
 #                                                        TF_GIT_VERSION))
-# print("nGraph bridge built with: {0} ({1})".format(TF_VERSION_NEEDED,
+# print("Openvino_Tensorflow built with: {0} ({1})".format(TF_VERSION_NEEDED,
 #                                                    TF_GIT_VERSION_BUILT_WITH))
 
 # We need to revisit this later. We can automate that using cmake configure
@@ -102,7 +92,7 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
     openvino_tensorflow_lib = ctypes.cdll.LoadLibrary(full_lib_path)
 else:
     raise ValueError(
-        "Error: Installed TensorFlow version {0}\nnGraph bridge built with: {1}"
+        "Error: Installed TensorFlow version {0}\n openvino_tensorflow built with: {1}"
         .format(TF_VERSION, TF_VERSION_NEEDED))
 
 def requested():
