@@ -487,7 +487,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     return output_wheel
 
 
-def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
+def install_ngraph_tf(tf_version, venv_dir, openvino_artifacts_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
@@ -498,8 +498,11 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     print('TensorFlow version: ', tf.__version__)
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)
-    import openvino_tensorflow
-    print(openvino_tensorflow.__version__)
+    # [TODO] Find an alternative method to do an import check as
+    # doing it before source /path/to/openvino/bin/setupvars.sh 
+    # results in undefined symbol
+    # import openvino_tensorflow
+    # print(openvino_tensorflow.__version__)
 
 
 def download_repo(target_name, repo, version, submodule_update=False):

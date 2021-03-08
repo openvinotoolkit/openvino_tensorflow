@@ -42,7 +42,7 @@ tf_version = "tensorflow==" + tf.__version__
 
 setup(
     name='openvino_tensorflow_add_on',
-    version='0.23.0rc0',
+    version='0.5.0',
     description='Intel OpenVINO Add On for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
