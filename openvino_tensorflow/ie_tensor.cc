@@ -108,6 +108,9 @@ void IETensor::write(const void* src, size_t bytes) {
   }
 
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  if (blob==nullptr){
+    THROW_IE_EXCEPTION << "blob is nullptr";
+  }
   auto lm = blob->wmap();
   uint8_t* output_ptr = lm.as<uint8_t*>();
   copy(src_ptr, src_ptr + bytes, output_ptr);
@@ -120,6 +123,9 @@ void IETensor::read(void* dst, size_t bytes) const {
   }
 
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  if (blob==nullptr){
+    THROW_IE_EXCEPTION << "blob is nullptr";
+  }
   auto lm = blob->rmap();
   uint8_t* output_ptr = lm.as<uint8_t*>();
   copy(output_ptr, output_ptr + bytes, dst_ptr);
@@ -127,6 +133,9 @@ void IETensor::read(void* dst, size_t bytes) const {
 
 const void* IETensor::get_data_ptr() const {
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  if (blob==nullptr){
+    THROW_IE_EXCEPTION << "blob is nullptr";
+  }
   auto lm = blob->rwmap();
   return lm.as<void*>();
 }

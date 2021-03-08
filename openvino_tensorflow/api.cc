@@ -87,8 +87,9 @@ bool IsLoggingPlacement() {
 }
 
 std::set<string> GetDisabledOps() {
-  if (std::getenv("OPENVINO_TF_DISABLED_OPS") != nullptr) {
-    string disabled_ops_str = std::getenv("OPENVINO_TF_DISABLED_OPS");
+  const char* disabled_ops_char_ptr = std::getenv("OPENVINO_TF_DISABLED_OPS"); 
+  if (disabled_ops_char_ptr != nullptr) {
+    string disabled_ops_str = disabled_ops_char_ptr;
     SetDisabledOps(disabled_ops_str);
   }
   return disabled_op_types;

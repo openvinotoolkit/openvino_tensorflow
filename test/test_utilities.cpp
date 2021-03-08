@@ -37,9 +37,13 @@ bool IsEnvVariableSet(const string& env_var_name) {
 
 string GetEnvVariable(const string& env_var_name) {
   const char* ng_backend_env_value = std::getenv(env_var_name.c_str());
-  NGRAPH_VLOG(5) << "Got Env Variable " << env_var_name << " : "
-                 << std::string(ng_backend_env_value);
-  return std::string(ng_backend_env_value);
+  if (ng_backend_env_value!=nullptr){
+    NGRAPH_VLOG(5) << "Got Env Variable " << env_var_name << " : "
+                  << std::string(ng_backend_env_value);
+    return std::string(ng_backend_env_value);
+  }else{
+    return "";
+  }
 }
 
 void UnsetEnvVariable(const string& env_var_name) {
