@@ -1,19 +1,9 @@
 #!  /bin/bash
 
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 # This script is designed to be called from within a docker container.
@@ -21,8 +11,8 @@
 #
 # Optional parameters, passed in environment variables:
 #
-# NG_TF_BUILD_OPTIONS  Command-line options for build_ngtf.py
-# NG_TF_TEST_OPTIONS   Command-line options for test_ngtf.py (CPU-backend)
+# NG_TF_BUILD_OPTIONS  Command-line options for build_ovtf.py
+# NG_TF_TEST_OPTIONS   Command-line options for test_ovtf.py (CPU-backend)
 # NG_TF_TEST_PLAIDML   If defined and non-zero, also run PlaidML-CPU unit-tests
 #
 # General environment variables that are passed through to the docker container:
@@ -164,30 +154,30 @@ cat /etc/os-release
 
 xtime="$(date)"
 echo  ' '
-echo  "===== Run build_ngtf.py at ${xtime} ====="
+echo  "===== Run build_ovtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-echo "Running: ./build_ngtf.py ${NG_TF_BUILD_OPTIONS}"
-./build_ngtf.py ${NG_TF_BUILD_OPTIONS}
+echo "Running: ./build_ovtf.py ${NG_TF_BUILD_OPTIONS}"
+./build_ovtf.py ${NG_TF_BUILD_OPTIONS}
 exit_code=$?
-echo "Exit status for build_ngtf.py is ${exit_code}"
+echo "Exit status for build_ovtf.py is ${exit_code}"
 
 xtime="$(date)"
 echo  ' '
-echo  "===== Run test_ngtf.py at ${xtime} ====="
+echo  "===== Run test_ovtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-echo "Running: ./test_ngtf.py ${NG_TF_TEST_OPTIONS}"
-./test_ngtf.py ${NG_TF_TEST_OPTIONS}
+echo "Running: ./test_ovtf.py ${NG_TF_TEST_OPTIONS}"
+./test_ovtf.py ${NG_TF_TEST_OPTIONS}
 exit_code=$?
-echo "Exit status for test_ngtf.py is ${exit_code}"
+echo "Exit status for test_ovtf.py is ${exit_code}"
 
 if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
     xtime="$(date)"
     echo  ' '
-    echo  "===== Run test_ngtf.py with PlaidML at ${xtime} ====="
+    echo  "===== Run test_ovtf.py with PlaidML at ${xtime} ====="
     echo  ' '
 
     OPENVINO_TF_BACKEND=PLAIDML
@@ -195,10 +185,10 @@ if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
     echo "OPENVINO_TF_BACKEND=${OPENVINO_TF_BACKEND}"
 
     cd "${bridge_dir}"
-    echo "Running: ./test_ngtf.py --plaidml_unit_tests_enable"
-    ./test_ngtf.py --plaidml_unit_tests_enable
+    echo "Running: ./test_ovtf.py --plaidml_unit_tests_enable"
+    ./test_ovtf.py --plaidml_unit_tests_enable
     exit_code=$?
-    echo "Exit status for test_ngtf.py --plaidml_unit_tests_enable is ${exit_code}"
+    echo "Exit status for test_ovtf.py --plaidml_unit_tests_enable is ${exit_code}"
 fi
 
 xtime="$(date)"

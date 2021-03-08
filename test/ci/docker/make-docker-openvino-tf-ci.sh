@@ -1,24 +1,14 @@
 #!  /bin/sh
 
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 # Script parameters:
 #
-# $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+# $1 ImageID    Required: ID of the ovtf_bridge_ci docker image to use
 # $2 ImageType  Optional: Type of docker image to build
 #
 # Additional parameters are passed to docker-build command
@@ -30,8 +20,8 @@
 # NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
 
 DIR_DOCKERFILES='dockerfiles'
-PRE_DOCKERFILE='Dockerfile.ngraph_tf.'
-PRE_NAME='ngraph_tf_'
+PRE_DOCKERFILE='Dockerfile.openvino_tf.'
+PRE_NAME='openvino_tf_'
 
 syntax() {
     cmd=`basename ${0}`
@@ -71,16 +61,16 @@ fi
 # scalable naming, where IMAGE_TYPE matches the extension
 case "${IMAGE_TYPE}" in
     default)
-        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
-        IMAGE_NAME='ngraph_tf_ci_py2'
+        DOCKER_FILE='Dockerfile.openvino-tf-ci-py2'
+        IMAGE_NAME='openvino_tf_ci_py2'
         ;;
     default_py27)
-        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
-        IMAGE_NAME='ngraph_tf_ci_py2'
+        DOCKER_FILE='Dockerfile.openvino-tf-ci-py2'
+        IMAGE_NAME='openvino_tf_ci_py2'
         ;;
     default_py35)
-        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py3'
-        IMAGE_NAME='ngraph_tf_ci_py3'
+        DOCKER_FILE='Dockerfile.openvino-tf-ci-py3'
+        IMAGE_NAME='openvino_tf_ci_py3'
         ;;
     *)  # Look for a dockerfile with an extension matching IMAGE_TYPE
         if [ -f "${DIR_DOCKERFILES}/${PRE_DOCKERFILE}${IMAGE_TYPE}" ] ; then
@@ -99,12 +89,12 @@ esac
 # compatibility (for now)
 case "${NG_TF_PY_VERSION}" in
     2)
-        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py2'
-        IMAGE_NAME='ngraph_tf_ci_py2'
+        DOCKER_FILE='Dockerfile.openvino-tf-ci-py2'
+        IMAGE_NAME='openvino_tf_ci_py2'
         ;;
     3)
-        DOCKER_FILE='Dockerfile.ngraph-tf-ci-py3'
-        IMAGE_NAME='ngraph_tf_ci_py3'
+        DOCKER_FILE='Dockerfile.openvino-tf-ci-py3'
+        IMAGE_NAME='openvino_tf_ci_py3'
         ;;
     *)
         # Do nothing if NG_TF_PY_VERSION is explicitly not set
@@ -114,7 +104,7 @@ esac
 set -u  # No unset variables after this point
 
 # Show in log what is being build
-echo "make-docker-ngraph-tf-ci is building the following:"
+echo "make-docker-openvino-tf-ci is building the following:"
 echo "    Image Type         IMAGE_TYPE: ${IMAGE_TYPE}"
 echo "    Dockerfile        DOCKER_FILE: ${DOCKER_FILE}"
 echo "    Docker Repository  IMAGE_NAME: ${IMAGE_NAME}"
@@ -137,7 +127,7 @@ else
 fi
 
 # Context is the maint-jenkins directory, to avoid including all of
-# ngraph-tensorflow-1.3 in the context.
+# openvino_tensorflow-1.3 in the context.
 #
 # The $@ allows us to pass command-line options easily to docker build.
 # Note that a "shift" is done above to remove the IMAGE_ID from the cmd line.

@@ -1,17 +1,7 @@
 # ******************************************************************************
-# Copyright 2017-2020 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
 add_subdirectory(python)
@@ -100,21 +90,21 @@ endif()
 # The compile flag -DNDEBUG is required since
 # tensorflow::Core::RefCounted is error prone as explained here:
 # https://github.com/tensorflow/tensorflow/issues/17316
-# Also, the openvino_tensorflow code when compiled has this flag enabled(https://github.com/tensorflow/ngraph-bridge/blob/018c010df44a51a988c6a2d009e6210506b4d96f/openvino_tensorflow/CMakeLists.txt#L26)
+# Also, the openvino_tensorflow code when compiled has this flag enabled(https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/openvino_tensorflow/CMakeLists.txt#L23)
 # hence the error seen while testing the custom op does not show up there.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DNDEBUG")
 
 message(STATUS "Compile Flags for test dir: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 
-add_executable(gtest_ngtf ${SRC})
-add_dependencies(gtest_ngtf ext_gtest)
+add_executable(gtest_ovtf ${SRC})
+add_dependencies(gtest_ovtf ext_gtest)
 message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
 # The following custom commands are used to create symlinks for various
 # input files needed by the unit test
 add_custom_command(
-    TARGET gtest_ngtf
+    TARGET gtest_ovtf
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt
@@ -141,7 +131,7 @@ if (APPLE)
 endif()
 
 target_link_libraries(
-    gtest_ngtf
+    gtest_ovtf
     openvino_tensorflow
     ngraph_lib
     libgtest
@@ -155,7 +145,7 @@ target_link_libraries(
 )
 
 # First install the libopenvino_tensorflow.so and headers
-install(TARGETS gtest_ngtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  
+install(TARGETS gtest_ovtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)

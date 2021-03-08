@@ -1,24 +1,14 @@
 #!  /bin/bash
 
 # ==============================================================================
-#  Copyright 2018-2020 Intel Corporation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 # Script parameters:
 #
-# $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+# $1 ImageID    Required: ID of the ovtf_bridge_ci docker image to use
 # $2 TFdir      Required: tensorflow directory to build
 #
 # Script environment variable parameters:
@@ -41,14 +31,14 @@ if [ -z "${NG_TF_PY_VERSION}" ] ; then
 fi
 
 # Note that the docker image must have been previously built using the
-# make-docker-ngraph-tf-ci.sh script (in the same directory as this script).
+# make-docker-openvino-tf-ci.sh script (in the same directory as this script).
 #
 case "${NG_TF_PY_VERSION}" in
     2)
-        IMAGE_CLASS='ngraph_tf_ci_py2'
+        IMAGE_CLASS='openvino_tf_ci_py2'
         ;;
     3)
-        IMAGE_CLASS='ngraph_tf_ci_py3'
+        IMAGE_CLASS='openvino_tf_ci_py3'
         ;;
     *)
         echo 'NG_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
@@ -81,7 +71,7 @@ fi
 # container
 bridge_dir="$(realpath ../../..)"
 
-bridge_mountpoint='/home/dockuser/ngraph-tf'
+bridge_mountpoint='/home/dockuser/openvino-tf'
 tf_mountpoint='/home/dockuser/tensorflow'
 
 # Set up a bunch of volume mounts
@@ -104,7 +94,7 @@ fi
 set -u  # No unset variables after this point
 
 RUNASUSER_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-as-user.sh"
-BUILD_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-ngraph-tf-build.sh"
+BUILD_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-openvino-tf-build.sh"
 
 # If proxy settings are detected in the environment, make sure they are
 # included on the docker-build command-line.  This mirrors a similar system
