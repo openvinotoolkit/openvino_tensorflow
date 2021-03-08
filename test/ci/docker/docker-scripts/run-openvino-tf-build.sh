@@ -300,10 +300,10 @@ echo  ' '
 
 echo 'md5sum of wheel that was built above, and will be installed:'
 cd "${bridge_dir}"
-md5sum openvino-tensorflow*.whl
+md5sum openvino_tensorflow*.whl
 
 cd "${bridge_dir}"
-pip install openvino-tensorflow*.whl
+pip install openvino_tensorflow*.whl
 
 xtime="$(date)"
 echo  ' '
