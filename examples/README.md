@@ -1,4 +1,4 @@
-# Bridge examples
+# openvino_tensorflow examples
 
 Simple! Just add `import openvino_tensorflow` after [building] it.
 

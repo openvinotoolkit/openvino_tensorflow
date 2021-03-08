@@ -6,7 +6,7 @@
       --use_openvino_from_location ${OV_LOCATION}
 
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
-      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/openvino-tensorflow-*.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/openvino_tensorflow-*.whl
     label: ":hammer_and_wrench: Build/Install ${OPENVINO_TF_BACKEND}"
     timeout_in_minutes: 30
     agents:

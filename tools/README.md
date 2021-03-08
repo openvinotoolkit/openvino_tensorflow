@@ -1,6 +1,6 @@
 # Readme for tools
 
-## Build and run nGraph in Docker
+## Build and run openvino_tensorflow in Docker
 
 To run nGraph in Docker, choose one of two ways to create your container:
   1. Use the [`docker_build_and_install_ovtf.sh`](docker_build_and_install_ovtf.sh) script to do a multi-stage build and run nGraph for Ubuntu 18.04 in a single command. 

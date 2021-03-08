@@ -41,7 +41,7 @@
         /usr/local/var/buildkite-agent/tf_1.15.2_install/artifacts/tensorflow/tensorflow-1.15.2-cp37-cp37m-macosx_10_14_x86_64.whl
       pip install psutil && \
       pip install psutil pip==19.3.1 && \
-        pip install -U /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/openvino-tensorflow-*.whl
+        pip install -U /usr/local/var/buildkite-agent/artifacts/$BUILDKITE_BUILD_ID/openvino_tensorflow-*.whl
       
     label: ":gear: Install"
     timeout_in_minutes: 30

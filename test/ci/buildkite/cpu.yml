@@ -37,7 +37,7 @@
   - command: |
       source /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/venv/bin/activate 
       pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/tensorflow/tensorflow-2.2.0-cp36-cp36m-linux_x86_64.whl
-      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/openvino-tensorflow-*.whl
+      pip install -U /localdisk/buildkite/artifacts/$BUILDKITE_BUILD_ID/openvino_tensorflow-*.whl
       
     label: ":gear: Install"
     timeout_in_minutes: 5

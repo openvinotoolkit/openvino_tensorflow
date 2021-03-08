@@ -127,7 +127,7 @@ else
 fi
 
 # Context is the maint-jenkins directory, to avoid including all of
-# openvino-tensorflow-1.3 in the context.
+# openvino_tensorflow-1.3 in the context.
 #
 # The $@ allows us to pass command-line options easily to docker build.
 # Note that a "shift" is done above to remove the IMAGE_ID from the cmd line.
