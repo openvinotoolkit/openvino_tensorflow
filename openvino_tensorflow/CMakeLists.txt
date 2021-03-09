@@ -73,6 +73,10 @@ target_compile_definitions(
 
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
 
+string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
+list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
+add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
+
 #------------------------------------------------------------------------------
 #installation 
 #------------------------------------------------------------------------------
@@ -129,6 +133,5 @@ install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
 install(CODE "set(NGTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(NGTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
-message(${TensorFlow_VERSION})
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")
