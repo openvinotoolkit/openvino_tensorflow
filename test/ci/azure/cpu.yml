@@ -41,20 +41,22 @@
       git submodule update
       python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts
      workingDirectory: $(WORK_DIR) 
-     displayName: "hammer_and_wrench: Build"
+     displayName: "Build"
      
    - script: |
+      export OPENVINO_TF_BACKEND=CPU
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      workingDirectory: $(WORK_DIR) 
-     displayName: "chrome: nGraph-bridge C++ Tests"
+     displayName: "tf_ov C++ Tests"
      
    - script: |
+      export OPENVINO_TF_BACKEND=CPU
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       ./test/ci/azure/run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
-     displayName: "bar_chart: C++ Inference Example"
+     displayName: "C++ Inference Example"
      
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
@@ -87,7 +89,7 @@
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_resnet50_infer
      workingDirectory: $(WORK_DIR) 
-     displayName: "bar_chart: ResNet50 Inference"
+     displayName: "ResNet50 Inference"
      
    - script: |
       rm -rf *
