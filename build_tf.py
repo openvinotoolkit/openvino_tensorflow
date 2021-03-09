@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        required=True)
+        default="2.2.2")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -35,6 +35,11 @@ def main():
         '--use_intel_tensorflow',
         help="Build using Intel TensorFlow.",
         action="store_true")
+    parser.add_argument(
+        '--cxx11_abi_version',
+        help=
+        "Desired version of ABI to be used while building Tensorflow"
+        default='0')
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
@@ -60,15 +65,25 @@ def main():
         call(["git", "pull"])
         os.chdir(pwd)
 
+    pwd = os.getcwd()
+    os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
+    # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
+    # For more information about the patches: 
+    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
+    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
+    if arguments.tf_version == "v2.2.2":
+        command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd])
+    os.chdir(pwd)
+
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
-                     arguments.use_intel_tensorflow)
+                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
                         arguments.target_arch, False,
-                        arguments.use_intel_tensorflow)
+                        arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
