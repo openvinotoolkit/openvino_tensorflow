@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
- 
-# SPDX-License-Identifier: Apache-2.0
+#  Copyright 2018-2020 Intel Corporation
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 # ==============================================================================
 import argparse
 import errno
@@ -19,8 +29,8 @@ from tools.test_utils import *
 
 def main():
     '''
-    Runs openvino_tensorflow tests. This script needs to be run after 
-    running build_ovtf.py which builds the openvino tensorflow add on
+    Runs ov_tf tests. This script needs to be run after 
+    running build_ngtf.py which builds the ov_tf
     and installs it to a virtual environment that would be used by this script.
     '''
     parser = argparse.ArgumentParser()
@@ -65,15 +75,15 @@ def main():
 
     # Set the backend if specified
     backend = TestEnv.BACKEND()
-    print("Openvino Tensorflow Backend set to:", backend)
+    print("ov_tf Backend set to:", backend)
 
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
         os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
-        run_ovtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
+        run_ngtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
-        run_ovtf_pytests_from_artifacts(arguments.artifacts_dir)
+        run_ngtf_pytests_from_artifacts(arguments.artifacts_dir)
     elif (arguments.test_tf_python):
         os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
