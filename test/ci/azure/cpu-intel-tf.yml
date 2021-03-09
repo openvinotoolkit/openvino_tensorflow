@@ -92,7 +92,7 @@
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_resnet50_infer
      workingDirectory: $(WORK_DIR) 
-     displayName: ":bar_chart: ResNet50 Inference"
+     displayName: "ResNet50 Inference"
      
    - script: |
       rm -rf *
