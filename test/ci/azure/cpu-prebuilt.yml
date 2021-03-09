@@ -1,4 +1,4 @@
-resources:
+ resources:
   repositories:
   - repository: openvino_tensorflow
     type: github
