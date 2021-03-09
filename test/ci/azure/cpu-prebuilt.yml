@@ -30,8 +30,8 @@ resources:
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
       export OV_LOCATION=/opt/intel/openvino_2021.2.185/ 
       export OPENVINO_TF_BACKEND=CPU
-      virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/6/s/venv 
-      source /home/iotgecsp/azu_ag/myagent/6/s/venv/bin/activate 
+      virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/2/s/venv 
+      source /home/iotgecsp/azu_ag/myagent/2/s/venv/bin/activate 
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
      workingDirectory: $(WORK_DIR) 
      displayName: "Setup" 
