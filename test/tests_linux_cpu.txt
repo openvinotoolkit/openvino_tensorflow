@@ -39,6 +39,7 @@ MathOps.LogicalOr
 MathOps.LogicalNot
 MathOps.NotEqual
 MathOps.FloorModNegInt
+MathOps.FloorDivNegInt
 
 MathOps.Ceil # Unsupported primitive of type: Ceiling
 
