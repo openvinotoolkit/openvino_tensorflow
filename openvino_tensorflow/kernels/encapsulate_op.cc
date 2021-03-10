@@ -385,7 +385,11 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
       auto blob = ie_tensor->get_blob();
 
-      ng_output->read(output_tensor->data(), size);
+      #if TF_VERSION < 2
+          ng_output->read((void*)DMAHelper::base(output_tensor), size);
+      #else
+          ng_output->read(output_tensor->data(), size);
+      #endif
     }
   }
 
