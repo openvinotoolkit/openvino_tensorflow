@@ -138,18 +138,6 @@ void IE_VADM_Engine::infer(
       outputs[i] = std::make_shared<IETensor>(blob);
     }
   }
-
-  for (int i = 0; i < in_blobs.size(); i++) {
-    in_blobs[i]->deallocate();
-  }
-  for (int i = 0; i < out_blobs.size(); i++) {
-    if (out_blobs[i] != nullptr) {
-      out_blobs[i]->deallocate();
-    }
-  }
-  for (int i = 0; i < param_blobs.size(); i++) {
-    param_blobs[i]->deallocate();
-  }
 }
 }// namespace openvino_tensorflow
 }// namespace tensorflow

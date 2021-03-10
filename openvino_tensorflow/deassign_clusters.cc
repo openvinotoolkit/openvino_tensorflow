@@ -185,6 +185,9 @@ Status DeassignClusters(Graph* graph) {
     }
 
     int min_non_trivial_nodes = 6;
+    if ((num_nodes_marked_before_deassign >> 5) > min_non_trivial_nodes) {
+        min_non_trivial_nodes = (num_nodes_marked_before_deassign >> 5);
+    }
     if (std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
       min_non_trivial_nodes =
           std::stoi(std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES"));
@@ -205,6 +208,49 @@ Status DeassignClusters(Graph* graph) {
         deassigned_histogram[node->type_string()]++;
       }
     }
+    // Disable dynamic to static
+    std::vector<Node*> dyn_node_check;
+    for (auto node : nodes) {
+        if (node->type_string() == "NonMaxSuppressionV2") {
+            dyn_node_check.push_back(node);
+        }
+    }
+    bool invalid_dyn_op = false;
+    while (dyn_node_check.size() > 0) {
+        Node* node = dyn_node_check.back();
+        dyn_node_check.pop_back();
+       
+        for (auto it : node->out_nodes()) {
+            int out_cluster;
+            Status s = GetNodeAttr(it->attrs(), "_ngraph_cluster", &out_cluster);
+            if (s == Status::OK()) {
+                if (out_cluster == cluster_idx && it->type_string() != "NonMaxSuppressionV2") {
+                    if (it->type_string() == "ZerosLike" || it->type_string() == "Size" || it->type_string() == "Conv2D") {
+                        invalid_dyn_op = true;
+                        break;
+                    } else {
+                        dyn_node_check.push_back(it);
+                    }
+                }
+            }
+        }
+    }
+    if (invalid_dyn_op) {
+      NGRAPH_VLOG(2) << "Busting cluster " << cluster_idx;
+      for (auto node : nodes) {
+        NGRAPH_VLOG(2) << "Busting node: " << node->name() << " ["
+                       << node->type_string() << "]";
+
+        // TODO(amprocte): move attr name to a constant
+        node->ClearAttr("_ngraph_cluster");
+        // TODO(amprocte): move attr name to a constant
+        node->ClearAttr("_ngraph_marked_for_clustering");
+
+        deassigned_histogram[node->type_string()]++;
+      }
+    }
+
+
     unordered_set<std::string> input_args;
     vector<string> cluster_inputs;
     bool omit_cluster = false;
@@ -232,7 +278,6 @@ Status DeassignClusters(Graph* graph) {
       }
     }
     if(omit_cluster){
-      cout << "Disable cluster: "  << cluster_idx << endl;
       for(auto node : nodes){
         node->ClearAttr("_ngraph_cluster");
         node->ClearAttr("_ngraph_marked_for_clustering");
