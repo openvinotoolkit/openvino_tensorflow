@@ -20,6 +20,7 @@
 #include "openvino_tensorflow/encapsulate_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
 
