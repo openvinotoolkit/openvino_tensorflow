@@ -10,6 +10,8 @@
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
 
+using namespace InferenceEngine;
+
 namespace tensorflow {
 namespace openvino_tensorflow {
 
@@ -35,8 +37,20 @@ void IE_Basic_Engine::infer(
   auto func = m_network.getFunction();
   auto parameters = func->get_parameters();
   for (int i = 0; i < inputs.size(); i++) {
-    if (inputs[i] != nullptr)
-      m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
+    if (inputs[i] != nullptr){
+
+      if(m_device != "MYRIAD" && m_device != "VAD-M")
+        m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
+      else{
+        auto input_blob = m_infer_reqs[0].GetBlob(input_names[i]);
+        MemoryBlob::Ptr minput = as<MemoryBlob>(input_blob);
+        auto minputHolder = minput->wmap();
+
+        auto inputBlobData = minputHolder.as<uint8_t*>();
+        size_t input_data_size = input_blob->byteSize();
+        inputs[i]->read((void*)inputBlobData, input_data_size);
+      }
+    }
   }
 
   for (int i = 0; i < hoisted_params.size(); i++) {
@@ -63,6 +77,7 @@ void IE_Basic_Engine::infer(
       outputs[i] = std::make_shared<IETensor>(blob);
     }
   }
+  NGRAPH_VLOG(4) << "Inference Successful";
 
   // return true;
 }

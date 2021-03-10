@@ -266,47 +266,51 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   // Allocate tensors for the output results.
 
   auto results = ng_exec->GetResults();
+  std::string device;
+  BackendManager::GetBackendName(device);
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(results.size(),
                                                               nullptr);
   std::vector<int> dyn_shape_tensors;
-  for (auto i = 0; i < results.size(); i++) {
-    auto ng_element = results[i];
-    if (ng_element->get_output_partial_shape(0).is_dynamic()) {
-      NGRAPH_VLOG(4)
-          << "NGraphEncapsulateOp::Compute skipping output allocation for "
-             "dynamic tensor at index"
-          << i;
-      dyn_shape_tensors.push_back(i);
-      continue;
-    }
+  if(device != "MYRIAD" && device != "VAD-M"){
+    for (auto i = 0; i < results.size(); i++) {
+      auto ng_element = results[i];
+      if (ng_element->get_output_partial_shape(0).is_dynamic()) {
+        NGRAPH_VLOG(4)
+            << "NGraphEncapsulateOp::Compute skipping output allocation for "
+              "dynamic tensor at index"
+            << i;
+        dyn_shape_tensors.push_back(i);
+        continue;
+      }
 
-    // Create the TF output tensor
-    auto ng_shape = ng_exec->GetOutputShape(i);
-    TensorShape tf_shape;
-    for (auto dim : ng_shape) {
-      tf_shape.AddDim(dim);
-    }
-    Tensor* output_tensor = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+      // Create the TF output tensor
+      auto ng_shape = ng_exec->GetOutputShape(i);
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-    // Make sure the nGraph-inferred element type agrees with what TensorFlow
-    // expected.
-    ngraph::element::Type expected_elem_type;
-    auto ng_element_type = ng_element->get_element_type();
-    OP_REQUIRES_OK(
-        ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
-                                                 &expected_elem_type));
-    OP_REQUIRES(
-        ctx, ng_element_type == expected_elem_type,
-        errors::Internal("Element type inferred by nGraph does not match "
-                         "the element type expected by TensorFlow"));
-    #if TF_VERSION < 2
-      ng_outputs[i] =
-        make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
-    #else
-      ng_outputs[i] =
-        make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
-    #endif
+      // Make sure the nGraph-inferred element type agrees with what TensorFlow
+      // expected.
+      ngraph::element::Type expected_elem_type;
+      auto ng_element_type = ng_element->get_element_type();
+      OP_REQUIRES_OK(
+          ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
+                                                  &expected_elem_type));
+      OP_REQUIRES(
+          ctx, ng_element_type == expected_elem_type,
+          errors::Internal("Element type inferred by nGraph does not match "
+                          "the element type expected by TensorFlow"));
+      #if TF_VERSION < 2
+        ng_outputs[i] =
+          make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
+      #else
+        ng_outputs[i] =
+          make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
+      #endif
+    }
   }
   NGRAPH_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
@@ -337,21 +341,52 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
     time_execute_function = execute_function.ElapsedInMS();
   }
+  if(device != "MYRIAD" && device != "VAD-M"){
+    for (auto i : dyn_shape_tensors) {
+      auto ng_output = ng_outputs[i];
+      // Create the TF output tensor
+      auto ng_shape = ng_output->get_shape();
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
 
-  for (auto i : dyn_shape_tensors) {
-    auto ng_output = ng_outputs[i];
-    // Create the TF output tensor
-    auto ng_shape = ng_output->get_shape();
-    TensorShape tf_shape;
-    for (auto dim : ng_shape) {
-      tf_shape.AddDim(dim);
+      // Zero-copy IE tensor to TF
+      IETensorBuffer* tf_buffer =
+          new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
+      Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
+      ctx->set_output(i, tf_tensor);
     }
+  }
+  else{
+    for(int i = 0; i < results.size(); i++){
+      auto ng_output = ng_outputs[i];
 
-    // Zero-copy IE tensor to TF
-    IETensorBuffer* tf_buffer =
-        new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-    Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
-    ctx->set_output(i, tf_tensor);
+      auto ng_shape = ng_exec->GetOutputShape(i);
+      ngraph::element::Type expected_elem_type;
+      auto ng_element = results[i];
+      auto ng_element_type = ng_element->get_element_type();
+      OP_REQUIRES_OK(
+        ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
+                                                 &expected_elem_type));
+      OP_REQUIRES(
+          ctx, ng_element_type == expected_elem_type,
+          errors::Internal("Element type inferred by nGraph does not match "
+                          "the element type expected by TensorFlow"));
+      TensorShape tf_shape;
+      for(auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
+
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+
+      auto size = ng_output->get_size_in_bytes();
+      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+      auto blob = ie_tensor->get_blob();
+
+      ng_output->read(output_tensor->data(), size);
+    }
   }
 
   long vm, rss;
