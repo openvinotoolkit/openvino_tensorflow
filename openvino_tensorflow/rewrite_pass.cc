@@ -99,10 +99,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // TF_RETURN_IF_ERROR(MarkForClustering(graph, skip_these_nodes));
 
     // OCM bypassing the MarkForClustering function call
-    const char* device_id =  std::getenv("OPENVINO_TF_BACKEND");
-    if (device_id==nullptr){
-      device_id = "CPU";
-    }
+    std::string device;
+    BackendManager::GetBackendName(device);
+    const char* device_id(device.c_str());
     std::string ov_version = "2021.2";
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
