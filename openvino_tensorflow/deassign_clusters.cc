@@ -23,6 +23,7 @@
 #include "openvino_tensorflow/deassign_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 using namespace std;
 
@@ -40,6 +41,12 @@ namespace openvino_tensorflow {
 // For unit testing purposes, this pass can be bypassed by setting
 // OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
+
+//For sorting the clusters for MYRIAD
+static bool cmp(pair<int, std::set<Node*>>& a, pair<int, std::set<Node*>>& b){
+
+    return a.second.size() > b.second.size();
+}
 
 unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
@@ -196,6 +203,78 @@ Status DeassignClusters(Graph* graph) {
         node->ClearAttr("_ngraph_marked_for_clustering");
 
         deassigned_histogram[node->type_string()]++;
+      }
+    }
+    unordered_set<std::string> input_args;
+    vector<string> cluster_inputs;
+    bool omit_cluster = false;
+
+    for (auto node : nodes){
+
+      for (auto it : node->in_nodes()){
+
+        if(!input_args.count(it->name())){
+          cluster_inputs.push_back(it->name());
+        }
+        input_args.insert(it->name());
+      }
+    }
+    for(auto node : nodes) {
+      if(node->type_string() == "Prod"){
+        for (auto it : node->in_nodes()){
+          auto inp_name = it->name();
+          auto iter = find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
+          if(iter != cluster_inputs.end()){
+            omit_cluster = true;
+            break;
+          }
+        }
+      }
+    }
+    if(omit_cluster){
+      cout << "Disable cluster: "  << cluster_idx << endl;
+      for(auto node : nodes){
+        node->ClearAttr("_ngraph_cluster");
+        node->ClearAttr("_ngraph_marked_for_clustering");
+        deassigned_histogram[node->type_string()]++;
+      }
+    }
+  }
+
+  string device;
+  BackendManager::GetBackendName(device);
+
+
+  if(device == "MYRIAD"){
+
+    vector<pair<int, std::set<Node*>>> cluster_arr;
+
+    for(auto& it : cluster_map){
+      cluster_arr.push_back(it);
+    }
+
+    sort(cluster_arr.begin(), cluster_arr.end(), cmp);
+
+    vector<int> top_10;
+    int i = 0;
+    for(auto& it : cluster_arr){
+      if(i == 10)
+        break;
+      top_10.push_back(it.first);
+      i++;
+    }
+
+    for(auto& kv : cluster_map){
+      if(!(std::count(top_10.begin(), top_10.end(), kv.first))){
+        //Need to be deassigned, not in top 10
+        cout << "Disable cluster: " << kv.first << std::endl;
+        set<Node*>& nodes = kv.second;
+
+        for(auto node : nodes) {
+          node->ClearAttr("_ngraph_cluster");
+          node->ClearAttr("_ngraph_marked_for_clustering");
+          deassigned_histogram[node->type_string()]++;
+        }
       }
     }
   }

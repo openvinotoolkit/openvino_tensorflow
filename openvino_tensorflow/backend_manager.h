@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "tensorflow/core/lib/core/errors.h"
+#include "contexts.h"
 
 #include "backend.h"
 
@@ -26,6 +27,9 @@ class BackendManager {
  public:
   // Returns the nGraph supported backend names
   static vector<string> GetSupportedBackends();
+
+  static GlobalContext& GetGlobalContext();
+  static void ReleaseGlobalContext();
 
   // Set the BackendManager backend ng_backend_name_
   static Status SetBackend(const string& backend_name = "CPU");
