@@ -17,10 +17,10 @@ class NGraphLogMessage : public tensorflow::internal::LogMessage {
   static tensorflow::int64 MinNGraphVLogLevel();
 };
 
-#define NGRAPH_VLOG_IS_ON(lvl) ((lvl) <= NGraphLogMessage::MinNGraphVLogLevel())
+#define OVTF_VLOG_IS_ON(lvl) ((lvl) <= NGraphLogMessage::MinNGraphVLogLevel())
 
-#define NGRAPH_VLOG(lvl)      \
-  if (NGRAPH_VLOG_IS_ON(lvl)) \
+#define OVTF_VLOG(lvl)      \
+  if (OVTF_VLOG_IS_ON(lvl)) \
   ::tensorflow::internal::LogMessage(__FILE__, __LINE__, tensorflow::INFO)
 
 #endif  // NGRAPH_LOG_H_

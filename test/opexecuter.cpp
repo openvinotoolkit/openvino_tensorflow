@@ -55,13 +55,13 @@ void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
       << "Failed to run opexecutor on TF";
   for (size_t i = 0; i < tf_outputs.size(); i++) {
-    NGRAPH_VLOG(5) << " TF op " << i << " " << tf_outputs[i].DebugString();
+    OVTF_VLOG(5) << " TF op " << i << " " << tf_outputs[i].DebugString();
   }
   // Activate nGraph again
   ActivateNGraph();
 }
 
-// Sets NG backend before executing on NGTF
+// Sets NG backend before executing on OVTF
 void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
@@ -78,11 +78,11 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
     ASSERT_EQ(Status::OK(),
               session.Run(sess_run_fetchoutputs_, &ngraph_outputs));
   } catch (const std::exception& e) {
-    NGRAPH_VLOG(0) << "Exception occured while running session " << e.what();
+    OVTF_VLOG(0) << "Exception occured while running session " << e.what();
     EXPECT_TRUE(false);
   }
   for (size_t i = 0; i < ngraph_outputs.size(); i++) {
-    NGRAPH_VLOG(5) << " NGTF op " << i << " "
+    OVTF_VLOG(5) << " OVTF op " << i << " "
                    << ngraph_outputs[i].DebugString();
   }
 }

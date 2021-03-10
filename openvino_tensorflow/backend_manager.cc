@@ -20,7 +20,7 @@ mutex BackendManager::m_backend_mutex;
 static unique_ptr<GlobalContext> g_global_context;
 
 BackendManager::~BackendManager() {
-  NGRAPH_VLOG(2) << "BackendManager::~BackendManager()";
+  OVTF_VLOG(2) << "BackendManager::~BackendManager()";
 }
 
 GlobalContext& BackendManager::GetGlobalContext() {
@@ -35,7 +35,7 @@ void BackendManager::ReleaseGlobalContext() {
 }
 
 Status BackendManager::SetBackend(const string& backend_name) {
-  NGRAPH_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
+  OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
   auto status = CreateBackend(backend, bname);
@@ -50,11 +50,11 @@ Status BackendManager::SetBackend(const string& backend_name) {
 }
 
 shared_ptr<Backend> BackendManager::GetBackend() {
-  NGRAPH_VLOG(2) << "BackendManager::GetBackend()";
+  OVTF_VLOG(2) << "BackendManager::GetBackend()";
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
-      NGRAPH_VLOG(0) << "Failed to get backend: " << status.error_message();
+      OVTF_VLOG(0) << "Failed to get backend: " << status.error_message();
       throw errors::Internal("Failed to get backend: ", status.error_message());
     }
   }
@@ -63,11 +63,11 @@ shared_ptr<Backend> BackendManager::GetBackend() {
 }
 
 Status BackendManager::GetBackendName(string& backend_name) {
-  NGRAPH_VLOG(2) << "BackendManager::GetBackendName()";
+  OVTF_VLOG(2) << "BackendManager::GetBackendName()";
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
-      NGRAPH_VLOG(0) << "Failed to get backend name: "
+      OVTF_VLOG(0) << "Failed to get backend name: "
                      << status.error_message();
       return errors::Internal("Failed to get backend name: ",
                               status.error_message());
@@ -96,7 +96,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                             " got nullptr");
   }
 
-  NGRAPH_VLOG(2) << "BackendManager::CreateBackend(): " << backend_name;
+  OVTF_VLOG(2) << "BackendManager::CreateBackend(): " << backend_name;
   return Status::OK();
 }
 

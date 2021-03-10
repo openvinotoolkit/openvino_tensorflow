@@ -27,21 +27,21 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-Status NgraphOptimizer::Init(
+Status OVTFOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
   const auto params = config->parameter_map();
   for (auto i : params) {
-    m_config_map["_ngraph_" + i.first] = i.second.s();
-    NGRAPH_VLOG(3) << "Attribute: " << i.first
-                   << " Value: " << m_config_map["_ngraph_" + i.first];
+    m_config_map["_ovtf_" + i.first] = i.second.s();
+    OVTF_VLOG(3) << "Attribute: " << i.first
+                   << " Value: " << m_config_map["_ovtf_" + i.first];
   }
   return Status::OK();
 }
 
-Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
+Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                  const tensorflow::grappler::GrapplerItem& item,
                                  GraphDef* output) {
-  NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: grappler item id " << item.id;
+  OVTF_VLOG(5) << "OVTF_OPTIMIZER: grappler item id " << item.id;
 
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
@@ -57,16 +57,16 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is set
   // we will not do anything; all subsequent passes become a no-op.
-  bool ngraph_not_enabled =
+  bool ovtf_not_enabled =
       (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
   bool already_processed = util::IsAlreadyProcessed(&graph);
-  if (!already_processed && ngraph_not_enabled) {
-    NGRAPH_VLOG(0) << "NGraph is available but disabled.";
+  if (!already_processed && ovtf_not_enabled) {
+    OVTF_VLOG(0) << "openvino_tensorflow is available but disabled.";
   }
-  if (ngraph_not_enabled || already_processed) {
-    NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
+  if (ovtf_not_enabled || already_processed) {
+    OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
                           (already_processed ? "graph is already preprocessed"
-                                             : "ngraph is disabled");
+                                             : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
@@ -127,11 +127,11 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   //
   // The part has several phases, each executed in sequence:
   //
-  //   1. Marking [ngraph_mark_for_clustering.cc]
-  //   2. Cluster Assignment [ngraph_assign_clusters.cc]
-  //   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
-  //   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc] - currently
-  //      part of the ngraph_rewrite_pass.cc to be executed after POST_REWRITE
+  //   1. Marking [mark_for_clustering.cc]
+  //   2. Cluster Assignment [assign_clusters.cc]
+  //   3. Cluster Deassignment [deassign_clusters.cc]
+  //   4. Cluster Encapsulation [encapsulate_clusters.cc] - currently
+  //      part of the rewrite_pass.cc to be executed after POST_REWRITE
   //
 
   // If requested, dump unmarked graphs.
@@ -161,18 +161,18 @@ Status NgraphOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   return Status::OK();
 }
 
-void NgraphOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
+void OVTFOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
                                const tensorflow::grappler::GrapplerItem& item,
                                const GraphDef& optimize_output, double result) {
   // no-op
 }
 
-int NgraphOptimizer::FreshIndex() {
+int OVTFOptimizer::FreshIndex() {
   mutex_lock l(s_serial_counter_mutex);
   return s_serial_counter++;
 }
 
-REGISTER_GRAPH_OPTIMIZER_AS(NgraphOptimizer, "ngraph-optimizer");
+REGISTER_GRAPH_OPTIMIZER_AS(OVTFOptimizer, "ovtf-optimizer");
 
 }  // end namespace openvino_tensorflow
 }  // end namespace tensorflow

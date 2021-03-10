@@ -62,8 +62,8 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   ASSERT_OK(NodeBuilder("node1", "Const")
                 .Attr("dtype", DT_FLOAT)
                 .Attr("value", t_input_0)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx_0)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx_0)
                 .Finalize(&g, &node1));
 
   int cluster_idx_1 = NGraphClusterManager::NewCluster();
@@ -73,8 +73,8 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
   ASSERT_OK(NodeBuilder("node2", "Const")
                 .Attr("dtype", DT_FLOAT)
                 .Attr("value", t_input_1)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx_1)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx_1)
                 .Finalize(&g, &node2));
 
   Node* node3;
@@ -82,8 +82,8 @@ TEST(EncapsulateClusters, EncapsulatorPass) {
                 .Input(node1, 0)
                 .Input(node2, 0)
                 .Attr("T", DT_FLOAT)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx_1)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx_1)
                 .Finalize(&g, &node3));
 
   Node* node4;
@@ -216,16 +216,16 @@ TEST(EncapsulateClusters, PopulateLibrary) {
   ASSERT_OK(NodeBuilder("node1", "Const")
                 .Attr("dtype", DT_FLOAT)
                 .Attr("value", t_input_0)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx)
                 .Finalize(&g, &node1));
 
   Node* node2;
   ASSERT_OK(NodeBuilder("node2", "Const")
                 .Attr("dtype", DT_FLOAT)
                 .Attr("value", t_input_1)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx)
                 .Finalize(&g, &node2));
 
   Node* node3;
@@ -233,8 +233,8 @@ TEST(EncapsulateClusters, PopulateLibrary) {
                 .Input(node1, 0)
                 .Input(node2, 0)
                 .Attr("T", DT_FLOAT)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_cluster", cluster_idx)
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_cluster", cluster_idx)
                 .Finalize(&g, &node3));
 
   Node* source = g.source_node();

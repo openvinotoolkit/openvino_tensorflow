@@ -96,7 +96,7 @@ def run_mnist(_):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=1)
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
     #config.graph_options.optimizer_options.global_jit_level = jit_level
     run_metadata = tf.compat.v1.RunMetadata()
@@ -106,7 +106,7 @@ def run_mnist(_):
 
     # The MonitoredTrainingSession takes care of session initialization
     with tf.train.MonitoredTrainingSession(
-            hooks=hooks, config=config_ngraph_enabled) as mon_sess:
+            hooks=hooks, config=config_ovtf_enabled) as mon_sess:
         start = time.time()
         train_writer = tf.compat.v1.summary.FileWriter(FLAGS.log_dir,
                                                        mon_sess.graph)

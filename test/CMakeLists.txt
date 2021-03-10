@@ -63,7 +63,7 @@ set_target_properties(
 
 set(SRC
     main.cpp
-    test_ngraph_exec.cpp
+    test_ovtf_exec.cpp
     tf_exec.cpp
     padding.cpp
     conversions.cpp

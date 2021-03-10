@@ -53,14 +53,14 @@ def main():
     # TODO
 
     # Install nGraph Bridge
-    ngtf_wheel_files = glob.glob(
+    ovtf_wheel_files = glob.glob(
         os.path.join(
             os.path.abspath(arguments.artifacts_dir),
-            "ngraph_tensorflow_bridge-*.whl"))
-    if (len(ngtf_wheel_files) != 1):
+            "openvino_tensorflow-*.whl"))
+    if (len(ovtf_wheel_files) != 1):
         raise ("Multiple Python whl files exist. Please remove old wheels")
 
-    openvino_tensorflow_wheel = ngtf_wheel_files[0]
+    openvino_tensorflow_wheel = ovtf_wheel_files[0]
 
     print("NGRAPH Wheel: ", openvino_tensorflow_wheel)
     command_executor([

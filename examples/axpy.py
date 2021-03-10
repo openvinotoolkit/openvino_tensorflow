@@ -40,10 +40,10 @@ config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     log_device_placement=False,
     inter_op_parallelism_threads=1)
-config_ngraph_enabled = openvino_tensorflow.update_config(config)
+config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
 # Create session and run
-with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
+with tf.compat.v1.Session(config=config_ovtf_enabled) as sess:
     print("Python: Running with Session")
     options = tf.compat.v1.RunOptions(
         trace_level=tf.compat.v1.RunOptions.FULL_TRACE)

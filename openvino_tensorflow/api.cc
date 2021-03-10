@@ -28,9 +28,9 @@ size_t backends_len() {
 }
 
 bool list_backends(char** backends) {
-  const auto ngraph_backends = ListBackends();
-  for (size_t idx = 0; idx < ngraph_backends.size(); idx++) {
-    backends[idx] = strdup(ngraph_backends[idx].c_str());
+  const auto ovtf_backends = ListBackends();
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    backends[idx] = strdup(ovtf_backends[idx].c_str());
   }
   return true;
 }

@@ -33,16 +33,16 @@ if (PYTHON)
             set(LIB_SUFFIX lib64)
         endif()
     endif()
-    message(STATUS "LIB_SUFFIX: ${NGTF_INSTALL_DIR}/${LIB_SUFFIX}")
-    file(GLOB NGRAPH_LIB_FILES "${NGTF_INSTALL_DIR}/${LIB_SUFFIX}/*")
+    message(STATUS "LIB_SUFFIX: ${OVTF_INSTALL_DIR}/${LIB_SUFFIX}")
+    file(GLOB NGRAPH_LIB_FILES "${OVTF_INSTALL_DIR}/${LIB_SUFFIX}/*")
     # Copy the openvino_tensorflow include from install
-    message(STATUS "NGTF_INSTALL_DIR: ${NGTF_INSTALL_DIR}")
+    message(STATUS "OVTF_INSTALL_DIR: ${OVTF_INSTALL_DIR}")
 
     # Copy the openvino_tensorflow libraries from install
     foreach(DEP_FILE ${NGRAPH_LIB_FILES})
         get_filename_component(lib_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lib_file_name ${DEP_FILE} NAME)
-        set(ngraph_libraries "${ngraph_libraries}\"${lib_file_name}\",\n\t")
+        set(ovtf_libraries "${ovtf_libraries}\"${lib_file_name}\",\n\t")
         file(COPY ${lib_file_real_path}
             DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow")
     endforeach()

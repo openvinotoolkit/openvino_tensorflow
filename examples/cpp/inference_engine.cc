@@ -103,7 +103,7 @@ Status InferenceEngine::CreateSession(const string& graph_filename,
                               ->mutable_rewrite_options()
                               ->add_custom_optimizers();
 
-    custom_config->set_name("ngraph-optimizer");
+    custom_config->set_name("ovtf-optimizer");
     options.config.mutable_graph_options()
         ->mutable_rewrite_options()
         ->set_min_graph_nodes(-1);

@@ -33,14 +33,14 @@ TEST(AssignClusters, ConstToStatic) {
   ASSERT_OK(NodeBuilder("node1", "Const")
                 .Attr("dtype", DT_FLOAT)
                 .Attr("value", t_input)
-                .Attr("_ngraph_marked_for_clustering", true)
+                .Attr("_ovtf_marked_for_clustering", true)
                 .Finalize(&g, &node1));
 
   Node* node2;
   ASSERT_OK(NodeBuilder("node2", "Const")
                 .Attr("dtype", DT_INT32)
                 .Attr("value", t_shape)
-                .Attr("_ngraph_marked_for_clustering", true)
+                .Attr("_ovtf_marked_for_clustering", true)
                 .Finalize(&g, &node2));
 
   Node* node3;
@@ -49,8 +49,8 @@ TEST(AssignClusters, ConstToStatic) {
                 .Input(node2, 0)
                 .Attr("T", DT_FLOAT)
                 .Attr("Tshape", DT_INT32)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_static_inputs", std::vector<int32>{1})
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_static_inputs", std::vector<int32>{1})
                 .Finalize(&g, &node3));
 
   // Add edges from SRC to node1 and node2
@@ -99,7 +99,7 @@ TEST(AssignClusters, Cone) {
   ASSERT_OK(NodeBuilder("node1", "_Arg")
                 .Attr("T", DT_FLOAT)
                 .Attr("index", 0)
-                .Attr("_ngraph_marked_for_clustering", true)
+                .Attr("_ovtf_marked_for_clustering", true)
                 .Finalize(&g, &node1));
 
   // Note: we're marking this for clustering by hand, even though as of this
@@ -110,7 +110,7 @@ TEST(AssignClusters, Cone) {
                 .Input(node1, 0)
                 .Attr("T", DT_FLOAT)
                 .Attr("out_type", DT_INT32)
-                .Attr("_ngraph_marked_for_clustering", true)
+                .Attr("_ovtf_marked_for_clustering", true)
                 .Finalize(&g, &node2));
 
   Node* node3;
@@ -119,8 +119,8 @@ TEST(AssignClusters, Cone) {
                 .Input(node2, 0)
                 .Attr("T", DT_FLOAT)
                 .Attr("Tshape", DT_INT32)
-                .Attr("_ngraph_marked_for_clustering", true)
-                .Attr("_ngraph_static_inputs", std::vector<int32>{1})
+                .Attr("_ovtf_marked_for_clustering", true)
+                .Attr("_ovtf_static_inputs", std::vector<int32>{1})
                 .Finalize(&g, &node3));
 
   // Add edges from SRC to node1 and node2
