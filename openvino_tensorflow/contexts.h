@@ -16,7 +16,7 @@ struct GlobalContext {
   InferenceEngine::Core ie_core;
 };
 
-} // namespace ngraph_bridge
 } // namespace openvino_tensorflow
+} // namespace tensorflow
 
 #endif
