@@ -2474,17 +2474,11 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(op->name(), ng_input.get_element_type(),
-                                         ngraph::Shape{0}, std::vector<int>({0})));
-  } else {
-    auto ng_const = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i32, ng::Shape{tf_axis.size()}, tf_axis);
+  auto ng_const = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{tf_axis.size()}, tf_axis);
 
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
-  }
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
   return Status::OK();
 }
 
@@ -2644,8 +2638,6 @@ static Status TranslateUnpackOp(const Node* op,
     std::vector<int64_t> new_axis_mask(rank, 0);
     std::vector<int64_t> shrink_axis_mask(rank, 0);
     shrink_axis_mask[tf_axis] = 1;
-    if (input_shape.size() == 1)
-      shrink_axis_mask[tf_axis] = 0;
     auto slice = ConstructNgNode<opset::StridedSlice>(
         op->name(), ng_input, ng_begin, ng_end, begin_mask, end_mask,
         new_axis_mask, shrink_axis_mask);
@@ -2837,24 +2829,11 @@ const static std::map<
         {"Xdivy", TranslateXdivyOp},
         {"ZerosLike", TranslateZerosLikeOp}};
 
-
 Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
     shared_ptr<ng::Function>& ng_function) {
-  ng::ResultVector ng_result_list;
-  TranslateGraph(inputs, static_input_map, input_graph,
-          name, ng_function, ng_result_list);
-  return Status::OK();
-}
-
-Status Builder::TranslateGraph(
-    const std::vector<TensorShape>& inputs,
-    const std::vector<const Tensor*>& static_input_map,
-    const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function,
-    ng::ResultVector& ng_result_list) {
   //
   // We will visit ops in topological order.
   //
@@ -2900,8 +2879,6 @@ Status Builder::TranslateGraph(
   // Populate the parameter list, and also put parameters into the op map.
   //
   ng::ParameterVector ng_parameter_list(tf_params.size());
-  ng::ParameterVector ng_func_parameter_list;
-  ng_func_parameter_list.reserve(tf_params.size());
 
   for (auto parm : tf_params) {
     DataType dtype;
@@ -2924,13 +2901,7 @@ Status Builder::TranslateGraph(
     GetNodeAttr(parm->attrs(), "_prov_tag", &prov_tag);
     auto ng_param =
         ConstructNgNode<opset::Parameter>(prov_tag, ng_et, ng_shape);
-    if (ng_shape.size() > 0 && ng_shape[0] == 0) {
-        std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
-        auto ng_const_input = ConstructNgNode<opset::Constant>(prov_tag, ng_et, ng_shape, constant_values);
-        SaveNgOp(ng_op_map, parm->name(), ng_const_input);
-    } else {
-        SaveNgOp(ng_op_map, parm->name(), ng_param);
-    }
+    SaveNgOp(ng_op_map, parm->name(), ng_param);
     ng_parameter_list[index] =
         ngraph::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
   }
@@ -2972,9 +2943,7 @@ Status Builder::TranslateGraph(
   //
   // Populate the result list.
   //
-  ng_result_list.resize(tf_ret_vals.size());
-  ng::ResultVector ng_func_result_list;
-  ng_func_result_list.reserve(tf_params.size());
+  ng::ResultVector ng_result_list(tf_ret_vals.size());
 
   for (auto n : tf_ret_vals) {
     // Make sure that this _Retval only has one input node.
@@ -2994,20 +2963,12 @@ Status Builder::TranslateGraph(
     ng_result_list[index] =
         ngraph::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
   }
-  for (int i=0; i<ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && ng_parameter_list[i]->get_shape()[0] == 0))
-      ng_func_parameter_list.push_back(ng_parameter_list[i]);
-  }
-  for (int i=0; i<ng_result_list.size(); i++) {
-    if (ng_result_list[i]->is_dynamic() || !(ng_result_list[i]->get_shape().size() > 0 && ng_result_list[i]->get_shape()[0] == 0))
-      ng_func_result_list.push_back(ng_result_list[i]);
-  }
 
   //
   // Create the nGraph function.
   //
   ng_function =
-      make_shared<ng::Function>(ng_func_result_list, ng_func_parameter_list, name);
+      make_shared<ng::Function>(ng_result_list, ng_parameter_list, name);
 
   //
   // Apply additional passes on the nGraph function here.
