@@ -20,7 +20,7 @@
       rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
       
    
-   - checkout: openvino_tensorflow
+   - checkout: self
      clean: true
      lfs: false
      path: openvino_tensorflow
