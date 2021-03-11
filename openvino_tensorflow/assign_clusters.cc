@@ -61,17 +61,17 @@ namespace openvino_tensorflow {
 // Other Constraints (Non Data Flow Constraints)
 //
 //   (1) If N1 is a static input to N2, N1 and N2 are not placed in the same
-//       cluster (More on static inputs in ngraph_mark_for_clustering)
+//       cluster (More on static inputs in mark_for_clustering)
 //   (2) If N1 and N2 have mismatching deadness predicates, they are not
 //       placed in the same cluster (More on deadness in tf_deadness_analysis)
 //
 // Given the above constraints, we try to find the "biggest" clusters we can.
 //
-// The assigned cluster index is represented by the "_ngraph_cluster"
+// The assigned cluster index is represented by the "_ovtf_cluster"
 // attribute, which has integer type.
 //
-// Assumption: the "MarkForClustering" pass (ngraph_mark_for_clustering.cc) has
-// already been run. This attaches the "_ngraph_marked_for_clustering"
+// Assumption: the "MarkForClustering" pass (mark_for_clustering.cc) has
+// already been run. This attaches the "_ovtf_marked_for_clustering"
 // attribute to ops which we will cluster.
 //
 // TODO(amprocte): Say more about the algorithm.
@@ -245,7 +245,7 @@ void MergeClusters(Edge* edge,
   int dst_index = cluster_map[dst]->index;
 
   // Merge dst cluster into src cluster
-  NGRAPH_VLOG(5) << "Contracting: " << src->name() << "[" << src->type_string()
+  OVTF_VLOG(5) << "Contracting: " << src->name() << "[" << src->type_string()
                  << " , " << edge->src_output() << "]@" << src_index << " -> "
                  << dst->name() << "[" << dst->type_string() << " , "
                  << edge->dst_input() << "]@" << dst_index;
@@ -253,7 +253,7 @@ void MergeClusters(Edge* edge,
 #if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   string src_predicate = cluster_map[src]->predicate_string;
   string dst_predicate = cluster_map[dst]->predicate_string;
-  NGRAPH_VLOG(5) << "Src pred: " << src_predicate
+  OVTF_VLOG(5) << "Src pred: " << src_predicate
                  << ", Dst pred: " << dst_predicate;
 
   std::string cluster_pred = GetMergedClusterPred(src_predicate, dst_predicate);
@@ -279,7 +279,7 @@ void MergeClusters(Edge* edge,
 }  // namespace
 
 // Main Entry point for Cluster Assignment to the Node
-// Adds an attribute "_ngraph_cluster" (cluster_id) to each Node that can be
+// Adds an attribute "_ovtf_cluster" (cluster_id) to each Node that can be
 // encapsulated
 Status AssignClusters(Graph* graph) {
   std::map<Node*, std::shared_ptr<Cluster>> cluster_map;
@@ -299,7 +299,7 @@ Status AssignClusters(Graph* graph) {
     cluster_map[node] = std::make_shared<Cluster>();
     cluster_map[node]->index = new_index;
     cluster_map[node]->nodes.insert(node);
-    NGRAPH_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
+    OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
                    << node->name() << "[" << node->type_string() << "]";
 
 #if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
@@ -311,7 +311,7 @@ Status AssignClusters(Graph* graph) {
 
     cluster_map[node]->outgoing_edges = std::set<const Edge*>(
         node->out_edges().begin(), node->out_edges().end());
-    NGRAPH_VLOG(5) << node->name() << "[" << node->type_string() << "]"
+    OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
                    << "  : Predicate " << pred_string;
 #endif
   }
@@ -332,7 +332,7 @@ Status AssignClusters(Graph* graph) {
     }
 
     if (!gc.InsertEdge(cluster_map[src]->index, cluster_map[dst]->index)) {
-      NGRAPH_VLOG(5) << "Failing due to cycle";
+      OVTF_VLOG(5) << "Failing due to cycle";
       return errors::Unimplemented(
           "Input graph has a cycle (inserting an edge from ",
           src->DebugString(), " to ", dst->DebugString(),
@@ -388,7 +388,7 @@ Status AssignClusters(Graph* graph) {
     }
   }
 
-  NGRAPH_VLOG(2) << "Starting contraction";
+  OVTF_VLOG(2) << "Starting contraction";
   bool changed;
   bool collect_non_contracting_edge_info = false;  // Must init with false
 
@@ -425,7 +425,7 @@ Status AssignClusters(Graph* graph) {
     changed = false;
 
     auto log_reason = [](EdgeNonContractionReasons reason, Edge* edge) {
-      NGRAPH_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << ": "
+      OVTF_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << ": "
                      << edge->src()->name() << "<" << edge->src()->type_string()
                      << ">"
                      << "[" << edge->src_output() << "] -> "
@@ -451,7 +451,7 @@ Status AssignClusters(Graph* graph) {
       }
 
       if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
-        NGRAPH_VLOG(5) << "Skipping (not marked): " << src->name() << "["
+        OVTF_VLOG(5) << "Skipping (not marked): " << src->name() << "["
                        << edge->src_output() << "]@" << src_index << " -> "
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
@@ -470,7 +470,7 @@ Status AssignClusters(Graph* graph) {
           CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
       if (!is_deadness_ok) {
         // do not contract, src and dst node cannot be in the same cluster
-        NGRAPH_VLOG(5) << "Skipping (deadness not ok): " << src->name() << "["
+        OVTF_VLOG(5) << "Skipping (deadness not ok): " << src->name() << "["
                        << edge->src_output() << "]@" << src_index << " -> "
                        << dst->name() << "[" << edge->dst_input() << "]@"
                        << dst_index;
@@ -542,9 +542,9 @@ Status AssignClusters(Graph* graph) {
     }
   } while (changed);
 
-  NGRAPH_VLOG(2) << "Contraction done";
+  OVTF_VLOG(2) << "Contraction done";
 
-  NGRAPH_VLOG(2) << "Starting tagging";
+  OVTF_VLOG(2) << "Starting tagging";
   std::set<Cluster*> seen;
   unordered_map<int, int> cluster_to_encapsulate;
   for (auto kv : cluster_map) {
@@ -553,12 +553,12 @@ Status AssignClusters(Graph* graph) {
       continue;
     }
 
-    bool has_ngraph_ops = false;
-    bool has_non_ngraph_ops = false;
+    bool has_ovtf_ops = false;
+    bool has_non_ovtf_ops = false;
 
     for (auto node : cluster->nodes) {
       if (NodeIsMarkedForClustering(node)) {
-        has_ngraph_ops = true;
+        has_ovtf_ops = true;
 
 // Some sanity checks for deadness
 #if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
@@ -566,15 +566,15 @@ Status AssignClusters(Graph* graph) {
             node, nodes_predicate_map, cluster_map));
 #endif
       } else {
-        has_non_ngraph_ops = true;
+        has_non_ovtf_ops = true;
       }
     }
 
-    if (has_ngraph_ops && has_non_ngraph_ops) {
-      NGRAPH_VLOG(2) << "Cluster " << cluster->index
+    if (has_ovtf_ops && has_non_ovtf_ops) {
+      OVTF_VLOG(2) << "Cluster " << cluster->index
                      << " has both nGraph and non-nGraph nodes";
       for (auto node : cluster->nodes) {
-        NGRAPH_VLOG(2) << (NodeIsMarkedForClustering(node)
+        OVTF_VLOG(2) << (NodeIsMarkedForClustering(node)
                                ? "nGraph node: "
                                : "non-nGraph node: ")
                        << node->name() << " [" << node->type_string() << "]";
@@ -583,7 +583,7 @@ Status AssignClusters(Graph* graph) {
                               " has both nGraph and non-nGraph nodes");
     }
 
-    if (!has_ngraph_ops) {
+    if (!has_ovtf_ops) {
       seen.insert(cluster);
       continue;
     }
@@ -591,8 +591,8 @@ Status AssignClusters(Graph* graph) {
     size_t cluster_idx = NGraphClusterManager::NewCluster();
 
     for (auto node : cluster->nodes) {
-      if (NGRAPH_VLOG_IS_ON(5)) {
-        NGRAPH_VLOG(5) << ">> cluster " << cluster_idx << ": " << node->id()
+      if (OVTF_VLOG_IS_ON(5)) {
+        OVTF_VLOG(5) << ">> cluster " << cluster_idx << ": " << node->id()
                        << " " << node << " :: " << node->name() << " ["
                        << node->type_string() << "]";
       }
@@ -604,17 +604,17 @@ Status AssignClusters(Graph* graph) {
       }
 
       // TODO(amprocte): move attr name to a constant
-      node->AddAttr("_ngraph_cluster", (int)cluster_idx);
+      node->AddAttr("_ovtf_cluster", (int)cluster_idx);
 
       if (api::IsLoggingPlacement()) {
-        // map from cluster id to ngraph_cluster id
+        // map from cluster id to ovtf_cluster id
         cluster_to_encapsulate[cluster->index] = cluster_idx;
       }
     }
 
     seen.insert(cluster);
   }
-  NGRAPH_VLOG(2) << "Tagging done";
+  OVTF_VLOG(2) << "Tagging done";
 
   if (api::IsLoggingPlacement()) {
     int num_reasons = 6;  // the number of elements in the reasons enum
@@ -641,8 +641,8 @@ Status AssignClusters(Graph* graph) {
     for (auto it : cluster_separation_reason) {
       num_non_contracted += it.second.size();
       auto cluster_id_vector = ngraph::split(it.first, ',');
-      // function to find if this cluster became an ngraph_cluster
-      // returns ngraph_cluster id if yes, else returns -1
+      // function to find if this cluster became an ovtf_cluster
+      // returns ovtf_cluster id if yes, else returns -1
       auto find_in_map = [&cluster_to_encapsulate, &cluster_id_vector](int x) {
         auto itr = cluster_to_encapsulate.find(stoi(cluster_id_vector[x]));
         return itr == cluster_to_encapsulate.end() ? -1 : itr->second;
@@ -715,21 +715,21 @@ Status AssignClusters(Graph* graph) {
       for (int i = 0; i < num_reasons; i++) {
         if (!forbidden_reasons_filter(
                 static_cast<EdgeNonContractionReasons>(i))) {
-          std::cout << (first ? "NGTF_SUMMARY: " : "") << reason_string[i]
+          std::cout << (first ? "OVTF_SUMMARY: " : "") << reason_string[i]
                     << ": " << reasons_count[i]
                     << (i < (num_reasons - 1) ? ", " : "\n");
           first = false;
         }
       }
     };
-    std::cout << "NGTF_SUMMARY: Summary of reasons why a pair of edge "
+    std::cout << "OVTF_SUMMARY: Summary of reasons why a pair of edge "
                  "connected encapsulates did not merge\n";
     print_reason_summary(reason_count_encapsulates, is_forbidden_reason);
-    std::cout << "NGTF_SUMMARY: Summary of reasons why a pair of edge "
+    std::cout << "OVTF_SUMMARY: Summary of reasons why a pair of edge "
                  "connected clusters did not merge\n";
     print_reason_summary(reason_count_clusters,
                          [](EdgeNonContractionReasons x) {
-                           NGRAPH_VLOG(5) << "EdgeNonContractionReasons: " << x;
+                           OVTF_VLOG(5) << "EdgeNonContractionReasons: " << x;
                            return false;
                          });
   }
@@ -740,7 +740,7 @@ Status AssignClusters(Graph* graph) {
 // Updates cluster with the assigned cluster-id of the node
 Status GetNodeCluster(const Node* node, int* cluster) {
   // TODO(amprocte): move attr name to a constant
-  Status s = GetNodeAttr(node->attrs(), "_ngraph_cluster", cluster);
+  Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", cluster);
   if (s != Status::OK()) {
     *cluster = -1;
   }

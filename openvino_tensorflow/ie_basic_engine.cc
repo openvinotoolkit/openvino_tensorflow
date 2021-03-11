@@ -39,7 +39,7 @@ void IE_Basic_Engine::infer(
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr){
 
-      if(m_device != "MYRIAD" && m_device != "VAD-M")
+      if(m_device != "MYRIAD" && m_device != "HDDL")
         m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
       else{
         auto input_blob = m_infer_reqs[0].GetBlob(input_names[i]);
@@ -62,7 +62,7 @@ void IE_Basic_Engine::infer(
   auto results = func->get_results();
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] != nullptr) {
-      NGRAPH_VLOG(4) << "Executable::call() SetBlob()";
+      OVTF_VLOG(4) << "Executable::call() SetBlob()";
       m_infer_reqs[0].SetBlob(output_names[i], outputs[i]->get_blob());
     }
   }
@@ -72,12 +72,12 @@ void IE_Basic_Engine::infer(
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] == nullptr) {
-      NGRAPH_VLOG(4) << "Executable::call() GetBlob()";
+      OVTF_VLOG(4) << "Executable::call() GetBlob()";
       auto blob = m_infer_reqs[0].GetBlob(output_names[i]);
       outputs[i] = std::make_shared<IETensor>(blob);
     }
   }
-  NGRAPH_VLOG(4) << "Inference Successful";
+  OVTF_VLOG(4) << "Inference Successful";
 
   // return true;
 }

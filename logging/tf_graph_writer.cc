@@ -115,10 +115,10 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
     // Skip source and sink nodes.
     if (!node->IsOp()) continue;
 
-    // TODO(amprocte): duplicated logic from ngraph_mark_for_clustering but
+    // TODO(amprocte): duplicated logic from mark_for_clustering but
     // this file does not live inside src.
     bool is_marked;
-    if (GetNodeAttr(node->attrs(), "_ngraph_marked_for_clustering",
+    if (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering",
                     &is_marked) != Status::OK()) {
       is_marked = false;
     }
@@ -129,7 +129,7 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
 
     // Clustered nodes get a color based on their cluster index.
     int cluster_idx;
-    if (GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) ==
+    if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) ==
         Status::OK()) {
       if (cluster_color_map.find(cluster_idx) == cluster_color_map.end()) {
         bg_color = cluster_bg_colors[seen_cluster_count];
@@ -213,7 +213,7 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
   GraphDef gdef;
   auto status = ReadTextProto(Env::Default(), pbtxt_filename, &gdef);
   if (status != Status::OK()) {
-    NGRAPH_VLOG(5) << "Can't read protobuf graph";
+    OVTF_VLOG(5) << "Can't read protobuf graph";
     return;
   }
 
@@ -222,7 +222,7 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
   opts.allow_internal_ops = true;
   status = ConvertGraphDefToGraph(opts, gdef, &input_graph);
   if (status != Status::OK()) {
-    NGRAPH_VLOG(5) << "Can't convert graphdef to graph";
+    OVTF_VLOG(5) << "Can't convert graphdef to graph";
     return;
   }
 

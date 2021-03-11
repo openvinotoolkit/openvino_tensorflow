@@ -175,8 +175,8 @@ def main():
             pass
 
     pwd = os.getcwd()
-    ngraph_tf_src_dir = os.path.abspath(pwd)
-    print("NGTF SRC DIR: " + ngraph_tf_src_dir)
+    openvino_tf_src_dir = os.path.abspath(pwd)
+    print("OVTF SRC DIR: " + openvino_tf_src_dir)
     build_dir_abs = os.path.abspath(build_dir)
     os.chdir(build_dir)
 
@@ -345,7 +345,7 @@ def main():
                        artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the bridge
-    ngraph_tf_cmake_flags = [
+    openvino_tf_cmake_flags = [
         "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
         "-DCMAKE_CXX_FLAGS=-march=" + target_arch,
     ]
@@ -356,46 +356,46 @@ def main():
     else:
         openvino_artifacts_dir = os.path.abspath(
             arguments.use_openvino_from_location)
-        ngraph_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
+        openvino_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
-    ngraph_tf_cmake_flags.extend(
+    openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
 
     if (arguments.debug_build):
-        ngraph_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+        openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
     if arguments.use_tensorflow_from_location:
-        ngraph_tf_cmake_flags.extend([
+        openvino_tf_cmake_flags.extend([
             "-DTF_SRC_DIR=" + os.path.abspath(
                 arguments.use_tensorflow_from_location + '/tensorflow')
         ])
     else:
         if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
             print("TF_SRC_DIR: ", tf_src_dir)
-            ngraph_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
+            openvino_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
-    ngraph_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
+    openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
     if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
-        ngraph_tf_cmake_flags.extend([
+        openvino_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
         ])
 
-    ngraph_tf_cmake_flags.extend([
+    openvino_tf_cmake_flags.extend([
         "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
         flag_string_map[arguments.use_grappler_optimizer]
     ])
 
     # Now build the bridge
-    ng_tf_whl = build_ngraph_tf(build_dir, artifacts_location,
-                                ngraph_tf_src_dir, venv_dir,
-                                ngraph_tf_cmake_flags, verbosity)
+    ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
+                                openvino_tf_src_dir, venv_dir,
+                                openvino_tf_cmake_flags, verbosity)
 
     # Make sure that the ngraph bridge whl is present in the artfacts directory
-    if not os.path.isfile(os.path.join(artifacts_location, ng_tf_whl)):
+    if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 
-    print("SUCCESSFULLY generated wheel: %s" % ng_tf_whl)
+    print("SUCCESSFULLY generated wheel: %s" % ov_tf_whl)
     print("PWD: " + os.getcwd())
 
     # Copy the TensorFlow Python code tree to artifacts directory so that they can
@@ -433,8 +433,8 @@ def main():
         command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     # Run a quick test
-    install_ngraph_tf(tf_version, venv_dir,
-                      os.path.join(artifacts_location, ng_tf_whl))
+    install_openvino_tf(tf_version, venv_dir,
+                      os.path.join(artifacts_location, ov_tf_whl))
 
     if arguments.use_grappler_optimizer:
         import tensorflow as tf

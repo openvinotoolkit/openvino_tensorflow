@@ -421,7 +421,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
     return str(cxx_abi)
 
 
-def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
+def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
                     cmake_flags, verbose):
     pwd = os.getcwd()
 
@@ -433,10 +433,10 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     # Get the absolute path for the artifacts
     artifacts_location = os.path.abspath(artifacts_location)
 
-    ngtf_src_loc = os.path.abspath(ngtf_src_loc)
-    print("Source location: " + ngtf_src_loc)
+    ovtf_src_loc = os.path.abspath(ovtf_src_loc)
+    print("Source location: " + ovtf_src_loc)
 
-    os.chdir(ngtf_src_loc)
+    os.chdir(ovtf_src_loc)
 
     # mkdir build directory
     path = build_dir
@@ -450,7 +450,7 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     os.chdir(path)
     cmake_cmd = ["cmake"]
     cmake_cmd.extend(cmake_flags)
-    cmake_cmd.extend([ngtf_src_loc])
+    cmake_cmd.extend([ovtf_src_loc])
     command_executor(cmake_cmd)
 
     import psutil
@@ -462,14 +462,14 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     command_executor(make_cmd)
 
     os.chdir(os.path.join("python", "dist"))
-    ngtf_wheel_files = glob.glob("openvino_tensorflow_add_on-*.whl")
-    if (len(ngtf_wheel_files) != 1):
+    ovtf_wheel_files = glob.glob("openvino_tensorflow_add_on-*.whl")
+    if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
-        for whl in ngtf_wheel_files:
+        for whl in ovtf_wheel_files:
             print("Existing Wheel: " + whl)
         raise Exception("Error getting the openvino_tensorflow_add_on wheel file")
 
-    output_wheel = ngtf_wheel_files[0]
+    output_wheel = ovtf_wheel_files[0]
     print("OUTPUT WHL FILE: %s" % output_wheel)
 
     output_path = os.path.join(artifacts_location, output_wheel)
@@ -487,11 +487,11 @@ def build_ngraph_tf(build_dir, artifacts_location, ngtf_src_loc, venv_dir,
     return output_wheel
 
 
-def install_ngraph_tf(tf_version, venv_dir, ngtf_pip_whl):
+def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
-    command_executor(["pip", "install", "-U", ngtf_pip_whl])
+    command_executor(["pip", "install", "-U", ovtf_pip_whl])
 
     import tensorflow as tf
     print('\033[1;34mVersion information\033[0m')

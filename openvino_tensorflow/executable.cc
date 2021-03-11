@@ -26,25 +26,25 @@ namespace openvino_tensorflow {
 
 Executable::Executable(shared_ptr<Function> func, string device)
     : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
-  NGRAPH_VLOG(2) << "Checking for unsupported ops";
+  OVTF_VLOG(2) << "Checking for unsupported ops";
   const auto& opset = ngraph::get_opset5();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
-      NGRAPH_VLOG(0) << "UNSUPPORTED OP DETECTED: "
+      OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: "
                      << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
                           " not belonging to opset5!");
     }
   }
 
-  NGRAPH_VLOG(2) << "Checking for unused parameters";
+  OVTF_VLOG(2) << "Checking for unused parameters";
   auto parameters = func->get_parameters();
   ngraph::ParameterVector used_parameters;
   for (int i = 0; i < parameters.size(); ++i) {
-    NGRAPH_VLOG(3) << parameters[i];
+    OVTF_VLOG(3) << parameters[i];
     if (parameters[i]->get_users().size() == 0) {
       m_skipped_inputs.push_back(i);
-      NGRAPH_VLOG(2) << "Removing unused parameter "
+      OVTF_VLOG(2) << "Removing unused parameter "
                      << parameters[i]->get_name();
     } else {
       used_parameters.push_back(parameters[i]);
@@ -59,7 +59,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
   //  1. constant function (Const -> Result)
   //  2. identity function (Parameter -> Result)
   //  3. zero function (* -> Zero)
-  NGRAPH_VLOG(2) << "Checking for trivial functions";
+  OVTF_VLOG(2) << "Checking for trivial functions";
   bool trivial_fn = true;
   for (auto result : func->get_results()) {
     auto parent = result->input_value(0).get_node_shared_ptr();
@@ -71,14 +71,14 @@ Executable::Executable(shared_ptr<Function> func, string device)
   }
 
   if (trivial_fn) {
-    NGRAPH_VLOG(2) << "Function is trivial and can be short-circuited";
+    OVTF_VLOG(2) << "Function is trivial and can be short-circuited";
     m_trivial_fn = func;
     return;
   }
 
-  NGRAPH_VLOG(2) << "Checking for function parameters";
+  OVTF_VLOG(2) << "Checking for function parameters";
   if (func->get_parameters().size() == 0) {
-    NGRAPH_VLOG(1) << "No parameters found in nGraph function!";
+    OVTF_VLOG(1) << "No parameters found in nGraph function!";
     // Try to find a node that can be converted into a "static input"
     bool param_replaced = false;
     for (const auto& node : func->get_ordered_ops()) {
@@ -104,7 +104,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
                          shape_size(shape) * element_type.size());
         m_hoisted_params.push_back(
             make_pair(param->get_friendly_name(), ie_tensor));
-        NGRAPH_VLOG(1) << "Converted node " << constant << " to a parameter "
+        OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
                        << param;
         param_replaced = true;
         break;
@@ -118,7 +118,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
 
   m_function = func;
 
-  NGRAPH_VLOG(2) << "Creating IE CNN network using nGraph function";
+  OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";
   m_network = InferenceEngine::CNNNetwork(func);
 
   std::map<string, string> options;
@@ -172,7 +172,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
     iter->second->setPrecision(precision);
   }
 
-  NGRAPH_VLOG(2) << "Creating IE Execution Engine";
+  OVTF_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
     m_ie_engine = make_shared<IE_VADM_Engine>(m_network);
   } else {
@@ -184,7 +184,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
                       vector<shared_ptr<runtime::Tensor>>& outputs,
                       bool multi_req_execution) {
   if (m_trivial_fn) {
-    NGRAPH_VLOG(2) << "Calling trivial IE function with inputs="
+    OVTF_VLOG(2) << "Calling trivial IE function with inputs="
                    << inputs.size() << " outputs=" << outputs.size();
     return CallTrivial(inputs, outputs);
   }
@@ -213,7 +213,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
     }
     auto input_name = parameters[j++]->get_friendly_name();
     if (input_info.find(input_name) == input_info.end()) {
-      NGRAPH_VLOG(1) << "Skipping unused input " << input_name;
+      OVTF_VLOG(1) << "Skipping unused input " << input_name;
       continue;
     }
     ie_inputs[i] = nullptr;
@@ -227,7 +227,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   for (const auto& it : m_hoisted_params) {
     auto input_name = it.first;
     if (input_info.find(input_name) == input_info.end()) {
-      NGRAPH_VLOG(1) << "Skipping unused hoisted param " << input_name;
+      OVTF_VLOG(1) << "Skipping unused hoisted param " << input_name;
       continue;
     }
     ie_hoisted_params[j] = nullptr;
@@ -296,12 +296,12 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
         outputs[i] =
             make_shared<IETensor>(results[i]->get_element_type(), shape);
       }
-      NGRAPH_VLOG(2) << "Skipping function with zero dim result...";
+      OVTF_VLOG(2) << "Skipping function with zero dim result...";
       continue;
     }
     auto parent = results[i]->input_value(0).get_node_shared_ptr();
     if (ngraph::is_type<opset::Parameter>(parent)) {
-      NGRAPH_VLOG(2) << "Calling parameter -> result function...";
+      OVTF_VLOG(2) << "Calling parameter -> result function...";
       auto param = ngraph::as_type_ptr<opset::Parameter>(parent);
       auto index = m_trivial_fn->get_parameter_index(param);
       if (index < 0) {
@@ -318,7 +318,7 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
       outputs[i]->write(buf_ptr, size);
       delete[] buf_ptr;
     } else if (ngraph::is_type<opset::Constant>(parent)) {
-      NGRAPH_VLOG(2) << "Calling constant -> result function...";
+      OVTF_VLOG(2) << "Calling constant -> result function...";
       auto constant = ngraph::as_type_ptr<opset::Constant>(parent);
       if (outputs[i] == nullptr) {
         outputs[i] = make_shared<IETensor>(

@@ -26,7 +26,7 @@ namespace openvino_tensorflow {
 // To do that an Encapsulator object with AnalysisPass run can be created in
 // MarkForClustering, and that can be passed to EncapsulateClusters
 
-/// Takes a TF graph where ngraph_cluster attributes has been marked in a
+/// Takes a TF graph where ovtf_cluster attributes has been marked in a
 /// preceeding pass (assign_clusters), then replaces TF subgraphs and inserts
 /// encapsulate ops in their place.
 Status EncapsulateClusters(

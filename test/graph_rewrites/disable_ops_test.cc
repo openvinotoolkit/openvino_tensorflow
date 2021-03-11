@@ -21,7 +21,7 @@ namespace testing {
 
 void ResetMarkForClustering(tensorflow::Graph* graph) {
   for (auto node : graph->nodes()) {
-    node->ClearAttr("_ngraph_marked_for_clustering");
+    node->ClearAttr("_ovtf_marked_for_clustering");
   }
 }
 
@@ -97,15 +97,15 @@ TEST(DisableOps, DisableTest) {
 
   // No ops are disabled. All 3 are expected to be clustered
   ASSERT_OK(
-      GetNodeAttr(node1->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node1->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node2->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node2->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node3->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node3->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ResetMarkForClustering(&g);
@@ -114,15 +114,15 @@ TEST(DisableOps, DisableTest) {
   api::set_disabled_ops("Add,Mul");
   ASSERT_OK(MarkForClustering(&g, {}));
   ASSERT_OK(
-      GetNodeAttr(node1->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node1->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node2->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node2->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_NOT_OK(
-      GetNodeAttr(node3->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node3->attrs(), "_ovtf_marked_for_clustering", &marked));
 
   ResetMarkForClustering(&g);
 
@@ -130,15 +130,15 @@ TEST(DisableOps, DisableTest) {
   api::set_disabled_ops("Add,Add,Mul,Add");
   ASSERT_OK(MarkForClustering(&g, {}));
   ASSERT_OK(
-      GetNodeAttr(node1->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node1->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node2->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node2->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_NOT_OK(
-      GetNodeAttr(node3->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node3->attrs(), "_ovtf_marked_for_clustering", &marked));
 
   ResetMarkForClustering(&g);
 
@@ -146,15 +146,15 @@ TEST(DisableOps, DisableTest) {
   api::set_disabled_ops("");
   ASSERT_OK(MarkForClustering(&g, {}));
   ASSERT_OK(
-      GetNodeAttr(node1->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node1->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node2->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node2->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ASSERT_OK(
-      GetNodeAttr(node3->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node3->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_TRUE(marked);
 
   ResetMarkForClustering(&g);
@@ -163,11 +163,11 @@ TEST(DisableOps, DisableTest) {
   api::set_disabled_ops("Add,_InvalidOp");
   ASSERT_NOT_OK(MarkForClustering(&g, {}));
   ASSERT_NOT_OK(
-      GetNodeAttr(node1->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node1->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_NOT_OK(
-      GetNodeAttr(node2->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node2->attrs(), "_ovtf_marked_for_clustering", &marked));
   ASSERT_NOT_OK(
-      GetNodeAttr(node3->attrs(), "_ngraph_marked_for_clustering", &marked));
+      GetNodeAttr(node3->attrs(), "_ovtf_marked_for_clustering", &marked));
 
   // Clean up
   api::set_disabled_ops("");

@@ -130,34 +130,34 @@ class RN50Graph:
         iteration = 0
         num_processed_images = 0
         num_remaining_images = self.args.num_images
-        ngtf_time = 0.0
-        ngtf_labels = np.array([], dtype=np.int32)
+        ovtf_time = 0.0
+        ovtf_labels = np.array([], dtype=np.int32)
         while num_remaining_images >= self.args.batch_size:
             np_images = data_sess.run(images)
             if iteration > self.args.warmup_iters:
                 num_processed_images += self.args.batch_size
                 num_remaining_images -= self.args.batch_size
 
-            ngtf_start_time = time.time()
+            ovtf_start_time = time.time()
             predictions = infer_sess.run(output_tensor,
                                          {input_tensor: np_images})
-            ngtf_elapsed_time = time.time() - ngtf_start_time
+            ovtf_elapsed_time = time.time() - ovtf_start_time
 
             if iteration > self.args.warmup_iters:
-                ngtf_time += ngtf_elapsed_time
-                ngtf_labels = np.append(ngtf_labels,
+                ovtf_time += ovtf_elapsed_time
+                ovtf_labels = np.append(ovtf_labels,
                                         np.argmax(predictions, axis=-1))
             iteration += 1
 
-        print("Total execution time (NGTF): ", ngtf_time)
+        print("Total execution time (OVTF): ", ovtf_time)
 
         print("Processed %d images. Batch size = %d" % (num_processed_images,
                                                         self.args.batch_size))
         print("Avg throughput (TF): %0.4f img/s" %
               (num_processed_images / tf_time))
-        print("Avg throughput (NGTF): %0.4f img/s" %
-              (num_processed_images / ngtf_time))
-        assert ((tf_labels == ngtf_labels).all())
+        print("Avg throughput (OVTF): %0.4f img/s" %
+              (num_processed_images / ovtf_time))
+        assert ((tf_labels == ovtf_labels).all())
 
 
 if __name__ == "__main__":

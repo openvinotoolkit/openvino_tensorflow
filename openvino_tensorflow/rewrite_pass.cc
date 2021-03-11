@@ -20,6 +20,7 @@
 #include "openvino_tensorflow/encapsulate_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
 
@@ -52,17 +53,17 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 //
 // The pass has several phases, each executed in the below sequence:
 //
-//   1. Marking [ngraph_mark_for_clustering.cc]
-//   2. Cluster Assignment [ngraph_assign_clusters.cc]
-//   3. Cluster Deassignment [ngraph_deassign_clusters.cc]
-//   4. Cluster Encapsulation [ngraph_encapsulate_clusters.cc]
+//   1. Marking [mark_for_clustering.cc]
+//   2. Cluster Assignment [assign_clusters.cc]
+//   3. Cluster Deassignment [deassign_clusters.cc]
+//   4. Cluster Encapsulation [encapsulate_clusters.cc]
 
 class NGraphEncapsulationPass : public NGraphRewritePass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
     // If we don't get a main graph, log that fact and bail.
     if (options.graph == nullptr) {
-      NGRAPH_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
+      OVTF_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
       return Status::OK();
     }
 
@@ -78,14 +79,14 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    bool ngraph_not_enabled =
+    bool ovtf_not_enabled =
         (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
     bool already_processed = util::IsAlreadyProcessed(graph);
-    if (!already_processed && ngraph_not_enabled) {
-      NGRAPH_VLOG(0) << "NGraph is available but disabled.";
+    if (!already_processed && ovtf_not_enabled) {
+      OVTF_VLOG(0) << "NGraph is available but disabled.";
     }
-    if (ngraph_not_enabled || already_processed) {
-      NGRAPH_VLOG(1) << std::string("Rewrite pass will not run because ") +
+    if (ovtf_not_enabled || already_processed) {
+      OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
                             (already_processed ? "graph is already preprocessed"
                                                : "ngraph is disabled");
       NGraphClusterManager::EvictAllClusters();
@@ -96,13 +97,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
-    // TF_RETURN_IF_ERROR(MarkForClustering(graph, skip_these_nodes));
 
-    // OCM bypassing the MarkForClustering function call
-    const char* device_id =  std::getenv("OPENVINO_TF_BACKEND");
-    if (device_id==nullptr){
-      device_id = "CPU";
-    }
+    // OCM call for marking supported nodes
+    std::string device;
+    BackendManager::GetBackendName(device);
+    const char* device_id(device.c_str());
     std::string ov_version = "2021.2";
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
@@ -115,7 +114,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     for (auto void_node : nodes_list) {
     // TODO(amprocte): move attr name to a constant
       tensorflow::Node* node = (tensorflow::Node *)void_node;
-      node->AddAttr("_ngraph_marked_for_clustering", true);
+      node->AddAttr("_ovtf_marked_for_clustering", true);
       auto it = set_attributes_map.find(node->type_string());
       if (it != set_attributes_map.end()) {
         it->second(node);

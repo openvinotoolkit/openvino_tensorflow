@@ -71,7 +71,7 @@ node {
   }
 }
 node {
-  name: "ngraph_cluster_0"
+  name: "ovtf_cluster_0"
   op: "_nGraphEncapsulate"
   input: "Placeholder"
   input: "Placeholder_1"
@@ -97,7 +97,7 @@ node {
     }
   }
   attr {
-    key: "ngraph_cluster"
+    key: "ovtf_cluster"
     value {
       i: 0
     }
@@ -112,7 +112,7 @@ node {
 node {
   name: "add_1"
   op: "IdentityN"
-  input: "ngraph_cluster_0"
+  input: "ovtf_cluster_0"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
     key: "T"
@@ -126,7 +126,7 @@ node {
 node {
   name: "Sigmoid"
   op: "IdentityN"
-  input: "ngraph_cluster_0:1"
+  input: "ovtf_cluster_0:1"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
     key: "T"
@@ -140,7 +140,7 @@ node {
 library {
   function {
     signature {
-      name: "ngraph_cluster_0"
+      name: "ovtf_cluster_0"
       input_arg {
         name: "ngraph_input_0"
         type: DT_FLOAT
@@ -175,13 +175,13 @@ library {
         }
       }
       attr {
-        key: "_ngraph_cluster"
+        key: "_ovtf_cluster"
         value {
           i: 0
         }
       }
       attr {
-        key: "_ngraph_marked_for_clustering"
+        key: "_ovtf_marked_for_clustering"
         value {
           b: true
         }
@@ -203,13 +203,13 @@ library {
         }
       }
       attr {
-        key: "_ngraph_cluster"
+        key: "_ovtf_cluster"
         value {
           i: 0
         }
       }
       attr {
-        key: "_ngraph_marked_for_clustering"
+        key: "_ovtf_marked_for_clustering"
         value {
           b: true
         }
@@ -230,13 +230,13 @@ library {
         }
       }
       attr {
-        key: "_ngraph_cluster"
+        key: "_ovtf_cluster"
         value {
           i: 0
         }
       }
       attr {
-        key: "_ngraph_marked_for_clustering"
+        key: "_ovtf_marked_for_clustering"
         value {
           b: true
         }

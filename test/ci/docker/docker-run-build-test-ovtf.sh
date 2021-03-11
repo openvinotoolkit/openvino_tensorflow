@@ -8,13 +8,13 @@
 
 # Script parameters:
 #
-# $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+# $1 ImageID    Required: ID of the ovtf_bridge_ci docker image to use
 #
 # Script environment variable parameters:
 #
-# NG_TF_BUILD_OPTIONS  Optional: additional build options for build_ovtf.py
-# NG_TF_TEST_OPTIONS   Optional: additional test options for test_ovtf.py
-# NG_TF_TEST_PLAIDML   Optional: run additional testing on PlaidML backend
+# OV_TF_BUILD_OPTIONS  Optional: additional build options for build_ovtf.py
+# OV_TF_TEST_OPTIONS   Optional: additional test options for test_ovtf.py
+# OV_TF_TEST_PLAIDML   Optional: run additional testing on PlaidML backend
 #
 # General environment variables that are passed through to the docker container:
 #
@@ -56,14 +56,14 @@ volume_mounts="-v ${bridge_dir}:${bridge_mountpoint}"
 
 # Set up optional environment variables
 optional_env=''
-if [ ! -z "${NG_TF_BUILD_OPTIONS}" ] ; then
-  optional_env="${optional_env} --env NG_TF_BUILD_OPTIONS=${NG_TF_BUILD_OPTIONS}"
+if [ ! -z "${OV_TF_BUILD_OPTIONS}" ] ; then
+  optional_env="${optional_env} --env OV_TF_BUILD_OPTIONS=${OV_TF_BUILD_OPTIONS}"
 fi
-if [ ! -z "${NG_TF_TEST_OPTIONS}" ] ; then
-  optional_env="${optional_env} --env NG_TF_TEST_OPTIONS=${NG_TF_TEST_OPTIONS}"
+if [ ! -z "${OV_TF_TEST_OPTIONS}" ] ; then
+  optional_env="${optional_env} --env OV_TF_TEST_OPTIONS=${OV_TF_TEST_OPTIONS}"
 fi
-if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
-  optional_env="${optional_env} --env NG_TF_TEST_PLAIDML=${NG_TF_TEST_PLAIDML}"
+if [ ! -z "${OV_TF_TEST_PLAIDML}" ] ; then
+  optional_env="${optional_env} --env OV_TF_TEST_PLAIDML=${OV_TF_TEST_PLAIDML}"
 fi
 
 # Set up passthrough environment variables
@@ -80,7 +80,7 @@ fi
 set -u  # No unset variables after this point
 
 RUNASUSER_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-as-user.sh"
-BUILD_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-build-test-ngtf.sh"
+BUILD_SCRIPT="${bridge_mountpoint}/test/ci/docker/docker-scripts/run-build-test-ovtf.sh"
 
 # If proxy settings are detected in the environment, make sure they are
 # included on the docker-build command-line.  This mirrors a similar system

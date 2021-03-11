@@ -70,9 +70,9 @@ def calculate_output(param_dict, select_device, input_example):
 
     config = tf.compat.v1.ConfigProto(
         inter_op_parallelism_threads=1, allow_soft_placement=True)
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
-    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
+    sess = tf.compat.v1.Session(config=config_ovtf_enabled)
     set_os_env(select_device)
 
     # if checkpoint, then load checkpoint
@@ -128,13 +128,13 @@ def calculate_output(param_dict, select_device, input_example):
     return tensors, output_tensor_name, skipped_tensors
 
 
-def calculate_norm(ngraph_output, tf_output, desired_norm):
+def calculate_norm(ovtf_output, tf_output, desired_norm):
     """Calculate desired_norm between vectors.
 
     Calculate the L1/L2/inf norm between the NGRAPH and tensorflow output vectors.
 
     Args:
-        ngraph_output: The output vector generated from NGRAPH graph.
+        ovtf_output: The output vector generated from NGRAPH graph.
         tf_output: The output vector generated from tensorflow graph.
         desired_norm: L1/L2/inf norm. 
 
@@ -144,30 +144,30 @@ def calculate_norm(ngraph_output, tf_output, desired_norm):
     Raises:
         Exception: If the dimension of the two vectors mismatch.
     """
-    if (ngraph_output.shape != tf_output.shape):
+    if (ovtf_output.shape != tf_output.shape):
         raise Exception('ngraph output and tf output dimension mismatch')
 
-    ngraph_output_squeezed = np.squeeze(ngraph_output)
+    ovtf_output_squeezed = np.squeeze(ovtf_output)
     tf_output_squeezed = np.squeeze(tf_output)
 
     #if size of node is 1 but shape is (), reshaping it to (1,)
-    if (len(ngraph_output_squeezed.shape) == 0):
-        ngraph_output_squeezed = ngraph_output_squeezed.reshape([1])
+    if (len(ovtf_output_squeezed.shape) == 0):
+        ovtf_output_squeezed = ovtf_output_squeezed.reshape([1])
         tf_output_squeezed = tf_output_squeezed.reshape([1])
 
-    ngraph_output_flatten = ngraph_output_squeezed.flatten()
+    ovtf_output_flatten = ovtf_output_squeezed.flatten()
     tf_output_flatten = tf_output_squeezed.flatten()
 
-    factor = np.prod(ngraph_output_squeezed.shape)
+    factor = np.prod(ovtf_output_squeezed.shape)
 
     if desired_norm not in [1, 2, np.inf]:
         raise Exception('Only L2, L2, and inf norms are supported')
 
     #Additional check to verify if the op datatype can be converted or not to be able to subtract.
     #Few data types cannot be converted, the list is printed among the results at the end.
-    if ngraph_output_flatten.size is not 0:
+    if ovtf_output_flatten.size is not 0:
         try:
-            n = np.linalg.norm((ngraph_output_flatten.astype(np.float32) -
+            n = np.linalg.norm((ovtf_output_flatten.astype(np.float32) -
                                 tf_output_flatten.astype(np.float32)),
                                desired_norm)
         except:
@@ -176,7 +176,7 @@ def calculate_norm(ngraph_output, tf_output, desired_norm):
         if desired_norm is np.inf or n is None:
             return n
         else:
-            return n / len(ngraph_output_flatten)
+            return n / len(ovtf_output_flatten)
 
 
 def parse_json():
@@ -297,11 +297,11 @@ if __name__ == '__main__':
     result_tf_graph_arrs, out_tensor_names_cpu, tf_skipped_tensors = calculate_output(
         parameters, device1, input_tensor_dim_map)
     # Run the model on testing backend
-    result_ngraph_arrs, out_tensor_names_ngraph, ngraph_skipped_tensors = calculate_output(
+    result_ovtf_arrs, out_tensor_names_ngraph, ovtf_skipped_tensors = calculate_output(
         parameters, device2, input_tensor_dim_map)
 
-    assert (len(tf_skipped_tensors) == len(ngraph_skipped_tensors)) and all(
-        [i == j for i, j in zip(tf_skipped_tensors, ngraph_skipped_tensors)])
+    assert (len(tf_skipped_tensors) == len(ovtf_skipped_tensors)) and all(
+        [i == j for i, j in zip(tf_skipped_tensors, ovtf_skipped_tensors)])
 
     if len(tf_skipped_tensors) > 0:
         print("Skipping comparison of the output tensor:")
@@ -317,7 +317,7 @@ if __name__ == '__main__':
         "inf": inf_norm_threshold
     }
     for tname, result_ngraph, result_tf_graph in zip(
-            out_tensor_names_cpu, result_ngraph_arrs, result_tf_graph_arrs):
+            out_tensor_names_cpu, result_ovtf_arrs, result_tf_graph_arrs):
         new_out_layer = tname.replace("/", "_")
         nparray_tf = np.array(result_tf_graph)
         nparray_ngraph = np.array(result_ngraph)

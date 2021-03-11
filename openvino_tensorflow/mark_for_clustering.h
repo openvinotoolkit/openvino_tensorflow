@@ -17,7 +17,6 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-Status MarkForClustering(Graph* graph, std::set<string> skip_these_nodes);
 Status IsSupportedByBackend(
     const Node* node, std::shared_ptr<Backend> op_backend,
     const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
@@ -37,13 +36,6 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes);
 
 using SetAttributesFunction = std::function<Status(Node*)>;
 const std::map<std::string, SetAttributesFunction>& GetAttributeSetters();
-
-using TypeConstraintMap =
-    std::map<std::string, std::map<std::string, gtl::ArraySlice<DataType>>>;
-const TypeConstraintMap& GetTypeConstraintMap();
-
-using ConfirmationFunction = std::function<Status(Node*, bool*)>;
-const std::map<std::string, ConfirmationFunction>& GetConfirmationMap();
 
 const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
 GetTFToNgOpMap();

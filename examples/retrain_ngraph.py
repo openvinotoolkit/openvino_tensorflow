@@ -1083,10 +1083,10 @@ def main(_):
     # Set the cofigureation suitable for nGraph
     config = tf.compat.v1.ConfigProto()
     config.inter_op_parallelism_threads = 2
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
-            config=config_ngraph_enabled, graph=graph) as sess:
+            config=config_ovtf_enabled, graph=graph) as sess:
         # Initialize all weights: for the module to their pretrained values,
         # and for the newly added retraining layer to random initial values.
         init = tf.compat.v1.global_variables_initializer()

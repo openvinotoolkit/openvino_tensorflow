@@ -133,7 +133,7 @@ def train_mnist_cnn(FLAGS):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=4)
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
@@ -165,7 +165,7 @@ def train_mnist_cnn(FLAGS):
     train_writer = tf.compat.v1.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.compat.v1.get_default_graph())
     saver = tf.compat.v1.train.Saver()
-    with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
+    with tf.compat.v1.Session(config=config_ovtf_enabled) as sess:
         saver.restore(sess, FLAGS.model_dir)
         #sess.run(tf.global_variables_initializer())
         test_accuracy_final = 0

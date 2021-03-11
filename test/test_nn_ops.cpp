@@ -720,7 +720,7 @@ TEST(NNOps, BiasAdd) {
     std::vector<std::string> formats{"NHWC", "NCHW"};
 
     for (auto& format : formats) {
-      NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+      OVTF_VLOG(2) << "BiasAdd testing with format: " << format;
       Scope root = Scope::NewRootScope();
       attrs = attrs.DataFormat(format);
       // see TF file .../tensorflow/cc/ops/nn_ops.h
@@ -739,7 +739,7 @@ TEST(NNOps, BiasAdd) {
     AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
     ops::BiasAdd::Attrs attrs;
     std::string format("NCHW");
-    NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+    OVTF_VLOG(2) << "BiasAdd testing with format: " << format;
     Scope root = Scope::NewRootScope();
     attrs = attrs.DataFormat(format);
     // see TF file .../tensorflow/cc/ops/nn_ops.h
@@ -757,7 +757,7 @@ TEST(NNOps, BiasAdd) {
     AssignInputValues<float>(B, {100, -100, 50});  // channels = 3
     ops::BiasAdd::Attrs attrs;
     std::string format("NHWC");
-    NGRAPH_VLOG(2) << "BiasAdd testing with format: " << format;
+    OVTF_VLOG(2) << "BiasAdd testing with format: " << format;
     Scope root = Scope::NewRootScope();
     attrs = attrs.DataFormat(format);
     // see TF file .../tensorflow/cc/ops/nn_ops.h

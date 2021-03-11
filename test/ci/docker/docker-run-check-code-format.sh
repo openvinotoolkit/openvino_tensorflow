@@ -8,7 +8,7 @@
 
 # Script parameters:
 #
-# $1 ImageID    Required: ID of the ngtf_bridge_ci docker image to use
+# $1 ImageID    Required: ID of the ovtf_bridge_ci docker image to use
 
 set -e  # Fail on any command with non-zero exit
 

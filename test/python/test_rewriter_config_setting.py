@@ -40,8 +40,8 @@ class TestRewriterConfigBackendSetting(NgraphTest):
         rewriter_options.meta_optimizer_iterations = (
             rewriter_config_pb2.RewriterConfig.ONE)
         rewriter_options.min_graph_nodes = -1
-        ngraph_optimizer = rewriter_options.custom_optimizers.add()
-        ngraph_optimizer.name = "ngraph-optimizer"
+        ovtf_optimizer = rewriter_options.custom_optimizers.add()
+        ovtf_optimizer.name = "ovtf-optimizer"
         config.MergeFrom(
             tf.compat.v1.ConfigProto(
                 graph_options=tf.compat.v1.GraphOptions(

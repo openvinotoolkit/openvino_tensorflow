@@ -46,7 +46,7 @@ class NgraphTest(object):
         # TODO: Stop grappler on failure (Add fail_on_optimizer_errors=True)
         config = openvino_tensorflow.update_config(config)
 
-        ngraph_tf_disable_deassign_clusters = os.environ.pop(
+        openvino_tf_disable_deassign_clusters = os.environ.pop(
             'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
@@ -56,25 +56,25 @@ class NgraphTest(object):
 
         os.environ.pop('OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
-        if ngraph_tf_disable_deassign_clusters is not None:
+        if openvino_tf_disable_deassign_clusters is not None:
             os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
-                ngraph_tf_disable_deassign_clusters
+                openvino_tf_disable_deassign_clusters
 
         return retval
 
     def without_ngraph(self, l, config=None):
         if config is None:
             config = tf.compat.v1.ConfigProto()
-        ngraph_tf_disable_deassign_clusters = os.environ.pop(
+        openvino_tf_disable_deassign_clusters = os.environ.pop(
             'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
         openvino_tensorflow.disable()
         with tf.compat.v1.Session(config=config) as sess:
             retval = l(sess)
 
-        if ngraph_tf_disable_deassign_clusters is not None:
+        if openvino_tf_disable_deassign_clusters is not None:
             os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
-                ngraph_tf_disable_deassign_clusters
+                openvino_tf_disable_deassign_clusters
 
         return retval
 
