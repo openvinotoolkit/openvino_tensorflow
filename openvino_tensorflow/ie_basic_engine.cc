@@ -39,7 +39,7 @@ void IE_Basic_Engine::infer(
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr){
 
-      if(m_device != "MYRIAD" && m_device != "VAD-M")
+      if(m_device != "MYRIAD" && m_device != "HDDL")
         m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
       else{
         auto input_blob = m_infer_reqs[0].GetBlob(input_names[i]);

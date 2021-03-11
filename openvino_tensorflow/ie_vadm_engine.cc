@@ -54,24 +54,41 @@ void IE_VADM_Engine::infer(
   //  Prepare input blobs
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] == nullptr) continue;
-    InferenceEngine::TensorDesc desc = inputs[i]->get_blob()->getTensorDesc();
-    InferenceEngine::Precision prec = desc.getPrecision();
-    const void* input_data_pointer = inputs[i]->get_data_ptr();
-    std::string input_name = input_names[i];
-    size_t size = inputs[i]->get_blob()->byteSize();
+    if(m_device != "MYRIAD" && m_device != "HDDL") {
+      InferenceEngine::TensorDesc desc = inputs[i]->get_blob()->getTensorDesc();
+      InferenceEngine::Precision prec = desc.getPrecision();
+      const void* input_data_pointer = inputs[i]->get_data_ptr();
+      std::string input_name = input_names[i];
+      size_t size = inputs[i]->get_blob()->byteSize();
 
-    InferenceEngine::SizeVector req_shape(desc.getDims());
-    if (batch_size != 0) {
-      req_shape[0] = batch_size;
-      desc.setDims(req_shape);
-    }
-    for (int j = 0; j < num_req; j++) {
-      size_t req_size = size / num_req;
-      const void* data_ptr =
-          (void*)((uint64_t)(input_data_pointer) + req_size * j);
-      int in_idx = i * num_req + j;
-      IE_Utils::CreateBlob(desc, prec, data_ptr, req_size, in_blobs[in_idx]);
-      m_infer_reqs[j].SetBlob(input_name, in_blobs[in_idx]);
+      InferenceEngine::SizeVector req_shape(desc.getDims());
+      if (batch_size != 0) {
+        req_shape[0] = batch_size;
+        desc.setDims(req_shape);
+      }
+      for (int j = 0; j < num_req; j++) {
+        size_t req_size = size / num_req;
+        const void* data_ptr =
+            (void*)((uint64_t)(input_data_pointer) + req_size * j);
+        int in_idx = i * num_req + j;
+        IE_Utils::CreateBlob(desc, prec, data_ptr, req_size, in_blobs[in_idx]);
+        m_infer_reqs[j].SetBlob(input_name, in_blobs[in_idx]);
+      }
+    } else {
+      const void* input_data_pointer = inputs[i]->get_data_ptr();
+      size_t size = inputs[i]->get_blob()->byteSize();
+      //size_t req_size = size / num_req;
+      for (int j = 0; j < num_req; j++) {
+        auto input_blob = m_infer_reqs[j].GetBlob(input_names[i]);
+       InferenceEngine::MemoryBlob::Ptr minput = InferenceEngine::as<InferenceEngine::MemoryBlob>(input_blob);
+        auto minputHolder = minput->wmap();
+
+        auto inputBlobData = minputHolder.as<uint8_t*>();
+        size_t input_data_size = input_blob->byteSize();
+       auto data_ptr = (uint8_t*)((uint64_t)(input_data_pointer)+input_data_size*j);
+       std::copy(data_ptr, data_ptr + input_data_size, inputBlobData);
+        //inputs[i]->read((void*)inputBlobData, input_data_size);
+      }
     }
   }
   for (int i = 0; i < hoisted_params.size(); i++) {
