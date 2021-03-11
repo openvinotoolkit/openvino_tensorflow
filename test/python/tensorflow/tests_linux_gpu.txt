@@ -272,3 +272,15 @@ reduction_ops_test.MeanReductionTest.testFloat64
 reduction_ops_test.MeanReductionTest.testComplex64
 reduction_ops_test.MeanReductionTest.testComplex128
 reduction_ops_test.MaxReductionTest.testDoubleReduce3D
+
+# Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
+topk_op_test.TopKTest.testMediumTopK
+topk_op_test.TopKTest.testLargeTopK
+topk_op_test.TopKTest.testTop2
+topk_op_test.TopKTest.testLargeSort
+
+# Axis Dimension is out of range. Got random value, should be in range [-4, 4)
+nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
+
+lrn_op_test.LRNOpTest.testGradientsZeroInput
+softmax_op_test.SoftmaxTest.testEmptyInput

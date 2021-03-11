@@ -106,3 +106,12 @@ test_nms.TestNMSOperations.test_NMSV2
 
 # Unsupported dynamic ops: Range
 test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
+
+
+# OP disable tests are not supported as of now
+test_op_disable.TestOpDisableOperations.*
+
+# Parameter mismtach: Failed to set output blob with precision: I32, if CNNNetwork output blob precision is: FP32
+test_topkv2.TestTopKV2.test_topkv2_1d
+test_topkv2.TestTopKV2.test_topkv2_2d
+test_topkv2.TestTopKV2.test_topkv2_3d

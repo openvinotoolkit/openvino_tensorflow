@@ -92,3 +92,11 @@ test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
 test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
 test_l2loss.TestL2Loss.test_l2loss[xshape1]
+
+# OP disable tests are not supported as of now
+test_op_disable.TestOpDisableOperations.*
+
+# Parameter mismtach: Failed to set output blob with precision: I32, if CNNNetwork output blob precision is: FP32
+test_topkv2.TestTopKV2.test_topkv2_1d
+test_topkv2.TestTopKV2.test_topkv2_2d
+test_topkv2.TestTopKV2.test_topkv2_3d

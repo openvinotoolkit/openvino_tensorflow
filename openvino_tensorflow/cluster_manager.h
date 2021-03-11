@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
-#ifndef NGRAPH_LIBRARY_MANAGER_H_
-#define NGRAPH_LIBRARY_MANAGER_H_
+#ifndef OPENVINO_TF_CLUSTER_MANAGER_H_
+#define OPENVINO_TF_CLUSTER_MANAGER_H_
 
 #include <mutex>
 #include <vector>
@@ -29,4 +29,4 @@ class NGraphClusterManager {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif
+#endif // OPENVINO_TF_CLUSTER_MANAGER_H_
