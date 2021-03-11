@@ -36,7 +36,7 @@ To get a **full** dump use the following set of flags
 |------------------------------|---------------------------------------|
 | `OPENVINO_TF_VLOG_LEVEL=5`     | Generate ngraph-tf logging info for different passes|
 | `OPENVINO_TF_LOG_PLACEMENT=1`  | Generate op placement log at stdout   |
-| `OPENVINO_TF_DUMP_CLUSTERS=1`  | Dump Encapsulated TF Graphs `ngraph_cluster_<cluster_num>` |
+| `OPENVINO_TF_DUMP_CLUSTERS=1`  | Dump Encapsulated TF Graphs `ovtf_cluster_<cluster_num>` |
 | `OPENVINO_TF_DUMP_GRAPHS=1`    | Dump TF graphs for different passes: precapture, capture, unmarked, marked, clustered, declustered, encapsulated |
 | `TF_CPP_MIN_VLOG_LEVEL=1`    | Enable TF CPP logs                    |
 |

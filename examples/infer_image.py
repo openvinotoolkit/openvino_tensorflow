@@ -170,10 +170,10 @@ if __name__ == "__main__":
     output_operation = graph.get_operation_by_name(output_name)
 
     config = tf.compat.v1.ConfigProto()
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
-            graph=graph, config=config_ngraph_enabled) as sess:
+            graph=graph, config=config_ovtf_enabled) as sess:
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})

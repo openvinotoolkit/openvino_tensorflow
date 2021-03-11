@@ -11,7 +11,7 @@ import os
 import sys
 import re
 import pdb
-from ngtf_graph_viewer import load_file
+from ovtf_graph_viewer import load_file
 
 
 def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):
@@ -28,9 +28,9 @@ def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):
         gdef = load_file(full_name, input_binary=False)
         print('Processing: ' + filename)
         for idx, node in enumerate(gdef.node):
-            if '_ngraph_cluster' in node.attr:
-                node_cluster_map[node.name] = 'ngtf_' + \
-                    str(node.attr['_ngraph_cluster'].i)+'/'
+            if '_ovtf_cluster' in node.attr:
+                node_cluster_map[node.name] = 'ovtf_' + \
+                    str(node.attr['_ovtf_cluster'].i)+'/'
     pkl.dump(node_cluster_map, open(output_pkl_name, "wb"), protocol=2)
 
 

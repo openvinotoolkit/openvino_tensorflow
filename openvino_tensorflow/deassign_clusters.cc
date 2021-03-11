@@ -31,9 +31,9 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 //
-// The clustering pass of ngraph_assign_clusters.cc sometimes generates many
+// The clustering pass of assign_clusters.cc sometimes generates many
 // small, trivial clusters. In this pass, we simply deassign (i.e., remove the
-// _ngraph_cluster and _ngraph_marked_for_clustering attributes) any such
+// _ovtf_cluster and _ovtf_marked_for_clustering attributes) any such
 // trivial clusters. For now, "trivial" just means that there are not at least
 // two non-trivial ops in the graph, where a "trivial op" means "Const" or
 // "Identity".
@@ -85,24 +85,24 @@ static void MaybeLogPlacement(const Graph* graph) {
                   num_nodes_marked_before_deassign)
           : 0;
 
-  std::cout << "\n";  // insert a new line at the start of NGTF_SUMMARY
-  std::cout << "NGTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
+  std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
+  std::cout << "OVTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
             << std::endl;
   // print out the number of nodes marked before deassign
-  std::cout << "NGTF_SUMMARY: Number of nodes marked for clustering: "
+  std::cout << "OVTF_SUMMARY: Number of nodes marked for clustering: "
             << num_nodes_marked_before_deassign << " ("
             << perc_marked_for_clustering_of_total << "% of total nodes)"
             << std::endl;
   // print out the number of nodes that are running on NGraph after deassign
-  std::cout << "NGTF_SUMMARY: Number of nodes assigned a cluster: "
+  std::cout << "OVTF_SUMMARY: Number of nodes assigned a cluster: "
             << nodes_assigned_a_cluster << " ("
             << perc_assigned_clusters_of_total << "% of total nodes) \t"
             << " (" << perc_assigned_clusters_of_marked
             << "% of nodes marked for clustering) \t" << std::endl;
   int num_encapsulates = final_cluster_map.size() - 1;
-  std::cout << "NGTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
+  std::cout << "OVTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
             << std::endl;
-  std::cout << "NGTF_SUMMARY: Nodes per cluster: "
+  std::cout << "OVTF_SUMMARY: Nodes per cluster: "
             << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
                                           float(num_encapsulates))
                                        : 0)
@@ -111,13 +111,13 @@ static void MaybeLogPlacement(const Graph* graph) {
   for (auto kv : final_cluster_map) {
     int cluster_idx = kv.first;
     if (cluster_idx != -1) {
-      std::cout << "NGTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
+      std::cout << "OVTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
                 << "]:\t" << kv.second.size() << std::endl;
     }
   }
 
   // log the ops gets deassigned
-  std::cout << "NGTF_SUMMARY: Op_deassigned: ";
+  std::cout << "OVTF_SUMMARY: Op_deassigned: ";
   util::PrintNodeHistogram(deassigned_histogram);
 
   for (auto kv : final_cluster_map) {
@@ -189,18 +189,18 @@ Status DeassignClusters(Graph* graph) {
       min_non_trivial_nodes =
           std::stoi(std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES"));
     }
-    NGRAPH_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
+    OVTF_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
 
     if (non_trivial_count < min_non_trivial_nodes) {
-      NGRAPH_VLOG(2) << "Busting cluster " << cluster_idx;
+      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
-        NGRAPH_VLOG(2) << "Busting node: " << node->name() << " ["
+        OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
                        << node->type_string() << "]";
 
         // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ngraph_cluster");
+        node->ClearAttr("_ovtf_cluster");
         // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ngraph_marked_for_clustering");
+        node->ClearAttr("_ovtf_marked_for_clustering");
 
         deassigned_histogram[node->type_string()]++;
       }
@@ -234,8 +234,8 @@ Status DeassignClusters(Graph* graph) {
     if(omit_cluster){
       cout << "Disable cluster: "  << cluster_idx << endl;
       for(auto node : nodes){
-        node->ClearAttr("_ngraph_cluster");
-        node->ClearAttr("_ngraph_marked_for_clustering");
+        node->ClearAttr("_ovtf_cluster");
+        node->ClearAttr("_ovtf_marked_for_clustering");
         deassigned_histogram[node->type_string()]++;
       }
     }
@@ -271,8 +271,8 @@ Status DeassignClusters(Graph* graph) {
         set<Node*>& nodes = kv.second;
 
         for(auto node : nodes) {
-          node->ClearAttr("_ngraph_cluster");
-          node->ClearAttr("_ngraph_marked_for_clustering");
+          node->ClearAttr("_ovtf_cluster");
+          node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;
         }
       }

@@ -59,7 +59,7 @@ static const gtl::ArraySlice<DataType>& NGraphRealDTypes() {
 // op.
 
 // Each op that passes all the checks, has the attribute
-// "_ngraph_marked_for_clustering" set to "true". Additional metadata (Static
+// "_ovtf_marked_for_clustering" set to "true". Additional metadata (Static
 // Inputs) for the op is also set.
 
 // Different Checks before we mark for clustering
@@ -119,7 +119,7 @@ static Status ConfirmationOk(
 
 // Marks the input indices in "inputs" as static
 static inline void SetStaticInputs(Node* n, std::vector<int32> inputs) {
-  n->AddAttr("_ngraph_static_inputs", inputs);
+  n->AddAttr("_ovtf_static_inputs", inputs);
 }
 
 // Marks the input indices given in static_input_indices as static, i.e., inputs
@@ -196,11 +196,11 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   //    confirmation_function_map["MyOp"] = [](Node* n) {
   //     if(n->condition()){
   //        int dummy=5;
-  //        n->AddAttr("_ngraph_dummy_attr", dummy);
+  //        n->AddAttr("_ovtf_dummy_attr", dummy);
   //      }
   //
   //      vector<int32> static_input_index =5;
-  //      n->AddAttr("_ngraph_static_inputs", static_input_index);
+  //      n->AddAttr("_ovtf_static_inputs", static_input_index);
   //      return Status::OK();
   //    };
   //
@@ -810,7 +810,7 @@ Status MarkForClustering(Graph* graph,
   }
 
   if (op_set_support_has_changed) {
-    NGRAPH_VLOG(5) << "Changing op support";
+    OVTF_VLOG(5) << "Changing op support";
     disabled_ops_set = disabled_ops_set_current;
     for (auto itr : disabled_ops_set) {
       auto conf_itr = confirmation_function_map.find(itr);
@@ -820,7 +820,7 @@ Status MarkForClustering(Graph* graph,
         // confirmation_function_map
         return errors::Internal("Tried to disable ngraph unsupported op ", itr);
       } else {
-        NGRAPH_VLOG(5) << "Disabling op: " << itr;
+        OVTF_VLOG(5) << "Disabling op: " << itr;
         confirmation_function_map.erase(conf_itr);
       }
     }
@@ -840,7 +840,7 @@ Status MarkForClustering(Graph* graph,
       bool skip_it = false;
       TF_RETURN_IF_ERROR(CheckIfOutputNode(node, skip_these_nodes, skip_it));
       if (skip_it) {
-        NGRAPH_VLOG(5) << "NGTF_OPTIMIZER: Found Output Node: " << node->name()
+        OVTF_VLOG(5) << "OVTF_OPTIMIZER: Found Output Node: " << node->name()
                        << " - skip marking it for clustering";
         break;
       }
@@ -849,7 +849,7 @@ Status MarkForClustering(Graph* graph,
       bool placement_ok = false;
       TF_RETURN_IF_ERROR(NGraphPlacementRequested(node, placement_ok));
       if (!placement_ok) {
-        NGRAPH_VLOG(5) << "Placement not requested: " << node->name();
+        OVTF_VLOG(5) << "Placement not requested: " << node->name();
         break;
       }
 
@@ -858,7 +858,7 @@ Status MarkForClustering(Graph* graph,
       TF_RETURN_IF_ERROR(ConfirmationOk(node, confirmation_function_map,
                                         confirmation_constraint_ok));
       if (!confirmation_constraint_ok) {
-        NGRAPH_VLOG(5) << "Node does not meet confirmation constraints: "
+        OVTF_VLOG(5) << "Node does not meet confirmation constraints: "
                        << node->name();
         if (confirmation_function_map.find(node->type_string()) ==
             confirmation_function_map.end()) {
@@ -876,7 +876,7 @@ Status MarkForClustering(Graph* graph,
       TF_RETURN_IF_ERROR(
           TypeConstraintOk(node, type_constraint_map, type_constraint_ok));
       if (!type_constraint_ok) {
-        NGRAPH_VLOG(5) << "Inputs do not meet type constraints: "
+        OVTF_VLOG(5) << "Inputs do not meet type constraints: "
                        << node->name();
         fail_constraint_histogram[node->type_string()]++;
         break;
@@ -890,7 +890,7 @@ Status MarkForClustering(Graph* graph,
       if (!is_supported) {
         string backend;
         BackendManager::GetBackendName(backend);
-        NGRAPH_VLOG(5) << "TF Op " << node->name() << " of type "
+        OVTF_VLOG(5) << "TF Op " << node->name() << " of type "
                        << node->type_string()
                        << " is not supported by backend: " << backend;
         break;
@@ -900,14 +900,14 @@ Status MarkForClustering(Graph* graph,
       mark_for_clustering = true;
     } while (false);
 
-    // Set the _ngraph_marked_for_clustering attribute if all constraints
+    // Set the _ovtf_marked_for_clustering attribute if all constraints
     // are satisfied
     if (mark_for_clustering) {
-      NGRAPH_VLOG(4) << "Accepting: " << node->name() << "["
+      OVTF_VLOG(4) << "Accepting: " << node->name() << "["
                      << node->type_string() << "]";
       nodes_marked_for_clustering.push_back(node);
     } else {
-      NGRAPH_VLOG(4) << "Rejecting: " << node->name() << "["
+      OVTF_VLOG(4) << "Rejecting: " << node->name() << "["
                      << node->type_string() << "]";
     }
   }
@@ -915,17 +915,17 @@ Status MarkForClustering(Graph* graph,
   if (api::IsLoggingPlacement()) {
     std::cout << "\n=============New sub-graph logs=============\n";
     // print summary for nodes failed to be marked
-    std::cout << "NGTF_SUMMARY: Op_not_supported: ";
+    std::cout << "OVTF_SUMMARY: Op_not_supported: ";
     util::PrintNodeHistogram(no_support_histogram);
-    std::cout << "NGTF_SUMMARY: Op_failed_confirmation: ";
+    std::cout << "OVTF_SUMMARY: Op_failed_confirmation: ";
     util::PrintNodeHistogram(fail_confirmation_histogram);
-    std::cout << "NGTF_SUMMARY: Op_failed_type_constraint: ";
+    std::cout << "OVTF_SUMMARY: Op_failed_type_constraint: ";
     util::PrintNodeHistogram(fail_constraint_histogram);
   }
 
   for (auto node : nodes_marked_for_clustering) {
     // TODO(amprocte): move attr name to a constant
-    node->AddAttr("_ngraph_marked_for_clustering", true);
+    node->AddAttr("_ovtf_marked_for_clustering", true);
     auto it = set_attributes_map.find(node->type_string());
     if (it != set_attributes_map.end()) {
       TF_RETURN_IF_ERROR(it->second(node));
@@ -938,13 +938,13 @@ Status MarkForClustering(Graph* graph,
 bool NodeIsMarkedForClustering(const Node* node) {
   bool is_marked;
   // TODO(amprocte): move attr name to a constant
-  return (GetNodeAttr(node->attrs(), "_ngraph_marked_for_clustering",
+  return (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering",
                       &is_marked) == Status::OK() &&
           is_marked);
 }
 
 void GetStaticInputs(const Node* node, std::vector<int32>* inputs) {
-  if (GetNodeAttr(node->attrs(), "_ngraph_static_inputs", inputs) !=
+  if (GetNodeAttr(node->attrs(), "_ovtf_static_inputs", inputs) !=
       Status::OK()) {
     *inputs = std::vector<int32>{};
   }
@@ -971,11 +971,11 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
           continue;
         }
 
-        NGRAPH_VLOG(5) << "For arg " << index << " checking edge "
+        OVTF_VLOG(5) << "For arg " << index << " checking edge "
                        << edge->DebugString();
 
         if (InputIsStatic(edge->dst(), edge->dst_input())) {
-          NGRAPH_VLOG(5) << "Marking edge static: " << edge->DebugString();
+          OVTF_VLOG(5) << "Marking edge static: " << edge->DebugString();
           static_input_indexes->push_back(index);
           break;
         }

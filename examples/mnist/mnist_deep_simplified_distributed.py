@@ -142,7 +142,7 @@ def train_mnist_cnn(FLAGS):
         allow_soft_placement=True,
         log_device_placement=False,
         inter_op_parallelism_threads=1)
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
     # Note: Additional configuration option to boost performance is to set the
     # following environment for the run:
@@ -200,7 +200,7 @@ def train_mnist_cnn(FLAGS):
     ]
 
     with tf.train.MonitoredTrainingSession(
-            hooks=hooks, config=config_ngraph_enabled) as sess:
+            hooks=hooks, config=config_ovtf_enabled) as sess:
 
         step = 0
         start = time.time()

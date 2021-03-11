@@ -30,12 +30,12 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 // Custom Grappler Optimizer for NGraph-TF
-class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
+class OVTFOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
  public:
-  NgraphOptimizer() = default;
-  ~NgraphOptimizer() override = default;
+  OVTFOptimizer() = default;
+  ~OVTFOptimizer() override = default;
 
-  string name() const override { return "NgraphOptimizer"; };
+  string name() const override { return "OVTFOptimizer"; };
 
   bool UsesFunctionLibrary() const override { return true; }
 
@@ -67,8 +67,8 @@ class NgraphOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
   static mutex s_serial_counter_mutex;
 };
 
-int NgraphOptimizer::s_serial_counter = 0;
-mutex NgraphOptimizer::s_serial_counter_mutex;
+int OVTFOptimizer::s_serial_counter = 0;
+mutex OVTFOptimizer::s_serial_counter_mutex;
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

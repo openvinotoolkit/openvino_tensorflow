@@ -65,9 +65,9 @@ Status EncapsulateClusters(
     Graph* graph, int graph_id,
     const std::unordered_map<std::string, std::string>& device_config) {
   Encapsulator enc(graph);
-  NGRAPH_VLOG(3) << "Running AnalysisPass in EncapsulateClusters";
+  OVTF_VLOG(3) << "Running AnalysisPass in EncapsulateClusters";
   TF_RETURN_IF_ERROR(enc.AnalysisPass());
-  NGRAPH_VLOG(3) << "Running RewritePass in EncapsulateClusters";
+  OVTF_VLOG(3) << "Running RewritePass in EncapsulateClusters";
   TF_RETURN_IF_ERROR(enc.RewritePass(graph_id, device_config));
 
   set<int> newly_created_cluster_ids;
@@ -89,7 +89,7 @@ Status EncapsulateClusters(
           opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
 
       std::stringstream ss;
-      ss << "ngraph_cluster_" << cluster_idx;
+      ss << "ovtf_cluster_" << cluster_idx;
       std::string filename_prefix = ss.str();
 
       GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
@@ -136,7 +136,7 @@ Status Encapsulator::AnalysisPass() {
         return errors::Internal(ss_err.str());
       }
     } else {
-      NGRAPH_VLOG(3) << "setting cluster " << cluster_idx
+      OVTF_VLOG(3) << "setting cluster " << cluster_idx
                      << " requested device to '" << node->assigned_device_name()
                      << "'";
       device_name_map[cluster_idx] = node->assigned_device_name();
@@ -190,7 +190,7 @@ Status Encapsulator::AnalysisPass() {
                                 ? "cross-flow"
                                 : dst_clustered ? "in-flow" : "out-flow";
 
-    NGRAPH_VLOG(4) << "found " << flow_kind << ": " << src->name() << "["
+    OVTF_VLOG(4) << "found " << flow_kind << ": " << src->name() << "["
                    << edge->src_output() << "] in " << src_cluster_idx << " to "
                    << dst->name() << "[" << edge->dst_input() << "] in "
                    << dst_cluster_idx << ", datatype: " << dt;
@@ -284,7 +284,7 @@ Status Encapsulator::AnalysisPass() {
     int computed_edge_number = count_arg + count_retval +
                                count_both_arg_retval + count_free +
                                count_encapsulated;
-    std::cout << "NGTF_SUMMARY: Types of edges:: args: " << count_arg
+    std::cout << "OVTF_SUMMARY: Types of edges:: args: " << count_arg
               << ", retvals: " << count_retval
               << ", both arg and retval: " << count_both_arg_retval
               << ", free: " << count_free
@@ -316,7 +316,7 @@ Status Encapsulator::AnalysisPass() {
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
 
-    if (GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
+    if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
         Status::OK()) {
       continue;
     }
@@ -408,7 +408,7 @@ Status Encapsulator::RewritePass(
   for (auto& kv : device_name_map) {
     int cluster_idx = kv.first;
     std::stringstream ss;
-    ss << "ngraph_cluster_" << cluster_idx;
+    ss << "ovtf_cluster_" << cluster_idx;
 
     string encap_node_name = ss.str();
     std::vector<DataType> input_types;
@@ -428,17 +428,17 @@ Status Encapsulator::RewritePass(
 
     Node* n;
     NodeBuilder nb = NodeBuilder(encap_node_name, "_nGraphEncapsulate")
-                         .Attr("ngraph_cluster", cluster_idx)
+                         .Attr("ovtf_cluster", cluster_idx)
                          .Attr("Targuments", input_types)
                          .Attr("Tresults", cluster_output_dt_map[cluster_idx])
                          .Attr("ngraph_graph_id", graph_id)
                          .Device(device_name_map[cluster_idx])
                          .Input(inputs);
     if (!device_config.empty()) {
-      NGRAPH_VLOG(3) << "Device config is not empty";
+      OVTF_VLOG(3) << "Device config is not empty";
       for (auto const& i : device_config) {
         // Adding the optional attributes
-        NGRAPH_VLOG(3) << "Attaching Attribute " << i.first << " Val "
+        OVTF_VLOG(3) << "Attaching Attribute " << i.first << " Val "
                        << i.second;
         nb.Attr(i.first, i.second);
       }
@@ -462,7 +462,7 @@ Status Encapsulator::RewritePass(
 
     TF_RETURN_IF_ERROR(
         GetStaticInputs(&graph_for_current_encapsulate, &static_input_indexes));
-    nb.Attr("_ngraph_static_inputs", static_input_indexes);
+    nb.Attr("_ovtf_static_inputs", static_input_indexes);
 
     Status status = nb.Finalize(graph, &n);
     TF_RETURN_IF_ERROR(status);
@@ -536,7 +536,7 @@ Status Encapsulator::RewritePass(
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
 
-    if (GetNodeAttr(node->attrs(), "_ngraph_cluster", &cluster_idx) !=
+    if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
         Status::OK()) {
       continue;
     }
@@ -544,7 +544,7 @@ Status Encapsulator::RewritePass(
   }
 
   for (auto node : nodes_to_remove) {
-    NGRAPH_VLOG(4) << "Removing: " << node->name();
+    OVTF_VLOG(4) << "Removing: " << node->name();
     graph->RemoveNode(node);
   }
 

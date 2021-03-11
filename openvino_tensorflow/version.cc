@@ -13,7 +13,7 @@
 
 #include "version.h"
 
-// nGraph-TensorFlow bridge uses semantic versioning: see http://semver.org/
+// openvino_tensorflow add-on uses semantic versioning: see http://semver.org/
 
 #define NG_TF_MAJOR_VERSION 0
 #define NG_TF_MINOR_VERSION 23
@@ -24,23 +24,23 @@
 // candidate such as v0.7.0-rc0
 // The code in master will always have the last released version number
 // with a suffix of '-master'
-#define NG_TF_VERSION_SUFFIX "-rc0"
+#define OV_TF_VERSION_SUFFIX "-rc0"
 
 #define VERSION_STR_HELPER(x) #x
 #define VERSION_STR(x) VERSION_STR_HELPER(x)
 
 // e.g. "0.7.0" or "0.7.0-rc0".
-#define NG_TF_VERSION_STRING                                    \
-  (VERSION_STR(NG_TF_MAJOR_VERSION) "." VERSION_STR(            \
-      NG_TF_MINOR_VERSION) "." VERSION_STR(NG_TF_PATCH_VERSION) \
-       NG_TF_VERSION_SUFFIX)
+#define OV_TF_VERSION_STRING                                    \
+  (VERSION_STR(OV_TF_MAJOR_VERSION) "." VERSION_STR(            \
+      OV_TF_MINOR_VERSION) "." VERSION_STR(OV_TF_PATCH_VERSION) \
+       OV_TF_VERSION_SUFFIX)
 
 extern "C" const char* get_ngraph_version_string();
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-const char* version() { return (NG_TF_VERSION_STRING); }
+const char* version() { return (OV_TF_VERSION_STRING); }
 const char* ngraph_version() { return get_ngraph_version_string(); }
 
 int cxx11_abi_flag() {

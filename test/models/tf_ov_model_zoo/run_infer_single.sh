@@ -117,7 +117,7 @@ NUM_ITER=20
 [ -z "$OPENVINO_TF_LOG_PLACEMENT" ] && export OPENVINO_TF_LOG_PLACEMENT=1
 [ -z "$OPENVINO_TF_VLOG_LEVEL" ] && export OPENVINO_TF_VLOG_LEVEL=-1
 device=${OPENVINO_TF_BACKEND:-"CPU"}
-./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ngtf" $device 2>&1 > ${TMPFILE}
+./run_infer.sh ${MODEL} ${IMGFILE} $NUM_ITER "ovtf" $device 2>&1 > ${TMPFILE}
 ret_code=$?
 if (( $ret_code == 0 )); then
     echo
@@ -128,7 +128,7 @@ if (( $ret_code == 0 )); then
     print_infer_times $NUM_ITER "${TMPFILE}"
 fi
 echo
-grep -oP "^NGTF_SUMMARY: (Number|Nodes|Size).*" ${TMPFILE}
+grep -oP "^OVTF_SUMMARY: (Number|Nodes|Size).*" ${TMPFILE}
 rm ${TMPFILE}
 
 if [ "${BUILDKITE}" == "true" ]; then

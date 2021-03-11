@@ -36,7 +36,7 @@ TEST(conversions, batch_to_tensorflow_nhwc) {
   ASSERT_EQ(node.get_shape(), (ngraph::Shape{2, 4, 5, 3}));
 }
 
-TEST(conversions, batch_to_ngraph_nchw) {
+TEST(conversions, batch_to_ovtf_nchw) {
   auto shape = ngraph::Shape{2, 3, 4, 5};
   ngraph::Output<ngraph::Node> node =
       make_shared<ngraph::op::Parameter>(ngraph::element::f32, shape);
@@ -44,7 +44,7 @@ TEST(conversions, batch_to_ngraph_nchw) {
   ASSERT_EQ(node.get_shape(), shape);
 }
 
-TEST(conversions, param_to_ngraph_nchw) {
+TEST(conversions, param_to_ovtf_nchw) {
   vector<size_t> in1{1, 2, 3, 4};
   vector<size_t> out1(4);
   NHWCtoHW(false, in1, out1);
@@ -52,7 +52,7 @@ TEST(conversions, param_to_ngraph_nchw) {
   ASSERT_EQ(out1[1], in1[3]);
 }
 
-TEST(conversions, batch_to_ngraph_nhwc) {
+TEST(conversions, batch_to_ovtf_nhwc) {
   auto shape = ngraph::Shape{2, 3, 4, 5};
   ngraph::Output<ngraph::Node> node =
       make_shared<ngraph::op::Parameter>(ngraph::element::f32, shape);
@@ -60,7 +60,7 @@ TEST(conversions, batch_to_ngraph_nhwc) {
   ASSERT_EQ(node.get_shape(), (ngraph::Shape{2, 5, 3, 4}));
 }
 
-TEST(conversions, param_to_ngraph_nhwc) {
+TEST(conversions, param_to_ovtf_nhwc) {
   vector<size_t> in1{1, 2, 3, 4};
   vector<size_t> out1(4);
   NHWCtoHW(true, in1, out1);

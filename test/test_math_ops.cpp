@@ -140,7 +140,7 @@ TEST(MathOps, AddV2) {
   };
 
   for (int i = 0; i < tensors_combs.size(); i += 2) {
-    NGRAPH_VLOG(5) << "========>> Running AddV2 sub-test# " << (int)(i / 2 + 1)
+    OVTF_VLOG(5) << "========>> Running AddV2 sub-test# " << (int)(i / 2 + 1)
                    << " ...";
 
     Scope root = Scope::NewRootScope();

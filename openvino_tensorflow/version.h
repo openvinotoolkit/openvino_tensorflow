@@ -9,7 +9,7 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 extern "C" {
-// Returns the ngraph-tensorflow bridge version
+// Returns the Openvino Tensorflow add-on version
 const char* version();
 
 // Returns the nGraph version this bridge was compiled with
@@ -20,7 +20,7 @@ const char* ngraph_version();
 // _GLIBCXX_USE_CXX11_ABI set during the compilation time
 int cxx11_abi_flag();
 
-// Returns true when nGraph is using Grappler optimizer APIs for
+// Returns true when openvino_tensorflow is using Grappler optimizer APIs for
 // graph rewriting
 bool is_grappler_enabled();
 

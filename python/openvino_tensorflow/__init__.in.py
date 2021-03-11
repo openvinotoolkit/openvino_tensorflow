@@ -81,7 +81,7 @@ except TypeError:
 TF_INSTALLED_VER = TF_VERSION.split('.')
 TF_NEEDED_VER = TF_VERSION_NEEDED.split('.')
 
-ngraph_classic_loaded = True
+ovtf_classic_loaded = True
 openvino_tensorflow_lib = None
 if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
@@ -97,11 +97,11 @@ else:
 
 def requested():
     return ops.get_default_graph()._attr_scope({
-        "_ngraph_requested":
+        "_ovtf_requested":
         attr_value_pb2.AttrValue(b=True)
     })
 
-if ngraph_classic_loaded:
+if ovtf_classic_loaded:
     openvino_tensorflow_lib.is_enabled.restype = ctypes.c_bool
     openvino_tensorflow_lib.list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.list_backends.restype = ctypes.c_bool
@@ -167,8 +167,8 @@ if ngraph_classic_loaded:
     def update_config(config, backend_name = "CPU", device_id = ""):
         #updating session config if grappler is enabled
         if(openvino_tensorflow_lib.is_grappler_enabled()):
-            opt_name = 'ngraph-optimizer'
-            # If the config already has ngraph-optimizer, then do not update it
+            opt_name = 'ovtf-optimizer'
+            # If the config already has ovtf-optimizer, then do not update it
             if config.HasField('graph_options'):
                 if config.graph_options.HasField('rewrite_options'):
                     custom_opts = config.graph_options.rewrite_options.custom_optimizers
@@ -178,20 +178,20 @@ if ngraph_classic_loaded:
             rewriter_options = rewriter_config_pb2.RewriterConfig()
             rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
             rewriter_options.min_graph_nodes=-1
-            ngraph_optimizer = rewriter_options.custom_optimizers.add()
-            ngraph_optimizer.name = opt_name
-            ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
+            ovtf_optimizer = rewriter_options.custom_optimizers.add()
+            ovtf_optimizer.name = opt_name
+            ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
             config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
             # For reference, if we want to provide configuration support(backend parameters)
-            # in a python script using the ngraph-optimizer
+            # in a python script using the ovtf-optimizer
             # rewriter_options = rewriter_config_pb2.RewriterConfig()
             # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
             # rewriter_options.min_graph_nodes=-1
-            # ngraph_optimizer = rewriter_options.custom_optimizers.add()
-            # ngraph_optimizer.name = "ngraph-optimizer"
-            # ngraph_optimizer.parameter_map["device_id"].s = device_id.encode()
-            # ngraph_optimizer.parameter_map["max_batch_size"].s = b'64'
-            # ngraph_optimizer.parameter_map["ice_cores"].s = b'12'
+            # ovtf_optimizer = rewriter_options.custom_optimizers.add()
+            # ovtf_optimizer.name = "ovtf-optimizer"
+            # ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
+            # ovtf_optimizer.parameter_map["max_batch_size"].s = b'64'
+            # ovtf_optimizer.parameter_map["ice_cores"].s = b'12'
             # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
         return config
 

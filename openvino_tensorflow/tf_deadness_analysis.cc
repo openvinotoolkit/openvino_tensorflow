@@ -496,7 +496,7 @@ void DeadnessAnalysisImpl::Print() const {
   for (TensorId tensor_id : tensor_ids) {
     auto it = predicate_map_.find(tensor_id);
     CHECK(it != predicate_map_.end()) << tensor_id.ToString();
-    NGRAPH_VLOG(5) << tensor_id.ToString() << " -> " << it->second->ToString();
+    OVTF_VLOG(5) << tensor_id.ToString() << " -> " << it->second->ToString();
   }
 }
 }  // namespace
@@ -508,7 +508,7 @@ DeadnessAnalysis::~DeadnessAnalysis() {}
       new DeadnessAnalysisImpl(&graph));
 
   TF_RETURN_IF_ERROR(analysis->Populate());
-  if (NGRAPH_VLOG_IS_ON(5)) {
+  if (OVTF_VLOG_IS_ON(5)) {
     analysis->Print();
   }
   *result = std::move(analysis);

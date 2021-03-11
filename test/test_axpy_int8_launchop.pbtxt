@@ -35,13 +35,13 @@ node {
   op: "Const"
   device: "/job:localhost/replica:0/task:0/device:CPU:0"
   attr {
-    key: "_ngraph_cluster"
+    key: "_ovtf_cluster"
     value {
       i: 0
     }
   }
   attr {
-    key: "_ngraph_marked_for_clustering"
+    key: "_ovtf_marked_for_clustering"
     value {
       b: true
     }
@@ -83,13 +83,13 @@ node {
     }
   }
   attr {
-    key: "_ngraph_cluster"
+    key: "_ovtf_cluster"
     value {
       i: 0
     }
   }
   attr {
-    key: "_ngraph_marked_for_clustering"
+    key: "_ovtf_marked_for_clustering"
     value {
       b: true
     }
@@ -125,13 +125,13 @@ node {
     }
   }
   attr {
-    key: "_ngraph_cluster"
+    key: "_ovtf_cluster"
     value {
       i: 0
     }
   }
   attr {
-    key: "_ngraph_marked_for_clustering"
+    key: "_ovtf_marked_for_clustering"
     value {
       b: true
     }

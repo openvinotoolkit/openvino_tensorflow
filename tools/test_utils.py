@@ -150,10 +150,10 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
     os.chdir(root_pwd)
 
 
-def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
+def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
                                           xml_output):
     root_pwd = os.getcwd()
-    ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
+    openvino_tf_src_dir = os.path.abspath(openvino_tf_src_dir)
 
     # Check to see if we need to apply the patch for Grappler
     import openvino_tensorflow
@@ -161,7 +161,7 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
         "_with_grappler"
         if openvino_tensorflow.is_grappler_enabled() else "") + ".patch"
     patch_file = os.path.abspath(
-        os.path.join(ngraph_tf_src_dir, patch_file_name))
+        os.path.join(openvino_tf_src_dir, patch_file_name))
 
     # Next patch the TensorFlow so that the tests run using openvino_tensorflow
     pwd = os.getcwd()
@@ -185,7 +185,7 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
-    test_src_dir = os.path.join(ngraph_tf_src_dir, "test/python/tensorflow")
+    test_src_dir = os.path.join(openvino_tf_src_dir, "test/python/tensorflow")
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
@@ -211,11 +211,11 @@ def run_tensorflow_pytests_from_artifacts(ngraph_tf_src_dir, tf_src_dir,
     os.chdir(root_pwd)
 
 
-def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
+def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
                                 iterations):
     root_pwd = os.getcwd()
     artifact_dir = os.path.abspath(artifact_dir)
-    ngraph_tf_src_dir = os.path.abspath(ngraph_tf_src_dir)
+    openvino_tf_src_dir = os.path.abspath(openvino_tf_src_dir)
     install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
@@ -226,7 +226,7 @@ def run_resnet50_from_artifacts(ngraph_tf_src_dir, artifact_dir, batch_size,
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
     patch_file = os.path.abspath(
-        os.path.join(ngraph_tf_src_dir, "test/grappler/benchmark_cnn.patch"))
+        os.path.join(openvino_tf_src_dir, "test/grappler/benchmark_cnn.patch"))
     import openvino_tensorflow
     if openvino_tensorflow.is_grappler_enabled():
         print("Patching repo using: %s" % patch_file)
@@ -282,7 +282,7 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
     artifact_dir = os.path.abspath(artifact_dir)
     if not os.path.exists(artifact_dir):
         raise Exception("Can't find artifact dir: " + artifact_dir)
-    if (len(glob.glob(artifact_dir + "/ngraph_tensorflow_bridge-*.whl")) == 0):
+    if (len(glob.glob(artifact_dir + "/openvino_tensorflow-*.whl")) == 0):
         install_openvino_tensorflow(artifact_dir)
 
     # Check/download pretrained model

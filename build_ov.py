@@ -80,9 +80,9 @@ if __name__ == '__main__':
     # ./build_ov.py --output_dir /prebuilt/ov/dir
     #
     # Reuse OV in different openvino_tensorflow builds
-    # mkdir ngtf_1; cd ngtf_1
+    # mkdir ovtf_1; cd ovtf_1
     # git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
     # ./build_ovtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino
-    # cd ..; mkdir ngtf_2; cd ngtf_2
+    # cd ..; mkdir ovtf_2; cd ovtf_2
     # git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
     # ./build_ovtf.py --use_openvino_from_location /prebuilt/ov/dir/artifacts/openvino

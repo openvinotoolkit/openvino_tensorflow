@@ -220,7 +220,7 @@ void DumpTFGraph(tensorflow::Graph* graph, int idx, std::string filename) {
 
   std::stringstream ss;
   ss << filename << "_" << std::setfill('0') << std::setw(4) << idx;
-  NGRAPH_VLOG(0) << "Dumping TF graph to " << ss.str() + ".pbtxt";
+  OVTF_VLOG(0) << "Dumping TF graph to " << ss.str() + ".pbtxt";
   GraphToPbTextFile(graph, ss.str() + ".pbtxt");
 }
 
@@ -230,7 +230,7 @@ void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
     return;
   }
 
-  NGRAPH_VLOG(0) << "Dumping nGraph graph to " << filename + ".dot";
+  OVTF_VLOG(0) << "Dumping nGraph graph to " << filename + ".dot";
   // enable shape info for nGraph graphs
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");

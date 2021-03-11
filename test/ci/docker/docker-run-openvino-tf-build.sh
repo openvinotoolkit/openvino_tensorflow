@@ -13,8 +13,8 @@
 #
 # Script environment variable parameters:
 #
-# NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
-# NG_TF_TRAINED      Optional: Directory that pretrained models are in
+# OV_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
+# OV_TF_TRAINED      Optional: Directory that pretrained models are in
 
 set -e  # Fail on any command with non-zero exit
 
@@ -26,14 +26,14 @@ fi
 
 # Set defaults
 
-if [ -z "${NG_TF_PY_VERSION}" ] ; then
-    NG_TF_PY_VERSION='2'  # Default is Python 2
+if [ -z "${OV_TF_PY_VERSION}" ] ; then
+    OV_TF_PY_VERSION='2'  # Default is Python 2
 fi
 
 # Note that the docker image must have been previously built using the
 # make-docker-openvino-tf-ci.sh script (in the same directory as this script).
 #
-case "${NG_TF_PY_VERSION}" in
+case "${OV_TF_PY_VERSION}" in
     2)
         IMAGE_CLASS='openvino_tf_ci_py2'
         ;;
@@ -41,7 +41,7 @@ case "${NG_TF_PY_VERSION}" in
         IMAGE_CLASS='openvino_tf_ci_py3'
         ;;
     *)
-        echo 'NG_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
+        echo 'OV_TF_PY_VERSION must be set to "2", "3", or left unset (default is "2")'
         exit 1
         ;;
 esac
@@ -78,17 +78,17 @@ tf_mountpoint='/home/dockuser/tensorflow'
 volume_mounts='-v /dataset:/dataset'
 volume_mounts="${volume_mounts} -v ${bridge_dir}:${bridge_mountpoint}"
 volume_mounts="${volume_mounts} -v ${tf_dir}:${tf_mountpoint}"
-if [ -z "${NG_TF_TRAINED}" ] ; then
+if [ -z "${OV_TF_TRAINED}" ] ; then
   volume_mounts="${volume_mounts} -v /trained_dataset:/trained_dataset"
 else
-  trained_abspath="$(realpath ${NG_TF_TRAINED})"
+  trained_abspath="$(realpath ${OV_TF_TRAINED})"
   volume_mounts="${volume_mounts} -v ${trained_abspath}:/trained_dataset"
 fi
 
 # Set up optional environment variables
 optional_env=''
-if [ ! -z "${NG_TF_PY_VERSION}" ] ; then
-  optional_env="${optional_env} --env NG_TF_PY_VERSION=${NG_TF_PY_VERSION}"
+if [ ! -z "${OV_TF_PY_VERSION}" ] ; then
+  optional_env="${optional_env} --env OV_TF_PY_VERSION=${OV_TF_PY_VERSION}"
 fi
 
 set -u  # No unset variables after this point

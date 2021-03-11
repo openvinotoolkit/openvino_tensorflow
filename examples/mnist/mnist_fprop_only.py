@@ -69,9 +69,9 @@ def run_mnist(_):
         allow_soft_placement=True,
         log_device_placement=True,
         inter_op_parallelism_threads=1)
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ovtf_enabled = openvino_tensorflow.update_config(config)
 
-    sess = tf.compat.v1.Session(config=config_ngraph_enabled)
+    sess = tf.compat.v1.Session(config=config_ovtf_enabled)
     tf.compat.v1.global_variables_initializer().run(session=sess)
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = np.reshape(x_train, (60000, 784))
