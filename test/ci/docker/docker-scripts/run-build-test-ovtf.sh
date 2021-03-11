@@ -11,9 +11,9 @@
 #
 # Optional parameters, passed in environment variables:
 #
-# NG_TF_BUILD_OPTIONS  Command-line options for build_ovtf.py
-# NG_TF_TEST_OPTIONS   Command-line options for test_ovtf.py (CPU-backend)
-# NG_TF_TEST_PLAIDML   If defined and non-zero, also run PlaidML-CPU unit-tests
+# OV_TF_BUILD_OPTIONS  Command-line options for build_ovtf.py
+# OV_TF_TEST_OPTIONS   Command-line options for test_ovtf.py (CPU-backend)
+# OV_TF_TEST_PLAIDML   If defined and non-zero, also run PlaidML-CPU unit-tests
 #
 # General environment variables that are passed through to the docker container:
 #
@@ -24,14 +24,14 @@
 set -e  # Make sure we exit on any command that returns non-zero
 set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 
-if [ -z "${NG_TF_BUILD_OPTIONS}" ] ; then
-    export NG_TF_BUILD_OPTIONS=''
+if [ -z "${OV_TF_BUILD_OPTIONS}" ] ; then
+    export OV_TF_BUILD_OPTIONS=''
 fi
-if [ -z "${NG_TF_TEST_OPTIONS}" ] ; then
-    export NG_TF_TEST_OPTIONS=''
+if [ -z "${OV_TF_TEST_OPTIONS}" ] ; then
+    export OV_TF_TEST_OPTIONS=''
 fi
-if [ -z "${NG_TF_TEST_PLAIDML}" ] ; then
-    export NG_TF_TEST_PLAIDML=''
+if [ -z "${OV_TF_TEST_PLAIDML}" ] ; then
+    export OV_TF_TEST_PLAIDML=''
 fi
 
 # Report on any recognized passthrough variables
@@ -69,9 +69,9 @@ echo "  ngraph_wheel_dir=${ngraph_wheel_dir}"
 echo ''
 echo "  HOME=${HOME}"
 echo ''
-echo "  NG_TF_BUILD_OPTIONS=${NG_TF_BUILD_OPTIONS}"
-echo "  NG_TF_TEST_OPTIONS=${NG_TF_TEST_OPTIONS}"
-echo "  NG_TF_TEST_PLAIDML=${NG_TF_TEST_PLAIDML}"
+echo "  OV_TF_BUILD_OPTIONS=${OV_TF_BUILD_OPTIONS}"
+echo "  OV_TF_TEST_OPTIONS=${OV_TF_TEST_OPTIONS}"
+echo "  OV_TF_TEST_PLAIDML=${OV_TF_TEST_PLAIDML}"
 
 # Do some up-front checks, to make sure necessary directories are in-place and
 # build directories are not-in-place
@@ -158,8 +158,8 @@ echo  "===== Run build_ovtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-echo "Running: ./build_ovtf.py ${NG_TF_BUILD_OPTIONS}"
-./build_ovtf.py ${NG_TF_BUILD_OPTIONS}
+echo "Running: ./build_ovtf.py ${OV_TF_BUILD_OPTIONS}"
+./build_ovtf.py ${OV_TF_BUILD_OPTIONS}
 exit_code=$?
 echo "Exit status for build_ovtf.py is ${exit_code}"
 
@@ -169,12 +169,12 @@ echo  "===== Run test_ovtf.py at ${xtime} ====="
 echo  ' '
 
 cd "${bridge_dir}"
-echo "Running: ./test_ovtf.py ${NG_TF_TEST_OPTIONS}"
-./test_ovtf.py ${NG_TF_TEST_OPTIONS}
+echo "Running: ./test_ovtf.py ${OV_TF_TEST_OPTIONS}"
+./test_ovtf.py ${OV_TF_TEST_OPTIONS}
 exit_code=$?
 echo "Exit status for test_ovtf.py is ${exit_code}"
 
-if [ ! -z "${NG_TF_TEST_PLAIDML}" ] ; then
+if [ ! -z "${OV_TF_TEST_PLAIDML}" ] ; then
     xtime="$(date)"
     echo  ' '
     echo  "===== Run test_ovtf.py with PlaidML at ${xtime} ====="

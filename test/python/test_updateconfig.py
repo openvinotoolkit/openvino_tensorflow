@@ -32,7 +32,7 @@ class TestUpdateConfig(NgraphTest):
             custom_opts = config.graph_options.rewrite_options.custom_optimizers
             count = 0
             for i in range(len(custom_opts)):
-                if custom_opts[i].name == 'ngraph-optimizer':
+                if custom_opts[i].name == 'ovtf-optimizer':
                     count += 1
             return count
 

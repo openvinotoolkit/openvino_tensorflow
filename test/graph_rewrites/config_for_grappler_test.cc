@@ -29,7 +29,7 @@ namespace openvino_tensorflow {
 namespace testing {
 
 // This test can only be run when nGraph-bridge is built with grappler
-// When running with other modes, grappler's ngraph-optimizer is not
+// When running with other modes, grappler's ovtf-optimizer is not
 // run, none of the nodes are encapsulated, no attributes are attached
 // etc.,etc.
 
@@ -56,11 +56,11 @@ TEST(GrapplerConfig, RConfig1) {
   ConfigProto config_proto;
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
-  rewriter_config.add_optimizers("ngraph-optimizer");
+  rewriter_config.add_optimizers("ovtf-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
   auto* custom_config = rewriter_config.add_custom_optimizers();
-  custom_config->set_name("ngraph-optimizer");
+  custom_config->set_name("ovtf-optimizer");
 
   // Run grappler
   tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);
@@ -113,12 +113,12 @@ TEST(GrapplerConfig, RConfig4) {
 
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
-  rewriter_config.add_optimizers("ngraph-optimizer");
+  rewriter_config.add_optimizers("ovtf-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
 
   auto* custom_config = rewriter_config.add_custom_optimizers();
-  custom_config->set_name("ngraph-optimizer");
+  custom_config->set_name("ovtf-optimizer");
   (*custom_config->mutable_parameter_map())["test_echo"] = test_echo;
 
   // Run grappler
@@ -143,7 +143,7 @@ TEST(GrapplerConfig, RConfig4) {
   }
   ASSERT_NE(ng_encap, nullptr);
   string ng_test_echo;
-  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ngraph_test_echo", &ng_test_echo));
+  ASSERT_OK(GetNodeAttr(ng_encap->attrs(), "_ovtf_test_echo", &ng_test_echo));
   ASSERT_EQ(ng_test_echo, "hi");
 }
 
@@ -173,12 +173,12 @@ TEST(GrapplerConfig, RConfig5) {
 
   auto& rewriter_config =
       *config_proto.mutable_graph_options()->mutable_rewrite_options();
-  rewriter_config.add_optimizers("ngraph-optimizer");
+  rewriter_config.add_optimizers("ovtf-optimizer");
   rewriter_config.set_min_graph_nodes(-1);
   rewriter_config.set_meta_optimizer_iterations(RewriterConfig::ONE);
 
   auto* custom_config = rewriter_config.add_custom_optimizers();
-  custom_config->set_name("ngraph-optimizer");
+  custom_config->set_name("ovtf-optimizer");
 
   // Run grappler
   tensorflow::grappler::MetaOptimizer optimizer(nullptr, config_proto);

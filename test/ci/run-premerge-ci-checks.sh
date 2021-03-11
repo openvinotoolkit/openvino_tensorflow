@@ -24,7 +24,7 @@ if [ -z ${NGRAPH_IMAGENET_DATASET+x} ]; then
     NGRAPH_IMAGENET_DATASET='/mnt/data/Imagenet_Validation/'
 fi
 if [ -z ${NGRAPH_TRAINED_MODEL+x} ]; then
-    NGRAPH_TRAINED_MODEL='/nfs/fm/disks/aipg_trained_dataset/ngraph_tensorflow/fully_trained/resnet50'
+    NGRAPH_TRAINED_MODEL='/nfs/fm/disks/aipg_trained_dataset/openvino_tensorflow/fully_trained/resnet50'
 fi
 
 

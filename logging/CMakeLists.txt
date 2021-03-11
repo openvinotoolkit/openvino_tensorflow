@@ -2,7 +2,7 @@
  
 # SPDX-License-Identifier: Apache-2.0
 
-set(LIB_NAME ngraph_logger)
+set(LIB_NAME ovtf_logger)
 
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)

@@ -30,7 +30,7 @@ with open(@README_DOC@, "r") as fh:
 # The following is filled in my cmake - essentially a list of library
 # and license files
 ng_data_list = [
-    @ngraph_libraries@ @license_files@ @licence_top_level@
+    @ovtf_libraries@ @license_files@ @licence_top_level@
 ]
 
 # This is the contents of the Package Data

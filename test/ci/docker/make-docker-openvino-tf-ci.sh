@@ -17,7 +17,7 @@
 #
 # Script environment variable parameters:
 #
-# NG_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
+# OV_TF_PY_VERSION   Optional: Set python major version ("2" or "3", default=2)
 
 DIR_DOCKERFILES='dockerfiles'
 PRE_DOCKERFILE='Dockerfile.openvino_tf.'
@@ -84,10 +84,10 @@ case "${IMAGE_TYPE}" in
 esac
 
 
-# The NG_TF_PY_VERSION takes precedence over the optional IMAGE_TYPE parameter,
-# because NG_TF_PY_VERSION existed first and we need to maintain backward
+# The OV_TF_PY_VERSION takes precedence over the optional IMAGE_TYPE parameter,
+# because OV_TF_PY_VERSION existed first and we need to maintain backward
 # compatibility (for now)
-case "${NG_TF_PY_VERSION}" in
+case "${OV_TF_PY_VERSION}" in
     2)
         DOCKER_FILE='Dockerfile.openvino-tf-ci-py2'
         IMAGE_NAME='openvino_tf_ci_py2'
@@ -97,7 +97,7 @@ case "${NG_TF_PY_VERSION}" in
         IMAGE_NAME='openvino_tf_ci_py3'
         ;;
     *)
-        # Do nothing if NG_TF_PY_VERSION is explicitly not set
+        # Do nothing if OV_TF_PY_VERSION is explicitly not set
         ;;
 esac
 

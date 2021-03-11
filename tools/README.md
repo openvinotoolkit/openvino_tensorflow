@@ -27,7 +27,7 @@ To run nGraph in Docker, choose one of two ways to create your container:
   
 - When the multi-stage docker build is complete, you will be able to run a container with Tensorflow and nGraph using the `openvino_tensorflow:ovtf` image:
 
-        docker run -it --name ngtf openvino_tensorflow:ovtf
+        docker run -it --name ovtf openvino_tensorflow:ovtf
         
   Note: If running behind a proxy, you will need to set `-e http_proxy=<http_proxy>` and `-e https_proxy=<https_proxy>` variables in order to run the test script.
 
@@ -49,7 +49,7 @@ To run nGraph in Docker, choose one of two ways to create your container:
 - Navigate up one level and run the image with the openvino_tensorflow project mounted to `/workspace`:  
 
         cd ..
-        docker run -it -v ${PWD}:/workspace -w /workspace --name ngtf openvino_tensorflow:devel
+        docker run -it -v ${PWD}:/workspace -w /workspace --name ovtf openvino_tensorflow:devel
 
 - Follow the instructions in [Build an Openvino_Tensoflow](/README.md#build-an-openvino_tensorflow) to execute `python3 build_ovtf.py`.
   You do not need to clone the repo inside the container because it is already mounted to `/workspace`.
@@ -78,7 +78,7 @@ The "normal" mode latches onto `Tensorflow` operations by registering `GraphOpti
 
 
 #### Introducing `Grappler`
-`Grappler` can be thought of as a function that accepts a `graphdef` and returns a (most likely) new modified `graphdef`, although in cases of failure to transform, `Tensorflow` will silently continue to run with the input untransformed `graphdef`. Recently we have added a way to build `openvino_tensorflow` with `Grappler`, by using the `--use_grappler_optimizer` flag in `build_ovtf.py`. We register the `NgraphOptimizer` as our `Grappler` pass. It pretty much does the same rewriting that `NGraphRewritePass` and `NGraphVariableCapturePass` was doing earlier, except for some subtle differences. For example, when `grappler` receives the graph in a certain stage of the `Tensorflow` execution pipeline which is different from when the `GraphOptimizationPass`es worked. Also we add `IdentityN` nodes to fetch (outputs), feed (inputs), init and keep ops to ensure we also capture these nodes(if supported), because by default `grappler` leaves them out.
+`Grappler` can be thought of as a function that accepts a `graphdef` and returns a (most likely) new modified `graphdef`, although in cases of failure to transform, `Tensorflow` will silently continue to run with the input untransformed `graphdef`. Recently we have added a way to build `openvino_tensorflow` with `Grappler`, by using the `--use_grappler_optimizer` flag in `build_ovtf.py`. We register the `OVTFOptimizer` as our `Grappler` pass. It pretty much does the same rewriting that `NGraphRewritePass` and `NGraphVariableCapturePass` was doing earlier, except for some subtle differences. For example, when `grappler` receives the graph in a certain stage of the `Tensorflow` execution pipeline which is different from when the `GraphOptimizationPass`es worked. Also we add `IdentityN` nodes to fetch (outputs), feed (inputs), init and keep ops to ensure we also capture these nodes(if supported), because by default `grappler` leaves them out.
 
 A sample script will look like:
 ```
@@ -89,4 +89,4 @@ sess = tf.Session(config=openvino_tensorflow.update_config(tf.ConfigProto()))
 result = sess.run(out0, feed_dict = {in0:[2,3], in1:[4,5]})
 ```
 
-Notice the new line introduced here wrt the "normal" path. `config_updated = openvino_tensorflow.update_config(config)` must now be passed during session construction to ensure `NgraphOptimizer` `grappler` pass is enabled. Without `grappler` build, we use `GraphOptimizationPass`, in which case just `import openvino_tensorflow` was enough to plug in `ngraph`. But in a `grappler` build, the config needs to be modified to enable the pass that will plugin `ngraph`. Like the "normal" path, in this script too the graph rewriting and actual execution happen when `session.run` is called.
+Notice the new line introduced here wrt the "normal" path. `config_updated = openvino_tensorflow.update_config(config)` must now be passed during session construction to ensure `OVTFOptimizer` `grappler` pass is enabled. Without `grappler` build, we use `GraphOptimizationPass`, in which case just `import openvino_tensorflow` was enough to plug in `ngraph`. But in a `grappler` build, the config needs to be modified to enable the pass that will plugin `ngraph`. Like the "normal" path, in this script too the graph rewriting and actual execution happen when `session.run` is called.

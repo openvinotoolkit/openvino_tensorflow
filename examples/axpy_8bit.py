@@ -25,10 +25,10 @@ axpy = c + y
 
 # Configure the session
 config = tf.compat.v1.ConfigProto(inter_op_parallelism_threads=1)
-config_ngraph_enabled = openvino_tensorflow.update_config(config, backend_name='CPU')
+config_ovtf_enabled = openvino_tensorflow.update_config(config, backend_name='CPU')
 
 # Create session and run
-with tf.compat.v1.Session(config=config_ngraph_enabled) as sess:
+with tf.compat.v1.Session(config=config_ovtf_enabled) as sess:
     print("Python: Running with Session")
     options = tf.compat.v1.RunOptions(
         trace_level=tf.compat.v1.RunOptions.FULL_TRACE)

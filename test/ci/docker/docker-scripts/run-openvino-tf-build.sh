@@ -14,8 +14,8 @@ set -u  # No unset variables
 set -o pipefail # Make sure cmds in pipe that are non-zero also fail immediately
 
 
-# Default is Python 2, but can override with NG_TF_PY_VERSION env. variable
-export PYTHON_VERSION_NUMBER="${NG_TF_PY_VERSION}"
+# Default is Python 2, but can override with OV_TF_PY_VERSION env. variable
+export PYTHON_VERSION_NUMBER="${OV_TF_PY_VERSION}"
 if [ -z "${PYTHON_VERSION_NUMBER}" ] ; then
     PYTHON_VERSION_NUMBER=2
 fi
@@ -35,7 +35,7 @@ libngraph_so="${bbuild_dir}/src/libopenvino_tensorflow.so"
 libngraph_dist_dir="${bridge_dir}/libngraph_dist"  # Directory to save plugin artifacts in
 libngraph_tarball="${bridge_dir}/libngraph_dist.tgz"  # Tarball artifact to send to Artifactory
 imagenet_dataset="${dataset_dir}/Imagenet_Validation"
-trained_resnet50_model="${trained_dir}/ngraph_tensorflow/fully_trained/resnet50"
+trained_resnet50_model="${trained_dir}/openvino_tensorflow/fully_trained/resnet50"
 
 # HOME is expected to be /home/dockuser.  See script run-as-user.sh, which
 # sets this up.
