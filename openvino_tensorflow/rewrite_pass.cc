@@ -97,9 +97,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
-    // TF_RETURN_IF_ERROR(MarkForClustering(graph, skip_these_nodes));
 
-    // OCM bypassing the MarkForClustering function call
+    // OCM call for marking supported nodes
     std::string device;
     BackendManager::GetBackendName(device);
     const char* device_id(device.c_str());

@@ -222,7 +222,7 @@ Status DeassignClusters(Graph* graph) {
        
         for (auto it : node->out_nodes()) {
             int out_cluster;
-            Status s = GetNodeAttr(it->attrs(), "_ngraph_cluster", &out_cluster);
+            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
             if (s == Status::OK()) {
                 if (out_cluster == cluster_idx && it->type_string() != "NonMaxSuppressionV2") {
                     if (it->type_string() == "ZerosLike" || it->type_string() == "Size" || it->type_string() == "Conv2D") {
@@ -236,15 +236,15 @@ Status DeassignClusters(Graph* graph) {
         }
     }
     if (invalid_dyn_op) {
-      NGRAPH_VLOG(2) << "Busting cluster " << cluster_idx;
+      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
-        NGRAPH_VLOG(2) << "Busting node: " << node->name() << " ["
+        OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
                        << node->type_string() << "]";
 
         // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ngraph_cluster");
+        node->ClearAttr("_ovtf_cluster");
         // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ngraph_marked_for_clustering");
+        node->ClearAttr("_ovtf_marked_for_clustering");
 
         deassigned_histogram[node->type_string()]++;
       }

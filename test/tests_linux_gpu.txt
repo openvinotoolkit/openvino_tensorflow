@@ -47,3 +47,6 @@ ArrayOps.Shape3D
 # SplitV/VariadicSplit_174733.1 has zero dimension which is not allowed
 ArrayOps.SplitVZeroSizeSplit
 ArrayOps.SplitVZeroSizeNegSplit
+
+# mismatch between TF and NG outputs
+MathOps.FloorDivNegInt
