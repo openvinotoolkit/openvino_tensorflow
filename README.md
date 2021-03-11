@@ -28,25 +28,25 @@ Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow has two releases: one built
 
 Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow package built with ABI=0 is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO TensorFlow Add-on package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
 
-Users can use TensorFlow 2.2.2 from PyPi (<code>pip install -U tensorflow==2.2.2</code>) However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
+Users can use TensorFlow 2.2.2 from PyPi (pip install -U tensorflow==2.2.2). However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
 
 Below are the steps needed to use the packages built with CXX11_ABI=0:
 
 1. Ensure the following pip version is being used:
 
-        <code>pip install --upgrade pip==21.0.1</code>
+        pip install --upgrade pip==21.0.1
 
 2. Install TensorFlow:
 
-        <code>pip install -U tensorflow==2.2.2</code>
+        pip install -U tensorflow==2.2.2
       
                     (or)
 
-        <code>pip install -U tensorflow-custom-abi0==2.2.2</code> (Recommended for security patches)
+        pip install -U tensorflow-custom-abi0==2.2.2 (Recommended for security patches)
 
 3. Install `openvino-tensorflow-addon`:
 
-        <code>pip install -U openvino-tensorflow-addon-abi0</code>
+        pip install -U openvino-tensorflow-addon-abi0
 
 #### Package built with CXX11_ABI=1
 
@@ -57,21 +57,21 @@ Below are the steps needed to use the packages built with CXX11_ABI=1:
 
 1. Ensure the following pip version is being used:
 
-        <code>pip install --upgrade pip==21.0.1</code>
+        pip install --upgrade pip==21.0.1
 
 2. Install TensorFlow:
 
-        <code>pip install -U tensorflow-custom-abi1==2.2.2</code>
+        pip install -U tensorflow-custom-abi1==2.2.2
 
 3. Install the OpenVINO 2021.2 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit](https://software.intel.com/en-us/openvino-toolkit)).
 
 4. Initialize the OpenVINO environment by running the setupvars.sh in <code>\<openvino\_install\_directory\>\/bin</code> using the below command:
 
-        <code>source setupvars.sh</code>
+        source setupvars.sh
 
 3. Install `openvino-tensorflow-addon`:
 
-        <code>pip install -U openvino-tensorflow-addon-abi1</code>
+        pip install -U openvino-tensorflow-addon-abi1
 
 #### Summary of the Prebuilt packages
 
