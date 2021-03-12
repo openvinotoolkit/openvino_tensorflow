@@ -89,15 +89,6 @@
      displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
      
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
-      source $(WORK_DIR)/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_resnet50_infer
-     workingDirectory: $(WORK_DIR) 
-     displayName: "ResNet50 Inference"
-     
-   - script: |
       rm -rf *
      displayName: "Cleanup"   
      workingDirectory: $(WORK_DIR)
