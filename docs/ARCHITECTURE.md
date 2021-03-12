@@ -24,7 +24,7 @@ Graph partitioner examines the nodes that are marked for clustering by OCM and p
 
 #### TensorFlow Importer
 
-TensorFlow importer translates the TensorFlow operators in the clusters to OpenVINO nGraph operators with the latest available [operator set](https://docs.openvinotoolkit.org/latest/openvino_docs_ops_opset.html) for a give version of OpenVINO™ toolkit. An [nGraph function](https://docs.openvinotoolkit.org/latest/openvino_docs_nGraph_DG_build_function.html) is built for each of the clusters. Once created, it is wrapped into an OpenVINO CNNNetwork that holds the intermedia representation of the cluster to be executed on OpenVINO backend.
+TensorFlow importer translates the TensorFlow operators in the clusters to OpenVINO nGraph operators with the latest available [operator set](https://docs.openvinotoolkit.org/latest/openvino_docs_ops_opset.html) for a give version of OpenVINO™ toolkit. An [nGraph function](https://docs.openvinotoolkit.org/latest/openvino_docs_nGraph_DG_build_function.html) is built for each of the clusters. Once created, it is wrapped into an OpenVINO CNNNetwork that holds the intermediate representation of the cluster to be executed on OpenVINO backend.
 
 #### Backend Manager
 
