@@ -69,15 +69,51 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
-
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/api.h"
+#include "openvino_tensorflow/version.h"
 
 // These are all common classes it's handy to reference with no namespace.
-// using tensorflow::Flag;
 using tensorflow::Tensor;
 using tensorflow::Status;
 using tensorflow::string;
 using tensorflow::int32;
+using tensorflow::SessionOptions;
+using tensorflow::RewriterConfig;
+using tensorflow::OptimizerOptions_Level_L0;
+
+//----------------------------------------------------------------------------
+// Sets custom config options for Openvino Tensorflow Add-on if enabled via
+// openvino_tensorflow api or OPENVINO_TF_DISABLE is not set
+//----------------------------------------------------------------------------
+bool ovtf_enabled =
+          (tensorflow::openvino_tensorflow::api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") == nullptr);
+SessionOptions options;
+
+Status CustomConfigOptions(SessionOptions& options) {
+    options.config.mutable_graph_options()
+        ->mutable_optimizer_options()
+        ->set_opt_level(OptimizerOptions_Level_L0);
+    options.config.mutable_graph_options()
+        ->mutable_rewrite_options()
+        ->set_constant_folding(RewriterConfig::OFF);
+    options.config.set_inter_op_parallelism_threads(2);
+
+    // Grappler related config
+    if (tensorflow::openvino_tensorflow::is_grappler_enabled()) {
+      auto* custom_config = options.config.mutable_graph_options()
+                                ->mutable_rewrite_options()
+                                ->add_custom_optimizers();
+      custom_config->set_name("ovtf-optimizer");
+      options.config.mutable_graph_options()
+          ->mutable_rewrite_options()
+          ->set_min_graph_nodes(-1);
+      options.config.mutable_graph_options()
+          ->mutable_rewrite_options()
+          ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
+    }
+    return Status::OK();
+  }
 
 //-----------------------------------------------------------------------------
 // Takes a file name, and loads a list of labels from it, one per line, and
@@ -134,102 +170,74 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
 // Given an image file name, read in the data, try to decode it as an image,
 // resize it to the requested size, and then scale the values as desired.
 //-----------------------------------------------------------------------------
-Status ReadTensorFromImageFile(const std::vector<string>& file_names,
-                               const int input_height, const int input_width,
-                               const float input_mean, const float input_std,
-                               bool use_NCHW, const int input_channels,
+Status ReadTensorFromImageFile(const string& file_name,const int input_height,
+                               const int input_width,const float input_mean,
+                               const float input_std,
                                std::vector<Tensor>* out_tensors) {
   auto root = tensorflow::Scope::NewRootScope();
   using namespace ::tensorflow::ops;  // NOLINT(build/namespaces)
 
   string input_name = "file_reader";
   string output_name = "normalized";
-  std::vector<std::pair<string, tensorflow::Tensor>> inputs;
-  std::vector<tensorflow::Output> div_tensors;
 
-  for (int i = 0; i < file_names.size(); i++) {
-    // read file_name into a tensor named input
-    Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
-    TF_RETURN_IF_ERROR(
-        ReadEntireFile(tensorflow::Env::Default(), file_names[i], &input));
+  // read file_name into a tensor named input
+  Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
+  TF_RETURN_IF_ERROR(
+        ReadEntireFile(tensorflow::Env::Default(), file_name, &input));
 
-    // use a placeholder to read input data
-    auto file_reader =
-        Placeholder(root.WithOpName("input_" + std::to_string(i)),
-                    tensorflow::DataType::DT_STRING);
+  // use a placeholder to read input data
+  auto file_reader =
+      Placeholder(root.WithOpName("input"),tensorflow::DataType::DT_STRING);
 
-    inputs.push_back({"input_" + std::to_string(i), input});
+  std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
+      {"input", input},
+  };
 
-    // Now try to figure out what kind of file it is and decode it.
-    tensorflow::Output image_reader;
-    if (absl::EndsWith(file_names[i], ".png")) {
+  // Now try to figure out what kind of file it is and decode it.
+  const int wanted_channels = 3;
+  tensorflow::Output image_reader;
+  if (absl::EndsWith(file_name, ".png")) {
       image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
-                               DecodePng::Channels(input_channels));
-    } else if (absl::EndsWith(file_names[i], ".gif")) {
+                               DecodePng::Channels(wanted_channels));
+  } else if (absl::EndsWith(file_name, ".gif")) {
       // gif decoder returns 4-D tensor, remove the first dim
-      image_reader =
-          Squeeze(root.WithOpName("squeeze_first_dim"),
+    image_reader =
+        Squeeze(root.WithOpName("squeeze_first_dim"),
                   DecodeGif(root.WithOpName("gif_reader"), file_reader));
-    } else if (absl::EndsWith(file_names[i], ".bmp")) {
-      image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
-    } else {
+  } else if (absl::EndsWith(file_name, ".bmp")) {
+    image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
+  } else {
       // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
-      image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
-                                DecodeJpeg::Channels(input_channels));
-    }
-    // Now cast the image data to float so we can do normal math on it.
-    auto float_caster = Cast(root.WithOpName("float_caster"), image_reader,
+    image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
+                                DecodeJpeg::Channels(wanted_channels));
+  }
+  // Now cast the image data to float so we can do normal math on it.
+  auto float_caster = Cast(root.WithOpName("float_caster"), image_reader,
                              tensorflow::DT_FLOAT);
-    // The convention for image ops in TensorFlow is that all images are
-    // expected
-    // to be in batches, so that they're four-dimensional arrays with indices of
-    // [batch, height, width, channel]. Because we only have a single image, we
-    // have to add a batch dimension of 1 to the start with ExpandDims().
-    auto dims_expander = ExpandDims(root, float_caster, 0);
-    // Bilinearly resize the image to fit the required dimensions.
-    auto resized = ResizeBilinear(
-        root, dims_expander,
-        Const(root.WithOpName("size"), {input_height, input_width}));
+  // The convention for image ops in TensorFlow is that all images are expected
+  // to be in batches, so that they're four-dimensional arrays with indices of
+  // [batch, height, width, channel]. Because we only have a single image, we
+  // have to add a batch dimension of 1 to the start with ExpandDims().
+  auto dims_expander = ExpandDims(root, float_caster, 0);
+  // Bilinearly resize the image to fit the required dimensions.
+  auto resized = ResizeBilinear(
+      root, dims_expander,
+      Const(root.WithOpName("size"), {input_height, input_width}));
 
-    tensorflow::Output div;
-    if (use_NCHW) {
-      auto converted_input = Transpose(root, resized, {0, 3, 1, 2});
-      // Subtract the mean and divide by the scale.
-      div = Div(root.WithOpName("output_" + std::to_string(i)),
-                Sub(root, converted_input, {input_mean}), {input_std});
-    } else {
-      // Subtract the mean and divide by the scale.
-      div = Div(root.WithOpName("output_" + std::to_string(i)),
-                Sub(root, resized, {input_mean}), {input_std});
-    }
-    div_tensors.push_back(div);
-  }
-
-  // skipping concat for a single image
-  if (file_names.size() > 1) {
-    Concat(root.WithOpName(output_name), div_tensors, 0);
-  }
+  // Subtract the mean and divide by the scale.
+  Div(root.WithOpName(output_name), Sub(root, resized, {input_mean}),
+      {input_std});
 
   // This runs the GraphDef network definition that we've just constructed, and
   // returns the results in the output tensor.
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
 
-  // Ideally we want to use the nGraph CPU backend for running the following
-  // network. But for now we're just disabling nGraph
-  // as for some of the devices, these Ops are not implemented
-  // tf::Status status =
-  //   tf::openvino_tensorflow::BackendManager::SetBackendName(backend_name);
-
-  tensorflow::openvino_tensorflow::api::disable();
   std::unique_ptr<tensorflow::Session> session(
-      tensorflow::NewSession(tensorflow::SessionOptions()));
+      tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(
-      session->Run({inputs}, {file_names.size() > 1 ? output_name : "output_0"},
-                   {}, out_tensors));
-  tensorflow::openvino_tensorflow::api::enable();
-
+      session->Run({inputs}, {output_name},{}, out_tensors));
   return Status::OK();
 }
 
@@ -238,14 +246,19 @@ Status ReadTensorFromImageFile(const std::vector<string>& file_names,
 // can use to run it.
 //-----------------------------------------------------------------------------
 Status LoadGraph(const string& graph_file_name,
-                 std::unique_ptr<tensorflow::Session>* session,
-                 const tensorflow::SessionOptions& options) {
+                 std::unique_ptr<tensorflow::Session>* session) {
   tensorflow::GraphDef graph_def;
   Status load_graph_status =
       ReadBinaryProto(tensorflow::Env::Default(), graph_file_name, &graph_def);
   if (!load_graph_status.ok()) {
     return tensorflow::errors::NotFound("Failed to load compute graph at '",
                                         graph_file_name, "'");
+  }
+  if (ovtf_enabled) {
+    Status customconfig_options_status = CustomConfigOptions(options);
+    if (!customconfig_options_status.ok()) {
+      return tensorflow::errors::NotFound("Error setting custom config options for Openvino Tensorflow Add-on");
+    }
   }
   session->reset(tensorflow::NewSession(options));
   Status session_create_status = (*session)->Create(graph_def);
@@ -271,8 +284,15 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
 
+  if (ovtf_enabled) {
+    Status customconfig_options_status = CustomConfigOptions(options);
+    if (!customconfig_options_status.ok()) {
+      return tensorflow::errors::NotFound("Error setting custom config options for Openvino Tensorflow Add-on");
+    }
+  }
+
   std::unique_ptr<tensorflow::Session> session(
-      tensorflow::NewSession(tensorflow::SessionOptions()));
+      tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   // The TopK node returns two outputs, the scores and their original indices,
   // so we have to append :0 and :1 to specify them both.
@@ -290,8 +310,6 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
 //-----------------------------------------------------------------------------
 Status PrintTopLabels(const std::vector<Tensor>& outputs,
                       const string& labels_file_name) {
-  // Disable nGraph so that we run these using TensorFlow on CPU
-  tensorflow::openvino_tensorflow::api::disable();
   std::vector<string> labels;
   size_t label_count;
   Status read_labels_status =
@@ -321,7 +339,6 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
 //-----------------------------------------------------------------------------
 Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
                      bool* is_expected) {
-  tensorflow::openvino_tensorflow::api::disable();
   *is_expected = false;
   Tensor indices;
   Tensor scores;
