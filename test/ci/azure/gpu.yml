@@ -19,7 +19,7 @@
       rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
       
    
-   - checkout: openvino_tensorflow
+   - checkout: self
      clean: true
      lfs: false
      path: openvino_tensorflow
@@ -28,7 +28,7 @@
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
       export OV_LOCATION=/opt/intel/openvino_2021.2.185/ 
       export OPENVINO_TF_BACKEND=GPU
-      export BUILD_OPTIONS=--use_grappler
+      export BUILD_OPTIONS=--use_grappler_optimizer
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/6/s/venv 
       source /home/iotgecsp/azu_ag/myagent/6/s/venv/bin/activate 
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
@@ -54,7 +54,8 @@
    - script: |
       export OPENVINO_TF_BACKEND=GPU
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      ./test/ci/azure/run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
+      cd test/ci/azure/      
+      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
      
@@ -82,14 +83,6 @@
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
      workingDirectory: $(WORK_DIR)   
      displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
-     
-   - script: |
-      export OPENVINO_TF_BACKEND=GPU
-      source $(WORK_DIR)/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_resnet50_infer
-     workingDirectory: $(WORK_DIR) 
-     displayName: "ResNet50 Inference"
      
    - script: |
       rm -rf *

@@ -19,6 +19,9 @@
 #include "openvino_tensorflow/api.h"
 #include "openvino_tensorflow/grappler/ovtf_optimizer.h"
 #include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/backend_manager.h"
+
+#include "ocm/include/ocm_nodes_checker.h"
 
 #include <iostream>
 
@@ -138,7 +141,27 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   util::DumpTFGraph(&graph, idx, "unmarked");
 
   // 1. Mark for clustering then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(MarkForClustering(&graph, skip_these_nodes));
+  // OCM call for marking supported nodes
+  std::string device;
+  BackendManager::GetBackendName(device);
+  const char* device_id(device.c_str());
+  std::string ov_version = "2021.2";
+  ocm::Framework_Names fName = ocm::Framework_Names::TF;
+  ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
+  FC.SetDisabledOps(api::GetDisabledOps());
+  std::vector<void *> nodes_list = FC.MarkSupportedNodes();
+
+  // cast back the nodes in the TF format and mark the nodes for clustering (moved out from MarkForClustering function)
+  const std::map<std::string, SetAttributesFunction>& set_attributes_map = GetAttributeSetters();
+  for (auto void_node : nodes_list) {
+  // TODO(amprocte): move attr name to a constant
+    tensorflow::Node* node = (tensorflow::Node *)void_node;
+    node->AddAttr("_ovtf_marked_for_clustering", true);
+    auto it = set_attributes_map.find(node->type_string());
+    if (it != set_attributes_map.end()) {
+      it->second(node);
+    }
+  }  
   util::DumpTFGraph(&graph, idx, "marked");
 
   // 2. Assign clusters then, if requested, dump the graphs.

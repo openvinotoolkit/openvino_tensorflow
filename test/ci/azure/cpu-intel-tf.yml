@@ -20,7 +20,7 @@
       rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
       
    
-   - checkout: openvino_tensorflow
+   - checkout: self
      clean: true
      lfs: false
      path: openvino_tensorflow
@@ -57,7 +57,8 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      ./test/ci/azure/run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
+      cd test/ci/azure/      
+      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
      
@@ -85,14 +86,6 @@
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
      workingDirectory: $(WORK_DIR)   
      displayName: "TF python:  Python Tests ${OPENVINO_TF_BACKEND}"  
-     
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_resnet50_infer
-     workingDirectory: $(WORK_DIR) 
-     displayName: "ResNet50 Inference"
      
    - script: |
       rm -rf *
