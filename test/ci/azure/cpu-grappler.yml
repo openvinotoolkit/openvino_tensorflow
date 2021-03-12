@@ -29,7 +29,7 @@
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
       export OV_LOCATION=/opt/intel/openvino_2021.2.185/ 
       export OPENVINO_TF_BACKEND=CPU
-      export BUILD_OPTIONS=--use_grappler
+      export BUILD_OPTIONS=--use_grappler_optimizer
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/3/s/venv 
       source /home/iotgecsp/azu_ag/myagent/3/s/venv/bin/activate 
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
@@ -41,7 +41,7 @@
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_grappler --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts
+      python3 build_ovtf.py --use_grappler_optimizer --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
