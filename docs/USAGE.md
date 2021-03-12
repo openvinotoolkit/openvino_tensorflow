@@ -40,18 +40,10 @@ To check if the placement logs are enabled, use the following API:
 
     openvino_tensorflow.is_logging_placement()
     
-To check the version of OpenVINO Add-on, use the following API:
-
-    openvino_tensorflow.__version__()
-    
 To check the CXX11_ABI used to compile OpenVINO Add-on, use the following API:
 
     openvino_tensorflow.cxx11_abi_flag()
-    
-To check if OpenVINO Add-on is registered as a Grappler optimizer, use the following API:
-
-    openvino_tensorflow.is_grappler_enabled()
-    
+  
 To disable execution of certain operators on the OpenVINO backend, use the following API to run them on native TensorFlow runtime:
 
     openvino_tensorflow.set_disabled_ops(<string_of_operators_separated_by_commas>)
