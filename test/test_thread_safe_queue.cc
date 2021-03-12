@@ -11,7 +11,7 @@
 #include "absl/time/time.h"
 #include "tensorflow/core/public/session.h"
 
-#include "../examples/cpp/thread_safe_queue.h"
+#include "../examples/classification_sample/thread_safe_queue.h"
 #include "gtest/gtest.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 
