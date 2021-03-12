@@ -14,7 +14,9 @@ namespace openvino_tensorflow {
 
 IE_VADM_Engine::IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network)
     : IE_Backend_Engine(ie_network, "HDDL"),
-      m_orig_batch_size(ie_network.getBatchSize()) {}
+      m_orig_batch_size(0) {
+        m_orig_batch_size = ie_network.getBatchSize();
+      }
 
 IE_VADM_Engine::~IE_VADM_Engine() {}
 
