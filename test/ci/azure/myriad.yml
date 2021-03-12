@@ -56,7 +56,8 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      ./test/ci/azure/run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
+      cd test/ci/azure/      
+      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
      
