@@ -13,6 +13,7 @@
 
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_tensor.h"
+#include "contexts.h"
 
 using namespace std;
 
@@ -22,10 +23,15 @@ namespace openvino_tensorflow {
 class Backend {
  public:
   Backend(const string& configuration_string);
-  ~Backend() {}
+  ~Backend() {
+    ReleaseGlobalContext();
+  }
 
   shared_ptr<Executable> Compile(shared_ptr<ngraph::Function> func,
                                  bool enable_performance_data = false);
+
+  static GlobalContext& GetGlobalContext();
+  static void ReleaseGlobalContext();
   bool IsSupported(const ngraph::Node& node) const;
 
  private:

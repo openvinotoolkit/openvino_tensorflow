@@ -45,9 +45,8 @@ void IE_Backend_Engine::load_network() {
     }
   }
 
-  InferenceEngine::Core ie;
   // Load network to the plugin (m_device)
-  m_exe_network = BackendManager::GetGlobalContext().ie_core.LoadNetwork(m_network, m_device, config);
+  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(m_network, m_device, config);
   m_network_ready = true;
 }
 
