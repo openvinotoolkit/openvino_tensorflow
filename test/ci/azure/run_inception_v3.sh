@@ -45,7 +45,7 @@ get_artifacts ${IMAGE} "https://github.com/tensorflow/tensorflow/raw/master/tens
 LABELS=imagenet_slim_labels.txt
 get_artifacts ${LABELS} "https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt"
 
-./cpp/inference/infer_single_network --graph=${MODEL} \
+./classification_sample/infer_image --graph=${MODEL} \
     --labels=${LABELS} \
     --image=${IMAGE} \
     --input_width=299 --input_height=299 \
