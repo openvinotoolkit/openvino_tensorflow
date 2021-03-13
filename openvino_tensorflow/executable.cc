@@ -143,19 +143,13 @@ Executable::Executable(shared_ptr<Function> func, string device)
     }
     return name;
   };
-  auto get_output_dtype = [](std::shared_ptr<ngraph::Node> node) {
-    auto parent = node->input_value(0).get_node_shared_ptr();
-    auto dtype = parent->get_output_element_type(0);
-    return dtype;
-  };
 
   std::unordered_map<std::string, element::Type> output_dt_map;
 
   auto results = func->get_results();
   for (int i = 0; i < results.size(); i++) {
     auto output_name = get_output_name(results[i]);
-    auto dtype = get_output_dtype(results[i]);
-
+    auto dtype = results[i]->get_element_type();
     output_dt_map[output_name] = dtype;
   }
 

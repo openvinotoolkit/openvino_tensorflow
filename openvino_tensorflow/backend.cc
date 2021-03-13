@@ -9,12 +9,16 @@
 #include <ie_core.hpp>
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset.hpp"
+#include "contexts.h"
 
 using namespace std;
 using namespace ngraph;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
+
+
+static unique_ptr<GlobalContext> g_global_context;
 
 Backend::Backend(const string& config) {
   string device = config.substr(0, config.find(":"));
@@ -32,6 +36,17 @@ Backend::Backend(const string& config) {
 shared_ptr<Executable> Backend::Compile(shared_ptr<ngraph::Function> func,
                                         bool) {
   return make_shared<Executable>(func, m_device);
+}
+
+GlobalContext& Backend::GetGlobalContext() {
+
+  if(!g_global_context)
+    g_global_context = unique_ptr<GlobalContext>(new GlobalContext);
+  return *g_global_context;
+}
+
+void Backend::ReleaseGlobalContext() {
+  g_global_context.reset();
 }
 
 bool Backend::IsSupported(const Node& node) const {

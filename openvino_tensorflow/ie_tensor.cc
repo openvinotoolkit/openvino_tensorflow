@@ -99,7 +99,7 @@ IETensor::IETensor(InferenceEngine::Blob::Ptr blob)
           Shape(blob->getTensorDesc().getDims()), "")),
       m_blob(blob) {}
 
-IETensor::~IETensor() { m_blob->deallocate(); }
+IETensor::~IETensor() {}
 
 void IETensor::write(const void* src, size_t bytes) {
   const int8_t* src_ptr = static_cast<const int8_t*>(src);
