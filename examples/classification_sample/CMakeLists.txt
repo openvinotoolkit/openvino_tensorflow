@@ -47,7 +47,7 @@ message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
-set(APP_NAME classification_sample)
+set(APP_NAME infer_image)
 add_executable(
     ${APP_NAME} ${SRC} main.cc
 )
@@ -74,5 +74,5 @@ else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()
 
-install(TARGETS ${APP_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/classification_sample/inference)
+install(TARGETS ${APP_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/classification_sample)
 

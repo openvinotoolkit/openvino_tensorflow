@@ -71,7 +71,6 @@ using namespace std;
 using tensorflow::Flag;
 using tensorflow::Status;
 using tensorflow::Tensor;
-namespace tf = tensorflow;
 
 extern tensorflow::Status LoadGraph(const string& graph_file_name,
                             std::unique_ptr<tensorflow::Session>* session);
@@ -122,11 +121,11 @@ int main(int argc, char** argv) {
   // input the model expects. If you train your own model, or use something
   // other than inception_v3, then you'll need to update these.
   string image_file =
-        "examples/classification_sample/data/grace_hopper.jpg";
+        "examples/data/grace_hopper.jpg";
   string graph =
-        "examples/classification_sample/data/inception_v3_2016_08_28_frozen.pb";
+        "examples/data/inception_v3_2016_08_28_frozen.pb";
   string labels_file =
-        "examples/classification_sample/data/imagenet_slim_labels.txt";
+        "examples/data/imagenet_slim_labels.txt";
   int input_width = 299;
   int input_height = 299;
   float input_mean = 0;
@@ -135,6 +134,7 @@ int main(int argc, char** argv) {
   string output_layer = "InceptionV3/Predictions/Reshape_1";
   bool self_test = false;
   string root_dir = "";
+  string backend_name="CPU";
 
   std::vector<tensorflow::Flag> flag_list = {
       Flag("image", &image_file, "image to be processed"),
@@ -152,7 +152,8 @@ int main(int argc, char** argv) {
       Flag("output_layer", &output_layer, "name of output layer"),
       Flag("self_test", &self_test, "run a self test"),
       Flag("root_dir", &root_dir,
-           "interpret image and graph file names relative to this directory")
+           "interpret image and graph file names relative to this directory"),
+      Flag("backend", &backend_name, "backend option. Default is CPU")
   };
 
   string usage = tensorflow::Flags::Usage(argv[0], flag_list);
@@ -172,12 +173,7 @@ int main(int argc, char** argv) {
   std::cout << "Component versions used\n";
   PrintVersion();
 
-  // Openvino Tensorflow Add-on is enabled by default. Uncomment to disable
-  // Openvino Tensorflow Add-on and run using native TensorFlow on CPU
-  //tensorflow::openvino_tensorflow::api::disable();
-
   // Enable differnt backends(CPU/GPU/MYRIAD/HDDL) to run the network.
-  string backend_name = "CPU";
   tensorflow::openvino_tensorflow::BackendManager::SetBackend(backend_name);
 
   // First we load and initialize the model.
@@ -212,7 +208,7 @@ int main(int argc, char** argv) {
            << endl;
 
   if (!run_status.ok()) {
-    LOG(ERROR) << "Running model failed: " << run_status;
+    LOG(ERROR) << "Compiling model failed: " << run_status;
     return -1;
   }
 

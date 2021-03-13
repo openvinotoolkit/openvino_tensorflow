@@ -83,35 +83,24 @@ using tensorflow::RewriterConfig;
 using tensorflow::OptimizerOptions_Level_L0;
 
 //----------------------------------------------------------------------------
-// Sets custom config options for Openvino Tensorflow Add-on if enabled via
-// openvino_tensorflow api or OPENVINO_TF_DISABLE is not set
+// Set custom config options for Openvino Tensorflow Add-on
+// if grappler optimizer is enabled
 //----------------------------------------------------------------------------
-bool ovtf_enabled =
-          (tensorflow::openvino_tensorflow::api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") == nullptr);
+bool grappler_enabled = tensorflow::openvino_tensorflow::is_grappler_enabled();
 SessionOptions options;
 
 Status CustomConfigOptions(SessionOptions& options) {
-    options.config.mutable_graph_options()
-        ->mutable_optimizer_options()
-        ->set_opt_level(OptimizerOptions_Level_L0);
-    options.config.mutable_graph_options()
-        ->mutable_rewrite_options()
-        ->set_constant_folding(RewriterConfig::OFF);
-    options.config.set_inter_op_parallelism_threads(2);
-
     // Grappler related config
-    if (tensorflow::openvino_tensorflow::is_grappler_enabled()) {
-      auto* custom_config = options.config.mutable_graph_options()
-                                ->mutable_rewrite_options()
-                                ->add_custom_optimizers();
-      custom_config->set_name("ovtf-optimizer");
-      options.config.mutable_graph_options()
-          ->mutable_rewrite_options()
-          ->set_min_graph_nodes(-1);
-      options.config.mutable_graph_options()
-          ->mutable_rewrite_options()
-          ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
-    }
+    auto* custom_config = options.config.mutable_graph_options()
+                             ->mutable_rewrite_options()
+                             ->add_custom_optimizers();
+    custom_config->set_name("ovtf-optimizer");
+    options.config.mutable_graph_options()
+       ->mutable_rewrite_options()
+       ->set_min_graph_nodes(-1);
+    options.config.mutable_graph_options()
+       ->mutable_rewrite_options()
+       ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
     return Status::OK();
   }
 
@@ -233,6 +222,14 @@ Status ReadTensorFromImageFile(const string& file_name,const int input_height,
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
 
+  if (grappler_enabled) {
+    Status customconfig_options_status = CustomConfigOptions(options);
+    if (!customconfig_options_status.ok()) {
+      return tensorflow::errors::NotFound("Error setting custom config options"
+                                             "for Openvino Tensorflow Add-on");
+    }
+  }
+
   std::unique_ptr<tensorflow::Session> session(
       tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
@@ -254,10 +251,11 @@ Status LoadGraph(const string& graph_file_name,
     return tensorflow::errors::NotFound("Failed to load compute graph at '",
                                         graph_file_name, "'");
   }
-  if (ovtf_enabled) {
+  if (grappler_enabled) {
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound("Error setting custom config options for Openvino Tensorflow Add-on");
+      return tensorflow::errors::NotFound("Error setting custom config options"
+                                           "for Openvino Tensorflow Add-on");
     }
   }
   session->reset(tensorflow::NewSession(options));
@@ -284,10 +282,11 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
 
-  if (ovtf_enabled) {
+  if (grappler_enabled) {
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound("Error setting custom config options for Openvino Tensorflow Add-on");
+      return tensorflow::errors::NotFound("Error setting custom config options"
+                                           "for Openvino Tensorflow Add-on");
     }
   }
 
