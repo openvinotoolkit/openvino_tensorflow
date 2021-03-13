@@ -16,6 +16,8 @@ namespace api {
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
 static std::set<std::string> disabled_op_types{};
+static char * backendName;
+static char * backendList[4];
 
 extern "C" {
 void enable() { Enable(); }
@@ -30,9 +32,17 @@ size_t backends_len() {
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
-    backends[idx] = strdup(ovtf_backends[idx].c_str());
+    backendList[idx] = strdup(ovtf_backends[idx].c_str());
+    backends[idx] = backendList[idx] ;
   }
   return true;
+}
+
+void freeBackendsList() {
+  const auto ovtf_backends = ListBackends();
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    free(backendList[idx]);
+  }
 }
 
 bool set_backend(const char* backend) { return SetBackend(string(backend)); }
@@ -42,10 +52,13 @@ extern bool get_backend(char** backend) {
   if (b == "") {
     return false;
   }
-  *backend = strdup(b.c_str());
+  backendName = strdup(b.c_str());
+  *backend = backendName;
   return true;
 }
-
+void  freeBackend() {
+  free(backendName);
+}
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
