@@ -31,9 +31,10 @@ $ cd <path-to-openvino_tensorflow>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-dir-with-tensorflow-artifacts>
 ```
 
-That should build a binary executable that you can then run like this:
+That should build a binary executable for classification_sample. Update the LD_LIBRARY_PATH and run the sample:
 
 ```bash
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow>/build_cmake/artifacts/lib:<path-to-openvino_tensorflow>/build_cmake/artifacts/tensorflow
 $ ./build_cmake/examples/classification_sample/infer_image
 ```
 
