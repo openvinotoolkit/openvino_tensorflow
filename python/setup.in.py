@@ -50,11 +50,12 @@ setup(
     packages=['openvino_tensorflow'],
     author='Intel Corporation',
     license='Apache License, Version 2.0',
-    platforms='Ubuntu 16.04, macOS Sierra',
+    platforms='Ubuntu 18.04',
     include_package_data=True,
     package_data= package_data_dict,
     cmdclass={'bdist_wheel': BinaryBdistWheel},
     install_requires=[
-        tf_version,
+        #[TODO] Replace this with custom built TF
+        #tf_version,
     ],
 )
