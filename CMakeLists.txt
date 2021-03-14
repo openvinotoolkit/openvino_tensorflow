@@ -137,6 +137,12 @@ option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FA
 
 set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
 find_package(InferenceEngine REQUIRED)
+
+if (USE_OPENVINO_FROM_LOCATION)
+    set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
+    find_package(ngraph REQUIRED)
+endif()
+
 include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
@@ -172,7 +178,11 @@ else()
     set(LIB "lib")
 endif()
 
-set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
+if(USE_OPENVINO_FROM_LOCATION)
+    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/)
+else()
+    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
+endif()
 set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties(

@@ -44,7 +44,7 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.2.0"
+    tf_version = "v2.2.2"
     use_intel_tf = False
     openvino_version = "releases/2021/2"
 
@@ -112,6 +112,13 @@ def main():
         "NOTE: This location is expected to be populated by build_ov.py\n",
         action="store",
         default='')
+
+    parser.add_argument(
+        '--disable_packaging_openvino_libs',
+        help=
+        "Use this option to do build a standalone python package of " +
+        "the OpenVINO Tensorflow Add-On Library without OpenVINO libraries",
+        action="store_true")
 
     parser.add_argument(
         '--disable_cpp_api',
@@ -263,8 +270,11 @@ def main():
                     ["pip", "install", "-U", "intel-tensorflow==" + tf_version])
             else:
                 print("Install native TensorFlow")
+                # [TODO] Replace the following with the openvino add-on recommended tf pypi package
+                # command_executor(
+                #     ["pip", "install", "-U", "tensorflow==" + tf_version])
                 command_executor(
-                    ["pip", "install", "-U", "tensorflow==" + tf_version])
+                     ["pip", "install", "tensorflow-2.2.2-cp36-cp36m-linux_x86_64.whl"])
             cxx_abi = get_tf_cxxabi()
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
@@ -385,6 +395,9 @@ def main():
         "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
         flag_string_map[arguments.use_grappler_optimizer]
     ])
+
+    if arguments.disable_packaging_openvino_libs:
+        ngraph_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
