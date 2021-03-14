@@ -1,82 +1,80 @@
-# openvino_tensorflow examples
+# Intel<sup>(R)</sup> Openvino<sup>TM</sup> TensorFlow Add-on C++ and Python Classification Demo
 
-Simple! Just add `import openvino_tensorflow` after [building] it.
+This example shows how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> Tensorflow Add-on to recognize objects in images in C++ and Python.
 
-The simplest `hello-world` example can be found in [axpy.py]. For other 
-real-world examples, see the instructions below to run `tf_cnn_benchmarks` and 
-models from TensorFlow Hub:
+## Description
 
-# `tf_cnn_benchmarks`: High-performance benchmarks
+This demo uses Google Inception V3 model to classify image that is passed in on the command line.
 
-`tf_cnn_benchmarks` contains implementations of several popular convolutional
-models, and is designed to be as fast as possible. `tf_cnn_benchmarks` supports
-running either on a single machine or running in *distributed mode* across multiple
-hosts. See the [High-Performance Models Guide] for more information.
+## To build/install/run
 
-These models utilize many of the strategies in the [TensorFlow Performance
-Guide].
+The TensorFlow `GraphDef` that contains the model definition and weights is not packaged in the repo because of its size. Instead, you must first download the file to the `data` directory in the source tree:
 
-These models are designed for performance. For models that have clean and
-easy-to-read implementations, see the [TensorFlow Official Models].
+```bash
+$ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
+  tar -C <path-to-openvino_tensorflow>/examples/data -xz
+```
 
-## Running examples from `tf_cnn_benchmarks`
+Once extracted, the data folder will have two new files:
 
-### Use the following instructions
+* imagenet_slim_labels.txt
+* inception_v3_2016_08_28_frozen.pb
 
-    git clone https://github.com/tensorflow/benchmarks.git
-    git checkout 4c7b09ad87bbfc4b1f89650bcee40b3fc5e7dfed
-    cd benchmarks/scripts/tf_cnn_benchmarks/
+See the labels file in the data directory for the possible
+classifications, which are the 1,000 categories used in the Imagenet
+competition.
 
-Next, enable nGraph by editing the `convnet_builder.py` and adding 
-`import openvino_tensorflow` right after the `import tensorflow` line.
+Assuming main tensorflow framework is already built using build_tf.py , run this command to build openvino_tensorflow with samples:
 
-### Train for a few iterations:
+```bash
+$ cd <path-to-openvino_tensorflow>
+$ python3 build_ovtf.py --use_tensorflow_from_location <path-to-dir-with-tensorflow-artifacts>
+```
 
-    KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 \
-        python tf_cnn_benchmarks.py --data_format NCHW \
-        --num_inter_threads 2 --train_dir=./modelsavepath/ \
-        --model=resnet50 --num_batches 10 --batch_size=128
+That should build a binary executable for classification_sample. Update the LD_LIBRARY_PATH and run the sample:
 
-### Evaluate the model (Inference pass):
+```bash
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow>/build_cmake/artifacts/lib:<path-to-openvino_tensorflow>/build_cmake/artifacts/tensorflow
+$ ./build_cmake/examples/classification_sample/infer_image
+```
 
-    KMP_BLOCKTIME=0  OMP_NUM_THREADS=56 KMP_AFFINITY=granularity=fine,compact,1,0 \
-        python tf_cnn_benchmarks.py --data_format NCHW \
-        --num_inter_threads 1 --train_dir=$(pwd)/modelsavepath \
-        --eval --model=resnet50 --batch_size=128```
+This uses the default example image that ships with this repo, and should
+output something similar to this:
 
+```
+military uniform (653): 0.834306
+mortarboard (668): 0.0218693
+academic gown (401): 0.010358
+pickelhaube (716): 0.00800814
+bulletproof vest (466): 0.00535091
+```
 
-### Tips
+In this case, we're using the default image of Admiral Grace Hopper, and you can
+see the network correctly spots she's wearing a military uniform, with a high
+score of 0.8.
 
-* Use ```--data_format NCHW``` to get better performance. Avoid ```NHWC``` if 
-  possible.
-* Change the batch_size to `128` for batch inference performance and `batch_size=1` 
-  for real-time inference
-* Change the `--model` flag to test for different topologies. The (by no means 
-  exhaustive) list of models known to run can be found on the nGraph [validated workloads]
-  page
+Next, try it out on your own images by supplying the --image= argument, e.g.
 
-Please feel free to run more models and let us know if you run across any issues.
+```bash
+$ ./build_cmake/examples/classification_sample/infer_image --image=my_image.png
+```
 
-* A more involved example of the run command
+## Python implementation
 
-    KMP_BLOCKTIME=0 OMP_NUM_THREADS=28  KMP_AFFINITY=granularity=fine,proclist=[0-27] python tf_cnn_benchmarks.py --model=resnet50  --eval --num_inter_threads=1 --batch_size=128  --train_dir /nfs/fm/disks/aipg_trained_dataset/openvino_tensorflow/partially_trained/resnet50 --data_format NCHW --num_epochs=1 --data_name=imagenet --data_dir /mnt/data/TF_ImageNet_latest/ --datasets_use_prefetch=False 
+classification_sample.py is a python implementation that provides code corresponding to the C++ code here and could be easier to add visualization or debug code.
 
-# TensorFlow Hub:
+```bash
+$ cd <path-to-openvino_tensorflow>
+$ source build_cmake/venv-tf-py3/bin/activate
+$ python examples/classification_sample.py
+```
 
-TensorFlow Hub models should also work. For example, you can try out [retraining] 
-tutorials on, `inceptionv3`.
+And get result similar to this:
+```
+military uniform (653): 0.834306
+mortarboard (668): 0.0218693
+academic gown (401): 0.010358
+pickelhaube (716): 0.00800814
+bulletproof vest (466): 0.00535091
+```
 
-# Keras models:
-
-Keras (with Tensorflow backend) should also work out-of-the-box with nGraph, 
-once one adds ```import openvino_tensorflow``` to the script. [Example](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/examples/keras_sample.py)
-
-
-
-[building]:https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md
-[axpy.py]:https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/examples/axpy.py
-[High-Performance Models Guide]:https://www.tensorflow.org/performance/performance_models 
-[TensorFlow Performance Guide]: https://www.tensorflow.org/performance/performance_guide
-[TensorFlow Official Models]:https://github.com/tensorflow/models/tree/master/official
-[validated workloads]: http://ngraph.nervanasys.com/docs/latest/frameworks/validated/list.html
-[retraining]:https://www.tensorflow.org/hub/tutorials/image_retraining

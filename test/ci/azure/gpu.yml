@@ -70,7 +70,7 @@
       export OPENVINO_TF_BACKEND=GPU
       pip install keras
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/azure/test_runner.py \
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
      workingDirectory: $(WORK_DIR) 
      displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"

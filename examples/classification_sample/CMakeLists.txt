@@ -1,6 +1,6 @@
 # ******************************************************************************
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
@@ -37,10 +37,8 @@ else()
 endif()
 
 set(SRC
-    inference_engine.h
     thread_safe_queue.h
-    inference_engine.cc
-    tf_label_image_utils.cc
+    utils.cc
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -49,9 +47,9 @@ message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
-set(APP_NAME infer_single_network)
+set(APP_NAME infer_image)
 add_executable(
-    ${APP_NAME} ${SRC} infer_single_network.cc
+    ${APP_NAME} ${SRC} main.cc
 )
 
 if (APPLE)
@@ -70,27 +68,11 @@ target_link_libraries(
     ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
 )
 
-set(APP_NAME_MULTI infer_multiple_networks)
-add_executable(
-    ${APP_NAME_MULTI} ${SRC} infer_multiple_networks.cc
-)
-
-target_link_libraries(
-    ${APP_NAME_MULTI}
-    openvino_tensorflow
-    ngraph_lib
-    pthread
-    ${TensorFlow_FRAMEWORK_LIBRARY}
-    tensorflow_cc_lib
-    absl_synchronization
-    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
-)
-
 if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
 else()
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
 endif()
 
-install(TARGETS ${APP_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/cpp/inference)
-install(TARGETS ${APP_NAME_MULTI} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/cpp/inference)
+install(TARGETS ${APP_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/classification_sample)
+

@@ -202,7 +202,7 @@ get_filename_component(
 add_subdirectory(examples)
 if (DEFINED TF_SRC_DIR)
     message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
-    add_subdirectory(examples/cpp)
+    add_subdirectory(examples/classification_sample)
 else()
     message(
         STATUS 
