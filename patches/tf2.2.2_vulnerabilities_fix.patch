@@ -1,0 +1,87 @@
+diff --git a/tensorflow/core/kernels/crop_and_resize_op.cc b/tensorflow/core/kernels/crop_and_resize_op.cc
+index 5223501997e..bb02948fcc0 100644
+--- a/tensorflow/core/kernels/crop_and_resize_op.cc
++++ b/tensorflow/core/kernels/crop_and_resize_op.cc
+@@ -70,6 +70,18 @@ static inline Status ParseAndCheckBoxSizes(const Tensor& boxes,
+   if (boxes.dim_size(1) != 4) {
+     return errors::InvalidArgument("boxes must have 4 columns");
+   }
++  for (int64 i = 0; i < *num_boxes; i++) {
++    for (int64 j = 0; j < 4; j++) {
++      if (!isfinite(boxes.tensor<float, 2>()(i, j))) {
++        return errors::InvalidArgument(
++            "boxes values must be finite, received boxes[", i, "]: ",
++            boxes.tensor<float, 2>()(i, 0), ", ",
++            boxes.tensor<float, 2>()(i, 1), ", ",
++            boxes.tensor<float, 2>()(i, 2), ", ",
++            boxes.tensor<float, 2>()(i, 3));
++      }
++    }
++  }
+   // The shape of 'box_index' is [num_boxes].
+   if (box_index.dims() != 1) {
+     return errors::InvalidArgument("box_index must be 1-D",
+diff --git a/tensorflow/core/kernels/quantize_and_dequantize_op.cc b/tensorflow/core/kernels/quantize_and_dequantize_op.cc
+index 8f71d09c083..e16b0c1462b 100644
+--- a/tensorflow/core/kernels/quantize_and_dequantize_op.cc
++++ b/tensorflow/core/kernels/quantize_and_dequantize_op.cc
+@@ -71,6 +71,10 @@ class QuantizeAndDequantizeV2Op : public OpKernel {
+ 
+   void Compute(OpKernelContext* ctx) override {
+     const Tensor& input = ctx->input(0);
++    OP_REQUIRES(
++        ctx, (axis_ == -1 || axis_ < input.shape().dims()),
++        errors::InvalidArgument("Shape must be at least rank ", axis_ + 1,
++                                " but is rank ", input.shape().dims()));
+     const int depth = (axis_ == -1) ? 1 : input.dim_size(axis_);
+     Tensor input_min_tensor;
+     Tensor input_max_tensor;
+diff --git a/tensorflow/python/kernel_tests/array_ops_test.py b/tensorflow/python/kernel_tests/array_ops_test.py
+index ce96ee4ad6d..68b65447755 100644
+--- a/tensorflow/python/kernel_tests/array_ops_test.py
++++ b/tensorflow/python/kernel_tests/array_ops_test.py
+@@ -1474,6 +1474,21 @@ class QuantizeAndDequantizeTest(test_util.TensorFlowTestCase):
+                 axis=(axis - 4)))
+         self.assertAllClose(fake_quantized, expected)
+ 
++  def testBadAxis(self):
++    input_tensor = [2.5, 2.5]
++    input_min = [0, 0]
++    input_max = [1, 1]
++    error_message_pattern = "Shape must be at least rank 11 but is rank 1"
++    # TODO(b/171260356): Eager mode and graph mode throw different error types
++    error = errors.InvalidArgumentError if context.executing_eagerly(
++    ) else ValueError
++    with self.assertRaisesRegex(error, error_message_pattern):
++      self.evaluate(
++          array_ops.quantize_and_dequantize_v2(
++              input=input_tensor,
++              input_min=input_min,
++              input_max=input_max,
++              axis=10))
+ 
+ @test_util.run_all_in_graph_and_eager_modes
+ class SortedSearchTest(test_util.TensorFlowTestCase):
+diff --git a/tensorflow/python/ops/image_ops_test.py b/tensorflow/python/ops/image_ops_test.py
+index f4c0f6926b1..6a586d07029 100644
+--- a/tensorflow/python/ops/image_ops_test.py
++++ b/tensorflow/python/ops/image_ops_test.py
+@@ -5224,6 +5224,18 @@ class DecodeImageTest(test_util.TensorFlowTestCase):
+       self.assertAllEqual(list(image0.shape), [40, 20, 3])
+       self.assertAllEqual(image0, image1)
+ 
++  def testImageCropAndResize(self):
++    # Test case for GitHub issue 42129
++    message = "boxes values must be finite"
++    with self.assertRaisesRegex(
++        (errors.InvalidArgumentError, ValueError), message):
++      v = image_ops_impl.crop_and_resize_v2(
++          image=array_ops.zeros((2, 1, 1, 1)),
++          boxes=[[1.0e+40, 0, 0, 0]],
++          box_indices=[1],
++          crop_size=[1, 1])
++      self.evaluate(v)
++
+ 
+ if __name__ == "__main__":
+   googletest.main()

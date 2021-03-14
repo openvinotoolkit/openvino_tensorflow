@@ -41,20 +41,21 @@ import tensorflow as tf
 tf_version = "tensorflow==" + tf.__version__
 
 setup(
-    name='openvino_tensorflow_add_on',
-    version='0.23.0rc0',
-    description='Intel OpenVINO Add On for TensorFlow',
+    name='openvino_tensorflow_addon',
+    version='0.5.0',
+    description='Intel OpenVINO Add-On for TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/openvinotoolkit/openvino_tensorflow',
     packages=['openvino_tensorflow'],
     author='Intel Corporation',
     license='Apache License, Version 2.0',
-    platforms='Ubuntu 16.04, macOS Sierra',
+    platforms='Ubuntu 18.04',
     include_package_data=True,
     package_data= package_data_dict,
     cmdclass={'bdist_wheel': BinaryBdistWheel},
     install_requires=[
-        tf_version,
+        #[TODO] Replace this with custom built TF
+        #tf_version,
     ],
 )

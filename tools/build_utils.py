@@ -188,6 +188,7 @@ def build_tensorflow(tf_version,
                      target_arch,
                      verbosity,
                      use_intel_tf,
+                     cxx_abi,
                      target=""):
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()
@@ -249,6 +250,12 @@ def build_tensorflow(tf_version,
             "--config=v1",
         ])
 
+    # Build Tensorflow with user-specified ABI
+    # Consequent builds of Add-on and OpenVINO will use the same ABI
+    cmd.extend([
+        "--cxxopt=\"-D_GLIBCXX_USE_CXX11_ABI=%s\""%cxx_abi
+    ])
+
     # If target is not specified, we assume default TF wheel build
     if target == '':
         target = "//tensorflow/tools/pip_package:build_pip_package"
@@ -282,6 +289,7 @@ def build_tensorflow_cc(tf_version,
                         target_arch,
                         verbosity,
                         use_intel_tf,
+                        cxx_abi,
                         tf_prebuilt=None):
     lib = "libtensorflow_cc.so.2"
     if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
@@ -296,6 +304,7 @@ def build_tensorflow_cc(tf_version,
         target_arch,
         verbosity,
         use_intel_tf,
+        cxx_abi,
         target="//tensorflow:" + tf_cc_lib_name +
         " //tensorflow/core/kernels:ops_testutil")
 
@@ -408,12 +417,10 @@ def install_tensorflow(venv_dir, artifacts_dir):
         raise Exception("more than 1 version of tensorflow wheels found")
     command_executor(["pip", "install", "-U", tf_wheel_files[0]])
 
-    cxx_abi = "0"
-    if (platform.system() == 'Linux'):
-        import tensorflow as tf
-        cxx_abi = tf.__cxx11_abi_flag__
-        print("LIB: %s" % tf.sysconfig.get_lib())
-        print("CXX_ABI: %d" % cxx_abi)
+    import tensorflow as tf
+    cxx_abi = tf.__cxx11_abi_flag__
+    print("LIB: %s" % tf.sysconfig.get_lib())
+    print("CXX_ABI: %d" % cxx_abi)
 
     # popd
     os.chdir(pwd)
@@ -462,7 +469,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     command_executor(make_cmd)
 
     os.chdir(os.path.join("python", "dist"))
-    ovtf_wheel_files = glob.glob("openvino_tensorflow_add_on-*.whl")
+    ovtf_wheel_files = glob.glob("openvino_tensorflow_addon-*.whl")
     if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
         for whl in ovtf_wheel_files:
@@ -498,8 +505,11 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     print('TensorFlow version: ', tf.__version__)
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)
-    import openvino_tensorflow
-    print(openvino_tensorflow.__version__)
+    # [TODO] Find an alternative method to do an import check as
+    # doing it before source /path/to/openvino/bin/setupvars.sh 
+    # results in undefined symbol
+    # import openvino_tensorflow
+    # print(openvino_tensorflow.__version__)
 
 
 def download_repo(target_name, repo, version, submodule_update=False):

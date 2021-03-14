@@ -12,6 +12,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
+    OV_LOCATION: /opt/intel/openvino_2021.2.185/
     
  steps:
  
@@ -28,49 +29,79 @@
    - script: |
       pwd
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
-      export OV_LOCATION=/opt/intel/openvino_2021.2.185/ 
       export OPENVINO_TF_BACKEND=CPU
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/2/s/venv 
       source /home/iotgecsp/azu_ag/myagent/2/s/venv/bin/activate 
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
      workingDirectory: $(WORK_DIR) 
-     displayName: "Setup" 
+     displayName: "Setup - ABI 0" 
     
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts
+      python3 build_ovtf.py --use_prebuilt_tensorflow
      workingDirectory: $(WORK_DIR) 
-     displayName: "Build"
-     
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
-     workingDirectory: $(WORK_DIR) 
-     displayName: "tf_ov C++ Tests"
-     
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      cd test/ci/azure/      
-      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
-     workingDirectory: $(WORK_DIR) 
-     displayName: "C++ Inference Example"
+     displayName: "Build - ABI 0"
      
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
       pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow_*.whl
       
-     displayName: "Install"
+     displayName: "Install - ABI 0 Wheels"
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install keras
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/azure/test_runner.py \
+      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install keras
+      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+     workingDirectory: $(WORK_DIR)   
+     displayName: "python TF :  Python Tests ${OPENVINO_TF_BACKEND}"  
+     
+   - script: |
+      rm -rf $(WORK_DIR)/build_cmake/
+     displayName: "Cleanup ABI 0"   
+     workingDirectory: $(WORK_DIR)
+
+   - script: |
+      pwd
+      export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
+      export OPENVINO_TF_BACKEND=CPU
+      virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/2/s/venv 
+      source /home/iotgecsp/azu_ag/myagent/2/s/venv/bin/activate 
+      pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Setup - ABI 1" 
+
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      echo $(WORK_DIR)
+      git submodule init
+      git submodule update
+      python3 build_ovtf.py --use_prebuilt_tensorflow --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Build - ABI 1"
+     
+   - script: |
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow_*.whl
+      
+     displayName: "Install - ABI 1 Wheels"
+   
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
@@ -79,13 +110,15 @@
      
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      pip install keras
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install keras
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
      workingDirectory: $(WORK_DIR)   
      displayName: "python TF :  Python Tests ${OPENVINO_TF_BACKEND}"  
      
    - script: |
-      #cleanup
-     displayName: "Cleanup"
+      rm -rf *
+     displayName: "Cleanup ABI 1"   
+     workingDirectory: $(WORK_DIR)
