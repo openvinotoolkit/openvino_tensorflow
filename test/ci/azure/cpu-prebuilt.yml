@@ -70,9 +70,9 @@
      displayName: "python TF :  Python Tests ${OPENVINO_TF_BACKEND}"  
      
    - script: |
-      #cleanup
-     displayName: "Cleanup - ABI 0"
-
+      rm -rf $(WORK_DIR)/build_cmake/
+     displayName: "Cleanup ABI 0"   
+     workingDirectory: $(WORK_DIR)
 
    - script: |
       pwd
@@ -119,5 +119,6 @@
      displayName: "python TF :  Python Tests ${OPENVINO_TF_BACKEND}"  
      
    - script: |
-      #cleanup
-     displayName: "Cleanup"
+      rm -rf *
+     displayName: "Cleanup ABI 1"   
+     workingDirectory: $(WORK_DIR)
