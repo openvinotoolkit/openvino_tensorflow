@@ -494,7 +494,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     return output_wheel
 
 
-def install_ngraph_tf(tf_version, venv_dir, openvino_artifacts_dir, ovtf_pip_whl):
+def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
