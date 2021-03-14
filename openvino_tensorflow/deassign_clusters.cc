@@ -171,6 +171,11 @@ Status DeassignClusters(Graph* graph) {
     cluster_map[cluster_idx].insert(node);
   }
 
+  string device;
+  BackendManager::GetBackendName(device);
+
+  std::vector<int> busted_clusters;
+
   for (auto& kv : cluster_map) {
     int cluster_idx = kv.first;
     std::set<Node*>& nodes = kv.second;
@@ -207,6 +212,8 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
+      busted_clusters.push_back(cluster_idx);
+      continue;
     }
     // Disable dynamic to static
     std::vector<Node*> dyn_node_check;
@@ -248,6 +255,8 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
+      busted_clusters.push_back(cluster_idx);
+      continue;
     }
 
 
@@ -283,19 +292,64 @@ Status DeassignClusters(Graph* graph) {
         node->ClearAttr("_ovtf_marked_for_clustering");
         deassigned_histogram[node->type_string()]++;
       }
+      busted_clusters.push_back(cluster_idx);
+      continue;
+    }
+
+    if(device == "HDDL"){
+      bool shape_output = false;
+      for (auto node: nodes) {
+        if (node->type_string() == "Greater") {
+          for (auto it : node->out_nodes()) {
+            int out_cluster;
+            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+            if (s == Status::OK()) {
+              if (out_cluster != cluster_idx) {
+                shape_output = true;
+                break;
+              }
+            } else {
+                shape_output = true;
+                break;
+            }
+          }
+        }
+        if (node->type_string() == "Unpack") {
+          for (auto it : node->in_nodes()) {
+            int in_cluster;
+            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
+            if (s == Status::OK()) {
+              if (in_cluster != cluster_idx) {
+                shape_output = true;
+                break;
+              }
+            } else {
+                shape_output = true;
+                break;
+            }
+          }
+        }
+      }
+      if(shape_output){
+        for(auto node : nodes){
+          node->ClearAttr("_ovtf_cluster");
+          node->ClearAttr("_ovtf_marked_for_clustering");
+          deassigned_histogram[node->type_string()]++;
+        }
+        busted_clusters.push_back(cluster_idx);
+        continue;
+      }
     }
   }
-
-  string device;
-  BackendManager::GetBackendName(device);
-
 
   if(device == "MYRIAD"){
 
     vector<pair<int, std::set<Node*>>> cluster_arr;
 
     for(auto& it : cluster_map){
-      cluster_arr.push_back(it);
+      if(!(std::count(busted_clusters.begin(), busted_clusters.end(), it.first))){
+        cluster_arr.push_back(it);
+      }
     }
 
     sort(cluster_arr.begin(), cluster_arr.end(), cmp);
@@ -305,6 +359,43 @@ Status DeassignClusters(Graph* graph) {
     for(auto& it : cluster_arr){
       if(i == 10)
         break;
+      top_10.push_back(it.first);
+      i++;
+    }
+
+    for(auto& kv : cluster_map){
+      if(!(std::count(top_10.begin(), top_10.end(), kv.first))){
+        //Need to be deassigned, not in top 10
+        cout << "Disable cluster: " << kv.first << std::endl;
+        set<Node*>& nodes = kv.second;
+
+        for(auto node : nodes) {
+          node->ClearAttr("_ovtf_cluster");
+          node->ClearAttr("_ovtf_marked_for_clustering");
+          deassigned_histogram[node->type_string()]++;
+        }
+      }
+    }
+  }
+
+  if(device == "HDDL"){
+
+    vector<pair<int, std::set<Node*>>> cluster_arr;
+
+    for(auto& it : cluster_map){
+      if(!(std::count(busted_clusters.begin(), busted_clusters.end(), it.first))){
+        cluster_arr.push_back(it);
+      }
+    }
+
+    sort(cluster_arr.begin(), cluster_arr.end(), cmp);
+
+    vector<int> top_10;
+    int i = 0;
+    for(auto& it : cluster_arr){
+      if(i == 1)
+        break;
+      cout << "Top cluster: " << it.first << std::endl;
       top_10.push_back(it.first);
       i++;
     }

@@ -24,6 +24,7 @@
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/tf_deadness_analysis.h"
 #include "openvino_tensorflow/tf_graphcycles.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 using namespace std;
 
@@ -420,6 +421,59 @@ Status AssignClusters(Graph* graph) {
   // predicates)
   std::unordered_map<std::string, tuple<string, string, vector<string>>>
       deadness_info;
+
+  string device;
+  BackendManager::GetBackendName(device);
+
+  // Drop Shape if it's the output node of HDDL cluster.
+  // Drop Sub if it's the input node and the input is from a Const node.
+  if(device == "HDDL"){
+    for (auto edge : graph->edges()) {
+      Node* src = edge->src();
+      Node* dst = edge->dst();
+      if (!src->IsOp() || !dst->IsOp()) {
+	if (src->type_string() == "Shape") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
+	if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+	}
+	if (src->type_string() == "Shape") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+#if !defined(NGRAPH_TF_DISABLE_DEADNESS_CHECK)
+      bool is_deadness_ok = false;
+      TF_RETURN_IF_ERROR(
+          CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
+      if (!is_deadness_ok) {
+	if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+	}
+	if (src->type_string() == "Shape") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+#endif
+      int src_index = cluster_map[src]->index;
+      int dst_index = cluster_map[dst]->index;
+      if (!(gc.HasEdge(src_index, dst_index) &&
+        gc.CanContractEdge(src_index, dst_index))) {
+	if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+	}
+	if (src->type_string() == "Shape") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+      }
+    }
+  }
+
 
   do {
     changed = false;
