@@ -65,6 +65,16 @@ def main():
         call(["git", "pull"])
         os.chdir(pwd)
 
+    pwd = os.getcwd()
+    os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
+    # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
+    # For more information about the patches: 
+    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
+    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
+    if arguments.tf_version == "v2.2.2":
+        command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd])
+    os.chdir(pwd)
+
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
