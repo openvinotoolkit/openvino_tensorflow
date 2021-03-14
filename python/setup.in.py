@@ -41,7 +41,7 @@ import tensorflow as tf
 tf_version = "tensorflow==" + tf.__version__
 
 setup(
-    name='openvino_tensorflow_add_on',
+    name='openvino_tensorflow_addon',
     version='0.5.0',
     description='Intel OpenVINO Add On for TensorFlow',
     long_description=long_description,

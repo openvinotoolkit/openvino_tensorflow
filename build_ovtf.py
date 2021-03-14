@@ -39,7 +39,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
 
 def main():
     '''
-    Builds TensorFlow, OpenVINO, and ngraph-tf for python 3
+    Builds TensorFlow, OpenVINO, and OpenVINO Tensorflow Add-On for python 3
     '''
 
     # Component versions
@@ -72,7 +72,7 @@ def main():
         help="Skip building TensorFlow and use the specified prebuilt version.\n"
         + "If prebuilt version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples won't be build for nGraph-TF bridge",
+        "Note: in this case C++ API, unit tests and examples won't be build for OpenVINO Tensorflow Add-On",
         const=tf_version,
         default='',
         nargs='?',
@@ -429,14 +429,14 @@ def main():
     ])
 
     if arguments.disable_packaging_openvino_libs:
-        ngraph_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
+        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                 openvino_tf_src_dir, venv_dir,
                                 openvino_tf_cmake_flags, verbosity)
 
-    # Make sure that the ngraph bridge whl is present in the artfacts directory
+    # Make sure that the openvino tensorflow add-on whl is present in the artfacts directory
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 

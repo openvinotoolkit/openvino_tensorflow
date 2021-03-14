@@ -469,7 +469,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     command_executor(make_cmd)
 
     os.chdir(os.path.join("python", "dist"))
-    ovtf_wheel_files = glob.glob("openvino_tensorflow_add_on-*.whl")
+    ovtf_wheel_files = glob.glob("openvino_tensorflow_addon-*.whl")
     if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
         for whl in ovtf_wheel_files:
@@ -494,7 +494,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     return output_wheel
 
 
-def install_ngraph_tf(tf_version, venv_dir, openvino_artifacts_dir, ovtf_pip_whl):
+def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
