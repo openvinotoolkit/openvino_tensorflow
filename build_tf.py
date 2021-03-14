@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="2.2.2")
+        default="v2.2.2")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -38,7 +38,7 @@ def main():
     parser.add_argument(
         '--cxx11_abi_version',
         help=
-        "Desired version of ABI to be used while building Tensorflow"
+        "Desired version of ABI to be used while building Tensorflow",
         default='0')
     arguments = parser.parse_args()
 
@@ -64,20 +64,6 @@ def main():
         command_executor(["git", "checkout", arguments.tf_version])
         call(["git", "pull"])
         os.chdir(pwd)
-
-    pwd = os.getcwd()
-    os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
-
-    '''
-    # Uncomment this to apply security patch during build
-    # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
-    # For more information about the patches: 
-    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
-    # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
-    if arguments.tf_version == "v2.2.2":
-        command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd])
-    os.chdir(pwd)
-    '''
 
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
