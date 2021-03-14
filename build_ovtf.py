@@ -301,7 +301,6 @@ def main():
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
             
-            '''
             # Uncomment this to apply security patch
             os.chdir("tensorflow")
             # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
@@ -312,7 +311,7 @@ def main():
                 print("Applying security patch...")
                 command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd_now])
             os.chdir("..")
-            '''
+            
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
