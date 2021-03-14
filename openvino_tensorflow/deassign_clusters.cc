@@ -174,7 +174,9 @@ Status DeassignClusters(Graph* graph) {
   string device;
   BackendManager::GetBackendName(device);
 
-  std::vector<int> busted_clusters;
+  std::vector<int> alive_clusters;
+  int max_cluster_size = 0;
+  int max_cluster_idx = -1;
 
   for (auto& kv : cluster_map) {
     int cluster_idx = kv.first;
@@ -212,7 +214,6 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
-      busted_clusters.push_back(cluster_idx);
       continue;
     }
     // Disable dynamic to static
@@ -255,7 +256,6 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
-      busted_clusters.push_back(cluster_idx);
       continue;
     }
 
@@ -292,7 +292,6 @@ Status DeassignClusters(Graph* graph) {
         node->ClearAttr("_ovtf_marked_for_clustering");
         deassigned_histogram[node->type_string()]++;
       }
-      busted_clusters.push_back(cluster_idx);
       continue;
     }
 
@@ -336,75 +335,25 @@ Status DeassignClusters(Graph* graph) {
           node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;
         }
-        busted_clusters.push_back(cluster_idx);
         continue;
       }
     }
+
+    if (max_cluster_idx == -1) {
+      max_cluster_idx = cluster_idx;
+      max_cluster_size = nodes.size();
+    } else if (max_cluster_size < nodes.size()) {
+      max_cluster_idx = cluster_idx;
+      max_cluster_size = nodes.size();
+    }
+    alive_clusters.push_back(cluster_idx);
   }
 
-  if(device == "MYRIAD"){
-
-    vector<pair<int, std::set<Node*>>> cluster_arr;
-
-    for(auto& it : cluster_map){
-      if(!(std::count(busted_clusters.begin(), busted_clusters.end(), it.first))){
-        cluster_arr.push_back(it);
-      }
-    }
-
-    sort(cluster_arr.begin(), cluster_arr.end(), cmp);
-
-    vector<int> top_10;
-    int i = 0;
-    for(auto& it : cluster_arr){
-      if(i == 10)
-        break;
-      top_10.push_back(it.first);
-      i++;
-    }
-
-    for(auto& kv : cluster_map){
-      if(!(std::count(top_10.begin(), top_10.end(), kv.first))){
-        //Need to be deassigned, not in top 10
-        cout << "Disable cluster: " << kv.first << std::endl;
-        set<Node*>& nodes = kv.second;
-
-        for(auto node : nodes) {
-          node->ClearAttr("_ovtf_cluster");
-          node->ClearAttr("_ovtf_marked_for_clustering");
-          deassigned_histogram[node->type_string()]++;
-        }
-      }
-    }
-  }
-
-  if(device == "HDDL"){
-
-    vector<pair<int, std::set<Node*>>> cluster_arr;
-
-    for(auto& it : cluster_map){
-      if(!(std::count(busted_clusters.begin(), busted_clusters.end(), it.first))){
-        cluster_arr.push_back(it);
-      }
-    }
-
-    sort(cluster_arr.begin(), cluster_arr.end(), cmp);
-
-    vector<int> top_10;
-    int i = 0;
-    for(auto& it : cluster_arr){
-      if(i == 1)
-        break;
-      cout << "Top cluster: " << it.first << std::endl;
-      top_10.push_back(it.first);
-      i++;
-    }
-
-    for(auto& kv : cluster_map){
-      if(!(std::count(top_10.begin(), top_10.end(), kv.first))){
-        //Need to be deassigned, not in top 10
-        cout << "Disable cluster: " << kv.first << std::endl;
-        set<Node*>& nodes = kv.second;
+  if(device == "HDDL" || device == "MYRIAD"){
+    for(int i=0; i<alive_clusters.size(); i++){
+      int alive_cluster_idx = alive_clusters[i];
+      if(alive_cluster_idx != max_cluster_idx){
+        set<Node*>& nodes = cluster_map[alive_cluster_idx];
 
         for(auto node : nodes) {
           node->ClearAttr("_ovtf_cluster");
