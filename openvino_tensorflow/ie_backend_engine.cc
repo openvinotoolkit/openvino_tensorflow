@@ -46,7 +46,8 @@ void IE_Backend_Engine::load_network() {
   }
 
   // Load network to the plugin (m_device)
-  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(m_network, m_device, config);
+  auto dev_type = Backend::GetGlobalContext().device_type;
+  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(m_network, dev_type, config);
   m_network_ready = true;
 }
 
