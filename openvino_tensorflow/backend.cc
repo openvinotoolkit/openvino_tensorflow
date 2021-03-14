@@ -25,12 +25,35 @@ Backend::Backend(const string& config) {
   InferenceEngine::Core core;
   auto devices = core.GetAvailableDevices();
   // TODO: Handle multiple devices
+
+  bool dev_found = false;
   if (find(devices.begin(), devices.end(), device) == devices.end()) {
+
+    if(device == "MYRIAD"){
+      for(auto dev : devices){
+        if(dev.find(device) != std::string::npos)
+          dev_found = true;
+      }
+    }
+  }
+  else{
+    dev_found = true;
+  }
+
+  if(!dev_found){
+
     stringstream ss;
     ss << "Device '" << config << "' not found.";
     throw runtime_error(ss.str());
+
   }
-  m_device = config;
+  Backend::GetGlobalContext().device_type = config;
+  if(config.find("MYRIAD") != std::string::npos){
+    m_device = "MYRIAD";
+  }
+  else{
+    m_device = config;
+  }
 }
 
 shared_ptr<Executable> Backend::Compile(shared_ptr<ngraph::Function> func,
