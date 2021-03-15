@@ -1,12 +1,13 @@
-# Intel<sup>(R)</sup> Openvino<sup>TM</sup> TensorFlow Add-on C++ and Python Classification Demo
+# Intel<sup>(R)</sup> Openvino<sup>TM</sup> Add-on for TensorFlow C++ and Python Classification Demo
 
-This example shows how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> Tensorflow Add-on to recognize objects in images in C++ and Python.
+These examples show how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> Add-on for Tensorflow to recognize objects in images in C++ and Python.
 
 ## Description
 
-This demo uses Google Inception V3 model to classify image that is passed in on the command line.
+These demos use Google Inception V3 model to classify image that is passed in on the command line.
 
 ## To build/install/run
+
 
 The TensorFlow `GraphDef` that contains the model definition and weights is not packaged in the repo because of its size. Instead, you must first download the file to the `data` directory in the source tree:
 
@@ -30,6 +31,7 @@ Assuming main tensorflow framework is already built using build_tf.py , run this
 $ cd <path-to-openvino_tensorflow>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-dir-with-tensorflow-artifacts>
 ```
+For detailed build instructions please read [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#build-from-source).
 
 That should build a binary executable for classification_sample. Update the LD_LIBRARY_PATH and run the sample:
 
@@ -38,8 +40,8 @@ $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow>/build_cm
 $ ./build_cmake/examples/classification_sample/infer_image
 ```
 
-This uses the default example image that ships with this repo, and should
-output something similar to this:
+This uses the default example image that is shipped with this repo, and should
+output something similar as below:
 
 ```
 military uniform (653): 0.834306
