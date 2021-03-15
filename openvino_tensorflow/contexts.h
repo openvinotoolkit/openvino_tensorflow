@@ -14,7 +14,6 @@ namespace openvino_tensorflow {
 
 struct GlobalContext {
   InferenceEngine::Core ie_core;
-  std::string device_type;
 };
 
 } // namespace openvino_tensorflow

@@ -120,7 +120,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         it->second(node);
       }
     }
-    
+
     util::DumpTFGraph(graph, idx, "marked");
 
     // 2. Assign clusters then, if requested, dump the graphs.
