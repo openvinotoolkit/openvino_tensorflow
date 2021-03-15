@@ -38,7 +38,7 @@ def main():
     run_ovtf_pytests_from_artifacts(artifacts_dir)
 
     # Finally run Resnet50
-    run_resnet50_infer_from_artifacts(artifacts_dir, 1, 1)
+    #run_resnet50_infer_from_artifacts(artifacts_dir, 1, 1)
     os.chdir(root_pwd)
 
 
