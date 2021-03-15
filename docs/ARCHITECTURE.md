@@ -4,7 +4,7 @@ This document describes the high-level architecture of Intel<sup>®</sup> OpenVI
 
 ## Architecture Diagram
 
-The below diagram shows the high level architecture of Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow. We broadly categorize the software stack into different modules as shown below. The purple box at the bottom shows the components of Intel<sup>®</sup> OpenVINO™ including different device plugins along with the corresponding libraries.
+The below diagram shows the high level architecture of Intel<sup>®</sup> OpenVINO™ Add-on. We broadly categorize the software stack into different modules as shown below. The purple box at the bottom shows the components of Intel<sup>®</sup> OpenVINO™ including different device plugins along with the corresponding libraries.
 
 <p align="center">
   <img src="../images/openvino_tensorflow_architecture.png" width="450">
