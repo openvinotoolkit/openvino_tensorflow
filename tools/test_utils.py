@@ -109,7 +109,7 @@ def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
     os.environ['LD_LIBRARY_PATH'] = os.getenv(
         "LD_LIBRARY_PATH", "") + ':' + os.path.join(artifacts_dir, lib_dir)
     assert os.path.exists(
-            (artifacts_dir), "Could not find directory"
+            artifacts_dir), "Could not find directory"
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters
