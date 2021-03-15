@@ -150,21 +150,21 @@ To determine what backends are available on your system, use the following API:
 
     openvino_tensorflow.list_backends()
 
-More detailed examples on how to use OpenVINO Add-on are located in the [examples] directory.
+More detailed examples on how to use OpenVINO Add-on are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
 ## Support
 
-Please submit your questions, feature requests and bug reports via [GitHub issues].
+Please submit your questions, feature requests and bug reports via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 
 ## How to Contribute
 
 We welcome community contributions to Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow. If you have an idea for how to 
 improve it:
 
-* Share your proposal via [GitHub issues].
+* Share your proposal via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 * Ensure you can build the product and run all the examples with your patch.
 * In the case of a larger feature, create a test.
-* Submit a [pull request].
+* Submit a [**pull request**](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
 * We will review your contribution and, if any additional fixes or
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
