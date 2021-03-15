@@ -27,7 +27,7 @@ Intel<sup>®</sup> OpenVINO™ Add-on has two releases: one built with CXX11_ABI
 
 #### Package built with CXX11_ABI=0
 
-Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=0 is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO Add-on package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=0 ([**PIP package**](https://test.pypi.org/project/openvino-tensorflow-addon-abi0/0.5.0/)) is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO Add-on package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
 
 Users can use TensorFlow 2.2.2 from PyPi (pip install -U tensorflow==2.2.2). However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
 
@@ -43,15 +43,15 @@ Below are the steps needed to use the packages built with CXX11_ABI=0:
       
                     (or)
 
-        pip install -U tensorflow-custom-abi0==2.2.2 (Recommended for security patches)
+        pip3 install -U --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tensorflow-custom-abi0==2.2.2 (Recommended for security patches)
 
 3. Install `openvino-tensorflow-addon`:
 
-        pip install -U openvino-tensorflow-addon-abi0
+        pip3 install -U --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ openvino-tensorflow-addon-abi0
 
 #### Package built with CXX11_ABI=1
 
-Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=1 is compatible with OpenVINO binary releases. This OpenVINO Add-on package is currently compatible with OpenVINO version 2021.2. This package supports Intel CPUs, Intel integrated GPUs, Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision Accelerator Design with Movidius<sup>TM</sup> (VAD-M). 
+Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=1 ([**PIP package**](https://test.pypi.org/project/openvino-tensorflow-addon-abi1/0.5.0/)) is compatible with OpenVINO binary releases. This OpenVINO Add-on package is currently compatible with OpenVINO version 2021.2. This package supports Intel CPUs, Intel integrated GPUs, Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision Accelerator Design with Movidius<sup>TM</sup> (VAD-M). 
 
 Users can build TensorFlow from source with CXX11_ABI=1 or they can use the TensorFlow package that we provide. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=1 and recommend users to use it to avoid any security issues. 
 Below are the steps needed to use the packages built with CXX11_ABI=1:
@@ -62,7 +62,7 @@ Below are the steps needed to use the packages built with CXX11_ABI=1:
 
 2. Install TensorFlow:
 
-        pip install -U tensorflow-custom-abi1==2.2.2
+        pip3 install -U --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tensorflow-custom-abi1==2.2.2 (Recommended for security patches)
 
 3. Install the OpenVINO 2021.2 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit](https://software.intel.com/en-us/openvino-toolkit)).
 
@@ -72,7 +72,7 @@ Below are the steps needed to use the packages built with CXX11_ABI=1:
 
 3. Install `openvino-tensorflow-addon`:
 
-        pip install -U openvino-tensorflow-addon-abi1
+        pip3 install -U --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ openvino-tensorflow-addon-abi1
 
 #### Summary of the Prebuilt packages
 
