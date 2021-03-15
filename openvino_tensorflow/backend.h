@@ -32,10 +32,12 @@ class Backend {
 
   static GlobalContext& GetGlobalContext();
   static void ReleaseGlobalContext();
+  std::string GetDeviceType();
   bool IsSupported(const ngraph::Node& node) const;
 
  private:
   string m_device;
+  string m_device_type;
 };
 }//end namespace openvino_tensorflow
 }

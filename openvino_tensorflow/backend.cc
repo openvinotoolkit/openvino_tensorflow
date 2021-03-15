@@ -47,7 +47,7 @@ Backend::Backend(const string& config) {
     throw runtime_error(ss.str());
 
   }
-  Backend::GetGlobalContext().device_type = config;
+  m_device_type = config;
   if(config.find("MYRIAD") != std::string::npos){
     m_device = "MYRIAD";
   }
@@ -70,6 +70,10 @@ GlobalContext& Backend::GetGlobalContext() {
 
 void Backend::ReleaseGlobalContext() {
   g_global_context.reset();
+}
+
+std::string Backend::GetDeviceType(){
+  return m_device_type;
 }
 
 bool Backend::IsSupported(const Node& node) const {
