@@ -56,7 +56,7 @@ This document provides a list of all validated models that are supported by Inte
 * [mobilenet-v3-small-1.0-224-tf](https://storage.googleapis.com/mobilenet_v3/checkpoints/v3-small_224_1.0_float.tgz)
 * [PRNet](https://github.com/YadiraF/PRNet)
 * [resnet_50](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb)
-* [resnet_50_v1.5](https://github.com/IntelAI/models/tree/master/benchmarks/image_recognition/tensorflow/resnet50v1_5)
+* [resnet_50_v1.5](https://zenodo.org/record/2535873/files/resnet50_v1.pb)
 * [yolo_v2](https://github.com/david8862/keras-YOLOv3-model-set.git)
 * [yolo_v2_tiny](https://github.com/david8862/keras-YOLOv3-model-set.git)
 * [yolo_v3_darknet](https://github.com/mystic123/tensorflow-yolo-v3.git)
