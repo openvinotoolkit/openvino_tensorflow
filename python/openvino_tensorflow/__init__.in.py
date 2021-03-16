@@ -206,4 +206,4 @@ if ovtf_classic_loaded:
     "nGraph version used for this build: " + str(openvino_tensorflow_lib.ngraph_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n" \
-    "openvino tensorflow add-on built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n" \
+    "openvino tensorflow add-on built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n"
