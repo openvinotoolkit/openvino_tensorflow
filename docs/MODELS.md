@@ -49,7 +49,7 @@ The links to the TensorFlow-Slim models include the checkpoint files only. You s
 * [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetMobile)
 * [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet50V2)
 
-Please follow the instructions on [Keras Applications](https://keras.io/api/applications/) page for further instructions on using these models.
+Please follow the instructions on [Keras Applications](https://keras.io/api/applications/) page for further information about using these models.
 
 ## Other Models
 * [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)
