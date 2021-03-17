@@ -35,7 +35,7 @@ Intel<sup>®</sup> OpenVINO™ Add-on has two releases: one built with CXX11_ABI
 
 #### Package built with CXX11_ABI=0
 
-Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=0 ([**PIP package**](https://test.pypi.org/project/openvino-tensorflow-addon-abi0/0.5.0/)) is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO Add-on package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=0 ([**PIP package**](https://test.pypi.org/project/openvino-tensorflow-addon-abi0/0.5.0/)) is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO Add-on package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs). Please note that Intel<sup>®</sup> Vision Accelerator Design with Movidius<sup>TM</sup> (VAD-M) is not supported with CXX11_ABI=0 at this time. In order to enable Intel<sup>®</sup> Vision Accelerator Design with Movidius<sup>TM</sup> (VAD-M) please use CXX11_ABI=1 (see next section below).
 
 Users can use TensorFlow 2.2.2 from PyPi (pip install -U tensorflow==2.2.2). However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
 
