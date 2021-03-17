@@ -10,7 +10,7 @@
 
 [Example: Google colab](https://colab.research.google.com/drive/19f2cps72oehRYC5citMwB0Yxw6_wbTPF) 
 
-[Example: Instructions for Azure ML](https://intel-my.sharepoint.com/:w:/p/arindam_paul/EaCAiqT9V9BEoNPrdE3tckYB0KOKxyh3LR4QTvqQ5i6Dng?e=cmb5SS)
+[Example: Instructions for Azure ML](https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/docs/Azure_Instructions)
 
-[Example: Instructions for AWS](https://intel-my.sharepoint.com/:w:/p/arindam_paul/ERQVwkAQADpCiV19B6a10iQBnYKc-VdFVpu-ODrv3Zol-w?e=5v5hjn)
+[Example: Instructions for AWS](https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/docs/AWS_Instructions)
 
