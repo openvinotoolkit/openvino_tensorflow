@@ -4,10 +4,14 @@ These examples show how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> Add-on 
 
 ## Description
 
-These demos use Google Inception V3 model to classify image that is passed in on the command line.
+These demos use Google Inception V3 model to classify image that is passed in on the command line. This examples assume that you have already  
 
-## To build/install/run
+* Installed TensorFlow on your system 
+* Installed OpenVINO Add-on for TensorFlow on your system
+* You've verified that both work with the following command and verified the output 
 
+
+## Download TensorFlow model 
 
 The TensorFlow `GraphDef` that contains the model definition and weights is not packaged in the repo because of its size. Instead, you must first download the file to the `data` directory in the source tree:
 
@@ -24,6 +28,27 @@ Once extracted, the data folder will have two new files:
 See the labels file in the data directory for the possible
 classifications, which are the 1,000 categories used in the Imagenet
 competition.
+
+## Python implementation
+
+classification_sample.py is a python implementation that provides code corresponding to the C++ code here and could be easier to add visualization or debug code.
+
+```bash
+$ cd <path-to-openvino_tensorflow>
+$ source build_cmake/venv-tf-py3/bin/activate
+$ python examples/classification_sample.py
+```
+
+And get result similar to this:
+```
+military uniform (653): 0.834306
+mortarboard (668): 0.0218693
+academic gown (401): 0.010358
+pickelhaube (716): 0.00800814
+bulletproof vest (466): 0.00535091
+```
+
+## To build/install/run C++ implementation 
 
 Assuming main tensorflow framework is already built using build_tf.py , run this command to build openvino_tensorflow with samples:
 
@@ -61,22 +86,5 @@ Next, try it out on your own images by supplying the --image= argument, e.g.
 $ ./build_cmake/examples/classification_sample/infer_image --image=my_image.png
 ```
 
-## Python implementation
 
-classification_sample.py is a python implementation that provides code corresponding to the C++ code here and could be easier to add visualization or debug code.
-
-```bash
-$ cd <path-to-openvino_tensorflow>
-$ source build_cmake/venv-tf-py3/bin/activate
-$ python examples/classification_sample.py
-```
-
-And get result similar to this:
-```
-military uniform (653): 0.834306
-mortarboard (668): 0.0218693
-academic gown (401): 0.010358
-pickelhaube (716): 0.00800814
-bulletproof vest (466): 0.00535091
-```
 
