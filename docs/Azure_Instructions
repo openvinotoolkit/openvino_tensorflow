@@ -4,11 +4,11 @@ Here are the instructions to accelerate TensorFlow models on Azure with the Inte
 
 1.	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
 
- [img]https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_1.png [/img]
+ [img src="https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_1.png"]
 
 2.	Pick an instance  like HC44rs. The bigger the instance the higher the performance 
 
-[img] https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_2.png [/img]
+[img src="https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_2.png"]
  
 
 3.	Then download the *.pem files for keys on your laptop. 
@@ -17,7 +17,7 @@ chmod 400 the *.pem key.
 4.	Get the public IP address of your instance 
 
 
-[img] https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_3.png [/img]
+[img src="https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/Azure_image_3.png"]
 
 
 5.	ssh -i *.pem <IP-addr-of-your-instance>
