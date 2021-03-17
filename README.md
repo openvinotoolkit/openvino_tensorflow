@@ -7,6 +7,12 @@
 This repository contains the source code of Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow, a product needed to enable Intel<sup>®</sup> OpenVINO™ runtime and optimizations for TensorFlow. Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL.   
 This open source project will be referred as OpenVINO™ Add-on in rest of the documentation.
 
+## Quickstart 
+
+[Example with Google colab](https://colab.research.google.com/drive/19f2cps72oehRYC5citMwB0Yxw6_wbTPF)
+[Instructions for Azure ML](https://intel-my.sharepoint.com/:w:/p/arindam_paul/EaCAiqT9V9BEoNPrdE3tckYB0KOKxyh3LR4QTvqQ5i6Dng?e=cmb5SS)
+[Instructions for AWS](https://intel-my.sharepoint.com/:w:/p/arindam_paul/ERQVwkAQADpCiV19B6a10iQBnYKc-VdFVpu-ODrv3Zol-w?e=5v5hjn)
+
 ## Installation
 
 ### Requirements
