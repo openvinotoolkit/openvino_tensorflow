@@ -279,7 +279,7 @@ def main():
             # [TODO] Replace the following with the openvino add-on recommended tf pypi package
             if arguments.cxx11_abi_version == "0":
                 command_executor(
-                    ["pip", "install", "tensorflow-cpu"])
+                    ["pip", "install", "--no-cache", "tensorflow-cpu=="+tf_version])
             elif arguments.cxx11_abi_version == "1":
                 command_executor(
                     ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi1"])
@@ -312,7 +312,7 @@ def main():
                 command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd_now])
             os.chdir("..")
             os.chdir(pwd_now)
-            
+
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
                 tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
