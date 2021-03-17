@@ -76,7 +76,7 @@ class TestEnv:
 
 def install_openvino_tensorflow(artifacts_dir):
     ovtf_wheel_files = glob.glob(artifacts_dir +
-                                 "/openvino_tensorflow_addon-*.whl")
+                                 "/openvino_tensorflow_addon*.whl")
 
     if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")

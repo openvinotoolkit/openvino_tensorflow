@@ -45,6 +45,7 @@ TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
 TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
 TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
+OVTF_VERSION = "0.5.0"
 
 # converting version representations to strings if not already
 try:
@@ -202,7 +203,7 @@ if ovtf_classic_loaded:
         return openvino_tensorflow_lib.get_disabled_ops()
 
     __version__ = \
-    "openvino tensorflow add-on version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
+    "openvino tensorflow add-on version: " + str(OVTF_VERSION) + "\n" + \
     "nGraph version used for this build: " + str(openvino_tensorflow_lib.ngraph_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n" \
