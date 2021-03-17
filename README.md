@@ -10,7 +10,9 @@ This open source project will be referred as OpenVINO™ Add-on in rest of the d
 ## Quickstart 
 
 [Example with Google colab](https://colab.research.google.com/drive/19f2cps72oehRYC5citMwB0Yxw6_wbTPF)
+
 [Instructions for Azure ML](https://intel-my.sharepoint.com/:w:/p/arindam_paul/EaCAiqT9V9BEoNPrdE3tckYB0KOKxyh3LR4QTvqQ5i6Dng?e=cmb5SS)
+
 [Instructions for AWS](https://intel-my.sharepoint.com/:w:/p/arindam_paul/ERQVwkAQADpCiV19B6a10iQBnYKc-VdFVpu-ODrv3Zol-w?e=5v5hjn)
 
 ## Installation
