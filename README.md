@@ -39,7 +39,9 @@ Intel<sup>®</sup> OpenVINO™ Add-on package built with ABI=0 ([**PIP package**
 
 Users can use TensorFlow 2.2.2 from PyPi (pip install -U tensorflow==2.2.2). However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
 
-Below are the steps needed to use the packages built with CXX11_ABI=0:
+Below are the steps needed to use the packages built with CXX11_ABI=0: 
+
+[Please note: MAC OSX is currently not supported for these steps]
 
 1. Ensure the following pip version is being used:
 
