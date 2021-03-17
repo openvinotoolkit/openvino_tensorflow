@@ -4,11 +4,30 @@ These examples show how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> Add-on 
 
 ## Description
 
-These demos use Google Inception V3 model to classify image that is passed in on the command line. This examples assume that you have already  
+These demos use Google Inception V3 model to classify image that is passed in on the command line. 
+
+## Prerequisites
+
+This examples assume that you have already  
 
 * Installed TensorFlow on your system 
 * Installed OpenVINO Add-on for TensorFlow on your system
 * You've verified that both work with the following command and verified the output 
+
+Verify that `openvino-tensorflow-addon` installed correctly:
+
+    python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+                import openvino_tensorflow; print(openvino_tensorflow.__version__)"
+
+This will produce something like this:
+
+        TensorFlow version:  2.2.2
+        OpenVINO Add-on for TensorFlow version: b'0.5.0'
+        OpenVINO version used for this build: b'2021.2'
+        TensorFlow version used for this build: v2.2.2
+        CXX11_ABI flag used for this build: 1
+        OpenVINO Add-on built with Grappler: False
+
 
 
 ## Download TensorFlow model 
