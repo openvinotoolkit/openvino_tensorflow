@@ -94,7 +94,7 @@ Below are the steps needed to use the packages built with CXX11_ABI=1:
 |tensorflow-custom-abi1| openvino-tensorflow-addon-abi1|Links to OpenVINO binary release|CPU,GPU,MYRIAD,HDDL|OpenVINO libraries are linked from preinstalled location|
 
 
-### Build from source
+### Build from source [Required for MAC OSX]
 
 Once TensorFlow and its dependencies are installed, clone the `openvino_tensorflow` repo:
 
