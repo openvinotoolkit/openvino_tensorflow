@@ -1,6 +1,6 @@
 [NOTE: TO BE VALIDATED BY ENGINEERING TEAM[ 
 
-Here are the instructions to accelerate TensorFlow models on Azure with the Intel® OpenVINOTM add-on for TensorFlow  
+Here are the instructions to accelerate TensorFlow models on Azure with the Intel® OpenVINO(TM) add-on for TensorFlow  
 
 1.	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
 
