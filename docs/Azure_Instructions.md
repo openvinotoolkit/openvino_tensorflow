@@ -99,10 +99,17 @@ azureuser@tf-u27:~/openvino_tensorflow-master$ python3 examples/classification_s
 2021-03-16 18:49:47.219153: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
 
 Available Backends:
+
 CPU
+
 Inference time in ms: 8.149624
+
 military uniform 0.8343049
+
 mortarboard 0.021869553
+
 academic gown 0.010358133
+
 pickelhaube 0.008008199
+
 bulletproof vest 0.0053509558
