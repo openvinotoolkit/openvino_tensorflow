@@ -85,12 +85,19 @@ azureuser@tf-u27:~/openvino_tensorflow-master$ curl -L "https://storage.googleap
 azureuser@tf-u27:~/openvino_tensorflow-master$ python3 examples/classification_sample.py 
 
 2021-03-16 18:49:47.205522: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+
 2021-03-16 18:49:47.205553: E tensorflow/stream_executor/cuda/cuda_driver.cc:313] failed call to cuInit: UNKNOWN ERROR (303)
+
 2021-03-16 18:49:47.205574: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (tf-u27): /proc/driver/nvidia/version does not exist
+
 2021-03-16 18:49:47.205753: I tensorflow/core/platform/cpu_feature_guard.cc:143] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 AVX512F FMA
+
 2021-03-16 18:49:47.214779: I tensorflow/core/platform/profile_utils/cpu_utils.cc:102] CPU Frequency: 2693670000 Hz
+
 2021-03-16 18:49:47.219130: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x7f881c000b60 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+
 2021-03-16 18:49:47.219153: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+
 Available Backends:
 CPU
 Inference time in ms: 8.149624
