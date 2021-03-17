@@ -1,6 +1,6 @@
 [TO BE VALIDATED BY ENGINEERING]
 
-Here are the instructions to accelerate TensorFlow models on AWS with the Intel® OpenVINOTM add-on for TensorFlow  
+Here are the instructions to accelerate TensorFlow models on AWS with the Intel® OpenVINO(TM) add-on for TensorFlow  
 
 
 1.	Launch the Deep Learning AMI EC2 instance Ubuntu 18.04 Version 41.0
@@ -69,17 +69,31 @@ openvino tensorflow add-on built with Grappler: False
 16.	(myenv) ubuntu@ip-10-0-0-123:~/openvino_tensorflow-master$ python3 examples/classification_sample.py 
 
 2021-03-16 23:38:39.107565: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcuda.so.1
+
 2021-03-16 23:38:39.609060: E tensorflow/stream_executor/cuda/cuda_driver.cc:313] failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+
 2021-03-16 23:38:39.609158: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (ip-10-0-0-123): /proc/driver/nvidia/version does not exist
+
 2021-03-16 23:38:39.610135: I tensorflow/core/platform/cpu_feature_guard.cc:143] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 AVX512F FMA
+
 2021-03-16 23:38:39.624320: I tensorflow/core/platform/profile_utils/cpu_utils.cc:102] CPU Frequency: 2999995000 Hz
+
 2021-03-16 23:38:39.627801: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x7f827c000b20 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+
 2021-03-16 23:38:39.627822: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
 Available Backends:
+
 CPU
+
 Inference time in ms: 7.504463
+
 military uniform 0.8343049
+
 mortarboard 0.021869553
+
 academic gown 0.010358133
+
 pickelhaube 0.008008199
+
 bulletproof vest 0.0053509558
+
