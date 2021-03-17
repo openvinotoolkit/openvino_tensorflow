@@ -103,6 +103,10 @@ Once TensorFlow and its dependencies are installed, clone the `openvino_tensorfl
         git submodule init
         git submodule update --recursive
 
+If running on MAC OSX, please ensure that virtual env is setup correctly 
+
+       pip3 install virtualenv
+
 Run the following Python script to build TensorFlow, OpenVINO, and the OpenVINO Add-on. Use Python 3:
 
         python3 build_ovtf.py --use_prebuilt_tensorflow
