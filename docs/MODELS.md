@@ -15,7 +15,7 @@ This document provides a list of all validated models that are supported by Inte
 * [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)
 * [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)
 
-The links to the TensorFlow-Slim models include the checkpoint files only. You should refer to TensorFlow-Slim models [instructions page](https://github.com/tensorflow/models/tree/master/research/slim) to run inference or freeze the models. (No pre-trained checkpoint files provided for CifarNet and LeNet.)
+The links to the TensorFlow-Slim models include the pre-trained checkpoint files only. You should refer to TensorFlow-Slim models [instructions page](https://github.com/tensorflow/models/tree/master/research/slim) to run inference or freeze the models. (No pre-trained checkpoint files provided for CifarNet and LeNet.)
 
 ## Tensorflow Object Detection Model Zoo
 * [faster_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)
@@ -31,6 +31,8 @@ The links to the TensorFlow-Slim models include the checkpoint files only. You s
 * [ssdlite_mobilenet_v2](http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz)
 * [mask_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)
 * [mask_rcnn_inception_v2_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)
+
+Pre-trained frozen models are provided for these models.
 
 ## TF Keras Applications
 * [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)
@@ -49,7 +51,7 @@ The links to the TensorFlow-Slim models include the checkpoint files only. You s
 * [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetMobile)
 * [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet50V2)
 
-Please follow the instructions on [Keras Applications](https://keras.io/api/applications/) page for further information about using these models.
+Please follow the instructions on [Keras Applications](https://keras.io/api/applications/) page for further information about using these pre-trained models.
 
 ## Other Models
 * [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)
@@ -72,3 +74,5 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 * [densenet161](https://drive.google.com/file/d/0B_fUSpodN0t0NmZvTnZZa2plaHc/view)
 * resnext50v2
 * squeezenet1.1
+
+Pre-trained frozen model files are provided for some of these models. For the rest, please refer to the links provided.
