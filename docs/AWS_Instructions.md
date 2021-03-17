@@ -5,15 +5,16 @@ Here are the instructions to accelerate TensorFlow models on AWS with the IntelÂ
 
 1.	Launch the Deep Learning AMI EC2 instance Ubuntu 18.04 Version 41.0
 
+<p align="center">
   <img src="  https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/AWS_image_1.png" >
-
-
+</p>
 
 
 2.	Choose one of the C5 instances â€“these are optimized for inference. The larger the instance , the faster the inference. 
 
- 
+ <p align="center">
   <img src="  https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/AWS_image_2.png" >
+</p>
 
 
 3.	Then download the *.pem files for keys on your laptop. 
@@ -21,7 +22,9 @@ chmod 400 the *.pem key.
 
 4.	Get the public IP address of your instance 
 
+<p align="center">
   <img src="  https://github.com/openvinotoolkit/openvino_tensorflow/blob/arindam-doc-changes-3-17-2011/images/AWS_image_3.png" >
+</p>
 
 
 5.	Wait for the instance to finish initializing and be fully running and functional 
