@@ -24,10 +24,10 @@ This open source project will be referred as OpenVINO™ Add-on in rest of the d
 | -----------------------|-------------------|
 |Python 3| Python 3|
 |TensorFlow v2.2.2|GCC 7.5 (Ubuntu), Clang/LLVM (macOS)|
-|        |`cmake` 3.15 or higher|
+|Note:Mac OSX is not supported with pre-built packages at this time|`cmake` 3.15 or higher|
 |        |Bazelisk|
 |        |`virtualenv` 16.0.0+|
-|Mac OSX is not supported with pre-built packages at this time   |`patchelf`|
+|        |`patchelf`|
 
 ### Use pre-built packages
 
