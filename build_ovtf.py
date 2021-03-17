@@ -279,7 +279,7 @@ def main():
             # [TODO] Replace the following with the openvino add-on recommended tf pypi package
             if arguments.cxx11_abi_version == "0":
                 command_executor(
-                    ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi0"])
+                    ["pip", "install", "tensorflow-cpu"])
             elif arguments.cxx11_abi_version == "1":
                 command_executor(
                     ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi1"])
