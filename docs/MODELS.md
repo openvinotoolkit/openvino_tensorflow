@@ -1,7 +1,5 @@
 This document provides a list of all validated models that are supported by Intel<sup>®</sup> OpenVINO™ integration with TensorFlow. This list is continuously evolving as we enable more operators and models. 
 
-**Following models are supported on CPU, GPU and MYRIAD**
-
 ## TensorFlow-Slim Image Classification Library
 
 * [Inception V3](http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz)
