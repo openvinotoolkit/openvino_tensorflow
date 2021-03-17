@@ -96,7 +96,11 @@ Below are the steps needed to use the packages built with CXX11_ABI=1:
 
 ### Build from source [Required for MAC OSX]
 
-Once TensorFlow and its dependencies are installed, clone the `openvino_tensorflow` repo:
+Please verify TensorFlow and its dependencies are installed  
+
+        python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);
+ 
+Then clone the `openvino_tensorflow` repo:
 
         git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
         cd openvino_tensorflow
