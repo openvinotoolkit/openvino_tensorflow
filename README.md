@@ -27,7 +27,7 @@ This open source project will be referred as OpenVINO™ Add-on in rest of the d
 |        |`cmake` 3.15 or higher|
 |        |Bazelisk|
 |        |`virtualenv` 16.0.0+|
-|        |`patchelf`|
+|Mac OSX is not supported with pre-built packages at this time   |`patchelf`|
 
 ### Use pre-built packages
 
