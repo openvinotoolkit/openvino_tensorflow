@@ -2,17 +2,20 @@ This document provides a list of all validated models that are supported by Inte
 
 **Following models are supported on CPU, GPU and MYRIAD**
 
-## Tensorflow-Slim Image Classification Library
-* [CifarNet](https://github.com/tensorflow/models/tree/master/research/slim)
-* [Inception V3](https://github.com/tensorflow/models/tree/master/research/slim)
-* [Inception_V4](https://github.com/tensorflow/models/tree/master/research/slim)
-* [LeNet](https://github.com/tensorflow/models/tree/master/research/slim)
-* [Resnet V1 50](https://github.com/tensorflow/models/tree/master/research/slim)
-* [Resnet V2 152](https://github.com/tensorflow/models/tree/master/research/slim)
-* [Resnet V2 50](https://github.com/tensorflow/models/tree/master/research/slim)
-* [VGG 16](https://github.com/tensorflow/models/tree/master/research/slim)
-* [VGG 19](https://github.com/tensorflow/models/tree/master/research/slim)
-* [MobileNet_v1_1.0_224](https://github.com/tensorflow/models/tree/master/research/slim)
+## TensorFlow-Slim Image Classification Library
+
+* [Inception V3](http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz)
+* [Inception_V4](http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz)
+* [Resnet V1 50](http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz)
+* [Resnet V2 152](http://download.tensorflow.org/models/resnet_v2_152_2017_04_14.tar.gz)
+* [Resnet V2 50](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz)
+* [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)
+* [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)
+* [MobileNet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)
+* [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)
+* [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)
+
+The links to the TensorFlow-Slim models include the checkpoint files only. You should refer to TensorFlow-Slim models [instructions page](https://github.com/tensorflow/models/tree/master/research/slim) to run inference or freeze the models. (No pre-trained checkpoint files provided for CifarNet and LeNet.)
 
 ## Tensorflow Object Detection Model Zoo
 * [faster_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)
@@ -30,21 +33,23 @@ This document provides a list of all validated models that are supported by Inte
 * [mask_rcnn_inception_v2_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)
 
 ## TF Keras Applications
-* [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [DenseNet169](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [DenseNet201](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB0](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB1](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB2](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB3](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB4](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB5](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB6](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [EfficientnetB7](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [InceptionV3](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [NASNetLarge](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-* [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
+* [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)
+* [DenseNet169](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet169)
+* [DenseNet201](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet201)
+* [EfficientnetB0](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB0)
+* [EfficientnetB1](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB1)
+* [EfficientnetB2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB2)
+* [EfficientnetB3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB3)
+* [EfficientnetB4](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB4)
+* [EfficientnetB5](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB5)
+* [EfficientnetB6](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB6)
+* [EfficientnetB7](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB7)
+* [InceptionV3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/InceptionV3)
+* [NASNetLarge](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetLarge)
+* [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetMobile)
+* [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet50V2)
+
+Please follow the instructions on [Keras Applications](https://keras.io/api/applications/) page for further instructions on using these models.
 
 ## Other Models
 * [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)
