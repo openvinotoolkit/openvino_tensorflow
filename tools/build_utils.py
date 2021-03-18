@@ -234,6 +234,9 @@ def build_tensorflow(tf_version,
         "--config=noaws",
         "--config=nohdfs",
         "--config=nonccl",
+        "--local_ram_resources=4096",
+        "--jobs=4",
+        "--local_cpu_resources=4"
     ]
     if use_intel_tf:
         print("Building Intel-Tensorflow")
