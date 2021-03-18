@@ -54,7 +54,6 @@ classification_sample.py is a python implementation that provides code correspon
 
 ```bash
 $ cd <path-to-openvino_tensorflow>
-$ source build_cmake/venv-tf-py3/bin/activate
 $ python examples/classification_sample.py
 ```
 
