@@ -106,6 +106,13 @@ def main():
         default='')
 
     parser.add_argument(
+        '--use_openvino_installation',
+        help=
+        "Use your local OpenVINO installation. Usually under /opt/intel/openvino/",
+        action="store",
+        default='')
+
+    parser.add_argument(
         '--disable_packaging_openvino_libs',
         help=
         "Use this option to do build a standalone python package of " +
@@ -148,13 +155,19 @@ def main():
     ), ("\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
     "cannot be used together.")
 
-    # Since the argument use_openvino_from_location utilizes a binary release
+    assert not (
+        arguments.use_openvino_from_location != '' and
+        arguments.use_openvino_installation != ''
+    ), ("\"use_openvino_from_location\" and \"use_openvino_installation\" "
+    "cannot be used together.")
+
+    # Since the argument use_openvino_installation utilizes a binary release
     # of OpenVINO - and it uses ABI 1 - an user supplied ABI version of 0 is
     # an incompatible option. Tn this case, tensorflow needs to be built with ABI 1
     assert not (
-        arguments.use_openvino_from_location != '' and
+        arguments.use_openvino_installation != '' and
         arguments.cxx11_abi_version != '1'
-    ), ("\"use_openvino_from_location\" and \"cxx11_abi_version\" "
+    ), ("\"use_openvino_installation\" and \"cxx11_abi_version=0\" "
     "cannot be used together. Please use cxx11_abi_version=1 "
     "to continue to build with a binary release of OpenVINO") 
 
@@ -373,6 +386,8 @@ def main():
 
     if arguments.use_openvino_from_location != "":
         print("Using OpenVINO from " + arguments.use_openvino_from_location)
+    elif arguments.use_openvino_installation != "":
+        print("Using OpenVINO installation from " + arguments.use_openvino_installation)
     else:
         print("Building OpenVINO from source")
         print(
@@ -400,10 +415,17 @@ def main():
     openvino_artifacts_dir = ""
     if arguments.use_openvino_from_location == '':
         openvino_artifacts_dir = os.path.join(artifacts_location, "openvino")
-    else:
+    elif arguments.use_openvino_installation != "":
+        openvino_artifacts_dir = os.path.abspath(
+            arguments.use_openvino_installation)
+        openvino_tf_cmake_flags.extend(["-DUSE_OPENVINO_INSTALLATION=TRUE"])        
+    elif arguments.use_openvino_from_location != "":
         openvino_artifacts_dir = os.path.abspath(
             arguments.use_openvino_from_location)
         openvino_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
+    else:
+        sys.exit("OpenVINO installation method not specified")
+
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
