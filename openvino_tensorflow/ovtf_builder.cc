@@ -3006,8 +3006,12 @@ Status Builder::TranslateGraph(
   //
   // Create the nGraph function.
   //
-  ng_function =
-      make_shared<ng::Function>(ng_func_result_list, ng_func_parameter_list, name);
+  try {
+    ng_function =
+        make_shared<ng::Function>(ng_func_result_list, ng_func_parameter_list, name);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Failed to create nGraph Function for "+name+": "+string(exp.what()));
+  }
 
   //
   // Apply additional passes on the nGraph function here.
