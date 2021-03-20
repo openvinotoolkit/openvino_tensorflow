@@ -324,7 +324,6 @@ Status DeassignClusters(Graph* graph) {
         }
       }
       if(omit_cluster){
-          std::cout << "Omiting my beautiful cluster" << std::endl;
         for(auto node : nodes){
           node->ClearAttr("_ovtf_cluster");
           node->ClearAttr("_ovtf_marked_for_clustering");
