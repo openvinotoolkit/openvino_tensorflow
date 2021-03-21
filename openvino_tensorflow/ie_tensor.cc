@@ -34,50 +34,10 @@ IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
 
   auto desc = InferenceEngine::TensorDesc(precision, shape, layout);
   auto size = shape_size(shape_) * element_type.size();
+  InferenceEngine::MemoryBlob::Ptr ie_blob;
+  IE_Utils::CreateBlob(desc, precision, memory_pointer, size, ie_blob);
+  m_blob = ie_blob;
 
-#define MAKE_IE_BLOB(type_, desc_, ptr_, size_)                               \
-  do {                                                                        \
-    if (ptr_ == nullptr) {                                                    \
-      m_blob = make_shared<InferenceEngine::TBlob<type_>>(desc);              \
-    } else {                                                                  \
-      m_blob = make_shared<InferenceEngine::TBlob<type_>>(desc, (type_*)ptr_, \
-                                                          size);              \
-    }                                                                         \
-  } while (0)
-
-  switch (element_type) {
-    case element::Type_t::f32:
-      MAKE_IE_BLOB(float, desc, memory_pointer, size);
-      break;
-    case element::Type_t::u8:
-      MAKE_IE_BLOB(uint8_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::i8:
-      MAKE_IE_BLOB(int8_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::u16:
-      MAKE_IE_BLOB(uint16_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::i16:
-      MAKE_IE_BLOB(int16_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::i32:
-      MAKE_IE_BLOB(int32_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::u64:
-      MAKE_IE_BLOB(uint64_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::i64:
-      MAKE_IE_BLOB(int64_t, desc, memory_pointer, size);
-      break;
-    case element::Type_t::boolean:
-      MAKE_IE_BLOB(uint8_t, desc, memory_pointer, size);
-      break;
-    default:
-      THROW_IE_EXCEPTION << "Can't create IE blob for type " << element_type
-                         << " and shape " << shape_;
-  }
-#undef MAKE_IE_TBLOB
 
   if (memory_pointer == nullptr) {
     m_blob->allocate();
