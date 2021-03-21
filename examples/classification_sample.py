@@ -15,7 +15,6 @@
 
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -112,12 +111,18 @@ if __name__ == "__main__":
 
     if args.graph:
       model_file = args.graph
-    if args.input_layer:
-      input_layer = args.input_layer
-    if args.output_layer:
-      output_layer = args.output_layer
-    if args.labels:
-      label_file = args.labels
+      if not args.input_layer:
+        raise Exception("Specify input layer for this network")
+      else:
+        input_layer = args.input_layer
+      if not args.output_layer:
+        raise Exception("Specify output layer for this network")
+      else:
+        output_layer = args.output_layer
+      if args.labels:
+        label_file = args.labels
+      else:
+        label_file = None
     if args.image:
       file_name = args.image
     if args.input_height:
