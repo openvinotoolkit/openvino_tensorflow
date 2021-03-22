@@ -37,11 +37,6 @@ IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
   InferenceEngine::MemoryBlob::Ptr ie_blob;
   IE_Utils::CreateBlob(desc, precision, memory_pointer, size, ie_blob);
   m_blob = ie_blob;
-
-
-  if (memory_pointer == nullptr) {
-    m_blob->allocate();
-  }
 }
 
 IETensor::IETensor(const element::Type& element_type, const Shape& shape)
