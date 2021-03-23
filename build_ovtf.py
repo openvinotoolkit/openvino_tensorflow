@@ -7,6 +7,7 @@
 
 from tools.build_utils import *
 
+builder_version = 0.50
 flag_string_map = {True: 'YES', False: 'NO'}
 
 
@@ -78,10 +79,11 @@ def main():
         nargs='?',
         action="store")
 
-    parser.add_argument(
-        '--use_grappler_optimizer',
-        help="Use Grappler optimizer instead of the optimization passes\n",
-        action="store_true")
+    if (builder_version > 0.50):
+        parser.add_argument(
+            '--use_grappler_optimizer',
+            help="Use Grappler optimizer instead of the optimization passes\n",
+            action="store_true")
 
     parser.add_argument(
         '--artifacts_dir',
@@ -428,10 +430,11 @@ def main():
                                                     "tensorflow")
         ])
 
-    openvino_tf_cmake_flags.extend([
-        "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
-        flag_string_map[arguments.use_grappler_optimizer]
-    ])
+    if (builder_version > 0.50):
+        openvino_tf_cmake_flags.extend([
+            "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
+            flag_string_map[arguments.use_grappler_optimizer]
+        ])
 
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
@@ -486,7 +489,7 @@ def main():
     install_openvino_tf(tf_version, venv_dir,
                       os.path.join(artifacts_location, ov_tf_whl))
 
-    if arguments.use_grappler_optimizer:
+    if builder_version > 0.50 and arguments.use_grappler_optimizer:
         import tensorflow as tf
         import openvino_tensorflow
         if not openvino_tensorflow.is_grappler_enabled():

@@ -61,6 +61,10 @@ void IE_VADM_Engine::infer(
     num_req = tmp_batch / batch_size;
     if (m_network.getBatchSize() != batch_size)
       m_network.setBatchSize(batch_size);
+  } else if (m_multi_req_execution) {
+    // Batching is enabled but the cluster is not compatible
+    std::cout << "OVTF_MESSAGE: Batching is disabled. The graph is"
+              << " not compatible for batching." << std::endl;
   }
 
   // Create requests

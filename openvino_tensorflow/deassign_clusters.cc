@@ -285,6 +285,8 @@ Status DeassignClusters(Graph* graph) {
           }
         }
       }
+      if (omit_cluster)
+        break;
     }
     if(omit_cluster){
       for(auto node : nodes){
@@ -296,40 +298,32 @@ Status DeassignClusters(Graph* graph) {
     }
 
     if(device == "HDDL"){
-      bool shape_output = false;
+      std::vector<std::string> illegal_input_nodes = {"Unpack"};
+      std::vector<std::string> illegal_output_nodes = {"Greater"};
+      bool omit_cluster = false;
       for (auto node: nodes) {
-        if (node->type_string() == "Greater") {
+        if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(), node->type_string()) != illegal_output_nodes.end()) {
           for (auto it : node->out_nodes()) {
             int out_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-            if (s == Status::OK()) {
-              if (out_cluster != cluster_idx) {
-                shape_output = true;
-                break;
-              }
-            } else {
-                shape_output = true;
-                break;
+            if ((s == Status::OK() && out_cluster != cluster_idx) || (s != Status::OK())) {
+              omit_cluster = true;
+              break;
             }
           }
         }
-        if (node->type_string() == "Unpack") {
+        if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(), node->type_string()) != illegal_input_nodes.end()) {
           for (auto it : node->in_nodes()) {
             int in_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
-            if (s == Status::OK()) {
-              if (in_cluster != cluster_idx) {
-                shape_output = true;
-                break;
-              }
-            } else {
-                shape_output = true;
-                break;
+            if ((s == Status::OK() && in_cluster != cluster_idx) || s != Status::OK()) {
+              omit_cluster = true;
+              break;
             }
           }
         }
       }
-      if(shape_output){
+      if(omit_cluster){
         for(auto node : nodes){
           node->ClearAttr("_ovtf_cluster");
           node->ClearAttr("_ovtf_marked_for_clustering");
