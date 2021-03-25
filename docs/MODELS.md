@@ -11,6 +11,7 @@ This document provides a list of all validated models that are supported by Inte
 | [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [MobileNet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
+| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU |
 | [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)| CPU, iGPU, MYRIAD, VAD-M |
 | [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)| CPU, iGPU, MYRIAD, VAD-M |
 
@@ -77,7 +78,8 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [yolo-v4](https://github.com/david8862/keras-YOLOv3-model-set)| CPU, iGPU, MYRIAD, VAD-M |
 | [CRNN](https://github.com/MaybeShewill-CV/CRNN_Tensorflow)| CPU, iGPU, MYRIAD, VAD-M |
 | [densenet161](https://drive.google.com/file/d/0B_fUSpodN0t0NmZvTnZZa2plaHc/view)| CPU, iGPU, MYRIAD, VAD-M |
-| resnext50v2| CPU, iGPU, MYRIAD, VAD-M |
-| squeezenet1.1| CPU, iGPU, MYRIAD, VAD-M |
+| [fc_densenet_103](https://github.com/AI-slam/FC-DenseNet-Tiramisu) | CPU |
+| resnext50v2 | CPU, iGPU, MYRIAD, VAD-M |
+| squeezenet1.1 | CPU, iGPU, MYRIAD, VAD-M |
 
 Pre-trained frozen model files are provided for some of these models. For the rest, please refer to the links provided.
