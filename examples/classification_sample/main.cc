@@ -103,8 +103,8 @@ void PrintVersion() {
   // Tensorflow version info
   std::cout << "Tensorflow version: " << tensorflow::openvino_tensorflow::tf_version()
             << std::endl;
-  // Openvino Tensorflow Add-on info
-  std::cout << "Openvino Tensorflow Add-on version: " << tensorflow::openvino_tensorflow::version()
+  // Openvino integration with TensorFlow info
+  std::cout << "OpenVINO integration with TensorFlow (OVTF) version: " << tensorflow::openvino_tensorflow::version()
             << std::endl;
   std::cout << "CXX11_ABI Used: " << tensorflow::openvino_tensorflow::cxx11_abi_flag()
             << std::endl;
