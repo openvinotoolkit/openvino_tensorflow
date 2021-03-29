@@ -66,7 +66,7 @@
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow_*.whl
+      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
    
