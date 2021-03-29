@@ -1,4 +1,4 @@
-# Intel<sup>(R)</sup> Openvino<sup>TM</sup> integration for TensorFlow C++ and Python Classification Demo
+# Intel<sup>(R)</sup> Openvino<sup>TM</sup> integration with TensorFlow C++ and Python Classification Demo
 
 These examples show how to use Intel<sup>(R)</sup> Openvino<sup>TM</sup> integration with Tensorflow to recognize objects in images in C++ and Python.
 

@@ -106,7 +106,7 @@ Run the following Python script to build TensorFlow, OpenVINO, and the OpenVINO 
 
         python3 build_ovtf.py
 
-When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (i.e., the `openvino_tensorflow_addon-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`) are created in the `build_cmake/artifacts` directory. 
+When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (i.e., the `openvino_tensorflow-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`) are created in the `build_cmake/artifacts` directory. 
 
 For more build options:
         
@@ -128,11 +128,11 @@ Verify that `openvino-tensorflow` installed correctly:
 This will produce something like this:
 
         TensorFlow version:  2.2.2
-        Openvino integration with TensorFlow version: b'0.5.0'
+        openvino_tensorflow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.2'
         TensorFlow version used for this build: v2.2.2
         CXX11_ABI flag used for this build: 1
-        Openvino integration with TensorFlow built with Grappler: False
+        openvino_tensorflow built with Grappler: False
 
 Note: The version of the openvino-tensorflow is not going to be exactly 
 the same as when you build from source. This is due to delay in the source 

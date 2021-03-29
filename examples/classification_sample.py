@@ -156,7 +156,7 @@ if __name__ == "__main__":
       print(backend)
     openvino_tensorflow.set_backend(backend_name)
 
-    # update config params for openvino tensorflow addon
+    # update config params for openvino tensorflow
     config = tf.compat.v1.ConfigProto()
     config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
