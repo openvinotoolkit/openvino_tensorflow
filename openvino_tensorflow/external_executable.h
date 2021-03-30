@@ -14,23 +14,38 @@
 #include "ngraph/ngraph.hpp"
 
 #include "openvino_tensorflow/ie_backend_engine.h"
-#include "openvino_tensorflow/external_executable.h"
-
-#define EXTERNAL_EXECUTION
 
 using namespace std;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
+typedef enum OVTF_DATA_TYPE {OVTF_FP32, OVTF_U8, OVTF_I8, OVTF_U16, OVTF_I16, OVTF_I32, OVTF_U64, OVTF_I64, OVTF_BOOL} OVTF_DATA_TYPE;
+
+struct ExternalTensor {
+  char valid;
+  void* memory_pointer;
+  OVTF_DATA_TYPE type;
+  size_t num_dims;
+  size_t* dims;
+  char* name;
+};
+typedef struct ExternalTensor ExternalTensor;
+
+
 // A Inference Engine executable object produced by compiling an nGraph
 // function.
-class Executable {
+class ExternalExecutable {
  public:
-  Executable(shared_ptr<ngraph::Function> func, string device);
-  ~Executable() {}
-  bool Call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
-            vector<shared_ptr<ngraph::runtime::Tensor>>& outputs,
+  //ExternalExecutable(shared_ptr<ngraph::Function> func, string device);
+  ExternalExecutable(string ir_path, string device);
+  ~ExternalExecutable() {}
+  bool Call(ExternalTensor* inputs,
+            ExternalTensor* params,
+            ExternalTensor* outputs,
+            size_t num_inputs,
+            size_t num_params,
+            size_t num_outputs,
             bool multi_req_execution = false);
 
   const ngraph::ResultVector& GetResults() {
@@ -61,7 +76,6 @@ class Executable {
   // This is the original nGraph function corresponding to this executable
   shared_ptr<ngraph::Function> m_function;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
-  shared_ptr<ExternalExecutable> m_external_exec;
 };
 }// namespace openvino_tensorflow
 }// namespace tensorflow

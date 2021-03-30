@@ -43,6 +43,7 @@ set(SRC
    ie_backend_engine.cc
    ie_basic_engine.cc
    ie_vadm_engine.cc
+   external_executable.cc
 )
 
 message(STATUS "OPENVINO_TF_USE_GRAPPLER_OPTIMIZER: ${OPENVINO_TF_USE_GRAPPLER_OPTIMIZER}")

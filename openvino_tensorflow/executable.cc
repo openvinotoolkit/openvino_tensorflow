@@ -121,6 +121,12 @@ Executable::Executable(shared_ptr<Function> func, string device)
   OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";
   m_network = InferenceEngine::CNNNetwork(func);
 
+
+#ifdef EXTERNAL_EXECUTION
+  auto& name = m_function->get_friendly_name();
+  m_network.serialize(name + ".xml", name + ".bin");
+  m_external_exec = make_shared<ExternalExecutable>(name, device);
+#else
   std::map<string, string> options;
 
   if (util::DumpAllGraphs()) {
@@ -172,6 +178,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
   } else {
     m_ie_engine = make_shared<IE_Basic_Engine>(m_network, m_device);
   }
+#endif
 }
 
 bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
@@ -258,6 +265,155 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
     output_names[i] = get_output_name(results[i]);
   }
 
+#ifdef EXTERNAL_EXECUTION
+  ExternalTensor* ext_inputs = new ExternalTensor[inputs.size()];
+  for (int i=0; i<inputs.size(); i++) {
+    char *name = new char[input_names[i].length()+1];
+    std::strcpy(ext_inputs[i].name, input_names[i].c_str());
+    if (inputs[i]) {
+      OVTF_DATA_TYPE data_type;
+      switch (ie_inputs[i]->get_blob()->getTensorDesc().getPrecision()) {
+        case InferenceEngine::Precision::FP32:
+          data_type = OVTF_DATA_TYPE::OVTF_FP32;
+        case InferenceEngine::Precision::I8:
+          data_type = OVTF_DATA_TYPE::OVTF_I8;
+        case InferenceEngine::Precision::U8:
+          data_type = OVTF_DATA_TYPE::OVTF_U8;
+        case InferenceEngine::Precision::I16:
+          data_type = OVTF_DATA_TYPE::OVTF_I16;
+        case InferenceEngine::Precision::U16:
+          data_type = OVTF_DATA_TYPE::OVTF_U16;
+        case InferenceEngine::Precision::I32:
+          data_type = OVTF_DATA_TYPE::OVTF_I32;
+        case InferenceEngine::Precision::I64:
+          data_type = OVTF_DATA_TYPE::OVTF_I64;
+        case InferenceEngine::Precision::U64:
+          data_type = OVTF_DATA_TYPE::OVTF_U64;
+        case InferenceEngine::Precision::BOOL:
+          data_type = OVTF_DATA_TYPE::OVTF_BOOL;
+        default:
+          THROW_IE_EXCEPTION << "Can't convert type OVTF Data Type to nGraph Element Type!";
+      }
+      ngraph::Shape ng_shape(ie_inputs[i]->get_blob()->getTensorDesc().getDims());
+      ext_inputs[i].valid = 1;
+      ext_inputs[i].type = data_type;
+      ext_inputs[i].num_dims = ng_shape.size();
+      ext_inputs[i].dims = new size_t[ext_inputs[i].num_dims];
+      for (int j=0; j<ext_inputs[i].num_dims; j++)
+        ext_inputs[i].dims[j] = ng_shape[j];
+      auto lm = InferenceEngine::as<InferenceEngine::MemoryBlob>(ie_inputs[i]->get_blob())->rwmap();
+      void* out_ptr = lm.as<void*>();
+      ext_inputs[i].memory_pointer = out_ptr;
+    } else {
+        ext_inputs[i].valid = 0;
+    }
+  }
+  ExternalTensor* ext_params = new ExternalTensor[m_hoisted_params.size()];
+  for (int i=0; i<m_hoisted_params.size(); i++) {
+    char *name = new char[param_names[i].length()+1];
+    std::strcpy(ext_params[i].name, param_names[i].c_str());
+    OVTF_DATA_TYPE data_type;
+    switch (ie_hoisted_params[i]->get_blob()->getTensorDesc().getPrecision()) {
+      case InferenceEngine::Precision::FP32:
+        data_type = OVTF_DATA_TYPE::OVTF_FP32;
+      case InferenceEngine::Precision::I8:
+        data_type = OVTF_DATA_TYPE::OVTF_I8;
+      case InferenceEngine::Precision::U8:
+        data_type = OVTF_DATA_TYPE::OVTF_U8;
+      case InferenceEngine::Precision::I16:
+        data_type = OVTF_DATA_TYPE::OVTF_I16;
+      case InferenceEngine::Precision::U16:
+        data_type = OVTF_DATA_TYPE::OVTF_U16;
+      case InferenceEngine::Precision::I32:
+        data_type = OVTF_DATA_TYPE::OVTF_I32;
+      case InferenceEngine::Precision::I64:
+        data_type = OVTF_DATA_TYPE::OVTF_I64;
+      case InferenceEngine::Precision::U64:
+        data_type = OVTF_DATA_TYPE::OVTF_U64;
+      case InferenceEngine::Precision::BOOL:
+        data_type = OVTF_DATA_TYPE::OVTF_BOOL;
+      default:
+        THROW_IE_EXCEPTION << "Can't convert type OVTF Data Type to nGraph Element Type!";
+    }
+    ngraph::Shape ng_shape(ie_hoisted_params[i]->get_blob()->getTensorDesc().getDims());
+    ext_params[i].valid = 1;
+    ext_params[i].type = data_type;
+    ext_params[i].num_dims = ng_shape.size();
+    ext_params[i].dims = new size_t[ext_params[i].num_dims];
+    for (int j=0; j<ext_params[i].num_dims; j++)
+      ext_params[i].dims[j] = ng_shape[j];
+    auto lm = InferenceEngine::as<InferenceEngine::MemoryBlob>(ie_hoisted_params[i]->get_blob())->rwmap();
+    void* out_ptr = lm.as<void*>();
+    ext_params[i].memory_pointer = out_ptr;
+  }
+  ExternalTensor* ext_outputs = new ExternalTensor[outputs.size()];
+  for (int i=0; i<outputs.size(); i++) {
+    char *name = new char[output_names[i].length()+1];
+    std::strcpy(ext_outputs[i].name, output_names[i].c_str());
+    if (outputs[i]) {
+      OVTF_DATA_TYPE data_type;
+      switch (ie_outputs[i]->get_blob()->getTensorDesc().getPrecision()) {
+        case InferenceEngine::Precision::FP32:
+          data_type = OVTF_DATA_TYPE::OVTF_FP32;
+        case InferenceEngine::Precision::I8:
+          data_type = OVTF_DATA_TYPE::OVTF_I8;
+        case InferenceEngine::Precision::U8:
+          data_type = OVTF_DATA_TYPE::OVTF_U8;
+        case InferenceEngine::Precision::I16:
+          data_type = OVTF_DATA_TYPE::OVTF_I16;
+        case InferenceEngine::Precision::U16:
+          data_type = OVTF_DATA_TYPE::OVTF_U16;
+        case InferenceEngine::Precision::I32:
+          data_type = OVTF_DATA_TYPE::OVTF_I32;
+        case InferenceEngine::Precision::I64:
+          data_type = OVTF_DATA_TYPE::OVTF_I64;
+        case InferenceEngine::Precision::U64:
+          data_type = OVTF_DATA_TYPE::OVTF_U64;
+        case InferenceEngine::Precision::BOOL:
+          data_type = OVTF_DATA_TYPE::OVTF_BOOL;
+        default:
+          THROW_IE_EXCEPTION << "Can't convert type OVTF Data Type to nGraph Element Type!";
+      }
+      ngraph::Shape ng_shape(ie_outputs[i]->get_blob()->getTensorDesc().getDims());
+      ext_outputs[i].valid = 1;
+      ext_outputs[i].type = data_type;
+      ext_outputs[i].num_dims = ng_shape.size();
+      ext_outputs[i].dims = new size_t[ext_outputs[i].num_dims];
+      for (int j=0; j<ext_outputs[i].num_dims; j++)
+        ext_outputs[i].dims[j] = ng_shape[j];
+      auto lm = InferenceEngine::as<InferenceEngine::MemoryBlob>(ie_outputs[i]->get_blob())->rwmap();
+      void* out_ptr = lm.as<void*>();
+      ext_outputs[i].memory_pointer = out_ptr;
+    } else {
+        ext_outputs[i].valid = 0;
+    }
+  }
+
+  m_external_exec->Call(ext_inputs, ext_params, ext_outputs, inputs.size(),
+          m_hoisted_params.size(), outputs.size(), multi_req_execution);
+
+  for (int i=0; i<inputs.size(); i++) {
+    delete[] ext_inputs[i].name;
+    if (ext_inputs[i].valid) {
+      delete[] ext_inputs[i].dims;
+    }
+  }
+  delete[] ext_inputs;
+  for (int i=0; i<m_hoisted_params.size(); i++) {
+    delete[] ext_params[i].name;
+    if (ext_params[i].valid) {
+      delete[] ext_params[i].dims;
+    }
+  }
+  delete[] ext_params;
+  for (int i=0; i<outputs.size(); i++) {
+    delete[] ext_outputs[i].name;
+    if (ext_outputs[i].valid) {
+      delete[] ext_outputs[i].dims;
+    }
+  }
+  delete[] ext_outputs;
+#else
   if (multi_req_execution) {
     m_ie_engine->enable_multi_req_execution();
   }
@@ -272,6 +428,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
     }
   }
 
+#endif
   return true;
 }
 
