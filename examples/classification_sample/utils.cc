@@ -226,7 +226,7 @@ Status ReadTensorFromImageFile(const string& file_name,const int input_height,
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
       return tensorflow::errors::NotFound("Error setting custom config options"
-                                             "for OpenVINO integration with TensorFlow (OVTF)");
+                                             "for OpenVINO integration with TensorFlow");
     }
   }
 
@@ -255,7 +255,7 @@ Status LoadGraph(const string& graph_file_name,
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
       return tensorflow::errors::NotFound("Error setting custom config options"
-                                           "for OpenVINO integration with TensorFlow (OVTF)");
+                                           "for OpenVINO integration with TensorFlow");
     }
   }
   session->reset(tensorflow::NewSession(options));
@@ -286,7 +286,7 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
       return tensorflow::errors::NotFound("Error setting custom config options"
-                                           "for OpenVINO integration with TensorFlow (OVTF)");
+                                           "for OpenVINO integration with TensorFlow");
     }
   }
 
