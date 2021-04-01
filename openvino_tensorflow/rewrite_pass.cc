@@ -98,6 +98,14 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // 1. Mark for clustering then, if requested, dump the graphs.
     std::set<string> skip_these_nodes = {};
 
+    const char* env = std::getenv("OPENVINO_TF_BACKEND");
+    if (env != nullptr && strlen(env) > 0){
+      auto status = BackendManager::SetBackend();
+      if(!status.ok()) {
+        OVTF_VLOG(0) << "Failed to set backend: " << status.error_message();
+      }
+    }
+
     // OCM call for marking supported nodes
     std::string device;
     BackendManager::GetBackendName(device);
