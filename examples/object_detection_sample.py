@@ -17,9 +17,10 @@
 # Copyright (C) 2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
-# Modified from TensorFlow example:
+# Modified from tensorflow object detection examples:
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/label_image.py
-#
+# https://github.com/mystic123/tensorflow-yolo-v3/blob/master/utils.py
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,8 +31,7 @@ import numpy as np
 import tensorflow as tf
 import openvino_tensorflow
 import time
-import cv2
-from subprocess import check_output, call
+from PIL import Image,ImageFont, ImageDraw
 
 def load_graph(model_file):
     graph = tf.Graph()
@@ -44,118 +44,105 @@ def load_graph(model_file):
 
     return graph
 
+def letter_box_image(image_path, input_height, input_width, fill_value)-> np.ndarray:
 
-def read_tensor_from_image_file(image_file,
-                                input_height=416,
-                                input_width=416,
-                                input_mean=0,
-                                input_std=255):
-    input_name = "file_reader"
-    output_name = "normalized"
-    file_reader = tf.io.read_file(image_file, input_name)
-    if image_file.endswith(".png"):
-        image_reader = tf.image.decode_png(
-            file_reader, channels=3, name="png_reader")
-    elif image_file.endswith(".gif"):
-        image_reader = tf.squeeze(
-            tf.image.decode_gif(file_reader, name="gif_reader"))
-    elif image_file.endswith(".bmp"):
-        image_reader = tf.image.decode_bmp(file_reader, name="bmp_reader")
-    else:
-        image_reader = tf.image.decode_jpeg(
-            file_reader, channels=3, name="jpeg_reader")
-    float_caster = tf.cast(image_reader, tf.float32)
-    dims_expander = tf.expand_dims(float_caster, 0)
-    resized = tf.compat.v1.image.resize_bilinear(dims_expander,
-                                                 [input_height, input_width])
-    normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    sess = tf.compat.v1.Session()
-    result = sess.run(normalized)
+    image = Image.open(image_path)
+    height_ratio = float(input_height)/image.size[1]
+    width_ratio = float(input_width)/image.size[0]
+    fit_ratio = min(width_ratio, height_ratio)
+    fit_height = int(image.size[1] * fit_ratio)
+    fit_width = int(image.size[0] * fit_ratio)
+    fit_image = np.asarray(image.resize((fit_width, fit_height),resample=Image.BILINEAR))
 
-    return result
+    fill_value = np.full(fit_image.shape[2], fill_value, fit_image.dtype)
+    to_return = np.tile(fill_value, (input_height, input_width, 1))
+    pad_top = int(0.5 * (input_height - fit_height))
+    pad_left = int(0.5 * (input_width - fit_width))
+    to_return[pad_top:pad_top+fit_height, pad_left:pad_left+fit_width] = fit_image
 
-def process_image(image_path, input_height, input_width):
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    resized_image = cv2.resize(image,(input_width,input_height))
-    resized_image = resized_image / 255.0
+    return to_return,image
 
-    return resized_image, image
-
-
-def draw_boxes(output_filename, classes_filename, inputs, original_image, resized_image):
+def load_coco_names(file_name):
     names = {}
-    with open(classes_filename) as f:
-        class_names = f.readlines()
-        for id, name in enumerate(class_names):
+    with open(file_name) as f:
+        for id, name in enumerate(f):
             names[id] = name
-    
-    height_ratio = original_image.shape[0] / resized_image.shape[0]
-    width_ratio = original_image.shape[1] / resized_image.shape[1]
-    ratio = (width_ratio, height_ratio)
+    return names
 
-    for object_class, box_coords_and_prob in inputs.items():
-        for box_coord, object_prob in box_coords_and_prob:
+def letter_box_pos_to_original_pos(letter_pos, current_size, ori_image_size)-> np.ndarray:
+    letter_pos = np.asarray(letter_pos, dtype=np.float)
+    current_size = np.asarray(current_size, dtype=np.float)
+    ori_image_size = np.asarray(ori_image_size, dtype=np.float)
+    final_ratio = min(current_size[0]/ori_image_size[0], current_size[1]/ori_image_size[1])
+    pad = 0.5 * (current_size - final_ratio * ori_image_size)
+    pad = pad.astype(np.int32)
+    to_return_pos = (letter_pos - pad) / final_ratio
+    return to_return_pos
 
-            box_coord = box_coord.reshape(2,2) * ratio
-            box_coord = box_coord.reshape(-1)
+def convert_to_original_size(box, size, original_size, is_letter_box_image):
+    if is_letter_box_image:
+        box = box.reshape(2, 2)
+        box[0, :] = letter_box_pos_to_original_pos(box[0, :], size, original_size)
+        box[1, :] = letter_box_pos_to_original_pos(box[1, :], size, original_size)
+    else:
+        ratio = original_size / size
+        box = box.reshape(2, 2) * ratio
+    return list(box.reshape(-1))
 
-            x0y0 = (int(box_coord[0]),int(box_coord[1]))
-            x1y1 = (int(box_coord[2]), int(box_coord[3]))
+def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
+    draw = ImageDraw.Draw(img)
+    for cls, bboxs in boxes.items():
+        color = tuple(np.random.randint(0, 256, 3))
+        for box, score in bboxs:
+            box = convert_to_original_size(box, np.array(detection_size),
+                                           np.array(img.size),
+                                           is_letter_box_image)
+            draw.rectangle(box, outline=color)
+            draw.text(box[:2], '{} {:.2f}%'.format(
+                cls_names[cls], score * 100), fill=color)
 
-            textx0y0 = (x0y0[0],x0y0[1]-4)
+def iou(box1, box2):
+    b1_x0, b1_y0, b1_x1, b1_y1 = box1
+    b2_x0, b2_y0, b2_x1, b2_y1 = box2
 
-            cv2.rectangle(original_image, x0y0, x1y1, (255,255,255), 2)
-            text_label = str(names[object_class])[:-1] + ", " + str(round(object_prob*100,2)) + "%"
-            cv2.putText(original_image, text_label, textx0y0, cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    int_x0 = max(b1_x0, b2_x0)
+    int_y0 = max(b1_y0, b2_y0)
+    int_x1 = min(b1_x1, b2_x1)
+    int_y1 = min(b1_y1, b2_y1)
 
-    cv2.imwrite(output_filename, cv2.cvtColor(original_image, cv2.COLOR_RGB2BGR))
+    int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
+
+    b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
+    b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
+
+    iou = int_area / (b1_area + b2_area - int_area + 1e-05)
+
+    return iou
 
 def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_threshold=0.4):
-    
-    def iou(box1, box2):
-        b1_x0, b1_y0, b1_x1, b1_y1 = box1
-        b2_x0, b2_y0, b2_x1, b2_y1 = box2
-
-        int_x0 = max(b1_x0, b2_x0)
-        int_y0 = max(b1_y0, b2_y0)
-        int_x1 = min(b1_x1, b2_x1)
-        int_y1 = min(b1_y1, b2_y1)
-
-        int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
-
-        b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
-        b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
-
-        iou = int_area / (b1_area + b2_area - int_area + 1e-05)
-
-        return iou
-    
-    conf_mask = np.expand_dims((predictions_with_boxes[:, :, 5] > confidence_threshold), -1)
+    conf_mask = np.expand_dims((predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
     predictions = predictions_with_boxes * conf_mask
-    
+
     result = {}
-    
     for i, image_pred in enumerate(predictions):
         shape = image_pred.shape
         non_zero_idxs = np.nonzero(image_pred)
         image_pred = image_pred[non_zero_idxs]
         image_pred = image_pred.reshape(-1, shape[-1])
-    
-        t_bbox_attrs = image_pred[:, :6]
-        bbox_attrs = np.delete(t_bbox_attrs,4,axis=1)
+
+        bbox_attrs = image_pred[:, :5]
         classes = image_pred[:, 5:]
         classes = np.argmax(classes, axis=-1)
-    
+
         unique_classes = list(set(classes.reshape(-1)))
-        
+
         for cls in unique_classes:
           cls_mask = classes == cls
           cls_boxes = bbox_attrs[np.nonzero(cls_mask)]
           cls_boxes = cls_boxes[cls_boxes[:, -1].argsort()[::-1]]
           cls_scores = cls_boxes[:, -1]
           cls_boxes = cls_boxes[:, :-1]
-               
+
           while len(cls_boxes) > 0:
             box = cls_boxes[0]
             score = cls_scores[0]
@@ -163,33 +150,13 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
               result[cls] = []
             result[cls].append((box, score))
             cls_boxes = cls_boxes[1:]
-            cls_scores = cls_scores[1:]
+            # iou threshold check for overlapping boxes
             ious = np.array([iou(box, x) for x in cls_boxes])
             iou_mask = ious < iou_threshold
             cls_boxes = cls_boxes[np.nonzero(iou_mask)]
             cls_scores = cls_scores[np.nonzero(iou_mask)]
-    
+
     return result
-
-def convert_box_coordinates(detections):
-    split = np.split(detections, [1, 2, 3, 4, 85], axis=2)
-    center_x = split[0]
-    center_y = split[1]
-    width = split[2]
-    height = split[3] 
-    attrs = split[4]
-    
-    w2 = width / 2
-    h2 = height / 2
-    x0 = center_x - w2
-    y0 = center_y - h2
-    x1 = center_x + w2
-    y1 = center_y + h2
-    
-    boxes = np.concatenate([x0, y0, x1, y1], axis=-1)
-    detections = np.concatenate([boxes, attrs], axis=-1)
-    return detections
-
 
 if __name__ == "__main__":
     image_file = "examples/data/grace_hopper.jpg"
@@ -202,6 +169,9 @@ if __name__ == "__main__":
     input_layer = "inputs"
     output_layer = "output_boxes"
     backend_name = "CPU"
+    output_dir = "."
+    conf_threshold = 0.6
+    iou_threshold = 0.5
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--graph", help="graph/model to be executed")
@@ -213,14 +183,18 @@ if __name__ == "__main__":
     parser.add_argument("--input_width", type=int, help="input width")
     parser.add_argument("--input_mean", type=int, help="input mean")
     parser.add_argument("--input_std", type=int, help="input std")
-    parser.add_argument("--backend", help="backend option. Default is CPU")
-    args = parser.parse_args()
+    parser.add_argument("--backend", help="name of backend. Default is CPU")
+    parser.add_argument("--output_dir", help="Directory that stores updated image."
+                                             " Default is directory from where this sample is launched.")
+    parser.add_argument("--conf_threshold", type=float, help="confidence threshold. Default is 0.6")
+    parser.add_argument("--iou_threshold", type=float, help="iou threshold. Default is 0.5")
 
+    args = parser.parse_args()
     if args.graph:
       model_file = args.graph
       if not args.input_layer:
         raise Exception("Specify input layer for this network")
-      else:    
+      else:
         input_layer = args.input_layer
       if not args.output_layer:
         raise Exception("Specify output layer for this network")
@@ -228,7 +202,7 @@ if __name__ == "__main__":
         output_layer = args.output_layer
       if args.labels:
         label_file = args.labels
-      else: 
+      else:
         label_file = None
     if args.image:
       image_file = args.image
@@ -242,16 +216,19 @@ if __name__ == "__main__":
       input_std = args.input_std
     if args.backend:
       backend_name = args.backend
+    if args.output_dir:
+      output_dir = args.output_dir
+    if args.conf_threshold:
+      conf_threshold = args.conf_threshold
+    if args.iou_threshold:
+      iou_threshold = args.iou_threshold
 
+    # Load graph and process input image
     graph = load_graph(model_file)
-    input_tensor = read_tensor_from_image_file(
-        image_file,
-        input_height=input_height,
-        input_width=input_width,
-        input_mean=input_mean,
-        input_std=input_std)
-
-    image, original_image = process_image(image_file, input_height, input_width)
+    img_resized, img = letter_box_image(image_file, input_height, input_width,128)
+    img_resized = img_resized.astype(np.float32)
+    if label_file:
+      classes = load_coco_names(label_file)
     input_name = "import/" + input_layer
     output_name = "import/" + output_layer
     input_operation = graph.get_operation_by_name(input_name)
@@ -263,27 +240,28 @@ if __name__ == "__main__":
     for backend in backends_list:
       print(backend)
     openvino_tensorflow.set_backend(backend_name)
-    
+
     # update config params for openvino tensorflow addon
     config = tf.compat.v1.ConfigProto()
     config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
             graph=graph,config=config_ngraph_enabled) as sess:
-        # Warmup
-        results = sess.run(output_operation.outputs[0],
-                           {input_operation.outputs[0]: input_tensor})
-        # Run
-        import time
-        start = time.time()
-        results = sess.run(output_operation.outputs[0],
-                           {input_operation.outputs[0]: input_tensor})
-        elapsed = time.time() - start
-        print('Inference time in ms: %f' % (elapsed*1000))
-          
-    # convert box coordinates, apply nms, and draw boxes
-    boxes = convert_box_coordinates(results)
-    filtered_boxes = non_max_suppression(boxes, confidence_threshold=0.99,iou_threshold=0.5)
-    #print(filtered_boxes)
-    draw_boxes("detections.jpg",label_file,filtered_boxes,original_image, image)
-        
+      # Warmup
+      detected_boxes = sess.run(output_operation.outputs[0],
+                           {input_operation.outputs[0]: [img_resized]})
+      # Run
+      import time
+      start = time.time()
+      detected_boxes = sess.run(output_operation.outputs[0],
+                               {input_operation.outputs[0]:[img_resized]})
+      elapsed = time.time() - start
+      print('Inference time in ms: %f' % (elapsed*1000))
+
+    # apply non max suppresion, draw boxes and save updated image
+    filtered_boxes = non_max_suppression(detected_boxes, conf_threshold,iou_threshold)
+    draw_boxes(filtered_boxes,img, classes, (input_width, input_height),True)
+    if output_dir:
+      img.save(os.path.join(output_dir,"detections.jpg"))
+    else:
+      img.save("detections.jpg")
