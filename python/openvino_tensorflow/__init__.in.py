@@ -202,8 +202,8 @@ if ovtf_classic_loaded:
         return openvino_tensorflow_lib.get_disabled_ops()
 
     __version__ = \
-    "openvino tensorflow add-on version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
+    "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "nGraph version used for this build: " + str(openvino_tensorflow_lib.ngraph_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n" \
-    "openvino tensorflow add-on built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n" \
+    "OpenVINO integration with TensorFlow built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n" \

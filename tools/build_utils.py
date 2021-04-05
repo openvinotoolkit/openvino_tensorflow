@@ -251,7 +251,7 @@ def build_tensorflow(tf_version,
         ])
 
     # Build Tensorflow with user-specified ABI
-    # Consequent builds of Add-on and OpenVINO will use the same ABI
+    # Consequent builds of Openvino-Tensorflow (OVTF) and OpenVINO will use the same ABI
     cmd.extend([
         "--cxxopt=\"-D_GLIBCXX_USE_CXX11_ABI=%s\""%cxx_abi
     ])

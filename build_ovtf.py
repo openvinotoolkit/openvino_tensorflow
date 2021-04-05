@@ -40,7 +40,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
 
 def main():
     '''
-    Builds TensorFlow, OpenVINO, and OpenVINO Tensorflow Add-On for python 3
+    Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for python 3
     '''
 
     # Component versions
@@ -73,7 +73,7 @@ def main():
         help="Skip building TensorFlow and use the specified prebuilt version.\n"
         + "If prebuilt version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples won't be build for OpenVINO Tensorflow Add-On",
+        "Note: in this case C++ API, unit tests and examples won't be build for OpenVINO-TensorFlow (OVTF)",
         const=tf_version,
         default='',
         nargs='?',
@@ -111,7 +111,7 @@ def main():
         '--disable_packaging_openvino_libs',
         help=
         "Use this option to do build a standalone python package of " +
-        "the OpenVINO Tensorflow Add-On Library without OpenVINO libraries",
+        "the OpenVINO-TensorFlow (OVTF) Library without OpenVINO libraries",
         action="store_true")
 
     parser.add_argument(
@@ -122,7 +122,7 @@ def main():
     parser.add_argument(
         '--cxx11_abi_version',
         help=
-        "Desired version of ABI to be used while building Tensorflow, Add-On, \n" +
+        "Desired version of ABI to be used while building TensorFlow, Openvino-TensorFlow (OVTF), \n" +
         "and OpenVINO libraries",
         default='0')
 
@@ -278,7 +278,7 @@ def main():
         if arguments.use_prebuilt_tensorflow != '':
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
-            # [TODO] Replace the following with the openvino add-on recommended tf pypi package
+            # [TODO] Replace the following with the Openvino-TensorFlow recommended tf pypi package
             if arguments.cxx11_abi_version == "0":
                 command_executor(
                     ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi0"])
@@ -444,7 +444,7 @@ def main():
                                 openvino_tf_src_dir, venv_dir,
                                 openvino_tf_cmake_flags, verbosity)
 
-    # Make sure that the openvino tensorflow add-on whl is present in the artfacts directory
+    # Make sure that the openvino-tensorflow whl is present in the artfacts directory
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 
