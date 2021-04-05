@@ -1268,7 +1268,9 @@ static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_value, ng_dims;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
+  // TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_dims));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_value));
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Broadcast>(op->name(), ng_value, ng_dims));
   return Status::OK();
@@ -2626,8 +2628,7 @@ static Status TranslateUnpackOp(const Node* op,
   int32 num_outputs;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &num_outputs));
 
-  auto input_shape = ng_input.get_shape();
-  auto rank = input_shape.size();
+  auto rank = ng_input.get_shape().size();
   for (int i = 0; i < num_outputs; ++i) {
     std::vector<int64_t> begin(rank, 0);
     std::vector<int64_t> end(rank, 0);
@@ -2643,13 +2644,14 @@ static Status TranslateUnpackOp(const Node* op,
     end_mask[tf_axis] = 0;
     std::vector<int64_t> new_axis_mask(rank, 0);
     std::vector<int64_t> shrink_axis_mask(rank, 0);
-    shrink_axis_mask[tf_axis] = 1;
-    if (input_shape.size() == 1)
-      shrink_axis_mask[tf_axis] = 0;
     auto slice = ConstructNgNode<opset::StridedSlice>(
         op->name(), ng_input, ng_begin, ng_end, begin_mask, end_mask,
         new_axis_mask, shrink_axis_mask);
-    SaveNgOp(ng_op_map, op->name(), slice);
+    auto squeeze_axis = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i32, ng::Shape{}, tf_axis);
+    auto squeeze = ConstructNgNode<opset::Squeeze>(
+        op->name(), slice, squeeze_axis);
+    SaveNgOp(ng_op_map, op->name(), squeeze);
   }
   return Status::OK();
 }
