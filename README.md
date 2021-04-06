@@ -4,7 +4,7 @@
 
 # Intel<sup>®</sup> OpenVINO™ integration with TensorFlow
 
-This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow, a product needed to enable Intel<sup>®</sup> OpenVINO™ runtime and optimizations for TensorFlow. Intel<sup>®</sup> OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL.
+This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow, a product needed to enable Intel<sup>®</sup> OpenVINO™ runtime and optimizations for TensorFlow. Intel<sup>®</sup> OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as Intel CPUs, Intel integrated GPUs, Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL.
 
 ## Installation
 
@@ -128,11 +128,11 @@ Verify that `openvino-tensorflow` installed correctly:
 This will produce something like this:
 
         TensorFlow version:  2.2.2
-        openvino_tensorflow version: b'0.5.0'
+        OpenVINO Integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.2'
         TensorFlow version used for this build: v2.2.2
         CXX11_ABI flag used for this build: 1
-        openvino_tensorflow built with Grappler: False
+        OpenVINO Integration with TensorFlow built with Grappler: False
 
 Note: The version of the openvino-tensorflow is not going to be exactly 
 the same as when you build from source. This is due to delay in the source 
