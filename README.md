@@ -128,11 +128,11 @@ Verify that `openvino-tensorflow` installed correctly:
 This will produce something like this:
 
         TensorFlow version:  2.2.2
-        OpenVINO Integration with TensorFlow version: b'0.5.0'
+        OpenVINO integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.2'
         TensorFlow version used for this build: v2.2.2
         CXX11_ABI flag used for this build: 1
-        OpenVINO Integration with TensorFlow built with Grappler: False
+        OpenVINO integration with TensorFlow built with Grappler: False
 
 Note: The version of the openvino-tensorflow is not going to be exactly 
 the same as when you build from source. This is due to delay in the source 
