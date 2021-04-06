@@ -338,19 +338,6 @@ def main():
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
             
-            '''
-            os.chdir("tensorflow")
-            # Uncomment this to apply security patch during build
-            # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
-            # For more information about the patches: 
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
-            if tf_version == "v2.2.2":
-                print("Applying security patch...")
-                command_executor(["git", "apply", "%s/../../patches/tf2.2.2_vulnerabilities_fix.patch"%os.getcwd()])
-            os.chdir("..")
-            '''
-
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 

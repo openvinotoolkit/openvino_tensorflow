@@ -111,6 +111,7 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.get_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.is_logging_placement.restype = ctypes.c_bool
     openvino_tensorflow_lib.tf_version.restype = ctypes.c_char_p
+    openvino_tensorflow_lib.version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.ngraph_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
     openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
@@ -206,4 +207,4 @@ if ovtf_classic_loaded:
     "nGraph version used for this build: " + str(openvino_tensorflow_lib.ngraph_version()) + "\n" + \
     "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n" \
-    "OpenVINO integration with TensorFlow built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n" \
+    "OpenVINO integration with TensorFlow built with Grappler: " + str(openvino_tensorflow_lib.is_grappler_enabled()) + "\n"
