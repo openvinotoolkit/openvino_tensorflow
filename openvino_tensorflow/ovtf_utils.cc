@@ -249,13 +249,9 @@ bool IsAlreadyProcessed(Graph* g) {
   return false;
 }
 
-string GetEnv(const char* env) {
-  const char* val = std::getenv(env);
-  if (val == nullptr) {
-    return "";
-  } else {
-    return string(val);
-  }
+string GetEnv(const std::string& env) {
+  const char* val = getenv(env.c_str());
+  return val == NULL ? std::string() : std::string(val);
 }
 
 void SetEnv(const char* env, const char* val) { setenv(env, val, 1); }

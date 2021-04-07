@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -506,7 +506,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)
     # [TODO] Find an alternative method to do an import check as
-    # doing it before source /path/to/openvino/bin/setupvars.sh 
+    # doing it before source /path/to/openvino/bin/setupvars.sh
     # results in undefined symbol
     # import openvino_tensorflow
     # print(openvino_tensorflow.__version__)
@@ -604,6 +604,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
+        "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
         target_arch, "-DENABLE_CPPLINT=OFF", "-DENABLE_SPEECH_DEMO=FALSE",

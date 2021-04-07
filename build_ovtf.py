@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -46,7 +46,7 @@ def main():
     # Component versions
     tf_version = "v2.2.2"
     use_intel_tf = False
-    openvino_version = "releases/2021/2"
+    openvino_version = "releases/2021/3"
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -158,7 +158,7 @@ def main():
         arguments.cxx11_abi_version != '1'
     ), ("\"use_openvino_from_location\" and \"cxx11_abi_version\" "
     "cannot be used together. Please use cxx11_abi_version=1 "
-    "to continue to build with a binary release of OpenVINO") 
+    "to continue to build with a binary release of OpenVINO")
 
 
     version_check((arguments.use_prebuilt_tensorflow != ''),
@@ -255,9 +255,9 @@ def main():
         # Install the found TF whl file
         command_executor(["pip", "install", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
-        
+
         assert (
-            arguments.cxx11_abi_version == tf_cxx_abi 
+            arguments.cxx11_abi_version == tf_cxx_abi
         ), ("Desired ABI version and user built tensorflow library provided with "
         "use_tensorflow_from_location are incompatible")
 
@@ -285,11 +285,11 @@ def main():
             elif arguments.cxx11_abi_version == "1":
                 command_executor(
                     ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi1"])
-                                            
+
             tf_cxx_abi = get_tf_cxxabi()
 
             assert (
-                arguments.cxx11_abi_version == tf_cxx_abi 
+                arguments.cxx11_abi_version == tf_cxx_abi
             ), ("Desired ABI version and tensorflow library installed with "
             "pip are incompatible")
 
@@ -302,18 +302,18 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
+
             # Uncomment this to apply security patch
             os.chdir("tensorflow")
             # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
-            # For more information about the patches: 
+            # For more information about the patches:
             # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
             # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
             if tf_version == "v2.2.2":
                 print("Applying security patch...")
                 command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd_now])
             os.chdir("..")
-            
+
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
@@ -337,7 +337,7 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
+
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 
@@ -424,7 +424,7 @@ def main():
         ])
 
     if arguments.disable_packaging_openvino_libs:
-        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
+        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,

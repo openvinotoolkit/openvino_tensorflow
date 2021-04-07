@@ -1,5 +1,5 @@
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.4)
@@ -178,11 +178,7 @@ else()
     set(LIB "lib")
 endif()
 
-if(USE_OPENVINO_FROM_LOCATION)
-    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/)
-else()
-    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
-endif()
+set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/)
 set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties(
@@ -215,7 +211,7 @@ if (DEFINED TF_SRC_DIR)
     add_subdirectory(examples/classification_sample)
 else()
     message(
-        STATUS 
+        STATUS
         "TensorFlow source directory not provided. "
         "C++ Examples won't be built"
     )
@@ -231,7 +227,7 @@ if (UNIT_TEST_ENABLE)
     else()
         if (NOT EXISTS ${TensorFlow_SRC_DIR})
             message(
-                STATUS 
+                STATUS
                 "TensorFlow source directory doesn't exist"
             )
         endif()

@@ -37,20 +37,8 @@ void IE_Basic_Engine::infer(
   auto func = m_network.getFunction();
   auto parameters = func->get_parameters();
   for (int i = 0; i < inputs.size(); i++) {
-    if (inputs[i] != nullptr){
-
-      if(m_device != "MYRIAD" && m_device != "HDDL")
-        m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
-      else{
-        auto input_blob = m_infer_reqs[0].GetBlob(input_names[i]);
-        MemoryBlob::Ptr minput = as<MemoryBlob>(input_blob);
-        auto minputHolder = minput->wmap();
-
-        auto inputBlobData = minputHolder.as<uint8_t*>();
-        size_t input_data_size = input_blob->byteSize();
-        inputs[i]->read((void*)inputBlobData, input_data_size);
-      }
-    }
+    if (inputs[i] != nullptr)
+      m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
   }
 
   for (int i = 0; i < hoisted_params.size(); i++) {
