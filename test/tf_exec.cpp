@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 #include "gtest/gtest.h"
+#include <thread>
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"

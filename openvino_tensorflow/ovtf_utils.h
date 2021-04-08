@@ -19,7 +19,6 @@
 #include "tensorflow/core/platform/tensor_coding.h"
 #include "tensorflow/core/util/saved_tensor_slice_util.h"
 
-#include "ngraph/chrome_trace.hpp"
 #include "ngraph/ngraph.hpp"
 
 #include "logging/ovtf_log.h"
