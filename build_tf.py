@@ -40,6 +40,11 @@ def main():
         help=
         "Desired version of ABI to be used while building Tensorflow",
         default='0')
+    parser.add_argument(
+        '--resource_usage_ratio',
+        help=
+        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        default=0.5)
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
@@ -68,7 +73,8 @@ def main():
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
-                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
+                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version,
+                     resource_usage_ratio=float(arguments.resource_usage_ratio))
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',

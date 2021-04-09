@@ -46,8 +46,9 @@ def main():
 
     # Component versions
     tf_version = "v2.2.2"
-    use_intel_tf = False
+    ovtf_version = "v0.5.0"
     openvino_version = "releases/2021/2"
+    use_intel_tf = False
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -126,7 +127,12 @@ def main():
         "Desired version of ABI to be used while building TensorFlow, Openvino-TensorFlow (OVTF), \n" +
         "and OpenVINO libraries",
         default='0')
-
+    
+    parser.add_argument(
+        '--resource_usage_ratio',
+        help=
+        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        default=0.5)
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -270,12 +276,16 @@ def main():
             print("Install TensorFlow")
             # [TODO] Replace the following with the Openvino-TensorFlow recommended tf pypi package
             if arguments.cxx11_abi_version == "0":
-                command_executor(
-                    ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi0"])
+                download_github_release_asset(ovtf_version, 
+                "tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl")
+                command_executor(["pip", "install", 
+                "tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl"])
             elif arguments.cxx11_abi_version == "1":
-                command_executor(
-                    ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi1"])
-                                            
+                download_github_release_asset(ovtf_version, 
+                "tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl")
+                command_executor(["pip", "install", 
+                "tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl"])
+
             tf_cxx_abi = get_tf_cxxabi()
 
             assert (
@@ -292,18 +302,6 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
-            # Uncomment this to apply security patch
-            os.chdir("tensorflow")
-            # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
-            # For more information about the patches: 
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
-            if tf_version == "v2.2.2":
-                print("Applying security patch...")
-                command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd_now])
-            os.chdir("..")
-            
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
@@ -333,7 +331,8 @@ def main():
 
             # Build TensorFlow
             build_tensorflow(tf_version, "tensorflow", artifacts_location,
-                             target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version)
+                             target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version,
+                             resource_usage_ratio=float(arguments.resource_usage_ratio))
 
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
