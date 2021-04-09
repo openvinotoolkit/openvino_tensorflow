@@ -11,6 +11,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
+    OV_LOCATION: /opt/intel/openvino_2021.2.185/
     
  steps:
  
@@ -26,7 +27,6 @@
  
    - script: |
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
-      export OV_LOCATION=/opt/intel/openvino_2021.2.185/ 
       export OPENVINO_TF_BACKEND=CPU
       export BUILD_OPTIONS=--use_grappler_optimizer
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/1/s/venv 
@@ -39,13 +39,14 @@
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts
+      python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/setup/artifacts --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
    - script: |
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
@@ -55,6 +56,7 @@
    - script: |
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
@@ -64,7 +66,7 @@
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow_*.whl
+      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
    
@@ -72,8 +74,9 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
       pip install keras
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/azure/test_runner.py \
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
      workingDirectory: $(WORK_DIR) 
      displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
@@ -82,6 +85,7 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
       pip install keras
+      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python

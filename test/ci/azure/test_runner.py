@@ -20,8 +20,8 @@ from tools.test_utils import *
 def main():
     '''
     Runs openvino_tensorflow tests. This script needs to be run after 
-    running build_ovtf.py which builds the openvino tensorflow add on
-    and installs it to a virtual environment that would be used by this script.
+    running build_ovtf.py which builds the openvino-tensorflow and
+    installs it to a virtual environment that would be used by this script.
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument(

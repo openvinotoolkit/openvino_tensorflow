@@ -1,10 +1,10 @@
-# Usage of Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow
+# Usage of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow
 
-This document describes the available Python APIs for Intel<sup>®</sup> OpenVINO™ Add-on for TensorFlow. The first section describes the essential APIs and lines of code needed for achieving the functionality of OpenVINO Add-on in TensorFlow applications.
+This document describes the available Python APIs for Intel<sup>®</sup> OpenVINO™ integration with TensorFlow. The first section describes the essential APIs and lines of code required to use the functionality of OpenVINO integration with TensorFlow applications.
 
 ## APIs for essential functionality 
 
-To add the OpenVINO Add-on package to the TensorFlow python application, import the package using the below line of code:
+To add the OpenVINO-TensorFlow package to the TensorFlow python application, import the package using the below line of code:
 
     import openvino_tensorflow
 
@@ -20,7 +20,7 @@ To determine available backends on your system, use the following API:
 
     openvino_tensorflow.list_backends()
     
-To check if the OpenVINO Add-on is enabled, use the following API:
+To check if the OpenVINO-TensorFlow is enabled, use the following API:
  
     openvino_tensorflow.is_enabled()
     
@@ -28,11 +28,11 @@ To get the assigned backend, use the following API:
 
     openvino_tensorflow.get_backend()
     
-To enable verbose logs for the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO TensorFlow Add-on, use the following API:
+To enable verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO-TensorFlow, use the following API:
 
     openvino_tensorflow.start_logging_placement()
     
-To disbale verbose logs for the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO TensorFlow Add-on, use the following API:
+To disbale verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO-TensorFlow, use the following API:
 
     openvino_tensorflow.stop_logging_placement()
     
@@ -40,7 +40,7 @@ To check if the placement logs are enabled, use the following API:
 
     openvino_tensorflow.is_logging_placement()
     
-To check the CXX11_ABI used to compile OpenVINO Add-on, use the following API:
+To check the CXX11_ABI used to compile OpenVINO-TensorFlow, use the following API:
 
     openvino_tensorflow.cxx11_abi_flag()
   

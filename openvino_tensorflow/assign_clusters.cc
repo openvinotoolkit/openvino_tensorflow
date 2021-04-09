@@ -24,6 +24,7 @@
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/tf_deadness_analysis.h"
 #include "openvino_tensorflow/tf_graphcycles.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 using namespace std;
 
@@ -81,13 +82,10 @@ namespace {
 struct Cluster {
   int index;
   std::set<tensorflow::Node*> nodes;
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   std::string predicate_string;
   std::set<const Edge*> outgoing_edges;
-#endif
 };
 
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
 // Returns the predicate of the merged cluster
 // If Src Predicate is TRUE then merged cluster gets the dst predicate
 // WARNING : This function does not do any checks
@@ -231,7 +229,6 @@ Status CheckNodeClusterAssignmentWRTDeadness(
 
   return Status::OK();
 }
-#endif
 
 // Merges src and dst clusters of the edge
 // This function does not do any checks for merging, but rather implements the
@@ -250,7 +247,6 @@ void MergeClusters(Edge* edge,
                  << dst->name() << "[" << dst->type_string() << " , "
                  << edge->dst_input() << "]@" << dst_index;
 
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   string src_predicate = cluster_map[src]->predicate_string;
   string dst_predicate = cluster_map[dst]->predicate_string;
   OVTF_VLOG(5) << "Src pred: " << src_predicate
@@ -264,7 +260,6 @@ void MergeClusters(Edge* edge,
       cluster_map[dst]->outgoing_edges.begin(),
       cluster_map[dst]->outgoing_edges.end());
   cluster_map[src]->outgoing_edges.erase(edge);
-#endif
 
   auto cluster_dst = cluster_map[dst];
   // using cluster_map[dst]->nodes in the loop directly appears to
@@ -284,12 +279,10 @@ void MergeClusters(Edge* edge,
 Status AssignClusters(Graph* graph) {
   std::map<Node*, std::shared_ptr<Cluster>> cluster_map;
 
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
   std::unique_ptr<DeadnessAnalysis> deadness_analyzer;
   TF_RETURN_IF_ERROR(DeadnessAnalysis::Run(*graph, &deadness_analyzer));
   // This map is used only for error checking
   std::map<Node*, std::string> nodes_predicate_map;
-#endif
 
   GraphCycles gc;
 
@@ -302,7 +295,6 @@ Status AssignClusters(Graph* graph) {
     OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
                    << node->name() << "[" << node->type_string() << "]";
 
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
     // get predicate string for the node
     string pred_string;
     TF_RETURN_IF_ERROR(deadness_analyzer->GetNodePredicate(*node, pred_string));
@@ -313,7 +305,6 @@ Status AssignClusters(Graph* graph) {
         node->out_edges().begin(), node->out_edges().end());
     OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
                    << "  : Predicate " << pred_string;
-#endif
   }
 
   // Check for existing cyclicity in the graph
@@ -421,6 +412,92 @@ Status AssignClusters(Graph* graph) {
   std::unordered_map<std::string, tuple<string, string, vector<string>>>
       deadness_info;
 
+  string device;
+  BackendManager::GetBackendName(device);
+
+  // Drop Shape if it's the output node of HDDL cluster.
+  // Drop Sub if it's the input node and the input is from a Const node.
+  if(device == "HDDL"){
+    for (auto edge : graph->edges()) {
+      Node* src = edge->src();
+      Node* dst = edge->dst();
+      if (!src->IsOp() || !dst->IsOp()) {
+	    if (src->type_string() == "Shape") {
+              src->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+        continue;
+      }
+      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
+	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+              dst->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+	    if (src->type_string() == "Shape") {
+              src->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+        continue;
+      }
+      bool is_deadness_ok = false;
+      TF_RETURN_IF_ERROR(
+          CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
+      if (!is_deadness_ok) {
+	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+              dst->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+	    if (src->type_string() == "Shape") {
+              src->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+        continue;
+      }
+      int src_index = cluster_map[src]->index;
+      int dst_index = cluster_map[dst]->index;
+      if (!(gc.HasEdge(src_index, dst_index) &&
+        gc.CanContractEdge(src_index, dst_index))) {
+	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+              dst->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+	    if (src->type_string() == "Shape") {
+              src->ClearAttr("_ovtf_marked_for_clustering");
+	    }
+          }
+        }
+  }
+  if(device == "GPU"){
+    for (auto edge : graph->edges()) {
+      Node* src = edge->src();
+      Node* dst = edge->dst();
+      if (!src->IsOp() || !dst->IsOp()) {
+	if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
+	if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+      bool is_deadness_ok = false;
+      TF_RETURN_IF_ERROR(
+          CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
+      if (!is_deadness_ok) {
+	if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+        continue;
+      }
+      int src_index = cluster_map[src]->index;
+      int dst_index = cluster_map[dst]->index;
+      if (!(gc.HasEdge(src_index, dst_index) &&
+        gc.CanContractEdge(src_index, dst_index))) {
+	if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+	}
+      }
+    }
+  }
+
+
   do {
     changed = false;
 
@@ -463,7 +540,6 @@ Status AssignClusters(Graph* graph) {
         continue;
       }
 
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
       // check if the edge can be contracted with respect to deadness
       bool is_deadness_ok = false;
       TF_RETURN_IF_ERROR(
@@ -495,7 +571,6 @@ Status AssignClusters(Graph* graph) {
         }
         continue;
       }
-#endif
 
       // Check if contracting the edge will lead to cycles
       // if not, MergeClusters
@@ -561,10 +636,8 @@ Status AssignClusters(Graph* graph) {
         has_ovtf_ops = true;
 
 // Some sanity checks for deadness
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
         TF_RETURN_IF_ERROR(CheckNodeClusterAssignmentWRTDeadness(
             node, nodes_predicate_map, cluster_map));
-#endif
       } else {
         has_non_ovtf_ops = true;
       }

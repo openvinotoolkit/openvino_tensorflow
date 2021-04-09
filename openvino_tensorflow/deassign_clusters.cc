@@ -171,6 +171,13 @@ Status DeassignClusters(Graph* graph) {
     cluster_map[cluster_idx].insert(node);
   }
 
+  string device;
+  BackendManager::GetBackendName(device);
+
+  std::vector<int> alive_clusters;
+  int max_cluster_size = 0;
+  int max_cluster_idx = -1;
+
   for (auto& kv : cluster_map) {
     int cluster_idx = kv.first;
     std::set<Node*>& nodes = kv.second;
@@ -207,6 +214,7 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
+      continue;
     }
     // Disable dynamic to static
     std::vector<Node*> dyn_node_check;
@@ -248,6 +256,7 @@ Status DeassignClusters(Graph* graph) {
 
         deassigned_histogram[node->type_string()]++;
       }
+      continue;
     }
 
 
@@ -276,6 +285,8 @@ Status DeassignClusters(Graph* graph) {
           }
         }
       }
+      if (omit_cluster)
+        break;
     }
     if(omit_cluster){
       for(auto node : nodes){
@@ -283,37 +294,60 @@ Status DeassignClusters(Graph* graph) {
         node->ClearAttr("_ovtf_marked_for_clustering");
         deassigned_histogram[node->type_string()]++;
       }
+      continue;
     }
+
+    if(device == "HDDL"){
+      std::vector<std::string> illegal_input_nodes = {"Unpack"};
+      std::vector<std::string> illegal_output_nodes = {"Greater"};
+      bool omit_cluster = false;
+      for (auto node: nodes) {
+        if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(), node->type_string()) != illegal_output_nodes.end()) {
+          for (auto it : node->out_nodes()) {
+            int out_cluster;
+            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+            if ((s == Status::OK() && out_cluster != cluster_idx) || (s != Status::OK())) {
+              omit_cluster = true;
+              break;
+            }
+          }
+        }
+        if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(), node->type_string()) != illegal_input_nodes.end()) {
+          for (auto it : node->in_nodes()) {
+            int in_cluster;
+            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
+            if ((s == Status::OK() && in_cluster != cluster_idx) || s != Status::OK()) {
+              omit_cluster = true;
+              break;
+            }
+          }
+        }
+      }
+      if(omit_cluster){
+        for(auto node : nodes){
+          node->ClearAttr("_ovtf_cluster");
+          node->ClearAttr("_ovtf_marked_for_clustering");
+          deassigned_histogram[node->type_string()]++;
+        }
+        continue;
+      }
+    }
+
+    if (max_cluster_idx == -1) {
+      max_cluster_idx = cluster_idx;
+      max_cluster_size = nodes.size();
+    } else if (max_cluster_size < nodes.size()) {
+      max_cluster_idx = cluster_idx;
+      max_cluster_size = nodes.size();
+    }
+    alive_clusters.push_back(cluster_idx);
   }
 
-  string device;
-  BackendManager::GetBackendName(device);
-
-
-  if(device == "MYRIAD"){
-
-    vector<pair<int, std::set<Node*>>> cluster_arr;
-
-    for(auto& it : cluster_map){
-      cluster_arr.push_back(it);
-    }
-
-    sort(cluster_arr.begin(), cluster_arr.end(), cmp);
-
-    vector<int> top_10;
-    int i = 0;
-    for(auto& it : cluster_arr){
-      if(i == 10)
-        break;
-      top_10.push_back(it.first);
-      i++;
-    }
-
-    for(auto& kv : cluster_map){
-      if(!(std::count(top_10.begin(), top_10.end(), kv.first))){
-        //Need to be deassigned, not in top 10
-        cout << "Disable cluster: " << kv.first << std::endl;
-        set<Node*>& nodes = kv.second;
+  if(device == "HDDL" || device == "MYRIAD"){
+    for(int i=0; i<alive_clusters.size(); i++){
+      int alive_cluster_idx = alive_clusters[i];
+      if(alive_cluster_idx != max_cluster_idx){
+        set<Node*>& nodes = cluster_map[alive_cluster_idx];
 
         for(auto node : nodes) {
           node->ClearAttr("_ovtf_cluster");

@@ -25,6 +25,12 @@ Status BackendManager::SetBackend(const string& backend_name) {
   OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
+  if(bname == "HDDL"){
+    return errors::Internal("Failed to set backend: ", bname + " backend not available");
+  }
+  if(bname == "VAD-M")
+    bname = "HDDL";
+
   auto status = CreateBackend(backend, bname);
   if (!status.ok() || backend == nullptr) {
     return errors::Internal("Failed to set backend: ", status.error_message());
@@ -32,7 +38,12 @@ Status BackendManager::SetBackend(const string& backend_name) {
 
   lock_guard<mutex> lock(m_backend_mutex);
   m_backend = backend;
-  m_backend_name = bname;
+  if(bname.find("MYRIAD") != string::npos){
+    m_backend_name = "MYRIAD";
+  }
+  else{
+    m_backend_name = bname;
+  }
   return Status::OK();
 }
 

@@ -27,7 +27,6 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.cc
  *******************************************************************************/
 
 #include "openvino_tensorflow/ovtf_utils.h"
-#if !defined(OPENVINO_TF_DISABLE_DEADNESS_CHECK)
 
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/tensor_id.h"
@@ -523,4 +522,3 @@ DeadnessAnalysis::~DeadnessAnalysis() {}
 }  // namespace openvino_tensorflow
 
 }  // namespace tensorflow
-#endif  // OPENVINO_TF_DISABLE_DEADNESS_CHECK

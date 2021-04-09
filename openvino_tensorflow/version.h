@@ -9,7 +9,7 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 extern "C" {
-// Returns the Openvino Tensorflow add-on version
+// Returns the version of OpenVINO™ integration with TensorFlow
 const char* version();
 
 // Returns the nGraph version this bridge was compiled with

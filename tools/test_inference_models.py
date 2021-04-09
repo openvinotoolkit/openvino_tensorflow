@@ -56,7 +56,7 @@ def main():
     ovtf_wheel_files = glob.glob(
         os.path.join(
             os.path.abspath(arguments.artifacts_dir),
-            "openvino_tensorflow-*.whl"))
+            "openvino_tensorflow*.whl"))
     if (len(ovtf_wheel_files) != 1):
         raise ("Multiple Python whl files exist. Please remove old wheels")
 

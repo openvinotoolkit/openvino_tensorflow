@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        required=True)
+        default="v2.2.2")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -35,6 +35,11 @@ def main():
         '--use_intel_tensorflow',
         help="Build using Intel TensorFlow.",
         action="store_true")
+    parser.add_argument(
+        '--cxx11_abi_version',
+        help=
+        "Desired version of ABI to be used while building Tensorflow",
+        default='0')
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
@@ -63,12 +68,12 @@ def main():
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
-                     arguments.use_intel_tensorflow)
+                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
                         arguments.target_arch, False,
-                        arguments.use_intel_tensorflow)
+                        arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')

@@ -15,7 +15,6 @@
 
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -34,26 +33,6 @@ import tensorflow as tf
 import openvino_tensorflow
 import time
 from subprocess import check_output, call
-import shlex
-
-
-def download_and_prepare():
-    # Check to see if the model is present
-    if not os.path.isfile('inception_v3_2016_08_28_frozen.pb'):
-        cmd = 'wget https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz'
-        if (call(shlex.split(cmd)) != 0):
-            raise Exception("Error running command: " + cmd)
-
-        cmd = 'tar xvf inception_v3_2016_08_28_frozen.pb.tar.gz'
-        if (call(shlex.split(cmd)) != 0):
-            raise Exception("Error running command: " + cmd)
-
-    # Check if the image exists
-    if not os.path.isfile('grace_hopper.jpg'):
-        cmd = 'wget https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/data/grace_hopper.jpg'
-        if (call(shlex.split(cmd)) != 0):
-            raise Exception("Error running command: " + cmd)
-
 
 def load_graph(model_file):
     graph = tf.Graph()
@@ -106,15 +85,16 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    file_name = "grace_hopper.jpg"
-    model_file = "inception_v3_2016_08_28_frozen.pb"
-    label_file = "imagenet_slim_labels.txt"
+    file_name = "examples/data/grace_hopper.jpg"
+    model_file = "examples/data/inception_v3_2016_08_28_frozen.pb"
+    label_file = "examples/data/imagenet_slim_labels.txt"
     input_height = 299
     input_width = 299
     input_mean = 0
     input_std = 255
     input_layer = "input"
     output_layer = "InceptionV3/Predictions/Reshape_1"
+    backend_name = "CPU"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--graph", help="graph/model to be executed")
@@ -126,35 +106,35 @@ if __name__ == "__main__":
     parser.add_argument("--input_width", type=int, help="input width")
     parser.add_argument("--input_mean", type=int, help="input mean")
     parser.add_argument("--input_std", type=int, help="input std")
+    parser.add_argument("--backend", help="backend option. Default is CPU")
     args = parser.parse_args()
 
-    if not args.graph:
-        download_and_prepare()
-    else:
-        model_file = args.graph
-        if not args.input_layer:
-            raise Exception("Specify input layer for this network")
-        else:
-            input_layer = args.input_layer
-        if not args.output_layer:
-            raise Exception("Specify output layer for this network")
-        else:
-            output_layer = args.output_layer
-        if args.labels:
-            label_file = args.labels
-        else:
-            label_file = None
-
+    if args.graph:
+      model_file = args.graph
+      if not args.input_layer:
+        raise Exception("Specify input layer for this network")
+      else:
+        input_layer = args.input_layer
+      if not args.output_layer:
+        raise Exception("Specify output layer for this network")
+      else:
+        output_layer = args.output_layer
+      if args.labels:
+        label_file = args.labels
+      else:
+        label_file = None
     if args.image:
-        file_name = args.image
+      file_name = args.image
     if args.input_height:
-        input_height = args.input_height
+      input_height = args.input_height
     if args.input_width:
-        input_width = args.input_width
+      input_width = args.input_width
     if args.input_mean:
-        input_mean = args.input_mean
+      input_mean = args.input_mean
     if args.input_std:
-        input_std = args.input_std
+      input_std = args.input_std
+    if args.backend:
+      backend_name = args.backend
 
     graph = load_graph(model_file)
     t = read_tensor_from_image_file(
@@ -169,11 +149,19 @@ if __name__ == "__main__":
     input_operation = graph.get_operation_by_name(input_name)
     output_operation = graph.get_operation_by_name(output_name)
 
+    #Print list of available backends
+    print('Available Backends:')
+    backends_list = openvino_tensorflow.list_backends()
+    for backend in backends_list:
+      print(backend)
+    openvino_tensorflow.set_backend(backend_name)
+
+    # update config params for openvino tensorflow
     config = tf.compat.v1.ConfigProto()
-    config_ovtf_enabled = openvino_tensorflow.update_config(config)
+    config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
-            graph=graph, config=config_ovtf_enabled) as sess:
+            graph=graph, config=config_ngraph_enabled) as sess:
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
@@ -183,7 +171,7 @@ if __name__ == "__main__":
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
         elapsed = time.time() - start
-        print('Time taken for inference: %f seconds' % elapsed)
+        print('Inference time in ms: %f' % (elapsed*1000))
     results = np.squeeze(results)
 
     if label_file:
