@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -133,6 +133,13 @@ def main():
         help=
         "Ratio of CPU / RAM resources to utilize during Tensorflow build",
         default=0.5)
+
+    parser.add_argument(
+      '--openvino_version',
+      help=
+      "Openvino version to be used for building from source",
+      default='2021.3')
+
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -156,6 +163,20 @@ def main():
         arguments.use_prebuilt_tensorflow != ''
     ), ("\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
     "cannot be used together.")
+
+    assert not (
+      arguments.openvino_version != "2021.3" and
+      arguments.openvino_version != "2021.2"
+    ), ("Only 2021.2 and 2021.3 are supported OpenVINO versions")
+
+    if arguments.use_openvino_from_location != '':
+      ver_file = arguments.use_openvino_from_location + \
+                    '/deployment_tools/inference_engine/version.txt'
+      with open(ver_file) as f:
+        line = f.readline()
+        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + 
+            arguments.openvino_version + 
+            " does not match the version specified in use_openvino_from_location"
 
     version_check((arguments.use_prebuilt_tensorflow != ''),
                   (arguments.use_tensorflow_from_location != ''),
@@ -251,9 +272,9 @@ def main():
         # Install the found TF whl file
         command_executor(["pip", "install", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
-        
+
         assert (
-            arguments.cxx11_abi_version == tf_cxx_abi 
+            arguments.cxx11_abi_version == tf_cxx_abi
         ), ("Desired ABI version and user built tensorflow library provided with "
         "use_tensorflow_from_location are incompatible")
 
@@ -286,7 +307,7 @@ def main():
             tf_cxx_abi = get_tf_cxxabi()
 
             assert (
-                arguments.cxx11_abi_version == tf_cxx_abi 
+                arguments.cxx11_abi_version == tf_cxx_abi
             ), ("Desired ABI version and tensorflow library installed with "
             "pip are incompatible")
 
@@ -322,7 +343,7 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
+
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 
@@ -354,12 +375,17 @@ def main():
             "NOTE: OpenVINO python module is not built when building from source."
         )
 
+        if(arguments.openvino_version == "2021.3"):
+          openvino_branch = "releases/2021/3"
+        elif(arguments.openvino_version == "2021.2"):
+          openvino_branch = "releases/2021/2"
+
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-            openvino_version,
-            submodule_update=True)
+             openvino_branch,
+             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
@@ -382,6 +408,9 @@ def main():
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
+
+    openvino_tf_cmake_flags.extend(
+      ["-DOPENVINO_VERSION=" + arguments.openvino_version])
 
     if (arguments.debug_build):
         openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
@@ -410,7 +439,7 @@ def main():
         ])
 
     if arguments.disable_packaging_openvino_libs:
-        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
+        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,

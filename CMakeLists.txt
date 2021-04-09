@@ -1,5 +1,5 @@
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.4)
@@ -169,7 +169,14 @@ endif()
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
-
+message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
+if (${OPENVINO_VERSION} MATCHES "2021.3")
+  add_definitions(-DOPENVINO_2021_3=1)
+elseif (${OPENVINO_VERSION} MATCHES "2021.2")
+  add_definitions(-DOPENVINO_2021_2=1)
+else()
+  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
+endif()
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 else()
@@ -213,7 +220,7 @@ if (DEFINED TF_SRC_DIR)
     add_subdirectory(examples/classification_sample)
 else()
     message(
-        STATUS 
+        STATUS
         "TensorFlow source directory not provided. "
         "C++ Examples won't be built"
     )
@@ -229,7 +236,7 @@ if (UNIT_TEST_ENABLE)
     else()
         if (NOT EXISTS ${TensorFlow_SRC_DIR})
             message(
-                STATUS 
+                STATUS
                 "TensorFlow source directory doesn't exist"
             )
         endif()

@@ -39,6 +39,7 @@ void IE_Basic_Engine::infer(
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr){
 
+    #if defined(OPENVINO_2021_2)
       if(m_device != "MYRIAD" && m_device != "HDDL")
         m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
       else{
@@ -48,8 +49,11 @@ void IE_Basic_Engine::infer(
 
         auto inputBlobData = minputHolder.as<uint8_t*>();
         size_t input_data_size = input_blob->byteSize();
-        inputs[i]->read((void*)inputBlobData, input_data_size);
+        inputs[i]->read((void*)inputBlobData,input_data_size);
       }
+    #else
+      m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
+    #endif
     }
   }
 

@@ -1,5 +1,5 @@
  # Copyright (C) 2021 Intel Corporation
- 
+
  # SPDX-License-Identifier: Apache-2.0
 
 set(LIB_NAME openvino_tensorflow)
@@ -46,7 +46,7 @@ set(SRC
 )
 
 message(STATUS "OPENVINO_TF_USE_GRAPPLER_OPTIMIZER: ${OPENVINO_TF_USE_GRAPPLER_OPTIMIZER}")
-if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)            
+if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     list(REMOVE_ITEM SRC rewrite_pass.cc)
     list(APPEND SRC grappler/ovtf_optimizer.cc)
     list(APPEND SRC grappler/add_identityn.cc)
@@ -56,8 +56,8 @@ endif()
 add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries(
         ${LIB_NAME}
-        ovtf_logger 
-        ${TensorFlow_FRAMEWORK_LIBRARY} 
+        ovtf_logger
+        ${TensorFlow_FRAMEWORK_LIBRARY}
         ngraph_lib
         absl_algorithm
         absl_container
@@ -66,7 +66,7 @@ target_link_libraries(
         ocm
     )
 
-target_compile_definitions( 
+target_compile_definitions(
     ${LIB_NAME} PRIVATE
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
@@ -78,7 +78,7 @@ list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
 add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
 
 #------------------------------------------------------------------------------
-#installation 
+#installation
 #------------------------------------------------------------------------------
 if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
@@ -95,7 +95,7 @@ endif()
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
 # First install the libopenvino_tensorflow.so and headers
-install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")  
+install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
 # Next install all the other prerequisites
 if(OS_VERSION STREQUAL "\"centos\"")
@@ -125,9 +125,9 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
     endif()
 endif()
 
-# Now create the Python pip package. The following variables are passed to the 
+# Now create the Python pip package. The following variables are passed to the
 # CreatePipWhl.cmake
-# CMake "install" target "CODE" will propagate these variables to the 
+# CMake "install" target "CODE" will propagate these variables to the
 # target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
 # So any variable that we need to propagate needs to be added here
 install(CODE "set(OS_VERSION ${OS_VERSION})")
