@@ -19,15 +19,11 @@ def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):
     ends_with = ".pbtxt"
     pattern = re.compile("^" + start_with + "(.*?)" + ends_with + "$")
     # Note: relying on this particular pattern. Could be brittle if the filenames change
-    assert os.path.exists(
-            input_dir), "Could not find the path"
     declustered_pbtxts = filter(lambda file_name: pattern.search(file_name),
                                 os.listdir(input_dir))
     node_cluster_map = {}
     for filename in declustered_pbtxts:
         full_name = os.path.join(input_dir, filename)
-        assert os.path.exists(
-            full_name), "Could not find the path"
         print('Reading: ' + filename)
         gdef = load_file(full_name, input_binary=False)
         print('Processing: ' + filename)
@@ -35,8 +31,6 @@ def create_node_encapsulate_map_pkl(input_dir, output_pkl_name):
             if '_ovtf_cluster' in node.attr:
                 node_cluster_map[node.name] = 'ovtf_' + \
                     str(node.attr['_ovtf_cluster'].i)+'/'
-    assert os.path.exists(
-            output_pkl_name), "Could not find the path"
     pkl.dump(node_cluster_map, open(output_pkl_name, "wb"), protocol=2)
 
 

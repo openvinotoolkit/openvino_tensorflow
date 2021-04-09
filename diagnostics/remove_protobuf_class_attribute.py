@@ -41,8 +41,6 @@ python remove_protobuf_class_attribute.py -f ./path/precapture_0000.pbtxt
 
 
 def get_files(directory):
-    assert os.path.isdir(
-            directory), "Could not find artifacts/tensorflow directory"
     files = os.listdir(path=directory)
     pbtxts = []
     for f in files:
@@ -81,8 +79,6 @@ def main():
         lines = []
         if args.directory:
             f = args.directory + "/" + f
-        assert os.path.isdir(
-            f), "Could not find file"
         for line in open(f):
             lines.append(line)
         pruned = []
@@ -97,8 +93,6 @@ def main():
                 save = True
             if save:
                 pruned.append(line)
-        assert os.path.exists(
-            output_file), "Could not find file"
         with open(output_file, "w") as output:
             for line in pruned:
                 output.write(line)

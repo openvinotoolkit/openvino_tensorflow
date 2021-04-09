@@ -59,8 +59,6 @@ def load_graph(model_file):
     graph = tf.Graph()
     graph_def = tf.compat.v1.GraphDef()
 
-   assert os.path.exists(
-            model_file), "Could not find directory"
     with open(model_file, "rb") as f:
         graph_def.ParseFromString(f.read())
     with graph.as_default():
