@@ -14,7 +14,7 @@ This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integ
 |Using pre-built packages| Building from source|
 | -----------------------|-------------------|
 |Python 3.6| Python 3.6|
-|TensorFlow v2.2.2|GCC 7.5 (Ubuntu 18.04)|
+|TensorFlow v2.4.1|GCC 7.5 (Ubuntu 18.04)|
 |        |cmake 3.15 or higher|
 |        |Bazelisk|
 |        |virtualenv 16.0.0+|
@@ -26,9 +26,9 @@ Intel<sup>®</sup> OpenVINO™ integration with TensorFlow has two releases: one
 
 #### - Package built with CXX11_ABI=0
 
-Intel<sup>®</sup> OpenVINO™ integration with TensorFlow package built with ABI=0 is compatible with PyPi TensorFlow package 2.2.2. This OpenVINO integration with TensorFlow package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+Intel<sup>®</sup> OpenVINO™ integration with TensorFlow package built with ABI=0 is compatible with PyPi TensorFlow package 2.4.1. This OpenVINO integration with TensorFlow package comes with prebuilt libraries of OpenVINO version 2021.2. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
 
-Users can use TensorFlow 2.2.2 from PyPi (`pip install -U tensorflow==2.2.2`). However, TensorFlow 2.2.2 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
+Users can use TensorFlow 2.4.1 from PyPi (`pip install -U tensorflow==2.4.1`). However, TensorFlow 2.4.1 package from PyPi does not have the latest security patches. We provide a ready-to-use TensorFlow package built with security patches using CXX11_ABI=0 and recommend users to use it to avoid any security issues.
 
 
 Below are the steps needed to use the packages built with CXX11_ABI=0
@@ -39,13 +39,13 @@ Below are the steps needed to use the packages built with CXX11_ABI=0
 
 2. Install `TensorFlow`:
 
-        pip install -U tensorflow==2.2.2
+        pip install -U tensorflow==2.4.1
       
                     (or)
 
-        pip install tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl (Recommended for security patches)
+        pip install tensorflow_security_patched-2.4.1-cp36-cp36m-linux_x86_64.whl (Recommended for security patches)
 
-    Download ([**tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl**](https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl))
+    Download ([**tensorflow_security_patched-2.4.1-cp36-cp36m-linux_x86_64.whl**](https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_security_patched-2.4.1-cp36-cp36m-linux_x86_64.whl))
 
 3. Install `openvino-tensorflow`:
 
@@ -67,9 +67,9 @@ Below are the steps needed to use the packages built with CXX11_ABI=1
 
 2. Install `TensorFlow`:
 
-        pip3 install tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl
+        pip3 install tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl
 
-    Download([**tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl**](https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl))
+    Download([**tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl**](https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl))
 
 3. Install the OpenVINO 2021.2 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit](https://software.intel.com/en-us/openvino-toolkit)).
 
@@ -127,10 +127,10 @@ Verify that `openvino-tensorflow` installed correctly:
 
 This will produce something like this:
 
-        TensorFlow version:  2.2.2
+        TensorFlow version:  2.4.1
         OpenVINO integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.2'
-        TensorFlow version used for this build: v2.2.2
+        TensorFlow version used for this build: v2.4.1
         CXX11_ABI flag used for this build: 1
         OpenVINO integration with TensorFlow built with Grappler: False
 

@@ -7,7 +7,7 @@
 
 from tools.build_utils import *
 
-# grappler defaults
+# grappler related defaults
 builder_version = 0.50
 flag_string_map = {True: 'YES', False: 'NO'}
 
@@ -41,11 +41,11 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
 
 def main():
     '''
-    Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for python 3
+    Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for Python 3
     '''
 
     # Component versions
-    tf_version = "v2.2.2"
+    tf_version = "v2.4.1"
     ovtf_version = "v0.5.0"
     openvino_version = "releases/2021/2"
     use_intel_tf = False
@@ -66,8 +66,7 @@ def main():
     parser.add_argument(
         '--target_arch',
         help=
-        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
-    )
+        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n")
 
     parser.add_argument(
         '--use_prebuilt_tensorflow',
@@ -75,7 +74,8 @@ def main():
         help="Skip building TensorFlow and use the specified prebuilt version.\n"
         + "If prebuilt version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples won't be build for OpenVINO-TensorFlow (OVTF)",
+        "Note: in this case C++ API, unit tests and examples won't be build for " + 
+        "OpenVINO integration with TensorFlow",
         const=tf_version,
         default='',
         nargs='?',
@@ -113,7 +113,7 @@ def main():
         '--disable_packaging_openvino_libs',
         help=
         "Use this option to do build a standalone python package of " +
-        "the OpenVINO-TensorFlow (OVTF) Library without OpenVINO libraries",
+        "the OpenVINO integration with TensorFlow Library without OpenVINO libraries",
         action="store_true")
 
     parser.add_argument(
@@ -124,8 +124,8 @@ def main():
     parser.add_argument(
         '--cxx11_abi_version',
         help=
-        "Desired version of ABI to be used while building TensorFlow, Openvino-TensorFlow (OVTF), \n" +
-        "and OpenVINO libraries",
+        "Desired version of ABI to be used while building Tensorflow, \n" +
+        "OpenVINO integration with TensorFlow, and OpenVINO libraries",
         default='0')
     
     parser.add_argument(
@@ -274,17 +274,14 @@ def main():
         if arguments.use_prebuilt_tensorflow != '':
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
-            # [TODO] Replace the following with the Openvino-TensorFlow recommended tf pypi package
+            
             if arguments.cxx11_abi_version == "0":
-                download_github_release_asset(ovtf_version, 
-                "tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl")
-                command_executor(["pip", "install", 
-                "tensorflow_security_patched-2.2.2-cp36-cp36m-linux_x86_64.whl"])
+                command_executor(["pip", "install", "tensorflow=="+tf_version])
             elif arguments.cxx11_abi_version == "1":
                 download_github_release_asset(ovtf_version, 
-                "tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl")
+                "tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl")
                 command_executor(["pip", "install", 
-                "tensorflow_security_patched_abi1-2.2.2-cp36-cp36m-linux_x86_64.whl"])
+                "tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
@@ -420,7 +417,7 @@ def main():
                                 openvino_tf_src_dir, venv_dir,
                                 openvino_tf_cmake_flags, verbosity)
 
-    # Make sure that the openvino-tensorflow whl is present in the artfacts directory
+    # Make sure that the openvino_tensorflow whl is present in the artfacts directory
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 

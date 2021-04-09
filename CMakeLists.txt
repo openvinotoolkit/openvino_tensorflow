@@ -139,7 +139,7 @@ set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_eng
 find_package(InferenceEngine REQUIRED)
 
 set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
-find_package(ngraph)
+find_package(ngraph QUIET)
 
 include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")

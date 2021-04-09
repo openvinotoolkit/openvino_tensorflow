@@ -23,9 +23,17 @@
 #
 # If your version/tag doesn't match, the script will exit with error.
 
-sudo apt install curl, wget, jq
+sudo apt install curl wget jq
 
-TOKEN=$GITHUB_ACCESS_TOKEN
+: ${GITHUB_ACCESS_TOKEN:?"Please set a GitHub Access Token. Create one under 'repo' scope \
+here: https://github.com/settings/tokens and then do:
+            
+            export GITHUB_ACCESS_TOKEN=\"YOUR-SECRET-ACCESS-TOKEN\"
+
+before running build_ovtf.py again
+"}
+
+TOKEN=$GITHUB_ACCESS_TOKEN 
 REPO="openvinotoolkit/openvino_tensorflow"
 FILE=$2      # the name of your release asset file, e.g. build.tar.gz
 VERSION=$1                       # tag name or the word "latest"
