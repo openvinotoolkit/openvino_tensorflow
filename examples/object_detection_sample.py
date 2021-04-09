@@ -45,7 +45,6 @@ def load_graph(model_file):
     return graph
 
 def letter_box_image(image_path, input_height, input_width, fill_value)-> np.ndarray:
-
     image = Image.open(image_path)
     height_ratio = float(input_height)/image.size[1]
     width_ratio = float(input_width)/image.size[0]
@@ -92,7 +91,7 @@ def convert_to_original_size(box, size, original_size, is_letter_box_image):
 def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
     draw = ImageDraw.Draw(img)
     for cls, bboxs in boxes.items():
-        color = tuple(np.random.randint(0, 256, 3))
+        color = (256, 256, 256)
         for box, score in bboxs:
             box = convert_to_original_size(box, np.array(detection_size),
                                            np.array(img.size),
@@ -246,7 +245,7 @@ if __name__ == "__main__":
     config_ngraph_enabled = openvino_tensorflow.update_config(config)
 
     with tf.compat.v1.Session(
-            graph=graph,config=config_ngraph_enabled) as sess:
+            graph=graph,config=config) as sess:
       # Warmup
       detected_boxes = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: [img_resized]})
