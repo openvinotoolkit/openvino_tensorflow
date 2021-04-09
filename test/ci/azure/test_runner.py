@@ -101,6 +101,7 @@ def main():
     else:
         raise Exception("No tests specified")
 
+    assert os.path.exists(root_pwd), "Could not find" + root_pwd
     os.chdir(root_pwd)
 
 
