@@ -174,8 +174,8 @@ def main():
                     '/deployment_tools/inference_engine/version.txt'
       with open(ver_file) as f:
         line = f.readline()
-        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + 
-            arguments.openvino_version + 
+        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
+            arguments.openvino_version + \
             " does not match the version specified in use_openvino_from_location"
 
     version_check((arguments.use_prebuilt_tensorflow != ''),
