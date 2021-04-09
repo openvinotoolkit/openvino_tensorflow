@@ -13,6 +13,7 @@
 
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_tensor.h"
+#include "openvino_tensorflow/cluster_manager.h"
 #include "contexts.h"
 
 using namespace std;
@@ -24,6 +25,7 @@ class Backend {
  public:
   Backend(const string& configuration_string);
   ~Backend() {
+    NGraphClusterManager::EvictAllClusters();
     ReleaseGlobalContext();
   }
 

@@ -79,8 +79,12 @@ Status BackendManager::GetBackendName(string& backend_name) {
 Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                                      string& backend_name) {
   const char* env = std::getenv("OPENVINO_TF_BACKEND");
-  if (env != nullptr && strlen(env) > 0) {
-    backend_name = string(env);
+  // Checkmarx fix. Array of max length MYRIAD.
+  char backendName[6];
+  
+  if (env != nullptr) {
+    strncpy((char*)backendName, env, sizeof(backendName));
+    backend_name = std::string(backendName);
   }
 
   try {

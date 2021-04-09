@@ -109,6 +109,10 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.set_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.get_backend.restype = ctypes.c_bool
+    openvino_tensorflow_lib.freeBackend.argtypes = []
+    openvino_tensorflow_lib.freeBackend.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.freeBackendsList.argtypes = []
+    openvino_tensorflow_lib.freeBackendsList.restype = ctypes.c_void_p
     openvino_tensorflow_lib.is_logging_placement.restype = ctypes.c_bool
     openvino_tensorflow_lib.tf_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.version.restype = ctypes.c_char_p
@@ -138,6 +142,7 @@ if ovtf_classic_loaded:
         backend_list = []
         for backend in list_result:
             backend_list.append(backend.decode("utf-8"))
+        openvino_tensorflow_lib.freeBackendsList()
         return backend_list
 
     def set_backend(backend):
@@ -148,7 +153,9 @@ if ovtf_classic_loaded:
         result = ctypes.c_char_p()
         if not openvino_tensorflow_lib.get_backend(ctypes.byref(result)):
             raise Exception("Cannot get currently set backend")
-        return result.value.decode("utf-8")
+        backend_name = result.value.decode("utf-8")
+        openvino_tensorflow_lib.freeBackend()
+        return backend_name
 
     def start_logging_placement():
         openvino_tensorflow_lib.start_logging_placement()

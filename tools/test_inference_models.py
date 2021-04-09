@@ -63,6 +63,8 @@ def main():
     openvino_tensorflow_wheel = ovtf_wheel_files[0]
 
     print("NGRAPH Wheel: ", openvino_tensorflow_wheel)
+    assert os.path.exists(
+            arguments.python_location), "Could not find the path"
     command_executor([
         os.path.join(arguments.python_location, "pip"), "install", "-U",
         openvino_tensorflow_wheel
@@ -79,6 +81,8 @@ def main():
     ])
 
     # Next is to go to the model directory
+    assert os.path.exists(
+            arguments.model_location), "Could not find the path"
     os.chdir(os.path.join(arguments.model_location, "tensorflow_scripts"))
 
     # Execute the inference runs
