@@ -151,17 +151,6 @@ def main():
     ), ("\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
     "cannot be used together.")
 
-    # Since the argument use_openvino_from_location utilizes a binary release
-    # of OpenVINO - and it uses ABI 1 - an user supplied ABI version of 0 is
-    # an incompatible option. Tn this case, tensorflow needs to be built with ABI 1
-    assert not (
-        arguments.use_openvino_from_location != '' and
-        arguments.cxx11_abi_version != '1'
-    ), ("\"use_openvino_from_location\" and \"cxx11_abi_version\" "
-    "cannot be used together. Please use cxx11_abi_version=1 "
-    "to continue to build with a binary release of OpenVINO") 
-
-
     version_check((arguments.use_prebuilt_tensorflow != ''),
                   (arguments.use_tensorflow_from_location != ''),
                   arguments.disable_cpp_api)

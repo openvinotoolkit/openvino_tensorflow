@@ -18,13 +18,13 @@ class BinaryBdistWheel(bdist_wheel):
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
-           plat = 'manylinux1_x86_64'
+           plat = 'manylinux2010_x86_64'
 
-        return ('py2.py3', 'none', plat)
+        return ('py3', 'none', plat)
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
-with open(@README_DOC@, "r") as fh:
+with open(@README_DOC@, "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # The following is filled in my cmake - essentially a list of library

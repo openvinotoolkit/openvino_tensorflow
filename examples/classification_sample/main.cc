@@ -53,7 +53,12 @@ limitations under the License.
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/public/version.h"
+#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#include "tensorflow/core/common_runtime/graph_constructor.h"
+#else
 #include "tensorflow/core/graph/graph_constructor.h"
+#endif
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/init_main.h"
