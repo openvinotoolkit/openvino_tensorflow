@@ -30,7 +30,7 @@ import argparse
 import os
 import numpy as np
 import tensorflow as tf
-import openvino_tensorflow
+import openvino_tensorflow as ovtf
 import time
 from subprocess import check_output, call
 
@@ -152,14 +152,14 @@ if __name__ == "__main__":
 
     #Print list of available backends
     print('Available Backends:')
-    backends_list = openvino_tensorflow.list_backends()
+    backends_list = ovtf.list_backends()
     for backend in backends_list:
       print(backend)
-    openvino_tensorflow.set_backend(backend_name)
+    ovtf.set_backend(backend_name)
 
     # update config params for openvino tensorflow
     config = tf.compat.v1.ConfigProto()
-    config_ngraph_enabled = openvino_tensorflow.update_config(config)
+    config_ngraph_enabled = ovtf.update_config(config)
 
     with tf.compat.v1.Session(
             graph=graph, config=config_ngraph_enabled) as sess:
