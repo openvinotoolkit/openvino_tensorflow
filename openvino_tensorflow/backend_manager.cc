@@ -41,6 +41,9 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if(bname.find("MYRIAD") != string::npos){
     m_backend_name = "MYRIAD";
   }
+  else if(bname.find("GPU") != string::npos){
+    m_backend_name = "GPU";
+  }
   else{
     m_backend_name = bname;
   }

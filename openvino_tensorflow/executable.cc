@@ -17,6 +17,7 @@
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
 #include "openvino_tensorflow/ie_vadm_engine.h"
+#include "ngraph/pass/convert_fp32_to_fp16.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -24,8 +25,8 @@ using namespace ngraph;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-Executable::Executable(shared_ptr<Function> func, string device)
-    : m_device{device}, m_trivial_fn{nullptr}, m_function(func) {
+Executable::Executable(shared_ptr<Function> func, string device, string device_type)
+    : m_device{device}, m_device_type{device_type}, m_trivial_fn{nullptr}, m_function(func) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
   const auto& opset = ngraph::get_opset5();
   for (const auto& node : func->get_ops()) {
@@ -118,6 +119,11 @@ Executable::Executable(shared_ptr<Function> func, string device)
 
   m_function = func;
 
+  if(m_device_type == "GPU_FP16") {
+    ngraph::pass::ConvertFP32ToFP16().run_on_function(func);
+    func->validate_nodes_and_infer_types();
+  }
+
   OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";
   m_network = InferenceEngine::CNNNetwork(func);
 
@@ -163,6 +169,8 @@ Executable::Executable(shared_ptr<Function> func, string device)
       THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name << " doesn't exist";
     }
     auto precision = IE_Utils::toPrecision(it->second);
+    if(m_device_type == "GPU_FP16")
+      precision = InferenceEngine::Precision::FP32;
     iter->second->setPrecision(precision);
   }
 
