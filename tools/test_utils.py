@@ -195,10 +195,10 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
-    assert os.path.exists(
-            test_manifest_file), "Could not find file"
     if not os.path.isabs(test_manifest_file):
         test_manifest_file = os.path.join(test_src_dir, test_manifest_file)
+    assert os.path.exists(
+            test_manifest_file), "Could not find file"
 
     test_xml_report = './junit_tensorflow_tests.xml'
 

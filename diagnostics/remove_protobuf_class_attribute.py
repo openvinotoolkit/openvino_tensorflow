@@ -98,7 +98,7 @@ def main():
             if save:
                 pruned.append(line)
         assert os.path.exists(
-            (output_file), "Could not find file"
+            output_file), "Could not find file"
         with open(output_file, "w") as output:
             for line in pruned:
                 output.write(line)
