@@ -101,7 +101,7 @@ This uses the default example image that is shipped with this repo, and should
 output something similar as below:
 
 <p align="left">
-  <img src="examples/data/detections.png">
+  <img src="../examples/data/detections.jpg" width="200" height="200" 
 </p>
 
 In this case, we're using the default image of Admiral Grace Hopper, and you can see that the network detects and draws the bounding box around the person correctly.
