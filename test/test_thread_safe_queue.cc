@@ -38,7 +38,6 @@ TEST(ThreadSafeQueue, Simple) {
   auto consumer = [&]() {
     while (item_count < 3) {
       {
-        // NG_TRACE("Consumer", "Do Wait", "");
         while (consumer_do_wait) {
           // cout << "\033[1;32mConsumer waiting\033[0m\n";
           absl::SleepFor(absl::Milliseconds(1));
@@ -46,7 +45,6 @@ TEST(ThreadSafeQueue, Simple) {
       }
 
       {
-        // NG_TRACE("Consumer", "Waiting", "");
         consumer_state = WAITING_FOR_ITEM;
         // cout << "\033[1;32mWaiting\033[0m" << endl;
         queue.GetNextAvailable();
@@ -64,7 +62,6 @@ TEST(ThreadSafeQueue, Simple) {
 
   std::thread thread0(consumer);
   {
-    // NG_TRACE("Producer", "Waiting", "");
     // Ensure that the consumer is in waiting state
     ASSERT_TRUE(consumer_do_wait);
 
@@ -76,7 +73,6 @@ TEST(ThreadSafeQueue, Simple) {
 
   // cout << "Now adding an item\n";
   {
-    // NG_TRACE("Producer", "Add", "");
     queue.Add(nullptr);
   }
   // Wait until the consumer has a chance to move forward
@@ -91,7 +87,6 @@ TEST(ThreadSafeQueue, Simple) {
   // Add two more items
   // //cout << "Now adding two items\n";
   {
-    // NG_TRACE("Producer", "Add-2", "");
     queue.Add(nullptr);
     queue.Add(nullptr);
   }

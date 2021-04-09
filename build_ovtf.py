@@ -46,7 +46,6 @@ def main():
     # Component versions
     tf_version = "v2.2.2"
     use_intel_tf = False
-    openvino_version = "releases/2021/3"
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -126,6 +125,12 @@ def main():
         "and OpenVINO libraries",
         default='0')
 
+    parser.add_argument(
+      '--openvino_version',
+      help=
+      "Openvino version to be used for building from source",
+      default='2021.3')
+
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -160,6 +165,16 @@ def main():
     "cannot be used together. Please use cxx11_abi_version=1 "
     "to continue to build with a binary release of OpenVINO")
 
+    assert not (
+      arguments.openvino_version != "2021.3" and
+      arguments.openvino_version != "2021.2"
+    ), ("Only 2021.2 and 2021.3 are supported OpenVINO versions")
+
+    if arguments.use_openvino_from_location != '':
+      ver_file = arguments.use_openvino_from_location + '/deployment_tools/inference_engine/version.txt'
+      with open(ver_file) as f:
+        line = f.readline()
+        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + arguments.openvino_version + " does not match the version specified in use_openvino_from_location"
 
     version_check((arguments.use_prebuilt_tensorflow != ''),
                   (arguments.use_tensorflow_from_location != ''),
@@ -368,11 +383,16 @@ def main():
             "NOTE: OpenVINO python module is not built when building from source."
         )
 
+        if(arguments.openvino_version == "2021.3"):
+          openvino_branch = "releases/2021/3"
+        elif(arguments.openvino_version == "2021.2"):
+          openvino_branch = "releases/2021/2"
+
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-            openvino_version,
+            openvino_branch,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
@@ -396,6 +416,9 @@ def main():
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
+
+    openvino_tf_cmake_flags.extend(
+      ["-DOPENVINO_VERSION=" + arguments.openvino_version])
 
     if (arguments.debug_build):
         openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
