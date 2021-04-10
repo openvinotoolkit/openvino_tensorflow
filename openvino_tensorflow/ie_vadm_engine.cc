@@ -83,6 +83,7 @@ void IE_VADM_Engine::infer(
   //  Prepare input blobs
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] == nullptr) continue;
+#if defined(OPENVINO_2021_2)
       const void* input_data_pointer = inputs[i]->get_data_ptr();
       size_t size = inputs[i]->get_blob()->byteSize();
       for (int j = 0; j < num_req; j++) {
@@ -95,6 +96,27 @@ void IE_VADM_Engine::infer(
        auto data_ptr = (uint8_t*)((uint64_t)(input_data_pointer)+input_data_size*j);
        std::copy(data_ptr, data_ptr + input_data_size, inputBlobData);
       }
+#else
+      InferenceEngine::TensorDesc desc = inputs[i]->get_blob()->getTensorDesc();
+      InferenceEngine::Precision prec = desc.getPrecision();
+      const void* input_data_pointer = inputs[i]->get_data_ptr();
+      std::string input_name = input_names[i];
+      size_t size = inputs[i]->get_blob()->byteSize();
+
+      InferenceEngine::SizeVector req_shape(desc.getDims());
+      if (batch_size != 0) {
+        req_shape[0] = batch_size;
+        desc.setDims(req_shape);
+      }
+      for (int j = 0; j < num_req; j++) {
+        size_t req_size = size / num_req;
+        const void* data_ptr =
+            (void*)((uint64_t)(input_data_pointer) + req_size * j);
+        int in_idx = i * num_req + j;
+        IE_Utils::CreateBlob(desc, prec, data_ptr, req_size, in_blobs[in_idx]);
+        m_infer_reqs[j].SetBlob(input_name, in_blobs[in_idx]);
+      }
+#endif
   }
   for (int i = 0; i < hoisted_params.size(); i++) {
     if (hoisted_params[i] == nullptr) continue;
@@ -111,6 +133,39 @@ void IE_VADM_Engine::infer(
       m_infer_reqs[j].SetBlob(param_name, param_blobs[i]);
     }
   }
+
+#if !defined(OPENVINO_2021_2)
+  // Prepare output blobs
+  for (int i = 0; i < outputs.size(); i++) {
+    out_blobs[i] = nullptr;
+    if (outputs[i] != nullptr) {
+      InferenceEngine::TensorDesc desc =
+          outputs[i]->get_blob()->getTensorDesc();
+      InferenceEngine::Precision prec = desc.getPrecision();
+      InferenceEngine::Layout layout = desc.getLayout();
+      const void* output_data_pointer = outputs[i]->get_data_ptr();
+      std::string output_name = output_names[i];
+      size_t size = outputs[i]->get_blob()->byteSize();
+
+      InferenceEngine::SizeVector req_shape(desc.getDims());
+      if (batch_size != 0) {
+        req_shape[0] = batch_size;
+        desc.setDims(req_shape);
+      }
+
+      InferenceEngine::TensorDesc req_desc(prec, req_shape, layout);
+      for (int j = 0; j < num_req; j++) {
+        size_t req_size = size / num_req;
+        const void* data_ptr =
+            (void*)((uint64_t)(output_data_pointer) + req_size * j);
+        int out_idx = i * num_req + j;
+        IE_Utils::CreateBlob(req_desc, prec, data_ptr, req_size,
+                             out_blobs[out_idx]);
+        m_infer_reqs[j].SetBlob(output_name, out_blobs[out_idx]);
+      }
+    }
+  }
+#endif
 
   // Start Inference Requests
   for (int i = 0; i < num_req; i++) {
