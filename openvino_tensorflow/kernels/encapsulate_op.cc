@@ -322,7 +322,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
       #endif
 
-      if (!(ng_shape.size() < 0 && ng_shape[0] == 0)) {
+      if (!(ng_shape.size() > 0 && ng_shape[0] == 0)) {
         output_mappings[i] = j;
         ng_func_outputs[j++] = ng_outputs[i];
       }
