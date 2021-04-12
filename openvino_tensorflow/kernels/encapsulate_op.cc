@@ -74,10 +74,10 @@ static Status ParseNodeAttributes(
       // right now _ovtf_ is used for optional attributes
       auto attr_name = itx.first;
       auto attr_value = itx.second.s();
-      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strlen("_ovtf_"))
+      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strnlen("_ovtf_", 6))
                      << " Value: " << attr_value;
       additional_attribute_map->insert(
-          {attr_name.substr(strlen("_ovtf_")), attr_value});
+          {attr_name.substr(strnlen("_ovtf_", 6)), attr_value});
     }
   }
   return Status::OK();
@@ -444,7 +444,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   }
 #endif
 
-  long vm, rss;
+  long vm=0, rss=0;
   util::MemoryProfile(vm, rss);
   OVTF_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
                  << " Step_ID: " << step_id << " Cluster: " << name()
@@ -507,7 +507,7 @@ Status NGraphEncapsulateOp::GetExecutable(
   std::shared_ptr<ngraph::Function> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
-    long vm, rss, vm0, rss0;
+    long vm=0, rss=0, vm0=0, rss0=0;
     util::MemoryProfile(vm0, rss0);
 
     ng_result_list.clear();
@@ -532,7 +532,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     const char* cache_depth_specified =
         std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
-      m_function_cache_depth_in_items = atoi(cache_depth_specified);
+      m_function_cache_depth_in_items = (int) strtol(cache_depth_specified, NULL, 10);
     }
     if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
