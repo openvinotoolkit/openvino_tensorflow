@@ -47,7 +47,6 @@ def main():
     # Component versions
     tf_version = "v2.4.1"
     ovtf_version = "v0.5.0"
-    openvino_version = "releases/2021/2"
     use_intel_tf = False
 
     # Command line parser options

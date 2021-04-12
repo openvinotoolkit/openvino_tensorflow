@@ -49,6 +49,10 @@ def main():
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
+    
+    assert os.path.isdir(arguments.output_dir), \
+        "Did not find output directory: " + arguments.output_dir
+
     os.chdir(arguments.output_dir)
 
     venv_dir = './venv3/'
