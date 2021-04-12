@@ -181,6 +181,10 @@ void IE_VADM_Engine::infer(
     if (outputs[i] == nullptr) {
       auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(
           m_infer_reqs[0].GetBlob(output_names[i]));
+      if (blob == nullptr) {
+        throw runtime_error("Output blob " + output_names[i] +
+                            " cannot be found!");
+      }
       InferenceEngine::TensorDesc desc = blob->getTensorDesc();
       InferenceEngine::Precision prec = desc.getPrecision();
       InferenceEngine::Layout layout = desc.getLayout();
