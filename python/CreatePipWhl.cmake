@@ -23,7 +23,7 @@ if (PYTHON)
 
     # Set the readme document location
     get_filename_component(
-        readme_file_path ${CMAKE_CURRENT_LIST_DIR}/../README.md ABSOLUTE)
+        readme_file_path ${CMAKE_CURRENT_LIST_DIR}/README.md ABSOLUTE)
     set(README_DOC \"${readme_file_path}\")
 
     # Create the python/openvino_tensorflow directory
