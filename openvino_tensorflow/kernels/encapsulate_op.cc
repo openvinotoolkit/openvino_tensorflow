@@ -275,6 +275,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   int j = 0;
 #if defined(OPENVINO_2021_2)
   if(device != "MYRIAD" && device != "HDDL"){
+#else
+  if(device != "HDDL"){
 #endif
     for (auto i = 0; i < ng_result_list.size(); i++) {
       auto ng_element = ng_result_list[i];
@@ -322,9 +324,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         ng_func_outputs[j++] = ng_outputs[i];
       }
     }
-#if defined(OPENVINO_2021_2)
   }
-#endif
   OVTF_VLOG(4)
       << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
       << m_cluster_id;
@@ -356,26 +356,27 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
 #if defined(OPENVINO_2021_2)
   if(device != "MYRIAD" && device != "HDDL") {
+#else
+  if(device != "HDDL") {
 #endif
-  for (auto i : dyn_shape_tensors) {
-    OP_REQUIRES(ctx, output_mappings[i] != -1,
-            errors::Internal("Mapping error while "
-                              "reading dynamic output blob"));
-    auto ng_output = ng_func_outputs[output_mappings[i]];
-    // Create the TF output tensor
-    auto ng_shape = ng_output->get_shape();
-    TensorShape tf_shape;
-    for (auto dim : ng_shape) {
-      tf_shape.AddDim(dim);
-    }
+    for (auto i : dyn_shape_tensors) {
+      OP_REQUIRES(ctx, output_mappings[i] != -1,
+              errors::Internal("Mapping error while "
+                                "reading dynamic output blob"));
+      auto ng_output = ng_func_outputs[output_mappings[i]];
+      // Create the TF output tensor
+      auto ng_shape = ng_output->get_shape();
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
 
-    // Zero-copy IE tensor to TF
-    IETensorBuffer* tf_buffer =
-        new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-    Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
-    ctx->set_output(i, tf_tensor);
-  }
-#if defined(OPENVINO_2021_2)
+      // Zero-copy IE tensor to TF
+      IETensorBuffer* tf_buffer =
+          new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
+      Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
+      ctx->set_output(i, tf_tensor);
+    }
   }
   else{
     int j = 0;
@@ -437,7 +438,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       }
     }
   }
-#endif
 
   long vm, rss;
   util::MemoryProfile(vm, rss);
