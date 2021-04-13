@@ -7,8 +7,10 @@ LABEL Description="This is the manylinux2014 based dockerfile that builds Python
 LABEL Vendor="Intel Corporation"
 
 ARG VERSION
-ARG GITHUB_PERSONAL_TOKEN
+ARG GITHUB_ACCESS_TOKEN
 ARG OVTF_BRANCH
+
+ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
 
 USER root
 WORKDIR /
@@ -25,7 +27,8 @@ RUN yum update -y && \
     yum clean all && rm -rf /var/cache/yum
 
 RUN yum install -y zlib-devel libffi-devel \
-    openssl-devel wget python-virtualenv libusb libusb-devel curl ca-certificates && \
+    openssl-devel wget python-virtualenv libusb libusb-devel curl ca-certificates opencl-headers \
+    ocl-icd numactl-libs && \
     yum clean all && rm -rf /var/cache/yum
 
 # install bazelisk
@@ -51,26 +54,47 @@ RUN ./bootstrap.sh && \
 
 WORKDIR /opt/libusb-1.0.22/libusb
 RUN /bin/mkdir -p '/usr/local/lib' && \
-    /bin/bash ../libtool   --mode=install /usr/bin/install -c   libusb-1.0.la '/usr/local/lib' && \
+    /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && \
     /bin/mkdir -p '/usr/local/include/libusb-1.0' && \
     /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
 
 # clone & build 
 RUN mkdir -p /opt/intel/openvino_tensorflow/
 
-RUN git clone https://${GITHUB_PERSONAL_TOKEN}@github.com/openvinotoolkit/openvino_tensorflow \
+RUN git clone https://${GITHUB_ACCESS_TOKEN}@github.com/openvinotoolkit/openvino_tensorflow \
     /opt/intel/openvino_tensorflow
 
 WORKDIR /opt/intel/openvino_tensorflow/
 
 RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 
-RUN for py_ver in cp36-cp36m; do \
-        PYBIN=/opt/python/${py_ver}/bin
+# Some ENV for auditwheel
+RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
+
+# Build ABI-0 Wheels
+RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
+        PYBIN=/opt/python/${py_ver}/bin; \
         "${PYBIN}/pip" install psutil virtualenv; \
         grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
-        "${PYBIN}/python" build_ovtf.py --use_prebuilt_tensorflow; \
+        "${PYBIN}/python" build_ovtf.py --use_prebuilt_tensorflow --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
+        auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
         git reset --hard HEAD; \
-        auditwheel repair --plat manylinux2014_x86_64 build_cmake/python/dist/openvino_tensorflow-${VERSION}-${py_ver}-none-linux_x86_64.whl
-        rm -rf build_cmake/
+        rm -rf build_cmake/; \
     done
+
+RUN mkdir -p /whl/abi0/ && cp wheelhouse/* /whl/abi0/
+
+# Build ABI-1 Wheels
+RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
+        PYBIN=/opt/python/${py_ver}/bin; \
+        grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
+        "${PYBIN}/python" build_ovtf.py --use_prebuilt_tensorflow --python_executable="${PYBIN}/python --cxx11_abi_version=1"; \
+        auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
+        git reset --hard HEAD; \
+        rm -rf build_cmake/; \
+    done
+
+RUN mkdir -p /whl/abi1/ && cp wheelhouse/* /whl/abi1/

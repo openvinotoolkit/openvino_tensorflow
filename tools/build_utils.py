@@ -10,6 +10,7 @@ from argparse import RawTextHelpFormatter
 
 import errno
 import os
+import sys
 import subprocess
 import sys
 import shutil
@@ -20,6 +21,7 @@ import math
 import psutil as psu
 from sysconfig import get_paths
 from subprocess import check_output, call
+from wheel.vendored.packaging.tags import sys_tags
 
 def get_tf_version():
     import tensorflow as tf

@@ -138,6 +138,13 @@ def main():
       help=
       "Openvino version to be used for building from source",
       default='2021.3')
+    
+    parser.add_argument(
+        '--python_executable',
+        help=
+        "Use a specific python executable while building whl",
+        action="store",
+        default='')
 
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
@@ -298,10 +305,23 @@ def main():
             if arguments.cxx11_abi_version == "0":
                 command_executor(["pip", "install", "tensorflow=="+tf_version])
             elif arguments.cxx11_abi_version == "1":
-                download_github_release_asset(ovtf_version, 
-                "tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl")
-                command_executor(["pip", "install", 
-                "tensorflow_security_patched_abi1-2.4.1-cp36-cp36m-linux_x86_64.whl"])
+                tags = next(sys_tags())
+
+                if tags.interpreter == "cp36":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"])
+                if tags.interpreter == "cp37":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"])
+                if tags.interpreter == "cp38":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
@@ -439,6 +459,8 @@ def main():
 
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
+    if arguments.python_executable != '':
+        openvino_tf_cmake_flags.extend(["-DPYTHON_EXECUTABLE=%s"%arguments.python_executable])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,

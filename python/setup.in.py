@@ -7,6 +7,7 @@ from platform import system
 from setuptools import setup
 from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
+from wheel.vendored.packaging.tags import sys_tags
 import os
 import sys
 
@@ -21,8 +22,8 @@ class BinaryBdistWheel(bdist_wheel):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
            plat = 'linux_x86_64'
-        py_version = 'py{}{}'.format(sys.version_info[0], sys.version_info[1])
-        return (py_version, 'none', plat)
+        tags = next(sys_tags())
+        return (tags.interpreter, tags.abi, plat)
 
 class InstallCommand(InstallCommandBase):
 

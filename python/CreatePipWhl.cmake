@@ -5,7 +5,11 @@
 # ******************************************************************************
 
 # Create the pip package
-find_program(PYTHON "python")
+if(PYTHON_EXECUTABLE)
+    set(PYTHON ${PYTHON_EXECUTABLE})
+else(PYTHON_EXECUTABLE)
+    find_program(PYTHON "python")
+endif()
 
 message( STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_LIST_DIR}")
 message( STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_BINARY_DIR}")
