@@ -47,9 +47,6 @@ ng_data_list = [
 package_data_dict = {}
 package_data_dict['openvino_tensorflow'] = ng_data_list
 
-import tensorflow as tf
-tf_version = "tensorflow==" + tf.__version__
-
 setup(
     name='openvino_tensorflow',
     version='0.5.0',

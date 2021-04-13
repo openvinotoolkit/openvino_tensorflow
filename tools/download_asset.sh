@@ -23,8 +23,6 @@
 #
 # If your version/tag doesn't match, the script will exit with error.
 
-sudo apt install curl wget jq
-
 : ${GITHUB_ACCESS_TOKEN:?"Please set a GitHub Access Token. Create one under 'repo' scope \
 here: https://github.com/settings/tokens and then do:
             

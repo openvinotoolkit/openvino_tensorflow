@@ -68,12 +68,12 @@ def main():
         "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n")
 
     parser.add_argument(
-        '--use_prebuilt_tensorflow',
+        '--build_tf_from_source',
         type=str,
-        help="Skip building TensorFlow and use the specified prebuilt version.\n"
-        + "If prebuilt version isn't specified, TF version " + tf_version +
+        help="Build TensorFlow from source and use the specified version.\n"
+        + "If version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples won't be build for " + 
+        "Note: in this case C++ API, unit tests and examples will be build for " + 
         "OpenVINO integration with TensorFlow",
         const=tf_version,
         default='',
@@ -134,10 +134,10 @@ def main():
         default=0.5)
 
     parser.add_argument(
-      '--openvino_version',
-      help=
-      "Openvino version to be used for building from source",
-      default='2021.3')
+        '--openvino_version',
+        help=
+        "Openvino version to be used for building from source",
+        default='2021.3')
     
     parser.add_argument(
         '--python_executable',
@@ -166,8 +166,8 @@ def main():
 
     assert not (
         arguments.use_tensorflow_from_location != '' and
-        arguments.use_prebuilt_tensorflow != ''
-    ), ("\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
+        arguments.build_tf_from_source != ''
+    ), ("\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
     "cannot be used together.")
 
     assert not (
@@ -184,7 +184,7 @@ def main():
             arguments.openvino_version + \
             " does not match the version specified in use_openvino_from_location"
 
-    version_check((arguments.use_prebuilt_tensorflow != ''),
+    version_check((arguments.build_tf_from_source == ''),
                   (arguments.use_tensorflow_from_location != ''),
                   arguments.disable_cpp_api)
 
@@ -249,9 +249,6 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
-    if arguments.use_prebuilt_tensorflow != '':
-        tf_version = arguments.use_prebuilt_tensorflow
-
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
     # this is set to 1
@@ -298,7 +295,7 @@ def main():
                              use_intel_tf)
         os.chdir(cwd)
     else:
-        if arguments.use_prebuilt_tensorflow != '':
+        if arguments.build_tf_from_source == '':
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
             
@@ -440,12 +437,12 @@ def main():
                 arguments.use_tensorflow_from_location + '/tensorflow')
         ])
     else:
-        if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
+        if not arguments.disable_cpp_api and arguments.build_tf_from_source:
             print("TF_SRC_DIR: ", tf_src_dir)
             openvino_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
     openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
-    if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
+    if not arguments.disable_cpp_api and arguments.build_tf_from_source:
         openvino_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
@@ -479,14 +476,14 @@ def main():
     #
     # There are four possibilities:
     # 1. use_tensorflow_from_location is not defined
-    #   2. In that case use_prebuilt_tensorflow is defined
+    #   2. In that case build_tf_from_source is not defined
     #       In this case we copy the entire tensorflow source to the artifacts
     #       So all we have to do is to create a symbolic link
-    #       3. OR use_prebuilt_tensorflow is not defined
+    #       3. OR build_tf_from_source is defined
     # 4. use_tensorflow_from_location is defined
     if arguments.use_tensorflow_from_location == '':
         # Case 1
-        if arguments.use_prebuilt_tensorflow != '':
+        if arguments.build_tf_from_source == '':
             # Case 2
             base_dir = None
         else:
