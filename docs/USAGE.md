@@ -57,7 +57,7 @@ To disable execution of certain operators on the OpenVINO backend, use the follo
 ## Environment Variables 
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
-After clusters are formed, some of the clusters still falls back to native Tensorflow due to some reasons (Cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash.
+After clusters are formed, some of the clusters still fall back to native Tensorflow due to some reasons (Cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
 Example:
 
@@ -113,7 +113,7 @@ Example:
     OPENVINO_TF_ENABLE_BATCHING="1"
 
 **OPENVINO_TF_DUMP_GRAPHS:**
-Setting this will serialize the full graphs in all stages during the optimnization pass.
+Setting this will serialize the full graphs in all stages during the optimization pass.
 
 Example:
 
@@ -134,7 +134,7 @@ Example:
     OPENVINO_TF_DISABLE=1
 
 **OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
-This variable sets the minumum number of ops that can exists in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to Tensorflow. By default, it's calculated based on the total graph size.
+This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to Tensorflow. By default, it is calculated based on the total graph size.
 
 Example:
 
