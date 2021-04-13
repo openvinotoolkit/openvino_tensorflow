@@ -1,6 +1,6 @@
-# Intel<sup>®</sup> Openvino<sup>TM</sup> integration with TensorFlow C++ and Python Demos
+# Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow C++ and Python Demos
 
-These examples show how to use Intel<sup>®</sup> </sup> Openvino<sup>TM</sup> integration with Tensorflow to recognize  and detect objects in images.
+These examples show how to use Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow to recognize  and detect objects in images.
 
 ## Description
 
@@ -124,7 +124,7 @@ For running C++ samples, we need to build tensorflow framework from source since
 ```bash
 $ cd <path-to-openvino_tensorflow>
 $ python3 build_tf.py --output_dir <path-to-tensorflow-dir>
-$ python3 build_ovtf.py --use_tensorflow_from_location <path-to-openvino_tensorflow>/build_cmake/artifacts/tensorflow
+$ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
 For detailed build instructions please read [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#build-from-source).
 
