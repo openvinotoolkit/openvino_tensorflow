@@ -1,4 +1,4 @@
-# Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow C++ and Python Demos
+# Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Demos
 
 These examples show how to use Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow to recognize  and detect objects in images.
 
