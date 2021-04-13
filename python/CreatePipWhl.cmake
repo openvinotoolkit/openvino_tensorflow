@@ -50,7 +50,7 @@ if (PYTHON)
     # Get the list of license files
     file(GLOB OPENVINO_TF_LICENSE_FILES "${NGTF_SRC_DIR}/third-party/licenses/*")
 
-    # Copy the licenses for ngraph-tf
+    # Copy the licenses for openvino-tensorflow
     foreach(DEP_FILE ${OPENVINO_TF_LICENSE_FILES})
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)
@@ -64,7 +64,7 @@ if (PYTHON)
     # Get the list of license files for ngraph
     file(GLOB NGRAPH_LICENSE_FILES "${NGRAPH_INSTALL_DIR}/licenses/*")
 
-    # Copy the licenses for ngraph-tf
+    # Copy the licenses for openvino-tensorflow
     foreach(DEP_FILE ${NGRAPH_LICENSE_FILES})
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)

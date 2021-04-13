@@ -7,6 +7,7 @@ from platform import system
 from setuptools import setup
 from wheel.bdist_wheel import bdist_wheel
 import os
+import sys
 
 # https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
 class BinaryBdistWheel(bdist_wheel):
@@ -18,9 +19,9 @@ class BinaryBdistWheel(bdist_wheel):
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
-           plat = 'manylinux2010_x86_64'
-
-        return ('py3', 'none', plat)
+           plat = 'linux_x86_64'
+        py_version = 'py{}{}'.format(sys.version_info[0], sys.version_info[1])
+        return (py_version, 'none', plat)
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
