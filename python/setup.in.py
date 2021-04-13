@@ -5,6 +5,7 @@
 # ==============================================================================
 from platform import system
 from setuptools import setup
+from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
 import os
 import sys
@@ -22,6 +23,13 @@ class BinaryBdistWheel(bdist_wheel):
            plat = 'linux_x86_64'
         py_version = 'py{}{}'.format(sys.version_info[0], sys.version_info[1])
         return (py_version, 'none', plat)
+
+class InstallCommand(InstallCommandBase):
+
+  def finalize_options(self):
+    ret = InstallCommandBase.finalize_options(self)
+    self.install_lib = self.install_platlib
+    return ret
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
@@ -54,7 +62,10 @@ setup(
     platforms='Ubuntu 18.04',
     include_package_data=True,
     package_data= package_data_dict,
-    cmdclass={'bdist_wheel': BinaryBdistWheel},
+    cmdclass={
+        'bdist_wheel': BinaryBdistWheel,
+        'install': InstallCommand
+    },
     install_requires=[
         #[TODO] Replace this with custom built TF
         #tf_version,
