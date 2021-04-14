@@ -60,7 +60,7 @@ void IE_VADM_Engine::infer(
   if (multi_req_support && tmp_batch != 0) {
     // Set the batch size per request and number of requests
     batch_size = IE_Utils::GetInputBatchSize(tmp_batch, m_device);
-    assert(batch_size>=0);
+    assert(batch_size>0);
     num_req = tmp_batch / batch_size;
     if (m_network.getBatchSize() != batch_size)
       m_network.setBatchSize(batch_size);
