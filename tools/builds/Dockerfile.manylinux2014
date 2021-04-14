@@ -1,0 +1,98 @@
+# Copyright (C) 2019-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+FROM quay.io/pypa/manylinux2014_x86_64 AS base
+
+LABEL Description="This is the manylinux2014 based dockerfile that builds Python 3.x whl packages \
+                   for Intel(R) OpenVINO(TM) integration with TensorFlow"
+LABEL Vendor="Intel Corporation"
+
+ARG VERSION
+ARG GITHUB_ACCESS_TOKEN
+ARG OVTF_BRANCH
+
+ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
+
+USER root
+WORKDIR /
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+ENV ftp_proxy=http://proxy-chain.intel.com:911
+ENV http_proxy=http://proxy-chain.intel.com:911
+ENV https_proxy=http://proxy-chain.intel.com:912
+ENV no_proxy=localhost,127.0.0.1/8,.intel.com,.ka.intel.com,10.217.0.0/8
+
+# yum dependencies
+RUN yum update -y && \
+    yum group install -y "Development Tools" && \
+    yum clean all && rm -rf /var/cache/yum
+
+RUN yum install -y zlib-devel libffi-devel \
+    openssl-devel wget python-virtualenv libusb libusb-devel curl ca-certificates opencl-headers \
+    ocl-icd numactl-libs jq && \
+    yum clean all && rm -rf /var/cache/yum
+
+# install bazelisk
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-linux-amd64 && \
+    chmod 700 bazelisk-linux-amd64 && chmod +x bazelisk-linux-amd64 &&  \
+    cp bazelisk-linux-amd64 /usr/local/bin/bazel
+
+# install cmake-3.18.4
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+    tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+    cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+    cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/
+
+# install libusb
+WORKDIR /opt
+RUN curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && \
+    unzip v1.0.22.zip && rm -rf v1.0.22.zip
+
+WORKDIR /opt/libusb-1.0.22
+RUN ./bootstrap.sh && \
+    ./configure --disable-udev --enable-shared && \
+    make -j4
+
+WORKDIR /opt/libusb-1.0.22/libusb
+RUN /bin/mkdir -p '/usr/local/lib' && \
+    /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && \
+    /bin/mkdir -p '/usr/local/include/libusb-1.0' && \
+    /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
+
+# clone & build 
+RUN mkdir -p /opt/intel/openvino_tensorflow/
+
+RUN git clone https://${GITHUB_ACCESS_TOKEN}@github.com/openvinotoolkit/openvino_tensorflow \
+    /opt/intel/openvino_tensorflow
+
+WORKDIR /opt/intel/openvino_tensorflow/
+
+RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
+
+# Some ENV for auditwheel
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.7/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
+
+RUN mkdir -p /whl/abi1/ && mkdir -p /whl/abi0/
+
+# Build ABI-1 Wheels
+RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
+        PYBIN=/opt/python/${py_ver}/bin; \
+        "${PYBIN}/pip" install psutil virtualenv; \
+        grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
+        "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=1 --disable_packaging_openvino_libs; \
+        auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
+	    mv wheelhouse/* /whl/abi1/; \
+        git reset --hard HEAD; \
+        rm -rf build_cmake/; \
+    done
+
+# Build ABI-0 Wheels
+RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
+        PYBIN=/opt/python/${py_ver}/bin; \
+        "${PYBIN}/pip" install psutil virtualenv; \
+        grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
+        "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
+        auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
+	    mv wheelhouse/* /whl/abi0/; \
+        git reset --hard HEAD; \
+        rm -rf build_cmake/; \
+    done

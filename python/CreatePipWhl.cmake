@@ -5,7 +5,11 @@
 # ******************************************************************************
 
 # Create the pip package
-find_program(PYTHON "python")
+if(PYTHON_EXECUTABLE)
+    set(PYTHON ${PYTHON_EXECUTABLE})
+else(PYTHON_EXECUTABLE)
+    find_program(PYTHON "python")
+endif()
 
 message( STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_LIST_DIR}")
 message( STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_BINARY_DIR}")
@@ -19,7 +23,7 @@ if (PYTHON)
 
     # Set the readme document location
     get_filename_component(
-        readme_file_path ${CMAKE_CURRENT_LIST_DIR}/../README.md ABSOLUTE)
+        readme_file_path ${CMAKE_CURRENT_LIST_DIR}/README.md ABSOLUTE)
     set(README_DOC \"${readme_file_path}\")
 
     # Create the python/openvino_tensorflow directory
@@ -50,7 +54,7 @@ if (PYTHON)
     # Get the list of license files
     file(GLOB OPENVINO_TF_LICENSE_FILES "${NGTF_SRC_DIR}/third-party/licenses/*")
 
-    # Copy the licenses for ngraph-tf
+    # Copy the licenses for openvino-tensorflow
     foreach(DEP_FILE ${OPENVINO_TF_LICENSE_FILES})
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)
@@ -64,7 +68,7 @@ if (PYTHON)
     # Get the list of license files for ngraph
     file(GLOB NGRAPH_LICENSE_FILES "${NGRAPH_INSTALL_DIR}/licenses/*")
 
-    # Copy the licenses for ngraph-tf
+    # Copy the licenses for openvino-tensorflow
     foreach(DEP_FILE ${NGRAPH_LICENSE_FILES})
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)

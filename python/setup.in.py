@@ -5,8 +5,11 @@
 # ==============================================================================
 from platform import system
 from setuptools import setup
+from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
+from wheel.vendored.packaging.tags import sys_tags
 import os
+import sys
 
 # https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
 class BinaryBdistWheel(bdist_wheel):
@@ -18,9 +21,16 @@ class BinaryBdistWheel(bdist_wheel):
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
-           plat = 'manylinux2010_x86_64'
+           plat = 'linux_x86_64'
+        tags = next(sys_tags())
+        return (tags.interpreter, tags.abi, plat)
 
-        return ('py3', 'none', plat)
+class InstallCommand(InstallCommandBase):
+
+  def finalize_options(self):
+    ret = InstallCommandBase.finalize_options(self)
+    self.install_lib = self.install_platlib
+    return ret
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
 
@@ -37,9 +47,6 @@ ng_data_list = [
 package_data_dict = {}
 package_data_dict['openvino_tensorflow'] = ng_data_list
 
-import tensorflow as tf
-tf_version = "tensorflow==" + tf.__version__
-
 setup(
     name='openvino_tensorflow',
     version='0.5.0',
@@ -53,7 +60,10 @@ setup(
     platforms='Ubuntu 18.04',
     include_package_data=True,
     package_data= package_data_dict,
-    cmdclass={'bdist_wheel': BinaryBdistWheel},
+    cmdclass={
+        'bdist_wheel': BinaryBdistWheel,
+        'install': InstallCommand
+    },
     install_requires=[
         #[TODO] Replace this with custom built TF
         #tf_version,
