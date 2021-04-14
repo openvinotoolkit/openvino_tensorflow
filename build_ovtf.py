@@ -319,6 +319,9 @@ def main():
                     "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl")
                     command_executor(["pip", "install", 
                     "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
+                
+                # ABI 1 TF required latest numpy
+                command_executor(["pip", "install", "-U numpy"])
 
             tf_cxx_abi = get_tf_cxxabi()
 

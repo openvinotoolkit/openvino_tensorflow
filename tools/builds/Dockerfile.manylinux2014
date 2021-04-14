@@ -71,6 +71,8 @@ RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 # Some ENV for auditwheel
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
 
+RUN mkdir -p /whl/abi1/ && mkdir -p /whl/abi0/
+
 # Build ABI-1 Wheels
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         PYBIN=/opt/python/${py_ver}/bin; \
@@ -78,11 +80,12 @@ RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=1 --disable_packaging_openvino_libs; \
         auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
+	    mv wheelhouse/* /whl/abi1/; \
         git reset --hard HEAD; \
         rm -rf build_cmake/; \
     done
 
-RUN mkdir -p /whl/abi1/ && cp wheelhouse/* /whl/abi1/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
 
 # Build ABI-0 Wheels
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
@@ -91,8 +94,7 @@ RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
         auditwheel repair --plat manylinux2014_x86_64 build_cmake/artifacts/*.whl; \
+	    mv wheelhouse/* /whl/abi0/; \
         git reset --hard HEAD; \
         rm -rf build_cmake/; \
     done
-
-RUN mkdir -p /whl/abi0/ && cp wheelhouse/* /whl/abi0/
