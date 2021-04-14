@@ -21,7 +21,7 @@ class BinaryBdistWheel(bdist_wheel):
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
-           plat = 'linux_x86_64'
+           plat = 'manylinux2014_x86_64'
         tags = next(sys_tags())
         return (tags.interpreter, tags.abi, plat)
 
