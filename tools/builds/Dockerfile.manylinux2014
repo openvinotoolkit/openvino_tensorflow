@@ -69,7 +69,7 @@ WORKDIR /opt/intel/openvino_tensorflow/
 RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 
 # Some ENV for auditwheel
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.7/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
 
 RUN mkdir -p /whl/abi1/ && mkdir -p /whl/abi0/
 
@@ -84,8 +84,6 @@ RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         git reset --hard HEAD; \
         rm -rf build_cmake/; \
     done
-
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
 
 # Build ABI-0 Wheels
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
