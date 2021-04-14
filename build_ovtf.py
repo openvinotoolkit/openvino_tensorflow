@@ -249,6 +249,9 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
+    if arguments.build_tf_from_source != '':
+        tf_version = arguments.build_tf_from_source
+
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
     # this is set to 1
