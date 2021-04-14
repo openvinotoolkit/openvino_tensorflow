@@ -112,6 +112,12 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
     std::set<std::string> disabled_ops_set = api::GetDisabledOps();
+    if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
+      std::vector<std::string> batched_disabled_ops = {"Shape"};
+      for (int i=0; i<batched_disabled_ops.size(); i++) {
+        disabled_ops_set.insert(batched_disabled_ops[i]);
+      }
+    }
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void *> nodes_list = FC.MarkSupportedNodes();
 
