@@ -7,7 +7,7 @@
 This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow, a product needed to enable Intel<sup>®</sup> OpenVINO™ runtime and optimizations for TensorFlow. Intel<sup>®</sup> OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as Intel CPUs, Intel integrated GPUs, Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL.
 
 ## Installation
-
+For installation table, please visit: [Link](https://openvinotoolkit.github.io/openvino_tensorflow/)
 ### Requirements
 
 **Check version numbers**
@@ -145,7 +145,7 @@ Test the installation:
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO.
 
-For more advanced build configurations, please refer to: ([OpenVINO integration with TensorFlow - Builds](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/README.md))
+For more advanced build configurations, please refer to: ([OpenVINO integration with TensorFlow - Builds](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILDS.md))
 
 ## Usage
 
