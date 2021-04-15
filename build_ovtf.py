@@ -308,20 +308,14 @@ def main():
                 tags = next(sys_tags())
 
                 if tags.interpreter == "cp36":
-                    download_github_release_asset(ovtf_version, 
-                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl")
                     command_executor(["pip", "install", 
-                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"])
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"])
                 if tags.interpreter == "cp37":
-                    download_github_release_asset(ovtf_version, 
-                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl")
                     command_executor(["pip", "install", 
-                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"])
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"])
                 if tags.interpreter == "cp38":
-                    download_github_release_asset(ovtf_version, 
-                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl")
                     command_executor(["pip", "install", 
-                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
                 
                 # ABI 1 TF required latest numpy
                 command_executor(["pip", "install", "-U numpy"])
