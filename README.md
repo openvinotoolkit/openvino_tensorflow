@@ -145,7 +145,7 @@ Test the installation:
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO.
 
-For more advanced build configurations, please refer to: ([OpenVINO integration with TensorFlow - Builds](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/README.md))
+For more advanced build configurations, please refer to: ([OpenVINO integration with TensorFlow - Builds](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILDS.md))
 
 ## Usage
 
