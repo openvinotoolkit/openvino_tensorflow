@@ -137,6 +137,7 @@ function commandArea()
                 const name = document.createTextNode(line.substr(0,line.indexOf('Link')));
                 let hyperlink = document.createElement('a');
                 hyperlink.appendChild(name);
+                hyperlink.target="_blank";
                 console.log(line.substr(line.indexOf('Link')+5))
                 hyperlink.href = line.substr(line.indexOf('Link')+5);
                 paragraph.appendChild(hyperlink);
