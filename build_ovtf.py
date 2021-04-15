@@ -26,8 +26,8 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                     "To build from source omit `use_prebuilt_tensorflow`")
     # Check cmake version
     cmake_ver = get_cmake_version()
-    if (int(cmake_ver[0]) < 3 or int(cmake_ver[1]) < 4):
-        raise Exception("Need minimum cmake version 3.4\n"
+    if (int(cmake_ver[0]) < 3 or int(cmake_ver[1]) < 14):
+        raise Exception("Need minimum cmake version 3.14\n"
                         "Got: " + '.'.join(cmake_ver))
 
     if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:

@@ -6,20 +6,11 @@ LABEL Description="This is the manylinux2014 based dockerfile that builds Python
                    for Intel(R) OpenVINO(TM) integration with TensorFlow"
 LABEL Vendor="Intel Corporation"
 
-ARG VERSION
-ARG GITHUB_ACCESS_TOKEN
 ARG OVTF_BRANCH
-
-ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
 
 USER root
 WORKDIR /
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
-
-ENV ftp_proxy=http://proxy-chain.intel.com:911
-ENV http_proxy=http://proxy-chain.intel.com:911
-ENV https_proxy=http://proxy-chain.intel.com:912
-ENV no_proxy=localhost,127.0.0.1/8,.intel.com,.ka.intel.com,10.217.0.0/8
 
 # yum dependencies
 RUN yum update -y && \
@@ -61,7 +52,7 @@ RUN /bin/mkdir -p '/usr/local/lib' && \
 # clone & build 
 RUN mkdir -p /opt/intel/openvino_tensorflow/
 
-RUN git clone https://${GITHUB_ACCESS_TOKEN}@github.com/openvinotoolkit/openvino_tensorflow \
+RUN git clone https://github.com/openvinotoolkit/openvino_tensorflow \
     /opt/intel/openvino_tensorflow
 
 WORKDIR /opt/intel/openvino_tensorflow/
@@ -77,7 +68,7 @@ RUN mkdir -p /whl/abi1/ && mkdir -p /whl/abi0/
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         PYBIN=/opt/python/${py_ver}/bin; \
         "${PYBIN}/pip" install psutil virtualenv; \
-        grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
+        sed -i "s#python3#${PYBIN}/python#g" tools/build_utils.py; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=1 --disable_packaging_openvino_libs; \
         cp build_cmake/artifacts/*.whl /whl/abi1/; \
         git reset --hard HEAD; \
@@ -88,7 +79,7 @@ RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         PYBIN=/opt/python/${py_ver}/bin; \
         "${PYBIN}/pip" install psutil virtualenv; \
-        grep -rli 'python3' * | xargs -i@ sed -i "s#python3#${PYBIN}/python#g" @; \
+        sed -i "s#python3#${PYBIN}/python#g" tools/build_utils.py; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
         cp build_cmake/artifacts/*.whl /whl/abi0/; \
         git reset --hard HEAD; \
