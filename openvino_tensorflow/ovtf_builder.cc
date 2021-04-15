@@ -1568,7 +1568,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
     }
   } else if (VecStrCmp(fused_ops, {"FusedBatchNorm"}) ||
              VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"}) ||
-             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"}) ||
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
     if (num_args != 4) {
       return errors::InvalidArgument(
           "FusedConv2D with FusedBatchNorm has incompatible num_args");
@@ -1598,6 +1599,16 @@ static Status TranslateFusedConv2DOp(const Node* op,
           op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm, 0, 6);
       NCHWtoNHWC(op->name(), is_nhwc, ng_relu6);
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
+    } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
+      float tf_leakyrelu_alpha;
+      TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_leakyrelu_alpha));
+      auto ng_leakyrelu_alpha = ConstructNgNode<opset::Constant>(op->name(), ng::element::f32, 
+          ng::Shape{}, tf_leakyrelu_alpha);
+      auto ng_alphax = ConstructNgNode<opset::Multiply>(op->name(), ng_leakyrelu_alpha, ng_batch_norm);
+      auto ng_lrelu = ConstructNgNode<opset::Maximum>(
+          op->name() + "_FusedConv2D_BatchNormLeakyRelu", ng_alphax, ng_batch_norm);
+      NCHWtoNHWC(op->name(), is_nhwc, ng_lrelu);
+      SaveNgOp(ng_op_map, op->name(), ng_lrelu);
     } else {
       NCHWtoNHWC(op->name(), is_nhwc, ng_batch_norm);
       SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
