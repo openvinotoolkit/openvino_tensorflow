@@ -53,3 +53,89 @@ To disable execution of certain operators on the OpenVINO backend, use the follo
  To check the list of disabled ops which are declared as supported by the backend, but disabled programmatically, use the following API:
  
     openvino_tensorflow.get_disabled_ops()
+    
+## Environment Variables 
+
+**OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
+After clusters are formed, some of the clusters still fall back to native Tensorflow due to some reasons (Cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash in some cases.
+
+Example:
+
+    OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
+
+**OPENVINO_TF_VLOG_LEVEL:**
+This variable is used to print the execution logs. Setting it to 1 will print the minumum amount of details and setting it to 5 will print the most detailed logs.
+
+Example:
+
+    OPENVINO_TF_VLOG_LEVEL="4"
+
+**OPENVINO_TF_LOG_PLACEMENT:**
+If this variable is set to 1, it will print the logs related to cluster forming and encapsulation.
+
+Example:
+
+    OPENVINO_TF_LOG_PLACEMENT="1"
+
+**OPENVINO_TF_BACKEND:**
+Backend device name can be set using this variable. It should be set to CPU, GPU, MYRIAD, or VAD-M.
+
+Example:
+
+    OPENVINO_TF_BACKEND="MYRIAD"
+
+**OPENVINO_TF_DISABLED_OPS:**
+A list of diabled ops can be passes using this variable. Those ops will not be considered for clustering and they will fallback to native Tensorflow.
+
+Example:
+
+    OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
+
+**OPENVINO_TF_CONSTANT_FOLDING:**
+This will enable/disable constant folding pass on the translated clusters (Disabled by default).
+
+Example:
+
+    OPENVINO_TF_CONSTANT_FOLDING="1"
+
+**OPENVINO_TF_TRANSPOSE_SINKING:**
+This will enable/disable transpose sinking pass on the translated clusters (Enabled by default).
+
+Example:
+
+    OPENVINO_TF_TRANSPOSE_SINKING="0"
+
+**OPENVINO_TF_ENABLE_BATCHING:**
+If this parameter is set to 1 while using VAD-M as the backend, the backend engine will devide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve a better performance.
+
+Example:
+
+    OPENVINO_TF_ENABLE_BATCHING="1"
+
+**OPENVINO_TF_DUMP_GRAPHS:**
+Setting this will serialize the full graphs in all stages during the optimization pass.
+
+Example:
+
+    OPENVINO_TF_DUMP_GRAPHS=1
+
+**OPENVINO_TF_DUMP_CLUSTERS:**
+Setting this variable to 1 will serialize all the clusters in ".pbtxt" format.
+
+Example:
+
+    OPENVINO_TF_DUMP_CLUSTERS=1
+
+**OPENVINO_TF_DISABLE:**
+Disables OpenVINO Integration if set to 1.
+
+Example:
+
+    OPENVINO_TF_DISABLE=1
+
+**OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
+This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to Tensorflow. By default, it is calculated based on the total graph size.
+
+Example:
+
+    OPENVINO_TF_MIN_NONTRIVIAL_NODES=6

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
 from tools.build_utils import *
 
+# grappler related defaults
 builder_version = 0.50
 flag_string_map = {True: 'YES', False: 'NO'}
 
@@ -25,8 +26,8 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                     "To build from source omit `use_prebuilt_tensorflow`")
     # Check cmake version
     cmake_ver = get_cmake_version()
-    if (int(cmake_ver[0]) < 3 or int(cmake_ver[1]) < 4):
-        raise Exception("Need minimum cmake version 3.4\n"
+    if (int(cmake_ver[0]) < 3 or int(cmake_ver[1]) < 14):
+        raise Exception("Need minimum cmake version 3.14\n"
                         "Got: " + '.'.join(cmake_ver))
 
     if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
@@ -40,13 +41,13 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
 
 def main():
     '''
-    Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for python 3
+    Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for Python 3
     '''
 
     # Component versions
-    tf_version = "v2.2.2"
+    tf_version = "v2.4.1"
+    ovtf_version = "v0.5.0"
     use_intel_tf = False
-    openvino_version = "releases/2021/2"
 
     # Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -64,16 +65,16 @@ def main():
     parser.add_argument(
         '--target_arch',
         help=
-        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n",
-    )
+        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n")
 
     parser.add_argument(
-        '--use_prebuilt_tensorflow',
+        '--build_tf_from_source',
         type=str,
-        help="Skip building TensorFlow and use the specified prebuilt version.\n"
-        + "If prebuilt version isn't specified, TF version " + tf_version +
+        help="Build TensorFlow from source and use the specified version.\n"
+        + "If version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples won't be build for OpenVINO-TensorFlow (OVTF)",
+        "Note: in this case C++ API, unit tests and examples will be build for " + 
+        "OpenVINO integration with TensorFlow",
         const=tf_version,
         default='',
         nargs='?',
@@ -111,7 +112,7 @@ def main():
         '--disable_packaging_openvino_libs',
         help=
         "Use this option to do build a standalone python package of " +
-        "the OpenVINO-TensorFlow (OVTF) Library without OpenVINO libraries",
+        "the OpenVINO integration with TensorFlow Library without OpenVINO libraries",
         action="store_true")
 
     parser.add_argument(
@@ -122,9 +123,28 @@ def main():
     parser.add_argument(
         '--cxx11_abi_version',
         help=
-        "Desired version of ABI to be used while building TensorFlow, Openvino-TensorFlow (OVTF), \n" +
-        "and OpenVINO libraries",
+        "Desired version of ABI to be used while building Tensorflow, \n" +
+        "OpenVINO integration with TensorFlow, and OpenVINO libraries",
         default='0')
+    
+    parser.add_argument(
+        '--resource_usage_ratio',
+        help=
+        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        default=0.5)
+
+    parser.add_argument(
+        '--openvino_version',
+        help=
+        "Openvino version to be used for building from source",
+        default='2021.3')
+    
+    parser.add_argument(
+        '--python_executable',
+        help=
+        "Use a specific python executable while building whl",
+        action="store",
+        default='')
 
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
@@ -146,22 +166,25 @@ def main():
 
     assert not (
         arguments.use_tensorflow_from_location != '' and
-        arguments.use_prebuilt_tensorflow != ''
-    ), ("\"use_tensorflow_from_location\" and \"use_prebuilt_tensorflow\" "
+        arguments.build_tf_from_source != ''
+    ), ("\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
     "cannot be used together.")
 
-    # Since the argument use_openvino_from_location utilizes a binary release
-    # of OpenVINO - and it uses ABI 1 - an user supplied ABI version of 0 is
-    # an incompatible option. Tn this case, tensorflow needs to be built with ABI 1
     assert not (
-        arguments.use_openvino_from_location != '' and
-        arguments.cxx11_abi_version != '1'
-    ), ("\"use_openvino_from_location\" and \"cxx11_abi_version\" "
-    "cannot be used together. Please use cxx11_abi_version=1 "
-    "to continue to build with a binary release of OpenVINO") 
+      arguments.openvino_version != "2021.3" and
+      arguments.openvino_version != "2021.2"
+    ), ("Only 2021.2 and 2021.3 are supported OpenVINO versions")
 
+    if arguments.use_openvino_from_location != '':
+      ver_file = arguments.use_openvino_from_location + \
+                    '/deployment_tools/inference_engine/version.txt'
+      with open(ver_file) as f:
+        line = f.readline()
+        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
+            arguments.openvino_version + \
+            " does not match the version specified in use_openvino_from_location"
 
-    version_check((arguments.use_prebuilt_tensorflow != ''),
+    version_check((arguments.build_tf_from_source == ''),
                   (arguments.use_tensorflow_from_location != ''),
                   arguments.disable_cpp_api)
 
@@ -226,8 +249,8 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
-    if arguments.use_prebuilt_tensorflow != '':
-        tf_version = arguments.use_prebuilt_tensorflow
+    if arguments.build_tf_from_source != '':
+        tf_version = arguments.build_tf_from_source
 
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
@@ -255,9 +278,9 @@ def main():
         # Install the found TF whl file
         command_executor(["pip", "install", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
-        
+
         assert (
-            arguments.cxx11_abi_version == tf_cxx_abi 
+            arguments.cxx11_abi_version == tf_cxx_abi
         ), ("Desired ABI version and user built tensorflow library provided with "
         "use_tensorflow_from_location are incompatible")
 
@@ -275,21 +298,38 @@ def main():
                              use_intel_tf)
         os.chdir(cwd)
     else:
-        if arguments.use_prebuilt_tensorflow != '':
+        if arguments.build_tf_from_source == '':
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
-            # [TODO] Replace the following with the Openvino-TensorFlow recommended tf pypi package
+            
             if arguments.cxx11_abi_version == "0":
-                command_executor(
-                    ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi0"])
+                command_executor(["pip", "install", "tensorflow=="+tf_version])
             elif arguments.cxx11_abi_version == "1":
-                command_executor(
-                    ["pip", "install", "--index-url", "https://test.pypi.org/simple/", "--extra-index-url", "https://pypi.org/simple", "tensorflow-custom-abi1"])
-                                            
+                tags = next(sys_tags())
+
+                if tags.interpreter == "cp36":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"])
+                if tags.interpreter == "cp37":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"])
+                if tags.interpreter == "cp38":
+                    download_github_release_asset(ovtf_version, 
+                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl")
+                    command_executor(["pip", "install", 
+                    "tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
+                
+                # ABI 1 TF required latest numpy
+                command_executor(["pip", "install", "-U numpy"])
+
             tf_cxx_abi = get_tf_cxxabi()
 
             assert (
-                arguments.cxx11_abi_version == tf_cxx_abi 
+                arguments.cxx11_abi_version == tf_cxx_abi
             ), ("Desired ABI version and tensorflow library installed with "
             "pip are incompatible")
 
@@ -302,18 +342,6 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
-            # Uncomment this to apply security patch
-            os.chdir("tensorflow")
-            # Apply patch to fix vulnerabilities in TF r2.2 as of commit d745ff2 dated Jan 5, 2021
-            # For more information about the patches: 
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15265
-            # https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15266
-            if tf_version == "v2.2.2":
-                print("Applying security patch...")
-                command_executor(["git", "apply", "%s/../patches/tf2.2.2_vulnerabilities_fix.patch"%pwd_now])
-            os.chdir("..")
-            
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
@@ -337,13 +365,14 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            
+
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 
             # Build TensorFlow
             build_tensorflow(tf_version, "tensorflow", artifacts_location,
-                             target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version)
+                             target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version,
+                             resource_usage_ratio=float(arguments.resource_usage_ratio))
 
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
@@ -368,12 +397,17 @@ def main():
             "NOTE: OpenVINO python module is not built when building from source."
         )
 
+        if(arguments.openvino_version == "2021.3"):
+          openvino_branch = "releases/2021/3"
+        elif(arguments.openvino_version == "2021.2"):
+          openvino_branch = "releases/2021/2"
+
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-            openvino_version,
-            submodule_update=True)
+             openvino_branch,
+             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
@@ -397,6 +431,9 @@ def main():
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
 
+    openvino_tf_cmake_flags.extend(
+      ["-DOPENVINO_VERSION=" + arguments.openvino_version])
+
     if (arguments.debug_build):
         openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
@@ -406,12 +443,12 @@ def main():
                 arguments.use_tensorflow_from_location + '/tensorflow')
         ])
     else:
-        if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
+        if not arguments.disable_cpp_api and arguments.build_tf_from_source:
             print("TF_SRC_DIR: ", tf_src_dir)
             openvino_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
     openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
-    if not arguments.disable_cpp_api and not arguments.use_prebuilt_tensorflow:
+    if not arguments.disable_cpp_api and arguments.build_tf_from_source:
         openvino_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
@@ -424,14 +461,16 @@ def main():
         ])
 
     if arguments.disable_packaging_openvino_libs:
-        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])  
+        openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
+    if arguments.python_executable != '':
+        openvino_tf_cmake_flags.extend(["-DPYTHON_EXECUTABLE=%s"%arguments.python_executable])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                 openvino_tf_src_dir, venv_dir,
                                 openvino_tf_cmake_flags, verbosity)
 
-    # Make sure that the openvino-tensorflow whl is present in the artfacts directory
+    # Make sure that the openvino_tensorflow whl is present in the artfacts directory
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 
@@ -443,14 +482,14 @@ def main():
     #
     # There are four possibilities:
     # 1. use_tensorflow_from_location is not defined
-    #   2. In that case use_prebuilt_tensorflow is defined
+    #   2. In that case build_tf_from_source is not defined
     #       In this case we copy the entire tensorflow source to the artifacts
     #       So all we have to do is to create a symbolic link
-    #       3. OR use_prebuilt_tensorflow is not defined
+    #       3. OR build_tf_from_source is defined
     # 4. use_tensorflow_from_location is defined
     if arguments.use_tensorflow_from_location == '':
         # Case 1
-        if arguments.use_prebuilt_tensorflow != '':
+        if arguments.build_tf_from_source == '':
             # Case 2
             base_dir = None
         else:

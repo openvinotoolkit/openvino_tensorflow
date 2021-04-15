@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -11,7 +11,7 @@ import argparse
 
 
 def main():
-    openvino_version = "releases/2021/2"
+    openvino_version = "releases/2021/3"
     build_dir = 'build_cmake'
     cxx_abi = "1"
     print("openVINO version: ", openvino_version)

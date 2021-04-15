@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -10,14 +10,18 @@ from argparse import RawTextHelpFormatter
 
 import errno
 import os
+import sys
 import subprocess
-from subprocess import check_output, call
 import sys
 import shutil
 import glob
 import platform
 import shlex
+import math 
+import psutil as psu
 from sysconfig import get_paths
+from subprocess import check_output, call
+from wheel.vendored.packaging.tags import sys_tags
 
 def get_tf_version():
     import tensorflow as tf
@@ -180,6 +184,12 @@ def setup_venv(venv_dir):
     # Print the current packages
     command_executor(["pip", "list"])
 
+def get_tf_build_resources(resource_usage_ratio=0.5):
+  num_cores = int(psu.cpu_count(logical=True) * resource_usage_ratio)
+  jobs = int(psu.cpu_count(logical=True) * resource_usage_ratio)
+  #Bazel takes this flag in MB. If not given default TOTAL_RAM*0.67; 1GB -> (1<<30); 1MB -> (1<<20)
+  ram_usage = math.floor((psu.virtual_memory().total / (1<<30))  * resource_usage_ratio) * (1<<20)
+  return num_cores, jobs, ram_usage
 
 def build_tensorflow(tf_version,
                      src_dir,
@@ -188,7 +198,8 @@ def build_tensorflow(tf_version,
                      verbosity,
                      use_intel_tf,
                      cxx_abi,
-                     target=""):
+                     target="",
+                     resource_usage_ratio=0.5):
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()
 
@@ -264,7 +275,12 @@ def build_tensorflow(tf_version,
     if verbosity:
         cmd.extend(['-s'])
 
-    command_executor(cmd)
+    num_cores, jobs, ram_usage = get_tf_build_resources(resource_usage_ratio)
+    cmd.extend(["--local_cpu_resources=%d"%num_cores])
+    cmd.extend(["--local_ram_resources=%d"%ram_usage])
+    cmd.extend(["--jobs=%d"%jobs])
+
+    command_executor(cmd, verbose=True)
 
     # If target is not specified, we assume default TF wheel build and copy the wheel to artifacts dir
     if target == '//tensorflow/tools/pip_package:build_pip_package':
@@ -505,7 +521,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     print('C Compiler version used in building TensorFlow: ',
           tf.__compiler_version__)
     # [TODO] Find an alternative method to do an import check as
-    # doing it before source /path/to/openvino/bin/setupvars.sh 
+    # doing it before source /path/to/openvino/bin/setupvars.sh
     # results in undefined symbol
     # import openvino_tensorflow
     # print(openvino_tensorflow.__version__)
@@ -528,6 +544,9 @@ def download_repo(target_name, repo, version, submodule_update=False):
 
     os.chdir(pwd)
 
+def download_github_release_asset(version, asset_name):
+    script = os.path.join(os.path.dirname(os.path.realpath(__file__)), "download_asset.sh")
+    command_executor(["bash", script, version, asset_name])
 
 def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,
@@ -603,6 +622,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
+        "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
         target_arch, "-DENABLE_CPPLINT=OFF", "-DENABLE_SPEECH_DEMO=FALSE",

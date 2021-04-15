@@ -1,10 +1,10 @@
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.14)
 
-project (ngraph_tensorflow_bridge CXX)
+project (openvino_tensorflow CXX)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -138,10 +138,8 @@ option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FA
 set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
 find_package(InferenceEngine REQUIRED)
 
-if (USE_OPENVINO_FROM_LOCATION)
-    set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
-    find_package(ngraph REQUIRED)
-endif()
+set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
+find_package(ngraph QUIET)
 
 include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
@@ -171,14 +169,21 @@ endif()
 message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
-
+message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
+if (${OPENVINO_VERSION} MATCHES "2021.3")
+  add_definitions(-DOPENVINO_2021_3=1)
+elseif (${OPENVINO_VERSION} MATCHES "2021.2")
+  add_definitions(-DOPENVINO_2021_2=1)
+else()
+  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
+endif()
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 else()
     set(LIB "lib")
 endif()
 
-if(USE_OPENVINO_FROM_LOCATION)
+if(ngraph_FOUND)
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/)
 else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
@@ -215,7 +220,7 @@ if (DEFINED TF_SRC_DIR)
     add_subdirectory(examples/classification_sample)
 else()
     message(
-        STATUS 
+        STATUS
         "TensorFlow source directory not provided. "
         "C++ Examples won't be built"
     )
@@ -231,7 +236,7 @@ if (UNIT_TEST_ENABLE)
     else()
         if (NOT EXISTS ${TensorFlow_SRC_DIR})
             message(
-                STATUS 
+                STATUS
                 "TensorFlow source directory doesn't exist"
             )
         endif()

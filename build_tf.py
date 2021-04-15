@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.2.2")
+        default="v2.4.1")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -40,10 +40,19 @@ def main():
         help=
         "Desired version of ABI to be used while building Tensorflow",
         default='0')
+    parser.add_argument(
+        '--resource_usage_ratio',
+        help=
+        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        default=0.5)
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
+    
+    assert os.path.isdir(arguments.output_dir), \
+        "Did not find output directory: " + arguments.output_dir
+
     os.chdir(arguments.output_dir)
 
     venv_dir = './venv3/'
@@ -68,7 +77,8 @@ def main():
     # Build TensorFlow
     build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
                      arguments.target_arch, False,
-                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
+                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version,
+                     resource_usage_ratio=float(arguments.resource_usage_ratio))
 
     # Build TensorFlow C++ Library
     build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',

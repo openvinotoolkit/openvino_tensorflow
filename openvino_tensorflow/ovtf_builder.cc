@@ -1268,7 +1268,9 @@ static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_value, ng_dims;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
+  // TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_dims));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_value));
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Broadcast>(op->name(), ng_value, ng_dims));
   return Status::OK();
@@ -1566,7 +1568,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
     }
   } else if (VecStrCmp(fused_ops, {"FusedBatchNorm"}) ||
              VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu"}) ||
-             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "Relu6"}) ||
+             VecStrCmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
     if (num_args != 4) {
       return errors::InvalidArgument(
           "FusedConv2D with FusedBatchNorm has incompatible num_args");
@@ -1596,6 +1599,16 @@ static Status TranslateFusedConv2DOp(const Node* op,
           op->name() + "_FusedConv2D_BatchNormRelu", ng_batch_norm, 0, 6);
       NCHWtoNHWC(op->name(), is_nhwc, ng_relu6);
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
+    } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
+      float tf_leakyrelu_alpha;
+      TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_leakyrelu_alpha));
+      auto ng_leakyrelu_alpha = ConstructNgNode<opset::Constant>(op->name(), ng::element::f32, 
+          ng::Shape{}, tf_leakyrelu_alpha);
+      auto ng_alphax = ConstructNgNode<opset::Multiply>(op->name(), ng_leakyrelu_alpha, ng_batch_norm);
+      auto ng_lrelu = ConstructNgNode<opset::Maximum>(
+          op->name() + "_FusedConv2D_BatchNormLeakyRelu", ng_alphax, ng_batch_norm);
+      NCHWtoNHWC(op->name(), is_nhwc, ng_lrelu);
+      SaveNgOp(ng_op_map, op->name(), ng_lrelu);
     } else {
       NCHWtoNHWC(op->name(), is_nhwc, ng_batch_norm);
       SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
@@ -2626,8 +2639,7 @@ static Status TranslateUnpackOp(const Node* op,
   int32 num_outputs;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &num_outputs));
 
-  auto input_shape = ng_input.get_shape();
-  auto rank = input_shape.size();
+  auto rank = ng_input.get_shape().size();
   for (int i = 0; i < num_outputs; ++i) {
     std::vector<int64_t> begin(rank, 0);
     std::vector<int64_t> end(rank, 0);
@@ -2643,13 +2655,14 @@ static Status TranslateUnpackOp(const Node* op,
     end_mask[tf_axis] = 0;
     std::vector<int64_t> new_axis_mask(rank, 0);
     std::vector<int64_t> shrink_axis_mask(rank, 0);
-    shrink_axis_mask[tf_axis] = 1;
-    if (input_shape.size() == 1)
-      shrink_axis_mask[tf_axis] = 0;
     auto slice = ConstructNgNode<opset::StridedSlice>(
         op->name(), ng_input, ng_begin, ng_end, begin_mask, end_mask,
         new_axis_mask, shrink_axis_mask);
-    SaveNgOp(ng_op_map, op->name(), slice);
+    auto squeeze_axis = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i32, ng::Shape{}, tf_axis);
+    auto squeeze = ConstructNgNode<opset::Squeeze>(
+        op->name(), slice, squeeze_axis);
+    SaveNgOp(ng_op_map, op->name(), squeeze);
   }
   return Status::OK();
 }

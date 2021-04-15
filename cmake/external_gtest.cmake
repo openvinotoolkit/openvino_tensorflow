@@ -35,7 +35,7 @@ endif()
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef")
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")
 else()
     set(GTEST_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 endif()

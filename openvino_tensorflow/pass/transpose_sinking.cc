@@ -311,9 +311,12 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
       convert_binary_to_default_order(binary, binary->input(0), right, reorders,
                                       transposes_to_delete);
     }
-    if (left_mismatch) {
-      convert_binary_to_default_order(binary, binary->input(1), left, reorders,
-                                      transposes_to_delete);
+    else 
+    {
+      if (left_mismatch) {
+        convert_binary_to_default_order(binary, binary->input(1), left, reorders,
+                                        transposes_to_delete);
+      }
     }
   }
 }

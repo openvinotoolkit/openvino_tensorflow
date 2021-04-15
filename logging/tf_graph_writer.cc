@@ -14,7 +14,12 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/public/version.h"
+#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#include "tensorflow/core/common_runtime/graph_constructor.h"
+#else
 #include "tensorflow/core/graph/graph_constructor.h"
+#endif
 #include "tensorflow/core/lib/strings/str_util.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/env.h"

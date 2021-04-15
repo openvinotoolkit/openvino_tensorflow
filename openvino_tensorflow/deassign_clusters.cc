@@ -191,9 +191,13 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = 6;
-    if ((num_nodes_marked_before_deassign >> 5) > min_non_trivial_nodes) {
-        min_non_trivial_nodes = (num_nodes_marked_before_deassign >> 5);
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
+    int avg_nodes_marked_before_deassign = num_nodes_marked_before_deassign/cluster_map.size();
+    if (min_non_trivial_nodes < avg_nodes_marked_before_deassign*2) {
+      min_non_trivial_nodes >>= 2;
+    }
+    if (min_non_trivial_nodes < 6) {
+      min_non_trivial_nodes = 6;
     }
     if (std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
       min_non_trivial_nodes =

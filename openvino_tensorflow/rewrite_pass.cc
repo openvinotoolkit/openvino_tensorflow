@@ -102,10 +102,22 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     std::string device;
     BackendManager::GetBackendName(device);
     const char* device_id(device.c_str());
-    std::string ov_version = "2021.2";
+    std::string ov_version;
+    #if defined(OPENVINO_2021_2)
+      ov_version = "2021.2";
+    #else if defined(OPENVINO_2021_3)
+      ov_version = "2021.3";
+    #endif
+
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
     std::set<std::string> disabled_ops_set = api::GetDisabledOps();
+    if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
+      std::vector<std::string> batched_disabled_ops = {"Shape"};
+      for (int i=0; i<batched_disabled_ops.size(); i++) {
+        disabled_ops_set.insert(batched_disabled_ops[i]);
+      }
+    }
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void *> nodes_list = FC.MarkSupportedNodes();
 

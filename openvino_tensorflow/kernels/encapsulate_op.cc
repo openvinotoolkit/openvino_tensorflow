@@ -17,7 +17,12 @@
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/public/version.h"
+#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#include "tensorflow/core/common_runtime/graph_constructor.h"
+#else
 #include "tensorflow/core/graph/graph_constructor.h"
+#endif
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
@@ -69,10 +74,10 @@ static Status ParseNodeAttributes(
       // right now _ovtf_ is used for optional attributes
       auto attr_name = itx.first;
       auto attr_value = itx.second.s();
-      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strlen("_ovtf_"))
+      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strnlen("_ovtf_", 6))
                      << " Value: " << attr_value;
       additional_attribute_map->insert(
-          {attr_name.substr(strlen("_ovtf_")), attr_value});
+          {attr_name.substr(strnlen("_ovtf_", 6)), attr_value});
     }
   }
   return Status::OK();
@@ -86,7 +91,6 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
-  NG_TRACE(oss.str(), name(), "");
 
   OVTF_VLOG(1) << "NGraphEncapsulateOp: " << m_cluster_id
                  << " Name: " << name();
@@ -181,7 +185,6 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
 NGraphEncapsulateOp::~NGraphEncapsulateOp() {
   std::ostringstream oss;
   oss << "Destroy Encapsulate_" << m_cluster_id << ": " << name();
-  NG_TRACE(oss.str(), name(), "");
   OVTF_VLOG(2) << "~NGraphEncapsulateOp::" << name();
   m_ng_exec_map.clear();
 }
@@ -190,7 +193,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Compute using executor " << name();
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
-  NG_TRACE(oss.str(), name(), "");
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                  << m_cluster_id;
 
@@ -210,7 +212,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   std::shared_ptr<Executable> ng_exec;
   int step_id;
   {
-    NG_TRACE("FunctionMaybeCreate", name(), "");
     for (int i = 0; i < ctx->num_inputs(); i++) {
       tf_input_tensors.push_back(ctx->input(i));
     }
@@ -235,7 +236,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   vector<shared_ptr<ngraph::runtime::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
   {
-    NG_TRACE("Input: maybe create", name(), "");
     // Allocate tensors for input arguments.
     for (int i = 0; i < tf_input_tensors.size(); i++) {
       ngraph::Shape ng_shape(tf_input_tensors[i].shape().dims());
@@ -278,14 +278,17 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
   int j = 0;
+#if defined(OPENVINO_2021_2)
   if(device != "MYRIAD" && device != "HDDL"){
+#else
+  if(device != "HDDL"){
+#endif
     for (auto i = 0; i < ng_result_list.size(); i++) {
       auto ng_element = ng_result_list[i];
-      if (ng_element->get_output_partial_shape(0).is_dynamic()) {
-        OVTF_VLOG(4)
-            << "NGraphEncapsulateOp::Compute skipping output allocation for "
-              "dynamic tensor at index"
-            << i;
+      if(ng_element->get_output_partial_shape(0).is_dynamic()) {
+        OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute skipping output allocation for "
+          "dynamic tensor at index"
+        << i;
         dyn_shape_tensors.push_back(i);
         output_mappings[i] = j;
         j++;
@@ -301,27 +304,29 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-      // Make sure the nGraph-inferred element type agrees with what TensorFlow
-      // expected.
+      //Make sure the nGraph-inferred element type agrees with what TensorFlow
+      // expected
       ngraph::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
       OP_REQUIRES_OK(
-          ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
-                                                  &expected_elem_type));
+        ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
+                                                &expected_elem_type));
       OP_REQUIRES(
-          ctx, ng_element_type == expected_elem_type,
-          errors::Internal("Element type inferred by nGraph does not match "
-                          "the element type expected by TensorFlow"));
+        ctx, ng_element_type == expected_elem_type,
+        errors::Internal("Element type inferred by nGraph does not match "
+                         "the element type expected by TensorFlow"));
+
+
       #if TF_VERSION < 2
-        ng_outputs[i] =
-          make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
+        ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
+
       #else
-        ng_outputs[i] =
-          make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
+        ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
       #endif
+
       if (!(ng_shape.size() > 0 && ng_shape[0] == 0)) {
-          output_mappings[i] = j;
-          ng_func_outputs[j++] = ng_outputs[i];
+        output_mappings[i] = j;
+        ng_func_outputs[j++] = ng_outputs[i];
       }
     }
   }
@@ -333,7 +338,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   // Execute the nGraph function.
   int time_execute_function;
   {
-    NG_TRACE("Execute nGraph", name(), "");
     Timer execute_function;
     {
       OVTF_VLOG(4)
@@ -354,11 +358,16 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
     time_execute_function = execute_function.ElapsedInMS();
   }
-  if(device != "MYRIAD" && device != "HDDL"){
+
+#if defined(OPENVINO_2021_2)
+  if(device != "MYRIAD" && device != "HDDL") {
+#else
+  if(device != "HDDL") {
+#endif
     for (auto i : dyn_shape_tensors) {
       OP_REQUIRES(ctx, output_mappings[i] != -1,
               errors::Internal("Mapping error while "
-                               "reading dynamic output blob"));
+                                "reading dynamic output blob"));
       auto ng_output = ng_func_outputs[output_mappings[i]];
       // Create the TF output tensor
       auto ng_shape = ng_output->get_shape();
@@ -435,7 +444,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
   }
 
-  long vm, rss;
+  long vm=0, rss=0;
   util::MemoryProfile(vm, rss);
   OVTF_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
                  << " Step_ID: " << step_id << " Cluster: " << name()
@@ -498,7 +507,7 @@ Status NGraphEncapsulateOp::GetExecutable(
   std::shared_ptr<ngraph::Function> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
-    long vm, rss, vm0, rss0;
+    long vm=0, rss=0, vm0=0, rss0=0;
     util::MemoryProfile(vm0, rss0);
 
     ng_result_list.clear();
@@ -523,7 +532,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     const char* cache_depth_specified =
         std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
-      m_function_cache_depth_in_items = atoi(cache_depth_specified);
+      m_function_cache_depth_in_items = (int) strtol(cache_depth_specified, NULL, 10);
     }
     if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
@@ -532,7 +541,6 @@ Status NGraphEncapsulateOp::GetExecutable(
       m_lru.pop_back();
     }  // cache eviction if cache size greater than cache depth
 
-    NG_TRACE("Compile nGraph", m_name, "");
     try {
       ng_exec = backend->Compile(ng_function);
     } catch (const std::exception& ex) {

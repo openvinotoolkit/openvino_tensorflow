@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 #include "gtest/gtest.h"
+#include <thread>
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
@@ -14,7 +15,12 @@
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/public/version.h"
+#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#include "tensorflow/core/common_runtime/graph_constructor.h"
+#else
 #include "tensorflow/core/graph/graph_constructor.h"
+#endif
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
 
