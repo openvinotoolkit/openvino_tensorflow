@@ -74,18 +74,26 @@ function removeFromOtherRow(div)
         document.getElementById('option-hddl-yes').classList.add('selected');
         document.getElementById('option-hddl-no').classList.remove('selected');
     }
-    // Blurr Effect when openvino/tensorflow is selected
-    // if(document.getElementById('option-byo-tfov').classList.contains('selected'))
-    // {
-    //     document.getElementById('option-hddl-no').classList.add('blur');
-    //     document.getElementById('option-hddl-yes').classList.add('blur');
-    // }
-    // else
-    // {
-    //     document.getElementById('option-hddl-no').classList.remove('blur');
-    //     document.getElementById('option-hddl-yes').classList.remove('blur');
-    // }
-
+    if(div.id=='option-distro-source' && document.getElementById('option-byo-tensorflow').classList.contains('selected')&&document.getElementById('option-hddl-no').classList.contains('selected'))
+    {
+        document.getElementById('option-byo-none').classList.add('selected');
+        document.getElementById('option-byo-tensorflow').classList.remove('selected');
+    }
+    if(div.id=='option-byo-tensorflow' && document.getElementById('option-distro-source').classList.contains('selected')&&document.getElementById('option-hddl-no').classList.contains('selected'))
+    {
+        document.getElementById('option-distro-pip').classList.add('selected');
+        document.getElementById('option-distro-source').classList.remove('selected');
+    }
+    if(div.id=='option-distro-source' && document.getElementById('option-byo-tensorflow').classList.contains('selected')&&document.getElementById('option-hddl-no').classList.contains('selected'))
+    {
+        document.getElementById('option-distro-pip').classList.add('selected');
+        document.getElementById('option-distro-source').classList.remove('selected');
+    }
+    if(div.id=='option-hddl-no' && document.getElementById('option-byo-tensorflow').classList.contains('selected')&&document.getElementById('option-distro-source').classList.contains('selected'))
+    {
+        document.getElementById('option-byo-none').classList.add('selected');
+        document.getElementById('option-byo-tensorflow').classList.remove('selected');
+    }
 }
 function removeSameRow(div)
 {
