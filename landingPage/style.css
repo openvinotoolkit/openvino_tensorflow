@@ -1,0 +1,48 @@
+.title-block{
+    border: 2px solid rgb(255, 255, 255);
+    text-align: center;
+    font-weight: 500;
+    font-size: larger;
+    background-color: rgb(212, 212, 212);
+    padding-top: 10px;
+    min-height: 60px;
+    /* cursor: auto; */
+}
+.lead{
+    font-weight: bolder;
+}
+
+.display-4{
+    padding-top: 10px;
+}
+.jumbotron{
+    background-color:rgb(119, 172, 241);
+    border-bottom: solid;
+}
+.container{
+    font-size: medium;
+    font-weight: 400;
+}
+.row{
+    display: flex;
+}
+.col-sm:hover{
+    /* background-color: rgb(182, 181, 181); */
+    cursor: pointer;
+    border: 2px solid rgb(24, 1, 1);
+}
+.selected{
+    background-color: #6727F2;
+    /* #6C24F4; */
+    color: #ffffff;
+    
+}
+#command-area:hover{
+    background-color:  rgb(212, 212, 212);
+    border: 2px solid rgb(255, 255, 255);
+    cursor: auto;
+}
+.col-sm-2{
+    background-color: rgb(119, 172, 241);
+    text-align: center;
+}
