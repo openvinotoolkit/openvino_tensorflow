@@ -1,18 +1,18 @@
 
 const combination = new Map([
-    ["000000","pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/tensorflow-abi1.whl , pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/openvino-tensorflow-abi1.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source /opt/intel/openvino_2021.3.394/bin/setupvars.sh"
+    ["000000","pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/tensorflow-abi1.whl , pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/openvino-tensorflow-abi1.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
 ["000001","pip install tensorflow , pip install openvino-tensorflow"
 ],
 ["010001","pip install openvino-tensorflow"
 ],
-["100000","pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/tensorflow-abi1.whl , pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/openvino-tensorflow-abi1.whl , source /opt/intel/openvino_2021.3.394/bin/setupvars.sh"
+["100000","pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/tensorflow-abi1.whl , pip install https://github.com/openvinotoolkit/openvino_tensorflow/releases/openvino-tensorflow-abi1.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
-["000010"," Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline ,python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.3.394/"
+["000010"," Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline ,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR"
 ],
 ["000011","python3 build_ovtf.py"
 ],
-["100010","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.3.394/"
+["100010","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR"
 ],
 ["100011","python3 build_ovtf.py"
 ]
