@@ -13,7 +13,7 @@ This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integ
 **Check version numbers**
 |Using pre-built packages| Building from source|
 | -----------------------|-------------------|
-|Python 3.6, 3.7, or 3.8| Python 3.6|
+|Python 3.6, 3.7, or 3.8| Python 3.6, 3.7, or 3.8|
 |TensorFlow v2.4.1|GCC 7.5 (Ubuntu 18.04)|
 |        |cmake >= 3.14|
 |        |Bazelisk v1.7.5|

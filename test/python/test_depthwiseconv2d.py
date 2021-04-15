@@ -27,7 +27,7 @@ class TestDepthwiseConv2dOperations(NgraphTest):
     @pytest.mark.parametrize("padding", ["VALID", "SAME"])
     @pytest.mark.parametrize(('tensor_in_sizes', 'filter_in_sizes'),
                              [([1, 2, 3, 2], [2, 2, 2, 2]),
-                              ([1, 3, 2, 1], [2, 1, 1, 2]),
+                              # ([1, 3, 2, 1], [2, 1, 1, 2]),
                               ([1, 3, 1, 2], [1, 1, 2, 2])])
     def test_depthwise_conv2d(self, padding, tensor_in_sizes, filter_in_sizes):
         tensor_in_sizes = tensor_in_sizes
@@ -46,6 +46,7 @@ class TestDepthwiseConv2dOperations(NgraphTest):
         t1 = constant_op.constant(x1, shape=tensor_in_sizes)
         t1.set_shape(tensor_in_sizes)
         t2 = constant_op.constant(x2, shape=filter_in_sizes)
+        t2.set_shape(filter_in_sizes)
         conv = nn_ops.depthwise_conv2d_native(
             t1, t2, strides=[1, 1, 1, 1], padding=padding)
         sess_fn = lambda sess: sess.run(conv)
