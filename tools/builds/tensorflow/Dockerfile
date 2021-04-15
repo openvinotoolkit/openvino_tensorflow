@@ -3,10 +3,6 @@
 
 FROM gcr.io/tensorflow-testing/nosla-cuda10.1-cudnn7-ubuntu16.04-manylinux2010-multipython
 
-ENV ftp_proxy=http://proxy-chain.intel.com:911
-ENV http_proxy=http://proxy-chain.intel.com:911
-ENV https_proxy=http://proxy-chain.intel.com:912
-ENV no_proxy=localhost,127.0.0.1/8,.intel.com,.ka.intel.com,10.217.0.0/8
 ENV IS_NIGHTLY=0
 ENV TF_NEED_CUDA=0
 ENV TF_NEED_ROCM=0
