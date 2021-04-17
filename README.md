@@ -21,7 +21,7 @@ Please visit [__*Installation Table*__](https://openvinotoolkit.github.io/openvi
 
 ### Use OpenVINO™ integration with TensorFlow alongside PyPi TensorFlow
 
-This OpenVINO™ integration with TensorFlow package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+This OpenVINO™ integration with TensorFlow package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
 
 
         pip3 install -U pip==21.0.1
