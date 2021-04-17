@@ -124,7 +124,10 @@ function commandArea()
     console.log(mapping);
     if(!command)
     {
-        area.innerHTML = "Choose Features/Invalid Option";
+      let invalidConfig = document.createElement('b');
+      invalidConfig.innerHTML = "Please click the appropriate configuration in the above interactive table to display the right command";
+      area.innerHTML = "";
+      area.appendChild(invalidConfig);
     }
     else
     {
