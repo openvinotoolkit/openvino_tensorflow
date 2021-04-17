@@ -1,6 +1,10 @@
-# Intel<sup>®</sup> OpenVINO™ integration with TensorFlow
+# OpenVINO™ integration with TensorFlow
 
-This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow, a product needed to enable Intel<sup>®</sup> OpenVINO™ runtime and optimizations for TensorFlow. Intel<sup>®</sup> OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as Intel CPUs, Intel integrated GPUs, Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL.
+This repository contains the source code of OpenVINO™ integration with TensorFlow, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel<sup>®</sup> silicon such as:
+- Intel<sup>®</sup> CPUs 
+- Intel<sup>®</sup> integrated GPUs 
+- Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs) - referred as VPU
+- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL.
 
 ## Installation
 
@@ -11,9 +15,9 @@ This repository contains the source code of Intel<sup>®</sup> OpenVINO™ integ
 
 ### Use Pre-Built Packages
 
-Intel<sup>®</sup> OpenVINO™ integration with TensorFlow package built with CXX11_ABI=0 is compatible with PyPi TensorFlow package 2.4.1. This OpenVINO integration with TensorFlow package comes with prebuilt libraries of OpenVINO version 2021.3. The users do not have to install OpenVINO separately. This package supports Intel CPUs, Intel integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+OpenVINO™ integration with TensorFlow package built with CXX11_ABI=0 is compatible with PyPi TensorFlow package 2.4.1. This OpenVINO™ integration with TensorFlow package comes with prebuilt libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
-To use Intel<sup>®</sup> OpenVINO™ integration with TensorFlow with pre-installed OpenVINO binaries, please visit this page for detailed instructions: ([OpenVINO integration with TensorFlow - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md))
+To use OpenVINO™ integration with TensorFlow with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([OpenVINO™ integration with TensorFlow - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md))
 
 Below are the steps needed to use the packages built with CXX11_ABI=0
 
@@ -53,7 +57,7 @@ This command runs all C++ and Python unit tests from the `openvino_tensorflow` s
 
 ## Usage
 
-Once you have installed Intel<sup>®</sup> OpenVINO™ integration with TensorFlow, you can use TensorFlow to run inference using a trained model.
+Once you have installed OpenVINO™ integration with TensorFlow, you can use TensorFlow to run inference using a trained model.
 The only change required to a script is adding
 
     import openvino_tensorflow
@@ -66,7 +70,7 @@ By default, CPU backend is enabled. You can substitute the default CPU backend w
 
     openvino_tensorflow.set_backend('backend_name')
 
-More detailed examples on how to use OpenVINO integration with TensorFlow are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+More detailed examples on how to use OpenVINO™ integration with TensorFlow are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
 ## Support
 
@@ -74,7 +78,7 @@ Please submit your questions, feature requests and bug reports via [**GitHub iss
 
 ## How to Contribute
 
-We welcome community contributions to Intel<sup>®</sup> OpenVINO™ integration with TensorFlow. If you have an idea for how to 
+We welcome community contributions to OpenVINO™ integration with TensorFlow. If you have an idea for how to 
 improve it:
 
 * Share your proposal via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
@@ -84,4 +88,5 @@ improve it:
 * We will review your contribution and, if any additional fixes or
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
+* All guidelines for contributing to the OpenVINO repositories can be found [here](https://github.com/openvinotoolkit/openvino/wiki/Contribute)
 

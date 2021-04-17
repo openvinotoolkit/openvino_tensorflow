@@ -1,10 +1,10 @@
-# Architecture of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow
+# Architecture of OpenVINO™ integration with TensorFlow
 
-This document describes the high-level architecture of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow (OVTF). This OVTF is registered as a graph optimization pass in TensorFlow and optimizes the execution of supported operator clusters using Intel<sup>®</sup> OpenVINO™ runtime. Unsupported operators fall back to native TensorFlow runtime.
+This document describes the high-level architecture of OpenVINO™ integration with TensorFlow (OVTF). This OVTF is registered as a graph optimization pass in TensorFlow and optimizes the execution of supported operator clusters using OpenVINO™ runtime. Unsupported operators fall back to native TensorFlow runtime.
 
 ## Architecture Diagram
 
-The below diagram shows the high level architecture of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow. We broadly categorize the software stack into different modules as shown below. The purple box at the bottom shows the components of Intel<sup>®</sup> OpenVINO™ including different device plugins along with the corresponding libraries.
+The below diagram shows the high level architecture of OpenVINO™ integration with TensorFlow. We broadly categorize the software stack into different modules as shown below. The purple box at the bottom shows the components of OpenVINO™ including different device plugins along with the corresponding libraries.
 
 <p align="center">
   <img src="../images/openvino_tensorflow_architecture.png" width="450">

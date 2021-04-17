@@ -7,8 +7,8 @@
 This repository contains the source code of OpenVINO™ integration with TensorFlow, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as:  
 - Intel<sup>®</sup> CPUs 
 - Intel<sup>®</sup> integrated GPUs
-- Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units - referred as VPU 
-- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius<sup>TM</sup> MyriadX VPUs - referred as VAD-M or HDDL
+- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU 
+- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
   
 ## Installation
 ### Pre-requisites
@@ -17,11 +17,11 @@ This repository contains the source code of OpenVINO™ integration with TensorF
 - Python 3.6, 3.7, or 3.8
 - TensorFlow v2.4.1
 
-Please visit [__*Installation Table*__](https://openvinotoolkit.github.io/openvino_tensorflow/) for all the options
+Check [__*Installation Table*__](https://openvinotoolkit.github.io/openvino_tensorflow/) for all the options
 
 ### Use OpenVINO™ integration with TensorFlow alongside PyPi TensorFlow
 
-This OpenVINO™ integration with TensorFlow package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius<sup>TM</sup> Vision Processing Units (VPUs).
+This OpenVINO™ integration with TensorFlow package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
 
         pip3 install -U pip==21.0.1
