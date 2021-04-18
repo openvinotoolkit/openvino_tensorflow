@@ -1,15 +1,10 @@
 # Installation and Build Options
-## Pre-requisites
+## Prerequisites
 
-|Use pre-built packages| Build from source|
-| -----------------------|-------------------|
-|Python 3.6, 3.7, or 3.8| Python 3.6, 3.7, or 3.8|
-|TensorFlow v2.4.1|GCC 7.5 (Ubuntu 18.04)|
-|        |cmake 3.14 or higher|
-|        |Bazelisk v1.7.5|
-|        |virtualenv 16.0.0+|
-|        |patchelf 0.9|
-  
+|Build Type| Requirements|
+|:-----------------------|-------------------|
+|Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.4.1|
+|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9|
 
 ## Use Pre-Built Packages
 

@@ -11,7 +11,7 @@ This repository contains the source code of OpenVINO™ integration with TensorF
 - Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
   
 ## Installation
-### Pre-requisites
+### Prerequisites
 
 - Ubuntu 18.04
 - Python 3.6, 3.7, or 3.8
@@ -29,7 +29,7 @@ This OpenVINO™ integration with TensorFlow package comes with pre-built librar
         pip3 install openvino-tensorflow
 
 
-For more details on other modes of installation, please refer to [build.md](docs/BUILDS.md)
+For more details on other modes of installation, please refer to [BUILD.md](docs/BUILDS.md)
 
 
 ## Usage
