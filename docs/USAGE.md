@@ -1,6 +1,6 @@
-# Usage of Intel<sup>®</sup> OpenVINO™ integration with TensorFlow
+# Usage of OpenVINO™ integration with TensorFlow
 
-This document describes the available Python APIs for Intel<sup>®</sup> OpenVINO™ integration with TensorFlow. The first section describes the essential APIs and lines of code required to use the functionality of OpenVINO integration with TensorFlow applications.
+This document describes the available Python APIs for OpenVINO™ integration with TensorFlow. The first section describes the essential APIs and lines of code required to use the functionality of OpenVINO integration with TensorFlow applications.
 
 ## APIs for essential functionality 
 
