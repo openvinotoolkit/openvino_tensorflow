@@ -4,11 +4,11 @@
 
 # OpenVINO™ integration with TensorFlow
 
-This repository contains the source code of OpenVINO™ integration with TensorFlow, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel silicon such as:  
+This repository contains the source code of OpenVINO™ integration with TensorFlow, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel<sup>®</sup> silicon such as:  
 - Intel<sup>®</sup> CPUs 
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU 
-- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
+- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
   
 ## Installation
 ### Prerequisites
@@ -29,7 +29,7 @@ This OpenVINO™ integration with TensorFlow package comes with pre-built librar
         pip3 install openvino-tensorflow
 
 
-For more details on other modes of installation, please refer to [BUILD.md](docs/BUILDS.md)
+For more details on other modes of installation, please refer to [BUILD.md](docs/BUILD.md)
 
 
 ## Usage
