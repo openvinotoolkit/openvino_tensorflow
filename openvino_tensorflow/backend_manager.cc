@@ -113,6 +113,5 @@ vector<string> BackendManager::GetSupportedBackends() {
   }
   return devices;
 }
-  // return core.GetAvailableDevices();
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
