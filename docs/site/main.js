@@ -125,7 +125,7 @@ function commandArea()
     if(!command)
     {
       let invalidConfig = document.createElement('b');
-      invalidConfig.innerHTML = "Please click the required configuration in the interactive table to display the right command for installation";
+      invalidConfig.innerHTML = "";
       area.innerHTML = "";
       area.appendChild(invalidConfig);
     }

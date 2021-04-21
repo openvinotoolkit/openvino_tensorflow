@@ -125,7 +125,7 @@ Alternatively, you can also install the TensorFlow and **OpenVINO™ integration
 
 Verify that `openvino-tensorflow` is installed correctly:
 
-    python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+    python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
                 import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
 This will produce something like this:

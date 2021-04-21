@@ -13,31 +13,20 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 - Python 3.6, 3.7, or 3.8
 - TensorFlow 2.4.1
 
-### Use Pre-Built Packages
+### Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-**OpenVINO™ integration with TensorFlow** package built with CXX11_ABI=0 is compatible with PyPi TensorFlow package 2.4.1. This **OpenVINO™ integration with TensorFlow** package comes with prebuilt libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
-To use **OpenVINO™ integration with TensorFlow** with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([**OpenVINO™ integration with TensorFlow** - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md))
+        pip3 install -U pip==21.0.1
+        pip3 install -U tensorflow==2.4.1
+        pip3 install openvino-tensorflow
 
-Below are the steps needed to use the packages built with CXX11_ABI=0
-
-1. Ensure the following pip version is being used:
-
-        pip install --upgrade pip==21.0.1
-
-2. Install `TensorFlow`:
-
-        pip install -U tensorflow==2.4.1
-      
-3. Install `openvino-tensorflow`:
-
-        pip install openvino-tensorflow
-
+To use **OpenVINO™ integration with TensorFlow** with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([**OpenVINO™ integration with TensorFlow** - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md))
 ## Verify Installation
 
 Verify that `openvino-tensorflow` installed correctly:
 
-    python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+    python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
                 import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
 This will produce something like this:
@@ -72,6 +61,11 @@ By default, CPU backend is enabled. You can substitute the default CPU backend w
 
 More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
+## License
+**OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/LICENSE).
+By contributing to the project, you agree to the license and copyright terms therein
+and release your contribution under these terms.  
+
 ## Support
 
 Please submit your questions, feature requests and bug reports via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
@@ -89,4 +83,3 @@ improve it:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 * All guidelines for contributing to the OpenVINO repositories can be found [here](https://github.com/openvinotoolkit/openvino/wiki/Contribute)
-
