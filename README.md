@@ -39,20 +39,21 @@ For the installation process, go to [BUILD.md](docs/BUILD.md).
 
 ## Usage
 
-Once you have installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
-The only change required to a script is adding
+Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
+
+To do so, run 'python3' in the command line. When you start the interactive prompt, enter the command below to import **OpenVINO™ integration with TensorFlow**.
 
     import openvino_tensorflow
 
-By default, CPU backend is enabled. You can substitute the default CPU backend with a different backend by using the following API:
+By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware inferencing is done on.  
 
     openvino_tensorflow.set_backend('backend_name')
 
-To determine what backends are available on your system, use the following API:
+To determine what processing units are available on your system for inference, use the following function:
 
     openvino_tensorflow.list_backends()
 
-More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+To see what you can do with **OpenVINO™ integration with TensorFlow**, test ride demos located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
 ## License
 **OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](LICENSE).
