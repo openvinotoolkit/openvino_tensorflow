@@ -2,9 +2,9 @@
   <img src="images/openvino.png">
 </p>
 
-# OpenVINO™ integration with TensorFlow
+# **OpenVINO™ integration with TensorFlow**
 
-This repository contains the source code of OpenVINO™ integration with TensorFlow, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. OpenVINO™ integration with TensorFlow enables acceleration of AI inferencing across almost all imaginable use cases, using a variety of AI models, on a variety of Intel<sup>®</sup> silicon such as:  
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. **OpenVINO™ integration with TensorFlow** enables acceleration of AI inferencing across a vast number of use cases, using a variety of AI models, on a variety of Intel<sup>®</sup> silicon such as:  
 - Intel<sup>®</sup> CPUs 
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU 
@@ -19,9 +19,9 @@ This repository contains the source code of OpenVINO™ integration with TensorF
 
 Check [__*Installation Table*__](https://openvinotoolkit.github.io/openvino_tensorflow/) for all the options
 
-### Use OpenVINO™ integration with TensorFlow alongside PyPi TensorFlow
+### Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This OpenVINO™ integration with TensorFlow package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
 
         pip3 install -U pip==21.0.1
@@ -34,7 +34,7 @@ For more details on other modes of installation, please refer to [BUILD.md](docs
 
 ## Usage
 
-Once you have installed OpenVINO™ integration with TensorFlow, you can use TensorFlow to run inference using a trained model.
+Once you have installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
 The only change required to a script is adding
 
     import openvino_tensorflow
@@ -47,10 +47,10 @@ To determine what backends are available on your system, use the following API:
 
     openvino_tensorflow.list_backends()
 
-More detailed examples on how to use OpenVINO™ integration with TensorFlow are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
 ## License
-OpenVINO™ integration with TensorFlow is licensed under [Apache License Version 2.0](LICENSE).
+**OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](LICENSE).
 By contributing to the project, you agree to the license and copyright terms therein
 and release your contribution under these terms.  
 
@@ -60,7 +60,7 @@ Please submit your questions, feature requests and bug reports via [**GitHub iss
 
 ## How to Contribute
 
-We welcome community contributions to OpenVINO™ integration with TensorFlow. If you have an idea for how to 
+We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for how to 
 improve it:
 
 * Share your proposal via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
