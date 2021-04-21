@@ -1,6 +1,8 @@
-# Intel<sup>®</sup> OpenVINO™ integration with TensorFlow Documentation
+# OpenVINO™ integration with TensorFlow Documentation
 
-[Introduction and Build instructions](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md)
+[Introduction](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md)
+
+[Build Instructions](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/BUILD.md)
 
 [High Level Architecture](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/ARCHITECTURE.md)
 

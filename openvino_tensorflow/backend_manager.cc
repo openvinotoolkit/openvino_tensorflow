@@ -81,7 +81,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
   const char* env = std::getenv("OPENVINO_TF_BACKEND");
   // Checkmarx fix. Array of max length MYRIAD.
   char backendName[6];
-  
+
   if (env != nullptr) {
     strncpy((char*)backendName, env, sizeof(backendName));
     backend_name = std::string(backendName);
@@ -105,8 +105,13 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 // Returns the supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
   InferenceEngine::Core core;
-  return core.GetAvailableDevices();
+  auto devices = core.GetAvailableDevices();
+  auto pos = find(devices.begin(), devices.end(), "HDDL");
+  if(pos != devices.end()) {
+    devices.erase(pos);
+    devices.push_back("VAD-M");
+  }
+  return devices;
 }
-
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
