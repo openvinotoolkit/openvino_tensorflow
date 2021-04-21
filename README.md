@@ -17,11 +17,14 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 - Python 3.6, 3.7, or 3.8
 - TensorFlow v2.4.1
 
-Check [__*Installation Table*__](https://openvinotoolkit.github.io/openvino_tensorflow/) for all the options
+Check our [__Interactive Installation Table__](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
-### Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
+### Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. You don't have to install OpenVINO™ separately. This package supports: 
+- Intel<sup>®</sup> CPUs
+- Intel<sup>®</sup> integrated GPUs
+- Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
 
         pip3 install -U pip==21.0.1
@@ -29,7 +32,9 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
         pip3 install openvino-tensorflow
 
 
-For more details on other modes of installation, please refer to [BUILD.md](docs/BUILD.md)
+If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit. 
+
+For the installation process, go to [BUILD.md](docs/BUILD.md). 
 
 
 ## Usage
@@ -56,18 +61,15 @@ and release your contribution under these terms.
 
 ## Support
 
-Please submit your questions, feature requests and bug reports via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
+Submit your questions, feature requests and bug reports via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 
 ## How to Contribute
 
-We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for how to 
-improve it:
+We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for improvement:
 
 * Share your proposal via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
-* Ensure you can build the product and run all the examples with your patch.
-* In the case of a larger feature, create a test.
 * Submit a [**pull request**](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
-* We will review your contribution and, if any additional fixes or
-  modifications are necessary, may provide feedback to guide you. When
-  accepted, your pull request will be merged to the repository.
-* All guidelines for contributing to the OpenVINO repositories can be found [here](https://github.com/openvinotoolkit/openvino/wiki/Contribute)
+
+We will review your contribution. If any additional fixes or modifications are necessary, we will guide you and provide you with feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your patch (**what is this patch?**). If you you want to introduce a large feature, test it. Upon our verification of your pull request, we will merge it to the repository provided that the PR has met our approval.  
+
+You can find all the guidelines for contributing to the OpenVINO repositories [here](https://github.com/openvinotoolkit/openvino/wiki/Contribute)
