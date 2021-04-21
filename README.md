@@ -37,11 +37,11 @@ If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-
 For the installation process, go to [BUILD.md](docs/BUILD.md). 
 
 
-## Usage
+## Get started 
 
 Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
 
-To do so, run 'python3' in the command line. When you start the interactive prompt, enter the command below to import **OpenVINO™ integration with TensorFlow**.
+To do so, run ''python3'' in the command line. When you start the interactive prompt, enter the command below to import **OpenVINO™ integration with TensorFlow**.
 
     import openvino_tensorflow
 
