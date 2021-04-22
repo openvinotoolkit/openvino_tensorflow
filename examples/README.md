@@ -1,25 +1,33 @@
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Demos
 
-These examples show how to use Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow to recognize  and detect objects in images.
+These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images.
 
-## Description
+## AI models leveraged in the demos
 
-* Classification demo uses Google Inception V3 model to classify a given image.
-* Object detection demo uses Yolo V3 model to detect objects in a given image.
+* Classification demo uses Google's Inception v3 model to classify a given image.
+* Object detection demo uses YOLOv3 model to detect objects in a given image.
 
 ## Python implementation for classification 
 
-This example assumes that you have already:  
+For this example, we assume that you've already:  
 
 * Installed TensorFlow on your system 
-* Installed OpenVINO integration with Tensorflow on your system
+* Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
+
 * Please refer to [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#use-pre-built-packages) for more details about pre-built packages.
 
-The TensorFlow `GraphDef` that contains the model definition and weights is not packaged in the repo because of its size. So, you must first download the file to the `data` directory in the source tree:
+Before you procede to running the classification demo, you will have to clone the `open_vino repository` to your local machine. 
+
+```bash
+$ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+```
+
+Download Inception v3 model. 
+The TensorFlow [`GraphDef`](https://stackoverflow.com/questions/47059848/difference-between-tensorflows-graph-and-graphdef) which contains the model definition and weights is not packaged in the repo because of its size. So, you must first download the file to the `data` directory in your cloned repo of `openvino_tensorflow` and extract the file:
 
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
-  tar -C <path-to-openvino_tensorflow>/examples/data -xz
+  tar -C <path-to-your-cloned-openvino_tensorflow-repository>/examples/data -xz
 ```
 
 Once extracted, the data folder will have two new files:
@@ -27,20 +35,17 @@ Once extracted, the data folder will have two new files:
 * imagenet_slim_labels.txt
 * inception_v3_2016_08_28_frozen.pb
 
-See the labels file in the data directory for the possible
-classifications, which are the 1,000 categories used in the Imagenet
-competition. 
+Open imagenet_slim_labels.txt to see the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition. 
 
 Now, you can run classification sample using the below instructions:
 
 
 ```bash
-$ cd <path-to-openvino_tensorflow>
+$ cd <path-to-your-cloned-openvino_tensorflow-repository>
 $ python3 examples/classification_sample.py
 ```
 
-This uses the default example image that is shipped with this repo, and should
-output something similar as below:
+`classification_sample.py` does inference on the default example image that is shipped with this repo and should output something similar to:
 
 ```
 military uniform (653): 0.834306
@@ -50,17 +55,20 @@ pickelhaube (716): 0.00800814
 bulletproof vest (466): 0.00535091
 ```
 
-In this case, we're using the default image of Admiral Grace Hopper, and you can
-see the network correctly spots that she's wearing a military uniform, with a high
-score of 0.8.
+In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
-Next, try it out on your own images by supplying the --image= argument, e.g.
+Next, try it out on your own images by supplying the --image= argument to a directory where your new image resides. Python accepts both abolute and relative paths and it is up to you which one you give in the arguemnt  e.g.
 
 ```bash
-$ python3 examples/classification_sample.py --image=my_image.png
+$ python3 examples/classification_sample.py --image=<absolute-or-relative-path>/my_image.png
+```
+If you add the new image to the existing data directory in the openvino_tensorflow repository, it will look like this:
+
+```bash
+$ python3 examples/classification_sample.py --image=example/data/my_image.png
 ```
 
-To know more about different options to run on various backends , please use:
+For more options to run on various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/classification_sample.py --help
 ```
@@ -68,7 +76,7 @@ $ python3 examples/classification_sample.py --help
 
 This example assumes that you have already:  
 
-* Installed TensorFlow on your system 
+* Installed TensorFlow on your system
 * Installed OpenVINO integration with Tensorflow on your system
 * Please refer to [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#use-pre-built-packages) for more details about pre-built packages.
 
@@ -112,7 +120,7 @@ Next, try it out on your own images by supplying the --image= argument, e.g.
 $ python3 examples/object_detection_sample.py --image=my_image.png
 ```
 
-To know more about different options to run on various backends , please use:
+To know more about different options to run on various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/object_detection_sample.py --help
 ```
