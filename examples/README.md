@@ -14,7 +14,7 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system 
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-* Please refer to [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#use-pre-built-packages) for more details about pre-built packages.
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md) for more details about pre-built packages.
 
 Before you procede to running the classification demo, you will have to clone the `open_vino repository` to your local machine. 
 
@@ -74,17 +74,18 @@ $ python3 examples/classification_sample.py --help
 ```
 ## Python implementation for object detection
 
-This example assumes that you have already:  
+For this example, we assume that you've already:  
 
 * Installed TensorFlow on your system
-* Installed OpenVINO integration with Tensorflow on your system
-* Please refer to [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#use-pre-built-packages) for more details about pre-built packages.
+* Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
+
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md) for more details about pre-built packages.
 
 
-The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repo because of its size. So, you must first follow the below instructions to convert the model from DarkNet to TensorFlow and download the labels and weights in the `data` directory in the source tree:
+The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repo because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights in the `data` directory in the source tree:
 
 ```bash
-$ cd <path-to-openvino_tensorflow>/examples/data
+$ cd <path-to-your-cloned-openvino_tensorflow-repository>/examples/data
 $ git clone https://github.com/mystic123/tensorflow-yolo-v3.git
 $ cd tensorflow-yolo-v3
 $ git checkout ed60b90
