@@ -1,14 +1,14 @@
 # Usage of **OpenVINO™ integration with TensorFlow**
 
-This document describes the available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section describes the essential APIs and lines of code required to use the functionality of OpenVINO integration with TensorFlow applications.
+This document describes the available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section covers the essential APIs and commands required to enable OpenVINO integration with TensorFlow applications.
 
 ## APIs for essential functionality
 
-To add the OpenVINO-TensorFlow package to the TensorFlow python application, import the package using the below line of code:
+To add the package to your TensorFlow python application, run the following command:
 
     import openvino_tensorflow
 
-By default, CPU backend is enabled. You can substitute the default CPU backend with a different backend by using the following API:
+Backend engine is used to perform actual computations for network inference. By default, CPU backend is enabled. To change the default engine, use the following API:
 
     openvino_tensorflow.set_backend('backend_name')
 
@@ -32,7 +32,7 @@ To enable verbose logs of the execution of the full TensorFlow pipeline and plac
 
     openvino_tensorflow.start_logging_placement()
 
-To disbale verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO-TensorFlow, use the following API:
+To disbale the above verbose logs, use the following API:
 
     openvino_tensorflow.stop_logging_placement()
 
