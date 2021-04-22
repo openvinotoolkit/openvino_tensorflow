@@ -8,30 +8,35 @@
 
 ## Use Pre-Built Packages
 
-**OpenVINO™ integration with TensorFlow** has two releases: one built with CXX11_ABI=0 and another built with CXX11_ABI=1. Since TensorFlow packages available in PyPi are built with CXX11_ABI=0 and OpenVINO™ release packages are built with CXX11_ABI=1, binary releases of these packages cannot be installed together and used as is. Based on your needs, you can choose one of the two available methods:
+#### CXX11_ABI compatibility
+
+**OpenVINO™ integration with TensorFlow** has two releases: one built with CXX11_ABI=0 and another built with CXX11_ABI=1. Since TensorFlow packages available in [PyPi](pypi.org) are built with CXX11_ABI=0 and OpenVINO™ release packages include CXX11_ABI=1, binary releases of these packages cannot be installed or used commonly. Choose among the two available methods, as followed:
 
 - Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
-  (CXX11_ABI=0, no OpenVINO™ installation required, disables VAD-M support)
-  
+  (CXX11_ABI=0, no OpenVINO™ installation required, **disables** VAD-M support)
+
 - Use **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
-  (CXX11_ABI=1, needs a custom TensorFlow package, enables VAD-M support)
+  (CXX11_ABI=1, a custom TensorFlow package required, **enables** VAD-M support)
 
-### Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
+### **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package includes pre-built libraries of OpenVINO™ version 2021.3, which means that you do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
+To install the package, run the following commands:
 
         pip3 install -U pip==21.0.1
         pip3 install -U tensorflow==2.4.1
         pip3 install openvino-tensorflow
 
-### Use **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
+Depending on your setup, you may need to invoke Python with `-m pip` instead of running pip directly.
 
-This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.3. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M). 
+### **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
 
-Users can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or they can use the TensorFlow package that is provide below.
+This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.3. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs) and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M).
 
-1. Ensure the following pip version is being used:
+You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the following TensorFlow package:
+
+1. Ensure the required pip version is being used:
 
         pip3 install --upgrade pip==21.0.1
 
@@ -49,11 +54,11 @@ Users can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or they c
 
 3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.3 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit](https://software.intel.com/en-us/openvino-toolkit)).
 
-4. Initialize the OpenVINO™ environment by running the `setupvars.sh` present in <code>\<openvino\_install\_directory\>\/bin</code> using the below command:
+4. Initialize the OpenVINO™ environment by running the `setupvars.sh` from <code>\<openvino\_install\_directory\>\/bin</code> using the below command:
 
         source setupvars.sh
 
-3. Install `openvino-tensorflow`. Based on your Python version, use the appropriate package below:
+3. Install `openvino-tensorflow`. Based on your Python version, choose the appropriate package below:
 
         pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl
 
@@ -65,8 +70,6 @@ Users can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or they c
 
         pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-manylinux2014_x86_64.whl
 
-
-  
 ### Prebuilt packages summary
 
 |TensorFlow Package| **OpenVINO™ integration with TensorFlow** Package|Supported OpenVINO™ Flavor|Supported Hardware Backends|Comments|
@@ -74,7 +77,7 @@ Users can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or they c
 |tensorflow| openvino-tensorflow|OpenVINO™ built from source|CPU,GPU,MYRIAD|OpenVINO™ libraries are built from source and included in the wheel package|
 |tensorflow-abi1| openvino-tensorflow-abi1|Links to OpenVINO™ binary release|CPU,GPU,MYRIAD,VAD-M|**OpenVINO™ integration with TensorFlow** libraries links to OpenVINO™ binaries|
 
-  
+
 ## Build From Source
 Clone the `openvino_tensorflow` repo:
 
@@ -85,20 +88,19 @@ Clone the `openvino_tensorflow` repo:
 ### **OpenVINO™ integration with TensorFlow**
 Use one of the following build options based on the requirements
 
-1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source. 
+1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source.
 
         python3 build_ovtf.py
 
 2. Pulls compatible prebuilt TF package from PyPi. Uses OpenVINO™ binary.
 
         python3 build_ovtf.py –use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1
-    
 
-3. Pulls and builds TF and OpenVINO™ from source 
+3. Pulls and builds TF and OpenVINO™ from source.
 
         python3 build_ovtf.py --build_tf_from_source
 
-4. Pulls and builds TF from Source. Uses OpenVINO™ binary. 
+4. Pulls and builds TF from Source. Uses OpenVINO™ binary.
 
         python3 build_ovtf.py –build_tf_from_source –use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1
 
@@ -106,29 +108,29 @@ Use one of the following build options based on the requirements
 
         python3 build_ovtf.py –use_tensorflow_from_location=/path/to/tensorflow/build/
 
-6. Uses prebuilt TF from the given location ([refer the Tensorflow build instructions](#tensorflow)). Uses OpenVINO™ binary. This is only compatible with ABI1 built TF.
+6. Uses prebuilt TF from the given location ([refer the Tensorflow build instructions](#tensorflow)). Uses OpenVINO™ binary. This is **the only compatible with ABI1 built TF**.
 
         python3 build_ovtf.py –use_tensorflow_from_location=/path/to/tensorflow/build/  –use_openvino_from_location=/opt/intel/openvino_2021/ --cxx11_abi_version=1
 
-Select the help option of `build_ovtf.py` script to learn more about various build options. 
-        
+Select the `help` option from `build_ovtf.py` script to learn more about various build options.
+
         python3 build_ovtf.py --help
 
 #### Verification
-When the build finishes, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (ex: the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory. 
+When the build is finished, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (ex: the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are located in the `build_cmake/artifacts/` directory.
 
-To use `openvino-tensorflow`, activate the following `virtualenv` to start using **OpenVINO™ integration with TensorFlow**. 
+Activate the following `virtualenv` to start using **OpenVINO™ integration with TensorFlow**.
 
         source build_cmake/venv-tf-py3/bin/activate
- 
-Alternatively, you can also install the TensorFlow and **OpenVINO™ integration with TensorFlow** outside of a `virtualenv`. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifacts/tensorflow` directories, respectively.
 
-Verify that `openvino-tensorflow` is installed correctly:
+Alternatively, you may install the TensorFlow and **OpenVINO™ integration with TensorFlow** outside of `virtualenv`. The Python `whl` files are located in the `build_cmake/artifacts/` and `build_cmake/artifacts/tensorflow` directories, respectively.
+
+Verify if `openvino-tensorflow` is installed correctly:
 
     python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
                 import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
-This will produce something like this:
+The output should provide the following information:
 
         TensorFlow version:  2.4.1
         OpenVINO integration with TensorFlow version: b'0.5.0'
@@ -143,6 +145,7 @@ Test the installation:
         python3 test_ovtf.py
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO.
+
 ## TensorFlow
 
 TensorFlow can be built from source using `build_tf.py`. The build artifacts can be found under ${PATH_TO_TF_BUILD}/artifacts/
