@@ -22,8 +22,7 @@ Before you procede to running the classification demo, you will have to clone th
 $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
 ```
 
-Download Inception v3 model. 
-The TensorFlow [`GraphDef`](https://stackoverflow.com/questions/47059848/difference-between-tensorflows-graph-and-graphdef) which contains the model definition and weights is not packaged in the repo because of its size. So, you must first download the file to the `data` directory in your cloned repo of `openvino_tensorflow` and extract the file:
+TensorFlow's [`GraphDef`](https://stackoverflow.com/questions/47059848/difference-between-tensorflows-graph-and-graphdef) which contains the model definition and weights is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
@@ -35,7 +34,7 @@ Once extracted, the data folder will have two new files:
 * imagenet_slim_labels.txt
 * inception_v3_2016_08_28_frozen.pb
 
-Open imagenet_slim_labels.txt to see the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition. 
+Open `imagenet_slim_labels.txt` to see the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition. 
 
 Now, you can run classification sample using the below instructions:
 
@@ -45,7 +44,7 @@ $ cd <path-to-your-cloned-openvino_tensorflow-repository>
 $ python3 examples/classification_sample.py
 ```
 
-`classification_sample.py` does inference on the default example image that is shipped with this repo and should output something similar to:
+`classification_sample.py` does inference on the default example image that is shipped with this repository and should output something similar to:
 
 ```
 military uniform (653): 0.834306
@@ -128,6 +127,15 @@ $ python3 examples/object_detection_sample.py --help
 
 ## C++ Implementation to build, install, and run for classification
 
+Before you start building from source, you have to make sure that you installed the following dependencies:
+
+* Python 3.6, 3.7, or 3.8
+* GCC 7.5 (Ubuntu 18.04)
+* Cmake 3.14 or higher 
+* Bazelisk v1.7.5 
+* Virtualenv 16.0.0 or higher
+* Patchelf 0.9
+
 For running C++ samples, we need to build tensorflow framework from source since samples have dependency on the tensorflow libraries. Run the following commands to build openvino_tensorflow with samples:
 
 ```bash
@@ -135,7 +143,7 @@ $ cd <path-to-openvino_tensorflow>
 $ python3 build_tf.py --output_dir <path-to-tensorflow-dir>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
-For detailed build instructions please read [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#build-from-source).
+For detailed build instructions read [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md).
 
 Now, a binary executable for classification_sample should be built. Update the LD_LIBRARY_PATH and run the sample:
 
