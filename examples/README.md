@@ -137,7 +137,9 @@ $ python3 examples/object_detection_sample.py --help
 ```
 
 
-## C++ Implementation to build, install, and run for classification
+## C++ Implementation for classification 
+
+For running C++ examples, we need to build a TensorFlow framework from source since examples have a dependency on the TensorFlow libraries. 
 
 Before you start building from source, you have to make sure that you installed the following dependencies:
 
@@ -148,7 +150,7 @@ Before you start building from source, you have to make sure that you installed 
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
-For running C++ examples, we need to build a TensorFlow framework from source since examples have a dependency on the TensorFlow libraries. Run the following commands to build openvino_tensorflow with samples:
+Run the following commands to build openvino_tensorflow with samples:
 
 ```bash
 $ cd <path-to-your-cloned-openvino_tensorflow-repository>
