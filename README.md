@@ -34,7 +34,7 @@ For more details on other modes of installation, please refer to [BUILD.md](docs
 
 ## Usage
 
-Once you have installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
+Once you have installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run [inference](https://docs.openvinotoolkit.org/latest/openvino_docs_IE_DG_Deep_Learning_Inference_Engine_DevGuide.html) using a trained model.
 The only change required to a script is adding
 
     import openvino_tensorflow
