@@ -9,7 +9,7 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Setup for the examples
 
-Before you procede to running the examples, you will have to clone the `openvino_tensorflow repository` to your local machine. For this, run the following commands:  
+Before you procede to running the examples, you will have to clone the `openvino_tensorflow repository` to your local machine. For this, run the following commands:
 
 ```bash
 $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
@@ -18,14 +18,14 @@ $ git submodule init
 $ git submodule update --recursive
 ```
 
-## Python implementation for classification 
+## Python implementation for classification
 
-For this example, we assume that you've already:  
+For this example, we assume that you've already:
 
-* Installed TensorFlow on your system 
+* Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow) for a quick install with pip. 
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow) for a quick install with pip.
 
 TensorFlow's [`GraphDef`](https://stackoverflow.com/questions/47059848/difference-between-tensorflows-graph-and-graphdef) which contains the model definition and weights is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
@@ -39,7 +39,7 @@ Once extracted, the data folder will contain two new files:
 * imagenet_slim_labels.txt
 * inception_v3_2016_08_28_frozen.pb
 
-Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition. 
+Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
 
 Now, you can run classification sample using the instructions below:
 
@@ -78,12 +78,12 @@ $ python3 examples/classification_sample.py --help
 ```
 ## Python implementation for object detection
 
-For this example, we assume that you've already:  
+For this example, we assume that you've already:
 
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow) for a quick install with pip. 
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow) for a quick install with pip.
 
 
 The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
@@ -112,7 +112,7 @@ This uses the default example image that comes with this repository, and should
 output something similar as below:
 
 <p align="left">
-  <img src="../examples/data/detections.jpg" width="200" height="200" 
+  <img src="../examples/data/detections.jpg" width="200" height="200"
 </p>
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
@@ -135,20 +135,20 @@ $ python3 examples/object_detection_sample.py --help
 ```
 
 
-## C++ Implementation for classification 
+## C++ Implementation for classification
 
-For running C++ examples, we need to build a TensorFlow framework from source since examples have a dependency on the TensorFlow libraries. 
+For running C++ examples, we need to build a TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
 
 Before you start building from source, you have to make sure that you installed the following dependencies:
 
 * Python 3.6, 3.7, or 3.8
 * GCC 7.5 (Ubuntu 18.04)
-* Cmake 3.14 or higher 
-* [Bazelisk v1.7.5](https://github.com/bazelbuild/bazelisk/tree/v1.7.5) 
+* Cmake 3.14 or higher
+* [Bazelisk v1.7.5](https://github.com/bazelbuild/bazelisk/tree/v1.7.5)
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
-```bash 
+```bash
 $ sudo cd /opt sudo curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && sudo unzip v1.0.22.zip && rm -rf v1.0.22.zip
 $ sudo cd /opt/libusb-1.0.22 && sudo ./bootstrap.sh && sudo ./configure --disable-udev --enable-shared && sudo make -j4
 $ sudo cd /opt/libusb-1.0.22/libusb && /bin/mkdir -p '/usr/local/lib' && sudo /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && sudo /bin/mkdir -p '/usr/local/include/libusb-1.0' && sudo /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'

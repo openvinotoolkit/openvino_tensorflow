@@ -62,22 +62,29 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 |---|---|
 | [3d-pose-baseline](https://drive.google.com/file/d/0BxWzojlLp259MF9qSFpiVjl0cU0/view?usp=sharing)| CPU, iGPU, MYRIAD |
 | [cpm-person](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU, iGPU, MYRIAD, VAD-M |
+| [cpm-pose](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU, iGPU |
 | [CRNN](https://github.com/MaybeShewill-CV/CRNN_Tensorflow)| CPU, iGPU, MYRIAD, VAD-M |
+| [ctpn](https://github.com/eragonruan/text-detection-ctpn/releases/download/untagged-48d74c6337a71b6b5f87/ctpn.pb)| MYRIAD, VAD-M |
 | [densenet161](https://drive.google.com/file/d/0B_fUSpodN0t0NmZvTnZZa2plaHc/view)| CPU, iGPU, MYRIAD, VAD-M |
 | [deeplabv3](http://download.tensorflow.org/models/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz)| CPU, MYRIAD |
 | [dilation](https://github.com/fyu/dilation)| CPU, iGPU |
 | [east_resnet_v1_50](https://github.com/argman/EAST#download)| CPU, iGPU, MYRIAD, VAD-M |
 | [efficientnet-b7_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b7.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [efficientnet-b0_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU, iGPU |
+| [faster_rcnn_nas_coco](https://github.com/shaoqingren/faster_rcnn)| CPU |
+| [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU |
 | [fc_densenet_103](https://github.com/AI-slam/FC-DenseNet-Tiramisu)| CPU |
 | [fcrn-dp-nyu-depth-v2-tf](http://campar.in.tum.de/files/rupprecht/depthpred/NYU_FCRN-checkpoint.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [googlenet-v1](http://download.tensorflow.org/models/inception_v1_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [googlenet-v2](http://download.tensorflow.org/models/inception_v2_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
+| [googlenet-v3](https://github.com/pytorch/vision/blob/master/torchvision/models/inception.py)| CPU, iGPU, MYRIAD, VAD-M |
 | [googlenet-v4](http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [i3d-flow](https://github.com/deepmind/kinetics-i3d)| CPU, iGPU, MYRIAD |
 | [i3d-rgb](https://download.01.org/opencv/public_models/032020/i3d-rgb/rgb.frozen.pb)| CPU, iGPU, MYRIAD |
 | [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)| CPU, iGPU, MYRIAD, VAD-M |
 | [license-plate-recognition-barrier-0007](https://download.01.org/openvinotoolkit/training_toolbox_tensorflow/models/lpr/chinese_lp/license-plate-recognition-barrier-0007.tar.gz)| CPU, iGPU, MYRIAD |
+| [mask_rcnn_resnet50_atrous](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
+| [mask_rcnn_resnet101_atrous_coco](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
 | [mobilenet_v1_0.25_128](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.25_128.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet_v1_0.50_160](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.5_160.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet_v1_0.50_224](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.5_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
@@ -92,18 +99,24 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [netvlad](http://rpg.ifi.uzh.ch/datasets/netvlad/vd16_pitts30k_conv5_3_vlad_preL2_intra_white.zip)| CPU, MYRIAD |
 | [NiftyNet](https://github.com/NifTK/NiftyNetModelZoo/tree/5-reorganising-with-lfs/mr_ct_regression)| CPU, iGPU, MYRIAD |
 | [openpose-pose](http://www.mediafire.com/file/qlzzr20mpocnpa3/graph_opt.pb)| CPU, iGPU, MYRIAD, VAD-M |
+| [pose-ae-refinement](https://github.com/umich-vl/pose-ae-demo)| CPU |
+| [pose-ae-multiperson](https://github.com/umich-vl/pose-ae-demo)| CPU |
 | [PRNet](https://github.com/YadiraF/PRNet)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb)| CPU, iGPU, MYRIAD, VAD-M |
+| [resnet-50-tf](http://download.tensorflow.org/models/official/20181001_resnet/savedmodels/resnet_v1_fp32_savedmodel_NHWC_jpg.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet-101](http://download.tensorflow.org/models/resnet_v1_101_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet-152](http://download.tensorflow.org/models/resnet_v1_152_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50_v1.5](https://zenodo.org/record/2535873/files/resnet50_v1.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_v2_101](http://download.tensorflow.org/models/resnet_v2_152_2017_04_14.tar.gz)| CPU, iGPU, MYRIAD |
+| [rfcn_resnet101_coco](https://download.pytorch.org/models/resnet50-19c8e357.pth)| CPU, iGPU, MYRIAD |
 | [se-resnext-50](https://drive.google.com/drive/folders/1k5MtfqbNRA8ziE3f18vu00Q1FQCzk4__)| CPU, iGPU, MYRIAD, VAD-M |
 | [squeezenet1.1](https://github.com/forresti/SqueezeNet)| CPU, iGPU, MYRIAD, VAD-M |
 | [srgan](https://github.com/tensorlayer/srgan)| CPU, iGPU |
 | [STN](https://github.com/oarriaga/STN.keras)| CPU, iGPU, MYRIAD, VAD-M |
+| [vehicle-attributes-barrier-0103](https://download.01.org/opencv/openvino_training_extensions/models/vehicle_attributes/vehicle-attributes-barrier-0103.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [vehicle-license-plate-detection-barrier-0123](https://download.01.org/opencv/openvino_training_extensions/models/ssd_detector/ssd-mobilenet-v2-0.35.1-barrier-256x256-0123.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [vggvox](https://github.com/linhdvu14/vggvox-speaker-identification)| CPU, iGPU, MYRIAD |
+| [yolo-v1-tiny-tf](https://www.npmjs.com/package/tfjs-yolo)| CPU, iGPU, MYRIAD |
 | [yolo_v2](https://github.com/david8862/keras-YOLOv3-model-set.git)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo_v2_tiny](https://github.com/david8862/keras-YOLOv3-model-set.git)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo_v3_darknet](https://github.com/mystic123/tensorflow-yolo-v3.git)| CPU, iGPU, MYRIAD, VAD-M |
