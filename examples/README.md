@@ -1,8 +1,8 @@
-# Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Demos
+# Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images.
 
-## AI models leveraged in the demos
+## AI models leveraged in the examples
 
 * Classification demo uses Google's Inception v3 model to classify a given image.
 * Object detection demo uses YOLOv3 model to detect objects in a given image.
@@ -148,9 +148,8 @@ Before you start building from source, you have to make sure that you installed 
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
-```bash
-$ sudo cd /opt 
-$ sudo curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && sudo unzip v1.0.22.zip && rm -rf v1.0.22.zip
+```bash 
+$ sudo cd /opt sudo curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && sudo unzip v1.0.22.zip && rm -rf v1.0.22.zip
 $ sudo cd /opt/libusb-1.0.22 && sudo ./bootstrap.sh && sudo ./configure --disable-udev --enable-shared && sudo make -j4
 $ sudo cd /opt/libusb-1.0.22/libusb && /bin/mkdir -p '/usr/local/lib' && sudo /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && sudo /bin/mkdir -p '/usr/local/include/libusb-1.0' && sudo /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
 ```
