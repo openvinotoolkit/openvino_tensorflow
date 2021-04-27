@@ -1,4 +1,4 @@
-This document provides a list of all validated models that are supported by **OpenVINO™ integration with TensorFlow**. This list is continuously evolving as we enable more operators and models. 
+This document provides a list of all validated models that are supported by **OpenVINO™ integration with TensorFlow**. This list is continuously evolving as we enable more operators and models.
 
 ## TensorFlow-Slim Image Classification Library
 | Model Name | Supported Devices |
@@ -111,4 +111,4 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [yolo-v3-tiny-tf](https://download.01.org/opencv/public_models/082020/yolo-v3-tiny-tf/yolo-v3-tiny-tf.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo-v4](https://github.com/david8862/keras-YOLOv3-model-set)| CPU, iGPU, MYRIAD, VAD-M |
 
-Pre-trained frozen model files are provided for some of these models. For the rest, please refer to the links provided.
+Pre-trained frozen model files are provided only for some of these models. For the rest, please refer to the links provided.
