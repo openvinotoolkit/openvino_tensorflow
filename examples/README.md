@@ -73,22 +73,20 @@ This example assumes that you have already:
 * Please refer to [**this**](https://github.com/openvinotoolkit/openvino_tensorflow#use-pre-built-packages) for more details about pre-built packages.
 
 
-The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repo because of its size. So, you must first follow the below instructions to convert the model from DarkNet to TensorFlow and download the labels and weights in the `data` directory in the source tree:
+The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repo because of its size. So, you must first run the below instructions to convert the model from DarkNet to TensorFlow and download the labels in the `data` directory. 
+
+Please note: Below instructions should not be executed in an active virtual environment. The `convert_yolov3.sh` script activates a python virtual environment for conversion. 
 
 ```bash
-$ cd <path-to-openvino_tensorflow>/examples/data
-$ git clone https://github.com/mystic123/tensorflow-yolo-v3.git
-$ cd tensorflow-yolo-v3
-$ git checkout ed60b90
-$ wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
-$ wget https://pjreddie.com/media/files/yolov3.weights
-$ python3 convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
+$ cd <path-to-openvino_tensorflow>/examples/
+$ chmod +x convert_yolov3.sh
+$ ./convert_yolov3.sh
 ```
 
 Once completed, the data folder will have following files needed to run the object detection sample:
 
 * coco.names
-* frozen_darknet_yolov3_model.pb
+* yolo_v3_darknet.pb
 
 Run the object detection sample using the below instructions:
 
