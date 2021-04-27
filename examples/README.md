@@ -34,14 +34,14 @@ $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/incepti
   tar -C <path-to-your-cloned-openvino_tensorflow-repository>/examples/data -xz
 ```
 
-Once extracted, the data folder will have two new files:
+Once extracted, the data folder will contain two new files:
 
 * imagenet_slim_labels.txt
 * inception_v3_2016_08_28_frozen.pb
 
 Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition. 
 
-Now, you can run classification sample using the below instructions:
+Now, you can run classification sample using the instructions below:
 
 
 ```bash
@@ -61,7 +61,7 @@ bulletproof vest (466): 0.00535091
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
-Next, try it out on your own image by passing the --image= argument to a directory where your new image resides. Python accepts both absolute and relative paths and it is up to you which one you give in the argument  e.g.
+Next, try it out on your own image by passing the --image= argument to a directory where your new image resides. You can provide either absolute or relative path and it is up to you which one you give in the argument  e.g.
 
 ```bash
 $ python3 examples/classification_sample.py --image=<absolute-or-relative-path-to-your-image>/my_image.png
@@ -88,20 +88,18 @@ Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow)
 
 The TensorFlow `GraphDef` that contains the Yolo V3 model definition and weights is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
 
+Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3.sh script activates a python virtual environment for conversion.
+
 ```bash
-$ cd <path-to-your-cloned-openvino_tensorflow-repository>/examples/data
-$ git clone https://github.com/mystic123/tensorflow-yolo-v3.git
-$ cd tensorflow-yolo-v3
-$ git checkout ed60b90
-$ wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
-$ wget https://pjreddie.com/media/files/yolov3.weights
-$ python3 convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
+$ cd <path-to-your-cloned-openvino_tensorflow-repository>/examples
+$ chmod +x convert_yolov3.sh
+$ ./convert_yolov3.sh
 ```
 
 Once completed, the data folder will contain following files needed to run the object detection example:
 
 * coco.names
-* frozen_darknet_yolov3_model.pb
+* yolo_v3_darknet.pb
 
 Run the object detection example using the instructions:
 
@@ -119,7 +117,7 @@ output something similar as below:
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
 
-Next, try it out on your own image by passing the --image= argument, to a directory where your new image resides. Python accepts both absolute and relative paths and it is up to you which one you give in the argument e.g.
+Next, try it out on your own image by passing the --image= argument, to a directory where your new image resides. You can provide either absolute or relative path and it is up to you which one you give in the argument e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>/my_image.png
@@ -128,7 +126,7 @@ $ python3 examples/object_detection_sample.py --image=<absolute-or-relative-path
 If you add the new image to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/object_detection_sample.py --image=example/data/my_image.png
+$ python3 examples/object_detection_sample.py --image=example/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
@@ -150,6 +148,20 @@ Before you start building from source, you have to make sure that you installed 
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
+```bash
+$ sudo cd /opt 
+$ sudo curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && sudo unzip v1.0.22.zip && rm -rf v1.0.22.zip
+$ sudo cd /opt/libusb-1.0.22 && sudo ./bootstrap.sh && sudo ./configure --disable-udev --enable-shared && sudo make -j4
+$ sudo cd /opt/libusb-1.0.22/libusb && /bin/mkdir -p '/usr/local/lib' && sudo /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && sudo /bin/mkdir -p '/usr/local/include/libusb-1.0' && sudo /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
+```
+
+TensorFlow's [`GraphDef`](https://stackoverflow.com/questions/47059848/difference-between-tensorflows-graph-and-graphdef) which contains the model definition and weights is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
+
+```bash
+$ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
+  tar -C <path-to-your-cloned-openvino_tensorflow-repository>/examples/data -xz
+```
+
 Run the following commands to build openvino_tensorflow with samples:
 
 ```bash
@@ -159,7 +171,7 @@ $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
 For detailed build instructions read [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md).
 
-Now, a binary executable for classification_sample should be built. Update the LD_LIBRARY_PATH and run the sample:
+Now, a binary executable for classification_sample is built. Update the LD_LIBRARY_PATH and run the sample:
 
 ```bash
 $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-your-cloned-openvino_tensorflow-repository>/build_cmake/artifacts/lib:<path-to-your-cloned-openvino_tensorflow-repository>/build_cmake/artifacts/tensorflow
@@ -167,7 +179,7 @@ $ ./build_cmake/examples/classification_sample/infer_image
 ```
 
 This uses the default example image that comes with this repository, and should
-output something similar as below:
+output something similar to:
 
 ```
 military uniform (653): 0.834306
@@ -181,16 +193,17 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own images by supplying the --image= argument, e.g.
+Next, try it out on your own image by passing the --image= argument to a directory where your new image resides. You can provide either absolute or relative path and it is up to you which one you give in the argument  e.g.
+
 
 ```bash
 $ ./build_cmake/examples/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>/my_image.png
 ```
 
-If you add the new image to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new image to your home directory, it will look like this:
 
 ```bash
-$ ./build_cmake/examples/classification_sample/infer_image --image=example/data/my_image.png
+$ ./build_cmake/examples/classification_sample/infer_image --image=/home/ubuntu/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
