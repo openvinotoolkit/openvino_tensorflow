@@ -144,7 +144,7 @@ Before you start building from source, you have to make sure that you installed 
 * Python 3.6, 3.7, or 3.8
 * GCC 7.5 (Ubuntu 18.04)
 * Cmake 3.14 or higher 
-* [Bazelisk v1.7.5] (https://github.com/bazelbuild/bazelisk/tree/v1.7.5) 
+* [Bazelisk v1.7.5](https://github.com/bazelbuild/bazelisk/tree/v1.7.5) 
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
