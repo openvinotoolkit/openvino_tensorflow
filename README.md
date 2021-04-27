@@ -34,8 +34,6 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 
 If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md). 
 
-For the installation process, go to [BUILD.md](docs/BUILD.md). 
-
 
 ## Configuration 
 
