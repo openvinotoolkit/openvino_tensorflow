@@ -19,4 +19,4 @@ namespace default_opset = ngraph::opset5;
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif // OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_
+#endif  // OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_

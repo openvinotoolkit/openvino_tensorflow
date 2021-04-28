@@ -50,6 +50,9 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
+#include "openvino_tensorflow/api.h"
+#include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/version.h"
 #include "tensorflow/cc/ops/const_op.h"
 #include "tensorflow/cc/ops/image_ops.h"
 #include "tensorflow/cc/ops/standard_ops.h"
@@ -69,9 +72,6 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
-#include "openvino_tensorflow/backend_manager.h"
-#include "openvino_tensorflow/api.h"
-#include "openvino_tensorflow/version.h"
 
 // These are all common classes it's handy to reference with no namespace.
 using tensorflow::Tensor;
@@ -90,19 +90,19 @@ bool grappler_enabled = tensorflow::openvino_tensorflow::is_grappler_enabled();
 SessionOptions options;
 
 Status CustomConfigOptions(SessionOptions& options) {
-    // Grappler related config
-    auto* custom_config = options.config.mutable_graph_options()
-                             ->mutable_rewrite_options()
-                             ->add_custom_optimizers();
-    custom_config->set_name("ovtf-optimizer");
-    options.config.mutable_graph_options()
-       ->mutable_rewrite_options()
-       ->set_min_graph_nodes(-1);
-    options.config.mutable_graph_options()
-       ->mutable_rewrite_options()
-       ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
-    return Status::OK();
-  }
+  // Grappler related config
+  auto* custom_config = options.config.mutable_graph_options()
+                            ->mutable_rewrite_options()
+                            ->add_custom_optimizers();
+  custom_config->set_name("ovtf-optimizer");
+  options.config.mutable_graph_options()
+      ->mutable_rewrite_options()
+      ->set_min_graph_nodes(-1);
+  options.config.mutable_graph_options()
+      ->mutable_rewrite_options()
+      ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
+  return Status::OK();
+}
 
 //-----------------------------------------------------------------------------
 // Takes a file name, and loads a list of labels from it, one per line, and
@@ -159,8 +159,8 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
 // Given an image file name, read in the data, try to decode it as an image,
 // resize it to the requested size, and then scale the values as desired.
 //-----------------------------------------------------------------------------
-Status ReadTensorFromImageFile(const string& file_name,const int input_height,
-                               const int input_width,const float input_mean,
+Status ReadTensorFromImageFile(const string& file_name, const int input_height,
+                               const int input_width, const float input_mean,
                                const float input_std,
                                std::vector<Tensor>* out_tensors) {
   auto root = tensorflow::Scope::NewRootScope();
@@ -172,11 +172,11 @@ Status ReadTensorFromImageFile(const string& file_name,const int input_height,
   // read file_name into a tensor named input
   Tensor input(tensorflow::DT_STRING, tensorflow::TensorShape());
   TF_RETURN_IF_ERROR(
-        ReadEntireFile(tensorflow::Env::Default(), file_name, &input));
+      ReadEntireFile(tensorflow::Env::Default(), file_name, &input));
 
   // use a placeholder to read input data
   auto file_reader =
-      Placeholder(root.WithOpName("input"),tensorflow::DataType::DT_STRING);
+      Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_STRING);
 
   std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
       {"input", input},
@@ -186,23 +186,23 @@ Status ReadTensorFromImageFile(const string& file_name,const int input_height,
   const int wanted_channels = 3;
   tensorflow::Output image_reader;
   if (absl::EndsWith(file_name, ".png")) {
-      image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
-                               DecodePng::Channels(wanted_channels));
+    image_reader = DecodePng(root.WithOpName("png_reader"), file_reader,
+                             DecodePng::Channels(wanted_channels));
   } else if (absl::EndsWith(file_name, ".gif")) {
-      // gif decoder returns 4-D tensor, remove the first dim
+    // gif decoder returns 4-D tensor, remove the first dim
     image_reader =
         Squeeze(root.WithOpName("squeeze_first_dim"),
-                  DecodeGif(root.WithOpName("gif_reader"), file_reader));
+                DecodeGif(root.WithOpName("gif_reader"), file_reader));
   } else if (absl::EndsWith(file_name, ".bmp")) {
     image_reader = DecodeBmp(root.WithOpName("bmp_reader"), file_reader);
   } else {
-      // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
+    // Assume if it's neither a PNG nor a GIF then it must be a JPEG.
     image_reader = DecodeJpeg(root.WithOpName("jpeg_reader"), file_reader,
-                                DecodeJpeg::Channels(wanted_channels));
+                              DecodeJpeg::Channels(wanted_channels));
   }
   // Now cast the image data to float so we can do normal math on it.
-  auto float_caster = Cast(root.WithOpName("float_caster"), image_reader,
-                             tensorflow::DT_FLOAT);
+  auto float_caster =
+      Cast(root.WithOpName("float_caster"), image_reader, tensorflow::DT_FLOAT);
   // The convention for image ops in TensorFlow is that all images are expected
   // to be in batches, so that they're four-dimensional arrays with indices of
   // [batch, height, width, channel]. Because we only have a single image, we
@@ -225,16 +225,15 @@ Status ReadTensorFromImageFile(const string& file_name,const int input_height,
   if (grappler_enabled) {
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound("Error setting custom config options"
-                                             "for OpenVINO integration with TensorFlow");
+      return tensorflow::errors::NotFound(
+          "Error setting custom config options"
+          "for OpenVINO integration with TensorFlow");
     }
   }
 
-  std::unique_ptr<tensorflow::Session> session(
-      tensorflow::NewSession(options));
+  std::unique_ptr<tensorflow::Session> session(tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
-  TF_RETURN_IF_ERROR(
-      session->Run({inputs}, {output_name},{}, out_tensors));
+  TF_RETURN_IF_ERROR(session->Run({inputs}, {output_name}, {}, out_tensors));
   return Status::OK();
 }
 
@@ -254,8 +253,9 @@ Status LoadGraph(const string& graph_file_name,
   if (grappler_enabled) {
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound("Error setting custom config options"
-                                           "for OpenVINO integration with TensorFlow");
+      return tensorflow::errors::NotFound(
+          "Error setting custom config options"
+          "for OpenVINO integration with TensorFlow");
     }
   }
   session->reset(tensorflow::NewSession(options));
@@ -285,13 +285,13 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
   if (grappler_enabled) {
     Status customconfig_options_status = CustomConfigOptions(options);
     if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound("Error setting custom config options"
-                                           "for OpenVINO integration with TensorFlow");
+      return tensorflow::errors::NotFound(
+          "Error setting custom config options"
+          "for OpenVINO integration with TensorFlow");
     }
   }
 
-  std::unique_ptr<tensorflow::Session> session(
-      tensorflow::NewSession(options));
+  std::unique_ptr<tensorflow::Session> session(tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   // The TopK node returns two outputs, the scores and their original indices,
   // so we have to append :0 and :1 to specify them both.

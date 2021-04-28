@@ -6,9 +6,9 @@
 
 #include <iostream>
 
+#include "backend_manager.h"
 #include "openvino_tensorflow/ie_backend_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
-#include "backend_manager.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -48,7 +48,8 @@ void IE_Backend_Engine::load_network() {
   // Load network to the plugin (m_device)
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
-  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(m_network, dev_type, config);
+  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(
+      m_network, dev_type, config);
   m_network_ready = true;
 }
 
@@ -92,5 +93,5 @@ void IE_Backend_Engine::disable_multi_req_execution() {
 std::shared_ptr<ngraph::Function> IE_Backend_Engine::get_func() {
   return m_func;
 }
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow

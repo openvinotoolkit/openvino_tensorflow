@@ -13,10 +13,9 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 IE_VADM_Engine::IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network)
-    : IE_Backend_Engine(ie_network, "HDDL"),
-      m_orig_batch_size(0) {
-        m_orig_batch_size = ie_network.getBatchSize();
-      }
+    : IE_Backend_Engine(ie_network, "HDDL"), m_orig_batch_size(0) {
+  m_orig_batch_size = ie_network.getBatchSize();
+}
 
 IE_VADM_Engine::~IE_VADM_Engine() {}
 
@@ -36,7 +35,7 @@ void IE_VADM_Engine::infer(
   int tmp_batch = 0;
   if (m_multi_req_execution) {
     multi_req_support = true;
-    for (int i = 0; i<inputs.size(); i++) {
+    for (int i = 0; i < inputs.size(); i++) {
       if (inputs[i] == nullptr) {
         continue;
       }
@@ -60,7 +59,7 @@ void IE_VADM_Engine::infer(
   if (multi_req_support && tmp_batch != 0) {
     // Set the batch size per request and number of requests
     batch_size = IE_Utils::GetInputBatchSize(tmp_batch, m_device);
-    assert(batch_size>0);
+    assert(batch_size > 0);
     num_req = tmp_batch / batch_size;
     if (m_network.getBatchSize() != batch_size)
       m_network.setBatchSize(batch_size);
@@ -84,18 +83,20 @@ void IE_VADM_Engine::infer(
   //  Prepare input blobs
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] == nullptr) continue;
-      const void* input_data_pointer = inputs[i]->get_data_ptr();
-      size_t size = inputs[i]->get_blob()->byteSize();
-      for (int j = 0; j < num_req; j++) {
-        auto input_blob = m_infer_reqs[j].GetBlob(input_names[i]);
-       InferenceEngine::MemoryBlob::Ptr minput = InferenceEngine::as<InferenceEngine::MemoryBlob>(input_blob);
-        auto minputHolder = minput->wmap();
+    const void* input_data_pointer = inputs[i]->get_data_ptr();
+    size_t size = inputs[i]->get_blob()->byteSize();
+    for (int j = 0; j < num_req; j++) {
+      auto input_blob = m_infer_reqs[j].GetBlob(input_names[i]);
+      InferenceEngine::MemoryBlob::Ptr minput =
+          InferenceEngine::as<InferenceEngine::MemoryBlob>(input_blob);
+      auto minputHolder = minput->wmap();
 
-        auto inputBlobData = minputHolder.as<uint8_t*>();
-        size_t input_data_size = input_blob->byteSize();
-       auto data_ptr = (uint8_t*)((uint64_t)(input_data_pointer)+input_data_size*j);
-       std::copy(data_ptr, data_ptr + input_data_size, inputBlobData);
-      }
+      auto inputBlobData = minputHolder.as<uint8_t*>();
+      size_t input_data_size = input_blob->byteSize();
+      auto data_ptr =
+          (uint8_t*)((uint64_t)(input_data_pointer) + input_data_size * j);
+      std::copy(data_ptr, data_ptr + input_data_size, inputBlobData);
+    }
   }
   for (int i = 0; i < hoisted_params.size(); i++) {
     if (hoisted_params[i] == nullptr) continue;
@@ -129,23 +130,23 @@ void IE_VADM_Engine::infer(
           m_infer_reqs[0].GetBlob(output_names[i]));
       if (blob == nullptr) {
         throw std::runtime_error("Output blob " + output_names[i] +
-                            " cannot be found!");
+                                 " cannot be found!");
       }
       InferenceEngine::TensorDesc desc = blob->getTensorDesc();
       InferenceEngine::Precision prec = desc.getPrecision();
       InferenceEngine::Layout layout = desc.getLayout();
       InferenceEngine::SizeVector out_shape(desc.getDims());
-      if (batch_size == 0 || out_shape.size() < 2 || out_shape[0] != batch_size) {
+      if (batch_size == 0 || out_shape.size() < 2 ||
+          out_shape[0] != batch_size) {
         outputs[i] = std::make_shared<IETensor>(blob);
       } else {
-          out_shape[0] = m_orig_batch_size;
-          desc.setDims(out_shape);
+        out_shape[0] = m_orig_batch_size;
+        desc.setDims(out_shape);
         size_t req_size = blob->byteSize();
         size_t out_size = req_size * num_req;
-  
+
         InferenceEngine::MemoryBlob::Ptr out_blob;
-        IE_Utils::CreateBlob(desc, prec, nullptr, out_size,
-                             out_blob);
+        IE_Utils::CreateBlob(desc, prec, nullptr, out_size, out_blob);
         outputs[i] = std::make_shared<IETensor>(out_blob);
         auto lm = out_blob->rwmap();
         uint8_t* out_ptr = lm.as<uint8_t*>();
@@ -154,11 +155,11 @@ void IE_VADM_Engine::infer(
               m_infer_reqs[j].GetBlob(output_names[i]));
           auto req_lm = blob->rwmap();
           uint8_t* req_ptr = req_lm.as<uint8_t*>();
-          std::copy(req_ptr, req_ptr + req_size, out_ptr + (req_size*j));
-        }   
-      }   
-    }                                                                                                                                                                                                                                                                        
+          std::copy(req_ptr, req_ptr + req_size, out_ptr + (req_size * j));
+        }
+      }
+    }
   }
 }
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow

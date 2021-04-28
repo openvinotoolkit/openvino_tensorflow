@@ -74,4 +74,4 @@ class Builder {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif // OPENVINO_TF_BRIDGE_BUILDER_H_
+#endif  // OPENVINO_TF_BRIDGE_BUILDER_H_

@@ -7,8 +7,8 @@
 #include <cstdlib>
 
 #include "logging/tf_graph_writer.h"
-#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 
@@ -35,7 +35,7 @@ void OpExecuter::RunTest(float rtol, float atol) {
 
   // Override the test result tolerance
   const char* rtol_char_ptr = std::getenv("OPENVINO_TF_UTEST_RTOL");
-  if (rtol_char_ptr!= nullptr) {
+  if (rtol_char_ptr != nullptr) {
     rtol = std::atof(rtol_char_ptr);
   }
 
@@ -82,8 +82,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
     EXPECT_TRUE(false);
   }
   for (size_t i = 0; i < ngraph_outputs.size(); i++) {
-    OVTF_VLOG(5) << " OVTF op " << i << " "
-                   << ngraph_outputs[i].DebugString();
+    OVTF_VLOG(5) << " OVTF op " << i << " " << ngraph_outputs[i].DebugString();
   }
 }
 

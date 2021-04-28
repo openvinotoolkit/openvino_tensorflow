@@ -29,4 +29,4 @@ class NGraphClusterManager {
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif // OPENVINO_TF_CLUSTER_MANAGER_H_
+#endif  // OPENVINO_TF_CLUSTER_MANAGER_H_

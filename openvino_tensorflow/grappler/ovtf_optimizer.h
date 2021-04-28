@@ -11,7 +11,7 @@
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
@@ -22,10 +22,10 @@
 
 #include "logging/ovtf_log.h"
 #include "logging/tf_graph_writer.h"
-#include "openvino_tensorflow/grappler/add_identityn.h"
 #include "openvino_tensorflow/assign_clusters.h"
 #include "openvino_tensorflow/deassign_clusters.h"
 #include "openvino_tensorflow/encapsulate_clusters.h"
+#include "openvino_tensorflow/grappler/add_identityn.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 

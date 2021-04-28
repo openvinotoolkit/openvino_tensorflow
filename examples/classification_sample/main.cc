@@ -54,42 +54,43 @@ limitations under the License.
 #include "tensorflow/core/graph/default_device.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
 #endif
+#include "openvino_tensorflow/api.h"
+#include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/ovtf_timer.h"
+#include "openvino_tensorflow/ovtf_utils.h"
+#include "openvino_tensorflow/version.h"
 #include "tensorflow/core/lib/core/errors.h"
+#include "tensorflow/core/lib/io/path.h"
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/init_main.h"
 #include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
-#include "tensorflow/core/lib/io/path.h"
-#include "openvino_tensorflow/backend_manager.h"
-#include "openvino_tensorflow/ovtf_timer.h"
-#include "openvino_tensorflow/ovtf_utils.h"
-#include "openvino_tensorflow/version.h"
-#include "openvino_tensorflow/api.h"
 
 using namespace std;
 using tensorflow::Flag;
 using tensorflow::Status;
 using tensorflow::Tensor;
 
-extern tensorflow::Status LoadGraph(const string& graph_file_name,
-                            std::unique_ptr<tensorflow::Session>* session);
+extern tensorflow::Status LoadGraph(
+    const string& graph_file_name,
+    std::unique_ptr<tensorflow::Session>* session);
 
-extern tensorflow::Status ReadTensorFromImageFile(const string& file_name,
-                                          const int input_height,
-                                          const int input_width,
-                                          const float input_mean,
-                                          const float input_std,
-                                          std::vector<tensorflow::Tensor>* out_tensors);
-extern tensorflow::Status PrintTopLabels(const std::vector<tensorflow::Tensor>& outputs,
-                                 const string& labels_file_name);
-extern tensorflow::Status CheckTopLabel(const std::vector<tensorflow::Tensor>& outputs,
-                                int expected, bool* is_expected);
+extern tensorflow::Status ReadTensorFromImageFile(
+    const string& file_name, const int input_height, const int input_width,
+    const float input_mean, const float input_std,
+    std::vector<tensorflow::Tensor>* out_tensors);
+extern tensorflow::Status PrintTopLabels(
+    const std::vector<tensorflow::Tensor>& outputs,
+    const string& labels_file_name);
+extern tensorflow::Status CheckTopLabel(
+    const std::vector<tensorflow::Tensor>& outputs, int expected,
+    bool* is_expected);
 
 // Prints the available backends
 void PrintAvailableBackends() {
@@ -106,16 +107,17 @@ void PrintAvailableBackends() {
 
 void PrintVersion() {
   // Tensorflow version info
-  std::cout << "Tensorflow version: " << tensorflow::openvino_tensorflow::tf_version()
-            << std::endl;
+  std::cout << "Tensorflow version: "
+            << tensorflow::openvino_tensorflow::tf_version() << std::endl;
   // Openvino integration with TensorFlow info
-  std::cout << "OpenVINO integration with TensorFlow version: " << tensorflow::openvino_tensorflow::version()
-            << std::endl;
-  std::cout << "CXX11_ABI Used: " << tensorflow::openvino_tensorflow::cxx11_abi_flag()
-            << std::endl;
+  std::cout << "OpenVINO integration with TensorFlow version: "
+            << tensorflow::openvino_tensorflow::version() << std::endl;
+  std::cout << "CXX11_ABI Used: "
+            << tensorflow::openvino_tensorflow::cxx11_abi_flag() << std::endl;
   std::cout << "Grappler Enabled? "
-            << (tensorflow::openvino_tensorflow::is_grappler_enabled() ? std::string("Yes")
-                                                         : std::string("No"))
+            << (tensorflow::openvino_tensorflow::is_grappler_enabled()
+                    ? std::string("Yes")
+                    : std::string("No"))
             << std::endl;
   PrintAvailableBackends();
 }
@@ -125,12 +127,9 @@ int main(int argc, char** argv) {
   // They define where the graph and input data is located, and what kind of
   // input the model expects. If you train your own model, or use something
   // other than inception_v3, then you'll need to update these.
-  string image_file =
-        "examples/data/grace_hopper.jpg";
-  string graph =
-        "examples/data/inception_v3_2016_08_28_frozen.pb";
-  string labels_file =
-        "examples/data/imagenet_slim_labels.txt";
+  string image_file = "examples/data/grace_hopper.jpg";
+  string graph = "examples/data/inception_v3_2016_08_28_frozen.pb";
+  string labels_file = "examples/data/imagenet_slim_labels.txt";
   int input_width = 299;
   int input_height = 299;
   float input_mean = 0;
@@ -139,27 +138,24 @@ int main(int argc, char** argv) {
   string output_layer = "InceptionV3/Predictions/Reshape_1";
   bool self_test = false;
   string root_dir = "";
-  string backend_name="CPU";
+  string backend_name = "CPU";
 
   std::vector<tensorflow::Flag> flag_list = {
       Flag("image", &image_file, "image to be processed"),
       Flag("graph", &graph, "graph to be executed"),
       Flag("labels", &labels_file, "name of file containing labels"),
-      //Flag("label_index", &label_index, "Index of the expected label"),
-      Flag("input_width", &input_width,
-               "resize image to this width in pixels"),
+      // Flag("label_index", &label_index, "Index of the expected label"),
+      Flag("input_width", &input_width, "resize image to this width in pixels"),
       Flag("input_height", &input_height,
-               "resize image to this height in pixels"),
+           "resize image to this height in pixels"),
       Flag("input_mean", &input_mean, "scale pixel values to this mean"),
-      Flag("input_std", &input_std,
-               "scale pixel values to this std deviation"),
+      Flag("input_std", &input_std, "scale pixel values to this std deviation"),
       Flag("input_layer", &input_layer, "name of input layer"),
       Flag("output_layer", &output_layer, "name of output layer"),
       Flag("self_test", &self_test, "run a self test"),
       Flag("root_dir", &root_dir,
            "interpret image and graph file names relative to this directory"),
-      Flag("backend", &backend_name, "backend option. Default is CPU")
-  };
+      Flag("backend", &backend_name, "backend option. Default is CPU")};
 
   string usage = tensorflow::Flags::Usage(argv[0], flag_list);
   const bool parse_result = tensorflow::Flags::Parse(&argc, argv, flag_list);
@@ -209,8 +205,7 @@ int main(int argc, char** argv) {
   Status run_status = session->Run({{input_layer, resized_tensor}},
                                    {output_layer}, {}, &outputs);
   compilation_timer.Stop();
-  cout << "Compilation Time in ms: " << compilation_timer.ElapsedInMS()
-           << endl;
+  cout << "Compilation Time in ms: " << compilation_timer.ElapsedInMS() << endl;
 
   if (!run_status.ok()) {
     LOG(ERROR) << "Compiling model failed: " << run_status;
@@ -219,11 +214,10 @@ int main(int argc, char** argv) {
 
   //  Run
   tensorflow::openvino_tensorflow::Timer inference_timer;
-  run_status = session->Run({{input_layer, resized_tensor}},
-                                   {output_layer}, {}, &outputs);
+  run_status = session->Run({{input_layer, resized_tensor}}, {output_layer}, {},
+                            &outputs);
   inference_timer.Stop();
-  cout << "Inference Time in ms: " << inference_timer.ElapsedInMS()
-           << endl;
+  cout << "Inference Time in ms: " << inference_timer.ElapsedInMS() << endl;
 
   if (!run_status.ok()) {
     LOG(ERROR) << "Running model failed: " << run_status;
@@ -256,4 +250,3 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
