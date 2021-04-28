@@ -240,6 +240,9 @@ def build_tensorflow(tf_version,
     os.environ["TF_DOWNLOAD_CLANG"] = "0"
     os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
     os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch + " -Wno-sign-compare"
+    if (target_arch == "silvermont"):
+        os.environ[
+            "CC_OPT_FLAGS"] = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
 
     command_executor("./configure")
 
@@ -624,6 +627,9 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     print("INSTALL location: " + artifacts_location)
 
     # Now build OpenVINO
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
     openvino_cmake_flags = [
         "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
@@ -632,8 +638,8 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
-        target_arch, "-DENABLE_CPPLINT=OFF", "-DENABLE_SPEECH_DEMO=FALSE",
-        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        target_arch + atom_flags, "-DENABLE_CPPLINT=OFF",
+        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DCMAKE_INSTALL_PREFIX=" + install_location
     ]
 
