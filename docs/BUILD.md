@@ -178,7 +178,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.4.1
 
-## OpenVINO
+## OpenVINO™
 
 OpenVINO™ can be built from source independently using `build_ov.py`
 
