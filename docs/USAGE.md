@@ -32,7 +32,7 @@ To enable verbose logs of the execution of the full TensorFlow pipeline and plac
 
     openvino_tensorflow.start_logging_placement()
 
-To disbale verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the **OpenVINO™ integration with TensorFlow**, use the following API:
+To disable verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the **OpenVINO™ integration with TensorFlow**, use the following API:
 
     openvino_tensorflow.stop_logging_placement()
 
@@ -44,7 +44,7 @@ To check the CXX11_ABI used to compile **OpenVINO™ integration with TensorFlow
 
     openvino_tensorflow.cxx11_abi_flag()
 
-To disable execution of certain operators on the OpenVINO backend, use the following API to run them on native TensorFlow runtime:
+To disable execution of certain operators on the OpenVINO™ backend, use the following API to run them on native TensorFlow runtime:
 
     openvino_tensorflow.set_disabled_ops(<string_of_operators_separated_by_commas>)
 
@@ -57,7 +57,7 @@ To disable execution of certain operators on the OpenVINO backend, use the follo
 ## Environment Variables
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
-After clusters are formed, some of the clusters may still fall back to native Tensorflow due to some reasons (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash in some cases.
+After clusters are formed, some of the clusters may still fall back to native Tensorflow due to some reasons (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
 Example:
 
@@ -78,7 +78,7 @@ Example:
     OPENVINO_TF_LOG_PLACEMENT="1"
 
 **OPENVINO_TF_BACKEND:**
-Backend device name can be set using this variable. It should be set to CPU, GPU, MYRIAD, or VAD-M.
+Backend device name can be set using this variable. It should be set to "CPU", "GPU", "MYRIAD", or "VAD-M".
 
 Example:
 
@@ -127,7 +127,7 @@ Example:
     OPENVINO_TF_DUMP_CLUSTERS=1
 
 **OPENVINO_TF_DISABLE:**
-Disables OpenVINO Integration if set to 1.
+Disables **OpenVINO™ integration with TensorFlow** if set to 1.
 
 Example:
 

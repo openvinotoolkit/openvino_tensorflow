@@ -10,7 +10,7 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU
 - Intel<sup>®</sup> Vision Accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
 
-Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend going beyond this component to adopt native OpenVINO APIs and its runtime.
+[Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend going beyond this component to adopt native OpenVINO™ APIs and its runtime.]
 
 ## Installation
 ### Prerequisites
@@ -53,10 +53,10 @@ This should produce an output like:
         OpenVINO integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.3'
         TensorFlow version used for this build: v2.4.1
-        CXX11_ABI flag used for this build: 1
+        CXX11_ABI flag used for this build: 0
         OpenVINO integration with TensorFlow built with Grappler: False
 
-By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware inferencing is done on.
+By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware on which inferencing is done.
 
     openvino_tensorflow.set_backend('<backend_name>')
 
