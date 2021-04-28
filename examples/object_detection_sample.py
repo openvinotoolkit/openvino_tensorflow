@@ -159,7 +159,7 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
 
 if __name__ == "__main__":
     image_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/frozen_darknet_yolov3_model.pb"
+    model_file = "examples/data/yolo_v3_darknet.pb"
     label_file = "examples/data/coco.names"
     input_height = 416
     input_width = 416

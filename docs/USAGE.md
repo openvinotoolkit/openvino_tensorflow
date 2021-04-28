@@ -1,16 +1,16 @@
-# Usage of OpenVINO™ integration with TensorFlow
+# APIs and environment variables for **OpenVINO™ integration with TensorFlow**
 
-This document describes the available Python APIs for OpenVINO™ integration with TensorFlow. The first section describes the essential APIs and lines of code required to use the functionality of OpenVINO integration with TensorFlow applications.
+This document describes available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section covers the essential APIs and lines of code required to leverage the functionality of **OpenVINO integration with TensorFlow** in TensorFlow applications.
 
 ## APIs for essential functionality
 
-To add the OpenVINO-TensorFlow package to the TensorFlow python application, import the package using the below line of code:
+To add the **OpenVINO integration with TensorFlow** package to your TensorFlow python application, import the package using this line of code:
 
     import openvino_tensorflow
 
-By default, CPU backend is enabled. You can substitute the default CPU backend with a different backend by using the following API:
+By default, CPU backend is enabled. You can set a different backend by using the following API:
 
-    openvino_tensorflow.set_backend('backend_name')
+    openvino_tensorflow.set_backend('<backend_name>')
 
 Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
 
@@ -20,7 +20,7 @@ To determine available backends on your system, use the following API:
 
     openvino_tensorflow.list_backends()
 
-To check if the OpenVINO-TensorFlow is enabled, use the following API:
+To check if the **OpenVINO integration with TensorFlow** is enabled, use the following API:
 
     openvino_tensorflow.is_enabled()
 
@@ -28,11 +28,11 @@ To get the assigned backend, use the following API:
 
     openvino_tensorflow.get_backend()
 
-To enable verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO-TensorFlow, use the following API:
+To enable verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the **OpenVINO integration with TensorFlow**, use the following API:
 
     openvino_tensorflow.start_logging_placement()
 
-To disbale verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the OpenVINO-TensorFlow, use the following API:
+To disbale verbose logs of the execution of the full TensorFlow pipeline and placement stages along with the **OpenVINO integration with TensorFlow**, use the following API:
 
     openvino_tensorflow.stop_logging_placement()
 
@@ -40,7 +40,7 @@ To check if the placement logs are enabled, use the following API:
 
     openvino_tensorflow.is_logging_placement()
 
-To check the CXX11_ABI used to compile OpenVINO-TensorFlow, use the following API:
+To check the CXX11_ABI used to compile **OpenVINO integration with TensorFlow**, use the following API:
 
     openvino_tensorflow.cxx11_abi_flag()
 
@@ -48,7 +48,7 @@ To disable execution of certain operators on the OpenVINO backend, use the follo
 
     openvino_tensorflow.set_disabled_ops(<string_of_operators_separated_by_commas>)
 
- The string of operators to be separated should be separated with commas and provided as an argument to the above API.
+ The string of operators should be separated with commas and provided as an argument to the above API.
 
  To check the list of disabled ops which are declared as supported by the backend, but disabled programmatically, use the following API:
 
@@ -57,7 +57,7 @@ To disable execution of certain operators on the OpenVINO backend, use the follo
 ## Environment Variables
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
-After clusters are formed, some of the clusters still fall back to native Tensorflow due to some reasons (Cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash in some cases.
+After clusters are formed, some of the clusters may still fall back to native Tensorflow due to some reasons (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
 Example:
 
@@ -85,7 +85,7 @@ Example:
     OPENVINO_TF_BACKEND="MYRIAD"
 
 **OPENVINO_TF_DISABLED_OPS:**
-A list of diabled ops can be passes using this variable. Those ops will not be considered for clustering and they will fallback to native Tensorflow.
+A list of disabled ops can be passed using this variable. Those ops will not be considered for clustering and they will fall back on to native Tensorflow.
 
 Example:
 
@@ -106,7 +106,7 @@ Example:
     OPENVINO_TF_TRANSPOSE_SINKING="0"
 
 **OPENVINO_TF_ENABLE_BATCHING:**
-If this parameter is set to 1 while using VAD-M as the backend, the backend engine will devide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve a better performance.
+If this parameter is set to 1 while using VAD-M as the backend, the backend engine will divide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve better performance.
 
 Example:
 

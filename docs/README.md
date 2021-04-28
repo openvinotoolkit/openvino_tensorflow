@@ -1,4 +1,4 @@
-# OpenVINO™ integration with TensorFlow Documentation
+# **OpenVINO™ integration with TensorFlow** Documentation
 
 [Introduction](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md)
 
