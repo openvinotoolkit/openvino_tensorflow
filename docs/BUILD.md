@@ -181,3 +181,14 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 ## OpenVINO
 
 OpenVINO™ can be built from source independently using `build_ov.py`
+
+## Docker
+
+### Build ManyLinux2014 compatible **OpenVINO integration with TensorFlow** whls
+
+To build whl files compatible with manylinux2014, use the following commands. The build artifacts will be available in your container's /whl/ folder.
+
+```bash
+cd tools/builds/
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v0.5.0 . -f Dockerfile.manylinux2014
+```
