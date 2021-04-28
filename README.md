@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/openvino.png">
+  <img src="images/openvino_wbgd.png">
 </p>
 
 # **OpenVINO™ integration with TensorFlow**
 
-This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enchanced level of TensorFlow compatiblity. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enchance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many AI models on a variety of Intel<sup>®</sup> silicon such as:
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatiblity. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many AI models on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU
@@ -87,4 +87,4 @@ We welcome community contributions to **OpenVINO™ integration with TensorFlow*
 * Share your proposal via [GitHub issues](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 * Submit a [pull request](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
 
-We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the abovementioned requirements and proved acceptable.
+We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the above mentioned requirements and proved acceptable.

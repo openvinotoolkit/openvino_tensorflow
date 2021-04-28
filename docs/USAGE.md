@@ -106,7 +106,7 @@ Example:
     OPENVINO_TF_TRANSPOSE_SINKING="0"
 
 **OPENVINO_TF_ENABLE_BATCHING:**
-If this parameter is set to 1 while using VAD-M as the backend, the backend engine will devide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve better performance.
+If this parameter is set to 1 while using VAD-M as the backend, the backend engine will divide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve better performance.
 
 Example:
 
