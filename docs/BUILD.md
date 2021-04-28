@@ -4,7 +4,7 @@
 |Build Type| Requirements|
 |:-----------------------|-------------------|
 |Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.4.1|
-|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9|
+|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9, libusb 1.0.0|
 
 ## Use Pre-Built Packages
 
@@ -79,11 +79,20 @@ You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the 
 
 ## Build From Source
 Clone the `openvino_tensorflow` repository:
+        
+```bash
+$ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+$ cd openvino_tensorflow
+$ git submodule init
+$ git submodule update --recursive
+```
 
-        git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
-        cd openvino_tensorflow
-        git submodule init
-        git submodule update --recursive
+Install the following python packages
+
+```bash
+$ pip3 install -U psutil==5.8.0 wheel==0.36.2
+```
+
 ### **OpenVINO™ integration with TensorFlow**
 Use one of the following build options based on the requirements
 
@@ -165,9 +174,9 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
 
-- To build a desired TF version
+- To build with a desired TF version, for example: v2.4.1
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=r2.x
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.4.1
 
 ## OpenVINO
 

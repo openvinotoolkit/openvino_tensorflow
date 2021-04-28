@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/openvino.png">
+  <img src="images/openvino_wbgd.png">
 </p>
 
 # **OpenVINO™ integration with TensorFlow**
@@ -87,4 +87,4 @@ We welcome community contributions to **OpenVINO™ integration with TensorFlow*
 * Share your proposal via [GitHub issues](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 * Submit a [pull request](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
 
-We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the abovementioned requirements and proved acceptable.
+We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the above mentioned requirements and proved acceptable.
