@@ -1,14 +1,14 @@
 # APIs and environment variables for **OpenVINO™ integration with TensorFlow**
 
-This document describes available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section describes the essential APIs and lines of code required to leverage the functionality of **OpenVINO integration with TensorFlow** in TensorFlow applications.
+This document describes available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section covers the essential APIs and lines of code required to leverage the functionality of **OpenVINO integration with TensorFlow** in TensorFlow applications.
 
 ## APIs for essential functionality
 
-To add the **OpenVINO integration with TensorFlow** package to the TensorFlow python application, import the package using this line of code:
+To add the **OpenVINO integration with TensorFlow** package to your TensorFlow python application, import the package using this line of code:
 
     import openvino_tensorflow
 
-By default, CPU backend is enabled. You can substitute the default CPU backend with a different backend by using the following API:
+By default, CPU backend is enabled. You can set a different backend by using the following API:
 
     openvino_tensorflow.set_backend('<backend_name>')
 

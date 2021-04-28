@@ -44,15 +44,17 @@ Once you've installed **OpenVINO™ integration with TensorFlow**, you can use T
 
 To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
-     python3
+    python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+                import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
-When you start the interactive prompt, enter the command below to import **OpenVINO™ integration with TensorFlow**.
+This should produce an output like:
 
-    import openvino_tensorflow
-
-The following message will inform you of the successful installation:
-
-```I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11```
+        TensorFlow version:  2.4.1
+        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO version used for this build: b'2021.3'
+        TensorFlow version used for this build: v2.4.1
+        CXX11_ABI flag used for this build: 1
+        OpenVINO integration with TensorFlow built with Grappler: False
 
 By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware inferencing is done on.
 
