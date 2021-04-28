@@ -125,6 +125,11 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
 
         python3 build_ovtf.py --help
 
+#### Building Instructions for Intel Atom® Processor
+In order to build OpenVINO™ Integration with Tensorflow to use on Intel Atom® processor, we recommend building TF from source. The command below will build TF and OpenVINO™ from source for Intel Atom® processors.
+
+        python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
+
 #### Verification
 When the build is finished, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (ex: the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
 
