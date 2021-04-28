@@ -20,10 +20,10 @@
 #include "api.h"
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/deassign_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
-#include "openvino_tensorflow/backend_manager.h"
 
 using namespace std;
 
@@ -42,10 +42,9 @@ namespace openvino_tensorflow {
 // OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
 
-//For sorting the clusters for MYRIAD
-static bool cmp(pair<int, std::set<Node*>>& a, pair<int, std::set<Node*>>& b){
-
-    return a.second.size() > b.second.size();
+// For sorting the clusters for MYRIAD
+static bool cmp(pair<int, std::set<Node*>>& a, pair<int, std::set<Node*>>& b) {
+  return a.second.size() > b.second.size();
 }
 
 unordered_map<string, int> deassigned_histogram;
@@ -192,8 +191,9 @@ Status DeassignClusters(Graph* graph) {
     }
 
     int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
-    int avg_nodes_marked_before_deassign = num_nodes_marked_before_deassign/cluster_map.size();
-    if (min_non_trivial_nodes < avg_nodes_marked_before_deassign*2) {
+    int avg_nodes_marked_before_deassign =
+        num_nodes_marked_before_deassign / cluster_map.size();
+    if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
       min_non_trivial_nodes >>= 2;
     }
     if (min_non_trivial_nodes < 6) {
@@ -209,7 +209,7 @@ Status DeassignClusters(Graph* graph) {
       OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-                       << node->type_string() << "]";
+                     << node->type_string() << "]";
 
         // TODO(amprocte): move attr name to a constant
         node->ClearAttr("_ovtf_cluster");
@@ -223,35 +223,37 @@ Status DeassignClusters(Graph* graph) {
     // Disable dynamic to static
     std::vector<Node*> dyn_node_check;
     for (auto node : nodes) {
-        if (node->type_string() == "NonMaxSuppressionV2") {
-            dyn_node_check.push_back(node);
-        }
+      if (node->type_string() == "NonMaxSuppressionV2") {
+        dyn_node_check.push_back(node);
+      }
     }
     bool invalid_dyn_op = false;
     while (dyn_node_check.size() > 0) {
-        Node* node = dyn_node_check.back();
-        dyn_node_check.pop_back();
-       
-        for (auto it : node->out_nodes()) {
-            int out_cluster;
-            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-            if (s == Status::OK()) {
-                if (out_cluster == cluster_idx && it->type_string() != "NonMaxSuppressionV2") {
-                    if (it->type_string() == "ZerosLike" || it->type_string() == "Size" || it->type_string() == "Conv2D") {
-                        invalid_dyn_op = true;
-                        break;
-                    } else {
-                        dyn_node_check.push_back(it);
-                    }
-                }
+      Node* node = dyn_node_check.back();
+      dyn_node_check.pop_back();
+
+      for (auto it : node->out_nodes()) {
+        int out_cluster;
+        Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+        if (s == Status::OK()) {
+          if (out_cluster == cluster_idx &&
+              it->type_string() != "NonMaxSuppressionV2") {
+            if (it->type_string() == "ZerosLike" ||
+                it->type_string() == "Size" || it->type_string() == "Conv2D") {
+              invalid_dyn_op = true;
+              break;
+            } else {
+              dyn_node_check.push_back(it);
             }
+          }
         }
+      }
     }
     if (invalid_dyn_op) {
       OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-                       << node->type_string() << "]";
+                     << node->type_string() << "]";
 
         // TODO(amprocte): move attr name to a constant
         node->ClearAttr("_ovtf_cluster");
@@ -262,38 +264,35 @@ Status DeassignClusters(Graph* graph) {
       }
       continue;
     }
-
 
     unordered_set<std::string> input_args;
     vector<string> cluster_inputs;
     bool omit_cluster = false;
 
-    for (auto node : nodes){
-
-      for (auto it : node->in_nodes()){
-
-        if(!input_args.count(it->name())){
+    for (auto node : nodes) {
+      for (auto it : node->in_nodes()) {
+        if (!input_args.count(it->name())) {
           cluster_inputs.push_back(it->name());
         }
         input_args.insert(it->name());
       }
     }
-    for(auto node : nodes) {
-      if(node->type_string() == "Prod"){
-        for (auto it : node->in_nodes()){
+    for (auto node : nodes) {
+      if (node->type_string() == "Prod") {
+        for (auto it : node->in_nodes()) {
           auto inp_name = it->name();
-          auto iter = find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
-          if(iter != cluster_inputs.end()){
+          auto iter =
+              find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
+          if (iter != cluster_inputs.end()) {
             omit_cluster = true;
             break;
           }
         }
       }
-      if (omit_cluster)
-        break;
+      if (omit_cluster) break;
     }
-    if(omit_cluster){
-      for(auto node : nodes){
+    if (omit_cluster) {
+      for (auto node : nodes) {
         node->ClearAttr("_ovtf_cluster");
         node->ClearAttr("_ovtf_marked_for_clustering");
         deassigned_histogram[node->type_string()]++;
@@ -301,34 +300,38 @@ Status DeassignClusters(Graph* graph) {
       continue;
     }
 
-    if(device == "HDDL"){
+    if (device == "HDDL") {
       std::vector<std::string> illegal_input_nodes = {"Unpack"};
       std::vector<std::string> illegal_output_nodes = {"Greater"};
       bool omit_cluster = false;
-      for (auto node: nodes) {
-        if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(), node->type_string()) != illegal_output_nodes.end()) {
+      for (auto node : nodes) {
+        if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(),
+                      node->type_string()) != illegal_output_nodes.end()) {
           for (auto it : node->out_nodes()) {
             int out_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-            if ((s == Status::OK() && out_cluster != cluster_idx) || (s != Status::OK())) {
+            if ((s == Status::OK() && out_cluster != cluster_idx) ||
+                (s != Status::OK())) {
               omit_cluster = true;
               break;
             }
           }
         }
-        if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(), node->type_string()) != illegal_input_nodes.end()) {
+        if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(),
+                      node->type_string()) != illegal_input_nodes.end()) {
           for (auto it : node->in_nodes()) {
             int in_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
-            if ((s == Status::OK() && in_cluster != cluster_idx) || s != Status::OK()) {
+            if ((s == Status::OK() && in_cluster != cluster_idx) ||
+                s != Status::OK()) {
               omit_cluster = true;
               break;
             }
           }
         }
       }
-      if(omit_cluster){
-        for(auto node : nodes){
+      if (omit_cluster) {
+        for (auto node : nodes) {
           node->ClearAttr("_ovtf_cluster");
           node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;
@@ -347,13 +350,13 @@ Status DeassignClusters(Graph* graph) {
     alive_clusters.push_back(cluster_idx);
   }
 
-  if(device == "HDDL" || device == "MYRIAD"){
-    for(int i=0; i<alive_clusters.size(); i++){
+  if (device == "HDDL" || device == "MYRIAD") {
+    for (int i = 0; i < alive_clusters.size(); i++) {
       int alive_cluster_idx = alive_clusters[i];
-      if(alive_cluster_idx != max_cluster_idx){
+      if (alive_cluster_idx != max_cluster_idx) {
         set<Node*>& nodes = cluster_map[alive_cluster_idx];
 
-        for(auto node : nodes) {
+        for (auto node : nodes) {
           node->ClearAttr("_ovtf_cluster");
           node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;

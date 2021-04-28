@@ -15,7 +15,7 @@
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
@@ -123,8 +123,8 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
     // TODO(amprocte): duplicated logic from mark_for_clustering but
     // this file does not live inside src.
     bool is_marked;
-    if (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering",
-                    &is_marked) != Status::OK()) {
+    if (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering", &is_marked) !=
+        Status::OK()) {
       is_marked = false;
     }
 

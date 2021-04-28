@@ -37,11 +37,11 @@ bool IsEnvVariableSet(const string& env_var_name) {
 
 string GetEnvVariable(const string& env_var_name) {
   const char* ng_backend_env_value = std::getenv(env_var_name.c_str());
-  if (ng_backend_env_value!=nullptr){
+  if (ng_backend_env_value != nullptr) {
     OVTF_VLOG(5) << "Got Env Variable " << env_var_name << " : "
-                  << std::string(ng_backend_env_value);
+                 << std::string(ng_backend_env_value);
     return std::string(ng_backend_env_value);
-  }else{
+  } else {
     return "";
   }
 }
@@ -54,7 +54,7 @@ void UnsetEnvVariable(const string& env_var_name) {
 void SetEnvVariable(const string& env_var_name, const string& env_var_val) {
   setenv(env_var_name.c_str(), env_var_val.c_str(), 1);
   OVTF_VLOG(5) << "Setting Env Variable " << env_var_name << " : "
-                 << env_var_val;
+               << env_var_val;
 }
 
 // Store Env Variables

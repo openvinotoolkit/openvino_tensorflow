@@ -19,12 +19,12 @@
 #include "api.h"
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/tf_deadness_analysis.h"
 #include "openvino_tensorflow/tf_graphcycles.h"
-#include "openvino_tensorflow/backend_manager.h"
 
 using namespace std;
 
@@ -243,14 +243,14 @@ void MergeClusters(Edge* edge,
 
   // Merge dst cluster into src cluster
   OVTF_VLOG(5) << "Contracting: " << src->name() << "[" << src->type_string()
-                 << " , " << edge->src_output() << "]@" << src_index << " -> "
-                 << dst->name() << "[" << dst->type_string() << " , "
-                 << edge->dst_input() << "]@" << dst_index;
+               << " , " << edge->src_output() << "]@" << src_index << " -> "
+               << dst->name() << "[" << dst->type_string() << " , "
+               << edge->dst_input() << "]@" << dst_index;
 
   string src_predicate = cluster_map[src]->predicate_string;
   string dst_predicate = cluster_map[dst]->predicate_string;
   OVTF_VLOG(5) << "Src pred: " << src_predicate
-                 << ", Dst pred: " << dst_predicate;
+               << ", Dst pred: " << dst_predicate;
 
   std::string cluster_pred = GetMergedClusterPred(src_predicate, dst_predicate);
 
@@ -293,7 +293,7 @@ Status AssignClusters(Graph* graph) {
     cluster_map[node]->index = new_index;
     cluster_map[node]->nodes.insert(node);
     OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
-                   << node->name() << "[" << node->type_string() << "]";
+                 << node->name() << "[" << node->type_string() << "]";
 
     // get predicate string for the node
     string pred_string;
@@ -304,7 +304,7 @@ Status AssignClusters(Graph* graph) {
     cluster_map[node]->outgoing_edges = std::set<const Edge*>(
         node->out_edges().begin(), node->out_edges().end());
     OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
-                   << "  : Predicate " << pred_string;
+                 << "  : Predicate " << pred_string;
   }
 
   // Check for existing cyclicity in the graph
@@ -417,98 +417,97 @@ Status AssignClusters(Graph* graph) {
 
   // Drop Shape if it's the output node of HDDL cluster.
   // Drop Sub if it's the input node and the input is from a Const node.
-  if(device == "HDDL"){
+  if (device == "HDDL") {
     for (auto edge : graph->edges()) {
       Node* src = edge->src();
       Node* dst = edge->dst();
       if (!src->IsOp() || !dst->IsOp()) {
-	    if (src->type_string() == "Shape") {
-              src->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-        continue;
-      }
-      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
-	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
-              dst->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-	    if (src->type_string() == "Shape") {
-              src->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-        continue;
-      }
-      bool is_deadness_ok = false;
-      TF_RETURN_IF_ERROR(
-          CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
-      if (!is_deadness_ok) {
-	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
-              dst->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-	    if (src->type_string() == "Shape") {
-              src->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-        continue;
-      }
-      int src_index = cluster_map[src]->index;
-      int dst_index = cluster_map[dst]->index;
-      if (!(gc.HasEdge(src_index, dst_index) &&
-        gc.CanContractEdge(src_index, dst_index))) {
-	    if (src->type_string() == "Const" && dst->type_string() == "Sub") {
-              dst->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-	    if (src->type_string() == "Shape") {
-              src->ClearAttr("_ovtf_marked_for_clustering");
-	    }
-          }
+        if (src->type_string() == "Shape") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
         }
-  }
-  if(device == "GPU"){
-    for (auto edge : graph->edges()) {
-      Node* src = edge->src();
-      Node* dst = edge->dst();
-      if (!src->IsOp() || !dst->IsOp()) {
-	if (src->type_string() == "Greater") {
-          src->ClearAttr("_ovtf_marked_for_clustering");
-	}
         continue;
       }
       if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
-	if (src->type_string() == "Greater") {
+        if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        if (src->type_string() == "Shape") {
           src->ClearAttr("_ovtf_marked_for_clustering");
-	}
+        }
         continue;
       }
       bool is_deadness_ok = false;
       TF_RETURN_IF_ERROR(
           CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
       if (!is_deadness_ok) {
-	if (src->type_string() == "Greater") {
+        if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        if (src->type_string() == "Shape") {
           src->ClearAttr("_ovtf_marked_for_clustering");
-	}
+        }
         continue;
       }
       int src_index = cluster_map[src]->index;
       int dst_index = cluster_map[dst]->index;
       if (!(gc.HasEdge(src_index, dst_index) &&
-        gc.CanContractEdge(src_index, dst_index))) {
-	if (src->type_string() == "Greater") {
+            gc.CanContractEdge(src_index, dst_index))) {
+        if (src->type_string() == "Const" && dst->type_string() == "Sub") {
+          dst->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        if (src->type_string() == "Shape") {
           src->ClearAttr("_ovtf_marked_for_clustering");
-	}
+        }
       }
     }
   }
-
+  if (device == "GPU") {
+    for (auto edge : graph->edges()) {
+      Node* src = edge->src();
+      Node* dst = edge->dst();
+      if (!src->IsOp() || !dst->IsOp()) {
+        if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        continue;
+      }
+      if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
+        if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        continue;
+      }
+      bool is_deadness_ok = false;
+      TF_RETURN_IF_ERROR(
+          CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
+      if (!is_deadness_ok) {
+        if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+        }
+        continue;
+      }
+      int src_index = cluster_map[src]->index;
+      int dst_index = cluster_map[dst]->index;
+      if (!(gc.HasEdge(src_index, dst_index) &&
+            gc.CanContractEdge(src_index, dst_index))) {
+        if (src->type_string() == "Greater") {
+          src->ClearAttr("_ovtf_marked_for_clustering");
+        }
+      }
+    }
+  }
 
   do {
     changed = false;
 
     auto log_reason = [](EdgeNonContractionReasons reason, Edge* edge) {
       OVTF_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << ": "
-                     << edge->src()->name() << "<" << edge->src()->type_string()
-                     << ">"
-                     << "[" << edge->src_output() << "] -> "
-                     << edge->dst()->name() << "<" << edge->dst()->type_string()
-                     << ">"
-                     << "[" << edge->dst_input() << "]";
+                   << edge->src()->name() << "<" << edge->src()->type_string()
+                   << ">"
+                   << "[" << edge->src_output() << "] -> "
+                   << edge->dst()->name() << "<" << edge->dst()->type_string()
+                   << ">"
+                   << "[" << edge->dst_input() << "]";
     };
 
     for (auto edge : graph->edges()) {
@@ -529,9 +528,9 @@ Status AssignClusters(Graph* graph) {
 
       if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
         OVTF_VLOG(5) << "Skipping (not marked): " << src->name() << "["
-                       << edge->src_output() << "]@" << src_index << " -> "
-                       << dst->name() << "[" << edge->dst_input() << "]@"
-                       << dst_index;
+                     << edge->src_output() << "]@" << src_index << " -> "
+                     << dst->name() << "[" << edge->dst_input() << "]@"
+                     << dst_index;
         if (collect_non_contracting_edge_info) {
           log_reason(EdgeNonContractionReasons::UNSUPPORTED, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
@@ -547,9 +546,9 @@ Status AssignClusters(Graph* graph) {
       if (!is_deadness_ok) {
         // do not contract, src and dst node cannot be in the same cluster
         OVTF_VLOG(5) << "Skipping (deadness not ok): " << src->name() << "["
-                       << edge->src_output() << "]@" << src_index << " -> "
-                       << dst->name() << "[" << edge->dst_input() << "]@"
-                       << dst_index;
+                     << edge->src_output() << "]@" << src_index << " -> "
+                     << dst->name() << "[" << edge->dst_input() << "]@"
+                     << dst_index;
         if (collect_non_contracting_edge_info) {
           log_reason(EdgeNonContractionReasons::DEADNESS, edge);
           cluster_separation_reason[get_string_key(src_index, dst_index)]
@@ -635,7 +634,7 @@ Status AssignClusters(Graph* graph) {
       if (NodeIsMarkedForClustering(node)) {
         has_ovtf_ops = true;
 
-// Some sanity checks for deadness
+        // Some sanity checks for deadness
         TF_RETURN_IF_ERROR(CheckNodeClusterAssignmentWRTDeadness(
             node, nodes_predicate_map, cluster_map));
       } else {
@@ -645,12 +644,11 @@ Status AssignClusters(Graph* graph) {
 
     if (has_ovtf_ops && has_non_ovtf_ops) {
       OVTF_VLOG(2) << "Cluster " << cluster->index
-                     << " has both nGraph and non-nGraph nodes";
+                   << " has both nGraph and non-nGraph nodes";
       for (auto node : cluster->nodes) {
-        OVTF_VLOG(2) << (NodeIsMarkedForClustering(node)
-                               ? "nGraph node: "
-                               : "non-nGraph node: ")
-                       << node->name() << " [" << node->type_string() << "]";
+        OVTF_VLOG(2) << (NodeIsMarkedForClustering(node) ? "nGraph node: "
+                                                         : "non-nGraph node: ")
+                     << node->name() << " [" << node->type_string() << "]";
       }
       return errors::Internal("Cluster ", cluster->index,
                               " has both nGraph and non-nGraph nodes");
@@ -666,8 +664,8 @@ Status AssignClusters(Graph* graph) {
     for (auto node : cluster->nodes) {
       if (OVTF_VLOG_IS_ON(5)) {
         OVTF_VLOG(5) << ">> cluster " << cluster_idx << ": " << node->id()
-                       << " " << node << " :: " << node->name() << " ["
-                       << node->type_string() << "]";
+                     << " " << node << " :: " << node->name() << " ["
+                     << node->type_string() << "]";
       }
 
       if (!NodeIsMarkedForClustering(node)) {

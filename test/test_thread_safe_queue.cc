@@ -72,9 +72,7 @@ TEST(ThreadSafeQueue, Simple) {
   }
 
   // cout << "Now adding an item\n";
-  {
-    queue.Add(nullptr);
-  }
+  { queue.Add(nullptr); }
   // Wait until the consumer has a chance to move forward
   // cout << "Producer: Waiting for consumer to get ready" << endl;
 

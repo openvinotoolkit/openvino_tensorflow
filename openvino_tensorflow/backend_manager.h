@@ -27,7 +27,6 @@ class BackendManager {
   // Returns the nGraph supported backend names
   static vector<string> GetSupportedBackends();
 
-
   // Set the BackendManager backend ng_backend_name_
   static Status SetBackend(const string& backend_name = "CPU");
 

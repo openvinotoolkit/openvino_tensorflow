@@ -70,4 +70,4 @@ void SetEnv(const char* env, const char* val);
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
 
-#endif // OPENVINO_TF_BRIDGE_UTILS_H_
+#endif  // OPENVINO_TF_BRIDGE_UTILS_H_

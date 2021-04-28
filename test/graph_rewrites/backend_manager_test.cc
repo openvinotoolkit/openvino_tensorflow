@@ -12,8 +12,8 @@
 #include "tensorflow/core/public/session.h"
 
 #include "logging/tf_graph_writer.h"
-#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "test/test_utilities.h"
 

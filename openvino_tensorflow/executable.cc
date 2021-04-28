@@ -12,11 +12,11 @@
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/executable.h"
-#include "openvino_tensorflow/ie_tensor.h"
-#include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
+#include "openvino_tensorflow/ie_tensor.h"
 #include "openvino_tensorflow/ie_utils.h"
 #include "openvino_tensorflow/ie_vadm_engine.h"
+#include "openvino_tensorflow/ovtf_utils.h"
 
 using namespace std;
 using namespace ngraph;
@@ -30,8 +30,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
   const auto& opset = ngraph::get_opset5();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
-      OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: "
-                     << node->get_type_info().name;
+      OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
                           " not belonging to opset5!");
     }
@@ -44,8 +43,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
     OVTF_VLOG(3) << parameters[i];
     if (parameters[i]->get_users().size() == 0) {
       m_skipped_inputs.push_back(i);
-      OVTF_VLOG(2) << "Removing unused parameter "
-                     << parameters[i]->get_name();
+      OVTF_VLOG(2) << "Removing unused parameter " << parameters[i]->get_name();
     } else {
       used_parameters.push_back(parameters[i]);
     }
@@ -105,7 +103,7 @@ Executable::Executable(shared_ptr<Function> func, string device)
         m_hoisted_params.push_back(
             make_pair(param->get_friendly_name(), ie_tensor));
         OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
-                       << param;
+                     << param;
         param_replaced = true;
         break;
       }
@@ -154,13 +152,13 @@ Executable::Executable(shared_ptr<Function> func, string device)
   }
 
   auto outputInfo = m_network.getOutputsInfo();
-  for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter){
+  for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter) {
     auto out_name = iter->first;
     auto it = output_dt_map.find(out_name);
 
-    if(it == output_dt_map.end()){
-
-      THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name << " doesn't exist";
+    if (it == output_dt_map.end()) {
+      THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name
+                         << " doesn't exist";
     }
     auto precision = IE_Utils::toPrecision(it->second);
     iter->second->setPrecision(precision);
@@ -178,8 +176,8 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
                       vector<shared_ptr<runtime::Tensor>>& outputs,
                       bool multi_req_execution) {
   if (m_trivial_fn) {
-    OVTF_VLOG(2) << "Calling trivial IE function with inputs="
-                   << inputs.size() << " outputs=" << outputs.size();
+    OVTF_VLOG(2) << "Calling trivial IE function with inputs=" << inputs.size()
+                 << " outputs=" << outputs.size();
     return CallTrivial(inputs, outputs);
   }
 
@@ -331,5 +329,5 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
   }
   return true;
 }
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow

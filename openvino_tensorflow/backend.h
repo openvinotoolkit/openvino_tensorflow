@@ -11,10 +11,10 @@
 
 #include "ngraph/ngraph.hpp"
 
+#include "contexts.h"
+#include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_tensor.h"
-#include "openvino_tensorflow/cluster_manager.h"
-#include "contexts.h"
 
 using namespace std;
 
@@ -41,5 +41,5 @@ class Backend {
   string m_device;
   string m_device_type;
 };
-}//end namespace openvino_tensorflow
+}  // end namespace openvino_tensorflow
 }

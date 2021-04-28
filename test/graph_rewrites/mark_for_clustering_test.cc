@@ -73,5 +73,5 @@ TEST(MarkForClustering, SimpleTest) {
   }
 }
 }
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow

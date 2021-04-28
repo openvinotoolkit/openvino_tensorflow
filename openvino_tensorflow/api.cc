@@ -16,8 +16,8 @@ namespace api {
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
 static std::set<std::string> disabled_op_types{};
-static char * backendName;
-static char * backendList[4];
+static char* backendName;
+static char* backendList[4];
 
 extern "C" {
 void enable() { Enable(); }
@@ -33,7 +33,7 @@ bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    backends[idx] = backendList[idx] ;
+    backends[idx] = backendList[idx];
   }
   return true;
 }
@@ -56,9 +56,7 @@ extern bool get_backend(char** backend) {
   *backend = backendName;
   return true;
 }
-void  freeBackend() {
-  free(backendName);
-}
+void freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
@@ -100,7 +98,7 @@ bool IsLoggingPlacement() {
 }
 
 std::set<string> GetDisabledOps() {
-  const char* disabled_ops_char_ptr = std::getenv("OPENVINO_TF_DISABLED_OPS"); 
+  const char* disabled_ops_char_ptr = std::getenv("OPENVINO_TF_DISABLED_OPS");
   if (disabled_ops_char_ptr != nullptr) {
     string disabled_ops_str = disabled_ops_char_ptr;
     SetDisabledOps(disabled_ops_str);

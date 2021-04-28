@@ -120,7 +120,7 @@ class IE_Utils {
         return InferenceEngine::Precision::BOOL;
       default:
         THROW_IE_EXCEPTION << "Can't convert type " << element_type
-                          << " to IE precision!";
+                           << " to IE precision!";
     }
   }
   static const element::Type fromPrecision(
@@ -146,7 +146,7 @@ class IE_Utils {
         return element::Type_t::boolean;
       default:
         THROW_IE_EXCEPTION << "Can't convert IE precision " << precision
-                          << " to nGraph type!";
+                           << " to nGraph type!";
     }
   }
 };

@@ -21,8 +21,6 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-
-
 IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
     : runtime::Tensor(
@@ -63,7 +61,7 @@ void IETensor::write(const void* src, size_t bytes) {
   }
 
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob==nullptr){
+  if (blob == nullptr) {
     THROW_IE_EXCEPTION << "blob is nullptr";
   }
   auto lm = blob->wmap();
@@ -78,7 +76,7 @@ void IETensor::read(void* dst, size_t bytes) const {
   }
 
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob==nullptr){
+  if (blob == nullptr) {
     THROW_IE_EXCEPTION << "blob is nullptr";
   }
   auto lm = blob->rmap();
@@ -88,11 +86,11 @@ void IETensor::read(void* dst, size_t bytes) const {
 
 const void* IETensor::get_data_ptr() const {
   auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob==nullptr){
+  if (blob == nullptr) {
     THROW_IE_EXCEPTION << "blob is nullptr";
   }
   auto lm = blob->rwmap();
   return lm.as<void*>();
 }
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow
