@@ -16,7 +16,6 @@ shared_ptr<Backend> BackendManager::m_backend;
 string BackendManager::m_backend_name;
 mutex BackendManager::m_backend_mutex;
 
-
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
 }
@@ -25,11 +24,11 @@ Status BackendManager::SetBackend(const string& backend_name) {
   OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
-  if(bname == "HDDL"){
-    return errors::Internal("Failed to set backend: ", bname + " backend not available");
+  if (bname == "HDDL") {
+    return errors::Internal("Failed to set backend: ",
+                            bname + " backend not available");
   }
-  if(bname == "VAD-M")
-    bname = "HDDL";
+  if (bname == "VAD-M") bname = "HDDL";
 
   auto status = CreateBackend(backend, bname);
   if (!status.ok() || backend == nullptr) {
@@ -38,10 +37,9 @@ Status BackendManager::SetBackend(const string& backend_name) {
 
   lock_guard<mutex> lock(m_backend_mutex);
   m_backend = backend;
-  if(bname.find("MYRIAD") != string::npos){
+  if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
-  }
-  else{
+  } else {
     m_backend_name = bname;
   }
   return Status::OK();
@@ -65,8 +63,7 @@ Status BackendManager::GetBackendName(string& backend_name) {
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
-      OVTF_VLOG(0) << "Failed to get backend name: "
-                     << status.error_message();
+      OVTF_VLOG(0) << "Failed to get backend name: " << status.error_message();
       return errors::Internal("Failed to get backend name: ",
                               status.error_message());
     }
@@ -107,7 +104,7 @@ vector<string> BackendManager::GetSupportedBackends() {
   InferenceEngine::Core core;
   auto devices = core.GetAvailableDevices();
   auto pos = find(devices.begin(), devices.end(), "HDDL");
-  if(pos != devices.end()) {
+  if (pos != devices.end()) {
     devices.erase(pos);
     devices.push_back("VAD-M");
   }

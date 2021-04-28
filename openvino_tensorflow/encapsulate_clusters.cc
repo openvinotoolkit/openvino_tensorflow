@@ -18,7 +18,7 @@
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
@@ -34,10 +34,10 @@
 #include "logging/ovtf_log.h"
 #include "logging/tf_graph_writer.h"
 #include "openvino_tensorflow/assign_clusters.h"
-#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/encapsulate_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
 
@@ -142,8 +142,8 @@ Status Encapsulator::AnalysisPass() {
       }
     } else {
       OVTF_VLOG(3) << "setting cluster " << cluster_idx
-                     << " requested device to '" << node->assigned_device_name()
-                     << "'";
+                   << " requested device to '" << node->assigned_device_name()
+                   << "'";
       device_name_map[cluster_idx] = node->assigned_device_name();
     }
   }
@@ -196,9 +196,9 @@ Status Encapsulator::AnalysisPass() {
                                 : dst_clustered ? "in-flow" : "out-flow";
 
     OVTF_VLOG(4) << "found " << flow_kind << ": " << src->name() << "["
-                   << edge->src_output() << "] in " << src_cluster_idx << " to "
-                   << dst->name() << "[" << edge->dst_input() << "] in "
-                   << dst_cluster_idx << ", datatype: " << dt;
+                 << edge->src_output() << "] in " << src_cluster_idx << " to "
+                 << dst->name() << "[" << edge->dst_input() << "] in "
+                 << dst_cluster_idx << ", datatype: " << dt;
 
     bool edge_is_retval = false, edge_is_arg = false;
 
@@ -444,7 +444,7 @@ Status Encapsulator::RewritePass(
       for (auto const& i : device_config) {
         // Adding the optional attributes
         OVTF_VLOG(3) << "Attaching Attribute " << i.first << " Val "
-                       << i.second;
+                     << i.second;
         nb.Attr(i.first, i.second);
       }
     }

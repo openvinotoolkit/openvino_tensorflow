@@ -1,6 +1,6 @@
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -74,7 +74,8 @@ class TestOpDisableOperations(NgraphTest):
         env_map = self.store_env_variables('OPENVINO_TF_DISABLED_OPS')
         env_list = 'Squeeze'
         self.set_env_variable('OPENVINO_TF_DISABLED_OPS', env_list)
-        assert openvino_tensorflow.get_disabled_ops() == env_list.encode("utf-8")
+        assert openvino_tensorflow.get_disabled_ops() == env_list.encode(
+            "utf-8")
         self.unset_env_variable('OPENVINO_TF_DISABLED_OPS')
         self.restore_env_variables(env_map)
 

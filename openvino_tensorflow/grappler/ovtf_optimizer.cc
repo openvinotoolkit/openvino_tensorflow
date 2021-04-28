@@ -17,9 +17,9 @@
 #include "tensorflow/core/platform/protobuf.h"
 
 #include "openvino_tensorflow/api.h"
-#include "openvino_tensorflow/grappler/ovtf_optimizer.h"
-#include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/backend_manager.h"
+#include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/grappler/ovtf_optimizer.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
 
@@ -36,14 +36,14 @@ Status OVTFOptimizer::Init(
   for (auto i : params) {
     m_config_map["_ovtf_" + i.first] = i.second.s();
     OVTF_VLOG(3) << "Attribute: " << i.first
-                   << " Value: " << m_config_map["_ovtf_" + i.first];
+                 << " Value: " << m_config_map["_ovtf_" + i.first];
   }
   return Status::OK();
 }
 
 Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
-                                 const tensorflow::grappler::GrapplerItem& item,
-                                 GraphDef* output) {
+                               const tensorflow::grappler::GrapplerItem& item,
+                               GraphDef* output) {
   OVTF_VLOG(5) << "OVTF_OPTIMIZER: grappler item id " << item.id;
 
   // Convert the GraphDef to Graph
@@ -58,7 +58,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is set
+  // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is
+  // set
   // we will not do anything; all subsequent passes become a no-op.
   bool ovtf_not_enabled =
       (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
@@ -68,8 +69,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   }
   if (ovtf_not_enabled || already_processed) {
     OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                          (already_processed ? "graph is already preprocessed"
-                                             : "openvino_tensorflow is disabled");
+                        (already_processed ? "graph is already preprocessed"
+                                           : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();
     graph.ToGraphDef(output);
     return Status::OK();
@@ -149,19 +150,21 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());
-  std::vector<void *> nodes_list = FC.MarkSupportedNodes();
+  std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
-  // cast back the nodes in the TF format and mark the nodes for clustering (moved out from MarkForClustering function)
-  const std::map<std::string, SetAttributesFunction>& set_attributes_map = GetAttributeSetters();
+  // cast back the nodes in the TF format and mark the nodes for clustering
+  // (moved out from MarkForClustering function)
+  const std::map<std::string, SetAttributesFunction>& set_attributes_map =
+      GetAttributeSetters();
   for (auto void_node : nodes_list) {
-  // TODO(amprocte): move attr name to a constant
-    tensorflow::Node* node = (tensorflow::Node *)void_node;
+    // TODO(amprocte): move attr name to a constant
+    tensorflow::Node* node = (tensorflow::Node*)void_node;
     node->AddAttr("_ovtf_marked_for_clustering", true);
     auto it = set_attributes_map.find(node->type_string());
     if (it != set_attributes_map.end()) {
       it->second(node);
     }
-  }  
+  }
   util::DumpTFGraph(&graph, idx, "marked");
 
   // 2. Assign clusters then, if requested, dump the graphs.
@@ -185,8 +188,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 }
 
 void OVTFOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
-                               const tensorflow::grappler::GrapplerItem& item,
-                               const GraphDef& optimize_output, double result) {
+                             const tensorflow::grappler::GrapplerItem& item,
+                             const GraphDef& optimize_output, double result) {
   // no-op
 }
 

@@ -18,7 +18,7 @@
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
@@ -26,9 +26,9 @@
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
-#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 
@@ -75,7 +75,7 @@ static Status ParseNodeAttributes(
       auto attr_name = itx.first;
       auto attr_value = itx.second.s();
       OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strnlen("_ovtf_", 6))
-                     << " Value: " << attr_value;
+                   << " Value: " << attr_value;
       additional_attribute_map->insert(
           {attr_name.substr(strnlen("_ovtf_", 6)), attr_value});
     }
@@ -93,7 +93,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
 
   OVTF_VLOG(1) << "NGraphEncapsulateOp: " << m_cluster_id
-                 << " Name: " << name();
+               << " Name: " << name();
 
   GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
   if (graph_def == nullptr) {
@@ -163,7 +163,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
       }
 
       OVTF_VLOG(5) << "For arg " << index << " checking edge "
-                     << edge->DebugString();
+                   << edge->DebugString();
 
       if (InputIsStatic(edge->dst(), edge->dst_input())) {
         OVTF_VLOG(5) << "Marking edge static: " << edge->DebugString();
@@ -194,7 +194,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
-                 << m_cluster_id;
+               << m_cluster_id;
 
   Timer compute_time;
   std::lock_guard<std::mutex> lock(m_compute_lock_);
@@ -230,7 +230,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   }
 
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got graph for cluster "
-                 << m_cluster_id;
+               << m_cluster_id;
 
   Timer create_or_lookup_tensors;
   vector<shared_ptr<ngraph::runtime::Tensor>> ng_inputs;
@@ -242,53 +242,53 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
         ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);
       }
-      if (ng_shape.size() > 0 && ng_shape[0] == 0)
-          continue;
+      if (ng_shape.size() > 0 && ng_shape[0] == 0) continue;
       ngraph::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
 
       auto backend = BackendManager::GetBackend();
-      #if TF_VERSION < 2
-        std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
-            make_shared<IETensor>(ng_element_type, ng_shape,
+#if TF_VERSION < 2
+      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+          make_shared<IETensor>(ng_element_type, ng_shape,
                                 (void*)DMAHelper::base(&tf_input_tensors[i]));
-      #else
-        std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
-            make_shared<IETensor>(ng_element_type, ng_shape,
+#else
+      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+          make_shared<IETensor>(ng_element_type, ng_shape,
                                 tf_input_tensors[i].data());
-      #endif
+#endif
       ng_inputs.push_back(ng_tensor);
     }
   }
 
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
-                    "for cluster "
-                 << m_cluster_id;
+                  "for cluster "
+               << m_cluster_id;
 
   // Allocate tensors for the output results.
 
   auto results = ng_exec->GetResults();
   std::string device;
   BackendManager::GetBackendName(device);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(results.size(),
-                                                              nullptr);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(ng_result_list.size(),
-                                                              nullptr);
+  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(
+      results.size(), nullptr);
+  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(
+      ng_result_list.size(), nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
   int j = 0;
 #if defined(OPENVINO_2021_2)
-  if(device != "MYRIAD" && device != "HDDL"){
+  if (device != "MYRIAD" && device != "HDDL") {
 #else
-  if(device != "HDDL"){
+  if (device != "HDDL") {
 #endif
     for (auto i = 0; i < ng_result_list.size(); i++) {
       auto ng_element = ng_result_list[i];
-      if(ng_element->get_output_partial_shape(0).is_dynamic()) {
-        OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute skipping output allocation for "
-          "dynamic tensor at index"
-        << i;
+      if (ng_element->get_output_partial_shape(0).is_dynamic()) {
+        OVTF_VLOG(4)
+            << "NGraphEncapsulateOp::Compute skipping output allocation for "
+               "dynamic tensor at index"
+            << i;
         dyn_shape_tensors.push_back(i);
         output_mappings[i] = j;
         j++;
@@ -304,25 +304,26 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-      //Make sure the nGraph-inferred element type agrees with what TensorFlow
+      // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected
       ngraph::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
-      OP_REQUIRES_OK(
-        ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
-                                                &expected_elem_type));
+      OP_REQUIRES_OK(ctx,
+                     util::TFDataTypeToNGraphElementType(
+                         ctx->expected_output_dtype(i), &expected_elem_type));
       OP_REQUIRES(
-        ctx, ng_element_type == expected_elem_type,
-        errors::Internal("Element type inferred by nGraph does not match "
-                         "the element type expected by TensorFlow"));
+          ctx, ng_element_type == expected_elem_type,
+          errors::Internal("Element type inferred by nGraph does not match "
+                           "the element type expected by TensorFlow"));
 
+#if TF_VERSION < 2
+      ng_outputs[i] = make_shared<IETensor>(
+          ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
 
-      #if TF_VERSION < 2
-        ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape, (void*)DMAHelper::base(output_tensor));
-
-      #else
-        ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape, output_tensor->data());
-      #endif
+#else
+      ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape,
+                                            output_tensor->data());
+#endif
 
       if (!(ng_shape.size() > 0 && ng_shape[0] == 0)) {
         output_mappings[i] = j;
@@ -340,9 +341,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   {
     Timer execute_function;
     {
-      OVTF_VLOG(4)
-          << "NGraphEncapsulateOp::Compute call starting for cluster "
-          << m_cluster_id;
+      OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
+                   << m_cluster_id;
       try {
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
       } catch (const std::exception& exp) {
@@ -360,14 +360,14 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   }
 
 #if defined(OPENVINO_2021_2)
-  if(device != "MYRIAD" && device != "HDDL") {
+  if (device != "MYRIAD" && device != "HDDL") {
 #else
-  if(device != "HDDL") {
+  if (device != "HDDL") {
 #endif
     for (auto i : dyn_shape_tensors) {
       OP_REQUIRES(ctx, output_mappings[i] != -1,
-              errors::Internal("Mapping error while "
-                                "reading dynamic output blob"));
+                  errors::Internal("Mapping error while "
+                                   "reading dynamic output blob"));
       auto ng_output = ng_func_outputs[output_mappings[i]];
       // Create the TF output tensor
       auto ng_shape = ng_output->get_shape();
@@ -382,25 +382,23 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
       ctx->set_output(i, tf_tensor);
     }
-  }
-  else{
+  } else {
     int j = 0;
-    for(int i = 0; i < ng_result_list.size(); i++){
+    for (int i = 0; i < ng_result_list.size(); i++) {
       if (ng_output_shapes[i].size() > 0 && ng_output_shapes[i][0] == 0) {
-
         auto ng_shape = ng_output_shapes[i];
         ngraph::element::Type expected_elem_type;
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(
-          ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
-                                                   &expected_elem_type));
+        OP_REQUIRES_OK(ctx,
+                       util::TFDataTypeToNGraphElementType(
+                           ctx->expected_output_dtype(i), &expected_elem_type));
         OP_REQUIRES(
             ctx, ng_element_type == expected_elem_type,
             errors::Internal("Element type inferred by nGraph does not match "
-                            "the element type expected by TensorFlow"));
+                             "the element type expected by TensorFlow"));
         TensorShape tf_shape;
-        for(auto dim : ng_shape) {
+        for (auto dim : ng_shape) {
           tf_shape.AddDim(dim);
         }
 
@@ -411,20 +409,20 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
         auto ng_shape = ng_output_shapes[i];
         if (ng_result_list[i]->is_dynamic()) {
-            ng_shape = ng_output->get_shape();
+          ng_shape = ng_output->get_shape();
         }
         ngraph::element::Type expected_elem_type;
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(
-          ctx, util::TFDataTypeToNGraphElementType(ctx->expected_output_dtype(i),
-                                                   &expected_elem_type));
+        OP_REQUIRES_OK(ctx,
+                       util::TFDataTypeToNGraphElementType(
+                           ctx->expected_output_dtype(i), &expected_elem_type));
         OP_REQUIRES(
             ctx, ng_element_type == expected_elem_type,
             errors::Internal("Element type inferred by nGraph does not match "
-                            "the element type expected by TensorFlow"));
+                             "the element type expected by TensorFlow"));
         TensorShape tf_shape;
-        for(auto dim : ng_shape) {
+        for (auto dim : ng_shape) {
           tf_shape.AddDim(dim);
         }
 
@@ -435,36 +433,34 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
         auto blob = ie_tensor->get_blob();
 
-      #if TF_VERSION < 2
-          ng_output->read((void*)DMAHelper::base(output_tensor), size);
-      #else
-          ng_output->read(output_tensor->data(), size);
-      #endif
+#if TF_VERSION < 2
+        ng_output->read((void*)DMAHelper::base(output_tensor), size);
+#else
+        ng_output->read(output_tensor->data(), size);
+#endif
       }
     }
   }
 
-  long vm=0, rss=0;
+  long vm = 0, rss = 0;
   util::MemoryProfile(vm, rss);
   OVTF_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
-                 << " Step_ID: " << step_id << " Cluster: " << name()
-                 << " Input Tensors created: "
-                 << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
-                 << " Total process memory: " << rss / (1024 * 1024) << " GB";
+               << " Step_ID: " << step_id << " Cluster: " << name()
+               << " Input Tensors created: "
+               << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
+               << " Total process memory: " << rss / (1024 * 1024) << " GB";
 
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
-                 << m_cluster_id;
+               << m_cluster_id;
 
-  OVTF_VLOG(4)
-      << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
-      << m_cluster_id;
+  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
+               << m_cluster_id;
   OVTF_VLOG(1) << "OPENVINO_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
-                 << " Step_ID: " << step_id << " Cluster: " << name()
-                 << " Time-Compute: " << compute_time.ElapsedInMS()
-                 << " Function-Create-or-Lookup: " << time_func_create_or_lookup
-                 << " Create-and-copy-tensors: "
-                 << time_create_or_lookup_tensors
-                 << " Execute: " << time_execute_function;
+               << " Step_ID: " << step_id << " Cluster: " << name()
+               << " Time-Compute: " << compute_time.ElapsedInMS()
+               << " Function-Create-or-Lookup: " << time_func_create_or_lookup
+               << " Create-and-copy-tensors: " << time_create_or_lookup_tensors
+               << " Execute: " << time_execute_function;
 }  // end compute
 
 // Computes signature and gets executable
@@ -501,13 +497,13 @@ Status NGraphEncapsulateOp::GetExecutable(
   OVTF_VLOG(5) << "Computed signature: " << signature;
   auto it = m_ng_exec_map.find(signature);
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
-                 << m_cluster_id;
+               << m_cluster_id;
 
   // Translate the TensorFlow graph to nGraph.
   std::shared_ptr<ngraph::Function> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
-    long vm=0, rss=0, vm0=0, rss0=0;
+    long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
     util::MemoryProfile(vm0, rss0);
 
     ng_result_list.clear();
@@ -519,12 +515,12 @@ Status NGraphEncapsulateOp::GetExecutable(
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());
-    for (int i=0; i<ng_result_list.size(); i++) {
-        if (ng_result_list[i]->is_dynamic()) {
-            ng_output_shapes[i] = ngraph::Shape{};
-        } else {
-            ng_output_shapes[i] = ng_result_list[i]->get_shape();
-        }
+    for (int i = 0; i < ng_result_list.size(); i++) {
+      if (ng_result_list[i]->is_dynamic()) {
+        ng_output_shapes[i] = ngraph::Shape{};
+      } else {
+        ng_output_shapes[i] = ng_result_list[i]->get_shape();
+      }
     }
 
     // Evict the cache if the number of elements exceeds the limit
@@ -532,7 +528,8 @@ Status NGraphEncapsulateOp::GetExecutable(
     const char* cache_depth_specified =
         std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
     if (cache_depth_specified != nullptr) {
-      m_function_cache_depth_in_items = (int) strtol(cache_depth_specified, NULL, 10);
+      m_function_cache_depth_in_items =
+          (int)strtol(cache_depth_specified, NULL, 10);
     }
     if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
       evicted_ng_exec = m_ng_exec_map[m_lru.back()];
@@ -556,11 +553,11 @@ Status NGraphEncapsulateOp::GetExecutable(
     auto delta_vm_mem = vm - vm0;
     auto delta_res_mem = rss - rss0;
     OVTF_VLOG(1) << "OPENVINO_TF_CACHE_PROFILE: OP_ID: " << m_cluster_id
-                   << " Cache length: " << m_ng_exec_map.size()
-                   << " Cluster: " << m_name << " Delta VM: " << delta_vm_mem
-                   << " Delta RSS: " << delta_res_mem
-                   << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
-                   << " VM: " << vm / (1024 * 1024) << " GB" << endl;
+                 << " Cache length: " << m_ng_exec_map.size()
+                 << " Cluster: " << m_name << " Delta VM: " << delta_vm_mem
+                 << " Delta RSS: " << delta_res_mem
+                 << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
+                 << " VM: " << vm / (1024 * 1024) << " GB" << endl;
   }  // end of input signature not found in m_ng_exec_map
   else {
     // Found the input signature in m_ng_exec_map, use the cached executable

@@ -13,7 +13,8 @@
 
 #include "version.h"
 
-// OpenVINO™ integration with TensorFlow uses semantic versioning: see http://semver.org/
+// OpenVINO™ integration with TensorFlow uses semantic versioning: see
+// http://semver.org/
 
 #define OV_TF_MAJOR_VERSION 0
 #define OV_TF_MINOR_VERSION 5

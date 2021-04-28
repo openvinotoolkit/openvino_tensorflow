@@ -1,6 +1,6 @@
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 """Openvino Tensorflow test for checking backend setting using rewriter config for grappler

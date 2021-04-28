@@ -58,7 +58,7 @@ class IE_Backend_Engine {
   virtual void complete_async_inference(const int req_id);
   virtual void load_network();
 };
-}// namespace openvino_tensorflow
-}// namesoace tensorflow
+}  // namespace openvino_tensorflow
+}  // namesoace tensorflow
 
 #endif  // IE_BACKEND_ENGINE_H_

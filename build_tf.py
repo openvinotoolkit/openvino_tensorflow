@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -37,19 +37,17 @@ def main():
         action="store_true")
     parser.add_argument(
         '--cxx11_abi_version',
-        help=
-        "Desired version of ABI to be used while building Tensorflow",
+        help="Desired version of ABI to be used while building Tensorflow",
         default='0')
     parser.add_argument(
         '--resource_usage_ratio',
-        help=
-        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        help="Ratio of CPU / RAM resources to utilize during Tensorflow build",
         default=0.5)
     arguments = parser.parse_args()
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
-    
+
     assert os.path.isdir(arguments.output_dir), \
         "Did not find output directory: " + arguments.output_dir
 
@@ -75,15 +73,20 @@ def main():
         os.chdir(pwd)
 
     # Build TensorFlow
-    build_tensorflow(arguments.tf_version, "tensorflow", 'artifacts',
-                     arguments.target_arch, False,
-                     arguments.use_intel_tensorflow, arguments.cxx11_abi_version,
-                     resource_usage_ratio=float(arguments.resource_usage_ratio))
+    build_tensorflow(
+        arguments.tf_version,
+        "tensorflow",
+        'artifacts',
+        arguments.target_arch,
+        False,
+        arguments.use_intel_tensorflow,
+        arguments.cxx11_abi_version,
+        resource_usage_ratio=float(arguments.resource_usage_ratio))
 
     # Build TensorFlow C++ Library
-    build_tensorflow_cc(arguments.tf_version, "tensorflow", 'artifacts',
-                        arguments.target_arch, False,
-                        arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
+    build_tensorflow_cc(
+        arguments.tf_version, "tensorflow", 'artifacts', arguments.target_arch,
+        False, arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
     artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
@@ -94,7 +97,9 @@ def main():
 
     print('\033[1;35mTensorFlow Build finished\033[0m')
 
-    print('When building openvino_tensorflow using this prebuilt tensorflow, use:')
+    print(
+        'When building openvino_tensorflow using this prebuilt tensorflow, use:'
+    )
     print('\033[3;34mpython3 build_ovtf.py --use_tensorflow_from_location ' +
           os.path.abspath(arguments.output_dir) + '\033[1;0m')
 

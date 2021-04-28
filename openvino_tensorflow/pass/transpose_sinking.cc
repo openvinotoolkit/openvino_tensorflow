@@ -91,7 +91,7 @@ static void write_transposemap(TransposeMap& reorders,
   auto name =
       target.get_node()->get_name() + "." + to_string(target.get_index());
   OVTF_VLOG(4) << "Write TransposeMap[" << name
-                 << "] = " << describe<opset::Transpose>(transpose);
+               << "] = " << describe<opset::Transpose>(transpose);
   reorders[name] = transpose;
 }
 
@@ -101,7 +101,7 @@ static shared_ptr<opset::Transpose> read_transposemap(
       target.get_node()->get_name() + "." + to_string(target.get_index());
   auto transpose = reorders[name];
   OVTF_VLOG(4) << "Read TransposeMap[" << name << "]  -> "
-                 << describe<opset::Transpose>(transpose);
+               << describe<opset::Transpose>(transpose);
   return transpose;
 }
 
@@ -118,8 +118,8 @@ static shared_ptr<opset::Transpose> combine_transposes(
       ngraph::apply_permutation(perm_t1, t2_const->get_axis_vector_val());
   auto combined = make_transpose(t2->input_value(0), perm_t2);
   OVTF_VLOG(4) << "Combining " << describe<opset::Transpose>(t1) << " and "
-                 << describe<opset::Transpose>(t2) << " into "
-                 << describe<opset::Transpose>(combined);
+               << describe<opset::Transpose>(t2) << " into "
+               << describe<opset::Transpose>(combined);
   return combined;
 }
 
@@ -127,7 +127,7 @@ static void insert_transpose(shared_ptr<ngraph::Node> target,
                              shared_ptr<ngraph::Node> transpose,
                              size_t input_index) {
   OVTF_VLOG(4) << "Inserting transpose at input " << target->get_name()
-                 << " input index " << input_index;
+               << " input index " << input_index;
   auto arg = target->input(input_index).get_source_output();
   OVTF_VLOG(4) << "Arg shape: " << arg.get_shape();
   auto new_order = ngraph::as_type_ptr<opset::Constant>(
@@ -135,8 +135,8 @@ static void insert_transpose(shared_ptr<ngraph::Node> target,
   auto new_transpose = make_transpose(arg.get_node_shared_ptr(),
                                       new_order->get_axis_vector_val());
   OVTF_VLOG(4) << "Inserting transpose "
-                 << describe<opset::Transpose>(new_transpose) << " at input "
-                 << target->get_name() << " input index " << input_index;
+               << describe<opset::Transpose>(new_transpose) << " at input "
+               << target->get_name() << " input index " << input_index;
 
   target->input(input_index).replace_source_output(new_transpose->output(0));
 }
@@ -158,7 +158,7 @@ static void mark_transpose_for_deletion(
     shared_ptr<ngraph::Node> transpose,
     set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
   OVTF_VLOG(4) << "Marking transpose " << transpose->get_name()
-                 << " for deletion";
+               << " for deletion";
   transposes_to_delete.insert(transpose);
 }
 
@@ -205,7 +205,7 @@ static void convert_binary_to_default_order(
   input.replace_source_output(new_node->output(0));
 
   OVTF_VLOG(4) << "right = " << ngraph::vector_to_string(right.get_shape())
-                 << ", " << right.get_node_shared_ptr()->get_name();
+               << ", " << right.get_node_shared_ptr()->get_name();
   // this should now insert transpose on right
   mark_transpose_for_deletion(right_t, transposes_to_delete);
   write_transposemap(reorders, binary, right_t);
@@ -225,8 +225,8 @@ static void materialize_shapes(
     auto arg = n->input_value(i);
     auto arg_transpose = read_transposemap(reorders, arg);
     OVTF_VLOG(4) << "Materializing "
-                   << describe<opset::Transpose>(arg_transpose) << " for "
-                   << arg.get_node_shared_ptr()->get_name();
+                 << describe<opset::Transpose>(arg_transpose) << " for "
+                 << arg.get_node_shared_ptr()->get_name();
     mark_transpose_for_deletion(arg_transpose, transposes_to_delete);
     auto arg_shape = arg.get_shape();
     auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
@@ -243,7 +243,7 @@ static void sink_transpose(
     shared_ptr<opset::Transpose> transpose, TransposeMap& reorders,
     set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
   OVTF_VLOG(4) << "Sinking Transpose :"
-                 << describe<opset::Transpose>(transpose);
+               << describe<opset::Transpose>(transpose);
   auto transpose_in = transpose->input_value(0);
   auto orig_transpose = read_transposemap(reorders, transpose_in);
   // combine both transposes
@@ -262,7 +262,7 @@ static void sink_unary(
     set<shared_ptr<ngraph::Node>>& /* transposes_to_delete */) {
   auto arg_transpose = read_transposemap(reorders, n->input_value(0));
   OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(arg_transpose)
-                 << " for " << n->get_name();
+               << " for " << n->get_name();
   write_transposemap(reorders, n, arg_transpose);
 }
 
@@ -299,9 +299,8 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
     // Propagate the reshape which matches the shape of the binary node
     auto new_transpose =
         (binary->get_output_shape(0) == left.get_shape()) ? left_t : right_t;
-    OVTF_VLOG(4) << "Propagating "
-                   << describe<opset::Transpose>(new_transpose) << " for "
-                   << binary->get_name();
+    OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(new_transpose)
+                 << " for " << binary->get_name();
     write_transposemap(reorders, binary, new_transpose);
     // at this point, both transposes will be eventually removed
     mark_transpose_for_deletion(left_t, transposes_to_delete);
@@ -310,12 +309,10 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
     if (right_mismatch) {
       convert_binary_to_default_order(binary, binary->input(0), right, reorders,
                                       transposes_to_delete);
-    }
-    else 
-    {
+    } else {
       if (left_mismatch) {
-        convert_binary_to_default_order(binary, binary->input(1), left, reorders,
-                                        transposes_to_delete);
+        convert_binary_to_default_order(binary, binary->input(1), left,
+                                        reorders, transposes_to_delete);
       }
     }
   }
@@ -351,11 +348,11 @@ static void sink_pad(
   ngraph::replace_node(dummy_correct_shape,
                        n->input_value(0).get_node_shared_ptr());
   OVTF_VLOG(4) << "Replacing " << n->get_name() << " with "
-                 << new_pad->get_name();
+               << new_pad->get_name();
   ngraph::replace_node(n, new_pad);
   auto new_transpose = make_transpose(new_pad, order);
   OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(new_transpose)
-                 << " for " << n->get_name();
+               << " for " << n->get_name();
   write_transposemap(reorders, new_pad, new_transpose);
 }
 
@@ -386,7 +383,7 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
     auto iorder = iarg_transpose_order->get_axis_vector_val();
     if (iorder != order) {
       OVTF_VLOG(4) << " input order at " << i
-                     << "-th arg is different from first arg";
+                   << "-th arg is different from first arg";
       materialize_shapes(n, reorders, transposes_to_delete);
       return;
     }
@@ -403,15 +400,15 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
   // put back the original arguments
   for (size_t i = 0; i < new_concat->get_input_size(); i++) {
     OVTF_VLOG(4) << "Replacing " << new_concat->get_name() << " input " << i
-                   << " with " << n->get_name() << " input " << i;
+                 << " with " << n->get_name() << " input " << i;
     new_concat->input(i).replace_source_output(n->input_value(i));
   }
   OVTF_VLOG(4) << "Replacing " << n->get_name() << " with "
-                 << new_concat->get_name();
+               << new_concat->get_name();
   ngraph::replace_node(n, new_concat);
   auto new_transpose = make_transpose(new_concat, order);
   OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(new_transpose)
-                 << " for " << n->get_name();
+               << " for " << n->get_name();
   write_transposemap(reorders, new_concat, new_transpose);
 }
 

@@ -17,7 +17,6 @@ from platform import system
 
 import numpy as np
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import ops

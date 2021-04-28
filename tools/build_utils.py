@@ -17,15 +17,17 @@ import shutil
 import glob
 import platform
 import shlex
-import math 
+import math
 import psutil as psu
 from sysconfig import get_paths
 from subprocess import check_output, call
 from wheel.vendored.packaging.tags import sys_tags
 
+
 def get_tf_version():
     import tensorflow as tf
     return tf.__version__
+
 
 def get_tf_cxxabi():
     import tensorflow as tf
@@ -63,7 +65,8 @@ def command_executor(cmd,
             shlex.split(cmd), stdout=stdout, stderr=stderr)
         so, se = process.communicate()
         retcode = process.returncode
-        assert retcode == 0, "dir:" + os.getcwd() + ". Error in running command: " + cmd
+        assert retcode == 0, "dir:" + os.getcwd(
+        ) + ". Error in running command: " + cmd
     except OSError as e:
         print(
             "!!! Execution failed !!!",
@@ -184,12 +187,15 @@ def setup_venv(venv_dir):
     # Print the current packages
     command_executor(["pip", "list"])
 
+
 def get_tf_build_resources(resource_usage_ratio=0.5):
-  num_cores = int(psu.cpu_count(logical=True) * resource_usage_ratio)
-  jobs = int(psu.cpu_count(logical=True) * resource_usage_ratio)
-  #Bazel takes this flag in MB. If not given default TOTAL_RAM*0.67; 1GB -> (1<<30); 1MB -> (1<<20)
-  ram_usage = math.floor((psu.virtual_memory().total / (1<<30))  * resource_usage_ratio) * (1<<20)
-  return num_cores, jobs, ram_usage
+    num_cores = int(psu.cpu_count(logical=True) * resource_usage_ratio)
+    jobs = int(psu.cpu_count(logical=True) * resource_usage_ratio)
+    #Bazel takes this flag in MB. If not given default TOTAL_RAM*0.67; 1GB -> (1<<30); 1MB -> (1<<20)
+    ram_usage = math.floor((psu.virtual_memory().total /
+                            (1 << 30)) * resource_usage_ratio) * (1 << 20)
+    return num_cores, jobs, ram_usage
+
 
 def build_tensorflow(tf_version,
                      src_dir,
@@ -262,9 +268,7 @@ def build_tensorflow(tf_version,
 
     # Build Tensorflow with user-specified ABI
     # Consequent builds of Openvino-Tensorflow (OVTF) and OpenVINO will use the same ABI
-    cmd.extend([
-        "--cxxopt=\"-D_GLIBCXX_USE_CXX11_ABI=%s\""%cxx_abi
-    ])
+    cmd.extend(["--cxxopt=\"-D_GLIBCXX_USE_CXX11_ABI=%s\"" % cxx_abi])
 
     # If target is not specified, we assume default TF wheel build
     if target == '':
@@ -276,9 +280,9 @@ def build_tensorflow(tf_version,
         cmd.extend(['-s'])
 
     num_cores, jobs, ram_usage = get_tf_build_resources(resource_usage_ratio)
-    cmd.extend(["--local_cpu_resources=%d"%num_cores])
-    cmd.extend(["--local_ram_resources=%d"%ram_usage])
-    cmd.extend(["--jobs=%d"%jobs])
+    cmd.extend(["--local_cpu_resources=%d" % num_cores])
+    cmd.extend(["--local_ram_resources=%d" % ram_usage])
+    cmd.extend(["--jobs=%d" % jobs])
 
     command_executor(cmd, verbose=True)
 
@@ -444,7 +448,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
 
 def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
-                    cmake_flags, verbose):
+                      cmake_flags, verbose):
     pwd = os.getcwd()
 
     # Load the virtual env
@@ -544,9 +548,12 @@ def download_repo(target_name, repo, version, submodule_update=False):
 
     os.chdir(pwd)
 
+
 def download_github_release_asset(version, asset_name):
-    script = os.path.join(os.path.dirname(os.path.realpath(__file__)), "download_asset.sh")
+    script = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "download_asset.sh")
     command_executor(["bash", script, version, asset_name])
+
 
 def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -75,8 +75,7 @@ class TestEnv:
 
 
 def install_openvino_tensorflow(artifacts_dir):
-    ovtf_wheel_files = glob.glob(artifacts_dir +
-                                 "/openvino_tensorflow*.whl")
+    ovtf_wheel_files = glob.glob(artifacts_dir + "/openvino_tensorflow*.whl")
 
     if (len(ovtf_wheel_files) != 1):
         print("Multiple Python whl files exist. Please remove old wheels")
@@ -108,8 +107,7 @@ def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
 
     os.environ['LD_LIBRARY_PATH'] = os.getenv(
         "LD_LIBRARY_PATH", "") + ':' + os.path.join(artifacts_dir, lib_dir)
-    assert os.path.exists(
-            artifacts_dir), "Could not find directory"
+    assert os.path.exists(artifacts_dir), "Could not find directory"
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters
@@ -118,8 +116,7 @@ def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
         cmd = ['./gtest_ovtf']
 
     command_executor(cmd)
-    assert os.path.exists(
-            root_pwd), "Could not find directory"
+    assert os.path.exists(root_pwd), "Could not find directory"
     os.chdir(root_pwd)
 
 
@@ -151,8 +148,7 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
-    assert os.path.exists(
-            root_pwd), "Could not find directory"
+    assert os.path.exists(root_pwd), "Could not find directory"
     os.chdir(root_pwd)
 
 
@@ -197,8 +193,7 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     test_manifest_file = TestEnv.get_test_manifest_filename()
     if not os.path.isabs(test_manifest_file):
         test_manifest_file = os.path.join(test_src_dir, test_manifest_file)
-    assert os.path.exists(
-            test_manifest_file), "Could not find file"
+    assert os.path.exists(test_manifest_file), "Could not find file"
 
     test_xml_report = './junit_tensorflow_tests.xml'
 
@@ -216,8 +211,7 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
         cmd.extend(["--xml_report", test_xml_report])
     command_executor(cmd, verbose=True)
 
-    assert os.path.exists(
-            root_pwd), "Could not find the path"
+    assert os.path.exists(root_pwd), "Could not find the path"
     os.chdir(root_pwd)
 
 
@@ -284,8 +278,7 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     # Commenting the eval since it currently fails with TF2.0
     command_executor(cmd, verbose=True)
 
-    assert os.path.exists(
-            root_pwd), "Could not find the path"
+    assert os.path.exists(root_pwd), "Could not find the path"
     os.chdir(root_pwd)
 
 
@@ -322,8 +315,7 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
     os.environ["KMP_AFFINITY"] = 'granularity=fine,compact,1,0'
 
-    assert os.path.exists(
-            root_pwd), "Could not find the path"
+    assert os.path.exists(root_pwd), "Could not find the path"
     os.chdir(root_pwd)
     cmd = [
         'python',
@@ -336,6 +328,5 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
         str(batch_size * iterations),
     ]
     command_executor(cmd, verbose=True)
-    assert os.path.exists(
-            root_pwd), "Could not find the path"
+    assert os.path.exists(root_pwd), "Could not find the path"
     os.chdir(root_pwd)
