@@ -2,7 +2,7 @@
   <img src="images/openvino_wbgd.png">
 </p>
 
-# **OpenVINO™ integration with TensorFlow**
+# **OpenVINO™ integration with TensorFlow (Preview Release)**
 
 This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatiblity. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many AI models on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
