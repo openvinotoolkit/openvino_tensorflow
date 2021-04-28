@@ -65,16 +65,17 @@ def main():
     parser.add_argument(
         '--target_arch',
         help=
-        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n")
+        "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n"
+    )
 
     parser.add_argument(
         '--build_tf_from_source',
         type=str,
-        help="Build TensorFlow from source and use the specified version.\n"
-        + "If version isn't specified, TF version " + tf_version +
+        help="Build TensorFlow from source and use the specified version.\n" +
+        "If version isn't specified, TF version " + tf_version +
         " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples will be build for " + 
-        "OpenVINO integration with TensorFlow",
+        "Note: in this case C++ API, unit tests and examples will be build for "
+        + "OpenVINO integration with TensorFlow",
         const=tf_version,
         default='',
         nargs='?',
@@ -110,8 +111,7 @@ def main():
 
     parser.add_argument(
         '--disable_packaging_openvino_libs',
-        help=
-        "Use this option to do build a standalone python package of " +
+        help="Use this option to do build a standalone python package of " +
         "the OpenVINO integration with TensorFlow Library without OpenVINO libraries",
         action="store_true")
 
@@ -122,27 +122,23 @@ def main():
 
     parser.add_argument(
         '--cxx11_abi_version',
-        help=
-        "Desired version of ABI to be used while building Tensorflow, \n" +
+        help="Desired version of ABI to be used while building Tensorflow, \n" +
         "OpenVINO integration with TensorFlow, and OpenVINO libraries",
         default='0')
-    
+
     parser.add_argument(
         '--resource_usage_ratio',
-        help=
-        "Ratio of CPU / RAM resources to utilize during Tensorflow build",
+        help="Ratio of CPU / RAM resources to utilize during Tensorflow build",
         default=0.5)
 
     parser.add_argument(
         '--openvino_version',
-        help=
-        "Openvino version to be used for building from source",
+        help="Openvino version to be used for building from source",
         default='2021.3')
-    
+
     parser.add_argument(
         '--python_executable',
-        help=
-        "Use a specific python executable while building whl",
+        help="Use a specific python executable while building whl",
         action="store",
         default='')
 
@@ -166,23 +162,22 @@ def main():
 
     assert not (
         arguments.use_tensorflow_from_location != '' and
-        arguments.build_tf_from_source != ''
-    ), ("\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
-    "cannot be used together.")
+        arguments.build_tf_from_source != ''), (
+            "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
+            "cannot be used together.")
 
-    assert not (
-      arguments.openvino_version != "2021.3" and
-      arguments.openvino_version != "2021.2"
-    ), ("Only 2021.2 and 2021.3 are supported OpenVINO versions")
+    assert not (arguments.openvino_version != "2021.3" and
+                arguments.openvino_version != "2021.2"), (
+                    "Only 2021.2 and 2021.3 are supported OpenVINO versions")
 
     if arguments.use_openvino_from_location != '':
-      ver_file = arguments.use_openvino_from_location + \
-                    '/deployment_tools/inference_engine/version.txt'
-      with open(ver_file) as f:
-        line = f.readline()
-        assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
-            arguments.openvino_version + \
-            " does not match the version specified in use_openvino_from_location"
+        ver_file = arguments.use_openvino_from_location + \
+                      '/deployment_tools/inference_engine/version.txt'
+        with open(ver_file) as f:
+            line = f.readline()
+            assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
+                arguments.openvino_version + \
+                " does not match the version specified in use_openvino_from_location"
 
     version_check((arguments.build_tf_from_source == ''),
                   (arguments.use_tensorflow_from_location != ''),
@@ -279,10 +274,9 @@ def main():
         command_executor(["pip", "install", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
 
-        assert (
-            arguments.cxx11_abi_version == tf_cxx_abi
-        ), ("Desired ABI version and user built tensorflow library provided with "
-        "use_tensorflow_from_location are incompatible")
+        assert (arguments.cxx11_abi_version == tf_cxx_abi), (
+            "Desired ABI version and user built tensorflow library provided with "
+            "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
         os.chdir(tf_whl_loc)
@@ -301,31 +295,37 @@ def main():
         if arguments.build_tf_from_source == '':
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
-            
+
             if arguments.cxx11_abi_version == "0":
-                command_executor(["pip", "install", "tensorflow=="+tf_version])
+                command_executor(
+                    ["pip", "install", "tensorflow==" + tf_version])
             elif arguments.cxx11_abi_version == "1":
                 tags = next(sys_tags())
 
                 if tags.interpreter == "cp36":
-                    command_executor(["pip", "install", 
-                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"])
+                    command_executor([
+                        "pip", "install",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl"
+                    ])
                 if tags.interpreter == "cp37":
-                    command_executor(["pip", "install", 
-                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"])
+                    command_executor([
+                        "pip", "install",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl"
+                    ])
                 if tags.interpreter == "cp38":
-                    command_executor(["pip", "install", 
-                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"])
-                
+                    command_executor([
+                        "pip", "install",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl"
+                    ])
+
                 # ABI 1 TF required latest numpy
                 command_executor(["pip", "install", "-U numpy"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
-            assert (
-                arguments.cxx11_abi_version == tf_cxx_abi
-            ), ("Desired ABI version and tensorflow library installed with "
-            "pip are incompatible")
+            assert (arguments.cxx11_abi_version == tf_cxx_abi), (
+                "Desired ABI version and tensorflow library installed with "
+                "pip are incompatible")
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
@@ -364,13 +364,20 @@ def main():
             print("TF_SRC_DIR: ", tf_src_dir)
 
             # Build TensorFlow
-            build_tensorflow(tf_version, "tensorflow", artifacts_location,
-                             target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version,
-                             resource_usage_ratio=float(arguments.resource_usage_ratio))
+            build_tensorflow(
+                tf_version,
+                "tensorflow",
+                artifacts_location,
+                target_arch,
+                verbosity,
+                use_intel_tf,
+                arguments.cxx11_abi_version,
+                resource_usage_ratio=float(arguments.resource_usage_ratio))
 
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
-                                target_arch, verbosity, use_intel_tf, arguments.cxx11_abi_version)
+                                target_arch, verbosity, use_intel_tf,
+                                arguments.cxx11_abi_version)
 
             tf_cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
@@ -391,17 +398,17 @@ def main():
             "NOTE: OpenVINO python module is not built when building from source."
         )
 
-        if(arguments.openvino_version == "2021.3"):
-          openvino_branch = "releases/2021/3"
-        elif(arguments.openvino_version == "2021.2"):
-          openvino_branch = "releases/2021/2"
+        if (arguments.openvino_version == "2021.3"):
+            openvino_branch = "releases/2021/3"
+        elif (arguments.openvino_version == "2021.2"):
+            openvino_branch = "releases/2021/2"
 
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-             openvino_branch,
-             submodule_update=True)
+            openvino_branch,
+            submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
@@ -409,9 +416,12 @@ def main():
                        artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the bridge
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
     openvino_tf_cmake_flags = [
         "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
-        "-DCMAKE_CXX_FLAGS=-march=" + target_arch,
+        "-DCMAKE_CXX_FLAGS=-march=" + target_arch + atom_flags,
     ]
 
     openvino_artifacts_dir = ""
@@ -426,7 +436,7 @@ def main():
         ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
 
     openvino_tf_cmake_flags.extend(
-      ["-DOPENVINO_VERSION=" + arguments.openvino_version])
+        ["-DOPENVINO_VERSION=" + arguments.openvino_version])
 
     if (arguments.debug_build):
         openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
@@ -457,12 +467,13 @@ def main():
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
     if arguments.python_executable != '':
-        openvino_tf_cmake_flags.extend(["-DPYTHON_EXECUTABLE=%s"%arguments.python_executable])
+        openvino_tf_cmake_flags.extend(
+            ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
-                                openvino_tf_src_dir, venv_dir,
-                                openvino_tf_cmake_flags, verbosity)
+                                  openvino_tf_src_dir, venv_dir,
+                                  openvino_tf_cmake_flags, verbosity)
 
     # Make sure that the openvino_tensorflow whl is present in the artfacts directory
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
@@ -507,7 +518,7 @@ def main():
 
     # Run a quick test
     install_openvino_tf(tf_version, venv_dir,
-                      os.path.join(artifacts_location, ov_tf_whl))
+                        os.path.join(artifacts_location, ov_tf_whl))
 
     if builder_version > 0.50 and arguments.use_grappler_optimizer:
         import tensorflow as tf

@@ -1,6 +1,6 @@
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 """Openvino Tensorflow floor operation test
@@ -100,7 +100,8 @@ class TestWhere(NgraphTest):
     env_map = None
 
     def setup_method(self):
-        self.env_map = self.store_env_variables(['OPENVINO_TF_CONSTANT_FOLDING'])
+        self.env_map = self.store_env_variables(
+            ['OPENVINO_TF_CONSTANT_FOLDING'])
         self.set_env_variable('OPENVINO_TF_CONSTANT_FOLDING', '1')
 
     def teardown_method(self):

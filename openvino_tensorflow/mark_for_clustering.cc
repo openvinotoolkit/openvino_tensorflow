@@ -255,7 +255,7 @@ GetTFToNgOpMap() {
             std::make_shared<opset::ReduceSum>(),
             std::make_shared<opset::Subtract>(),
             std::make_shared<opset::Log>()}},
-	  {"LeakyRelu", {std::make_shared<opset::PRelu>()}},
+          {"LeakyRelu", {std::make_shared<opset::PRelu>()}},
           {"Less", {std::make_shared<opset::Less>()}},
           {"LessEqual", {std::make_shared<opset::LessEqual>()}},
           {"Log", {std::make_shared<opset::Log>()}},
@@ -382,7 +382,7 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
         }
 
         OVTF_VLOG(5) << "For arg " << index << " checking edge "
-                       << edge->DebugString();
+                     << edge->DebugString();
 
         if (InputIsStatic(edge->dst(), edge->dst_input())) {
           OVTF_VLOG(5) << "Marking edge static: " << edge->DebugString();

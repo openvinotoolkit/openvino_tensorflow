@@ -1,6 +1,6 @@
 # ==============================================================================
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 """Openvino Tensorflow update_config api test
@@ -24,7 +24,8 @@ import openvino_tensorflow
 class TestUpdateConfig(NgraphTest):
 
     @pytest.mark.skipif(
-        not openvino_tensorflow.is_grappler_enabled(), reason='Only for Grappler')
+        not openvino_tensorflow.is_grappler_enabled(),
+        reason='Only for Grappler')
     def test_update_config_adds_optimizer_only_once(self):
 
         # Helper function to count the number of occurances in a config

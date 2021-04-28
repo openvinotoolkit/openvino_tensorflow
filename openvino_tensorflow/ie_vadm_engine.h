@@ -42,7 +42,7 @@ class IE_VADM_Engine : public IE_Backend_Engine {
  private:
   int m_orig_batch_size;
 };
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow
 
 #endif  // IE_VADM_ENGINE_H_

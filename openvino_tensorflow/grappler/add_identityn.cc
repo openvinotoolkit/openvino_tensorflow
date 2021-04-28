@@ -30,8 +30,8 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         for (int i = 0; i < node->num_outputs(); i++) {
           if (IsRefType(node->output_type(i))) {
             OVTF_VLOG(5) << "OVTF_OPTIMIZER: "
-                           << "Datatype for the node output"
-                           << " at index " << i << " is ref type";
+                         << "Datatype for the node output"
+                         << " at index " << i << " is ref type";
             ref_type = true;
             break;
           }
@@ -40,8 +40,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         }
 
         if (ref_type) {
-          OVTF_VLOG(5)
-              << "OVTF_OPTIMIZER: Cannot construct an IdentityN node";
+          OVTF_VLOG(5) << "OVTF_OPTIMIZER: Cannot construct an IdentityN node";
           continue;
         }
 
@@ -62,7 +61,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         // TODO: Use (guaranteed) unique name here
         node->set_name(new_name);
         OVTF_VLOG(5) << "OVTF_OPTIMIZER: New name for fetch node "
-                       << node->name();
+                     << node->name();
       } else {
         OVTF_VLOG(5) << "OVTF_OPTIMIZER: num outputs " << node->num_outputs();
         OVTF_VLOG(5) << "OVTF_OPTIMIZER: Cannot construct an IdentityN node";

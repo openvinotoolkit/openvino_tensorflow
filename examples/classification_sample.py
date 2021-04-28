@@ -34,10 +34,11 @@ import openvino_tensorflow as ovtf
 import time
 from subprocess import check_output, call
 
+
 def load_graph(model_file):
     graph = tf.Graph()
     graph_def = tf.compat.v1.GraphDef()
-    
+
     assert os.path.exists(model_file), "Could not find directory"
     with open(model_file, "rb") as f:
         graph_def.ParseFromString(f.read())
@@ -111,39 +112,33 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.graph:
-      model_file = args.graph
-      if not args.input_layer:
-        raise Exception("Specify input layer for this network")
-      else:
-        input_layer = args.input_layer
-      if not args.output_layer:
-        raise Exception("Specify output layer for this network")
-      else:
-        output_layer = args.output_layer
-      if args.labels:
-        label_file = args.labels
-      else:
-        label_file = None
+        model_file = args.graph
+        if not args.input_layer:
+            raise Exception("Specify input layer for this network")
+        else:
+            input_layer = args.input_layer
+        if not args.output_layer:
+            raise Exception("Specify output layer for this network")
+        else:
+            output_layer = args.output_layer
+        if args.labels:
+            label_file = args.labels
+        else:
+            label_file = None
     if args.image:
-      file_name = args.image
+        file_name = args.image
     if args.input_height:
-      input_height = args.input_height
+        input_height = args.input_height
     if args.input_width:
-      input_width = args.input_width
+        input_width = args.input_width
     if args.input_mean:
-      input_mean = args.input_mean
+        input_mean = args.input_mean
     if args.input_std:
-      input_std = args.input_std
+        input_std = args.input_std
     if args.backend:
-      backend_name = args.backend
+        backend_name = args.backend
 
     graph = load_graph(model_file)
-    t = read_tensor_from_image_file(
-        file_name,
-        input_height=input_height,
-        input_width=input_width,
-        input_mean=input_mean,
-        input_std=input_std)
 
     input_name = "import/" + input_layer
     output_name = "import/" + output_layer
@@ -154,7 +149,7 @@ if __name__ == "__main__":
     print('Available Backends:')
     backends_list = ovtf.list_backends()
     for backend in backends_list:
-      print(backend)
+        print(backend)
     ovtf.set_backend(backend_name)
 
     # update config params for openvino tensorflow
@@ -163,6 +158,12 @@ if __name__ == "__main__":
 
     with tf.compat.v1.Session(
             graph=graph, config=config_ngraph_enabled) as sess:
+        t = read_tensor_from_image_file(
+            file_name,
+            input_height=input_height,
+            input_width=input_width,
+            input_mean=input_mean,
+            input_std=input_std)
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
@@ -172,7 +173,7 @@ if __name__ == "__main__":
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
         elapsed = time.time() - start
-        print('Inference time in ms: %f' % (elapsed*1000))
+        print('Inference time in ms: %f' % (elapsed * 1000))
     results = np.squeeze(results)
 
     if label_file:

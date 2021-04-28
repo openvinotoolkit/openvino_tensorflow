@@ -17,7 +17,7 @@ This document provides a list of all validated models that are supported by **Op
 
 The links to the TensorFlow-Slim models include the pre-trained checkpoint files only. You should refer to TensorFlow-Slim models [instructions page](https://github.com/tensorflow/models/tree/master/research/slim) to run inference or freeze the models. (No pre-trained checkpoint files provided for CifarNet and LeNet.)
 
-## Tensorflow Object Detection Model Zoo
+## TensorFlow Object Detection Model Zoo
 | Model Name | Supported Devices |
 |---|---|
 | [faster_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
@@ -36,7 +36,7 @@ The links to the TensorFlow-Slim models include the pre-trained checkpoint files
 
 Pre-trained frozen models are provided for these models.
 
-## TF Keras Applications
+## TensorFlow Keras Applications
 | Model Name | Supported Devices |
 |---|---|
 | [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)| CPU, iGPU, MYRIAD, VAD-M |

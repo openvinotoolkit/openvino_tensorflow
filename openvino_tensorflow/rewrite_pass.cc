@@ -15,12 +15,12 @@
 #include "logging/ovtf_log.h"
 #include "logging/tf_graph_writer.h"
 #include "openvino_tensorflow/assign_clusters.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/deassign_clusters.h"
 #include "openvino_tensorflow/encapsulate_clusters.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_utils.h"
-#include "openvino_tensorflow/backend_manager.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
 
@@ -76,7 +76,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 
-    // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is set
+    // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE
+    // is set
     // we will not do anything; all subsequent
     // passes become a no-op.
     bool ovtf_not_enabled =
@@ -87,8 +88,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
     if (ovtf_not_enabled || already_processed) {
       OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                            (already_processed ? "graph is already preprocessed"
-                                               : "ngraph is disabled");
+                          (already_processed ? "graph is already preprocessed"
+                                             : "ngraph is disabled");
       NGraphClusterManager::EvictAllClusters();
       return Status::OK();
     }
@@ -103,29 +104,32 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     BackendManager::GetBackendName(device);
     const char* device_id(device.c_str());
     std::string ov_version;
-    #if defined(OPENVINO_2021_2)
-      ov_version = "2021.2";
-    #else if defined(OPENVINO_2021_3)
-      ov_version = "2021.3";
-    #endif
+#if defined(OPENVINO_2021_2)
+    ov_version = "2021.2";
+#else if defined(OPENVINO_2021_3)
+    ov_version = "2021.3";
+#endif
 
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
-    ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, options.graph->get());
+    ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
+                                  options.graph->get());
     std::set<std::string> disabled_ops_set = api::GetDisabledOps();
     if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
       std::vector<std::string> batched_disabled_ops = {"Shape"};
-      for (int i=0; i<batched_disabled_ops.size(); i++) {
+      for (int i = 0; i < batched_disabled_ops.size(); i++) {
         disabled_ops_set.insert(batched_disabled_ops[i]);
       }
     }
     FC.SetDisabledOps(disabled_ops_set);
-    std::vector<void *> nodes_list = FC.MarkSupportedNodes();
+    std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
-    // cast back the nodes in the TF format and mark the nodes for clustering (moved out from MarkForClustering function)
-    const std::map<std::string, SetAttributesFunction>& set_attributes_map = GetAttributeSetters();
+    // cast back the nodes in the TF format and mark the nodes for clustering
+    // (moved out from MarkForClustering function)
+    const std::map<std::string, SetAttributesFunction>& set_attributes_map =
+        GetAttributeSetters();
     for (auto void_node : nodes_list) {
-    // TODO(amprocte): move attr name to a constant
-      tensorflow::Node* node = (tensorflow::Node *)void_node;
+      // TODO(amprocte): move attr name to a constant
+      tensorflow::Node* node = (tensorflow::Node*)void_node;
       node->AddAttr("_ovtf_marked_for_clustering", true);
       auto it = set_attributes_map.find(node->type_string());
       if (it != set_attributes_map.end()) {

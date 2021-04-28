@@ -67,7 +67,8 @@ def main():
 
     print('\033[1;35mOpenVINO Build finished\033[0m')
 
-    print('When building Openvino_Tensorflow using this prebuilt OpenVINO, use:')
+    print(
+        'When building Openvino_Tensorflow using this prebuilt OpenVINO, use:')
     print('\033[3;34mpython3 build_ovtf.py --use_openvino_from_location ' +
           os.path.abspath(arguments.output_dir) + '/artifacts/openvino' +
           '\033[1;0m')

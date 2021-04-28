@@ -17,7 +17,7 @@
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
-#if (TF_MAJOR_VERSION>=2) && (TF_MINOR_VERSION>2)
+#if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
@@ -146,7 +146,7 @@ TEST(MathOps, AddV2) {
 
   for (int i = 0; i < tensors_combs.size(); i += 2) {
     OVTF_VLOG(5) << "========>> Running AddV2 sub-test# " << (int)(i / 2 + 1)
-                   << " ...";
+                 << " ...";
 
     Scope root = Scope::NewRootScope();
 

@@ -33,9 +33,10 @@ This **OpenVINO™ integration with TensorFlow** package is currently compatible
 
 You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the following TensorFlow package:
 
-1. Ensure the following pip version is being used:
+1. Ensure the following versions are being used for pip and numpy:
 
         pip3 install --upgrade pip==21.0.1
+        pip3 install numpy==1.20.2
 
 2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
 
@@ -113,11 +114,11 @@ Use one of the following build options based on the requirements
 
         python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1
 
-5. Uses pre-built TF from the given location ([refer the Tensorflow build instructions](#tensorflow)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TF from source everytime.
+5. Uses pre-built TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TF from source everytime.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
 
-6. Uses prebuilt TF from the given location ([refer the Tensorflow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
+6. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021/ --cxx11_abi_version=1
 
@@ -154,6 +155,11 @@ Test the installation:
         python3 test_ovtf.py
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
+
+### Build Instructions for Intel Atom® Processor
+In order to build **OpenVINO™ integration with TensorFlow** to use on Intel Atom® processor, we recommend building TF from source. The command below will build TF and OpenVINO™ from source for Intel Atom® processors.
+
+        python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
 
 ## TensorFlow
 

@@ -19,9 +19,9 @@
 #include "api.h"
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
-#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/layout_conversions.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
+#include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
 
@@ -655,7 +655,7 @@ static Status TranslateArgMinMax(
   // If input dimension is negative, make it positive
   if (tf_dim[0] < 0) {
     OVTF_VLOG(3) << "Input dimension is negative, make it positive "
-                   << tf_dim[0];
+                 << tf_dim[0];
     tf_dim[0] = (int64)input_rank + tf_dim[0];
   }
   OVTF_VLOG(3) << "Axis along which to compute " << tf_dim[0];
@@ -751,7 +751,7 @@ static Status TranslateAvgPoolOp(const Node* op,
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_avgpool);
   OVTF_VLOG(3) << "avgpool outshape: {" << ng::join(ng_avgpool.get_shape())
-                 << "}";
+               << "}";
 
   SaveNgOp(ng_op_map, op->name(), ng_avgpool);
   return Status::OK();
@@ -1601,12 +1601,15 @@ static Status TranslateFusedConv2DOp(const Node* op,
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
     } else if (VecStrCmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
       float tf_leakyrelu_alpha;
-      TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_leakyrelu_alpha));
-      auto ng_leakyrelu_alpha = ConstructNgNode<opset::Constant>(op->name(), ng::element::f32, 
-          ng::Shape{}, tf_leakyrelu_alpha);
-      auto ng_alphax = ConstructNgNode<opset::Multiply>(op->name(), ng_leakyrelu_alpha, ng_batch_norm);
+      TF_RETURN_IF_ERROR(
+          GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_leakyrelu_alpha));
+      auto ng_leakyrelu_alpha = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::f32, ng::Shape{}, tf_leakyrelu_alpha);
+      auto ng_alphax = ConstructNgNode<opset::Multiply>(
+          op->name(), ng_leakyrelu_alpha, ng_batch_norm);
       auto ng_lrelu = ConstructNgNode<opset::Maximum>(
-          op->name() + "_FusedConv2D_BatchNormLeakyRelu", ng_alphax, ng_batch_norm);
+          op->name() + "_FusedConv2D_BatchNormLeakyRelu", ng_alphax,
+          ng_batch_norm);
       NCHWtoNHWC(op->name(), is_nhwc, ng_lrelu);
       SaveNgOp(ng_op_map, op->name(), ng_lrelu);
     } else {
@@ -1751,21 +1754,20 @@ static Status TranslateLogSoftmaxOp(const Node* op,
 }
 
 static Status TranslateLeakyReluOp(const Node* op,
-                                 const std::vector<const Tensor*>&,
-                                 Builder::OpMap& ng_op_map) {
+                                   const std::vector<const Tensor*>&,
+                                   Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_inp;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
   float alpha = 0.0;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "alpha", &alpha));
 
-  auto ng_alpha = ConstructNgNode<opset::Constant>(
-      op->name(), ng::element::f32, ng::Shape{1}, alpha);
+  auto ng_alpha = ConstructNgNode<opset::Constant>(op->name(), ng::element::f32,
+                                                   ng::Shape{1}, alpha);
 
   auto ng_output = ConstructNgNode<opset::PRelu>(op->name(), ng_inp, ng_alpha);
   SaveNgOp(ng_op_map, op->name(), ng_output);
   return Status::OK();
 }
-
 
 static Status TranslateMatMulOp(const Node* op,
                                 const std::vector<const Tensor*>&,
@@ -1839,7 +1841,7 @@ static Status TranslateMaxPoolOp(const Node* op,
   NCHWtoNHWC(op->name(), is_nhwc, ng_maxpool);
 
   OVTF_VLOG(3) << "maxpool outshape: {" << ng::join(ng_maxpool.get_shape())
-                 << "}";
+               << "}";
 
   SaveNgOp(ng_op_map, op->name(), ng_maxpool);
   return Status::OK();
@@ -2309,10 +2311,10 @@ static Status TranslateSoftmaxOp(const Node* op,
 }
 
 // TODO: Change the translation back to unary softplus
-// after resolving mish fusion issue 
+// after resolving mish fusion issue
 static Status TranslateSoftPlusOp(const Node* op,
-                                    const std::vector<const Tensor*>&,
-                                    Builder::OpMap& ng_op_map) {
+                                  const std::vector<const Tensor*>&,
+                                  Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_inp;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp));
   auto exp = ConstructNgNode<opset::Exp>(op->name(), ng_inp);
@@ -2489,8 +2491,9 @@ static Status TranslateSqueezeOp(const Node* op,
 
   if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
     SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(op->name(), ng_input.get_element_type(),
-                                         ngraph::Shape{0}, std::vector<int>({0})));
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_input.get_element_type(), ngraph::Shape{0},
+                 std::vector<int>({0})));
   } else {
     auto ng_const = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i32, ng::Shape{tf_axis.size()}, tf_axis);
@@ -2516,10 +2519,10 @@ static Status TranslateStridedSliceOp(
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "ellipsis_mask", &ellipsis_mask));
 
   OVTF_VLOG(5) << "strided slice attributes: "
-                 << "  begin mask: " << begin_mask << "  end mask: " << end_mask
-                 << "  new axis mask: " << new_axis_mask
-                 << "  shrink axis mask: " << shrink_axis_mask
-                 << "  ellipsis mask: " << ellipsis_mask;
+               << "  begin mask: " << begin_mask << "  end mask: " << end_mask
+               << "  new axis mask: " << new_axis_mask
+               << "  shrink axis mask: " << shrink_axis_mask
+               << "  ellipsis mask: " << ellipsis_mask;
 
   std::vector<int64> begin_vec;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &begin_vec));
@@ -2660,8 +2663,8 @@ static Status TranslateUnpackOp(const Node* op,
         new_axis_mask, shrink_axis_mask);
     auto squeeze_axis = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i32, ng::Shape{}, tf_axis);
-    auto squeeze = ConstructNgNode<opset::Squeeze>(
-        op->name(), slice, squeeze_axis);
+    auto squeeze =
+        ConstructNgNode<opset::Squeeze>(op->name(), slice, squeeze_axis);
     SaveNgOp(ng_op_map, op->name(), squeeze);
   }
   return Status::OK();
@@ -2775,7 +2778,7 @@ const static std::map<
         {"IsFinite", TranslateIsFiniteOp},
         {"L2Loss", TranslateL2LossOp},
         {"LogSoftmax", TranslateLogSoftmaxOp},
-	{"LeakyRelu", TranslateLeakyReluOp},
+        {"LeakyRelu", TranslateLeakyReluOp},
         {"Less", TranslateBinaryOp<opset::Less>},
         {"LessEqual", TranslateBinaryOp<opset::LessEqual>},
         {"Log", TranslateUnaryOp<opset::Log>},
@@ -2850,15 +2853,14 @@ const static std::map<
         {"Xdivy", TranslateXdivyOp},
         {"ZerosLike", TranslateZerosLikeOp}};
 
-
 Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
     shared_ptr<ng::Function>& ng_function) {
   ng::ResultVector ng_result_list;
-  TranslateGraph(inputs, static_input_map, input_graph,
-          name, ng_function, ng_result_list);
+  TranslateGraph(inputs, static_input_map, input_graph, name, ng_function,
+                 ng_result_list);
   return Status::OK();
 }
 
@@ -2866,8 +2868,7 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function,
-    ng::ResultVector& ng_result_list) {
+    shared_ptr<ng::Function>& ng_function, ng::ResultVector& ng_result_list) {
   //
   // We will visit ops in topological order.
   //
@@ -2938,11 +2939,12 @@ Status Builder::TranslateGraph(
     auto ng_param =
         ConstructNgNode<opset::Parameter>(prov_tag, ng_et, ng_shape);
     if (ng_shape.size() > 0 && ng_shape[0] == 0) {
-        std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
-        auto ng_const_input = ConstructNgNode<opset::Constant>(prov_tag, ng_et, ng_shape, constant_values);
-        SaveNgOp(ng_op_map, parm->name(), ng_const_input);
+      std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
+      auto ng_const_input = ConstructNgNode<opset::Constant>(
+          prov_tag, ng_et, ng_shape, constant_values);
+      SaveNgOp(ng_op_map, parm->name(), ng_const_input);
     } else {
-        SaveNgOp(ng_op_map, parm->name(), ng_param);
+      SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
     ng_parameter_list[index] =
         ngraph::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
@@ -2953,7 +2955,7 @@ Status Builder::TranslateGraph(
   //
   for (auto op : tf_ops) {
     OVTF_VLOG(2) << "Constructing op " << op->name() << " which is "
-                   << op->type_string();
+                 << op->type_string();
 
     const function<Status(const Node*, const std::vector<const Tensor*>&,
                           Builder::OpMap&)>* op_fun;
@@ -2964,8 +2966,8 @@ Status Builder::TranslateGraph(
       // -----------------------------
       // Catch-all for unsupported ops
       // -----------------------------
-      OVTF_VLOG(3) << "No translation handler registered for op: "
-                     << op->name() << " (" << op->type_string() << ")";
+      OVTF_VLOG(3) << "No translation handler registered for op: " << op->name()
+                   << " (" << op->type_string() << ")";
       OVTF_VLOG(3) << op->def().DebugString();
       return errors::InvalidArgument(
           "No translation handler registered for op: ", op->name(), " (",
@@ -3007,12 +3009,15 @@ Status Builder::TranslateGraph(
     ng_result_list[index] =
         ngraph::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
   }
-  for (int i=0; i<ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && ng_parameter_list[i]->get_shape()[0] == 0))
+  for (int i = 0; i < ng_parameter_list.size(); i++) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 &&
+          ng_parameter_list[i]->get_shape()[0] == 0))
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
   }
-  for (int i=0; i<ng_result_list.size(); i++) {
-    if (ng_result_list[i]->is_dynamic() || !(ng_result_list[i]->get_shape().size() > 0 && ng_result_list[i]->get_shape()[0] == 0))
+  for (int i = 0; i < ng_result_list.size(); i++) {
+    if (ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 &&
+          ng_result_list[i]->get_shape()[0] == 0))
       ng_func_result_list.push_back(ng_result_list[i]);
   }
 
@@ -3020,10 +3025,11 @@ Status Builder::TranslateGraph(
   // Create the nGraph function.
   //
   try {
-    ng_function =
-        make_shared<ng::Function>(ng_func_result_list, ng_func_parameter_list, name);
+    ng_function = make_shared<ng::Function>(ng_func_result_list,
+                                            ng_func_parameter_list, name);
   } catch (const std::exception& exp) {
-    return errors::Internal("Failed to create nGraph Function for "+name+": "+string(exp.what()));
+    return errors::Internal("Failed to create nGraph Function for " + name +
+                            ": " + string(exp.what()));
   }
 
   //

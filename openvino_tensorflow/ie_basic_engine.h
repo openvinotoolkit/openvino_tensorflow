@@ -35,7 +35,7 @@ class IE_Basic_Engine : public IE_Backend_Engine {
     return m_func->get_results()[i]->get_shape();
   };
 };
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow
 
 #endif  // IE_BASIC_ENGINE_H_

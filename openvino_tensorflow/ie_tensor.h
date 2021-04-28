@@ -60,5 +60,5 @@ class IETensorBuffer : public TensorBuffer {
   size_t size_;
   std::shared_ptr<IETensor> tensor_;
 };
-}// namespace openvino_tensorflow
-}// namespace tensorflow
+}  // namespace openvino_tensorflow
+}  // namespace tensorflow
