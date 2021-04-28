@@ -139,12 +139,6 @@ if __name__ == "__main__":
         backend_name = args.backend
 
     graph = load_graph(model_file)
-    t = read_tensor_from_image_file(
-        file_name,
-        input_height=input_height,
-        input_width=input_width,
-        input_mean=input_mean,
-        input_std=input_std)
 
     input_name = "import/" + input_layer
     output_name = "import/" + output_layer
@@ -164,6 +158,12 @@ if __name__ == "__main__":
 
     with tf.compat.v1.Session(
             graph=graph, config=config_ngraph_enabled) as sess:
+        t = read_tensor_from_image_file(
+            file_name,
+            input_height=input_height,
+            input_width=input_width,
+            input_mean=input_mean,
+            input_std=input_std)
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
