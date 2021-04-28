@@ -4,12 +4,14 @@
 
 # **OpenVINO™ integration with TensorFlow**
 
-This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. **OpenVINO™ integration with TensorFlow** enables acceleration of AI inferencing across many AI models on a variety of Intel<sup>®</sup> silicon such as:
-- Intel<sup>®</sup> CPUs 
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enchanced level of TensorFlow compatiblity. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enchance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many AI models on a variety of Intel<sup>®</sup> silicon such as:
+- Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
-- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU 
-- Intel<sup>®</sup> Vision accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
-  
+- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU
+- Intel<sup>®</sup> Vision Accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
+
+Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend going beyond this component to adopt native OpenVINO APIs and its runtime.
+
 ## Installation
 ### Prerequisites
 
@@ -17,11 +19,14 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 - Python 3.6, 3.7, or 3.8
 - TensorFlow v2.4.1
 
-Check [__*Installation Table*__](https://openvinotoolkit.github.io/openvino_tensorflow/) for all the options
+Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
-### Use **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
+### Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3 meaning you don't have to install OpenVINO™ separately. This package supports:
+- Intel<sup>®</sup> CPUs
+- Intel<sup>®</sup> integrated GPUs
+- Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
 
         pip3 install -U pip==21.0.1
@@ -29,45 +34,57 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
         pip3 install openvino-tensorflow
 
 
+If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md#install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
+
 For more details on other modes of installation, please refer to [BUILD.md](docs/BUILD.md)
 
+## Configuration
 
-## Usage
+Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
 
-Once you have installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
-The only change required to a script is adding
+To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
-    import openvino_tensorflow
+    python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+                import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
-By default, CPU backend is enabled. You can substitute the default CPU backend with a different backend by using the following API:
+This should produce an output like:
 
-    openvino_tensorflow.set_backend('backend_name')
+        TensorFlow version:  2.4.1
+        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO version used for this build: b'2021.3'
+        TensorFlow version used for this build: v2.4.1
+        CXX11_ABI flag used for this build: 1
+        OpenVINO integration with TensorFlow built with Grappler: False
 
-To determine what backends are available on your system, use the following API:
+By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware inferencing is done on.
+
+    openvino_tensorflow.set_backend('<backend_name>')
+
+Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
+
+To determine what processing units are available on your system for inference, use the following function:
 
     openvino_tensorflow.list_backends()
+For more API calls and environment variables, see [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE.md).
 
-More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+## Examples
+
+To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
 
 ## License
 **OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](LICENSE).
 By contributing to the project, you agree to the license and copyright terms therein
-and release your contribution under these terms.  
+and release your contribution under these terms.
 
 ## Support
 
-Please submit your questions, feature requests and bug reports via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
+Submit your questions, feature requests and bug reports via [GitHub issues](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 
 ## How to Contribute
 
-We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for how to 
-improve it:
+We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for improvement:
 
-* Share your proposal via [**GitHub issues**](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
-* Ensure you can build the product and run all the examples with your patch.
-* In the case of a larger feature, create a test.
-* Submit a [**pull request**](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
-* We will review your contribution and, if any additional fixes or
-  modifications are necessary, may provide feedback to guide you. When
-  accepted, your pull request will be merged to the repository.
-* All guidelines for contributing to the OpenVINO repositories can be found [here](https://github.com/openvinotoolkit/openvino/wiki/Contribute)
+* Share your proposal via [GitHub issues](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
+* Submit a [pull request](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
+
+We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the abovementioned requirements and proved acceptable.
