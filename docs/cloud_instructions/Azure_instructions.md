@@ -1,45 +1,50 @@
-Here are the instructions to accelerate TensorFlow models on Azure with the Intel® OpenVINO(TM) integration with TensorFlow  
+# Instructions to accelerate TensorFlow models on Azure with the **OpenVINO™ integration with TensorFlow**
 
-1.	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
+-	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
 
 <p align="center">
  <img src="images/Azure_image_1.png">
 </p>
 
-2.	Pick an instance  like HC44rs. The bigger the instance the higher the performance 
+-	Pick an instance  like HC44rs. The bigger the instance the higher the performance 
 
 <p align="center">
 <img src="images/Azure_image_2.png">
  </p>
 
-3.	Then download the *.pem files for keys on your laptop. 
+-	Then download the *.pem files for keys on your laptop. 
 chmod 400 the *.pem key.  
 
-4.	Get the public IP address of your instance 
+-	Get the public IP address of your instance 
 
 <p align="center">
 <img src="images/Azure_image_3.png">
 </p>
 
-5.	ssh -i *.pem <IP-addr-of-your-instance>  
-scp -i *.pem  <source-file> <IP-addr-of-your-instance>:/tmp
+-	Login to the AWS instance using SSH  
+  ```bash
+  $ ssh -i *.pem <IP-addr-of-your-instance>  
+  $ scp -i *.pem  <source-file> <IP-addr-of-your-instance>:/tmp
+  ```
 
   SSH and SCP with the Azure instance should be working (Note: It worked seamlessly on our team Intel provided Azure account, but developers might need to configure networking to enable this.) 
+  ```bash
+  azureuser@tf-u27:~$ python3 --version
+  Python 3.8.6
+  ```
+- Install **OpenVINO™ integration with TensorFlow**
+```bash
+$ sudo apt-get update
 
-6.	azureuser@tf-u27:~$ python3 --version  
-     Python 3.8.6
+$ sudo apt install python3-pip 
 
+$ sudo pip3 install -U tensorflow==2.4.1
 
-7.	sudo apt-get update
+$ sudo pip3 install -U openvino-tensorflow
+```
 
-8.	sudo apt install python3-pip 
-
-9.	sudo pip3 install -U tensorflow==2.4.1
-
-10.	sudo pip3 install -U openvino-tensorflow
-
-11.	Run the following command 
-
+- Verify the installation 
+```bash
 azureuser@tf-u26:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)" 
 TensorFlow version:  2.4.1
 OpenVINO integration with TensorFlow version: b'0.5.0'
@@ -47,24 +52,26 @@ OpenVINO version used for this build: b'2021.3'
 TensorFlow version used for this build: v2.4.1
 CXX11_ABI flag used for this build: 0
 OpenVINO integration with TensorFlow built with Grappler: False
+```
 
 
-
-12.	  git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+- Clone the repo to run the example
+```bash
+$ git clone --recursive https://github.com/openvinotoolkit/openvino_tensorflow.git
+```
 
 Or just download the entire gitrepo as a zip/tar file to your local directory and scp it to the azure instance and unzip it in your home directory  
-
-sudo apt install unzip  
-
-
-
+You may need to install unzip package to extract the content of the zipped repo
+```bash
+$ sudo apt install unzip  
+```
+```bash
 azureuser@tf-u26:~$ ls
 openvino_tensorflow-master  openvino_tensorflow-master.zip
 
 azureuser@tf-u26:~$ cd openvino_tensorflow-master/
 
-azureuser@tf-u27:~/openvino_tensorflow-master$ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
->   tar -C ./examples/data -xz
+azureuser@tf-u27:~/openvino_tensorflow-master$ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C ./examples/data -xz
 
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -94,4 +101,4 @@ mortarboard 0.021869553
 academic gown 0.010358133  
 pickelhaube 0.008008199  
 bulletproof vest 0.0053509558  
-
+```
