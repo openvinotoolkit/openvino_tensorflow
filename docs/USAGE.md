@@ -134,8 +134,8 @@ Example:
     OPENVINO_TF_DISABLE=1
 
 **OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
-This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to TensorFlow. By default, it is calculated based on the total graph size.
+This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to TensorFlow. By default, it is calculated based on the total graph size but it cannot be less than 6 unless it is set manually (Did not observe any performance benefit enabling very small clusters).
 
 Example:
 
-    OPENVINO_TF_MIN_NONTRIVIAL_NODES=6
+    OPENVINO_TF_MIN_NONTRIVIAL_NODES=10
