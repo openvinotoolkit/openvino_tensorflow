@@ -100,6 +100,8 @@ class IE_Utils {
   static InferenceEngine::Precision toPrecision(
       const element::Type& element_type) {
     switch (element_type) {
+      case element::Type_t::f16:
+        return InferenceEngine::Precision::FP16;
       case element::Type_t::f32:
         return InferenceEngine::Precision::FP32;
       case element::Type_t::u8:
