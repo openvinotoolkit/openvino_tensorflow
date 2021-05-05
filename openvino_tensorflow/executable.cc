@@ -17,6 +17,7 @@
 #include "openvino_tensorflow/ie_utils.h"
 #include "openvino_tensorflow/ie_vadm_engine.h"
 #include "openvino_tensorflow/ovtf_utils.h"
+#include "ngraph/pass/convert_fp32_to_fp16.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -118,7 +119,7 @@ Executable::Executable(shared_ptr<Function> func, string device, string device_t
 
   if(m_device_type == "GPU_FP16") {
     ngraph::pass::ConvertFP32ToFP16().run_on_function(func);
-    fun->validate_nodes_and_infer_type();
+    func->validate_nodes_and_infer_types();
   }
 
   OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";

@@ -167,7 +167,7 @@ def main():
             "cannot be used together.")
 
     assert not (arguments.openvino_version != "2021.3" and
-                arguments.openvino_version != "2021.2"), (
+                arguments.openvino_version != "master"), (
                     "Only 2021.2 and 2021.3 are supported OpenVINO versions")
 
     if arguments.use_openvino_from_location != '':
@@ -400,8 +400,8 @@ def main():
 
         if (arguments.openvino_version == "2021.3"):
             openvino_branch = "releases/2021/3"
-        elif (arguments.openvino_version == "2021.2"):
-            openvino_branch = "releases/2021/2"
+        elif (arguments.openvino_version == "master"):
+            openvino_branch = "master"
 
         # Download OpenVINO
         download_repo(
