@@ -1,0 +1,103 @@
+# ==============================================================================
+# Copyright (C) 2021 Intel Corporation
+ 
+# SPDX-License-Identifier: Apache-2.0
+# ==============================================================================
+# Environment to build and unit-test openvino_tensorflow
+FROM ubuntu:18.04
+
+# Default python environment is python 3, thus python3-pip and virtualenv
+# Default gcc 7.3 for ubuntu 18.04
+# python3-dev is needed for TensorFlow build
+# git is needed to clone tensorflow repository
+# unzip and wget are needed for installing bazel
+# sudo is required for installing the TF wheel into /usr/local/...
+# zlib1g, zlib1g-dev and bash-completion are required by bazel install
+# zip and golang-go are needed to run TensorFlow tests
+# curl and locate are needed by Tensorflow's configure command
+# clang-format is needed for code-style checks
+
+ARG BUILD_DEPENDENCIES="autoconf \
+                        automake \
+                        build-essential \
+                        libtool \
+                        unzip \
+                        python3-pip virtualenv \
+                        python3-dev \
+                        git \
+                        unzip wget \
+                        sudo \
+                        zlib1g zlib1g-dev bash-completion \
+                        build-essential cmake \
+                        zip golang-go \
+                        locate curl \
+                        clang-format-3.9 \
+                        cpio \
+                        libtinfo-dev \
+                        jq"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} && \
+    rm -rf /var/lib/apt/lists/*
+
+# Report which gcc and g++ versions are present
+RUN which gcc && gcc --version || true
+RUN which c++ && c++ --version || true
+
+# The "locate" command uses a prepopulated index.  If this index is not built,
+# then "locate" will find absolutely nothing.  In Tensorflow's configure,
+# this manifests itself as a silent failure of the configure script to run to
+# completion.  Therefore, updatedb MUST BE RUN to provide an index for "locate".
+RUN updatedb
+
+# The pip-upgrade for pip, setuptools, and virtualenv is to avoid a nasty
+# bug in setuptools: "_NamespacePath object has no attribute sort"
+# We include pytest so the Docker image can be used for daily validation
+RUN pip3 install --upgrade pip
+RUN pip3 install setuptools
+RUN pip3 install virtualenv
+RUN pip3 install --upgrade pytest
+RUN pip3 install psutil
+RUN pip3 install wheel==0.36.2
+
+#Cmake
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.tar.gz && \
+    tar -xzvf cmake-3.14.0-Linux-x86_64.tar.gz && \
+    cp cmake-3.14.0-Linux-x86_64/bin/* /usr/local/bin/ && \
+    cp -r cmake-3.14.0-Linux-x86_64/share/cmake-3.14 /usr/local/share/
+
+# We include openjdk-8-jdk
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+
+#Get BAZEL using BAZELISK
+RUN curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g @bazel/bazelisk
+
+#Get OpenVINO from Download link and install
+RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/17662/l_openvino_toolkit_p_2021.3.394.tgz -P /tmp
+RUN tar -xvf /tmp/l_openvino_toolkit_p_2021.3.394.tgz -C /tmp
+RUN cd /tmp/l_openvino_toolkit_p_2021.3.394 && sudo sed -i 's/decline/accept/g' silent.cfg
+RUN cd /tmp/l_openvino_toolkit_p_2021.3.394 && sudo ./install.sh -s silent.cfg
+
+#Install OpenVINO Dependencies
+RUN cd /opt/intel/openvino_2021/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
+
+#Setup Openvino Command
+RUN echo 'source /opt/intel/openvino_2021.3.394/bin/setupvars.sh' >> ~/.bashrc
+
+#for libusb
+WORKDIR /opt
+RUN curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && \
+    unzip v1.0.22.zip && rm -rf v1.0.22.zip
+WORKDIR /opt/libusb-1.0.22
+RUN ./bootstrap.sh && \
+    ./configure --disable-udev --enable-shared && \
+    make -j4
+WORKDIR /opt/libusb-1.0.22/libusb
+RUN /bin/mkdir -p '/usr/local/lib' && \
+    /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && \
+    /bin/mkdir -p '/usr/local/include/libusb-1.0' && \
+    /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
+
+#Base Image ends here
