@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build_options>
+
+    <item>
+        <name>ubuntu_pip_yes</name>
+        <command>pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl</command>
+        <command>pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-linux_x86_64.whl</command>
+    </item>
+
+    <item>
+        <name>ubuntu_pip_no</name>
+        <command>pip3 install -U pip==21.0.1</command>
+        <command>pip3 install -U tensorflow==2.4.1</command>
+        <command>pip3 install openvino-tensorflow</command>
+    </item>
+
+    <item>
+        <name>ubuntu_source_yes</name>
+        <command>git clone https://github.com/openvinotoolkit/openvino_tensorflow.git /opt/intel/openvino_tensorflow</command>
+        <command>cd /opt/intel/openvino_tensorflow && git submodule init</command>
+        <command>cd /opt/intel/openvino_tensorflow  && git submodule update --recursive</command>
+        <command>cd /opt/intel/openvino_tensorflow && python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1</command>
+    </item>
+
+    <item>
+        <name>ubuntu_source_no</name>
+        <command>git clone https://github.com/openvinotoolkit/openvino_tensorflow.git /opt/intel/openvino_tensorflow</command>
+        <command>cd /opt/intel/openvino_tensorflow && git submodule init</command>
+        <command>cd /opt/intel/openvino_tensorflow  && git submodule update --recursive</command>
+        <command>cd /opt/intel/openvino_tensorflow && python3 build_ovtf.py</command>
+    </item>
+
+    <item>
+        <name>tensorflow_ubuntu_pip_no</name>
+        <command>pip3 install tensorflow</command>
+        <command>pip3 install openvino-tensorflow</command>
+    </item>
+
+</build_options>
