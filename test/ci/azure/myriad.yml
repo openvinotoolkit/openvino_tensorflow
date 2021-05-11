@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  name: 'Default'
+  name: 'Myriad'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
@@ -26,11 +26,6 @@
      path: openvino_tensorflow
  
    - script: |
-      export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
-      export OPENVINO_TF_BACKEND=CPU
-      export BUILD_OPTIONS=--use_grappler_optimizer
-      virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/1/s/venv 
-      source /home/iotgecsp/azu_ag/myagent/1/s/venv/bin/activate 
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
      displayName: "Setup" 
     
