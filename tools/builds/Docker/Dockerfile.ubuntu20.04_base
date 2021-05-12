@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 # Environment to build and unit-test openvino_tensorflow
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Default python environment is python 3, thus python3-pip and virtualenv
-# Default gcc 7.3 for ubuntu 18.04
+# Default gcc 7.3 for ubuntu 20.04
 # python3-dev is needed for TensorFlow build
 # git is needed to clone tensorflow repository
 # unzip and wget are needed for installing bazel
@@ -16,7 +16,7 @@ FROM ubuntu:18.04
 # zip and golang-go are needed to run TensorFlow tests
 # curl and locate are needed by Tensorflow's configure command
 # clang-format is needed for code-style checks
-
+ARG DEBIAN_FRONTEND=noninteractive
 ARG BUILD_DEPENDENCIES="autoconf \
                         automake \
                         build-essential \
@@ -31,7 +31,7 @@ ARG BUILD_DEPENDENCIES="autoconf \
                         build-essential cmake \
                         zip golang-go \
                         locate curl \
-                        clang-format-3.9 \
+                        clang-format \
                         cpio \
                         libtinfo-dev \
                         jq \
