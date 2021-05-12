@@ -8,7 +8,7 @@ Soup = BeautifulSoup(open('build_options.xml','r'),'lxml')
 for bo in Soup.find_all(['item']):
     if os.path.exists(bo.find(['name']).text):
         os.remove(bo.find(['name']).text)
-    base = open("Dockerfile", "r")
+    base = open("Dockerfile.ubuntu18.04_base", "r")
     temp = open(bo.find(['name']).text,"w")
     for line in base:
         temp.write(line)
