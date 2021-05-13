@@ -272,7 +272,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config_ngraph_enabled = ovtf.update_config(config)
 
-    with tf.compat.v1.Session(graph=graph, config=config_ngraph_enabled) as sess:
+    with tf.compat.v1.Session(
+            graph=graph, config=config_ngraph_enabled) as sess:
         # Warmup
         detected_boxes = sess.run(output_operation.outputs[0],
                                   {input_operation.outputs[0]: [img_resized]})
