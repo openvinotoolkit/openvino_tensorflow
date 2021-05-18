@@ -82,28 +82,7 @@ using tensorflow::SessionOptions;
 using tensorflow::RewriterConfig;
 using tensorflow::OptimizerOptions_Level_L0;
 
-//----------------------------------------------------------------------------
-// Set custom config options for Openvino integration with Tensorflow (OVTF)
-// if grappler optimizer is enabled
-//----------------------------------------------------------------------------
-bool grappler_enabled = tensorflow::openvino_tensorflow::is_grappler_enabled();
 SessionOptions options;
-
-Status CustomConfigOptions(SessionOptions& options) {
-  // Grappler related config
-  auto* custom_config = options.config.mutable_graph_options()
-                            ->mutable_rewrite_options()
-                            ->add_custom_optimizers();
-  custom_config->set_name("ovtf-optimizer");
-  options.config.mutable_graph_options()
-      ->mutable_rewrite_options()
-      ->set_min_graph_nodes(-1);
-  options.config.mutable_graph_options()
-      ->mutable_rewrite_options()
-      ->set_meta_optimizer_iterations(tensorflow::RewriterConfig::ONE);
-  return Status::OK();
-}
-
 //-----------------------------------------------------------------------------
 // Takes a file name, and loads a list of labels from it, one per line, and
 // returns a vector of the strings. It pads with empty strings so the length
@@ -221,16 +200,6 @@ Status ReadTensorFromImageFile(const string& file_name, const int input_height,
   // returns the results in the output tensor.
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
-
-  if (grappler_enabled) {
-    Status customconfig_options_status = CustomConfigOptions(options);
-    if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound(
-          "Error setting custom config options"
-          "for OpenVINO integration with TensorFlow");
-    }
-  }
-
   std::unique_ptr<tensorflow::Session> session(tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(session->Run({inputs}, {output_name}, {}, out_tensors));
@@ -249,14 +218,6 @@ Status LoadGraph(const string& graph_file_name,
   if (!load_graph_status.ok()) {
     return tensorflow::errors::NotFound("Failed to load compute graph at '",
                                         graph_file_name, "'");
-  }
-  if (grappler_enabled) {
-    Status customconfig_options_status = CustomConfigOptions(options);
-    if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound(
-          "Error setting custom config options"
-          "for OpenVINO integration with TensorFlow");
-    }
   }
   session->reset(tensorflow::NewSession(options));
   Status session_create_status = (*session)->Create(graph_def);
@@ -281,16 +242,6 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
   // returns the results in the output tensors.
   tensorflow::GraphDef graph;
   TF_RETURN_IF_ERROR(root.ToGraphDef(&graph));
-
-  if (grappler_enabled) {
-    Status customconfig_options_status = CustomConfigOptions(options);
-    if (!customconfig_options_status.ok()) {
-      return tensorflow::errors::NotFound(
-          "Error setting custom config options"
-          "for OpenVINO integration with TensorFlow");
-    }
-  }
-
   std::unique_ptr<tensorflow::Session> session(tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   // The TopK node returns two outputs, the scores and their original indices,
