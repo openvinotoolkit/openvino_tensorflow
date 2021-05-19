@@ -78,7 +78,7 @@
      
    - script: |
       export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
+      export NGRAPH_TF_UTEST_RTOL=0.001
       pip install keras
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
