@@ -66,7 +66,13 @@ def main():
     optional.add_argument(
         '--verbose',
         action="store_true",
-        help="Prints standard out if specified \n")
+        help="Prints standard out if specified \n"
+    )
+    optional.add_argument(
+        '--print_support_vector',
+        action="store_true",
+        help="Prints support vector from a device specific manifest file in True/False format\n"
+    )
     parser._action_groups.append(optional)
     arguments = parser.parse_args()
 
@@ -84,6 +90,16 @@ def main():
             arguments.list_tests_from_file, arguments.tensorflow_path)
         print('\n'.join(sorted(test_list)))
         print('Total:', len(test_list), 'Skipped:', len(skip_list))
+
+        if (arguments.print_support_vector):
+            print("\n----------------------------------\n")
+            all_tests = test_list | skip_list
+            for test in sorted(all_tests):
+                if test in test_list:
+                    print("True")
+                elif test in skip_list:
+                    print("False")
+            
         return True
 
     if (arguments.run_test):
@@ -294,6 +310,7 @@ def read_tests_from_manifest(manifestfile,
                 run_items |= new_runs
             if curr_section == 'skip_section':
                 new_skips = set(get_test_list(tensorflow_path, line)[0])
+                new_skips = set([x for x in new_skips if x in run_items])
                 run_items -= new_skips
                 skipped_items |= new_skips
         assert (run_items.isdisjoint(skipped_items))
@@ -348,6 +365,31 @@ def run_singletest_in_new_child_process(runner, a_test):
     test_result_map = return_dict[a_test.id()]
     return test_result_map
 
+def run_singletest(testpattern, runner, a_test):
+    # This func runs in the same process
+    mpmanager_return_dict.clear()
+    return_dict = mpmanager_return_dict
+    try:
+        test_result = runner.run(a_test)
+        success = test_result.wasSuccessful()
+        return_dict[a_test.id()] = {
+            'wasSuccessful': success,
+            'failures': [] if (success) else [('', test_result.failures[0][1])],
+            'errors': [],
+            'skipped': []
+        }
+    except Exception as e:
+        #print('DBG: func_utrunner_testcase_run test_result.errors', test_result.errors, '\n')
+        error_msg = '!!! RUNTIME ERROR !!! Test ' + a_test.id()
+        print(error_msg)
+        return_dict[a_test.id()] = {
+            'wasSuccessful': False,
+            'failures': [('', test_result.errors[0][1])],
+            'errors': [('', test_result.errors[0][1])],
+            'skipped': []
+        }
+    return return_dict[a_test.id()]
+
 
 def run_test(test_list, xml_report, verbosity=0):
     """
@@ -395,8 +437,11 @@ def run_test(test_list, xml_report, verbosity=0):
                 print('>> >> >> >> ({}) Testing: {} ...'.format(
                     run_test_counter, a_test.id()))
                 start = time.time()
-                test_result_map = run_singletest_in_new_child_process(
-                    runner, a_test)
+                if os.getenv('OPENVINO_TF_BACKEND', default="CPU") == "MYRIAD":
+                    test_result_map = run_singletest(testpattern, runner, a_test)
+                else:
+                    test_result_map = run_singletest_in_new_child_process(
+                        runner, a_test)
                 elapsed = time.time() - start
                 elapsed = str(timedelta(seconds=elapsed))
 
