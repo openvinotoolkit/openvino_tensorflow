@@ -45,7 +45,6 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.4.1"
     ovtf_version = "v0.5.0"
     use_intel_tf = False
 
@@ -67,6 +66,13 @@ def main():
         help=
         "Architecture flag to use (e.g., haswell, core-avx2 etc. Default \'native\'\n"
     )
+
+    parser.add_argument(
+        '--tf_version',
+        help="Tensorflow version to be used for pulling from pypi / building from source",
+        default='v2.4.1')
+
+    tf_version = parser.parse_args().tf_version
 
     parser.add_argument(
         '--build_tf_from_source',
