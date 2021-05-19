@@ -71,15 +71,17 @@ def main():
     parser.add_argument(
         '--tf_version',
         type=str,
-        help="Tensorflow version to be used for pulling from pypi / building from source",
+        help=
+        "Tensorflow version to be used for pulling from pypi / building from source",
         default=tf_version,
         action="store")
 
     parser.add_argument(
         '--build_tf_from_source',
-        help="Builds TensorFlow from source. \n" + 
-        "You can choose to specify the version using the --tf_version flag. \n" + 
-        "If version isn't specified, TF version " + tf_version + " will be used.\n" +
+        help="Builds TensorFlow from source. \n" +
+        "You can choose to specify the version using the --tf_version flag. \n"
+        + "If version isn't specified, TF version " + tf_version +
+        " will be used.\n" +
         "Note: in this case C++ API, unit tests and examples will be built for "
         + "OpenVINO integration with TensorFlow",
         action="store_true")
@@ -148,12 +150,12 @@ def main():
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
-
     if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
         assert (tf_version == arguments.tf_version), (
-            "Currently ABI1 Tensorflow %s wheel is unavailable. "%arguments.tf_version +
-                "Please consider adding --build_tf_from_source")
-    
+            "Currently ABI1 Tensorflow %s wheel is unavailable. " %
+            arguments.tf_version +
+            "Please consider adding --build_tf_from_source")
+
     # Update the build time tensorflow version with the user specified version
     tf_version = arguments.tf_version
 
