@@ -30,6 +30,7 @@ tf_unittest_runner is primarily used to run tensorflow python
 unit tests using ngraph
 """
 
+
 def main():
     parser = argparse.ArgumentParser()
     optional = parser._action_groups.pop()
@@ -66,20 +67,19 @@ def main():
     optional.add_argument(
         '--verbose',
         action="store_true",
-        help="Prints standard out if specified \n"
-    )
+        help="Prints standard out if specified \n")
     optional.add_argument(
         '--print_support_vector',
         action="store_true",
-        help="Prints support vector from a device specific manifest file in True/False format\n"
+        help=
+        "Prints support vector from a device specific manifest file in True/False format\n"
     )
     optional.add_argument(
         '--timeout',
         type=int,
         default=60,
         action="store",
-        help="Timeout to skip a test if it hangs\n"
-    )
+        help="Timeout to skip a test if it hangs\n")
     parser._action_groups.append(optional)
     arguments = parser.parse_args()
 
@@ -106,7 +106,7 @@ def main():
                     print("True")
                 elif test in skip_list:
                     print("False")
-            
+
         return True
 
     if (arguments.run_test):
@@ -132,7 +132,7 @@ def main():
         list_of_tests = read_tests_from_manifest(arguments.run_tests_from_file,
                                                  arguments.tensorflow_path)[0]
         test_results = run_test(
-            sorted(list_of_tests), xml_report, (2 if arguments.verbose else 0), 
+            sorted(list_of_tests), xml_report, (2 if arguments.verbose else 0),
             arguments.timeout)
         elapsed = time.time() - start
         print("\n\nTesting results\nTime elapsed: ",
@@ -373,8 +373,10 @@ def run_singletest_in_new_child_process(runner, a_test):
     test_result_map = return_dict[a_test.id()]
     return test_result_map
 
+
 def timeout_handler(signum, frame):
     raise Exception("Test took too long to run. Skipping.")
+
 
 def run_singletest(testpattern, runner, a_test, timeout):
     # This func runs in the same process
@@ -455,7 +457,8 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
                     run_test_counter, a_test.id()))
                 start = time.time()
                 if os.getenv('OPENVINO_TF_BACKEND', default="CPU") == "MYRIAD":
-                    test_result_map = run_singletest(testpattern, runner, a_test, timeout)
+                    test_result_map = run_singletest(testpattern, runner,
+                                                     a_test, timeout)
                 else:
                     test_result_map = run_singletest_in_new_child_process(
                         runner, a_test)

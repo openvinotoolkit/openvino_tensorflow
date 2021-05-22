@@ -288,3 +288,16 @@ softmax_op_test.SoftmaxTest.testEmptyInput
 # hangs in MYRIAD
 math_ops_test.AddNTest.testPartials
 split_op_test.SplitOpTest.testListOfScalarTensors
+
+# TBD
+split_op_test.SplitOpTest.testSplitDim0
+split_op_test.SplitOpTest.testSplitCols
+split_op_test.SplitOpTest.testRandom
+split_op_test.SplitOpTest.testIdentity
+split_op_test.SplitOpTest.testGradientsAll
+pool_test.PoolingTest.testGradient2D
+cwise_ops_unary_test.UnaryOpTest.testGradGrad
+conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
+conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
+concat_op_test.ConcatOpTest.testVStack
+concat_op_test.ConcatOpTest.testHStack
