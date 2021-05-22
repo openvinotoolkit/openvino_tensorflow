@@ -69,17 +69,22 @@ def main():
     )
 
     parser.add_argument(
-        '--build_tf_from_source',
+        '--tf_version',
         type=str,
-        help="Build TensorFlow from source and use the specified version.\n" +
-        "If version isn't specified, TF version " + tf_version +
-        " will be used.\n" +
-        "Note: in this case C++ API, unit tests and examples will be build for "
-        + "OpenVINO integration with TensorFlow",
-        const=tf_version,
-        default='',
-        nargs='?',
+        help=
+        "Tensorflow version to be used for pulling from pypi / building from source",
+        default=tf_version,
         action="store")
+
+    parser.add_argument(
+        '--build_tf_from_source',
+        help="Builds TensorFlow from source. \n" +
+        "You can choose to specify the version using the --tf_version flag. \n"
+        + "If version isn't specified, TF version " + tf_version +
+        " will be used.\n" +
+        "Note: in this case C++ API, unit tests and examples will be built for "
+        + "OpenVINO integration with TensorFlow",
+        action="store_true")
 
     if (builder_version > 0.50):
         parser.add_argument(
@@ -145,6 +150,15 @@ def main():
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
+    if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
+        assert (tf_version == arguments.tf_version), (
+            "Currently ABI1 Tensorflow %s wheel is unavailable. " %
+            arguments.tf_version +
+            "Please consider adding --build_tf_from_source")
+
+    # Update the build time tensorflow version with the user specified version
+    tf_version = arguments.tf_version
+
     if (arguments.debug_build):
         print("Building in debug mode\n")
 
@@ -162,7 +176,7 @@ def main():
 
     assert not (
         arguments.use_tensorflow_from_location != '' and
-        arguments.build_tf_from_source != ''), (
+        arguments.build_tf_from_source), (
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
 
@@ -179,7 +193,7 @@ def main():
                 arguments.openvino_version + \
                 " does not match the version specified in use_openvino_from_location"
 
-    version_check((arguments.build_tf_from_source == ''),
+    version_check((not arguments.build_tf_from_source),
                   (arguments.use_tensorflow_from_location != ''),
                   arguments.disable_cpp_api)
 
@@ -244,9 +258,6 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
-    if arguments.build_tf_from_source != '':
-        tf_version = arguments.build_tf_from_source
-
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
     # this is set to 1
@@ -292,7 +303,7 @@ def main():
                              use_intel_tf)
         os.chdir(cwd)
     else:
-        if arguments.build_tf_from_source == '':
+        if not arguments.build_tf_from_source:
             print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
 
@@ -494,7 +505,7 @@ def main():
     # 4. use_tensorflow_from_location is defined
     if arguments.use_tensorflow_from_location == '':
         # Case 1
-        if arguments.build_tf_from_source == '':
+        if not arguments.build_tf_from_source:
             # Case 2
             base_dir = None
         else:
