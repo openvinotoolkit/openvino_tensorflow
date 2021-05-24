@@ -152,21 +152,20 @@ if __name__ == "__main__":
         print(backend)
     ovtf.set_backend(backend_name)
 
-    # Initialize session and run 
+    # Initialize session and run
     config = tf.compat.v1.ConfigProto()
-    with tf.compat.v1.Session(
-            graph=graph, config=config) as sess:
+    with tf.compat.v1.Session(graph=graph, config=config) as sess:
         t = read_tensor_from_image_file(
             file_name,
             input_height=input_height,
             input_width=input_width,
             input_mean=input_mean,
             input_std=input_std)
-        
+
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
-        
+
         # Run
         start = time.time()
         results = sess.run(output_operation.outputs[0],

@@ -254,11 +254,11 @@ if __name__ == "__main__":
     img_resized, img = letter_box_image(image_file, input_height, input_width,
                                         128)
     img_resized = img_resized.astype(np.float32)
-    
+
     # Load label file
     if label_file:
-      classes = load_coco_names(label_file)
-    
+        classes = load_coco_names(label_file)
+
     input_name = "import/" + input_layer
     output_name = "import/" + output_layer
     input_operation = graph.get_operation_by_name(input_name)
@@ -271,10 +271,9 @@ if __name__ == "__main__":
         print(backend)
     ovtf.set_backend(backend_name)
 
-    # Initialize session and run 
+    # Initialize session and run
     config = tf.compat.v1.ConfigProto()
-    with tf.compat.v1.Session(
-            graph=graph, config=config) as sess:
+    with tf.compat.v1.Session(graph=graph, config=config) as sess:
         # Warmup
         detected_boxes = sess.run(output_operation.outputs[0],
                                   {input_operation.outputs[0]: [img_resized]})
