@@ -60,7 +60,6 @@ limitations under the License.
 #include "tensorflow/core/graph/graph_constructor.h"
 #endif
 #include "openvino_tensorflow/api.h"
-#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
@@ -96,7 +95,7 @@ extern tensorflow::Status CheckTopLabel(
 void PrintAvailableBackends() {
   // Get the list of backends
   auto supported_backends =
-      tensorflow::openvino_tensorflow::BackendManager::GetSupportedBackends();
+      tensorflow::openvino_tensorflow::api::ListBackends();
   vector<string> backends(supported_backends.begin(), supported_backends.end());
 
   cout << "Available backends: " << endl;
@@ -175,7 +174,7 @@ int main(int argc, char** argv) {
   PrintVersion();
 
   // Enable differnt backends(CPU/GPU/MYRIAD/HDDL) to run the network.
-  tensorflow::openvino_tensorflow::BackendManager::SetBackend(backend_name);
+  tensorflow::openvino_tensorflow::api::SetBackend(backend_name);
 
   // First we load and initialize the model.
   std::unique_ptr<tensorflow::Session> session;

@@ -152,23 +152,21 @@ if __name__ == "__main__":
         print(backend)
     ovtf.set_backend(backend_name)
 
-    # update config params for openvino tensorflow
+    # Initialize session and run
     config = tf.compat.v1.ConfigProto()
-    config_ngraph_enabled = ovtf.update_config(config)
-
-    with tf.compat.v1.Session(
-            graph=graph, config=config_ngraph_enabled) as sess:
+    with tf.compat.v1.Session(graph=graph, config=config) as sess:
         t = read_tensor_from_image_file(
             file_name,
             input_height=input_height,
             input_width=input_width,
             input_mean=input_mean,
             input_std=input_std)
+
         # Warmup
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
+
         # Run
-        import time
         start = time.time()
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
@@ -176,6 +174,7 @@ if __name__ == "__main__":
         print('Inference time in ms: %f' % (elapsed * 1000))
     results = np.squeeze(results)
 
+    # print labels
     if label_file:
         top_k = results.argsort()[-5:][::-1]
         labels = load_labels(label_file)
