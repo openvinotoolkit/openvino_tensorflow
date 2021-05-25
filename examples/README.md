@@ -1,11 +1,11 @@
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
-These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images.
+These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
 ## Demos showcased in the examples
 
-* Classification demo uses Google's Inception v3 model to classify a given image.
-* Object detection demo uses YOLOv3 model to detect objects in a given image.
+* Classification demo uses Google's Inception v3 model to classify a given image or video.
+* Object detection demo uses YOLOv3 model to detect objects in a given image or video.
 
 ## Setup for the examples
 
@@ -41,7 +41,7 @@ Once extracted, the data folder will contain two new files:
 
 Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
 
-Now, you can run classification sample using the instructions below:
+Now, you can run classification sample using image input with the instructions below:
 
 
 ```bash
@@ -75,6 +75,22 @@ $ python3 examples/classification_sample.py --image=examples/data/my_image.png
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/classification_sample.py --help
+```
+
+To run classification sample using video input, follow  the instructions below:
+```bash
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/classification_sample_video.py
+```
+Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+
+```bash
+$ python3 examples/classification_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+```
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+
+```bash
+$ python3 examples/classification_sample_video.py --input=examples/data/people-detection.mp4
 ```
 ## Python implementation for object detection
 
@@ -133,7 +149,21 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/object_detection_sample.py --help
 ```
+To run object detection sample with video input, follow the instructions below:
+```bash
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/object_detection_sample_video.py
+```
+Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
+```bash
+$ python3 examples/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+```
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+
+```bash
+$ python3 examples/object_detection_sample_video.py --input=examples/data/people-detection.mp4
+```
 
 ## C++ Implementation for classification
 
