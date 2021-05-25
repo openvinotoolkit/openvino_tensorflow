@@ -37,7 +37,7 @@ from PIL import Image, ImageFont, ImageDraw
 def load_graph(model_file):
     graph = tf.Graph()
     graph_def = tf.compat.v1.GraphDef()
-
+    assert os.path.exists(model_file), "Model doesn't exist {0}".format(model_file)
     with open(model_file, "rb") as f:
         graph_def.ParseFromString(f.read())
     with graph.as_default():
@@ -69,6 +69,7 @@ def letter_box_image(image_path, input_height, input_width,
 
 def load_coco_names(file_name):
     names = {}
+    assert os.path.exists(file_name), "path doesn't exist {0}".format(file_name)
     with open(file_name) as f:
         for id, name in enumerate(f):
             names[id] = name

@@ -25,6 +25,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -37,7 +38,7 @@ from PIL import Image, ImageFont, ImageDraw
 def load_graph(model_file):
     graph = tf.Graph()
     graph_def = tf.compat.v1.GraphDef()
-
+    assert os.path.exists(model_file), "path doesn't exist {0}".format(model_file)
     with open(model_file, "rb") as f:
         graph_def.ParseFromString(f.read())
     with graph.as_default():
@@ -69,6 +70,7 @@ def letter_box_image(image_path, input_height, input_width,
 
 def load_coco_names(file_name):
     names = {}
+    assert os.path.exists(file_name), "path doesn't exist {0}".format(file_name)
     with open(file_name) as f:
         for coco_id, name in enumerate(f):
             names[coco_id] = name
