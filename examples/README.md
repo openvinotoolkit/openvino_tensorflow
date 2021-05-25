@@ -79,6 +79,7 @@ $ python3 examples/classification_sample.py --help
 
 To run classification sample using video input, follow  the instructions below:
 ```bash
+$ pip3 install opencv-python
 $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/classification_sample_video.py
 ```
@@ -152,6 +153,7 @@ $ python3 examples/object_detection_sample.py --help
 ```
 To run object detection sample with video input, follow the instructions below:
 ```bash
+$ pip3 install opencv-python
 $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/object_detection_sample_video.py
 ```
