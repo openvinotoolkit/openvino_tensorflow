@@ -92,6 +92,7 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 ```bash
 $ python3 examples/classification_sample_video.py --input=examples/data/people-detection.mp4
 ```
+
 ## Python implementation for object detection
 
 For this example, we assume that you've already:
@@ -165,6 +166,22 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 $ python3 examples/object_detection_sample_video.py --input=examples/data/people-detection.mp4
 ```
 
+To try on the yolo_v3_160 model for faster inference follow the below steps
+
+Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3_160.sh script activates a python virtual environment for conversion.
+
+```bash
+$ cd <path-to-openvino_tensorflow-repository>/examples
+$ chmod +x convert_yolov3_160.sh
+$ ./convert_yolov3_160.sh
+```
+
+Run the object detection example using the instructions below:
+
+```bash
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/object_detection_sample_vid.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
+```
 ## C++ Implementation for classification
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
