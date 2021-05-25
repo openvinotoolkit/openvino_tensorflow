@@ -62,7 +62,7 @@ def letter_box_image(image_path, input_height, input_width,
     pad_top = int(0.5 * (input_height - fit_height))
     pad_left = int(0.5 * (input_width - fit_width))
     to_return[pad_top:pad_top + fit_height, pad_left:pad_left +
-                                                     fit_width] = fit_image
+              fit_width] = fit_image
 
     return to_return, image
 
@@ -209,7 +209,10 @@ if __name__ == "__main__":
     parser.add_argument("--input_layer", help="name of input layer")
     parser.add_argument("--output_layer", help="name of output layer")
     parser.add_argument("--labels", help="name of file containing labels")
-    parser.add_argument("--input", help="input (0 - for camera / absolute video file path) to be processed")
+    parser.add_argument(
+        "--input",
+        help="input (0 - for camera / absolute video file path) to be processed"
+    )
     parser.add_argument("--input_height", type=int, help="input height")
     parser.add_argument("--input_width", type=int, help="input width")
     parser.add_argument("--input_mean", type=int, help="input mean")
@@ -218,7 +221,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_dir",
         help="Directory that stores updated image."
-             " Default is directory from where this sample is launched.")
+        " Default is directory from where this sample is launched.")
     parser.add_argument(
         "--conf_threshold",
         type=float,
@@ -278,7 +281,7 @@ if __name__ == "__main__":
 
     # open capturing device
     cap = cv2.VideoCapture(input_file)
-    
+
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
@@ -291,26 +294,32 @@ if __name__ == "__main__":
                 # Run
                 frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
                 start = time.time()
-                detected_boxes = sess.run(output_operation.outputs[0],
-                                          {input_operation.outputs[0]: [img_resized]})
+                detected_boxes = sess.run(
+                    output_operation.outputs[0],
+                    {input_operation.outputs[0]: [img_resized]})
                 elapsed = time.time() - start
                 fps = 1 / elapsed
 
                 # post-processing - apply non max suppression, draw boxes and save updated image
-                filtered_boxes = non_max_suppression(detected_boxes, conf_threshold, iou_threshold)
-                
+                filtered_boxes = non_max_suppression(
+                    detected_boxes, conf_threshold, iou_threshold)
+
                 # OpenCV frame to PIL format conversions as the draw_box function uses PIL
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 im_pil = Image.fromarray(img)
-                
+
                 # modified draw_boxes function to return an openCV formatted image
-                img_bbox = draw_boxes(filtered_boxes, im_pil, classes, (input_width, input_height), True)
-                
+                img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
+                                      (input_width, input_height), True)
+
                 # draw information overlay onto the frames
-                cv2.putText(img_bbox, 'Inference Running on : {0}'.format(backend_name), (30, 50), font, font_size,
-                            color, font_thickness)
-                cv2.putText(img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(int(fps), round((elapsed * 1000), 2)),
-                            (30, 80), font, font_size, color, font_thickness)
+                cv2.putText(img_bbox,
+                            'Inference Running on : {0}'.format(backend_name),
+                            (30, 50), font, font_size, color, font_thickness)
+                cv2.putText(
+                    img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
+                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                    font_size, color, font_thickness)
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
@@ -318,4 +327,3 @@ if __name__ == "__main__":
                 cap = cv2.VideoCapture(input_file)
     cap.release()
     cv2.destroyAllWindows()
-

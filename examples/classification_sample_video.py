@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # overlay parameters
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_size = .6
-    color = (0,0,0)
+    color = (0, 0, 0)
     font_thickness = 2
 
     parser = argparse.ArgumentParser()
@@ -94,7 +94,10 @@ if __name__ == "__main__":
     parser.add_argument("--input_layer", help="name of input layer")
     parser.add_argument("--output_layer", help="name of output layer")
     parser.add_argument("--labels", help="name of file containing labels")
-    parser.add_argument("--input", help="input (0 - for camera / absolute video file path) to be processed")
+    parser.add_argument(
+        "--input",
+        help="input (0 - for camera / absolute video file path) to be processed"
+    )
     parser.add_argument("--input_height", type=int, help="input height")
     parser.add_argument("--input_width", type=int, help="input width")
     parser.add_argument("--input_mean", type=int, help="input mean")
@@ -145,7 +148,7 @@ if __name__ == "__main__":
 
     # Read input video file
     cap = cv2.VideoCapture(input_file)
-    
+
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
@@ -158,7 +161,7 @@ if __name__ == "__main__":
                     input_width=input_width,
                     input_mean=input_mean,
                     input_std=input_std)
-                                
+
                 # Run
                 start = time.time()
                 results = sess.run(output_operation.outputs[0],
@@ -170,17 +173,26 @@ if __name__ == "__main__":
 
                 # print labels
                 if label_file:
-                    cv2.putText(frame, 'Inferene Running on : {0}'.format(backend_name), (30,50), font, font_size, color, font_thickness)
-                    cv2.putText(frame, 'FPS : {0} | Inference Time : {1}ms'.format(int(fps), round((elapsed*1000),2)), (30,80), font, font_size, color, font_thickness)
+                    cv2.putText(
+                        frame, 'Inferene Running on : {0}'.format(backend_name),
+                        (30, 50), font, font_size, color, font_thickness)
+                    cv2.putText(
+                        frame, 'FPS : {0} | Inference Time : {1}ms'.format(
+                            int(fps), round((elapsed * 1000), 2)), (30, 80),
+                        font, font_size, color, font_thickness)
                     top_k = results.argsort()[-5:][::-1]
                     labels = load_labels(label_file)
                     c = 130
                     for i in top_k:
-                        cv2.putText(frame, '{0} : {1}'.format(labels[i], results[i]), (30, c), font, font_size, color, font_thickness)
+                        cv2.putText(frame, '{0} : {1}'.format(
+                            labels[i], results[i]), (30, c), font, font_size,
+                                    color, font_thickness)
                         print(labels[i], results[i])
                         c += 30
                 else:
-                    print("No label file provided. Cannot print classification results")
+                    print(
+                        "No label file provided. Cannot print classification results"
+                    )
                 cv2.imshow("results", frame)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
