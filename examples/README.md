@@ -1,11 +1,11 @@
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
-These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images.
+These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
 ## Demos showcased in the examples
 
-* Classification demo uses Google's Inception v3 model to classify a given image.
-* Object detection demo uses YOLOv3 model to detect objects in a given image.
+* Classification demo uses Google's Inception v3 model to classify a given image or video.
+* Object detection demo uses YOLOv3 model to detect objects in a given image or video.
 
 ## Setup for the examples
 
@@ -41,7 +41,7 @@ Once extracted, the data folder will contain two new files:
 
 Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
 
-Now, you can run classification sample using the instructions below:
+Now, you can run classification sample using image input with the instructions below:
 
 
 ```bash
@@ -76,6 +76,24 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/classification_sample.py --help
 ```
+
+To run classification sample using video input, follow  the instructions below:
+```bash
+$ pip3 install opencv-python
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/classification_sample_video.py
+```
+Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+
+```bash
+$ python3 examples/classification_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+```
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+
+```bash
+$ python3 examples/classification_sample_video.py --input=examples/data/people-detection.mp4
+```
+
 ## Python implementation for object detection
 
 For this example, we assume that you've already:
@@ -133,8 +151,39 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/object_detection_sample.py --help
 ```
+To run object detection sample with video input, follow the instructions below:
+```bash
+$ pip3 install opencv-python
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/object_detection_sample_video.py
+```
+Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
+```bash
+$ python3 examples/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+```
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
+```bash
+$ python3 examples/object_detection_sample_video.py --input=examples/data/people-detection.mp4
+```
+
+To try on the yolo_v3_160 model for faster inference follow the below steps
+
+Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3_160.sh script activates a python virtual environment for conversion.
+
+```bash
+$ cd <path-to-openvino_tensorflow-repository>/examples
+$ chmod +x convert_yolov3_160.sh
+$ ./convert_yolov3_160.sh
+```
+
+Run the object detection example using the instructions below:
+
+```bash
+$ cd <path-to-openvino_tensorflow-repository>
+$ python3 examples/object_detection_sample_vid.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
+```
 ## C++ Implementation for classification
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
