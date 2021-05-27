@@ -10,8 +10,9 @@ import os
 import re
 import fnmatch
 import time
-from datetime import timedelta
 import warnings
+
+from datetime import timedelta
 from fnmatch import fnmatch
 
 import multiprocessing
@@ -67,6 +68,18 @@ def main():
         '--verbose',
         action="store_true",
         help="Prints standard out if specified \n")
+    optional.add_argument(
+        '--print_support_vector',
+        action="store_true",
+        help=
+        "Prints support vector from a device specific manifest file in True/False format\n"
+    )
+    optional.add_argument(
+        '--timeout',
+        type=int,
+        default=60,
+        action="store",
+        help="Timeout to skip a test if it hangs\n")
     parser._action_groups.append(optional)
     arguments = parser.parse_args()
 
@@ -84,6 +97,16 @@ def main():
             arguments.list_tests_from_file, arguments.tensorflow_path)
         print('\n'.join(sorted(test_list)))
         print('Total:', len(test_list), 'Skipped:', len(skip_list))
+
+        if (arguments.print_support_vector):
+            print("\n----------------------------------\n")
+            all_tests = test_list | skip_list
+            for test in sorted(all_tests):
+                if test in test_list:
+                    print("True")
+                elif test in skip_list:
+                    print("False")
+
         return True
 
     if (arguments.run_test):
@@ -109,7 +132,8 @@ def main():
         list_of_tests = read_tests_from_manifest(arguments.run_tests_from_file,
                                                  arguments.tensorflow_path)[0]
         test_results = run_test(
-            sorted(list_of_tests), xml_report, (2 if arguments.verbose else 0))
+            sorted(list_of_tests), xml_report, (2 if arguments.verbose else 0),
+            arguments.timeout)
         elapsed = time.time() - start
         print("\n\nTesting results\nTime elapsed: ",
               str(timedelta(seconds=elapsed)))
@@ -294,6 +318,7 @@ def read_tests_from_manifest(manifestfile,
                 run_items |= new_runs
             if curr_section == 'skip_section':
                 new_skips = set(get_test_list(tensorflow_path, line)[0])
+                new_skips = set([x for x in new_skips if x in run_items])
                 run_items -= new_skips
                 skipped_items |= new_skips
         assert (run_items.isdisjoint(skipped_items))
@@ -349,7 +374,43 @@ def run_singletest_in_new_child_process(runner, a_test):
     return test_result_map
 
 
-def run_test(test_list, xml_report, verbosity=0):
+def timeout_handler(signum, frame):
+    raise Exception("Test took too long to run. Skipping.")
+
+
+def run_singletest(testpattern, runner, a_test, timeout):
+    # This func runs in the same process
+    mpmanager_return_dict.clear()
+    return_dict = mpmanager_return_dict
+    import signal
+    signal.signal(signal.SIGALRM, timeout_handler)
+
+    # set timeout here
+    signal.alarm(timeout)
+
+    try:
+        test_result = runner.run(a_test)
+        success = test_result.wasSuccessful()
+        return_dict[a_test.id()] = {
+            'wasSuccessful': success,
+            'failures': [] if (success) else [('', test_result.failures[0][1])],
+            'errors': [],
+            'skipped': []
+        }
+    except Exception as e:
+        #print('DBG: func_utrunner_testcase_run test_result.errors', test_result.errors, '\n')
+        error_msg = '!!! RUNTIME ERROR !!! Test ' + a_test.id()
+        print(error_msg)
+        return_dict[a_test.id()] = {
+            'wasSuccessful': False,
+            'failures': [('', test_result.errors[0][1])],
+            'errors': [('', test_result.errors[0][1])],
+            'skipped': []
+        }
+    return return_dict[a_test.id()]
+
+
+def run_test(test_list, xml_report, timeout=60, verbosity=0):
     """
     Runs a specific test suite or test case given with the fully qualified 
     test name and prints stdout.
@@ -395,8 +456,12 @@ def run_test(test_list, xml_report, verbosity=0):
                 print('>> >> >> >> ({}) Testing: {} ...'.format(
                     run_test_counter, a_test.id()))
                 start = time.time()
-                test_result_map = run_singletest_in_new_child_process(
-                    runner, a_test)
+                if os.getenv('OPENVINO_TF_BACKEND', default="CPU") == "MYRIAD":
+                    test_result_map = run_singletest(testpattern, runner,
+                                                     a_test, timeout)
+                else:
+                    test_result_map = run_singletest_in_new_child_process(
+                        runner, a_test)
                 elapsed = time.time() - start
                 elapsed = str(timedelta(seconds=elapsed))
 

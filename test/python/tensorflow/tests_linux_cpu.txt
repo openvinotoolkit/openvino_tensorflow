@@ -238,11 +238,11 @@ nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 
 # Tests randomly failing with error:
 # Caught exception while executing cluster: wstring_convert::to_bytes
-conv_ops_test.Conv2DTest.testConv2D2x2Filter
-conv_ops_test.Conv2DTest.testConv2D1x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
-conv_ops_test.Conv2DTest.testConv2D2x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+#conv_ops_test.Conv2DTest.testConv2D2x2Filter
+#conv_ops_test.Conv2DTest.testConv2D1x2Filter
+#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
+#conv_ops_test.Conv2DTest.testConv2D2x2Filter
+#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
 
 # TBD
 softmax_op_test.SoftmaxTest.testEmptyInput
