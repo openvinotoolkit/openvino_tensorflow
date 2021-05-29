@@ -2643,8 +2643,8 @@ static Status TranslateUnpackOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num", &num_outputs));
 
   auto rank = ng_input.get_partial_shape().rank().get_length();
-  // convert the negative unpack axis value to positive value 
-  if (tf_axis < 0){
+  // convert the negative unpack axis value to positive value
+  if (tf_axis < 0) {
     tf_axis = rank + tf_axis;
   }
   for (int i = 0; i < num_outputs; ++i) {
