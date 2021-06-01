@@ -1,10 +1,12 @@
 import os
 import subprocess
 from bs4 import BeautifulSoup
+import shutil
 
-
+#Make a copy of dev folder for GPU and MYRIAD RUN
+# shutil.copytree("/dev", os.path.join(os.getcwd(),"dev"))
 #Creates Docker Files for each base image and for each combination
-base_docker_files=os.listdir("./docker_files")
+base_docker_files=os.listdir("./dockerfiles")
 print(base_docker_files)
 success_build={}
 success_test={}
@@ -15,7 +17,7 @@ for bdf in base_docker_files:
             os.remove(bdf+"_"+bo.find(['name']).text)
         # Use the name of approprite docker file
         #eg for ubuntu20 use Dockerfile.ubuntu20.04_base    
-        base = open("./docker_files/"+bdf, "r")
+        base = open("./dockerfiles/"+bdf, "r")
         temp = open(bdf+"_"+bo.find(['name']).text,"w")
         for line in base:
             temp.write(line)
@@ -56,7 +58,7 @@ if os.environ.__contains__('no_proxy'):
 for bdf in base_docker_files:
     for bo in Soup.find_all(['item']):
         command = ("docker build --rm %s %s %s %s -t %s:latest -f %s  ." %(DOCKER_HTTP_PROXY,DOCKER_HTTPS_PROXY,DOCKER_NO_PROXY,DOCKER_FTP_PROXY,bdf+"_"+bo.find(['name']).text,bdf+"_"+bo.find(['name']).text))
-        #print(command)
+        print(command)
         output=subprocess.run(command,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if os.path.exists(bdf+"_"+bo.find(['name']).text+".log"):
             os.remove(bdf+"_"+bo.find(['name']).text+".log")
@@ -68,22 +70,6 @@ for bdf in base_docker_files:
         logging.close()
         success = "Success" if output.returncode==0 else "Failure"
         success_build[bdf+"_"+bo.find(['name']).text]=success
-        name_of_the_image = bdf+"_"+bo.find(['name']).text+":latest"
-        if success=="Success" and 'source' in name_of_the_image:
-            command_run_test = ''
-            if 'no' in bdf+"_"+bo.find(['name']).text:
-                command_run_test = ('docker run  %s %s %s %s %s   /bin/bash -c "cd /opt/intel/openvino_tensorflow/examples/data && wget https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz && tar -xzvf inception_v3_2016_08_28_frozen.pb.tar.gz && source /opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/bin/activate && cd /opt/intel/openvino_tensorflow && python3 ./examples/classification_sample.py"'%(DOCKER_RUN_FTP_PROXY,DOCKER_RUN_HTTP_PROXY,DOCKER_RUN_HTTPS_PROXY,DOCKER_RUN_NO_PROXY,name_of_the_image))
-            else :
-                command_run_test = ('docker run  %s %s %s %s %s   /bin/bash -c "source /opt/intel/openvino_2021.3.394/bin/setupvars.sh && cd /opt/intel/openvino_tensorflow/examples/data && wget https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz && tar -xzvf inception_v3_2016_08_28_frozen.pb.tar.gz && source /opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/bin/activate && cd /opt/intel/openvino_tensorflow && python3 ./examples/classification_sample.py"'%(DOCKER_RUN_FTP_PROXY,DOCKER_RUN_HTTP_PROXY,DOCKER_RUN_HTTPS_PROXY,DOCKER_RUN_NO_PROXY,name_of_the_image))
-            #print(command_run_test)
-            run_test = subprocess.run(command_run_test,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)#,stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            logging = open(bdf+"_"+bo.find(['name']).text+"_test.log","w")
-            logging.write("**************STDOUT**********************\n")
-            logging.write(run_test.stdout.decode('UTF-8'))
-            logging.write("**************STDERR**********************\n")
-            logging.write(run_test.stderr.decode('UTF-8'))
-            logging.close()
-            success_test[bdf+"_"+bo.find(['name']).text]="Success" if run_test.returncode==0 else "Failure"
 
 if os.path.exists("overallstatus.txt"):
     os.remove("overallstatus.txt")
@@ -91,9 +77,6 @@ over_all_status = open("overallstatus.txt","w")
 over_all_status.write("***************Builds**************\n")
 for key in success_build:
     over_all_status.write(str(key)+":"+str(success_build[key])+"\n")
-over_all_status.write("***************Test**************\n")
-for key in success_test:
-    over_all_status.write(str(key)+":"+str(success_test[key])+"\n")
 over_all_status.close()
 
 

@@ -16,7 +16,7 @@ FROM ubuntu:18.04
 # zip and golang-go are needed to run TensorFlow tests
 # curl and locate are needed by Tensorflow's configure command
 # clang-format is needed for code-style checks
-
+ARG DEBIAN_FRONTEND=noninteractive
 ARG BUILD_DEPENDENCIES="autoconf \
                         automake \
                         build-essential \
@@ -35,6 +35,7 @@ ARG BUILD_DEPENDENCIES="autoconf \
                         cpio \
                         libtinfo-dev \
                         jq \
+                        lsb-core \
                         python3.8 "
 
 RUN apt-get update && \
@@ -60,6 +61,7 @@ RUN pip3 install virtualenv
 RUN pip3 install --upgrade pytest
 RUN pip3 install psutil
 RUN pip3 install wheel==0.36.2
+RUN pip3 install keras
 RUN python3.8 -m pip install --upgrade pip
 
 #Cmake
@@ -85,8 +87,10 @@ RUN cd /tmp/l_openvino_toolkit_p_2021.3.394 && sudo ./install.sh -s silent.cfg
 #Install OpenVINO Dependencies
 RUN cd /opt/intel/openvino_2021/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
 
-#Setup Openvino Command
-RUN echo 'source /opt/intel/openvino_2021.3.394/bin/setupvars.sh' >> ~/.bashrc
+#Copy Files
+COPY unit_testing.sh /tmp
+COPY . /dev/ /dev/
+
 
 #for libusb
 WORKDIR /opt

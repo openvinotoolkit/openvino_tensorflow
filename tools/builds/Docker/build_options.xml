@@ -19,7 +19,8 @@
         <command>git clone https://github.com/openvinotoolkit/openvino_tensorflow.git /opt/intel/openvino_tensorflow</command>
         <command>cd /opt/intel/openvino_tensorflow && git submodule init</command>
         <command>cd /opt/intel/openvino_tensorflow  && git submodule update --recursive</command>
-        <command>cd /opt/intel/openvino_tensorflow && python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1</command>
+        <command>chmod +rwx /tmp/unit_testing.sh</command>
+        <command>/bin/bash /tmp/unit_testing.sh</command>
     </item>
 
     <item>
