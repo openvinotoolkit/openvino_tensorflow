@@ -67,12 +67,27 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    tensorflow::Graph* graph = options.graph->get();
+    for (Node* node : graph->nodes()) {
+      int cluster;
+      Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
+      if (s == Status::OK()) {
+        if (NGraphClusterManager::CheckClusterFallback(cluster))
+          return Status::OK();
+        else
+          break;
+      } else if (!node->IsSink() && !node->IsSource() &&
+                 !node->IsControlFlow() && !node->IsArg() &&
+                 !node->IsRetval()) {
+        break;
+      }
+    }
+
     // For filename generation purposes, grab a fresh index. This is just an
     // arbitrary integer to avoid filename collisions resulting from subsequent
     // runs of this pass.
     int idx = FreshIndex();
 
-    tensorflow::Graph* graph = options.graph->get();
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 

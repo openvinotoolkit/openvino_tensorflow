@@ -23,6 +23,8 @@
 #else
 #include "tensorflow/core/graph/graph_constructor.h"
 #endif
+#include "tensorflow/core/graph/algorithm.h"
+#include "tensorflow/core/public/session.h"
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
@@ -46,6 +48,7 @@ class NGraphEncapsulateOp : public OpKernel {
  private:
   Status GetExecutable(const std::vector<Tensor>& tf_input_tensors,
                        std::shared_ptr<Executable>& ng_exec);
+  Status Fallback(OpKernelContext* ctx);
 
   std::mutex m_compute_lock_;
   Graph m_graph;
@@ -57,6 +60,10 @@ class NGraphEncapsulateOp : public OpKernel {
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
   ngraph::ResultVector ng_result_list;
   std::vector<ngraph::Shape> ng_output_shapes;
+  std::shared_ptr<tensorflow::Session> m_session;
+  bool m_fallback_enabled = false;
+  std::vector<std::string> m_session_input_names;
+  std::vector<std::string> m_session_output_names;
 };
 
 static Status ParseNodeAttributes(
@@ -195,6 +202,11 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
+
+  if (m_fallback_enabled) {
+    Fallback(ctx);
+    return;
+  }
 
   Timer compute_time;
   std::lock_guard<std::mutex> lock(m_compute_lock_);
@@ -346,14 +358,15 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       try {
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
       } catch (const std::exception& exp) {
-        string status_string = "Caught exception while executing cluster " +
-                               to_string(m_cluster_id) + ": " +
-                               string(exp.what());
-        OP_REQUIRES(ctx, false, errors::Internal(status_string));
+        OVTF_VLOG(4) << "Caught exception while executing cluster "
+                     << to_string(m_cluster_id) << ": " << string(exp.what());
+        OP_REQUIRES_OK(ctx, Fallback(ctx));
+        return;
       } catch (...) {
-        string status_string = "Caught exception while executing cluster " +
-                               to_string(m_cluster_id);
-        OP_REQUIRES(ctx, false, errors::Internal(status_string));
+        OVTF_VLOG(4) << "Caught exception while executing cluster "
+                     << to_string(m_cluster_id);
+        OP_REQUIRES_OK(ctx, Fallback(ctx));
+        return;
       }
     }
     time_execute_function = execute_function.ElapsedInMS();
@@ -567,6 +580,95 @@ Status NGraphEncapsulateOp::GetExecutable(
       m_lru.push_front(signature);
     }
     ng_exec = it->second;
+  }
+  return Status::OK();
+}
+
+Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
+  OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
+  if (!m_fallback_enabled) {
+    m_fallback_enabled = true;
+    NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
+    GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
+    SessionOptions options;
+    std::shared_ptr<tensorflow::Session> session(
+        tensorflow::NewSession(options));
+    Status session_create_status = session->Create(*graph_def);
+    if (!session_create_status.ok()) {
+      std::cout << "Load Graph Error" << std::endl;
+    }
+    m_session = session;
+
+    vector<Node*> ordered;
+    GetReversePostOrder(m_graph, &ordered, NodeComparatorName());
+
+    vector<const Node*> tf_params;
+    vector<const Node*> tf_ret_vals;
+
+    for (const auto n : ordered) {
+      if (n->IsSink() || n->IsSource()) {
+        continue;
+      }
+
+      if (n->IsControlFlow()) {
+        return errors::Unimplemented(
+            "Encountered a control flow op in the openvino_tensorflow: ",
+            n->DebugString());
+      }
+
+      if (n->IsArg()) {
+        tf_params.push_back(n);
+      } else if (n->IsRetval()) {
+        tf_ret_vals.push_back(n);
+      }
+    }
+    m_session_input_names.resize(tf_params.size());
+    for (auto parm : tf_params) {
+      DataType dtype;
+      if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
+        return errors::InvalidArgument("No data type defined for _Arg");
+      }
+      int index;
+      if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
+        return errors::InvalidArgument("No index defined for _Arg");
+      }
+      m_session_input_names[index] = parm->name();
+    }
+    m_session_output_names.resize(tf_ret_vals.size());
+    for (auto n : tf_ret_vals) {
+      if (n->num_inputs() != 1) {
+        return errors::InvalidArgument("_Retval has ", n->num_inputs(),
+                                       " inputs, should have 1");
+      }
+      int index;
+      if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
+        return errors::InvalidArgument("No index defined for _Retval");
+      }
+      Node* cluster_output_node;
+      TF_RETURN_IF_ERROR(n->input_node(0, &cluster_output_node));
+      m_session_output_names[index] = cluster_output_node->name();
+    }
+  }
+
+  std::vector<std::pair<string, Tensor>> input_tensor_list(
+      m_session_input_names.size());
+  for (int i = 0; i < m_session_input_names.size(); i++) {
+    input_tensor_list[i] = {m_session_input_names[i], ctx->input(i)};
+  }
+  std::vector<Tensor> outputs;
+  Status run_status =
+      m_session->Run(input_tensor_list, m_session_output_names, {}, &outputs);
+  if (run_status != Status::OK()) {
+    return errors::Internal("Failed to run TF session for " + name());
+  }
+  for (int i = 0; i < outputs.size(); i++) {
+    Tensor* output_tensor = ctx->mutable_output(i);
+    if (output_tensor == nullptr) {
+      ctx->set_output(i, outputs[i]);
+    } else {
+      std::memcpy((void*)(output_tensor->data()), (void*)(outputs[i].data()),
+                  outputs[i].AllocatedBytes());
+    }
   }
   return Status::OK();
 }
