@@ -204,7 +204,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                << m_cluster_id;
 
   if (m_fallback_enabled) {
-    Fallback(ctx);
+    OP_REQUIRES_OK(ctx, Fallback(ctx));
     return;
   }
 
