@@ -14,6 +14,7 @@ import shutil
 import glob
 import platform
 import subprocess
+import distro
 from distutils.sysconfig import get_python_lib
 
 from tools.build_utils import load_venv, command_executor, apply_patch
@@ -28,8 +29,8 @@ class TestEnv:
 
     @staticmethod
     def get_linux_type():
-        if platform.linux_distribution():
-            return platform.linux_distribution()[0]  # Ubuntu or CentOS
+        if distro.linux_distribution():
+            return distro.linux_distribution()[0]  # Ubuntu or CentOS
         else:
             return ''
 
