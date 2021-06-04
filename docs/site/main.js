@@ -1,20 +1,36 @@
 
 const combination = new Map([
-    ["000000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-linux_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+    ["000000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+],
+["000100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
 ["000001"," pip3 install -U pip==21.0.1,pip3 install -U tensorflow==2.4.1,pip3 install openvino-tensorflow"
 ],
+["000101"," pip3 install -U pip==21.0.1,pip3 install -U tensorflow==2.4.1,pip3 install openvino-tensorflow"
+],
 ["010001","pip3 install openvino-tensorflow"
 ],
-["100000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-linux_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+["010101","pip3 install openvino-tensorflow"
+],
+["100000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+],
+["100100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
 ["000010"," Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline ,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
+["000110"," Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline ,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
+],
 ["000011","python3 build_ovtf.py "
+],
+["000111","python3 build_ovtf.py "
 ],
 ["100010","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
+["100110","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
+],
 ["100011","python3 build_ovtf.py"
+],
+["100111","python3 build_ovtf.py"
 ]
     ]);
 
@@ -112,9 +128,9 @@ function commandArea()
 {
     const area = document.getElementById('command-area');
     // For OS Temporary Output
-    if(getOs()=='01'||getOs()=='10')
+    if(getOs()=='10'||getOs()=='11')
     {
-        let nameOS = getOs()=='01'?"Windows":"MacOS";
+        let nameOS = getOs()=='10'?"Windows":"MAC OS";
         area.innerHTML = `${nameOS} installation not supported`;
         return;
     }
@@ -165,9 +181,10 @@ function getByo()
 
 function getOs()
 {
-    if(document.getElementById('option-os-ubuntu').classList.contains('selected')) return "00"; //return "00";
-    if(document.getElementById('option-os-windows').classList.contains('selected')) return "01";//return "01";
-    if(document.getElementById('option-os-mac').classList.contains('selected')) return "10";//return "10";
+    if(document.getElementById('option-os-ubuntu18').classList.contains('selected')) return "00"; //return "00";
+    if(document.getElementById('option-os-ubuntu20').classList.contains('selected')) return "01"; //return "01";
+    if(document.getElementById('option-os-windows').classList.contains('selected')) return "10";//return "10";
+    if(document.getElementById('option-os-mac').classList.contains('selected')) return "11";//return "11";
     return "2";
 }
 
