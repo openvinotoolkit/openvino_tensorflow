@@ -42,6 +42,7 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install distro
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      workingDirectory: $(WORK_DIR) 
@@ -51,6 +52,7 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install distro
       cd test/ci/azure/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
@@ -68,6 +70,7 @@
       pip install keras
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install distro
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
      workingDirectory: $(WORK_DIR) 
@@ -78,6 +81,7 @@
       pip install keras
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip install distro
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
      workingDirectory: $(WORK_DIR)   
