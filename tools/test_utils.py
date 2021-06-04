@@ -14,7 +14,6 @@ import shutil
 import glob
 import platform
 import subprocess
-import distro
 from distutils.sysconfig import get_python_lib
 
 from tools.build_utils import load_venv, command_executor, apply_patch
@@ -29,10 +28,12 @@ class TestEnv:
 
     @staticmethod
     def get_linux_type():
-        if distro.linux_distribution():
-            return distro.linux_distribution()[0]  # Ubuntu or CentOS
-        else:
-            return ''
+        linux_distro = subprocess.check_output("""awk -F= '$1=="ID" { print $2 ;}' /etc/os-release""", shell=True)
+        if "ubuntu" in linux_distro.decode("utf-8"):
+            return 'Ubuntu'
+        elif "centos" in linux_distro.decode("utf-8"):
+            return 'CentOS'
+        return ''
 
     @staticmethod
     def get_platform_lib_dir():
