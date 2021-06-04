@@ -15,7 +15,7 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 ## Installation
 ### Prerequisites
 
-- Ubuntu 18.04
+- Ubuntu 18.04, 20.04
 - Python 3.6, 3.7, or 3.8
 - TensorFlow v2.4.1
 
