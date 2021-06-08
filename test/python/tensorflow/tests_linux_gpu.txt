@@ -26,7 +26,49 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-
+array_ops_test.StridedSliceTest.testExpand
+array_ops_test.StridedSliceTest.testExpandVariable
+array_ops_test.StridedSliceTest.testOptimizedCases
+array_ops_test.StridedSliceTest.test_basic_slice
+concat_op_test.ConcatOpTest.testRandom
+constant_op_test.ZerosLikeTest.testZerosLikeCPU
+conv_ops_test.Conv2DTest.testConv2D1x1Padding
+conv_ops_test.Conv2DTest.testConv2D2x2Padding
+conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
+conv_ops_test.Conv2DTest.testConv2DEmptyDilation
+conv_ops_test.Conv2DTest.testConv2DExplicitPaddingWithDilations
+conv_ops_test.Conv2DTest.testConv2DLotsPadding
+conv_ops_test.Conv2DTest.testConv2DOnlyBottomPadding
+conv_ops_test.Conv2DTest.testConv2DOnlyTopRightPadding
+conv_ops_test.Conv2DTest.testOpEdgeCases
+cwise_ops_binary_test.BinaryOpTest.testBCast_8A
+cwise_ops_binary_test.BinaryOpTest.testBCast_8B
+cwise_ops_binary_test.BinaryOpTest.testBCast_8C
+cwise_ops_binary_test.BinaryOpTest.testBCast_8D
+cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
+cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+gather_op_test.GatherTest.testHigherRank
+lrn_op_test.LRNOpTest.testCompute  
+math_ops_test.AddNTest.testIndexedSlices
+pad_op_test.PadOpTest.testPaddingTypes
+pooling_ops_test.PoolingTest.testAvgPooling
+pooling_ops_test.PoolingTest.testMaxPooling
+reduction_ops_test.MeanReductionTest.testAxesType
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
+reduction_ops_test.MeanReductionTest.testDegenerate
+reduction_ops_test.MeanReductionTest.testFloat32
+reduction_ops_test.MeanReductionTest.testInfinity
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
+reduction_ops_test.MeanReductionTest.testUint8
+shape_ops_test.ShapeOpsTest.testSqueezeGradient
+split_op_test.SplitOpTest.testSpecialCasesVariable
+split_op_test.SplitOpTest.testDegenerateVariable
+topk_op_test.TopKTest.testKNegative
 
 
 ###################################################
@@ -282,7 +324,6 @@ topk_op_test.TopKTest.testLargeSort
 
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
-
 lrn_op_test.LRNOpTest.testGradientsZeroInput
 softmax_op_test.SoftmaxTest.testEmptyInput
 

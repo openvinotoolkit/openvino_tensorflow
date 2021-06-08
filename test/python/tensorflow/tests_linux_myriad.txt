@@ -26,6 +26,9 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
+argmax_op_test.ArgMaxTest.testDefaultAxis
+argmax_op_test.ArgMaxTest.testEmpty
+cast_op_test.CastOpTest.testRandom
 
 
 
@@ -34,12 +37,12 @@ tests_common.txt
 
 
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
-argmax_op_test.ArgMaxTest.testDefaultAxis
+#argmax_op_test.ArgMaxTest.testDefaultAxis
 
 # BEGIN:TBD -->>
 
 # zero dim error
-argmax_op_test.ArgMaxTest.testEmpty
+#argmax_op_test.ArgMaxTest.testEmpty
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 math_ops_test.DivAndModTest.testFloorDivGrad
 reduction_ops_test.SumReductionTest.testDegenerate
@@ -51,7 +54,7 @@ cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
 argmax_op_test.ArgMaxTest.testFloat 
 argmax_op_test.ArgMaxTest.testInt32
 cast_op_test.CastOpTest.testBasic
-cast_op_test.CastOpTest.testRandom
+#cast_op_test.CastOpTest.testRandom
 cast_op_test.CastOpTest.testSmallValues
 spacetodepth_op_test.SpaceToDepthTest.testBasic
 scan_ops_test.CumsumTest.test1D

@@ -25,10 +25,20 @@ tests_common.txt
 ###################################################
 [RUN]
 # Specify tests/patterns/regex that should be included
+concat_op_test.ConcatOpTest.testConcatLargeNumberOfTensors
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
+split_op_test.SplitOpTest.testSplitRows
+
+
 
 ###################################################
 [SKIP]
-
 #Fails with this error : TopKImpl - Incorrect input data/index values precision.
 #https://github.com/openvinotoolkit/openvino/blob/master/inference-engine/src/mkldnn_plugin/nodes/topk.cpp#L39
 #OV TopK expects data to be F32 or BF16 and index I32
