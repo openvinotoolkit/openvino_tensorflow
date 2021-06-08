@@ -644,8 +644,7 @@ static Status TranslateArgMinMax(
   std::vector<int64> tf_dim;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &tf_dim));
 
-  ng::Shape input_shape = ng_input.get_shape();
-  size_t input_rank = input_shape.size();
+  size_t input_rank = ng_input.get_partial_shape().rank().get_length();
 
   if (tf_dim.size() != 1) {
     return errors::InvalidArgument(
@@ -1420,8 +1419,7 @@ static Status TranslateGatherV2Op(
   }
 
   // Negative axis is supported. Accounting for that
-  auto ng_input_shape = ng_input.get_shape();
-  size_t ng_input_rank = ng_input_shape.size();
+  size_t ng_input_rank = ng_input.get_partial_shape().rank().get_length();
   int axis;
   if (tf_axis[0] >= 0) {
     axis = tf_axis[0];
@@ -1522,15 +1520,25 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu"}) ||
-      VecStrCmp(fused_ops, {"BiasAdd", "Relu6"})) {
-    if (num_args != 1) {
-      return errors::InvalidArgument(
-          "FusedConv2DBiasAdd has incompatible num_args");
+      VecStrCmp(fused_ops, {"BiasAdd", "Relu6"}) ||
+      VecStrCmp(fused_ops, {"BiasAdd", "LeakyRelu"}) ||
+      VecStrCmp(fused_ops, {"BiasAdd",  "Add", "Relu"})) {
+    ng::Output<ng::Node> ng_input, ng_filter, ng_bias, ng_conv, ng_input2;
+    if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+      if (num_args != 2) {
+        return errors::InvalidArgument(
+            "FusedConv2DBiasAdd has incompatible num_args");
+      }
+      TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_filter,
+                                       ng_bias, ng_input2));
+    } else {
+      if (num_args != 1) {
+        return errors::InvalidArgument(
+            "FusedConv2DBiasAdd has incompatible num_args");
+      }
+      TF_RETURN_IF_ERROR(
+          GetInputNodes(ng_op_map, op, ng_input, ng_filter, ng_bias));
     }
-
-    ng::Output<ng::Node> ng_input, ng_filter, ng_bias, ng_conv;
-    TF_RETURN_IF_ERROR(
-        GetInputNodes(ng_op_map, op, ng_input, ng_filter, ng_bias));
 
     TF_RETURN_IF_ERROR(CreateNgConv(ng_input, ng_filter, ng_conv));
 
@@ -1562,6 +1570,27 @@ static Status TranslateFusedConv2DOp(const Node* op,
           op->name() + "_FusedConv2D_Relu6", ng_add, 0, 6);
       NCHWtoNHWC(op->name(), is_nhwc, ng_relu6);
       SaveNgOp(ng_op_map, op->name(), ng_relu6);
+    } else if (VecStrCmp(fused_ops, {"BiasAdd", "LeakyRelu"})) {
+      float tf_leakyrelu_alpha;
+      TF_RETURN_IF_ERROR(
+          GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_leakyrelu_alpha));
+      auto ng_leakyrelu_alpha = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::f32, ng::Shape{}, tf_leakyrelu_alpha);
+      auto ng_alphax = ConstructNgNode<opset::Multiply>(
+          op->name(), ng_leakyrelu_alpha, ng_add);
+      auto ng_lrelu = ConstructNgNode<opset::Maximum>(
+          op->name() + "_FusedConv2D_LeakyRelu", ng_alphax,
+          ng_add);
+      NCHWtoNHWC(op->name(), is_nhwc, ng_lrelu);
+      SaveNgOp(ng_op_map, op->name(), ng_lrelu); 
+    } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+      NHWCtoNCHW(op->name(), is_nhwc, ng_input2);
+      auto ng_add2 = ConstructNgNode<opset::Add>(
+          op->name() + "_FusedConv2D_Add", ng_add, ng_input2);
+      auto ng_relu = ConstructNgNode<opset::Relu>(
+          op->name() + "_FusedConv2D_Relu", ng_add2);
+      NCHWtoNHWC(op->name(), is_nhwc, ng_relu);
+      SaveNgOp(ng_op_map, op->name(), ng_relu);
     } else {
       NCHWtoNHWC(op->name(), is_nhwc, ng_add);
       SaveNgOp(ng_op_map, op->name(), ng_add);
@@ -1902,6 +1931,61 @@ static Status TranslateNonMaxSuppressionV2Op(
   return Status::OK();
 }
 
+static Status TranslateNonMaxSuppressionV3Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_boxes, ng_scores, ng_unused, ng_iou_threshold, ng_score_threshold;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_boxes, ng_scores,
+                                   ng_unused, ng_iou_threshold, ng_score_threshold));
+
+  auto ng_axis_boxes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{1}, std::vector<int64>({0}));
+  auto ng_boxes_unsqueezed =
+      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_boxes, ng_axis_boxes);
+
+  auto ng_axis_scores = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{1}, std::vector<int64>({0}));
+  auto ng_scores_unsqueezed1 =
+      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_scores, ng_axis_scores);
+  auto ng_scores_unsqueezed2 = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_scores_unsqueezed1, ng_axis_scores);
+
+  std::vector<int> max_output_size;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 2, static_input_map, &max_output_size));
+
+  // max_output_size must be scalar
+  if (max_output_size.size() != 1) {
+    return errors::InvalidArgument(
+        "NonMaxSuppression Op: max_output_size of nms must be scalar ",
+        max_output_size.size());
+  }
+
+  auto ng_max_output_size = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{}, max_output_size[0]);
+  OVTF_VLOG(5) << "ng_max_output_size " << max_output_size[0];
+
+  auto ng_nmsv = ConstructNgNode<opset::NonMaxSuppression>(
+      op->name(), ng_boxes_unsqueezed, ng_scores_unsqueezed2,
+      ng_max_output_size, ng_iou_threshold, ng_score_threshold,
+      opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
+      ngraph::element::Type_t::i32);
+
+  auto begin = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{2}, std::vector<int64>({0, 2}));
+  auto end = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{2},
+      std::vector<int64>({max_output_size[0], 3}));
+  auto ng_nmsv_slice = ConstructNgNode<opset::StridedSlice>(
+      op->name(), ng_nmsv, begin, end, std::vector<int64_t>{0, 0},
+      std::vector<int64_t>{0, 0}, std::vector<int64_t>{0, 0},
+      std::vector<int64_t>{0, 1});
+
+  Builder::SetTracingInfo(op->name(), ng_nmsv_slice);
+  SaveNgOp(ng_op_map, op->name(), ng_nmsv_slice);
+  return Status::OK();
+}
+
 static Status TranslateReduceOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map,
@@ -1918,8 +2002,7 @@ static Status TranslateReduceOp(
   std::vector<int64> axes;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &axes));
 
-  ng::Shape input_shape = ng_input.get_shape();
-  size_t input_rank = input_shape.size();
+  size_t input_rank = ng_input.get_partial_shape().rank().get_length();
 
   TF_RETURN_IF_ERROR(CheckAxisDimInRange(axes, input_rank));
 
@@ -2111,8 +2194,7 @@ static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
 
-  ng::Shape input_shape = ng_input.get_shape();
-  auto input_rank = static_cast<int>(input_shape.size());
+  auto input_rank = static_cast<int>(ng_input.get_partial_shape().rank().get_length());
 
   auto ng_rank = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape(),
@@ -2299,8 +2381,7 @@ static Status TranslateSoftmaxOp(const Node* op,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
 
-  auto input_shape = ng_input.get_shape();
-  auto rank = input_shape.size();
+  auto rank = ng_input.get_partial_shape().rank().get_length();
   if (rank < 1) {
     return errors::InvalidArgument("TF Softmax logits must be >=1 dimension");
   }
@@ -2367,8 +2448,7 @@ static Status TranslateSplitOp(
   int32 num_split;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_split", &num_split));
 
-  ng::Shape shape = ng_input.get_shape();
-  int rank = shape.size();
+  auto rank = ng_input.get_partial_shape().rank().get_length();
 
   std::vector<int> split_dim_vec;
   TF_RETURN_IF_ERROR(
@@ -2797,6 +2877,7 @@ const static std::map<
         {"MaxPool", TranslateMaxPoolOp<2>},
         {"MaxPool3D", TranslateMaxPoolOp<3>},
         {"NonMaxSuppressionV2", TranslateNonMaxSuppressionV2Op},
+        {"NonMaxSuppressionV3", TranslateNonMaxSuppressionV3Op},
         {"Mean", TranslateDirectReduceOp<opset::ReduceMean>},
         {"Min", TranslateDirectReduceOp<opset::ReduceMin>},
         {"Minimum", TranslateBinaryOp<opset::Minimum>},
