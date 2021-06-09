@@ -130,7 +130,7 @@ function commandArea()
     // For OS Temporary Output
     if(getOs()=='10'||getOs()=='11')
     {
-        let nameOS = getOs()=='10'?"Windows":"MAC OS";
+        let nameOS = getOs()=='10'?"Windows":"MacOS";
         area.innerHTML = `${nameOS} installation not supported`;
         return;
     }
