@@ -28,7 +28,8 @@ class TestEnv:
 
     @staticmethod
     def get_linux_type():
-        linux_distro = subprocess.check_output("""awk -F= '$1=="ID" { print $2 ;}' /etc/os-release""", shell=True)
+        linux_distro = subprocess.check_output(
+            """awk -F= '$1=="ID" { print $2 ;}' /etc/os-release""", shell=True)
         if "ubuntu" in linux_distro.decode("utf-8"):
             return 'Ubuntu'
         elif "centos" in linux_distro.decode("utf-8"):
