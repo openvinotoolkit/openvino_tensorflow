@@ -53,7 +53,7 @@
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate  
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install keras
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples:`pwd`/examples/mnist python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
@@ -62,7 +62,7 @@
      
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate 
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install keras
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
@@ -79,7 +79,7 @@
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
       export OPENVINO_TF_BACKEND=CPU
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/2/s/venv 
-      source /home/iotgecsp/azu_ag/myagent/2/s/venv/bin/activate  
+      source /home/iotgecsp/azu_ag/myagent/2/s/venv/bin/activate
       pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
      workingDirectory: $(WORK_DIR) 
      displayName: "Setup - ABI 1" 
@@ -94,8 +94,7 @@
      displayName: "Build - ABI 1"
      
    - script: |
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-       
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate       
       pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
       
      displayName: "Install - ABI 1 Wheels"
