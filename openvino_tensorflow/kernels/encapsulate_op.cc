@@ -232,12 +232,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     // Get ngraph executable and inputs information
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
     if (getex_status != Status::OK()) {
-        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
-          OP_REQUIRES_OK(ctx, Fallback(ctx));
-          return;
-        } else {
-          OP_REQUIRES_OK(ctx, getex_status);
-        }
+      if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+        OP_REQUIRES_OK(ctx, Fallback(ctx));
+        return;
+      } else {
+        OP_REQUIRES_OK(ctx, getex_status);
+      }
     }
 
     OVTF_VLOG(1) << " Step_ID: " << step_id;

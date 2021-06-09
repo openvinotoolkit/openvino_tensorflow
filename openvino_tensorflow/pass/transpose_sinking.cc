@@ -308,8 +308,8 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
   } else {
     try {
       if (right_mismatch) {
-        convert_binary_to_default_order(binary, binary->input(0), right, reorders,
-                                        transposes_to_delete);
+        convert_binary_to_default_order(binary, binary->input(0), right,
+                                        reorders, transposes_to_delete);
       } else {
         if (left_mismatch) {
           convert_binary_to_default_order(binary, binary->input(1), left,
@@ -317,7 +317,9 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
         }
       }
     } catch (const std::exception& ex) {
-      throw errors::Internal("Exception thrown while converting binary to default order: ", ex.what());
+      throw errors::Internal(
+          "Exception thrown while converting binary to default order: ",
+          ex.what());
     }
   }
 }

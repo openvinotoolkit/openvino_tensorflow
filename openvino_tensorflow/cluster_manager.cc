@@ -37,12 +37,15 @@ size_t NGraphClusterManager::NumberOfClusters() {
 void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
 
 bool NGraphClusterManager::CheckClusterFallback(const size_t idx) {
-  return (s_cluster_fallback_enabled && idx < s_cluster_fallback.size()) ? s_cluster_fallback[idx] : false;
+  return (s_cluster_fallback_enabled && idx < s_cluster_fallback.size())
+             ? s_cluster_fallback[idx]
+             : false;
 }
 
 void NGraphClusterManager::SetClusterFallback(const size_t idx,
                                               const bool fallback) {
-  if (s_cluster_fallback_enabled && idx < s_cluster_fallback.size()) s_cluster_fallback[idx] = fallback;
+  if (s_cluster_fallback_enabled && idx < s_cluster_fallback.size())
+    s_cluster_fallback[idx] = fallback;
 }
 
 void NGraphClusterManager::EnableClusterFallback() {

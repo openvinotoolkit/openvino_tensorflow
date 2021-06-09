@@ -125,12 +125,10 @@ void SetDisabledOps(set<string> disabled_ops_set) {
   disabled_op_types = disabled_ops_set;
 }
 
-void EnableDynamicFallback() {
-    NGraphClusterManager::EnableClusterFallback();
-}
+void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
 
 void DisableDynamicFallback() {
-    NGraphClusterManager::DisableClusterFallback();
+  NGraphClusterManager::DisableClusterFallback();
 }
 
 }  // namespace api

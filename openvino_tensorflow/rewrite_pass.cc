@@ -68,15 +68,15 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
-      int dyn_fallback =
-          std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
+      int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
       if (dyn_fallback == 0) {
         NGraphClusterManager::DisableClusterFallback();
       } else {
         NGraphClusterManager::EnableClusterFallback();
       }
     }
-    bool dynamic_fallback_enabled = NGraphClusterManager::IsClusterFallbackEnabled();
+    bool dynamic_fallback_enabled =
+        NGraphClusterManager::IsClusterFallbackEnabled();
 
     tensorflow::Graph* graph = options.graph->get();
     if (dynamic_fallback_enabled) {
