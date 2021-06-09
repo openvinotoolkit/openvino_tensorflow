@@ -1522,7 +1522,8 @@ static Status TranslateFusedConv2DOp(const Node* op,
       VecStrCmp(fused_ops, {"BiasAdd", "Relu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Relu6"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "LeakyRelu"}) ||
-      VecStrCmp(fused_ops, {"BiasAdd",  "Add", "Relu"})) {
+      VecStrCmp(fused_ops, {"BiasAdd", "Elu"}) ||
+      VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
     ng::Output<ng::Node> ng_input, ng_filter, ng_bias, ng_conv, ng_input2;
     if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
       if (num_args != 2) {
@@ -1579,10 +1580,17 @@ static Status TranslateFusedConv2DOp(const Node* op,
       auto ng_alphax = ConstructNgNode<opset::Multiply>(
           op->name(), ng_leakyrelu_alpha, ng_add);
       auto ng_lrelu = ConstructNgNode<opset::Maximum>(
-          op->name() + "_FusedConv2D_LeakyRelu", ng_alphax,
-          ng_add);
+          op->name() + "_FusedConv2D_LeakyRelu", ng_alphax, ng_add);
       NCHWtoNHWC(op->name(), is_nhwc, ng_lrelu);
-      SaveNgOp(ng_op_map, op->name(), ng_lrelu); 
+      SaveNgOp(ng_op_map, op->name(), ng_lrelu);
+    } else if (VecStrCmp(fused_ops, {"BiasAdd", "Elu"})) {
+      float tf_elu_alpha = 1.0;
+      TF_RETURN_IF_ERROR(
+          GetNodeAttr(op->attrs(), "leakyrelu_alpha", &tf_elu_alpha));
+      auto ng_elu = ConstructNgNode<opset::Elu>(op->name() + "_FusedConv2D_Elu",
+                                                ng_add, tf_elu_alpha);
+      NCHWtoNHWC(op->name(), is_nhwc, ng_elu);
+      SaveNgOp(ng_op_map, op->name(), ng_elu);
     } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
       NHWCtoNCHW(op->name(), is_nhwc, ng_input2);
       auto ng_add2 = ConstructNgNode<opset::Add>(
@@ -1934,9 +1942,11 @@ static Status TranslateNonMaxSuppressionV2Op(
 static Status TranslateNonMaxSuppressionV3Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_boxes, ng_scores, ng_unused, ng_iou_threshold, ng_score_threshold;
+  ng::Output<ng::Node> ng_boxes, ng_scores, ng_unused, ng_iou_threshold,
+      ng_score_threshold;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_boxes, ng_scores,
-                                   ng_unused, ng_iou_threshold, ng_score_threshold));
+                                   ng_unused, ng_iou_threshold,
+                                   ng_score_threshold));
 
   auto ng_axis_boxes = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i64, ng::Shape{1}, std::vector<int64>({0}));
@@ -2194,7 +2204,8 @@ static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
 
-  auto input_rank = static_cast<int>(ng_input.get_partial_shape().rank().get_length());
+  auto input_rank =
+      static_cast<int>(ng_input.get_partial_shape().rank().get_length());
 
   auto ng_rank = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape(),
