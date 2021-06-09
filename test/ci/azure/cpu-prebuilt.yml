@@ -94,7 +94,7 @@
      displayName: "Build - ABI 1"
      
    - script: |
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate       
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
       
      displayName: "Install - ABI 1 Wheels"
