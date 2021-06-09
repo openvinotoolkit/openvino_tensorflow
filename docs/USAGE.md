@@ -54,6 +54,11 @@ To disable execution of certain operators on the OpenVINO™ backend, use the fo
 
     openvino_tensorflow.get_disabled_ops()
 
+To disable or enable dynamic fallback use the the following API (When enabled, clusters having errors during runtime can fallback to native TF although they are assigned to run on OV).
+
+    openvino_tensorflow.enable_dynamic_fallback()
+    openvino_tensorflow.disable_dynamic_fallback()
+
 ## Environment Variables
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
@@ -139,3 +144,10 @@ This variable sets the minimum number of ops that can exist in a cluster. If the
 Example:
 
     OPENVINO_TF_MIN_NONTRIVIAL_NODES=10
+
+**OPENVINO_TF_DYNAMIC_FALLBACK**
+This variable enables or disables dynamic fallback feature. Should be set to "0" to disable and "1" to enable dynamic fallback. When enabled, clusters having errors during runtime can fallback to native TF although they are assigned to run on OV. Enabled by default.
+
+Example:
+
+    OPENVINO_TF_DYNAMIC_FALLBACK=0

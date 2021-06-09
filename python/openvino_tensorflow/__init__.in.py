@@ -36,6 +36,7 @@ __all__ = [
     'is_logging_placement', '__version__', 'cxx11_abi_flag'
     'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
+    'enable_dynamic_fallback', 'disable_dynamic_fallback',
 ]
 
 ext = 'dylib' if system() == 'Darwin' else 'so'
@@ -118,8 +119,8 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.ngraph_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
     openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
-    openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
-    openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
+    openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_bool]
+    openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_void_p
 
     def enable():
         openvino_tensorflow_lib.enable()
@@ -207,6 +208,12 @@ if ovtf_classic_loaded:
 
     def get_disabled_ops():
         return openvino_tensorflow_lib.get_disabled_ops()
+
+    def enable_dynamic_fallback():
+        openvino_tensorflow_lib.enable_dynamic_fallback()
+
+    def disable_dynamic_fallback():
+        openvino_tensorflow_lib.disable_dynamic_fallback()
 
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \

@@ -61,7 +61,6 @@ class NGraphEncapsulateOp : public OpKernel {
   ngraph::ResultVector ng_result_list;
   std::vector<ngraph::Shape> ng_output_shapes;
   std::shared_ptr<tensorflow::Session> m_session;
-  bool m_fallback_enabled = false;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
 };
@@ -203,7 +202,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
 
-  if (m_fallback_enabled) {
+  if (NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     OP_REQUIRES_OK(ctx, Fallback(ctx));
     return;
   }
@@ -231,7 +230,15 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     step_id = ctx->step_id();
 
     // Get ngraph executable and inputs information
-    OP_REQUIRES_OK(ctx, GetExecutable(tf_input_tensors, ng_exec));
+    Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
+    if (getex_status != Status::OK()) {
+        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+          OP_REQUIRES_OK(ctx, Fallback(ctx));
+          return;
+        } else {
+          OP_REQUIRES_OK(ctx, getex_status);
+        }
+    }
 
     OVTF_VLOG(1) << " Step_ID: " << step_id;
     OVTF_VLOG(4)
@@ -358,15 +365,26 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       try {
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
       } catch (const std::exception& exp) {
-        OVTF_VLOG(4) << "Caught exception while executing cluster "
-                     << to_string(m_cluster_id) << ": " << string(exp.what());
-        OP_REQUIRES_OK(ctx, Fallback(ctx));
-        return;
+        string status_string = "Caught exception while executing cluster " +
+                               to_string(m_cluster_id) + ": " +
+                               string(exp.what());
+        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+          OVTF_VLOG(4) << status_string;
+          OP_REQUIRES_OK(ctx, Fallback(ctx));
+          return;
+        } else {
+          OP_REQUIRES(ctx, false, errors::Internal(status_string));
+        }
       } catch (...) {
-        OVTF_VLOG(4) << "Caught exception while executing cluster "
-                     << to_string(m_cluster_id);
-        OP_REQUIRES_OK(ctx, Fallback(ctx));
-        return;
+        string status_string = "Caught exception while executing cluster " +
+                               to_string(m_cluster_id);
+        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+          OVTF_VLOG(4) << status_string;
+          OP_REQUIRES_OK(ctx, Fallback(ctx));
+          return;
+        } else {
+          OP_REQUIRES(ctx, false, errors::Internal(status_string));
+        }
       }
     }
     time_execute_function = execute_function.ElapsedInMS();
@@ -586,8 +604,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  if (!m_fallback_enabled) {
-    m_fallback_enabled = true;
+  if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
     GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
     SessionOptions options;
@@ -595,7 +612,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
         tensorflow::NewSession(options));
     Status session_create_status = session->Create(*graph_def);
     if (!session_create_status.ok()) {
-      std::cout << "Load Graph Error" << std::endl;
+      return session_create_status;
     }
     m_session = session;
 

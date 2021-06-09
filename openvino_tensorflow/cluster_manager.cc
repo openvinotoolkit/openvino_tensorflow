@@ -14,6 +14,7 @@ namespace openvino_tensorflow {
 std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
 std::vector<bool> NGraphClusterManager::s_cluster_fallback;
 std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
+bool NGraphClusterManager::s_cluster_fallback_enabled = true;
 
 size_t NGraphClusterManager::NewCluster() {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
@@ -36,12 +37,24 @@ size_t NGraphClusterManager::NumberOfClusters() {
 void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
 
 bool NGraphClusterManager::CheckClusterFallback(const size_t idx) {
-  return idx < s_cluster_fallback.size() ? s_cluster_fallback[idx] : false;
+  return (s_cluster_fallback_enabled && idx < s_cluster_fallback.size()) ? s_cluster_fallback[idx] : false;
 }
 
 void NGraphClusterManager::SetClusterFallback(const size_t idx,
                                               const bool fallback) {
-  if (idx < s_cluster_fallback.size()) s_cluster_fallback[idx] = fallback;
+  if (s_cluster_fallback_enabled && idx < s_cluster_fallback.size()) s_cluster_fallback[idx] = fallback;
+}
+
+void NGraphClusterManager::EnableClusterFallback() {
+  s_cluster_fallback_enabled = true;
+}
+
+void NGraphClusterManager::DisableClusterFallback() {
+  s_cluster_fallback_enabled = false;
+}
+
+bool NGraphClusterManager::IsClusterFallbackEnabled() {
+  return s_cluster_fallback_enabled;
 }
 
 }  // namespace openvino_tensorflow

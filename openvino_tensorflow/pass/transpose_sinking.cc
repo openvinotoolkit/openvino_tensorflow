@@ -306,14 +306,18 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
     mark_transpose_for_deletion(left_t, transposes_to_delete);
     mark_transpose_for_deletion(right_t, transposes_to_delete);
   } else {
-    if (right_mismatch) {
-      convert_binary_to_default_order(binary, binary->input(0), right, reorders,
-                                      transposes_to_delete);
-    } else {
-      if (left_mismatch) {
-        convert_binary_to_default_order(binary, binary->input(1), left,
-                                        reorders, transposes_to_delete);
+    try {
+      if (right_mismatch) {
+        convert_binary_to_default_order(binary, binary->input(0), right, reorders,
+                                        transposes_to_delete);
+      } else {
+        if (left_mismatch) {
+          convert_binary_to_default_order(binary, binary->input(1), left,
+                                          reorders, transposes_to_delete);
+        }
       }
+    } catch (const std::exception& ex) {
+      throw errors::Internal("Exception thrown while converting binary to default order: ", ex.what());
     }
   }
 }
@@ -431,25 +435,30 @@ bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
   }
 
   // STEP 1 : Sink or Swim transposes away for op clusters
-  for (auto n : f->get_ordered_ops()) {
-    OVTF_VLOG(4) << "Processing " << n->get_name();
-    // collect output shape of all Result nodes for a sanity check
-    if (ngraph::op::is_output(n)) {
-      orig_result_out_shape[n->get_name()] = n->get_output_shape(0);
+  try {
+    for (auto n : f->get_ordered_ops()) {
+      OVTF_VLOG(4) << "Processing " << n->get_name();
+      // collect output shape of all Result nodes for a sanity check
+      if (ngraph::op::is_output(n)) {
+        orig_result_out_shape[n->get_name()] = n->get_output_shape(0);
+      }
+      if (auto transpose = ngraph::as_type_ptr<opset::Transpose>(n)) {
+        sink_transpose(transpose, reorders, transposes_to_delete);
+      } else if (ngraph::op::is_unary_elementwise_arithmetic(n)) {
+        sink_unary(n, reorders, transposes_to_delete);
+      } else if (ngraph::op::is_binary_elementwise_arithmetic(n)) {
+        sink_binary(n, reorders, transposes_to_delete);
+      } else if (auto pad = ngraph::as_type_ptr<opset::Pad>(n)) {
+        sink_pad(pad, reorders, transposes_to_delete);
+      } else if (auto concat = ngraph::as_type_ptr<opset::Concat>(n)) {
+        sink_concat(concat, reorders, transposes_to_delete);
+      } else {
+        materialize_shapes(n, reorders, transposes_to_delete);
+      }
     }
-    if (auto transpose = ngraph::as_type_ptr<opset::Transpose>(n)) {
-      sink_transpose(transpose, reorders, transposes_to_delete);
-    } else if (ngraph::op::is_unary_elementwise_arithmetic(n)) {
-      sink_unary(n, reorders, transposes_to_delete);
-    } else if (ngraph::op::is_binary_elementwise_arithmetic(n)) {
-      sink_binary(n, reorders, transposes_to_delete);
-    } else if (auto pad = ngraph::as_type_ptr<opset::Pad>(n)) {
-      sink_pad(pad, reorders, transposes_to_delete);
-    } else if (auto concat = ngraph::as_type_ptr<opset::Concat>(n)) {
-      sink_concat(concat, reorders, transposes_to_delete);
-    } else {
-      materialize_shapes(n, reorders, transposes_to_delete);
-    }
+  } catch (...) {
+    OVTF_VLOG(4) << "Caught exception while sinking op";
+    return false;
   }
 
   // STEP 2: purge all the transposes we either sunk or swam.

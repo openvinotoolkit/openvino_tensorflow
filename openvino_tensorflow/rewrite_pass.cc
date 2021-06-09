@@ -67,19 +67,32 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
+      int dyn_fallback =
+          std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
+      if (dyn_fallback == 0) {
+        NGraphClusterManager::DisableClusterFallback();
+      } else {
+        NGraphClusterManager::EnableClusterFallback();
+      }
+    }
+    bool dynamic_fallback_enabled = NGraphClusterManager::IsClusterFallbackEnabled();
+
     tensorflow::Graph* graph = options.graph->get();
-    for (Node* node : graph->nodes()) {
-      int cluster;
-      Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
-      if (s == Status::OK()) {
-        if (NGraphClusterManager::CheckClusterFallback(cluster))
-          return Status::OK();
-        else
+    if (dynamic_fallback_enabled) {
+      for (Node* node : graph->nodes()) {
+        int cluster;
+        Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
+        if (s == Status::OK()) {
+          if (NGraphClusterManager::CheckClusterFallback(cluster))
+            return Status::OK();
+          else
+            break;
+        } else if (!node->IsSink() && !node->IsSource() &&
+                   !node->IsControlFlow() && !node->IsArg() &&
+                   !node->IsRetval()) {
           break;
-      } else if (!node->IsSink() && !node->IsSource() &&
-                 !node->IsControlFlow() && !node->IsArg() &&
-                 !node->IsRetval()) {
-        break;
+        }
       }
     }
 

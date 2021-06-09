@@ -22,10 +22,14 @@ class NGraphClusterManager {
   static size_t NumberOfClusters();
   static bool CheckClusterFallback(const size_t idx);
   static void SetClusterFallback(const size_t idx, const bool fallback);
+  static void EnableClusterFallback();
+  static void DisableClusterFallback();
+  static bool IsClusterFallbackEnabled();
 
  private:
   static std::vector<tensorflow::GraphDef*> s_cluster_graphs;
   static std::vector<bool> s_cluster_fallback;
+  static bool s_cluster_fallback_enabled;
   static std::mutex s_cluster_graphs_mutex;
 };
 
