@@ -119,8 +119,8 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.ngraph_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
     openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
-    openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_bool]
-    openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
+    openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
 
     def enable():
         openvino_tensorflow_lib.enable()
