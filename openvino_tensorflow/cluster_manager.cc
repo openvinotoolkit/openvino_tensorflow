@@ -14,7 +14,7 @@ namespace openvino_tensorflow {
 std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
 std::vector<bool> NGraphClusterManager::s_cluster_fallback;
 std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
-bool NGraphClusterManager::s_cluster_fallback_enabled = true;
+bool NGraphClusterManager::s_cluster_fallback_enabled = false;
 
 size_t NGraphClusterManager::NewCluster() {
   std::lock_guard<std::mutex> guard(s_cluster_graphs_mutex);
@@ -34,7 +34,10 @@ size_t NGraphClusterManager::NumberOfClusters() {
   return s_cluster_graphs.size();
 }
 
-void NGraphClusterManager::EvictAllClusters() { s_cluster_graphs.clear(); }
+void NGraphClusterManager::EvictAllClusters() {
+    s_cluster_graphs.clear();
+    s_cluster_fallback.clear();
+}
 
 bool NGraphClusterManager::CheckClusterFallback(const size_t idx) {
   return (s_cluster_fallback_enabled && idx < s_cluster_fallback.size())
