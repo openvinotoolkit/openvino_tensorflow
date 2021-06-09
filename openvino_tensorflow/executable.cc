@@ -163,7 +163,6 @@ Executable::Executable(shared_ptr<Function> func, string device)
     auto precision = IE_Utils::toPrecision(it->second);
     iter->second->setPrecision(precision);
   }
-  auto parameters2 = func->get_parameters();
 
   OVTF_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
