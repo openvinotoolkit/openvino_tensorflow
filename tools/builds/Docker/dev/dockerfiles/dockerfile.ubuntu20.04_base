@@ -36,16 +36,11 @@ ARG BUILD_DEPENDENCIES="autoconf \
                         libtinfo-dev \
                         jq \
                         lsb-core \
-                        python3.8 \
-                        gcc-7 \
-                        g++-7"
+                        python3.8"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} && \
     rm -rf /var/lib/apt/lists/*
-
-# Changing symbolic link for GCC-7
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 --slave /usr/bin/g++ g++ /usr/bin/g++-7 --slave /usr/bin/gcov gcov /usr/bin/gcov-7
 
 # Report which gcc and g++ versions are present
 RUN which gcc && gcc --version || true
