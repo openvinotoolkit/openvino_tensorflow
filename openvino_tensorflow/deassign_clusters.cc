@@ -223,7 +223,8 @@ Status DeassignClusters(Graph* graph) {
     // Disable dynamic to static
     std::vector<Node*> dyn_node_check;
     for (auto node : nodes) {
-      if (node->type_string() == "NonMaxSuppressionV2") {
+      if (node->type_string() == "NonMaxSuppressionV2" ||
+          node->type_string() == "Reshape") {
         dyn_node_check.push_back(node);
       }
     }
@@ -237,9 +238,11 @@ Status DeassignClusters(Graph* graph) {
         Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
         if (s == Status::OK()) {
           if (out_cluster == cluster_idx &&
-              it->type_string() != "NonMaxSuppressionV2") {
+              (it->type_string() != "NonMaxSuppressionV2" &&
+               it->type_string() != "Reshape")) {
             if (it->type_string() == "ZerosLike" ||
-                it->type_string() == "Size" || it->type_string() == "Conv2D") {
+                it->type_string() == "Size" || it->type_string() == "Conv2D" ||
+                it->type_string() == "Unpack") {
               invalid_dyn_op = true;
               break;
             } else {

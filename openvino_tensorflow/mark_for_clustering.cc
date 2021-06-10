@@ -140,6 +140,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Min"] = SetStaticInputs({1});
     set_attributes_map["MirrorPad"] = SetStaticInputs({1});
     set_attributes_map["NonMaxSuppressionV2"] = SetStaticInputs({2});
+    set_attributes_map["NonMaxSuppressionV3"] = SetStaticInputs({2});
     set_attributes_map["OneHot"] = SetStaticInputs({1});
     set_attributes_map["Pad"] = SetStaticInputs({1});
     set_attributes_map["PadV2"] = SetStaticInputs({1});
