@@ -35,7 +35,7 @@ else
 fi
 
 # Check the YAPF format
-declare YAPF_VERSION=`python -c "import yapf; print(yapf.__version__)"`
+declare YAPF_VERSION=`python3 -c "import yapf; print(yapf.__version__)"`
 
 if [[ "${YAPF_VERSION}" != "${REQUIRED_YAPF_FORMAT_VERSION}" ]] ; then
     echo -n "Unable to match version for ${YAPF_FORMAT_BASENAME}"
@@ -56,7 +56,7 @@ bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CL
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare PYBIND_WRAPPER="python/pyngraph"
+declare PYBIND_WRAPPER="python3/pyngraph"
 
 declare ROOT_SUBDIR
 for ROOT_SUBDIR in ${SRC_DIRS}; do
