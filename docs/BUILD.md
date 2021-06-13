@@ -4,7 +4,7 @@
 |Build Type| Requirements|
 |:-----------------------|-------------------|
 |Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.4.1|
-|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9, libusb 1.0.0|
+|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04, 20.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9, libusb 1.0.0|
 
 ## Use Pre-Built Packages
 

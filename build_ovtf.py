@@ -147,6 +147,12 @@ def main():
         action="store",
         default='')
 
+    parser.add_argument(
+        '--build_dir',
+        help="Specify a custom directory during build",
+        action="store",
+        default='build_cmake')
+
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -172,7 +178,7 @@ def main():
     #-------------------------------
 
     # Default directories
-    build_dir = 'build_cmake'
+    build_dir = arguments.build_dir
 
     assert not (
         arguments.use_tensorflow_from_location != '' and
