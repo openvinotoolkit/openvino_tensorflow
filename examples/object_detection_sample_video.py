@@ -267,6 +267,7 @@ if __name__ == "__main__":
 
     # Load graph and process input image
     graph = load_graph(model_file)
+    # Load the labels
     if label_file:
         classes = load_coco_names(label_file)
     input_name = "import/" + input_layer
@@ -326,6 +327,6 @@ if __name__ == "__main__":
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
             else:
-                cap = cv2.VideoCapture(input_file)
+                print("Completed")
     cap.release()
     cv2.destroyAllWindows()

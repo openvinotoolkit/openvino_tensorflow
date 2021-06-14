@@ -71,8 +71,7 @@ def read_tensor_from_image_file(file_name,
     resized = tf.compat.v1.image.resize_bilinear(dims_expander,
                                                  [input_height, input_width])
     normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    sess = tf.compat.v1.Session()
-    result = sess.run(normalized)
+    result = normalized.eval()
 
     return result
 
