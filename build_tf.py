@@ -53,12 +53,12 @@ def main():
 
     os.chdir(arguments.output_dir)
 
-    venv_dir = './venv3/'
+    venv_dir = '.\\venv2\\'
 
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
     setup_venv(venv_dir)
-
+    print("tensorflow path",os.path.join(arguments.output_dir, "tensorflow"))
     if not os.path.isdir(os.path.join(arguments.output_dir, "tensorflow")):
         # Download TensorFlow
         download_repo("tensorflow",
@@ -82,16 +82,16 @@ def main():
         arguments.use_intel_tensorflow,
         arguments.cxx11_abi_version,
         resource_usage_ratio=float(arguments.resource_usage_ratio))
-
+        
     # Build TensorFlow C++ Library
     build_tensorflow_cc(
         arguments.tf_version, "tensorflow", 'artifacts', arguments.target_arch,
         False, arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
-    artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
+    print("prsent dir is------------------>",pwd)
+    artifacts_dir = os.path.join(pwd, 'tensorflow')
     os.chdir("tensorflow")
-
     copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None,
                          arguments.use_intel_tensorflow)
 

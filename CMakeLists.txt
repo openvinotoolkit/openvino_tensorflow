@@ -16,10 +16,13 @@ include(cmake/sdl.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+message("Helloo..CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-comment -Wno-sign-compare")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4308 /wd4146 /wd4703 /wd4244 /wd4819")
 endif()
 
 # In order to compile ngraph-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.
@@ -82,7 +85,8 @@ else()
     # Handle the case for MacOS
     # TBD
 endif()
-
+message("NPROC_RESULT: ${NPROC_RESULT}")
+message("NUM_MAKE_PROCESSES: ${NUM_MAKE_PROCESSES}")
 # Default to four jobs if the command fails.
 if(NPROC_RESULT)
     message (WARNING "Unable to detect number of processors. Building nGraph with make -j4.")
@@ -113,11 +117,12 @@ elseif(DEFINED OPENVINO_TF_RPATH)
 else()
     set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
 endif()
+message("CMAKE_INSTALL_RPATH: ${CMAKE_INSTALL_RPATH}")
 
 # Find TensorFlow
 find_package(TensorFlow REQUIRED)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
     message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")
@@ -126,7 +131,7 @@ endif()
 if(APPLE)
     set(LIBNGRAPH "libngraph.dylib")
 else()
-    set(LIBNGRAPH "libngraph.so")
+    set(LIBNGRAPH "ngraph.lib")
 endif(APPLE)
 
 # Build options
@@ -140,14 +145,18 @@ find_package(InferenceEngine REQUIRED)
 
 set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
 find_package(ngraph QUIET)
-
+message("InferenceEngine_INCLUDE_DIRS: ${InferenceEngine_INCLUDE_DIRS}")
 include_directories(${InferenceEngine_INCLUDE_DIRS})
+message("IE_LIB_REL_DIR: ${IE_LIB_REL_DIR}")
+message("IE_LIB_DBG_DIR: ${IE_LIB_DBG_DIR}")
+
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
+	message("THREADING is TBB or TBB_AUTO..........................")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
     find_package(TBB COMPONENTS tbb tbbmalloc)
 endif()
 
-message(STATUS "UNIT_TEST_TF_CC_DIR:        ${TF_PRE_BUILT_LOCATION}")
+message(STATUS "UNIT_TEST_TF_CC_DIR:        ${UNIT_TEST_TF_CC_DIR}")
 if(UNIT_TEST_TF_CC_DIR)
     # Check if the path specified is ABSOLUTE or RELATVE
     if (NOT IS_ABSOLUTE ${UNIT_TEST_TF_CC_DIR})
@@ -160,6 +169,7 @@ if(UNIT_TEST_TF_CC_DIR)
         "${UNIT_TEST_TF_CC_DIR}"
         ABSOLUTE
     )
+	message(STATUS "TF_PRE_BUILT_LOCATION:        ${TF_PRE_BUILT_LOCATION}")
     if (NOT EXISTS ${TF_PRE_BUILT_LOCATION})
         message(FATAL_ERROR
             "TensorFlow pre-built directory doesn't exist: " ${TF_PRE_BUILT_LOCATION} )
@@ -197,6 +207,7 @@ set_target_properties(
 )
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
+message("BASEPATH : ${BASEPATH}")
 INCLUDE_DIRECTORIES("${BASEPATH}")
 
 # Add the directories to be built
