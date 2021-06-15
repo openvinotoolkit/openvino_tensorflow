@@ -12,8 +12,9 @@ namespace openvino_tensorflow {
 void NHWCtoNCHW(const string& op_name, bool is_nhwc,
                 ngraph::Output<ngraph::Node>& node) {
   if (is_nhwc) {
-    auto rank = node.get_shape().size();
+    auto rank = node.get_partial_shape().rank().get_length();
     if (rank == 4) {
+      std::cout << "LSKDJFLKSJ" << std::endl;
       Transpose<0, 3, 1, 2>(node);
     } else if (rank == 5) {
       Transpose3D<0, 4, 1, 2, 3>(node);
@@ -25,7 +26,7 @@ void NHWCtoNCHW(const string& op_name, bool is_nhwc,
 void NCHWtoNHWC(const string& op_name, bool is_nhwc,
                 ngraph::Output<ngraph::Node>& node) {
   if (is_nhwc) {
-    auto rank = node.get_shape().size();
+    auto rank = node.get_partial_shape().rank().get_length();
     if (rank == 4) {
       Transpose<0, 2, 3, 1>(node);
     } else if (rank == 5) {

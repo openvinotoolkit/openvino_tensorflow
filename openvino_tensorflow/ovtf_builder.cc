@@ -894,6 +894,7 @@ static Status TranslateConv2DOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input, ng_filter;
+  std::cout << "IN CONV2D" << std::endl;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_filter));
 
   std::vector<int32> tf_strides;
@@ -930,15 +931,51 @@ static Status TranslateConv2DOp(const Node* op,
   ng::Shape ng_image_shape(2);
   ng::Shape ng_kernel_shape(2);
 
+  auto partial_shape = ng_input.get_partial_shape();
+  if(partial_shape.rank().is_static())
+    std::cout << "Rank is static " << std::endl;
+  else
+    std::cout << "NOPE " << std::endl;
+
+  std::cout << "RANK IS " << partial_shape.rank().get_length() << std::endl;
+
+
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  std::cout << "944 \n";
+  // NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  // if(!partial_shape.is_dynamic()){
+  //   NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  // }
+  // else{
+  //   std::vector<int64_t> shape;
+  //   auto length = partial_shape.rank().get_length();
+  //   std::cout << "LEngth is " << length << std::endl;
+  //   std::cout << "In here " << std::endl;
+  //   for (int i = 0; i < length; i++) {
+  //     std::cout << "In for loop" << std::endl;
+  //     std::cout << "PARTIAL SHAPE " << partial_shape << std::endl;
+  //     if(!partial_shape[i].is_dynamic()){
+
+  //       std::cout << "Ok till here " << std::endl;
+  //       shape[i] = partial_shape[i].get_length();
+  //     }
+  //     else{
+  //       shape[i] = -1;
+  //     }
+  //   }
+  //   NHWCtoHW(is_nhwc, shape, ng_image_shape);
+  // }
+  // std::cout << "Done with transformations" << std::endl;
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
+  std::cout << "970 \n";
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
+  std::cout << "972 \n";
 
   OVTF_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
   OVTF_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
-  OVTF_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+  // OVTF_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
 
+  std::cout << "975 \n";
   auto& ng_filter_shape = ng_filter.get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
@@ -949,7 +986,7 @@ static Status TranslateConv2DOp(const Node* op,
 
   ng::CoordinateDiff ng_padding_below;
   ng::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+  Builder::MakePadding(tf_padding_type, partial_shape, ng_kernel_shape,
                        ng_strides, ng_dilations, ng_padding_below,
                        ng_padding_above);
 
@@ -959,6 +996,7 @@ static Status TranslateConv2DOp(const Node* op,
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
+  std::cout << "DONE WITH CONV2D" << std::endl;
   return Status::OK();
 }
 
@@ -2479,7 +2517,7 @@ static Status TranslateSqueezeOp(const Node* op,
                                  Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  size_t input_dims = ng_input.get_shape().size();
+  size_t input_dims = ng_input.get_partial_shape().rank().get_length();
 
   std::vector<int32> tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "squeeze_dims", &tf_axis));
@@ -2489,18 +2527,18 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(
-                 op->name(), ng_input.get_element_type(), ngraph::Shape{0},
-                 std::vector<int>({0})));
-  } else {
+  // if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
+  //   SaveNgOp(ng_op_map, op->name(),
+  //            ConstructNgNode<opset::Constant>(
+  //                op->name(), ng_input.get_element_type(), ngraph::Shape{0},
+  //                std::vector<int>({0})));
+  // } else {
     auto ng_const = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i32, ng::Shape{tf_axis.size()}, tf_axis);
 
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
-  }
+  // }
   return Status::OK();
 }
 

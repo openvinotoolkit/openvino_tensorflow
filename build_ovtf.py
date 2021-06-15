@@ -45,7 +45,7 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.4.1"
+    tf_version = "v2.5.0"
     ovtf_version = "v0.5.0"
     use_intel_tf = False
 

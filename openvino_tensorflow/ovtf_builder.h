@@ -41,21 +41,26 @@ class Builder {
 
   template <typename T>
   static void MakePadding(const std::string& tf_padding_type,
-                          const ngraph::Shape& ng_image_shape,
+                          const ngraph::PartialShape& ng_partial_shape,
                           const ngraph::Shape& ng_kernel_shape,
                           const ngraph::Strides& ng_strides,
                           const ngraph::Shape& ng_dilations,
                           T& ng_padding_below, T& ng_padding_above) {
-    if (tf_padding_type == "SAME") {
-      ngraph::Shape img_shape = {0, 0};
-      img_shape.insert(img_shape.end(), ng_image_shape.begin(),
-                       ng_image_shape.end());
-      ngraph::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
-                                 ng_dilations, ngraph::op::PadType::SAME_UPPER,
-                                 ng_padding_above, ng_padding_below);
-    } else if (tf_padding_type == "VALID") {
-      ng_padding_below.assign(ng_image_shape.size(), 0);
-      ng_padding_above.assign(ng_image_shape.size(), 0);
+    // if (tf_padding_type == "SAME") {
+    //   ngraph::Shape img_shape = {0, 0};
+    //   img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+    //                    ng_image_shape.end());
+    //   ngraph::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+    //                              ng_dilations, ngraph::op::PadType::SAME_UPPER,
+    //                              ng_padding_above, ng_padding_below);
+    // } else if (tf_padding_type == "VALID") {
+    if(tf_padding_type == "VALID") {
+      // ng_padding_below.assign(ng_partial_shape.rank().get_length(), 0);
+      // ng_padding_above.assign(ng_partial_shape.rank().get_length(), 0);
+      std::cout << "NG_PARTIAL " << ng_partial_shape.rank().get_length() << std::endl;
+      ng_padding_below.assign(2, 0);
+      ng_padding_above.assign(2, 0);
+      // std::cout << "NG_IMAGE SIZE " <<  ng_image_shape.size() << std::endl;
     }
   }
 

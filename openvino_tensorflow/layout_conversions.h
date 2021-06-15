@@ -21,12 +21,11 @@ void Transpose(ngraph::Output<ngraph::Node>& node) {
                 "Number of dimensions cannot exceed 4");
   static_assert(a != b && a != c && a != d && b != c && b != d && c != d,
                 "Dimensions indices cannot be equal");
-  auto& s = node.get_shape();
-  ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
+  // auto& s = node.get_shape();
+  // ngraph::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
   ngraph::Shape transpose_order{a, b, c, d};
-  OVTF_VLOG(3) << "transposing " << ngraph::join(s) << " to "
-               << ngraph::join(reshaped_shape) << " axis-order "
-               << ngraph::join(transpose_order);
+  // OVTF_VLOG(3) << "transposing " << ngraph::join(s) << " to "
+              //  << ngraph::join(reshaped_shape) << " axis-order "
   auto input_order = std::make_shared<opset::Constant>(
       ngraph::element::u64, ngraph::Shape{transpose_order.size()},
       transpose_order);
