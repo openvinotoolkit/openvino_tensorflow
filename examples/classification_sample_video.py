@@ -57,8 +57,7 @@ def read_tensor_from_image_file(frame,
     resized = tf.compat.v1.image.resize_bilinear(dims_expander,
                                                  [input_height, input_width])
     normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    sess = tf.compat.v1.Session()
-    result = sess.run(normalized)
+    result = normalized.eval()
     return result
 
 
@@ -71,7 +70,7 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    file_name = "examples/data/people-detection.mp4"
+    input_file = "examples/data/people-detection.mp4"
     model_file = "examples/data/inception_v3_2016_08_28_frozen.pb"
     label_file = "examples/data/imagenet_slim_labels.txt"
     input_height = 299
@@ -145,6 +144,9 @@ if __name__ == "__main__":
         print(backend)
     ovtf.set_backend(backend_name)
 
+    #Load the labels
+    if label_file:
+        labels = load_labels(label_file)
     # Read input video file
     cap = cv2.VideoCapture(input_file)
 
@@ -173,14 +175,14 @@ if __name__ == "__main__":
                 # print labels
                 if label_file:
                     cv2.putText(
-                        frame, 'Inferene Running on : {0}'.format(backend_name),
+                        frame,
+                        'Inference Running on : {0}'.format(backend_name),
                         (30, 50), font, font_size, color, font_thickness)
                     cv2.putText(
                         frame, 'FPS : {0} | Inference Time : {1}ms'.format(
                             int(fps), round((elapsed * 1000), 2)), (30, 80),
                         font, font_size, color, font_thickness)
                     top_k = results.argsort()[-5:][::-1]
-                    labels = load_labels(label_file)
                     c = 130
                     for i in top_k:
                         cv2.putText(frame, '{0} : {1}'.format(
@@ -196,6 +198,6 @@ if __name__ == "__main__":
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
             else:
-                cap = cv2.VideoCapture(input_file)
+                print("Completed")
     cap.release()
     cv2.destroyAllWindows()
