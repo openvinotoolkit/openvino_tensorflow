@@ -99,6 +99,7 @@ RUN cd /opt/intel/openvino_tensorflow && git submodule update --recursive
 RUN cd /home && mkdir tf_m1
 RUN cd /opt/intel/openvino_tensorflow && python3.8 build_tf.py --output_dir=/home/tf_m1 --cxx11_abi_version=1
 
+
 RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \
   && rm -rf /var/lib/apt/lists/*
 

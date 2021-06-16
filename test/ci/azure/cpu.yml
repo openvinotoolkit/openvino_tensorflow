@@ -12,7 +12,8 @@
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
-    
+    OPENVINO_TF_BACKEND: CPU
+
  steps:
  
    - script: |
@@ -30,7 +31,6 @@
      displayName: "Setup" 
     
    - script: |
-      export OPENVINO_TF_BACKEND=CPU
       echo $(WORK_DIR)
       git submodule init
       git submodule update

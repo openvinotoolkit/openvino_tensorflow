@@ -12,6 +12,8 @@
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    OPENVINO_TF_BACKEND: MYRIAD
+    NGRAPH_TF_UTEST_RTOL: 0.0001
     
  steps:
  
@@ -30,19 +32,14 @@
      displayName: "Setup" 
     
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      ${OV_LOCATION}/install_dependencies/install_NEO_OCL_driver.sh -y
-      ${OV_LOCATION}/install_dependencies/install_NCS_udev_rules.sh
       python3 build_ovtf.py --use_tensorflow_from_location=/home/tf_m1 --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
@@ -51,8 +48,6 @@
      displayName: "tf_ov C++ Tests"
      
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
@@ -68,8 +63,6 @@
      displayName: "Install"
    
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
       pip install keras
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
@@ -79,8 +72,6 @@
      displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
-      export OPENVINO_TF_BACKEND=MYRIAD
-      export NGRAPH_TF_UTEST_RTOL=0.0001
       pip install keras
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate

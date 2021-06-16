@@ -1,4 +1,7 @@
 #!/bin/bash
+/opt/intel/openvino_2021.3.394/install_dependencies/install_NEO_OCL_driver.sh -y
+/opt/intel/openvino_2021.3.394/install_dependencies/install_NCS_udev_rules.sh
+ 
 set -e
 
 if [ -z "$AZP_URL" ]; then
