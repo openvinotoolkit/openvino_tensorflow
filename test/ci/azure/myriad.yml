@@ -2,7 +2,7 @@
   repositories:
   - repository: openvino_tensorflow
     type: github
-    endpoint: openvinotoolkit
+    endpoint: barun repo 6
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
