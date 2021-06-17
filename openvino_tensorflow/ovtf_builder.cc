@@ -1290,6 +1290,7 @@ static Status TranslateFusedBatchNormOp(
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input, ng_scale, ng_offset, ng_mean, ng_variance;
   bool is_v3 = op->type_string() == "FusedBatchNormV3";
+  bool is_Ex = op->type_string() == "_FusedBatchNormEx";
 
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_scale, ng_offset,
                                    ng_mean, ng_variance));
@@ -1321,16 +1322,31 @@ static Status TranslateFusedBatchNormOp(
       op->name(), ng_input, ng_scale, ng_offset, ng_mean, ng_variance,
       tf_epsilon);
   NCHWtoNHWC(op->name(), is_nhwc, ng_batch_norm);
-  SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
-  SaveNgOp(ng_op_map, op->name(), ng_mean);
-  SaveNgOp(ng_op_map, op->name(), ng_variance);
-  SaveNgOp(ng_op_map, op->name(), ng_mean);      // reserve_space_1
-  SaveNgOp(ng_op_map, op->name(), ng_variance);  // reserve_space_2
-  if (is_v3) {
-    // FusedBatchNormV3 has 6 outputs
-    SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
+
+  if (is_Ex) {
+     string activation_mode;
+     TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "activation_mode", &activation_mode));
+
+     if (activation_mode == "Relu")
+     {
+       auto relu_op = ConstructNgNode<opset::Relu>(op->name(), ng_batch_norm);
+       SaveNgOp(ng_op_map, op->name(), relu_op);
+     } else {
+       return errors::Unimplemented("Unsupported _FusedBatchNormEx activation mode in " +
+                                 op->name());
+     }
   }
-  return Status::OK();
+  else {
+      SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+      SaveNgOp(ng_op_map, op->name(), ng_mean);
+      SaveNgOp(ng_op_map, op->name(), ng_variance);
+      SaveNgOp(ng_op_map, op->name(), ng_mean);      // reserve_space_1
+      SaveNgOp(ng_op_map, op->name(), ng_variance);  // reserve_space_2
+      if (is_v3) {
+        // FusedBatchNormV3 has 6 outputs
+        SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
+      }
+  }
 }
 
 static Status TranslateFusedMatMulOp(const Node* op,
@@ -1523,9 +1539,11 @@ static Status TranslateFusedConv2DOp(const Node* op,
       VecStrCmp(fused_ops, {"BiasAdd", "Relu6"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "LeakyRelu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Elu"}) ||
-      VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+      VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) || 
+      VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
     ng::Output<ng::Node> ng_input, ng_filter, ng_bias, ng_conv, ng_input2;
-    if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+    if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
+        VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
       if (num_args != 2) {
         return errors::InvalidArgument(
             "FusedConv2DBiasAdd has incompatible num_args");
@@ -1599,6 +1617,13 @@ static Status TranslateFusedConv2DOp(const Node* op,
           op->name() + "_FusedConv2D_Relu", ng_add2);
       NCHWtoNHWC(op->name(), is_nhwc, ng_relu);
       SaveNgOp(ng_op_map, op->name(), ng_relu);
+    } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
+      ng::Output<ng::Node> ng_add_inp;
+      //TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, ng_add_inp));
+      NCHWtoNHWC(op->name(), is_nhwc, ng_add);
+      auto ng_out = ConstructNgNode<opset::Add>(
+          op->name() + "_FusedConv2D_BiasAdd_Add", ng_add, ng_input2);
+      SaveNgOp(ng_op_map, op->name(), ng_out);
     } else {
       NCHWtoNHWC(op->name(), is_nhwc, ng_add);
       SaveNgOp(ng_op_map, op->name(), ng_add);
@@ -2865,6 +2890,7 @@ const static std::map<
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
+        {"_FusedBatchNormEx", TranslateFusedBatchNormOp},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedMatMul", TranslateFusedMatMulOp},
         {"Greater", TranslateBinaryOp<opset::Greater>},
