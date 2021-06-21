@@ -2,7 +2,7 @@
   repositories:
   - repository: openvino_tensorflow
     type: github
-    endpoint: barun repo 6
+    endpoint: openvinotoolkit
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
@@ -12,8 +12,7 @@
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
-    OPENVINO_TF_BACKEND: CPU
-
+    
  steps:
  
    - script: |
@@ -31,10 +30,11 @@
      displayName: "Setup" 
     
    - script: |
+      export OPENVINO_TF_BACKEND=CPU
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=/home/tf_m1 --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
+      python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/ci_setup/setup/ --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
