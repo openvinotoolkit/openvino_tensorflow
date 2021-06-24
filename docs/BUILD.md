@@ -3,7 +3,7 @@
 
 |Build Type| Requirements|
 |:-----------------------|-------------------|
-|Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.4.1|
+|Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.5.0|
 |Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04, 20.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9, libusb 1.0.0|
 
 ## Use Pre-Built Packages
@@ -24,7 +24,7 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
 
         pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.4.1
+        pip3 install -U tensorflow==2.5.0
         pip3 install openvino-tensorflow
 
 ### Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
@@ -40,15 +40,15 @@ You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the 
 
 2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
 
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl
+        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl
 
 3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.3 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
@@ -142,10 +142,10 @@ Verify that `openvino-tensorflow` is installed correctly:
 
 This should produce an output like:
 
-        TensorFlow version:  2.4.1
+        TensorFlow version:  2.5.0
         OpenVINO integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.3'
-        TensorFlow version used for this build: v2.4.1
+        TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 1
         OpenVINO integration with TensorFlow built with Grappler: False
 
@@ -181,9 +181,9 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
 
-- To build with a desired TF version, for example: v2.4.1
+- To build with a desired TF version, for example: v2.5.0
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.4.1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.5.0
 
 ## OpenVINO™
 
