@@ -13,9 +13,9 @@
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
-    #Uncomment the location for using the version of TF BUILD
-    TF_LOCATION: /home/tf_source/tf_2.4.1 
-    #TF_LOCATION: /home/tf_source/tf_2.5.0 
+    #Uncomment and comment the location respectively for using the version of TF BUILD
+    #TF_LOCATION: /home/tf_source/tf_2.4.1 
+    TF_LOCATION: /home/tf_source/tf_2.5.0 
     
  steps:
  
