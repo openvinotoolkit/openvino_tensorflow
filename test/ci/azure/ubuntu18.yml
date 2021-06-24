@@ -8,11 +8,14 @@
  pool:
   name: 'Default'
   demands:
-    - agent.name -equals ubuntu18agent
+    - agent.name -equals ubuntu18agenttest
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    #Uncomment the location for using the version of TF BUILD
+    TF_LOCATION: /home/tf_source/tf_2.4.1 
+    #TF_LOCATION: /home/tf_source/tf_2.5.0 
     
  steps:
  
@@ -33,7 +36,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=/home/tf_m1 --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
+      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
