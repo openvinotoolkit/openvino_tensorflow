@@ -683,8 +683,13 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     if (output_tensor == nullptr) {
       ctx->set_output(i, outputs[i]);
     } else {
+#if TF_VERSION < 2
+      std::memcpy((void*)(DMAHelper::base(output_tensor)), (void*)(DMAHelper::base(&(outputs[i]))),
+                  outputs[i].AllocatedBytes());
+#else
       std::memcpy((void*)(output_tensor->data()), (void*)(outputs[i].data()),
                   outputs[i].AllocatedBytes());
+#endif
     }
   }
   return Status::OK();
