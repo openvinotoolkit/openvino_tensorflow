@@ -1324,28 +1324,27 @@ static Status TranslateFusedBatchNormOp(
   NCHWtoNHWC(op->name(), is_nhwc, ng_batch_norm);
 
   if (is_Ex) {
-     string activation_mode;
-     TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "activation_mode", &activation_mode));
+    string activation_mode;
+    TF_RETURN_IF_ERROR(
+        GetNodeAttr(op->attrs(), "activation_mode", &activation_mode));
 
-     if (activation_mode == "Relu")
-     {
-       auto relu_op = ConstructNgNode<opset::Relu>(op->name(), ng_batch_norm);
-       SaveNgOp(ng_op_map, op->name(), relu_op);
-     } else {
-       return errors::Unimplemented("Unsupported _FusedBatchNormEx activation mode in " +
-                                 op->name());
-     }
-  }
-  else {
-      SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
-      SaveNgOp(ng_op_map, op->name(), ng_mean);
-      SaveNgOp(ng_op_map, op->name(), ng_variance);
-      SaveNgOp(ng_op_map, op->name(), ng_mean);      // reserve_space_1
-      SaveNgOp(ng_op_map, op->name(), ng_variance);  // reserve_space_2
-      if (is_v3) {
-        // FusedBatchNormV3 has 6 outputs
-        SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
-      }
+    if (activation_mode == "Relu") {
+      auto relu_op = ConstructNgNode<opset::Relu>(op->name(), ng_batch_norm);
+      SaveNgOp(ng_op_map, op->name(), relu_op);
+    } else {
+      return errors::Unimplemented(
+          "Unsupported _FusedBatchNormEx activation mode in " + op->name());
+    }
+  } else {
+    SaveNgOp(ng_op_map, op->name(), ng_batch_norm);
+    SaveNgOp(ng_op_map, op->name(), ng_mean);
+    SaveNgOp(ng_op_map, op->name(), ng_variance);
+    SaveNgOp(ng_op_map, op->name(), ng_mean);      // reserve_space_1
+    SaveNgOp(ng_op_map, op->name(), ng_variance);  // reserve_space_2
+    if (is_v3) {
+      // FusedBatchNormV3 has 6 outputs
+      SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
+    }
   }
 }
 
@@ -1539,7 +1538,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
       VecStrCmp(fused_ops, {"BiasAdd", "Relu6"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "LeakyRelu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Elu"}) ||
-      VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) || 
+      VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
       VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
     ng::Output<ng::Node> ng_input, ng_filter, ng_bias, ng_conv, ng_input2;
     if (VecStrCmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
@@ -1619,7 +1618,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
       SaveNgOp(ng_op_map, op->name(), ng_relu);
     } else if (VecStrCmp(fused_ops, {"BiasAdd", "Add"})) {
       ng::Output<ng::Node> ng_add_inp;
-      //TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, ng_add_inp));
+      // TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, ng_add_inp));
       NCHWtoNHWC(op->name(), is_nhwc, ng_add);
       auto ng_out = ConstructNgNode<opset::Add>(
           op->name() + "_FusedConv2D_BiasAdd_Add", ng_add, ng_input2);
