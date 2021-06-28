@@ -95,8 +95,12 @@ RUN bazel version
 RUN git clone  https://github.com/openvinotoolkit/openvino_tensorflow.git /opt/intel/openvino_tensorflow
 RUN cd /opt/intel/openvino_tensorflow && git submodule init
 RUN cd /opt/intel/openvino_tensorflow && git submodule update --recursive
-RUN cd /home && mkdir tf_m1
-RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/tf_m1 --cxx11_abi_version=1
+RUN cd /home && mkdir tf_source
+RUN cd /home/tf_source && mkdir tf_2.4.1
+RUN cd /home/tf_source && mkdir tf_2.5.0
+RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/tf_source/tf_2.4.1 --cxx11_abi_version=1 --tf_version=v2.4.1
+RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/tf_source/tf_2.5.0 --cxx11_abi_version=1 --tf_version=v2.5.0
+
 
 
 RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \
