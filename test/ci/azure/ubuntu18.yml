@@ -12,8 +12,8 @@
     BUILD_DIR: $(WORK_DIR)/build
     OV_LOCATION: /opt/intel/openvino_2021.3.394/
     #Uncomment and comment the location respectively for using the version of TF BUILD
-    #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
-    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_0
+    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
+    #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_0
     
  steps:
  
