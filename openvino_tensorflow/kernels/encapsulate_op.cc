@@ -673,8 +673,12 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     input_tensor_list[i] = {m_session_input_names[i], ctx->input(i)};
   }
   std::vector<Tensor> outputs;
+  tensorflow::RunOptions run_options;
+  run_options.set_inter_op_thread_pool(-1);
+  tensorflow::RunMetadata run_metadata;
   Status run_status =
-      m_session->Run(input_tensor_list, m_session_output_names, {}, &outputs);
+      m_session->Run(run_options, input_tensor_list, m_session_output_names, {},
+                     &outputs, &run_metadata);
   if (run_status != Status::OK()) {
     return errors::Internal("Failed to run TF session for " + name());
   }
