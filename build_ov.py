@@ -38,6 +38,10 @@ def main():
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
+    os.chdir(arguments.output_dir)
+
+    if not os.path.isdir(arguments.output_dir):
+        os.makedirs(arguments.output_dir)
     assert os.path.exists(
         arguments.output_dir), "path doesn't exist {0}".format(
             arguments.output_dir)
@@ -72,7 +76,7 @@ def main():
 
     verbosity = False
     artifacts_location = os.path.abspath(arguments.output_dir) + '/artifacts'
-
+    
     # Build OpenVINO
     build_openvino(build_dir, openvino_src_dir, cxx_abi, arguments.target_arch,
                    artifacts_location, arguments.debug_build, verbosity)
