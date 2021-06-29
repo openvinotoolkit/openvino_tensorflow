@@ -146,7 +146,14 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   std::string device;
   BackendManager::GetBackendName(device);
   const char* device_id(device.c_str());
-  std::string ov_version = "2021.2";
+  std::string ov_version;
+#if defined(OPENVINO_2021_2)
+  ov_version = "2021.2";
+#elif defined(OPENVINO_2021_3)
+  ov_version = "2021.3";
+#elif defined(OPENVINO_2021_4)
+  ov_version = "2021.4";
+#endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());
