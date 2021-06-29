@@ -7,6 +7,9 @@
     
  pool:
   name: 'Docker'
+  demands:
+    - agent.name -equals ubuntu18agent
+    
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
@@ -59,8 +62,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
-      exit_code=$?
-      echo "Exit Result for tf_ov C++ Tests is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "CPU tf_ov C++ Tests"
      
@@ -70,8 +72,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
-      exit_code=$?
-      echo "Exit Result for C++ Inference Example is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "CPU C++ Inference Example"
    
@@ -82,8 +83,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
-      exit_code=$?
-      echo "Exit Result for Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "CPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
@@ -94,8 +94,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
-      exit_code=$?
-      echo "Exit Result for TF Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "CPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
 
@@ -105,8 +104,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
-      exit_code=$?
-      echo "Exit Result for tf_ov C++ Tests is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "GPU tf_ov C++ Tests"
      
@@ -116,8 +114,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
-      exit_code=$?
-      echo "Exit Result for C++ Inference Example is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "GPU C++ Inference Example"
      
@@ -129,8 +126,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
-      exit_code=$?
-      echo "Exit Result for Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "GPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
@@ -141,8 +137,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
-      exit_code=$?
-      echo "Exit Result for TF Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "GPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
@@ -152,8 +147,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
-      exit_code=$?
-      echo "Exit Result for tf_ov C++ Tests is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD tf_ov C++ Tests"
      
@@ -164,8 +158,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
-      exit_code=$?
-      echo "Exit Result for C++ Inference Example is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD C++ Inference Example"
      
@@ -178,8 +171,7 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
-      exit_code=$?
-      echo "Exit Result for Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
@@ -191,12 +183,12 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
-      exit_code=$?
-      echo "Exit Result for TF Python Tests OPENVINO_TF_BACKEND is ${exit_code}"
+     condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
     
    - script: |
       rm -rf *
+     condition: always()
      displayName: "Cleanup"   
      workingDirectory: $(WORK_DIR)
