@@ -2697,16 +2697,28 @@ static Status TranslateTopKV2Op(
     sort = "index";
   }
 
-  auto ng_result =
-      std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+  if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_input.get_element_type(), ngraph::Shape{0},
+                 std::vector<int>({0})));
+    
+    SaveNgOp(ng_op_map, op->name(),
+          ConstructNgNode<opset::Constant>(
+              op->name(), ng::element::i32, ngraph::Shape{0},
+              std::vector<int>({0})));
+  } else {
+    auto ng_result =
+        std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
 
-  ng::Output<ng::Node> ng_values = ng_result->output(0);
-  Builder::SetTracingInfo(op->name(), ng_values);
-  ng::Output<ng::Node> ng_indices = ng_result->output(1);
-  Builder::SetTracingInfo(op->name(), ng_indices);
+    ng::Output<ng::Node> ng_values = ng_result->output(0);
+    Builder::SetTracingInfo(op->name(), ng_values);
+    ng::Output<ng::Node> ng_indices = ng_result->output(1);
+    Builder::SetTracingInfo(op->name(), ng_indices);
 
-  SaveNgOp(ng_op_map, op->name(), ng_values);
-  SaveNgOp(ng_op_map, op->name(), ng_indices);
+    SaveNgOp(ng_op_map, op->name(), ng_values);
+    SaveNgOp(ng_op_map, op->name(), ng_indices);
+  }
 
   return Status::OK();
 }
