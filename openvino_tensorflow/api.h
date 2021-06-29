@@ -33,6 +33,9 @@ extern bool is_logging_placement();
 
 extern void set_disabled_ops(const char* op_type_list);
 extern const char* get_disabled_ops();
+
+extern void enable_dynamic_fallback();
+extern void disable_dynamic_fallback();
 }
 
 extern void Enable();
@@ -52,6 +55,8 @@ extern std::set<string> GetDisabledOps();
 extern void SetDisabledOps(std::set<string>);
 extern void SetDisabledOps(string);
 
+extern void EnableDynamicFallback();
+extern void DisableDynamicFallback();
 }  // namespace api
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

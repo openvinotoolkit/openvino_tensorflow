@@ -3284,8 +3284,9 @@ Status Builder::TranslateGraph(
   }
   for (int i = 0; i < ng_parameter_list.size(); i++) {
     if (!(ng_parameter_list[i]->get_shape().size() > 0 &&
-          ng_parameter_list[i]->get_shape()[0] == 0))
+          ng_parameter_list[i]->get_shape()[0] == 0)) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
+    }
   }
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (ng_result_list[i]->is_dynamic() ||
