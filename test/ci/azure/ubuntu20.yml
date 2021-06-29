@@ -7,6 +7,9 @@
     
  pool:
   name: 'Docker'
+  demands:
+    - agent.name -equals ubuntu20agent
+    
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
