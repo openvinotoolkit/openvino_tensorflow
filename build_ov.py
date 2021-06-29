@@ -11,7 +11,7 @@ import argparse
 
 
 def main():
-    openvino_version = "releases/2021/3"
+    openvino_version = "releases/2021/4"
     build_dir = 'build_cmake'
     cxx_abi = "1"
     print("openVINO version: ", openvino_version)
@@ -35,6 +35,10 @@ def main():
         help="Builds a debug version of the components\n",
         action="store_true")
     arguments = parser.parse_args()
+
+    if not os.path.isdir(arguments.output_dir):
+        os.makedirs(arguments.output_dir)
+    os.chdir(arguments.output_dir)
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
@@ -72,7 +76,7 @@ def main():
 
     verbosity = False
     artifacts_location = os.path.abspath(arguments.output_dir) + '/artifacts'
-
+    
     # Build OpenVINO
     build_openvino(build_dir, openvino_src_dir, cxx_abi, arguments.target_arch,
                    artifacts_location, arguments.debug_build, verbosity)

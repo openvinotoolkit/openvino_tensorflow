@@ -134,10 +134,11 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     std::string ov_version;
 #if defined(OPENVINO_2021_2)
     ov_version = "2021.2";
-#else if defined(OPENVINO_2021_3)
+#elif defined(OPENVINO_2021_3)
     ov_version = "2021.3";
+#elif defined(OPENVINO_2021_4)
+    ov_version = "2021.4";
 #endif
-
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
                                   options.graph->get());

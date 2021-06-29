@@ -7,16 +7,16 @@
 
 from tools.build_utils import *
 
-# grappler related defaults
+#grappler related defaults
 builder_version = 0.50
 flag_string_map = {True: 'YES', False: 'NO'}
 
 
 def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                   disable_cpp_api):
-    # Check pre-requisites
+#Check pre - requisites
     if use_prebuilt_tensorflow and not disable_cpp_api:
-        # Check if the gcc version is at least 5.3.0
+#Check if the gcc version is at least 5.3.0
         if (platform.system() != 'Darwin'):
             gcc_ver_list = get_gcc_version()
             gcc_ver = float(".".join(gcc_ver_list[:2]))
@@ -36,7 +36,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                         "Got: " + '.'.join(cmake_ver_list))
 
     if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
-        # Check bazel version
+#Check bazel version
         bazel_kind, bazel_ver = get_bazel_version()
         got_correct_bazel_version = bazel_kind == 'Bazelisk version'
         if (not got_correct_bazel_version and int(bazel_ver[0]) < 2):
@@ -49,12 +49,12 @@ def main():
     Builds TensorFlow, OpenVINO, and OpenVINO integration with TensorFlow for Python 3
     '''
 
-    # Component versions
+#Component versions
     tf_version = "v2.5.0"
     ovtf_version = "v0.5.0"
     use_intel_tf = False
 
-    # Command line parser options
+#Command line parser options
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -144,7 +144,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2021.3')
+        default='2021.4')
 
     parser.add_argument(
         '--python_executable',
@@ -158,7 +158,7 @@ def main():
         action="store",
         default='build_cmake')
 
-    # Done with the options. Now parse the commandline
+#Done with the options.Now parse the commandline
     arguments = parser.parse_args()
 
     if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
@@ -167,7 +167,7 @@ def main():
             arguments.tf_version +
             "Please consider adding --build_tf_from_source")
 
-    # Update the build time tensorflow version with the user specified version
+#Update the build time tensorflow version with the user specified version
     tf_version = arguments.tf_version
 
     if (arguments.debug_build):
@@ -178,11 +178,11 @@ def main():
         print("Building with verbose output messages\n")
         verbosity = True
 
-    #-------------------------------
-    # Recipe
-    #-------------------------------
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#Recipe
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
-    # Default directories
+#Default directories
     build_dir = arguments.build_dir
 
     assert not (
@@ -191,9 +191,10 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
 
-    assert not (arguments.openvino_version != "2021.3" and
+    assert not (arguments.openvino_version != "2021.4" and
+                arguments.openvino_version != "2021.3" and
                 arguments.openvino_version != "2021.2"), (
-                    "Only 2021.2 and 2021.3 are supported OpenVINO versions")
+                    "Only 2021.2, 2021.3 and 2021.4 OpenVINO versions are supported")
 
     if arguments.use_openvino_from_location != '':
         ver_file = arguments.use_openvino_from_location + \
@@ -211,7 +212,7 @@ def main():
                   arguments.disable_cpp_api)
 
     if arguments.use_tensorflow_from_location != '':
-        # Check if the prebuilt folder has necessary files
+#Check if the prebuilt folder has necessary files
         assert os.path.isdir(
             arguments.use_tensorflow_from_location
         ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
@@ -255,17 +256,17 @@ def main():
     artifacts_location = os.path.abspath(artifacts_location)
     print("ARTIFACTS location: " + artifacts_location)
 
-    #If artifacts doesn't exist create
+#If artifacts doesn't exist create
     if not os.path.isdir(artifacts_location):
         os.mkdir(artifacts_location)
 
-    #install virtualenv
+#install virtualenv
     install_virtual_env(venv_dir)
 
-    # Load the virtual env
+#Load the virtual env
     load_venv(venv_dir)
 
-    # Setup the virtual env
+#Setup the virtual env
     setup_venv(venv_dir)
 
     target_arch = 'native'
@@ -274,20 +275,20 @@ def main():
 
     print("Target Arch: %s" % target_arch)
 
-    # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
-    # For gcc older than 5.3, this flag is set to 0 and for newer ones,
-    # this is set to 1
-    # Tensorflow still uses ABI 0 for its PyPi builds, and OpenVINO uses ABI 1
-    # To maintain compatibility, a single ABI flag should be used for both builds
+#The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
+#For gcc older than 5.3, this flag is set to 0 and for newer ones,
+#this is set to 1
+#Tensorflow still uses ABI 0 for its PyPi builds, and OpenVINO uses ABI 1
+#To maintain compatibility, a single ABI flag should be used for both builds
     cxx_abi = arguments.cxx11_abi_version
 
     if arguments.use_tensorflow_from_location != "":
-        # Some asserts to make sure the directory structure of
-        # use_tensorflow_from_location is correct. The location
-        # should have: ./artifacts/tensorflow, which is expected
-        # to contain one TF whl file, framework.so and cc.so
+#Some asserts to make sure the directory structure of
+#use_tensorflow_from_location is correct.The location
+#should have :./ artifacts / tensorflow, which is expected
+#to contain one TF whl file, framework.so and cc.so
         print("Using TensorFlow from " + arguments.use_tensorflow_from_location)
-        # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
+#The tf whl should be in use_tensorflow_from_location / artifacts / tensorflow
         tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location +
                                      '/artifacts/tensorflow')
         assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
@@ -296,7 +297,7 @@ def main():
         assert len(
             possible_whl
         ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
-        # Make sure there is exactly 1 TF whl
+#Make sure there is exactly 1 TF whl
         tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
         assert os.path.isfile(tf_whl), "Did not find " + tf_whl
         # Install the found TF whl file
@@ -315,9 +316,9 @@ def main():
             os.path.abspath(artifacts_location), "tensorflow")
         if not os.path.isdir(tf_in_artifacts):
             os.mkdir(tf_in_artifacts)
-        # This function copies the .so files from
-        # use_tensorflow_from_location/artifacts/tensorflow to
-        # artifacts/tensorflow
+#This function copies the.so files from
+#use_tensorflow_from_location / artifacts / tensorflow to
+#artifacts / tensorflow
         tf_version = get_tf_version()
         copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                              use_intel_tf)
@@ -364,7 +365,7 @@ def main():
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
-            # Download TF source for enabling TF python tests
+#Download TF source for enabling TF python tests
             pwd_now = os.getcwd()
             assert os.path.exists(
                 artifacts_location), "Path doesn't exist {0}".format(
@@ -377,7 +378,7 @@ def main():
             assert os.path.exists(pwd_now), "Path doesn't exist {0}".format(
                 pwd_now)
             os.chdir(pwd_now)
-            # Finally, copy the libtensorflow_framework.so to the artifacts
+#Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
                 tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
             else:
@@ -397,7 +398,7 @@ def main():
             shutil.copyfile(tf_lib_file, dst)
         else:
             print("Building TensorFlow from source")
-            # Download TensorFlow
+#Download TensorFlow
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
@@ -405,7 +406,7 @@ def main():
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
 
-            # Build TensorFlow
+#Build TensorFlow
             build_tensorflow(
                 tf_version,
                 "tensorflow",
@@ -416,16 +417,16 @@ def main():
                 arguments.cxx11_abi_version,
                 resource_usage_ratio=float(arguments.resource_usage_ratio))
 
-            # Now build the libtensorflow_cc.so - the C++ library
+#Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
                                 target_arch, verbosity, use_intel_tf,
                                 arguments.cxx11_abi_version)
 
             tf_cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
-            # This function copies the .so files from
-            # use_tensorflow_from_location/artifacts/tensorflow to
-            # artifacts/tensorflow
+#This function copies the.so files from
+#use_tensorflow_from_location / artifacts / tensorflow to
+#artifacts / tensorflow
             cwd = os.getcwd()
             os.chdir(tf_src_dir)
             dst_dir = os.path.join(artifacts_location, "tensorflow")
@@ -440,12 +441,14 @@ def main():
             "NOTE: OpenVINO python module is not built when building from source."
         )
 
-        if (arguments.openvino_version == "2021.3"):
+        if (arguments.openvino_version == "2021.4"):
+            openvino_branch = "releases/2021/4"
+        elif (arguments.openvino_version == "2021.3"):
             openvino_branch = "releases/2021/3"
         elif (arguments.openvino_version == "2021.2"):
             openvino_branch = "releases/2021/2"
 
-        # Download OpenVINO
+#Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
@@ -457,7 +460,7 @@ def main():
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
-    # Next build CMAKE options for the bridge
+#Next build CMAKE options for the bridge
     atom_flags = ""
     if (target_arch == "silvermont"):
         atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
@@ -512,7 +515,7 @@ def main():
         openvino_tf_cmake_flags.extend(
             ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
 
-    # Now build the bridge
+#Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                   openvino_tf_src_dir, venv_dir,
                                   openvino_tf_cmake_flags, verbosity)
@@ -529,26 +532,26 @@ def main():
     print("SUCCESSFULLY generated wheel: %s" % ov_tf_whl)
     print("PWD: " + os.getcwd())
 
-    # Copy the TensorFlow Python code tree to artifacts directory so that they can
-    # be used for running TensorFlow Python unit tests
-    #
-    # There are four possibilities:
-    # 1. use_tensorflow_from_location is not defined
-    #   2. In that case build_tf_from_source is not defined
-    #       In this case we copy the entire tensorflow source to the artifacts
-    #       So all we have to do is to create a symbolic link
-    #       3. OR build_tf_from_source is defined
-    # 4. use_tensorflow_from_location is defined
+#Copy the TensorFlow Python code tree to artifacts directory so that they can
+#be used for running TensorFlow Python unit tests
+#
+#There are four possibilities:
+# 1. use_tensorflow_from_location is not defined
+# 2. In that case build_tf_from_source is not defined
+#In this case we copy the entire tensorflow source to the artifacts
+#So all we have to do is to create a symbolic link
+# 3. OR build_tf_from_source is defined
+# 4. use_tensorflow_from_location is defined
     if arguments.use_tensorflow_from_location == '':
-        # Case 1
+#Case 1
         if not arguments.build_tf_from_source:
-            # Case 2
+#Case 2
             base_dir = None
         else:
-            # Case 3
+#Case 3
             base_dir = build_dir_abs
     else:
-        # Case 4
+#Case 4
         base_dir = arguments.use_tensorflow_from_location
 
     if base_dir != None:
@@ -557,7 +560,7 @@ def main():
             ['cp', '-r', base_dir + '/tensorflow/tensorflow/python', dest_dir],
             verbose=True)
     else:
-        # Create a sym-link to
+#Create a sym - link to
         link_src = os.path.join(artifacts_location,
                                 "tensorflow/tensorflow/python")
         link_dst = os.path.join(artifacts_location, "tensorflow/python")
