@@ -10,7 +10,6 @@ from argparse import RawTextHelpFormatter
 
 import errno
 import os
-import sys
 import subprocess
 import sys
 import shutil
@@ -19,9 +18,7 @@ import platform
 import shlex
 import math
 import psutil as psu
-from sysconfig import get_paths
-from subprocess import check_output, call
-from wheel.vendored.packaging.tags import sys_tags
+from subprocess import  call
 
 
 def get_tf_version():
@@ -302,6 +299,7 @@ def build_tensorflow(tf_version,
         print("TF Wheel: %s" % tf_wheel_files[0])
 
     # popd
+    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
     os.chdir(pwd)
 
 
@@ -313,7 +311,7 @@ def build_tensorflow_cc(tf_version,
                         use_intel_tf,
                         cxx_abi,
                         tf_prebuilt=None):
-    lib = "libtensorflow_cc.so.2"
+    # lib = "libtensorflow_cc.so.2"
     if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
         tf_cc_lib_name = "libtensorflow_cc.so.2"
     elif (tf_version.startswith("v1.") or tf_version.startswith("1.")):
@@ -343,6 +341,7 @@ def build_tensorflow_cc(tf_version,
     os.chdir(src_dir)
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
+        assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
         os.unlink(doomed_file)
     except OSError:
         print("Cannot remove: %s" % doomed_file)
@@ -360,6 +359,7 @@ def build_tensorflow_cc(tf_version,
 
 
 def locate_tf_whl(tf_whl_loc):
+    assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(tf_whl_loc)
     possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
     assert len(possible_whl
               ) == 1, "Expected 1 TF whl file, but found " + len(possible_whl)
@@ -382,8 +382,10 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
+        assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
         os.unlink(doomed_file)
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
+        assert  os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
         os.unlink(doomed_file)
     except OSError:
         print("Cannot remove: %s" % doomed_file)
@@ -429,6 +431,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
     tf_pip = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
 
     pwd = os.getcwd()
+    assert os.path.exists(pwd),"Path doesn't exist {0}".format(pwd)
     os.chdir(os.path.join(artifacts_dir, "tensorflow"))
 
     # Get the name of the TensorFlow pip package
@@ -505,6 +508,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     print("OUTPUT WHL DST: %s" % output_path)
     # Delete just in case it exists
     try:
+        assert os.path.exists(output_path), "Output path doesn't exist {0}".format(output_path)
         os.remove(output_path)
     except OSError:
         pass

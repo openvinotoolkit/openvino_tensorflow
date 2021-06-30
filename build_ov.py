@@ -38,8 +38,9 @@ def main():
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
+    assert os.path.exists(arguments.output_dir), "path doesn't exist {0}".format(arguments.output_dir)
     os.chdir(arguments.output_dir)
-
+    assert os.path.exists(arguments.output_dir), "Directory doesn't exist {0}".format(arguments.output_dir)
     if not os.path.isdir(os.path.join(arguments.output_dir, "openvino")):
         # Download OpenVINO
         download_repo(
@@ -53,6 +54,7 @@ def main():
         call(["git", "fetch"])
         command_executor(["git", "checkout", openvino_version])
         call(["git", "pull"])
+        assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
         os.chdir(pwd)
 
     openvino_src_dir = os.path.join(arguments.output_dir, "openvino")
