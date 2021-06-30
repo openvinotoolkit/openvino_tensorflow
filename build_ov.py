@@ -63,7 +63,10 @@ def main():
         call(["git", "pull"])
         assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
         os.chdir(pwd)
-
+    assert os.path.exists(
+        os.path.join(arguments.output_dir,
+                     "openvino")), "Path doesn't exist {0}/openvino".format(
+                         arguments.output_dir)
     openvino_src_dir = os.path.join(arguments.output_dir, "openvino")
     print("OV_SRC_DIR: ", openvino_src_dir)
 

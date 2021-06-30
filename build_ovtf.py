@@ -238,6 +238,8 @@ def main():
     openvino_tf_src_dir = os.path.abspath(pwd)
     print("OVTF SRC DIR: " + openvino_tf_src_dir)
     build_dir_abs = os.path.abspath(build_dir)
+    assert os.path.exists(build_dir_abs), "Directory doesn't exist {}".format(
+        build_dir_abs)
     os.chdir(build_dir)
 
     venv_dir = 'venv-tf-py3'
@@ -508,6 +510,11 @@ def main():
                                   openvino_tf_cmake_flags, verbosity)
 
     # Make sure that the openvino_tensorflow whl is present in the artfacts directory
+    assert os.path.exists(artifacts_location), "Path not found {}".format(
+        artifacts_location)
+    assert os.path.isfile(os.path.join(
+        artifacts_location,
+        ov_tf_whl)), "Cannot locate nGraph whl in the artifacts location"
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 
@@ -549,6 +556,8 @@ def main():
         command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     # Run a quick test
+    assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
+        artifacts_location)
     install_openvino_tf(tf_version, venv_dir,
                         os.path.join(artifacts_location, ov_tf_whl))
 

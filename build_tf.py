@@ -70,8 +70,9 @@ def main():
                       arguments.tf_version)
     else:
         pwd = os.getcwd()
-        assert os.path.exists(os.path.join(arguments.output_dir,
-                                           "tensorflow")), "Path doesn't exist"
+        assert os.path.exists(
+            arguments.output_dir), "Path doesn't exist {}".format(
+                arguments.output_dir)
         os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
         call(["git", "fetch"])
         command_executor(["git", "checkout", arguments.tf_version])
