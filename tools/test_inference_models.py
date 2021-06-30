@@ -71,6 +71,7 @@ def main():
 
     # Print the version information
     print("\nnGraph-TensorFlow Information ")
+    assert os.path.exists(arguments.python_location), "Path doesn't exist"
     python_exe = os.path.join(arguments.python_location, "python3")
     command_executor([
         python_exe, "-c", "\"import tensorflow as tf; " +

@@ -193,6 +193,8 @@ def main():
     if arguments.use_openvino_from_location != '':
         ver_file = arguments.use_openvino_from_location + \
                       '/deployment_tools/inference_engine/version.txt'
+        assert os.path.exists(ver_file), "Path doesn't exist {0}".format(
+            ver_file)
         with open(ver_file) as f:
             line = f.readline()
             assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
@@ -214,6 +216,7 @@ def main():
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
+        assert os.path.exists(loc), "Path doesn't exist {0}".format(loc)
         for i in os.listdir(loc):
             if '.whl' in i:
                 found_whl = True
@@ -280,6 +283,8 @@ def main():
         # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
         tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location +
                                      '/artifacts/tensorflow')
+        assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
+            tf_whl_loc)
         possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
         assert len(
             possible_whl
@@ -296,6 +301,8 @@ def main():
             "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
+        assert os.path.exists(tf_whl_loc), "Path doesn't exist {0}".format(
+            tf_whl_loc)
         os.chdir(tf_whl_loc)
         tf_in_artifacts = os.path.join(
             os.path.abspath(artifacts_location), "tensorflow")
@@ -307,6 +314,7 @@ def main():
         tf_version = get_tf_version()
         copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                              use_intel_tf)
+        assert os.path.exists(cwd), "Path doesn't exist {0}".format(cwd)
         os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
@@ -348,11 +356,16 @@ def main():
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
             pwd_now = os.getcwd()
+            assert os.path.exists(
+                artifacts_location), "Path doesn't exist {0}".format(
+                    artifacts_location)
             os.chdir(artifacts_location)
             print("DOWNLOADING TF: PWD", os.getcwd())
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
+            assert os.path.exists(pwd_now), "Path doesn't exist {0}".format(
+                pwd_now)
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
@@ -366,6 +379,8 @@ def main():
             tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
             print("SYSCFG LIB: ", tf_lib_file)
             dst_dir = os.path.join(artifacts_location, "tensorflow")
+            assert os.path.exists(
+                dst_dir), "Directory doesn't exist {0}".format(dst_dir)
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
