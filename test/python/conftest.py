@@ -75,7 +75,8 @@ def read_tests_from_manifest(manifestfile):
     run_items = set()
     skipped_items = set()
     pytest.g_imported_files.add(manifestfile)
-    assert os.path.exists(manifestfile), "File doesn't exist {0}".format(manifestfile)
+    assert os.path.exists(manifestfile), "File doesn't exist {0}".format(
+        manifestfile)
     with open(manifestfile) as fh:
         curr_section = ''
         for line in fh.readlines():
