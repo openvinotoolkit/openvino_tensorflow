@@ -50,6 +50,7 @@ def main():
             submodule_update=True)
     else:
         pwd = os.getcwd()
+        assert os.path.exists(arguments.output_dir), "path doesn't exist {0}".format(arguments.output_dir)
         os.chdir(os.path.join(arguments.output_dir, "openvino"))
         call(["git", "fetch"])
         command_executor(["git", "checkout", openvino_version])

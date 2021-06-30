@@ -382,7 +382,7 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
-        assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
+        # assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
         os.unlink(doomed_file)
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
         assert  os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)

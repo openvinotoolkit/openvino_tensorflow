@@ -299,6 +299,7 @@ def main():
             "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
+        assert os.path.exists(tf_whl_loc), "Path doesn't exist {0}".format(tf_whl_loc)
         os.chdir(tf_whl_loc)
         tf_in_artifacts = os.path.join(
             os.path.abspath(artifacts_location), "tensorflow")
@@ -352,12 +353,13 @@ def main():
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
             pwd_now = os.getcwd()
-            assert os.path.exists(pwd_now), "Path doesn't exist {0}".format(pwd_now)
+            assert os.path.exists(artifacts_location), "Path doesn't exist {0}".format(artifacts_location)
             os.chdir(artifacts_location)
             print("DOWNLOADING TF: PWD", os.getcwd())
             download_repo("tensorflow",
-                          "https://github.com/tensorflow/tensorflow.git",
+                          "https://github.com/tensorflow/tensorflow.git"    ,
                           tf_version)
+            assert os.path.exists(pwd_now), "Path doesn't exist {0}".format(pwd_now)
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
