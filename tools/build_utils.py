@@ -508,8 +508,9 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     print("OUTPUT WHL DST: %s" % output_path)
     # Delete just in case it exists
     try:
-        assert os.path.exists(output_path), "Output path doesn't exist {0}".format(output_path)
-        os.remove(output_path)
+        # assert os.path.exists(output_path), "Output path doesn't exist {0}".format(output_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
     except OSError:
         pass
 
