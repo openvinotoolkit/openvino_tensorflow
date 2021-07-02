@@ -420,8 +420,8 @@ Status Encapsulator::RewritePass(
     std::vector<NodeBuilder::NodeOut> inputs;
 
     for (auto& tup : cluster_input_map[cluster_idx]) {
-      int src_node_id;
-      int src_output_idx;
+      int src_node_id = -1;
+      int src_output_idx = -1;
       DataType dt;
       std::tie(src_node_id, src_output_idx, dt) = tup;
 
@@ -525,8 +525,8 @@ Status Encapsulator::RewritePass(
         continue;
       }
 
-      int cluster_idx;
-      int cluster_output;
+      int cluster_idx = -1;
+      int cluster_output = -1;
       std::tie(cluster_idx, cluster_output) = it->second;
 
       Status status =
