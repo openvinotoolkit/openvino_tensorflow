@@ -342,9 +342,13 @@ def build_tensorflow_cc(tf_version,
     os.chdir(src_dir)
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
-        assert os.path.exists(
-            doomed_file), "File not present for unlinking {0}".format(
-                doomed_file)
+        try:
+            assert os.path.exists(
+                doomed_file), "File not present for unlinking {0}".format(
+                    doomed_file)
+        except Exception as e:
+            print("Cannot remove: %s" % e)
+            pass
         os.unlink(doomed_file)
     except OSError:
         print("Cannot remove: %s" % doomed_file)
@@ -389,9 +393,13 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         # assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
         os.unlink(doomed_file)
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
-        assert os.path.exists(
-            doomed_file), "File not present for unlinking {0}".format(
-                doomed_file)
+        try:
+            assert os.path.exists(
+                doomed_file), "File not present for unlinking {0}".format(
+                    doomed_file)
+        except Exception as e:
+            print("Cannot remove: %s" % e)
+            pass
         os.unlink(doomed_file)
     except OSError:
         print("Cannot remove: %s" % doomed_file)

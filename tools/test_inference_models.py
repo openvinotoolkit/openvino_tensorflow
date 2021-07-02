@@ -82,6 +82,9 @@ def main():
 
     # Next is to go to the model directory
     assert os.path.exists(arguments.model_location), "Could not find the path"
+    assert os.path.exists(
+        os.path.join(arguments.model_location,
+                     "tensorflow_scripts")), "Could not find the path"
     os.chdir(os.path.join(arguments.model_location, "tensorflow_scripts"))
 
     # Execute the inference runs

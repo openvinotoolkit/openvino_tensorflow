@@ -281,7 +281,7 @@ def read_tests_from_manifest(manifestfile,
     run_items = set()
     skipped_items = set()
     g_imported_files.add(manifestfile)
-    assert os.path.exists(manifestfile), "Could not find the file"
+    assert os.path.isfile(manifestfile), "Could not find the file"
     with open(manifestfile) as fh:
         curr_section = ''
         for line in fh.readlines():
@@ -432,7 +432,7 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
         for testpattern in test_list:
             tests = loader.loadTestsFromName(testpattern)
             suite.addTest(tests)
-        assert os.path.exists(xml_report), "Could not find the file"
+        assert os.path.isfile(xml_report), "Could not find the file"
         with open(xml_report, 'wb') as output:
             sys.stdout = open(os.devnull, "w")
             sys.stderr = open(os.devnull, "w")
