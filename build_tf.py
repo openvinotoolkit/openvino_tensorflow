@@ -89,7 +89,6 @@ def main():
         False, arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
-    print("prsent dir is------------------>",pwd)
     artifacts_dir = os.path.join(pwd, 'tensorflow')
     os.chdir("tensorflow")
     copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None,

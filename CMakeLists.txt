@@ -133,7 +133,7 @@ if(APPLE)
 else()
     set(LIBNGRAPH "ngraph.lib")
 endif(APPLE)
-
+add_definitions(-DNOMINMAX)
 # Build options
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
@@ -215,7 +215,7 @@ add_subdirectory(third-party)
 add_subdirectory(logging)
 add_subdirectory(openvino_tensorflow)
 add_subdirectory(tools)
-add_subdirectory(ocm/OCM)
+#add_subdirectory(ocm/OCM)
 
 # The following targets depend on the Tensorflow source code directory
 # Get the absolute file name for the source

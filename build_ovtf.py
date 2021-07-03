@@ -277,16 +277,14 @@ def main():
         # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
         tf_whl_loc = os.path.abspath(os.path.join(arguments.use_tensorflow_from_location,
                                      'artifacts\\tensorflow'))
-        print("tf_whl_loc:=============>", tf_whl_loc)
         tf_whl_loc = tf_whl_loc.replace("\\","\\\\")
         possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-        print("possible_whl:=============>",possible_whl)
         assert len(
             possible_whl
         ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
         # Make sure there is exactly 1 TF whl
         tf_whl = os.path.abspath(tf_whl_loc + '\\' + possible_whl[0])
-        print("tf_whl:================>",tf_whl)
+
         assert os.path.isfile(tf_whl), "Did not find " + tf_whl
         # Install the found TF whl file
         command_executor(["pip", "install", "-U", tf_whl.replace("\\","\\\\")])
@@ -382,7 +380,6 @@ def main():
 
             tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
-            print
 
             # Build TensorFlow
             build_tensorflow(
@@ -400,8 +397,6 @@ def main():
                                 target_arch, verbosity, use_intel_tf,
                                 arguments.cxx11_abi_version)
             os.chdir(build_dir_abs)
-            print("CWD is:======>",os.getcwd())
-            print("artifacts_location is:======>",artifacts_location)
             tf_cxx_abi = install_tensorflow(venv_dir, artifacts_location)
 
             # This function copies the .so files from
@@ -486,7 +481,6 @@ def main():
                 arguments.use_tensorflow_from_location + '\tensorflow')).replace("\\","\\\\")
         ])
     
-    print("openvino_tf_cmake_flags=======>",openvino_tf_cmake_flags)
     if (builder_version > 0.50):
         openvino_tf_cmake_flags.extend([
             "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +

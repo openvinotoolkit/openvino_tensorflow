@@ -5,8 +5,12 @@
  *******************************************************************************/
 #ifndef OPENVINO_TF_BRIDGE_TIMER_H_
 #define OPENVINO_TF_BRIDGE_TIMER_H_
-
+#ifdef _WIN32
+//#include <io.h>
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 #include <chrono>
 #include <fstream>
 #include <iostream>

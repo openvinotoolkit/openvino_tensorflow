@@ -188,6 +188,7 @@ def setup_venv(venv_dir):
         "termcolor>=1.1.0",
         "keras_applications>=1.0.6",
         "--no-deps",
+        "scipy>=0.14",
         "keras",
         "keras_preprocessing>=1.1.1,<1.2",
         "--no-deps",
