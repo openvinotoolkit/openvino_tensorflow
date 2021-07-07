@@ -11,7 +11,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    OV_LOCATION: /opt/intel/openvino_2021.4.582/
     
  steps:
  
@@ -26,7 +26,7 @@
      path: openvino_tensorflow
  
    - script: |
-      pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
+      pip install -U pip yapf==0.26.0 pytest psutil keras==2.4.3
      displayName: "Setup" 
     
    - script: |
