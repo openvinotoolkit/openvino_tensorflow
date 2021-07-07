@@ -36,3 +36,5 @@ Backend manager creates a backend for the execution of the CNNNetwork. We implem
 Basic backend is used for Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). The backend creates an inference request and runs inference on a given input data.
 
 VAD-M backend is used for Intel® Vision Accelerator Design with 8 Intel<sup>®</sup> Movidius™ MyriadX VPUs (referred as VAD-M or HDDL). We support batched inference execution in the VAD-M backend. When the user provides a batched input, multiple inference requests are created and inference is run in parallel on all the available VPUs in the VAD-M.
+
+Backend Manager supports Dynamic Fallback which means if the execution of the corresponding CNNNetwork fails in OpenVINO runtime, the execution fallbacks to stock TensorFlow runtime. 
