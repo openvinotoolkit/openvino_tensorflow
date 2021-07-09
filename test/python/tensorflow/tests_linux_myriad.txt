@@ -27,24 +27,6 @@ tests_common.txt
 # Specify tests/patterns/regex that should be included
 
 
-
-concat_op_test.ConcatOpTest.testRandom
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ###################################################
 [SKIP]
 
@@ -338,6 +320,7 @@ constant_op_test.ZerosLikeTest.testZerosLikeCPU
 conv_ops_test.Conv2DTest.testConv2DEmpty
 conv_ops_test.Conv2DTest.testConv2DEmptyDilation
 topk_op_test.TopKTest.testKNegative
+concat_op_test.ConcatOpTest.testRandom
 
 # input sizes must be positive integers
 conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
