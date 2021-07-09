@@ -25,9 +25,6 @@ tests_common.txt
 ###################################################
 [RUN]
 
-
-
-
 array_ops_test.StridedSliceTest.testExpandVariable
 cwise_ops_binary_test.BinaryOpTest.testBCast_0A
 cwise_ops_binary_test.BinaryOpTest.testBCast_0B
@@ -90,11 +87,6 @@ pad_op_test.PadOpTest.testPaddingTypes
 reduction_ops_test.MeanReductionTest.testGradient
 shape_ops_test.ShapeOpsTest.testSqueezeGradient
 
-
-
-
-
-
 ###################################################
 [SKIP]
 
@@ -112,12 +104,10 @@ reduction_ops_test.SumReductionTest.testDegenerate
 reduction_ops_test.MeanReductionTest.testDegenerate
 reduction_ops_test.ProdReductionTest.testDegenerate
 
-
 cwise_ops_binary_test.BinaryOpTest.testBCast_10A
 cwise_ops_binary_test.BinaryOpTest.testBCast_10B
 cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
-
 
 #Failed to set Blob with precision not corresponding to user output precision.
 
@@ -136,7 +126,6 @@ math_ops_test.SquaredDifferenceTest.testSquaredDifference
 
 scan_ops_test.CumsumTest.testAxisType
 reduction_ops_test.SumReductionTest.testHighRank
-
 
 #incorrect number of input/output dimensions
 array_ops_test.ShapeSizeRankTest.testSparseShape
@@ -207,10 +196,6 @@ pooling_test.Pooling2DTest.test_averagepooling_2d
 pooling_test.Pooling2DTest.test_maxpooling_2d
 pooling_test.Pooling3DTest.test_averagepooling_3d
 pooling_test.Pooling3DTest.test_maxpooling_3d
-
-
-
-
 
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
@@ -322,14 +307,8 @@ conv_ops_test.Conv2DTest.testConv2DOnlyBottomPadding
 conv_ops_test.Conv2DTest.testConv2DOnlyTopRightPadding
 cwise_ops_binary_test.BinaryOpTest.testBCast_12B
 
-
-
-
-
-
 # Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
 # Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
-
 
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
@@ -353,7 +332,6 @@ reduction_ops_test.MaxReductionTest.testDoubleReduce3D
 
 # Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
 
-
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 lrn_op_test.LRNOpTest.testGradientsZeroInput
@@ -373,9 +351,6 @@ conv_ops_test.Conv2DTest.testConv2DEmptyDilation
 conv_ops_test.Conv2DTest.testConv2DLotsPadding
 pooling_ops_test.PoolingTest.testAvgPooling
 topk_op_test.TopKTest.testKNegative
-
-
-
 
 #input sizes must be positive integers
 conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput

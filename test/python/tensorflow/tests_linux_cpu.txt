@@ -26,8 +26,6 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-
-
 array_ops_test.StridedSliceTest.testShrink
 array_ops_test.StridedSliceTest.testTensorIndexing
 conv_ops_test.Conv2DTest.testConv2D0x0Padding
@@ -43,28 +41,11 @@ conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
 cwise_ops_unary_test.UnaryOpTest.testFloatBasic
 split_op_test.SplitOpTest.testSplitRows
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ###################################################
 [SKIP]
 #Fails with this error : TopKImpl - Incorrect input data/index values precision.
 #https://github.com/openvinotoolkit/openvino/blob/master/inference-engine/src/mkldnn_plugin/nodes/topk.cpp#L39
 #OV TopK expects data to be F32 or BF16 and index I32
-
 
 # zero dim error
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency
@@ -73,11 +54,10 @@ reduction_ops_test.SumReductionTest.testDegenerate
 reduction_ops_test.MeanReductionTest.testDegenerate
 reduction_ops_test.ProdReductionTest.testDegenerate
 Gather_op_test.GatherTest.testHigherRank
+#cwise_ops_binary_test.BinaryOpTest.testBCast_10A
 cwise_ops_binary_test.BinaryOpTest.testBCast_10B
 cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
-
-
 
 #Failed to set Blob with precision not corresponding to user output precision.
 
@@ -139,9 +119,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_8D
 pad_op_test.PadOpTest.testPaddingTypes
 gather_op_test.GatherTest.testHigherRank
 cwise_ops_binary_test.BinaryOpTest.testBCast_0A
-
-
-
 
 #incorrect number of input/output dimensions
 array_ops_test.ShapeSizeRankTest.testSparseShape
@@ -216,8 +193,6 @@ constant_op_test.ZerosLikeTest.testZerosLikeCPU
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
 
-
-
 # cannot find blob with name <xxx>
 
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
@@ -253,12 +228,9 @@ reduction_ops_test.ReducedShapeTest.testSimple
 slice_op_test.SliceTest.testGradientsAll 
 conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
 
-
 # Input rank plus number of new axis has to be at least the size of Lower and Upper bounds vector.
 slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testScalarInput
-
-
 
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
 scan_ops_test.CumsumTest.test6D
@@ -284,7 +256,6 @@ pool_test.PoolingTest.testGradient3D
 
 # Results don't match between TF and OV
 lrn_op_test.LRNOpTest.testGradients
-
 
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
@@ -345,7 +316,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_3B
 cwise_ops_binary_test.BinaryOpTest.testBCast_4B
 cwise_ops_binary_test.BinaryOpTest.testBCast_6B
 cwise_ops_binary_test.BinaryOpTest.testBCast_8B
-
 
 #RUNTIME ERROR:  exited with code: -11
 cwise_ops_binary_test.BinaryOpTest.testBCast_11B

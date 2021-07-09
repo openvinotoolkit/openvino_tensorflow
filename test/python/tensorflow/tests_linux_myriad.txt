@@ -30,7 +30,6 @@ tests_common.txt
 ###################################################
 [SKIP]
 
-
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 #argmax_op_test.ArgMaxTest.testDefaultAxis
 
@@ -246,7 +245,6 @@ conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
 conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
 conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
 
-
 # Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
 # Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
 #nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
@@ -300,6 +298,7 @@ conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
 
 concat_op_test.ConcatOpTest.testHStack
 
+<<<<<<< HEAD
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 spacetobatch_op_test.SpaceToBatchNDTest.testOneBlockDimZeroRemainingDims
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsOneRemainingDim
@@ -310,6 +309,8 @@ batchtospace_op_test.BatchToSpaceDepthToSpace.testDepthToSpaceTranspose
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsTwoRemainingDims
 spacetobatch_op_test.SpaceToBatchSpaceToDepth.testSpaceToDepthTranspose
 
+=======
+>>>>>>> updated tf tests list for cpu,gpu,myriad
 # tensorflow:Failed to translate Constant with TF type:DT_BFLOAT16
 constant_op_test.ConstantTest.testBFloat16
 
