@@ -17,7 +17,7 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 
 - Ubuntu 18.04, 20.04
 - Python 3.6, 3.7, or 3.8
-- TensorFlow v2.4.1
+- TensorFlow v2.5.0
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
@@ -30,7 +30,7 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 
 
         pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.4.1
+        pip3 install -U tensorflow==2.5.0
         pip3 install openvino-tensorflow
 
 
@@ -49,10 +49,10 @@ To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
 This should produce an output like:
 
-        TensorFlow version:  2.4.1
+        TensorFlow version:  2.5.0
         OpenVINO integration with TensorFlow version: b'0.5.0'
         OpenVINO version used for this build: b'2021.3'
-        TensorFlow version used for this build: v2.4.1
+        TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 0
         OpenVINO integration with TensorFlow built with Grappler: False
 

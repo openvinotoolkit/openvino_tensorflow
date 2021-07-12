@@ -68,6 +68,9 @@ extern void set_disabled_ops(const char* op_type_list) {
 extern const char* get_disabled_ops() {
   return ngraph::join(GetDisabledOps(), ",").c_str();
 }
+
+void enable_dynamic_fallback() { EnableDynamicFallback(); }
+void disable_dynamic_fallback() { DisableDynamicFallback(); }
 }
 
 // note that TensorFlow always uses camel case for the C++ API, but not for
@@ -120,6 +123,12 @@ void SetDisabledOps(string disabled_ops_str) {
 
 void SetDisabledOps(set<string> disabled_ops_set) {
   disabled_op_types = disabled_ops_set;
+}
+
+void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
+
+void DisableDynamicFallback() {
+  NGraphClusterManager::DisableClusterFallback();
 }
 
 }  // namespace api

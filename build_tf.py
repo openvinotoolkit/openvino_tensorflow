@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.4.1")
+        default="v2.5.0")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -50,7 +50,9 @@ def main():
 
     assert os.path.isdir(arguments.output_dir), \
         "Did not find output directory: " + arguments.output_dir
-
+    assert os.path.exists(
+        arguments.output_dir), "path doesn't exist {0}".format(
+            arguments.output_dir)
     os.chdir(arguments.output_dir)
 
     venv_dir = './venv3/'
@@ -58,7 +60,9 @@ def main():
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
     setup_venv(venv_dir)
-
+    assert os.path.exists(
+        arguments.output_dir), "Directory doesn't exist {0}".format(
+            arguments.output_dir)
     if not os.path.isdir(os.path.join(arguments.output_dir, "tensorflow")):
         # Download TensorFlow
         download_repo("tensorflow",
@@ -66,10 +70,14 @@ def main():
                       arguments.tf_version)
     else:
         pwd = os.getcwd()
+        assert os.path.exists(
+            arguments.output_dir), "Path doesn't exist {}".format(
+                arguments.output_dir)
         os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
         call(["git", "fetch"])
         command_executor(["git", "checkout", arguments.tf_version])
         call(["git", "pull"])
+        assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
         os.chdir(pwd)
 
     # Build TensorFlow

@@ -67,12 +67,40 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
+      int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
+      if (dyn_fallback == 0) {
+        NGraphClusterManager::DisableClusterFallback();
+      } else {
+        NGraphClusterManager::EnableClusterFallback();
+      }
+    }
+    bool dynamic_fallback_enabled =
+        NGraphClusterManager::IsClusterFallbackEnabled();
+
+    tensorflow::Graph* graph = options.graph->get();
+    if (dynamic_fallback_enabled) {
+      for (Node* node : graph->nodes()) {
+        int cluster;
+        Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
+        if (s == Status::OK()) {
+          if (NGraphClusterManager::CheckClusterFallback(cluster))
+            return Status::OK();
+          else
+            break;
+        } else if (!node->IsSink() && !node->IsSource() &&
+                   !node->IsControlFlow() && !node->IsArg() &&
+                   !node->IsRetval()) {
+          break;
+        }
+      }
+    }
+
     // For filename generation purposes, grab a fresh index. This is just an
     // arbitrary integer to avoid filename collisions resulting from subsequent
     // runs of this pass.
     int idx = FreshIndex();
 
-    tensorflow::Graph* graph = options.graph->get();
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 

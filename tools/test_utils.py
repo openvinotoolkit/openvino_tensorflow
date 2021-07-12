@@ -136,6 +136,8 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
         raise Exception("test directory doesn't exist: " + test_dir)
 
     # Change the directory to the test_dir
+    assert os.path.exists(test_dir), "Could not find directory: {}".format(
+        test_dir)
     os.chdir(test_dir)
 
     # Next run the ngraph-tensorflow python tests
@@ -174,12 +176,15 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     # Go to the location of TesorFlow install directory
     import tensorflow as tf
     tf_dir = tf.sysconfig.get_lib()
+    assert os.path.exists(
+        tf_dir + '/python/framework'), "Could not find directory: {}".format(
+            tf_dir + '/python/framework')
     os.chdir(tf_dir + '/python/framework')
     print("CURRENT DIR: " + os.getcwd())
 
     print("Patching TensorFlow using: %s" % patch_file)
-    cmd = subprocess.Popen(
-        'patch -N -i ' + patch_file, shell=True, stdout=subprocess.PIPE)
+    patch_command = ['patch', '-N', '-i', patch_file]
+    cmd = subprocess.Popen(patch_command, stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in
@@ -187,6 +192,7 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     # will fail
     assert cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
         printed_lines[0]), "Error applying the patch."
+    assert os.path.exists(pwd), "Could not find directory: {}".format(pwd)
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
@@ -194,6 +200,8 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
+    assert os.path.exists(test_src_dir), "Path doesn't exist {}".format(
+        test_src_dir)
     if not os.path.isabs(test_manifest_file):
         test_manifest_file = os.path.join(test_src_dir, test_manifest_file)
     assert os.path.exists(test_manifest_file), "Could not find file"
@@ -227,6 +235,8 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
 
     # Now clone the repo and proceed
     call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
+    assert os.path.exists('benchmarks'), "Could not find directory: {}".format(
+        'benchmarks')
     os.chdir('benchmarks')
     call(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'])
 
@@ -238,7 +248,9 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     if openvino_tensorflow.is_grappler_enabled():
         print("Patching repo using: %s" % patch_file)
         apply_patch(patch_file)
-
+    assert os.path.exists(
+        'scripts/tf_cnn_benchmarks/'), "Could not find directory: {}".format(
+            'scripts/tf_cnn_benchmarks/')
     os.chdir('scripts/tf_cnn_benchmarks/')
 
     # junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
@@ -298,6 +310,9 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
         os.path.join(root_pwd, '../pretrained_models'))
     if not os.path.exists(pretrained_models_dir):
         os.mkdir(pretrained_models_dir, 0o755)
+    assert os.path.exists(
+        pretrained_models_dir), "Could not find the path: {}".format(
+            pretrained_models_dir)
     os.chdir(pretrained_models_dir)
     pretrained_model = os.path.join(pretrained_models_dir, 'resnet50_v1.pb')
     if not os.path.exists(pretrained_model):
