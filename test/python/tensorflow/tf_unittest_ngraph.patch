@@ -1,12 +1,10 @@
-*** test_util.py	2020-01-15 15:44:13.595859904 -0800
---- updated_test_util.py	2020-01-15 15:32:11.630592207 -0800
-***************
-*** 2041,2046 ****
---- 2041,2047 ----
-      self._threads = []
-      self._tempdir = None
-      self._cached_session = None
-      self._test_start_time = None
-+     import openvino_tensorflow
-  
-    def setUp(self):
+--- test_util.py        2021-06-17 17:54:02.525954260 +0530
++++ test_util.py.orig   2021-06-17 17:49:10.677963797 +0530
+@@ -2064,6 +2064,7 @@
+     self._tempdir = None
+     self._cached_session = None
+     self._test_start_time = None
++    import openvino_tensorflow
+     # This flag provides the ability to control whether the graph mode gets
+     # initialized for TF1 or not. Initializing for TF1, which is what was
+     # happening earlier, was preventing enablement of 'eager mode' in the test.

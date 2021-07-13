@@ -51,14 +51,11 @@ def read_tensor_from_image_file(frame,
                                 input_width=299,
                                 input_mean=0,
                                 input_std=255):
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    float_caster = tf.cast(frame, tf.float32)
-    dims_expander = tf.expand_dims(float_caster, 0)
-    resized = tf.compat.v1.image.resize_bilinear(dims_expander,
-                                                 [input_height, input_width])
-    normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    sess = tf.compat.v1.Session()
-    result = sess.run(normalized)
+    resized = cv2.resize(frame, (input_height, input_width))
+    img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+    resized_image = img.astype(np.float32)
+    normalized_image = (resized_image - input_mean) / input_std
+    result = np.expand_dims(normalized_image, 0)
     return result
 
 
@@ -71,7 +68,7 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    file_name = "examples/data/people-detection.mp4"
+    input_file = "examples/data/people-detection.mp4"
     model_file = "examples/data/inception_v3_2016_08_28_frozen.pb"
     label_file = "examples/data/imagenet_slim_labels.txt"
     input_height = 299
@@ -89,19 +86,35 @@ if __name__ == "__main__":
     font_thickness = 2
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="graph/model to be executed")
-    parser.add_argument("--input_layer", help="name of input layer")
-    parser.add_argument("--output_layer", help="name of output layer")
-    parser.add_argument("--labels", help="name of file containing labels")
     parser.add_argument(
-        "--input",
-        help="input (0 - for camera / absolute video file path) to be processed"
-    )
-    parser.add_argument("--input_height", type=int, help="input height")
-    parser.add_argument("--input_width", type=int, help="input width")
-    parser.add_argument("--input_mean", type=int, help="input mean")
-    parser.add_argument("--input_std", type=int, help="input std")
-    parser.add_argument("--backend", help="backend option. Default is CPU")
+        "--graph", help="Optional. Path to graph/model to be executed.")
+    parser.add_argument("--input_layer", help="Optional. Name of input layer.")
+    parser.add_argument(
+        "--output_layer", help="Optional. Name of output layer.")
+    parser.add_argument(
+        "--labels", help="Optional. Path to labels mapping file.")
+    parser.add_argument(
+        "--input", help="Optional. An input video file to process.")
+    parser.add_argument(
+        "--input_height",
+        type=int,
+        help="Optional. Specify input height value.")
+    parser.add_argument(
+        "--input_width", type=int, help="Optional. Specify input width value.")
+    parser.add_argument(
+        "--input_mean", type=int, help="Optional. Specify input mean value.")
+    parser.add_argument(
+        "--input_std", type=int, help="Optional. Specify input std value.")
+    parser.add_argument(
+        "--backend",
+        help="Optional. Specify the target device to infer on; "
+        "CPU, GPU, MYRIAD or VAD-M is acceptable. Default value is CPU.")
+    parser.add_argument(
+        "--no_show", help="Optional. Don't show output.", action='store_true')
+    parser.add_argument(
+        "--disable_ovtf",
+        help="Optional. Disable openvino_tensorflow pass and run on stock TF.",
+        action='store_true')
     args = parser.parse_args()
 
     if args.graph:
@@ -138,14 +151,22 @@ if __name__ == "__main__":
     input_operation = graph.get_operation_by_name(input_name)
     output_operation = graph.get_operation_by_name(output_name)
 
-    #Print list of available backends
-    print('Available Backends:')
-    backends_list = ovtf.list_backends()
-    for backend in backends_list:
-        print(backend)
-    ovtf.set_backend(backend_name)
+    if not args.disable_ovtf:
+        #Print list of available backends
+        print('Available Backends:')
+        backends_list = ovtf.list_backends()
+        for backend in backends_list:
+            print(backend)
+        ovtf.set_backend(backend_name)
+    else:
+        ovtf.disable()
+
+    #Load the labels
+    if label_file:
+        labels = load_labels(label_file)
 
     # Read input video file
+    assert os.path.exists(input_file), "Could not find input video file path"
     cap = cv2.VideoCapture(input_file)
 
     # Initialize session and run
@@ -154,6 +175,7 @@ if __name__ == "__main__":
         while cap.isOpened():
             ret, frame = cap.read()
             if ret is True:
+                # preprocessing
                 t = read_tensor_from_image_file(
                     frame,
                     input_height=input_height,
@@ -161,26 +183,26 @@ if __name__ == "__main__":
                     input_mean=input_mean,
                     input_std=input_std)
 
-                # Run
+                # run
                 start = time.time()
                 results = sess.run(output_operation.outputs[0],
                                    {input_operation.outputs[0]: t})
                 elapsed = time.time() - start
                 fps = 1 / elapsed
-                print('Inference time in ms: %f' % (elapsed * 1000))
+                print('Inference time in ms: %.2f' % (elapsed * 1000))
                 results = np.squeeze(results)
 
                 # print labels
                 if label_file:
                     cv2.putText(
-                        frame, 'Inferene Running on : {0}'.format(backend_name),
+                        frame,
+                        'Inference Running on : {0}'.format(backend_name),
                         (30, 50), font, font_size, color, font_thickness)
                     cv2.putText(
                         frame, 'FPS : {0} | Inference Time : {1}ms'.format(
                             int(fps), round((elapsed * 1000), 2)), (30, 80),
                         font, font_size, color, font_thickness)
                     top_k = results.argsort()[-5:][::-1]
-                    labels = load_labels(label_file)
                     c = 130
                     for i in top_k:
                         cv2.putText(frame, '{0} : {1}'.format(
@@ -192,10 +214,12 @@ if __name__ == "__main__":
                     print(
                         "No label file provided. Cannot print classification results"
                     )
-                cv2.imshow("results", frame)
-                if cv2.waitKey(1) & 0XFF == ord('q'):
-                    break
+                if not args.no_show:
+                    cv2.imshow("results", frame)
+                    if cv2.waitKey(1) & 0XFF == ord('q'):
+                        break
             else:
-                cap = cv2.VideoCapture(input_file)
+                break
+    sess.close()
     cap.release()
     cv2.destroyAllWindows()

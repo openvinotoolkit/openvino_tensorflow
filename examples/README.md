@@ -79,7 +79,6 @@ $ python3 examples/classification_sample.py --help
 
 To run classification sample using video input, follow  the instructions below:
 ```bash
-$ pip3 install opencv-python
 $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/classification_sample_video.py
 ```
@@ -182,7 +181,7 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/object_detection_sample_vid.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
+$ python3 examples/object_detection_sample_video.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
 ```
 ## C++ Implementation for classification
 
