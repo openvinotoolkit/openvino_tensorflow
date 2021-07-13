@@ -2702,11 +2702,11 @@ static Status TranslateTopKV2Op(
              ConstructNgNode<opset::Constant>(
                  op->name(), ng_input.get_element_type(), ngraph::Shape{0},
                  std::vector<int>({0})));
-    
+
     SaveNgOp(ng_op_map, op->name(),
-          ConstructNgNode<opset::Constant>(
-              op->name(), ng::element::i32, ngraph::Shape{0},
-              std::vector<int>({0})));
+             ConstructNgNode<opset::Constant>(op->name(), ng::element::i32,
+                                              ngraph::Shape{0},
+                                              std::vector<int>({0})));
   } else {
     auto ng_result =
         std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
