@@ -2872,16 +2872,28 @@ static Status TranslateTopKV2Op(
     sort = "index";
   }
 
-  auto ng_result =
-      std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+  if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_input.get_element_type(), ngraph::Shape{0},
+                 std::vector<int>({0})));
 
-  ng::Output<ng::Node> ng_values = ng_result->output(0);
-  Builder::SetTracingInfo(op->name(), ng_values);
-  ng::Output<ng::Node> ng_indices = ng_result->output(1);
-  Builder::SetTracingInfo(op->name(), ng_indices);
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(op->name(), ng::element::i32,
+                                              ngraph::Shape{0},
+                                              std::vector<int>({0})));
+  } else {
+    auto ng_result =
+        std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
 
-  SaveNgOp(ng_op_map, op->name(), ng_values);
-  SaveNgOp(ng_op_map, op->name(), ng_indices);
+    ng::Output<ng::Node> ng_values = ng_result->output(0);
+    Builder::SetTracingInfo(op->name(), ng_values);
+    ng::Output<ng::Node> ng_indices = ng_result->output(1);
+    Builder::SetTracingInfo(op->name(), ng_indices);
+
+    SaveNgOp(ng_op_map, op->name(), ng_values);
+    SaveNgOp(ng_op_map, op->name(), ng_indices);
+  }
 
   return Status::OK();
 }
@@ -3211,7 +3223,17 @@ Status Builder::TranslateGraph(
     GetNodeAttr(parm->attrs(), "_prov_tag", &prov_tag);
     auto ng_param =
         ConstructNgNode<opset::Parameter>(prov_tag, ng_et, ng_shape);
-    if (ng_shape.size() > 0 && ng_shape[0] == 0) {
+
+    auto ng_shape_check = [ng_shape]() {
+      if (ng_shape.size() > 0) {
+        for (auto val : ng_shape) {
+          if (val == 0) return true;
+        }
+      }
+      return false;
+    };
+
+    if (ng_shape_check()) {
       std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
       auto ng_const_input = ConstructNgNode<opset::Constant>(
           prov_tag, ng_et, ng_shape, constant_values);
@@ -3282,17 +3304,34 @@ Status Builder::TranslateGraph(
     ng_result_list[index] =
         ngraph::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
   }
+
+  auto param_dim_check = [ng_parameter_list](int i) {
+    auto param_shape_list = ng_parameter_list[i]->get_shape();
+    for (auto dim : param_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 &&
-          ng_parameter_list[i]->get_shape()[0] == 0)) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }
+
+  auto result_dim_check = [ng_result_list](int i) {
+    auto res_shape_list = ng_result_list[i]->get_shape();
+    for (auto dim : res_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (ng_result_list[i]->is_dynamic() ||
-        !(ng_result_list[i]->get_shape().size() > 0 &&
-          ng_result_list[i]->get_shape()[0] == 0))
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
       ng_func_result_list.push_back(ng_result_list[i]);
+    }
   }
 
   //
