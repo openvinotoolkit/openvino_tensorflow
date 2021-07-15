@@ -137,6 +137,19 @@ pooling_test.Pooling2DTest.test_averagepooling_2d
 pooling_test.Pooling2DTest.test_maxpooling_2d
 pooling_test.Pooling3DTest.test_averagepooling_3d
 pooling_test.Pooling3DTest.test_maxpooling_3d
+conv_ops_test.Conv2DTest.testConv2D2x2Depth1ValidBackpropInput
+conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInput
+Testing: conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInputStride1x2
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeBackpropInput
+cwise_ops_binary_test.BinaryOpTest.testBCast_6A
+depthtospace_op_test.DepthToSpaceTest.testBasic
+depthtospace_op_test.DepthToSpaceTest.testBlockSize2
+depthtospace_op_test.DepthToSpaceTest.testBlockSize2Batch10
+depthtospace_op_test.DepthToSpaceTest.testBlockSize4FlatInput
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleaved
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedDepth3
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedLarger
+Testing: depthtospace_op_test.DepthToSpaceTest.testNonSquare
 
 # unsupported type
 #cast_op_test.CastOpTest.testBfloat16
@@ -226,6 +239,7 @@ math_ops_test.ModTest.testFloat
 #softmax_op_test.SoftmaxTest.testFloat
 #softmax_op_test.SoftmaxTest.testHalf
 split_op_test.SplitOpTest.testSplitRows
+
 
 # Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
 conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize

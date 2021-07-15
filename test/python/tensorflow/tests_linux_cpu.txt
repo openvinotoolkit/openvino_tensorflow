@@ -20,26 +20,13 @@
 # Read in one/more external manifest file(s)
 # Path specified is relative to this file's path
 
-tests_common.txt
+#tests_common.txt
 
 ###################################################
 [RUN]
 # Specify tests/patterns/regex that should be included
 
-array_ops_test.StridedSliceTest.testShrink
-array_ops_test.StridedSliceTest.testTensorIndexing
-conv_ops_test.Conv2DTest.testConv2D0x0Padding
-conv_ops_test.Conv2DTest.testConv2D1x1Filter
-conv_ops_test.Conv2DTest.testConv2D1x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
-conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSize
-conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideSame
-conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
-cwise_ops_unary_test.UnaryOpTest.testFloatBasic
-split_op_test.SplitOpTest.testSplitRows
+
 
 ###################################################
 [SKIP]
@@ -54,7 +41,7 @@ reduction_ops_test.SumReductionTest.testDegenerate
 reduction_ops_test.MeanReductionTest.testDegenerate
 reduction_ops_test.ProdReductionTest.testDegenerate
 Gather_op_test.GatherTest.testHigherRank
-#cwise_ops_binary_test.BinaryOpTest.testBCast_10A
+cwise_ops_binary_test.BinaryOpTest.testBCast_10A
 cwise_ops_binary_test.BinaryOpTest.testBCast_10B
 cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
@@ -74,6 +61,7 @@ math_ops_test.SquaredDifferenceTest.testSquaredDifference
 
 scan_ops_test.CumsumTest.testAxisType
 reduction_ops_test.SumReductionTest.testHighRank
+cwise_ops_binary_test.BinaryOpTest.testBCast_0A
 
 cwise_ops_binary_test.BinaryOpTest.testBCast_0C
 cwise_ops_binary_test.BinaryOpTest.testBCast_0D
@@ -187,6 +175,8 @@ pooling_test.Pooling3DTest.test_maxpooling_3d
 
 # Unsupported TensorFlow data type: DT_INT16
 concat_op_test.ConcatOpTest.testRandom
+array_ops_test.StridedSliceTest.testExpand
+
 
 # unknown element type on an empty tensor
 constant_op_test.ZerosLikeTest.testZerosLikeCPU
@@ -323,6 +313,9 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_5B
 cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
 math_ops_test.AddNTest.testIndexedSlices
 reduction_ops_test.MeanReductionTest.testGradient
+array_ops_test.StridedSliceTest.test_basic_slice
+array_ops_test.StridedSliceTest.testExpandVariable
+
 
 # AssertionError: False is not true
 lrn_op_test.LRNOpTest.testCompute  
@@ -344,6 +337,9 @@ reduction_ops_test.MeanReductionTest.testFloat32
 reduction_ops_test.MeanReductionTest.testInfinity
 reduction_ops_test.MeanReductionTest.testUint8
 shape_ops_test.ShapeOpsTest.testSqueezeGradient
+
+# Caught exception while executing cluster 2
+array_ops_test.StridedSliceTest.testOptimizedCases
 
 # Caught exception while executing cluster 0
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt8

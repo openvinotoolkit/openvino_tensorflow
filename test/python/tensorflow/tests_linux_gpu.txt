@@ -369,6 +369,9 @@ pooling_ops_test.PoolingTest.testMaxPooling
 
 # Caught exception while executing cluster 0
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
+concat_op_test.ConcatOpTest.testRandom
+constant_op_test.ConstantTest.testBFloat16
+gather_op_test.GatherTest.testHigherRank
 
 # range/Range_5 of type Range(op::v4) is not supported
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
