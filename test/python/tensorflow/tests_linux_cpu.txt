@@ -20,7 +20,7 @@
 # Read in one/more external manifest file(s)
 # Path specified is relative to this file's path
 
-#tests_common.txt
+tests_common.txt
 
 ###################################################
 [RUN]
