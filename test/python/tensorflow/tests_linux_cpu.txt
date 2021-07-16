@@ -182,6 +182,8 @@ array_ops_test.StridedSliceTest.testExpand
 constant_op_test.ZerosLikeTest.testZerosLikeCPU
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
+array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
+split_op_test.SplitOpTest.testNonexistentDimTensor
 
 # cannot find blob with name <xxx>
 
@@ -315,6 +317,7 @@ math_ops_test.AddNTest.testIndexedSlices
 reduction_ops_test.MeanReductionTest.testGradient
 array_ops_test.StridedSliceTest.test_basic_slice
 array_ops_test.StridedSliceTest.testExpandVariable
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
 
 
 # AssertionError: False is not true
