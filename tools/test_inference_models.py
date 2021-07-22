@@ -71,6 +71,7 @@ def main():
 
     # Print the version information
     print("\nnGraph-TensorFlow Information ")
+    assert os.path.exists(arguments.python_location), "Path doesn't exist"
     python_exe = os.path.join(arguments.python_location, "python3")
     command_executor([
         python_exe, "-c", "\"import tensorflow as tf; " +
@@ -81,6 +82,9 @@ def main():
 
     # Next is to go to the model directory
     assert os.path.exists(arguments.model_location), "Could not find the path"
+    assert os.path.exists(
+        os.path.join(arguments.model_location,
+                     "tensorflow_scripts")), "Could not find the path"
     os.chdir(os.path.join(arguments.model_location, "tensorflow_scripts"))
 
     # Execute the inference runs

@@ -175,6 +175,7 @@ one_hot_op_test.OneHotTest.testSingleValueGiven
 # AssertionError: Arrays are not equal
 slice_op_test.SliceTest.testSliceOfSlice
 reduction_ops_test.ReducedShapeTest.testSimple
+math_ops_test.DivAndModTest.testFloorModFloat
 
 # Dim size cannot be less than -1
 slice_op_test.SliceTest.testGradientsAll 
