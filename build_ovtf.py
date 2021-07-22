@@ -168,7 +168,7 @@ def main():
     if (arguments.debug_build):
         print("Building in debug mode\n")
 
-    verbosity = False
+    verbosity = True
     if (arguments.verbose_build):
         print("Building with verbose output messages\n")
         verbosity = True
@@ -534,9 +534,9 @@ def main():
             verbose=True)
     else:
         # Create a sym-link to
-        link_src = os.path.join(artifacts_location,
-                                "tensorflow/tensorflow/python")
-        link_dst = os.path.join(artifacts_location, "tensorflow/python")
+        link_src = os.path.join(artifacts_location.replace("\\","\\\\"),
+                                "tensorflow\\tensorflow\\python")
+        link_dst = os.path.join(artifacts_location.replace("\\","\\\\"), "tensorflow\\python")
         command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     # Run a quick test

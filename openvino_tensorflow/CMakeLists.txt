@@ -53,17 +53,34 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
+#find_package(protobuf REQUIRED
+#    HINTS
+#       "C:/Program Files/protobuf"
+#        "C:/Program Files (x86)/protobuf")
+#message("PROTOBUF_LIBRARY: ${PROTOBUF_LIBRARY} ${PROTOBUF_INCLUDE_DIR}")
+
+#include_directories(${PROTOBUF_INCLUDE_DIR})
+
+if(${result})
+    message(FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR})
+endif()
+MESSAGE(STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR})
+
 add_library(${LIB_NAME} SHARED ${SRC})
+#add_library(${LIB_NAME} STATIC ${SRC}) #SHARED
 target_link_libraries(
         ${LIB_NAME}
+		#"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
         ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
-        ngraph_lib
+        #ngraph_lib
+		"C:\\Program Files (x86)\\Intel\\openvino_2021.3.394\\deployment_tools\\ngraph\\lib\\ngraph.lib"
         absl_algorithm
         absl_container
         absl_strings
         ${InferenceEngine_LIBRARIES}
         ocm
+		#"C:\\Users\\Intel\\ovtf_workspace\\openvino_tensorflow\\ocm\\build\\OCM\\Debug\\ocm.lib"
     )
 
 target_compile_definitions(
@@ -107,7 +124,7 @@ endif()
 # Install OpenVINO libraries
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/Release)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-#install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/ocm.lib DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/ocm.lib DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )

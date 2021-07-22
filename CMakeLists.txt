@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.14)
+message("CMakeLists")
 
 project (openvino_tensorflow CXX)
 
@@ -119,9 +120,9 @@ else()
 endif()
 message("CMAKE_INSTALL_RPATH: ${CMAKE_INSTALL_RPATH}")
 
-# Find TensorFlow
+# Find TensorFlow might encounter problems later on
 find_package(TensorFlow REQUIRED)
-
+message("Tensorflow CX ABI"${TensorFlow_CXX_ABI})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
     message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
@@ -199,6 +200,7 @@ else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
 set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
+message("LIBNGRAPH: ${LIBNGRAPH} = ${NGRAPH_IMPORTED_LOCATION}")
 add_library(ngraph_lib SHARED IMPORTED)
 set_target_properties(
     ngraph_lib
@@ -215,7 +217,7 @@ add_subdirectory(third-party)
 add_subdirectory(logging)
 add_subdirectory(openvino_tensorflow)
 add_subdirectory(tools)
-#add_subdirectory(ocm/OCM)
+add_subdirectory(ocm/OCM)
 
 # The following targets depend on the Tensorflow source code directory
 # Get the absolute file name for the source
