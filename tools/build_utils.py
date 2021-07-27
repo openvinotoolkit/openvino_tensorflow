@@ -471,7 +471,8 @@ def install_tensorflow(venv_dir, artifacts_dir):
         raise Exception("no tensorflow wheels found")
     elif (len(tf_wheel_files) > 1):
         raise Exception("more than 1 version of tensorflow wheels found")
-    command_executor(["pip", "install", "--force-reinstall", "-U", tf_wheel_files[0]])
+    command_executor(
+        ["pip", "install", "--force-reinstall", "-U", tf_wheel_files[0]])
 
     import tensorflow as tf
     cxx_abi = tf.__cxx11_abi_flag__
@@ -564,7 +565,8 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
-    command_executor(["pip", "install", "--force-reinstall", "-U", ovtf_pip_whl])
+    command_executor(
+        ["pip", "install", "--force-reinstall", "-U", ovtf_pip_whl])
 
     import tensorflow as tf
     print('\033[1;34mVersion information\033[0m')

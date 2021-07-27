@@ -31,7 +31,8 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
     cmake_ver = float(".".join(cmake_ver_list[:2]))
     cmake_desired_version = 3.14
     if cmake_ver < cmake_desired_version:
-        raise Exception("Need minimum cmake version " + cmake_desired_version + " \n"
+        raise Exception("Need minimum cmake version " + cmake_desired_version +
+                        " \n"
                         "Got: " + '.'.join(cmake_ver_list))
 
     if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
@@ -299,7 +300,7 @@ def main():
         tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
         assert os.path.isfile(tf_whl), "Did not find " + tf_whl
         # Install the found TF whl file
-        command_executor(["pip", "install", "--force-reinstall",  "-U", tf_whl])
+        command_executor(["pip", "install", "--force-reinstall", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
 
         assert (arguments.cxx11_abi_version == tf_cxx_abi), (
@@ -328,29 +329,32 @@ def main():
             print("Install TensorFlow")
 
             if arguments.cxx11_abi_version == "0":
-                command_executor(
-                    ["pip", "install", "--force-reinstall",  "tensorflow==" + tf_version])
+                command_executor([
+                    "pip", "install", "--force-reinstall",
+                    "tensorflow==" + tf_version
+                ])
             elif arguments.cxx11_abi_version == "1":
                 tags = next(sys_tags())
 
                 if tags.interpreter == "cp36":
                     command_executor([
-                        "pip", "install", "--force-reinstall", 
+                        "pip", "install", "--force-reinstall",
                         "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp37":
                     command_executor([
-                        "pip", "install", "--force-reinstall", 
+                        "pip", "install", "--force-reinstall",
                         "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
-                        "pip", "install", "--force-reinstall", 
+                        "pip", "install", "--force-reinstall",
                         "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl"
                     ])
 
                 # ABI 1 TF required latest numpy
-                command_executor(["pip", "install", "--force-reinstall",  "-U numpy"])
+                command_executor(
+                    ["pip", "install", "--force-reinstall", "-U numpy"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
