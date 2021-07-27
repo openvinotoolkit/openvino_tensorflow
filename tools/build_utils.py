@@ -144,6 +144,17 @@ def load_venv(venv_dir):
             open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
         dict(__file__=activate_this_file))
 
+    # excluding system-wide site-packages paths as they interfere when
+    # venv tensorflow version is different from system-wide tensorflow version
+    sys_paths = [_p for _p in sys.path if "site-packages" in _p]
+    sys_paths = [_p for _p in sys_paths if "venv-tf-py3" not in _p]
+    for _p in sys_paths:
+        sys.path.remove(_p)
+
+    # ignore site-package installations in user-space
+    import site
+    site.ENABLE_USER_SITE = False
+
     return venv_dir
 
 
@@ -460,7 +471,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
         raise Exception("no tensorflow wheels found")
     elif (len(tf_wheel_files) > 1):
         raise Exception("more than 1 version of tensorflow wheels found")
-    command_executor(["pip", "install", "-U", tf_wheel_files[0]])
+    command_executor(["pip", "install", "--force-reinstall", "-U", tf_wheel_files[0]])
 
     import tensorflow as tf
     cxx_abi = tf.__cxx11_abi_flag__
@@ -553,7 +564,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
     # Load the virtual env
     load_venv(venv_dir)
 
-    command_executor(["pip", "install", "-U", ovtf_pip_whl])
+    command_executor(["pip", "install", "--force-reinstall", "-U", ovtf_pip_whl])
 
     import tensorflow as tf
     print('\033[1;34mVersion information\033[0m')
@@ -615,7 +626,9 @@ def get_gcc_version():
         bufsize=1,
         universal_newlines=True)
     output = cmd.communicate()[0].rstrip()
-    return output
+    # The cmake version format is: "gcc version a.b.c"
+    version_tuple = output.split('.')
+    return version_tuple
 
 
 def get_cmake_version():
