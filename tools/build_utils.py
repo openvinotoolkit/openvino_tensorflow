@@ -147,7 +147,7 @@ def load_venv(venv_dir):
 
 
 def setup_venv(venv_dir):
-    #load_venv(venv_dir)
+    load_venv(venv_dir)
 
     print("PIP location")
     call(['where', 'pip'])
@@ -170,11 +170,9 @@ def setup_venv(venv_dir):
         "mock",
         "keras_applications>=1.0.6",
         "--no-deps",
-        "scipy>=0.14",
         "keras",
         "--no-deps",
         "yapf==0.26.0",
-        "opencv-python==4.5.2.54",
         "absl-py~=0.10",
         "astunparse~=1.6.3",
         "flatbuffers~=1.12.0",
