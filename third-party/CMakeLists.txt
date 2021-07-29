@@ -9,7 +9,6 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
 endif()
 include( ../cmake/external_gtest.cmake )
 
-message("EXTERNAL_PROJECTS_ROOT: ${EXTERNAL_PROJECTS_ROOTs}")
 ExternalProject_Add(
     ext_abseil
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
@@ -43,37 +42,65 @@ add_library(absl_algorithm IMPORTED STATIC GLOBAL)
 add_dependencies(absl_algorithm ext_abseil)
 
 # Set library properties
-set_target_properties(absl_algorithm PROPERTIES
-    "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/algorithm/Debug/absl_algorithm.lib"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+if(WIN32)
+    set_target_properties(absl_algorithm PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/algorithm/Release/absl_algorithm.lib"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+else()
+    set_target_properties(absl_algorithm PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/algorithm/libabsl_algorithm.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+endif()
 
 # Create the absl libraries - container
 add_library(absl_container IMPORTED STATIC GLOBAL)
 add_dependencies(absl_container ext_abseil)
 
 # Set library properties
-set_target_properties(absl_container PROPERTIES
-    "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/container/Debug/absl_container.lib"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+if(WIN32)
+    set_target_properties(absl_container PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/container/Release/absl_container.lib"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+else()
+    set_target_properties(absl_container PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/container/libabsl_container.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+endif()
 
 # Create the absl libraries - strings
 add_library(absl_strings IMPORTED STATIC GLOBAL)
 add_dependencies(absl_strings ext_abseil)
 
 # Set library properties
-set_target_properties(absl_strings PROPERTIES
-    "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/strings/Debug/absl_strings.lib"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+if(WIN32)
+    set_target_properties(absl_strings PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/strings/Release/absl_strings.lib"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+else()
+    set_target_properties(absl_strings PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/strings/libabsl_strings.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+endif()
 
 # Create the absl libraries - synchronization
 add_library(absl_synchronization IMPORTED STATIC GLOBAL)
 add_dependencies(absl_synchronization ext_abseil)
 
 # Set library properties
-set_target_properties(absl_synchronization PROPERTIES
-    "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/synchronization/Debug/absl_synchronization.lib"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+if(WIN32)
+    set_target_properties(absl_synchronization PROPERTIES
+        "IMPORTED_LOCATION" "${ABSL_BUILD_DIR}/synchronization/Release/absl_synchronization.lib"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+else()
+    set_target_properties(absl_synchronization PROPERTIES
+        "${ABSL_BUILD_DIR}/synchronization/libabsl_synchronization.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    )
+endif()

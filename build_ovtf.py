@@ -152,7 +152,7 @@ def main():
         help="Specify a custom directory during build",
         action="store",
         default='build_cmake')
-  
+
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -217,8 +217,10 @@ def main():
         for i in os.listdir(loc):
             if '.whl' in i:
                 found_whl = True
-            if 'tensorflow.lib' in i:
+            if 'tensorflow_cc.lib' in i:
                 found_libtf_cc = True
+            if 'tensorflow.lib' in i:
+                found_libtf_fw = True
         assert found_whl, "Did not find TF whl file"
         assert found_libtf_cc, "Did not find libtensorflow_cc"
 
@@ -278,13 +280,14 @@ def main():
         tf_whl_loc = os.path.abspath(os.path.join(arguments.use_tensorflow_from_location,
                                      'artifacts\\tensorflow'))
         tf_whl_loc = tf_whl_loc.replace("\\","\\\\")
+        assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
+            tf_whl_loc)
         possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
         assert len(
             possible_whl
         ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
         # Make sure there is exactly 1 TF whl
         tf_whl = os.path.abspath(tf_whl_loc + '\\' + possible_whl[0])
-
         assert os.path.isfile(tf_whl), "Did not find " + tf_whl
         # Install the found TF whl file
         command_executor(["pip", "install", "-U", tf_whl.replace("\\","\\\\")])
@@ -355,11 +358,13 @@ def main():
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
-                tf_fmwk_lib_name = 'tensorflow.lib'
+                tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
             else:
-                tf_fmwk_lib_name = 'tensorflow.lib'
+                tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
             if (platform.system() == 'Darwin'):
                 tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+            elif (platform.system() == 'Windows'):
+                tf_fmwk_lib_name = 'tensorflow.lib'
             import tensorflow as tf
             tf_lib_dir = tf.sysconfig.get_lib()
             tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
@@ -390,8 +395,7 @@ def main():
                 verbosity,
                 use_intel_tf,
                 arguments.cxx11_abi_version,
-                resource_usage_ratio=float(arguments.resource_usage_ratio))
-            
+                resource_usage_ratio=float(arguments.resource_usage_ratio))           
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
                                 target_arch, verbosity, use_intel_tf,
@@ -474,6 +478,12 @@ def main():
         openvino_tf_cmake_flags.extend([
             "-DUNIT_TEST_TF_CC_DIR=" + ((os.path.join(artifacts_location,
                                                     "tensorflow")).replace("\\","\\\\"))
+        ])
+        
+    if not arguments.disable_cpp_api and arguments.use_tensorflow_from_location:
+        openvino_tf_cmake_flags.extend([
+            "-DUNIT_TEST_TF_CC_DIR=" + (os.path.abspath(
+                arguments.use_tensorflow_from_location + '\tensorflow')).replace("\\","\\\\")
         ])
     if not arguments.disable_cpp_api and arguments.use_tensorflow_from_location:
         openvino_tf_cmake_flags.extend([

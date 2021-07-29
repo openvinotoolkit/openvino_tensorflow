@@ -28,12 +28,19 @@ if(NOT(TensorFlow_VERSION LESS 2.0))
     set_target_properties(
         tensorflow_cc_lib
         PROPERTIES IMPORTED_LOCATION
-        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow.lib)
+        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2)
 else()
     set_target_properties(
     tensorflow_cc_lib
     PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow.lib)
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1)
+endif()
+
+if(WIN32)
+    set_target_properties(
+    tensorflow_cc_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib)
 endif()
 
 set(SRC

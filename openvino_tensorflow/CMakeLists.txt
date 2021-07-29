@@ -8,6 +8,8 @@ include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
+include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\tensorflow\\core\\graph")
+include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\include\\tensorflow\\core\\framework")
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
@@ -53,24 +55,14 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
-#find_package(protobuf REQUIRED
-#    HINTS
-#       "C:/Program Files/protobuf"
-#        "C:/Program Files (x86)/protobuf")
-#message("PROTOBUF_LIBRARY: ${PROTOBUF_LIBRARY} ${PROTOBUF_INCLUDE_DIR}")
-
-#include_directories(${PROTOBUF_INCLUDE_DIR})
-
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR})
-endif()
-MESSAGE(STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR})
-
 add_library(${LIB_NAME} SHARED ${SRC})
 #add_library(${LIB_NAME} STATIC ${SRC}) #SHARED
 target_link_libraries(
         ${LIB_NAME}
-		#"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
+		"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
+		#"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\graph.lib"
+		#"C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\venv-tf-py3\\Lib\\site-packages\\tensorflow\\tensorflow_cc.lib"
+		"C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\venv-tf-py3\\Lib\\site-packages\\tensorflow\\tensorflow.lib"
         ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
         #ngraph_lib

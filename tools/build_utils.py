@@ -123,7 +123,6 @@ def install_virtual_env(venv_dir):
     # Setup virtual environment
     venv_dir = os.path.abspath(venv_dir)
     venv_dir = venv_dir.replace("\\", "\\\\")
-    
     # Note: We assume that we are using Python 3 (as this script is also being
     # executed under Python 3 as marked in line 1)
     command_executor(["virtualenv", "-p", "python", venv_dir])
@@ -139,13 +138,11 @@ def load_venv(venv_dir):
     print("Loading virtual environment from: %s" % venv_dir)
 
     activate_this_file = venv_dir + "\\Scripts\\activate_this.py"
-    activate_path = os.path.join(venv_dir,"Scripts\\activate.bat")
-    print("activate_path",activate_path)
     # The execfile API is for Python 2. We keep here just in case you are on an
     # obscure system without Python 3
-    #execfile(activate_this_file, dict(__file__=activate_this_file))
+    # execfile(activate_this_file, dict(__file__=activate_this_file))
     exec( compile( open(activate_this_file, "rb").read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
-    #subprocess.call([activate_path])
+
     return venv_dir
 
 
@@ -168,30 +165,33 @@ def setup_venv(venv_dir):
         "pip",
         "install",
         "-U",
-        "pip",
         "psutil",
-        "pyyaml",
-        "six>=1.12.0",
-        "numpy>=1.16.0,<1.19.0",
-        "wheel>=0.26",
-        "absl-py",
-        "astunparse",
-        "flatbuffers",
-        "google_pasta",
-        "h5py",
-        "opt_einsum",
-        "protobuf",
-        "wrapt",
-        "gast==0.4.0",
-        "tensorboard",
-        "tensorflow_estimator",
-        "termcolor>=1.1.0",
+        "setuptools",
+        "mock",
         "keras_applications>=1.0.6",
         "--no-deps",
         "scipy>=0.14",
         "keras",
-        "keras_preprocessing>=1.1.1,<1.2",
         "--no-deps",
+        "yapf==0.26.0",
+        "opencv-python==4.5.2.54",
+        "absl-py~=0.10",
+        "astunparse~=1.6.3",
+        "flatbuffers~=1.12.0",
+        "gast==0.4.0",
+        "google_pasta~=0.2",
+        "h5py~=3.1.0",
+        "keras_preprocessing~=1.1.2",
+        "numpy~=1.19.2",
+        "opt_einsum~=3.3.0",
+        "protobuf>=3.9.2",
+        "tensorboard~=2.5",
+        "termcolor~=1.1.0",
+        "wrapt~=1.12.1",
+        "wheel~=0.35",
+        "six~=1.15.0",
+        "scipy~=1.5.2",
+        "typing_extensions~=3.7.4",
     ]
     command_executor(package_list)
 
@@ -215,10 +215,10 @@ def build_tensorflow(tf_version,
                      use_intel_tf,
                      cxx_abi,
                      target="",
-                     resource_usage_ratio=0.5):
-    
+                     resource_usage_ratio=0.5):    
     # In order to build TensorFlow, we need to be in the virtual environment
     pwd = os.getcwd()
+
     src_dir = os.path.abspath(src_dir)
     print("SOURCE DIR: " + src_dir)
     # Update the artifacts directory
@@ -307,8 +307,14 @@ def build_tensorflow_cc(tf_version,
                         use_intel_tf,
                         cxx_abi,
                         tf_prebuilt=None):
-    
-    tf_cc_lib_name = "tensorflow.lib"
+    # lib = "libtensorflow_cc.so.2"
+    if (tf_version.startswith("v2.") or tf_version.startswith("2.")):
+        tf_cc_lib_name = "libtensorflow_cc.so.2"
+    elif (tf_version.startswith("v1.") or tf_version.startswith("1.")):
+        tf_cc_lib_name = "libtensorflow_cc.so.1"
+    if (platform.system() == 'Windows'):
+        tf_cc_lib_name = "tensorflow_cc.lib"
+
     build_tensorflow(
         tf_version,
         src_dir,
@@ -358,8 +364,19 @@ def locate_tf_whl(tf_whl_loc):
 
 
 def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
-    tf_cc_lib_name = "tensorflow.lib"
-    
+    if (tf_version.startswith("v2.") or (tf_version.startswith("2."))):
+        tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
+        tf_cc_lib_name = 'libtensorflow_cc.so.2'
+    elif (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
+        tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
+        tf_cc_lib_name = 'libtensorflow_cc.so.1'
+    if (platform.system() == 'Darwin'):
+        if (tf_version.startswith("v2.")):
+            tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+        elif (tf_version.startswith("v1.")):
+            tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
+    if (platform.system() == 'Windows'):
+        tf_fmwk_lib_name = 'tensorflow.lib'
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
         os.unlink(doomed_file)
@@ -370,18 +387,18 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
     # Now copy the TF libraries
     if tf_prebuilt is None:
         tf_cc_lib_file = "bazel-bin\\tensorflow\\" + tf_cc_lib_name
+        tf_cc_fmwk_file = "bazel-bin\\tensorflow\\" + tf_fmwk_lib_name
         if use_intel_tf:
-            opm_lib_file = "bazel-tensorflow\\external\\mkl_linux\\lib\\libiomp5.so"
-            mkl_lib_file = "bazel-tensorflow\\external\\mkl_linux\\lib\\libmklml_intel.so"
+            opm_lib_file = "bazel-tensorflow\\external\\mkl_linux\\lib\\libiomp5.so" # Need to update for windows
+            mkl_lib_file = "bazel-tensorflow\\external\\mkl_linux\\lib\\libmklml_intel.so" # Need to update for windows
     else:
         tf_cc_lib_file = os.path.abspath(tf_prebuilt + '\\' + tf_cc_lib_name)
+        tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '\\' + tf_fmwk_lib_name)
         if use_intel_tf:
-            opm_lib_file = os.path.abspath(tf_prebuilt + '\\libiomp5.so')
-            mkl_lib_file = os.path.abspath(tf_prebuilt + '\\libmklml_intel.so')
+            opm_lib_file = os.path.abspath(tf_prebuilt + '/libiomp5.so') # Need to update for windows
+            mkl_lib_file = os.path.abspath(tf_prebuilt + '/libmklml_intel.so') # Need to update for windows
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
-#    if os.path.exists(os.path.join(artifacts_dir,tf_cc_lib_file)):
-#        os.remove(os.path.join(artifacts_dir,tf_cc_lib_file))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
 
     if use_intel_tf:
@@ -453,15 +470,15 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
 
     # Run cmake
     os.chdir(path)
-    cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\""]
+    cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Release"]
     cmake_cmd.extend(cmake_flags)
     cmake_cmd.extend([ovtf_src_loc.replace("\\","\\\\")])
     command_executor(cmake_cmd)
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    make_cmd = ["cmake", "--build", ".", "-j" + num_cores, "--target install"]
-    #make_cmd = ["cmake", "--build", ".", "--config Release", "-j" + num_cores, "--target install"]    
+    #make_cmd = ["cmake", "--config Release", "--build", "."]
+    make_cmd = ["cmake", "--build", ".", "--config Release", "-j" + num_cores, "--target install"]
     if verbose:
         make_cmd.extend(['--verbose'])
 
