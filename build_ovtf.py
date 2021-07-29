@@ -485,11 +485,6 @@ def main():
             "-DUNIT_TEST_TF_CC_DIR=" + (os.path.abspath(
                 arguments.use_tensorflow_from_location + '\tensorflow')).replace("\\","\\\\")
         ])
-    if not arguments.disable_cpp_api and arguments.use_tensorflow_from_location:
-        openvino_tf_cmake_flags.extend([
-            "-DUNIT_TEST_TF_CC_DIR=" + (os.path.abspath(
-                arguments.use_tensorflow_from_location + '\tensorflow')).replace("\\","\\\\")
-        ])
     
     if (builder_version > 0.50):
         openvino_tf_cmake_flags.extend([
