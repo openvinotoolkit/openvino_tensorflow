@@ -11,7 +11,7 @@ import argparse
 
 
 def main():
-    openvino_version = "releases/2021/3"
+    openvino_version = "releases/2021/4"
     build_dir = 'build_cmake'
     cxx_abi = "1"
     print("openVINO version: ", openvino_version)
