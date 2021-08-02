@@ -32,6 +32,7 @@ import tensorflow as tf
 import openvino_tensorflow as ovtf
 import time
 import cv2
+import imghdr
 from PIL import Image, ImageFont, ImageDraw
 
 
@@ -163,6 +164,31 @@ def non_max_suppression(predictions_with_boxes,
 
     return result
 
+def get_input_mode(input_path):
+    if input_path.lower() in ['cam','camera']:
+        return "camera"
+    assert os.path.exists(input_file), "input path doesn't exist"
+    if os.path.isdir(input_path):
+        images = os.listdir(input_path)
+        if len(images) < 1:
+            assert False, "Input directory doesn't contain any images"
+        for i in images:
+            image_path = os.path.join(input_path, i)
+            if imghdr.what(image_path) == None:
+                assert False, "Input directory contains non image files"
+        return "folder"
+    elif os.path.isfile(input_path):
+        if imghdr.what(input_path) != None:
+            return "image"
+        elif input_path.rsplit('.',1)[1] in ['mp4','avi']:
+            return "video"
+
+def load_labels(label_file):
+    label = []
+    proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
+    for l in proto_as_ascii_lines:
+        label.append(l.rstrip())
+    return label
 
 if __name__ == "__main__":
     input_file = "examples/data/people-detection.mp4"
@@ -278,53 +304,78 @@ if __name__ == "__main__":
 
     # open capturing device
     assert os.path.exists(input_file), "Could not find input video file path"
-    cap = cv2.VideoCapture(input_file)
-
+    cap = None
+    images = []
+    if label_file:
+        labels = load_labels(label_file)
+    input_mode = get_input_mode(input_file)
+    if input_mode == "video":
+        cap = cv2.VideoCapture(input_file)
+    elif input_mode == "camera":
+        cap = cv2.VideoCapture(0)
+    elif input_mode == 'image':
+        images = [input_file]
+    elif input_mode == 'folder':
+        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+    images_len = len(images)
+    image_id = -1
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if ret is True:
-                # pre-processing steps
-                img = frame
-                img_resized = cv2.resize(frame, (input_height, input_width))
-
-                # Run
-                frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                start = time.time()
-                detected_boxes = sess.run(
-                    output_operation.outputs[0],
-                    {input_operation.outputs[0]: [img_resized]})
-                elapsed = time.time() - start
-                fps = 1 / elapsed
-                print('Inference time in ms: %.2f' % (elapsed * 1000))
-                # post-processing - apply non max suppression, draw boxes and save updated image
-                filtered_boxes = non_max_suppression(
-                    detected_boxes, conf_threshold, iou_threshold)
-
-                # OpenCV frame to PIL format conversions as the draw_box function uses PIL
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                im_pil = Image.fromarray(img)
-
-                # modified draw_boxes function to return an openCV formatted image
-                img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
-                                      (input_width, input_height), True)
-
-                # draw information overlay onto the frames
-                cv2.putText(img_bbox,
-                            'Inference Running on : {0}'.format(backend_name),
-                            (30, 50), font, font_size, color, font_thickness)
-                cv2.putText(
-                    img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
-                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
-                    font_size, color, font_thickness)
-                if not args.no_show:
-                    cv2.imshow("detections", img_bbox)
-                    if cv2.waitKey(1) & 0XFF == ord('q'):
+        while True:
+            image_id += 1
+            if input_mode in ['camera', 'video']:
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    if ret is True:
+                        pass
+                    else:
                         break
-            else:
-                break
+                else:
+                    break
+            if input_mode in ['image','folder']:
+                if image_id < images_len:
+                    frame = cv2.imread(images[image_id])
+                else:
+                    break
+            img = frame
+            img_resized = cv2.resize(frame, (input_height, input_width))
+
+            # Run
+            # frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
+            print (image_id)
+            start = time.time()
+            detected_boxes = sess.run(
+                output_operation.outputs[0],
+                {input_operation.outputs[0]: [img_resized]})
+            elapsed = time.time() - start
+            fps = 1 / elapsed
+            print('Inference time in ms: %.2f' % (elapsed * 1000))
+            # post-processing - apply non max suppression, draw boxes and save updated image
+            filtered_boxes = non_max_suppression(
+                detected_boxes, conf_threshold, iou_threshold)
+
+            # OpenCV frame to PIL format conversions as the draw_box function uses PIL
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            im_pil = Image.fromarray(img)
+
+            # modified draw_boxes function to return an openCV formatted image
+            img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
+                                    (input_width, input_height), True)
+
+            # draw information overlay onto the frames
+            cv2.putText(img_bbox,
+                        'Inference Running on : {0}'.format(backend_name),
+                        (30, 50), font, font_size, color, font_thickness)
+            cv2.putText(
+                img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
+                    int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                font_size, color, font_thickness)
+            if not args.no_show:
+                cv2.imshow("detections", img_bbox)
+                if cv2.waitKey(1) & 0XFF == ord('q'):
+                    break            
     sess.close()
-    cap.release()
+    if cap:
+        cap.release()
     cv2.destroyAllWindows()
