@@ -55,6 +55,15 @@
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
+   
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      source $(OV_LOCATION)/bin/setupvars.sh
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
+      python3 examples/object_detection_sample_video.py --no_show
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Python Inference Example Detection"
      
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
