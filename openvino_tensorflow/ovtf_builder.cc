@@ -2439,6 +2439,81 @@ static Status TranslateReshapeOp(
   return Status::OK();
 }
 
+static Status TranslateResizeBilinearOp(const Node* op,
+                                 const std::vector<const Tensor*>& static_input_map,
+                                 Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp, ng_inp_sizes;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp, ng_inp_sizes));
+
+  // Get Interpolate attributes
+  using InterpolateV4Attrs = opset::Interpolate::InterpolateAttrs;
+  InterpolateV4Attrs interpolate_attrs;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+  interpolate_attrs.shape_calculation_mode = opset::Interpolate::ShapeCalcMode::sizes;
+  bool align_corners = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
+  if (align_corners)
+    interpolate_attrs.coordinate_transformation_mode = opset::Interpolate::CoordinateTransformMode::align_corners;
+
+  auto input_shape = ng_inp.get_shape();
+  std::vector<int32> spatial_shape = {input_shape[1], input_shape[2]};
+  auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
+  auto ng_input_shape = ConstructNgNode<opset::Convert>(
+      op->name(), ng_spatial_shape, ng::element::f32);
+  auto ng_sizes = ConstructNgNode<opset::Convert>(
+      op->name(), ng_inp_sizes, ng::element::f32);
+  auto ng_scales = ConstructNgNode<opset::Divide>(
+      op->name(), ng_sizes, ng_input_shape);
+  auto ng_axes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2,3}));
+
+  Transpose<0, 3, 1, 2>(ng_inp);
+  auto ng_output = ConstructNgNode<opset::Interpolate>(
+      op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
+  Transpose<0, 2, 3, 1>(ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
+static Status TranslateResizeNearestNeighborOp(const Node* op,
+                                 const std::vector<const Tensor*>& static_input_map,
+                                 Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp, ng_inp_sizes;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp, ng_inp_sizes));
+
+  opset::Interpolate::InterpolateAttrs interpolate_attrs;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+  interpolate_attrs.shape_calculation_mode = opset::Interpolate::ShapeCalcMode::sizes;
+  bool align_corners = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
+  if (align_corners) {
+    interpolate_attrs.coordinate_transformation_mode = 
+      opset::Interpolate::CoordinateTransformMode::align_corners;
+  }
+  interpolate_attrs.nearest_mode = opset::Interpolate::NearestMode::round_prefer_floor;
+
+  auto input_shape = ng_inp.get_shape();
+  std::vector<int32> spatial_shape = {input_shape[1], input_shape[2]};
+  auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
+  auto ng_input_shape = ConstructNgNode<opset::Convert>(
+      op->name(), ng_spatial_shape, ng::element::f32);
+  auto ng_sizes = ConstructNgNode<opset::Convert>(
+      op->name(), ng_inp_sizes, ng::element::f32);
+  auto ng_scales = ConstructNgNode<opset::Divide>(
+      op->name(), ng_sizes, ng_input_shape);
+  auto ng_axes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2,3}));
+
+  Transpose<0, 3, 1, 2>(ng_inp);
+  auto ng_output = ConstructNgNode<opset::Interpolate>(
+      op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
+  Transpose<0, 2, 3, 1>(ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
 static Status TranslateRsqrtOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3106,6 +3181,8 @@ const static std::map<
         {"Relu", TranslateUnaryOp<opset::Relu>},
         {"Relu6", TranslateRelu6Op},
         {"Reshape", TranslateReshapeOp},
+        {"ResizeBilinear", TranslateResizeBilinearOp},
+        {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
