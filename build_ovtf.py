@@ -539,14 +539,14 @@ def main():
             verbose=True)
     else:
         # Create a sym-link to
-        link_src = os.path.join(artifacts_location.replace("\\","\\\\"),
+        link_src = os.path.join(artifacts_location,
                                 "tensorflow\\tensorflow\\python")
-        link_dst = os.path.join(artifacts_location.replace("\\","\\\\"), "tensorflow\\python")
-        command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
+        link_dst = os.path.join(artifacts_location, "tensorflow\\python")
+        command_executor(['ln', '-sf', link_src.replace("\\","\\\\"), link_dst.replace("\\","\\\\")], verbose=True)
 
     # Run a quick test
     install_openvino_tf(tf_version, venv_dir,
-                        os.path.join(artifacts_location, ov_tf_whl))
+                        os.path.join(artifacts_location, ov_tf_whl).replace("\\","\\\\"))
 
     if builder_version > 0.50 and arguments.use_grappler_optimizer:
         import tensorflow as tf
