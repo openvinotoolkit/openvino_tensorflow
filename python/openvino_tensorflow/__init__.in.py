@@ -42,7 +42,7 @@ __all__ = [
 if system() == 'Darwin':
     ext = 'dylib'
 elif system() == 'Windows':
-    ext = 'lib'
+    ext = 'dll'
 else:
     ext = 'so'
 
