@@ -1552,6 +1552,22 @@ static Status TranslateGatherV2Op(
   return Status::OK();
 }
 
+static Status TranslateGatherNdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_input_indices;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_input_indices));
+
+  int batch_dims = 0;
+  // TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "batch_dims", &batch_dims));
+
+  auto gathernd_op = ConstructNgNode<opset::GatherND>(
+      op->name(), ng_input, ng_input_indices, batch_dims);
+
+  SaveNgOp(ng_op_map, op->name(), gathernd_op);
+  return Status::OK();
+}
+
 static Status TranslateFusedConv2DOp(const Node* op,
                                      const std::vector<const Tensor*>&,
                                      Builder::OpMap& ng_op_map) {
@@ -2533,6 +2549,20 @@ static Status TranslateReshapeOp(
   return Status::OK();
 }
 
+static Status TranslateRoundOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+
+  // using default round mode "half_to_even" in openvino,
+  // as TF has only that mode
+  opset::Round::RoundMode round_mode = opset::Round::RoundMode::HALF_TO_EVEN;
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Round>(op->name(), ng_input, round_mode));
+  return Status::OK();
+}
+
 static Status TranslateResizeBilinearOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3227,6 +3257,7 @@ const static std::map<
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
+        {"GatherNd", TranslateGatherNdOp},
         {"_FusedBatchNormEx", TranslateFusedBatchNormOp},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedDepthwiseConv2dNative", TranslateFusedDepthwiseConv2dNativeOp},
@@ -3280,6 +3311,7 @@ const static std::map<
         {"Relu", TranslateUnaryOp<opset::Relu>},
         {"Relu6", TranslateRelu6Op},
         {"Reshape", TranslateReshapeOp},
+        {"Round", TranslateRoundOp},
         {"ResizeBilinear", TranslateResizeBilinearOp},
         {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
         {"Rsqrt", TranslateRsqrtOp},
