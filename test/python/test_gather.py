@@ -99,3 +99,45 @@ class TestGatherV2Operations(NgraphTest):
         assert (
             self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
         print(self.with_ngraph(run_test))
+
+
+class TestGatherNdOperations(NgraphTest):
+
+    # Simple indexing
+    def test_gather_0(self):
+        val = tf.compat.v1.placeholder(tf.string, shape=(2, 2))
+        out = tf.raw_ops.Gather(params=val, indices=[[0, 0], [1, 1]])
+
+        def run_test(sess):
+            return sess.run((out,), feed_dict={val: [['a', 'b'], ['c',
+                                                                  'd']]})[0]
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    # Slice indexing into a matrix
+    def test_gather_1(self):
+        val = tf.compat.v1.placeholder(tf.string, shape=(2, 2))
+        out = tf.raw_ops.Gather(params=val, indices=[[1], [0]])
+
+        def run_test(sess):
+            return sess.run((out,), feed_dict={val: [['a', 'b'], ['c',
+                                                                  'd']]})[0]
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+
+    # Indexing into a 3-tensor
+    def test_gather_2(self):
+        val = tf.compat.v1.placeholder(tf.string, shape=(2, 2, 2))
+        out = tf.raw_ops.Gather(params=val, indices=[[0, 1], [1, 0]])
+
+        def run_test(sess):
+            return sess.run((out,),
+                            feed_dict={
+                                val: [[['a0', 'b0'], ['c0', 'd0']],
+                                      [['a1', 'b1'], ['c1', 'd1']]]
+                            })[0]
+
+        assert (
+            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()

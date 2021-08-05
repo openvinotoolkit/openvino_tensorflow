@@ -76,7 +76,7 @@ def main():
 
     verbosity = False
     artifacts_location = os.path.abspath(arguments.output_dir) + '/artifacts'
-    
+
     # Build OpenVINO
     build_openvino(build_dir, openvino_src_dir, cxx_abi, arguments.target_arch,
                    artifacts_location, arguments.debug_build, verbosity)
