@@ -1129,6 +1129,100 @@ static Status TranslateConv3DOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateCropAndResizeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  /*
+  ng_input: [batch, image_height, image_width, depth]
+  ng_boxes: [num_boxes, 4]; each box is a normalized [0.to 1.] co-ordinate [y1,
+  x1, y2, x2]
+  ng_box_ind: [num_boxes]; i-th ng_box_ind refers to the image to crop and
+  ranges from 0 to batch
+  ng_crop_size: [crop_height, crop_width];
+
+  for each box b specified in ng_boxes {
+    1. crop ng_input[ng_box_ind[b]] w/ co-ordinates in ng_boxes
+    2. resize according to method
+  }
+  */
+  ng::Output<ng::Node> ng_input, ng_boxes, ng_box_ind, ng_size;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_input, ng_boxes, ng_box_ind, ng_size));
+
+  string tf_resize_method;
+  float tf_extrapolation_value;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "method", &tf_resize_method));
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "extrapolation_value", &tf_extrapolation_value));
+
+  auto spatial_shape = ng_input.get_shape();
+  int image_height = spatial_shape[1];
+  int image_width = spatial_shape[2];
+  int image_depth = spatial_shape[3];
+
+  std::vector<int32> box_ind;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
+
+  std::vector<float> boxes;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &boxes));
+
+  ng::OutputVector ng_crop_outputs;
+  for (int i = 0; i < box_ind.size(); i++) {
+    int y1, x1, y2, x2;
+    y1 = boxes.at(0 + i * 4) * (image_height - 1);
+    x1 = boxes.at(1 + i * 4) * (image_width - 1);
+    y2 = boxes.at(2 + i * 4) * (image_height - 1);
+    x2 = boxes.at(3 + i * 4) * (image_width - 1);
+
+    auto begin = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{4},
+        std::vector<int64>({box_ind[i], y1, x1, 0}));
+    auto end = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{4},
+        std::vector<int64>({box_ind[i] + 1, y2 + 1, x2 + 1, image_depth + 1}));
+
+    auto ng_crop = ConstructNgNode<opset::StridedSlice>(
+        op->name(), ng_input, begin, end, std::vector<int64_t>{},
+        std::vector<int64_t>{});
+
+    opset::Interpolate::InterpolateAttrs interpolate_attrs;
+    // always corner aligned
+    interpolate_attrs.coordinate_transformation_mode =
+        opset::Interpolate::CoordinateTransformMode::align_corners;
+
+    // arguments for resizing
+    auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i32, ng::Shape{2},
+        std::vector<int32>{y2 - y1, x2 - x1});
+    auto ng_input_shape = ConstructNgNode<opset::Convert>(
+        op->name(), ng_spatial_shape, ng::element::f32);
+    auto ng_crop_size =
+        ConstructNgNode<opset::Convert>(op->name(), ng_size, ng::element::f32);
+    auto ng_scales = ConstructNgNode<opset::Divide>(op->name(), ng_crop_size,
+                                                    ng_input_shape);
+    auto ng_axes = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
+
+    if (tf_resize_method == "bilinear") {
+      interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+    } else {  // nearest
+      interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+    }
+
+    Transpose<0, 3, 1, 2>(ng_crop);
+    auto ng_output = ConstructNgNode<opset::Interpolate>(
+        op->name(), ng_crop, ng_size, ng_scales, ng_axes, interpolate_attrs);
+    Transpose<0, 2, 3, 1>(ng_output);
+    ng_crop_outputs.push_back(ng_output);
+  }
+
+  auto ng_crop_and_resize =
+      ConstructNgNode<opset::Concat>(op->name(), ng_crop_outputs, 0);
+
+  Builder::SetTracingInfo(op->name(), ng_crop_and_resize);
+  SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
+}
+
 static Status TranslateCumsumOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -1455,22 +1549,6 @@ static Status TranslateGatherV2Op(
                                                   ng_input_coords, ng_axis);
 
   SaveNgOp(ng_op_map, op->name(), gather_op);
-  return Status::OK();
-}
-
-static Status TranslateGatherNdOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_input, ng_input_indices;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_input_indices));
-
-  int batch_dims = 0;
-  // TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "batch_dims", &batch_dims));
-
-  auto gathernd_op = ConstructNgNode<opset::GatherND>(
-      op->name(), ng_input, ng_input_indices, batch_dims);
-
-  SaveNgOp(ng_op_map, op->name(), gathernd_op);
   return Status::OK();
 }
 
@@ -2455,20 +2533,6 @@ static Status TranslateReshapeOp(
   return Status::OK();
 }
 
-static Status TranslateRoundOp(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  ng::Output<ng::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
-
-  // using default round mode "half_to_even" in openvino,
-  // as TF has only that mode
-  opset::Round::RoundMode round_mode = opset::Round::RoundMode::HALF_TO_EVEN;
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Round>(op->name(), ng_input, round_mode));
-  return Status::OK();
-}
-
 static Status TranslateResizeBilinearOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3147,6 +3211,7 @@ const static std::map<
         {"Conv3D", TranslateConv3DOp},
         {"Cos", TranslateUnaryOp<opset::Cos>},
         {"Cosh", TranslateUnaryOp<opset::Cosh>},
+        {"CropAndResize", TranslateCropAndResizeOp},
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
@@ -3162,7 +3227,6 @@ const static std::map<
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
-        {"GatherNd", TranslateGatherNdOp},
         {"_FusedBatchNormEx", TranslateFusedBatchNormOp},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedDepthwiseConv2dNative", TranslateFusedDepthwiseConv2dNativeOp},
@@ -3216,7 +3280,6 @@ const static std::map<
         {"Relu", TranslateUnaryOp<opset::Relu>},
         {"Relu6", TranslateRelu6Op},
         {"Reshape", TranslateReshapeOp},
-        {"Round", TranslateRoundOp},
         {"ResizeBilinear", TranslateResizeBilinearOp},
         {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
         {"Rsqrt", TranslateRsqrtOp},
