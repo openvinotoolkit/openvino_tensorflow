@@ -10,6 +10,7 @@ include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
 include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\tensorflow\\core\\graph")
 include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\include\\tensorflow\\core\\framework")
+include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\\\core\\framework")
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
@@ -61,8 +62,10 @@ target_link_libraries(
         ${LIB_NAME}
 		"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
 		#"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\graph.lib"
-		#"C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\venv-tf-py3\\Lib\\site-packages\\tensorflow\\tensorflow_cc.lib"
-		"C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\venv-tf-py3\\Lib\\site-packages\\tensorflow\\tensorflow.lib"
+		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
+		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\resource_handle.lo.lib"
+		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\tensor_shape.lo.lib"
+		#"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\tensor_proto_cc_impl.lo.lib"
         ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
         #ngraph_lib
@@ -72,7 +75,6 @@ target_link_libraries(
         absl_strings
         ${InferenceEngine_LIBRARIES}
         ocm
-		#"C:\\Users\\Intel\\ovtf_workspace\\openvino_tensorflow\\ocm\\build\\OCM\\Debug\\ocm.lib"
     )
 
 target_compile_definitions(
@@ -116,7 +118,8 @@ endif()
 # Install OpenVINO libraries
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/Release)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/ocm.lib DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+#install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+install(FILES "C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\ocm\\OCM\\Release\\ocm.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
