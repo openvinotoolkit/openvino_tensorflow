@@ -1174,15 +1174,35 @@ static Status TranslateCropAndResizeOp(
     y2 = boxes.at(2 + i * 4) * (image_height - 1);
     x2 = boxes.at(3 + i * 4) * (image_width - 1);
 
+    int crop_height = std::abs(y2 - y1);
+    int crop_width = std::abs(x2 - x1);
+
+    // account for flip crops when y1>y2 or x1>x2 with negative striding
+    int stride_height = 1, stride_width = 1;
+    if (y1 > y2) {
+      y1 = y1 - image_height;
+      y2 = y2 - image_height - 2;
+      stride_height = -1;
+    }
+    if (x1 > x2) {
+      x1 = x1 - image_height;
+      x2 = x2 - image_height - 2;
+      stride_width = -1;
+    }
+
     auto begin = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i64, ng::Shape{4},
         std::vector<int64>({box_ind[i], y1, x1, 0}));
     auto end = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i64, ng::Shape{4},
         std::vector<int64>({box_ind[i] + 1, y2 + 1, x2 + 1, image_depth + 1}));
+    auto strides = ConstructNgNode<opset::Constant>(
+        op->name(), ng::element::i64, ng::Shape{4},
+        std::vector<int64>({1, stride_height, stride_width, 1}));
 
+    // crop
     auto ng_crop = ConstructNgNode<opset::StridedSlice>(
-        op->name(), ng_input, begin, end, std::vector<int64_t>{},
+        op->name(), ng_input, begin, end, strides, std::vector<int64_t>{},
         std::vector<int64_t>{});
 
     opset::Interpolate::InterpolateAttrs interpolate_attrs;
@@ -1193,7 +1213,7 @@ static Status TranslateCropAndResizeOp(
     // arguments for resizing
     auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
         op->name(), ng::element::i32, ng::Shape{2},
-        std::vector<int32>{y2 - y1, x2 - x1});
+        std::vector<int32>{crop_height, crop_width});
     auto ng_input_shape = ConstructNgNode<opset::Convert>(
         op->name(), ng_spatial_shape, ng::element::f32);
     auto ng_crop_size =
