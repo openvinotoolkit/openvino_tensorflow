@@ -15,7 +15,7 @@ cd temp_build
 python3.6 -m venv env
 source env/bin/activate
 
-pip install --upgrade pip
+pip install --upgrade pip==21.0.1
 pip install tensorflow==1.15.2
 pip install pillow
 git clone https://github.com/mystic123/tensorflow-yolo-v3.git
