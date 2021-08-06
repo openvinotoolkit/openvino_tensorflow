@@ -12,7 +12,7 @@ model_source="https://github.com/mystic123/tensorflow-yolo-v3"
 mkdir temp_build
 cd temp_build
 
-python3 -m venv env
+python3 -m virtualenv env
 source env/bin/activate
 
 pip install --upgrade pip
