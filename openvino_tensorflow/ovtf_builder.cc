@@ -1160,87 +1160,99 @@ static Status TranslateCropAndResizeOp(
   int image_width = spatial_shape[2];
   int image_depth = spatial_shape[3];
 
-  std::vector<int32> box_ind;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
-
   std::vector<float> boxes;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &boxes));
 
+  std::vector<int32> box_ind;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
+
+  std::vector<int32> crop_size;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 3, static_input_map, &crop_size));
+
   ng::OutputVector ng_crop_outputs;
-  for (int i = 0; i < box_ind.size(); i++) {
-    int y1, x1, y2, x2;
-    y1 = boxes.at(0 + i * 4) * (image_height - 1);
-    x1 = boxes.at(1 + i * 4) * (image_width - 1);
-    y2 = boxes.at(2 + i * 4) * (image_height - 1);
-    x2 = boxes.at(3 + i * 4) * (image_width - 1);
+  if (box_ind.size() == 0) {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng::element::f32,
+                 ngraph::Shape{0, crop_size.at(0), crop_size.at(1), 256},
+                 std::vector<float>({})));
+  } else {
+    for (int i = 0; i < box_ind.size(); i++) {
+      int y1, x1, y2, x2;
+      y1 = boxes.at(0 + i * 4) * (image_height - 1);
+      x1 = boxes.at(1 + i * 4) * (image_width - 1);
+      y2 = boxes.at(2 + i * 4) * (image_height - 1);
+      x2 = boxes.at(3 + i * 4) * (image_width - 1);
 
-    int crop_height = std::abs(y2 - y1);
-    int crop_width = std::abs(x2 - x1);
+      int crop_height = std::abs(y2 - y1);
+      int crop_width = std::abs(x2 - x1);
 
-    // account for flip crops when y1>y2 or x1>x2 with negative striding
-    int stride_height = 1, stride_width = 1;
-    if (y1 > y2) {
-      y1 = y1 - image_height;
-      y2 = y2 - image_height - 2;
-      stride_height = -1;
+      // account for flip crops when y1>y2 or x1>x2 with negative striding
+      int stride_height = 1, stride_width = 1;
+      if (y1 > y2) {
+        y1 = y1 - image_height;
+        y2 = y2 - image_height - 2;
+        stride_height = -1;
+      }
+      if (x1 > x2) {
+        x1 = x1 - image_height;
+        x2 = x2 - image_height - 2;
+        stride_width = -1;
+      }
+
+      auto begin = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>({box_ind[i], y1, x1, 0}));
+      auto end = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>(
+              {box_ind[i] + 1, y2 + 1, x2 + 1, image_depth + 1}));
+      auto strides = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>({1, stride_height, stride_width, 1}));
+
+      // crop
+      auto ng_crop = ConstructNgNode<opset::StridedSlice>(
+          op->name(), ng_input, begin, end, strides, std::vector<int64_t>{},
+          std::vector<int64_t>{});
+
+      opset::Interpolate::InterpolateAttrs interpolate_attrs;
+      // always corner aligned
+      interpolate_attrs.coordinate_transformation_mode =
+          opset::Interpolate::CoordinateTransformMode::align_corners;
+
+      // arguments for resizing
+      auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i32, ng::Shape{2},
+          std::vector<int32>{crop_height, crop_width});
+      auto ng_input_shape = ConstructNgNode<opset::Convert>(
+          op->name(), ng_spatial_shape, ng::element::f32);
+      auto ng_crop_size = ConstructNgNode<opset::Convert>(op->name(), ng_size,
+                                                          ng::element::f32);
+      auto ng_scales = ConstructNgNode<opset::Divide>(op->name(), ng_crop_size,
+                                                      ng_input_shape);
+      auto ng_axes = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
+
+      if (tf_resize_method == "bilinear") {
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+      } else {  // nearest
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+      }
+
+      Transpose<0, 3, 1, 2>(ng_crop);
+      auto ng_output = ConstructNgNode<opset::Interpolate>(
+          op->name(), ng_crop, ng_size, ng_scales, ng_axes, interpolate_attrs);
+      Transpose<0, 2, 3, 1>(ng_output);
+      ng_crop_outputs.push_back(ng_output);
     }
-    if (x1 > x2) {
-      x1 = x1 - image_height;
-      x2 = x2 - image_height - 2;
-      stride_width = -1;
-    }
 
-    auto begin = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{4},
-        std::vector<int64>({box_ind[i], y1, x1, 0}));
-    auto end = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{4},
-        std::vector<int64>({box_ind[i] + 1, y2 + 1, x2 + 1, image_depth + 1}));
-    auto strides = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i64, ng::Shape{4},
-        std::vector<int64>({1, stride_height, stride_width, 1}));
+    auto ng_crop_and_resize =
+        ConstructNgNode<opset::Concat>(op->name(), ng_crop_outputs, 0);
 
-    // crop
-    auto ng_crop = ConstructNgNode<opset::StridedSlice>(
-        op->name(), ng_input, begin, end, strides, std::vector<int64_t>{},
-        std::vector<int64_t>{});
-
-    opset::Interpolate::InterpolateAttrs interpolate_attrs;
-    // always corner aligned
-    interpolate_attrs.coordinate_transformation_mode =
-        opset::Interpolate::CoordinateTransformMode::align_corners;
-
-    // arguments for resizing
-    auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i32, ng::Shape{2},
-        std::vector<int32>{crop_height, crop_width});
-    auto ng_input_shape = ConstructNgNode<opset::Convert>(
-        op->name(), ng_spatial_shape, ng::element::f32);
-    auto ng_crop_size =
-        ConstructNgNode<opset::Convert>(op->name(), ng_size, ng::element::f32);
-    auto ng_scales = ConstructNgNode<opset::Divide>(op->name(), ng_crop_size,
-                                                    ng_input_shape);
-    auto ng_axes = ConstructNgNode<opset::Constant>(
-        op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
-
-    if (tf_resize_method == "bilinear") {
-      interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
-    } else {  // nearest
-      interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
-    }
-
-    Transpose<0, 3, 1, 2>(ng_crop);
-    auto ng_output = ConstructNgNode<opset::Interpolate>(
-        op->name(), ng_crop, ng_size, ng_scales, ng_axes, interpolate_attrs);
-    Transpose<0, 2, 3, 1>(ng_output);
-    ng_crop_outputs.push_back(ng_output);
+    // Builder::SetTracingInfo(op->name(), ng_crop_and_resize);
+    SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
   }
-
-  auto ng_crop_and_resize =
-      ConstructNgNode<opset::Concat>(op->name(), ng_crop_outputs, 0);
-
-  Builder::SetTracingInfo(op->name(), ng_crop_and_resize);
-  SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
 }
 
 static Status TranslateCumsumOp(const Node* op,
