@@ -1346,6 +1346,7 @@ static Status TranslateFusedBatchNormOp(
       SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
     }
   }
+  return Status::OK();
 }
 
 static Status TranslateFusedMatMulOp(const Node* op,
