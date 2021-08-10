@@ -60,7 +60,6 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
       cd examples
       bash convert_yolov3.sh
       cd $(WORK_DIR) 
