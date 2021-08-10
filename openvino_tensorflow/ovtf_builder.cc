@@ -1132,19 +1132,18 @@ static Status TranslateConv3DOp(const Node* op,
 static Status TranslateCropAndResizeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  /*
-  ng_input: [batch, image_height, image_width, depth]
-  ng_boxes: [num_boxes, 4]; each box is a normalized [0.to 1.] co-ordinate [y1,
-  x1, y2, x2]
-  ng_box_ind: [num_boxes]; i-th ng_box_ind refers to the image to crop and
-  ranges from 0 to batch
-  ng_crop_size: [crop_height, crop_width];
+  /// ng_input: [batch, image_height, image_width, depth]
+  /// ng_boxes: [num_boxes, 4]; each box is a normalized [0.to 1.] co-ordinate
+  /// [y1,
+  /// x1, y2, x2]
+  /// ng_box_ind: [num_boxes]; i-th ng_box_ind refers to the image to crop and
+  /// ranges from 0 to batch
+  /// ng_crop_size: [crop_height, crop_width];
 
-  for each box b specified in ng_boxes {
-    1. crop ng_input[ng_box_ind[b]] w/ co-ordinates in ng_boxes
-    2. resize according to method
-  }
-  */
+  /// for each box b specified in ng_boxes:
+  ///  1. crop ng_input[ng_box_ind[b]] w/ co-ordinates in ng_boxes
+  ///  2. resize according to method
+
   ng::Output<ng::Node> ng_input, ng_boxes, ng_box_ind, ng_size;
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, ng_input, ng_boxes, ng_box_ind, ng_size));
@@ -1169,13 +1168,14 @@ static Status TranslateCropAndResizeOp(
   std::vector<int32> crop_size;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 3, static_input_map, &crop_size));
 
-  ng::OutputVector ng_crop_outputs;
+  ng::OutputVector ng_crop_outputs(box_ind.size());
   if (box_ind.size() == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(
-                 op->name(), ng::element::f32,
-                 ngraph::Shape{0, crop_size.at(0), crop_size.at(1), 256},
-                 std::vector<float>({})));
+    SaveNgOp(
+        ng_op_map, op->name(),
+        ConstructNgNode<opset::Constant>(
+            op->name(), ng::element::f32,
+            ngraph::Shape{0, crop_size.at(0), crop_size.at(1), image_depth},
+            std::vector<float>({})));
   } else {
     for (int i = 0; i < box_ind.size(); i++) {
       int y1, x1, y2, x2;
@@ -1221,6 +1221,7 @@ static Status TranslateCropAndResizeOp(
       interpolate_attrs.coordinate_transformation_mode =
           opset::Interpolate::CoordinateTransformMode::align_corners;
 
+      // TODO: handle the case when extrapolation value is greatger than 1.0
       // arguments for resizing
       auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
           op->name(), ng::element::i32, ng::Shape{2},
@@ -1244,7 +1245,7 @@ static Status TranslateCropAndResizeOp(
       auto ng_output = ConstructNgNode<opset::Interpolate>(
           op->name(), ng_crop, ng_size, ng_scales, ng_axes, interpolate_attrs);
       Transpose<0, 2, 3, 1>(ng_output);
-      ng_crop_outputs.push_back(ng_output);
+      ng_crop_outputs.at(i) = ng_output;
     }
 
     auto ng_crop_and_resize =
@@ -1253,6 +1254,7 @@ static Status TranslateCropAndResizeOp(
     // Builder::SetTracingInfo(op->name(), ng_crop_and_resize);
     SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
   }
+  return Status::OK();
 }
 
 static Status TranslateCumsumOp(const Node* op,
@@ -2674,6 +2676,18 @@ static Status TranslateResizeNearestNeighborOp(
   return Status::OK();
 }
 
+static Status TranslateReverseOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_reversed_axis;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_reversed_axis));
+  ngraph::op::v1::Reverse::Mode mode = ngraph::op::v1::Reverse::Mode::INDEX;
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ngraph::op::v1::Reverse>(op->name(), ng_input,
+                                                    ng_reversed_axis, mode));
+  return Status::OK();
+}
+
 static Status TranslateRsqrtOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3346,6 +3360,7 @@ const static std::map<
         {"Round", TranslateRoundOp},
         {"ResizeBilinear", TranslateResizeBilinearOp},
         {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
+        {"Reverse", TranslateReverseOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
