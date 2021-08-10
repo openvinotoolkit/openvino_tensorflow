@@ -56,13 +56,12 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
    
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      source $(OV_LOCATION)/bin/setupvars.sh
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+   - script: | 
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
-      cd $(WORK_DIR) 
+      cd $(WORK_DIR)
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate      
+      export OPENVINO_TF_BACKEND=CPU  
       python3 examples/object_detection_sample_video.py --no_show
      workingDirectory: $(WORK_DIR) 
      displayName: "Python Inference Example Detection"
