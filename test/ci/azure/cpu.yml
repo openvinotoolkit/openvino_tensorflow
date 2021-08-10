@@ -56,7 +56,8 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
    
-   - script: | 
+   - script: |
+      cd $(WORK_DIR)/examples 
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       cd $(WORK_DIR)
