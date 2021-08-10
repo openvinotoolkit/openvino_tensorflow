@@ -96,7 +96,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
   node->set_friendly_name(op_name + "/" + node->get_name());
   node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
-    cout << "TF_to_NG: " << op_name << " --> " << node << "\n";
+    cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
 }
 
@@ -756,6 +756,61 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateBatchNDAndSpaceNDOp(const Node* op,
+                                        const std::vector<const Tensor*>& static_input_map,
+                                        Builder::OpMap& ng_op_map) {
+
+  ng::Output<ng::Node> ng_input, ng_block_shape, ng_crops;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_block_shape, ng_crops));
+  
+  // ng_crops should be of shape N=[ng_input.get_shape()).size()]
+  // But TF's ng_crops input is limited only to the spatial dimensions (neither batch nor innermost),
+  // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
+  // Hence, pad ng_crops with zeros at both ends
+  
+
+
+  std::vector<int> tf_block_shape;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
+
+  auto N = (int) ng_input.get_shape().size();
+  auto M = (int) tf_block_shape.size();
+
+  auto crops = ConstructNgNode<opset::Pad>(op->name(), ng_crops, 
+    make_shared<opset::Constant>(ng_crops.get_element_type(), ng::Shape{2}, std::vector<int>{1, 0}),
+    make_shared<opset::Constant>(ng_crops.get_element_type(), ng::Shape{2}, std::vector<int>{N-M-1, 0}),
+    ng::op::PadMode::CONSTANT);
+
+  // Padding needs to be done for block_shape as done for crops above but with value=1
+  auto block_shape = ConstructNgNode<opset::Pad>(op->name(), ng_block_shape, 
+    make_shared<opset::Constant>(ng_block_shape.get_element_type(), ng::Shape{1}, std::vector<int>{1}),
+    make_shared<opset::Constant>(ng_block_shape.get_element_type(), ng::Shape{1}, std::vector<int>{N-M-1}),
+    make_shared<opset::Constant>(ng_block_shape.get_element_type(), ng::Shape{}, 1),
+    ng::op::PadMode::CONSTANT);
+
+  auto target_axis = make_shared<opset::Constant>(ng::element::i64, ng::Shape{}, 1);
+  // split into two 1-D vectors crops_begin and crops_end along axis 1
+  auto crops_split = ConstructNgNode<opset::Split>(op->name(), crops, target_axis, 2);
+  auto crops_begin = ConstructNgNode<opset::Squeeze>(op->name(), crops_split.get_node()->outputs()[0]);
+  auto crops_end = ConstructNgNode<opset::Squeeze>(op->name(),crops_split.get_node()->outputs()[1]);
+  
+  if (op->type_string() == "BatchToSpaceND") {
+    auto ng_batch_to_space_nd = ConstructNgNode<opset::BatchToSpace>(op->name(),
+        ng_input, block_shape, crops_begin, crops_end);
+    SaveNgOp(ng_op_map, op->name(), ng_batch_to_space_nd);
+  }
+  else if (op->type_string() == "SpaceToBatchND") {
+    auto ng_space_to_batch_nd = ConstructNgNode<opset::SpaceToBatch>(op->name(),
+        ng_input, block_shape, crops_begin, crops_end);
+    SaveNgOp(ng_op_map, op->name(), ng_space_to_batch_nd);
+  }
+  else {
+    return errors::Unknown("Unknown Op Name: ", op->name());
+  }
+  
+  return Status::OK();
+}
+
 static Status TranslateBiasAddOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -1251,7 +1306,6 @@ static Status TranslateCropAndResizeOp(
     auto ng_crop_and_resize =
         ConstructNgNode<opset::Concat>(op->name(), ng_crop_outputs, 0);
 
-    // Builder::SetTracingInfo(op->name(), ng_crop_and_resize);
     SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
   }
   return Status::OK();
@@ -1376,6 +1430,18 @@ static Status TranslateDepthwiseConv2dNativeOp(
   SaveNgOp(ng_op_map, op->name(), ng_conv);
   return Status::OK();
 }
+
+static Status TranslateEluOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+    
+    ng::Output<ng::Node> ng_input;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+
+    // No alpha in TF, so default to 1.0
+    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Elu>(op->name(), ng_input, 1.0));
+    return Status::OK();
+  }
 
 static Status TranslateExpandDimsOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
@@ -3277,6 +3343,7 @@ const static std::map<
         {"Atan", TranslateUnaryOp<opset::Atan>},
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp},
+        {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
         {"Ceil", TranslateUnaryOp<opset::Ceiling>},
@@ -3291,6 +3358,7 @@ const static std::map<
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
+        {"Elu", TranslateEluOp},
         {"Equal", TranslateBinaryOp<opset::Equal>},
         {"Exp", TranslateUnaryOp<opset::Exp>},
         {"ExpandDims", TranslateExpandDimsOp},
@@ -3374,6 +3442,7 @@ const static std::map<
         {"Snapshot", TranslateIdentityOp},
         {"Softmax", TranslateSoftmaxOp},
         {"Softplus", TranslateSoftPlusOp},
+        {"SpaceToBatchND", TranslateBatchNDAndSpaceNDOp},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
