@@ -38,7 +38,7 @@ bool list_backends(char** backends) {
   return true;
 }
 
-void freeBackendsList() {
+__declspec(dllexport) void freeBackendsList() {
   const auto ovtf_backends = ListBackends();
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     free(backendList[idx]);
@@ -56,7 +56,7 @@ extern bool get_backend(char** backend) {
   *backend = backendName;
   return true;
 }
-void freeBackend() { free(backendName); }
+__declspec(dllexport) void freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }

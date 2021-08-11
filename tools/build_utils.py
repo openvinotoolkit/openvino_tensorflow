@@ -470,6 +470,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     os.chdir(path)
     cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Release"]
     cmake_cmd.extend(cmake_flags)
+    cmake_cmd.extend(["-DBUILD_API=TRUE"])
     cmake_cmd.extend([ovtf_src_loc.replace("\\","\\\\")])
     command_executor(cmake_cmd)
 

@@ -10,6 +10,17 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+	#ifdef BUILD_API
+		#define EXPORT_SYMBOL __declspec(dllexport)
+	#else
+		#define EXPORT_SYMBOL __declspec(dllimport)
+	#endif
+#else
+    #define EXPORT_SYMBOL
+#endif
+
+
 using namespace std;
 
 namespace tensorflow {
@@ -19,20 +30,20 @@ namespace api {
 extern "C" {
 extern void enable();
 extern void disable();
-extern bool is_enabled();
+EXPORT_SYMBOL extern bool is_enabled();
 
-extern size_t backends_len();
-extern bool list_backends(char** backends);
-extern bool set_backend(const char* backend);
-extern bool is_supported_backend(const char* backend);
-extern bool get_backend(char** backend);
+EXPORT_SYMBOL extern size_t backends_len();
+EXPORT_SYMBOL extern bool list_backends(char** backends);
+EXPORT_SYMBOL extern bool set_backend(const char* backend);
+EXPORT_SYMBOL extern bool is_supported_backend(const char* backend);
+EXPORT_SYMBOL extern bool get_backend(char** backend);
 
-extern void start_logging_placement();
-extern void stop_logging_placement();
-extern bool is_logging_placement();
+EXPORT_SYMBOL extern void start_logging_placement();
+EXPORT_SYMBOL extern void stop_logging_placement();
+EXPORT_SYMBOL extern bool is_logging_placement();
 
-extern void set_disabled_ops(const char* op_type_list);
-extern const char* get_disabled_ops();
+EXPORT_SYMBOL extern void set_disabled_ops(const char* op_type_list);
+EXPORT_SYMBOL extern const char* get_disabled_ops();
 }
 
 extern void Enable();
