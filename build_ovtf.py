@@ -542,7 +542,7 @@ def main():
         link_src = os.path.join(artifacts_location,
                                 "tensorflow\\tensorflow\\python")
         link_dst = os.path.join(artifacts_location, "tensorflow\\python")
-        command_executor(['ln', '-sf', link_src.replace("\\","\\\\"), link_dst.replace("\\","\\\\")], verbose=True)
+       # command_executor(['ln', '-sf', link_src.replace("\\","\\\\"), link_dst.replace("\\","\\\\")], verbose=True)
 
     # Run a quick test
     install_openvino_tf(tf_version, venv_dir,
