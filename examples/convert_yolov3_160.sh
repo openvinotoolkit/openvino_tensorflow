@@ -9,6 +9,7 @@ input_node="inputs"
 output_node="output_boxes"
 model_source="https://github.com/mystic123/tensorflow-yolo-v3"
 
+rm -rf temp_build
 mkdir temp_build
 cd temp_build
 
