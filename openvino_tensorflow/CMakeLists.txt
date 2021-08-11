@@ -61,12 +61,8 @@ add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries(
         ${LIB_NAME}
 		"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
-		#"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\graph.lib"
 		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
-		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\resource_handle.lo.lib"
-		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\tensor_shape.lo.lib"
-		#"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\core\\framework\\tensor_proto_cc_impl.lo.lib"
-        ovtf_logger
+		ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
         #ngraph_lib
 		"C:\\Program Files (x86)\\Intel\\openvino_2021.3.394\\deployment_tools\\ngraph\\lib\\ngraph.lib"
@@ -83,6 +79,8 @@ target_compile_definitions(
 )
 
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
+#target_include_directories(${LIB_NAME} PUBLIC "C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\openvino_tensorflow")
+
 
 string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
 list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
@@ -116,10 +114,12 @@ else()
 endif()
 
 # Install OpenVINO libraries
-set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/Release)
-set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-#install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-install(FILES "C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\ocm\\OCM\\Release\\ocm.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
+set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.lib DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+#install(FILES "C:\\Users\\Intel\\ovtf_workspace/protobuf/cmake/build/release/Release/libprotobuf.lib "${OVTF_INSTALL_LIB_DIR}")
+#install(FILES "C:\\Users\\Intel\\ovtf_workspace\\ovtf_latest\\openvino_tensorflow\\build_cmake\\ocm\\OCM\\Release\\ocm.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
@@ -128,7 +128,11 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
         foreach(LIB_FILE ${NGRAPH_LIB_FILES})
             get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
             get_filename_component(lib_file_name ${LIB_FILE} NAME)
-            if(${lib_file_name} MATCHES ".lib*")
+			#string(REPLACE " " "\\ " lib_file_real_path_1 ${lib_file_real_path})
+			#string(REPLACE "(" "\\(" lib_file_real_path_2 ${lib_file_real_path_1})
+			#string(REPLACE ")" "\\)" lib_file_real_path_valid ${lib_file_real_path_2})
+			#message("lib_file_real_path_valid: ${lib_file_real_path_valid}")
+            if(${lib_file_name} MATCHES ".dll*")
                 install(CODE "
                 execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
                 ")
