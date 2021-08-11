@@ -767,14 +767,18 @@ static Status TranslateBatchNDAndSpaceNDOp(const Node* op,
   // But TF's ng_crops input is limited only to the spatial dimensions (neither batch nor innermost),
   // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
   // Hence, pad ng_crops with zeros at both ends
-  
-
 
   std::vector<int> tf_block_shape;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
 
-  auto N = (int) ng_input.get_shape().size();
+  auto N = (int) ng_input.get_partial_shape().rank().get_length();
   auto M = (int) tf_block_shape.size();
+
+  // return with input if rank < 2 as ngraph's impl doesn't support it
+  if (N < 2) {
+    SaveNgOp(ng_op_map, op->name(), ng_input);
+    return Status::OK();
+  }
 
   auto crops = ConstructNgNode<opset::Pad>(op->name(), ng_crops, 
     make_shared<opset::Constant>(ng_crops.get_element_type(), ng::Shape{2}, std::vector<int>{1, 0}),
@@ -3429,6 +3433,7 @@ const static std::map<
         {"ResizeBilinear", TranslateResizeBilinearOp},
         {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
         {"Reverse", TranslateReverseOp},
+        {"ReverseV2", TranslateReverseOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
