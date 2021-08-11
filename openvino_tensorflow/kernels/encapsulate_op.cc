@@ -15,7 +15,6 @@
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
-#define _HAS_EXCEPTIONS 0
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/graph/graph.h"
 #include "tensorflow/core/public/version.h"
@@ -32,10 +31,12 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
-#define EXPAND(x) x
-#define TF_NEW_ID_FOR_INIT_2(m, c, ...) EXPAND(m(c, __VA_ARGS__)) // L145 selective_registration.h
-#define TF_EXTRACT_KERNEL_NAME_IMPL(m, ...) EXPAND(m(__VA_ARGS__)) // L1431 op_kernel.h
-
+#ifdef _WIN32
+	#define _HAS_EXCEPTIONS 0
+	#define EXPAND(x) x
+	#define TF_NEW_ID_FOR_INIT_2(m, c, ...) EXPAND(m(c, __VA_ARGS__)) // L145 selective_registration.h
+	#define TF_EXTRACT_KERNEL_NAME_IMPL(m, ...) EXPAND(m(__VA_ARGS__)) // L1431 op_kernel.h
+#endif
 using namespace std;
 
 namespace tensorflow {

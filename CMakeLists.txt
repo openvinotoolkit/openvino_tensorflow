@@ -154,13 +154,12 @@ set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
 find_package(ngraph QUIET)
 
 include_directories(${InferenceEngine_INCLUDE_DIRS})
-
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
     find_package(TBB COMPONENTS tbb tbbmalloc)
 endif()
 
-message(STATUS "UNIT_TEST_TF_CC_DIR: ${TF_PRE_BUILT_LOCATION}")
+message(STATUS "UNIT_TEST_TF_CC_DIR:  ${TF_PRE_BUILT_LOCATION}")
 if(UNIT_TEST_TF_CC_DIR)
     # Check if the path specified is ABSOLUTE or RELATVE
     if (NOT IS_ABSOLUTE ${UNIT_TEST_TF_CC_DIR})
