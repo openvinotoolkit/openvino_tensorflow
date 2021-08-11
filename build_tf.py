@@ -53,7 +53,7 @@ def main():
 
     os.chdir(arguments.output_dir)
 
-    if platform.system() == 'Windows'):
+    if (platform.system() == 'Windows'):
         venv_dir = '.\\venv3\\'
     else:
         venv_dir = './venv3/'
@@ -91,7 +91,7 @@ def main():
         False, arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
-    if platform.system() == 'Windows'):
+    if (platform.system() == 'Windows'):
         artifacts_dir = os.path.join(pwd, 'tensorflow')
     else:
         artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
