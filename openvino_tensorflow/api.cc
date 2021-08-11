@@ -9,6 +9,12 @@
 #include "api.h"
 #include "backend_manager.h"
 
+#ifdef _WIN32
+	#define EXPORT_API __declspec(dllexport)
+#else
+    #define EXPORT_API
+#endif
+
 namespace tensorflow {
 namespace openvino_tensorflow {
 namespace api {
@@ -38,7 +44,7 @@ bool list_backends(char** backends) {
   return true;
 }
 
-__declspec(dllexport) void freeBackendsList() {
+EXPORT_API void freeBackendsList() {
   const auto ovtf_backends = ListBackends();
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     free(backendList[idx]);
@@ -56,7 +62,7 @@ extern bool get_backend(char** backend) {
   *backend = backendName;
   return true;
 }
-__declspec(dllexport) void freeBackend() { free(backendName); }
+EXPORT_API void freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
