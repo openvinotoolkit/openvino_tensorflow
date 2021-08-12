@@ -33,8 +33,21 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 import imghdr
+from postprocess_np import yolo3_postprocess_np
 from PIL import Image, ImageFont, ImageDraw
 
+
+def get_classes(classes_path):
+    '''loads the classes'''
+    with open(classes_path) as f:
+        class_names = f.readlines()
+    class_names = [c.strip() for c in class_names]
+    return class_names
+
+def get_anchors():   
+    anchors = [116,90, 156,198, 373,326,30,61, 62,45, 59,119,10,13, 16,30, 33,23]
+    anchors = [float(x) for x in anchors]
+    return np.array(anchors).reshape(-1, 2)
 
 @tf.function
 def get_graph_def(x):
@@ -89,20 +102,20 @@ def convert_to_original_size(box, size, original_size, is_letter_box_image):
     return list(box.reshape(-1))
 
 
-def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
+def draw_boxes(boxes, out_classes, img, cls_names, detection_size, is_letter_box_image):
     draw = ImageDraw.Draw(img)
-    for cls, bboxs in boxes.items():
+    for box, cls in zip(boxes, out_classes):
         color = (256, 256, 256)
-        for box, score in bboxs:
-            box = convert_to_original_size(box, np.array(detection_size),
-                                           np.array(img.size),
-                                           is_letter_box_image)
-            draw.rectangle(box, outline=color)
-            draw.text(
-                box[:2],
-                '{} {:.2f}%'.format(cls_names[cls], score * 100),
-                fill=color)
-            print('{},{:.2f}'.format(cls_names[cls].rstrip(), score * 100))
+        # for box, score in bboxs:
+        # box = convert_to_original_size(box, np.array(detection_size),
+        #                                 np.array(img.size),
+        #                                 is_letter_box_image)
+        draw.rectangle(box, outline=color)
+        draw.text(
+            box[:2],
+            '{} '.format(cls_names[cls]),
+            fill=color)
+        # print('{},{:.2f}'.format(cls_names[cls].rstrip(), score * 100))
     # converting PIL image back to OpenCV format
     im_np = np.asarray(img)
     im_np = cv2.cvtColor(im_np, cv2.COLOR_RGB2BGR)
@@ -169,6 +182,8 @@ def non_max_suppression(predictions_with_boxes,
                 cls_scores = cls_scores[np.nonzero(iou_mask)]
 
     return result
+def draw_bboxes(out_boxes, out_classes, out_scores, img_bbox):
+    pass
 
 def get_input_mode(input_path):
     if input_path.lower() in ['cam','camera']:
@@ -199,13 +214,14 @@ def load_labels(label_file):
 if __name__ == "__main__":
     input_file = "examples/data/people-detection.mp4"
     model_file = "examples/data/yolo_v3_darknet.pb"
+    model_file = "/home/aditya/yolov3/keras_yolo/weights/yolo-v3.pb"
     label_file = "examples/data/coco.names"
     input_height = 416
     input_width = 416
     input_mean = 0
     input_std = 255
-    input_layer = "inputs"
-    output_layer = "output_boxes"
+    input_layer = "image_input"
+    output_layer = ["conv2d_58/BiasAdd","conv2d_66/BiasAdd","conv2d_74/BiasAdd" ]
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
@@ -294,9 +310,10 @@ if __name__ == "__main__":
     if label_file:
         classes = load_coco_names(label_file)
     input_name = "import/" + input_layer
-    output_name = "import/" + output_layer
+    # input_name = input_layer
+    # output_name = "import/" + output_layer
     input_operation = graph.get_operation_by_name(input_name)
-    output_operation = graph.get_operation_by_name(output_name)
+    output_operation = [ graph.get_operation_by_name("import/"+output_name) for output_name in output_layer]
 
     if not args.disable_ovtf:
         # Print list of available backends
@@ -352,23 +369,46 @@ if __name__ == "__main__":
             print (image_id)
             start = time.time()
             detected_boxes = sess.run(
-                output_operation.outputs[0],
+                (output_operation[0].outputs[0],
+                output_operation[1].outputs[0],
+                output_operation[2].outputs[0]),
                 {input_operation.outputs[0]: [img_resized]})
             elapsed = time.time() - start
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
+            image_shape = tuple((frame.shape[0],frame.shape[1]))
+            out_boxes, out_classes, out_scores = yolo3_postprocess_np(detected_boxes, 
+                                    image_shape, 
+                                    get_anchors(), 
+                                    len(labels), 
+                                    (input_height, input_width), 
+                                    max_boxes=100, 
+                                    elim_grid_sense=True)
+            print (len(detected_boxes[2][0]))
+            print(set(out_classes))
+            flag = 0
+            for c in set(out_classes):                
+                # print (labels[c])
+                if c == 0:
+                    # print(out_classes)
+                    print (labels[0])
+                    flag = 1
+                    # print (labels)
+                    # exit(1)
+            # continue
             # post-processing - apply non max suppression, draw boxes and save updated image
-            filtered_boxes = non_max_suppression(
-                detected_boxes, conf_threshold, iou_threshold)
+            # filtered_boxes = non_max_suppression(
+            #     detected_boxes, conf_threshold, iou_threshold)
 
             # OpenCV frame to PIL format conversions as the draw_box function uses PIL
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            im_pil = Image.fromarray(img)
-
+            img_bbox = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            # im_pil = Image.fromarray(img)
+            # img_bbox = draw_bboxes(out_boxes, out_classes, out_scores, img_bbox)
             # modified draw_boxes function to return an openCV formatted image
-            img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
-                                    (input_width, input_height), True)
-
+            # img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
+            #                         (input_width, input_height), True)
+            # img_bbox = draw_boxes(out_boxes,out_classes, im_pil, classes,
+            #                         (input_width, input_height), True)
             # draw information overlay onto the frames
             cv2.putText(img_bbox,
                         'Inference Running on : {0}'.format(backend_name),
@@ -377,6 +417,8 @@ if __name__ == "__main__":
                 img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
+            if flag:
+                cv2.imwrite("examples/preds/{}.jpg".format(image_id),img_bbox)
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
