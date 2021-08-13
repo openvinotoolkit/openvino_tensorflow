@@ -23,11 +23,22 @@
 #include "openvino_tensorflow/ovtf_utils.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
+#include "ias3.h" // Telemetry
 
 using namespace std;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
+
+//Telemetry 
+#define FAIL_ON_ERR(e) (void(0))
+
+template < typename T, uint32_t N >
+uint32_t countof(T(&)[N])
+{
+    return std::extent< T[N] >::value;
+}
+//Telemetry end
 
 class NGraphRewritePass : public GraphOptimizationPass {
  public:
@@ -139,6 +150,34 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 #elif defined(OPENVINO_2021_4)
     ov_version = "2021.4";
 #endif
+
+    //Telemetry initialization
+    std::wstring app_name{ L"OVTF" };
+    std::wstring telemetry_id{ L"00000000-1111-2222-3333-444444444444" };
+    std::wstring app_version{ L"ovtf0.1" };
+    std::wstring store_folder;
+    std::wstring tel_options{ LR"({"post_did":"generate"})" };
+    const wchar_t* const init_keys[] = { L"ikey1", L"ikey2" };
+    const wchar_t* const init_vals[] = { L"ival1", L"ival2" };
+
+    ias_handle_t ovtf_handle = IAS3_INVALID_SDK_HANDLE;
+    std::wcout << "\033[1;34mAbout to call InitializeEx ..." << "\033[0m\n";
+    auto res = InitializeEx(
+      &ovtf_handle,
+      app_name.c_str(),
+      app_version.c_str(),
+      telemetry_id.c_str(),
+      tel_options.c_str(),
+      store_folder.c_str(),
+      init_keys,
+      init_vals,
+      countof(init_keys));
+    sleep(1);
+    std::wcout << "\033[1;33mInitializeEx with res: 0x" << res << "\n";
+    std::wcout << "\033[0;33mInitializeEx returned ovtf_handle: " << ovtf_handle << "\033[0m\n";
+    FAIL_ON_ERR(res);
+    //Telemetry initialization End
+
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
                                   options.graph->get());
@@ -165,6 +204,24 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         it->second(node);
       }
     }
+
+    // ovtf telemetry recording event and upload 
+    const wchar_t* const ekeys[] = { L"Layer1", L"Layer2", L"Layer3" };
+    const wchar_t* const evals[] = { L"eval1", L"eval2", L"eval3" };
+    std::wstring event_name{ L"OVTF_telemetry" };
+
+    res = RecordEventEx(ovtf_handle, nullptr, event_name.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
+    std::wcout << "Event recorded " << event_name.c_str() << std::endl;
+    FAIL_ON_ERR(res);
+
+    res = Deinitialize(ovtf_handle);
+    std::wcout << "Deinitializing in OVTF " << std::endl;
+    std::wcout << "start uploading ..." << std::endl;
+    res = Upload(telemetry_id.c_str(), LR"({"show":false, "wait": true})");
+    std::wcout << "Upload 0x" << std::setw(8) << res << "\n";
+    std::wcout << "uploading finished " << std::endl;
+    FAIL_ON_ERR(res);
+    // end of ovtf telemetry upload
 
     util::DumpTFGraph(graph, idx, "marked");
 
