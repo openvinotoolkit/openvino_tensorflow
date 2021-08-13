@@ -60,12 +60,12 @@ add_library(${LIB_NAME} SHARED ${SRC})
 #add_library(${LIB_NAME} STATIC ${SRC}) #SHARED
 target_link_libraries(
         ${LIB_NAME}
-		"C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
-		"C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
-		ovtf_logger
+        "C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
+        "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
+        ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
         #ngraph_lib
-		"C:\\Program Files (x86)\\Intel\\openvino_2021.3.394\\deployment_tools\\ngraph\\lib\\ngraph.lib"
+        "C:\\Program Files (x86)\\Intel\\openvino_2021.3.394\\deployment_tools\\ngraph\\lib\\ngraph.lib"
         absl_algorithm
         absl_container
         absl_strings

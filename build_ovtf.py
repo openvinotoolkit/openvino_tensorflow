@@ -214,6 +214,7 @@ def main():
         assert os.path.isdir(
             loc), "Could not find artifacts/tensorflow directory"
         found_whl = False
+        found_libtf_fw = False
         found_libtf_cc = False
         for i in os.listdir(loc):
             if '.whl' in i:
@@ -229,6 +230,7 @@ def main():
                 if 'libtensorflow_framework' in i:
                     found_libtf_fw = True
         assert found_whl, "Did not find TF whl file"
+        assert found_libtf_fw, "Did not find tensorflow lib"
         assert found_libtf_cc, "Did not find tensorflow cc lib"
 
     try:
@@ -413,7 +415,8 @@ def main():
                 verbosity,
                 use_intel_tf,
                 arguments.cxx11_abi_version,
-                resource_usage_ratio=float(arguments.resource_usage_ratio))           
+                resource_usage_ratio=float(arguments.resource_usage_ratio))
+            
             # Now build the libtensorflow_cc.so - the C++ library
             build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
                                 target_arch, verbosity, use_intel_tf,
@@ -523,7 +526,7 @@ def main():
             "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
                                                     "tensorflow")
             ])
-   
+    
     if (builder_version > 0.50):
         openvino_tf_cmake_flags.extend([
             "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
