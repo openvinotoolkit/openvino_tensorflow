@@ -287,3 +287,6 @@ lrn_op_test.LRNOpTest.testGradientsZeroInput
 softmax_op_test.SoftmaxTest.testEmptyInput
 
 spacetobatch_op_test.RequiredSpaceToBatchPaddingsTest.testSimple
+
+#const has zero dimension which is not allowed
+spacetobatch_op_test.SpaceToBatchNDTest.testDirect
