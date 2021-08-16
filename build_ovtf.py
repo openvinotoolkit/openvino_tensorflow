@@ -23,7 +23,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
             gcc_desired_version = 5.3
             if gcc_ver < gcc_desired_version:
                 raise Exception(
-                    "Need GCC 5.3.0 or newer to build using prebuilt TensorFlow\n"
+                    "Need GCC " + str(gcc_desired_version) + " or newer to build using prebuilt TensorFlow\n"
                     "Gcc version installed: " + '.'.join(gcc_ver_list) + "\n"
                     "To build from source omit `use_prebuilt_tensorflow`")
     # Check cmake version
@@ -31,7 +31,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
     cmake_ver = float(".".join(cmake_ver_list[:2]))
     cmake_desired_version = 3.14
     if cmake_ver < cmake_desired_version:
-        raise Exception("Need minimum cmake version " + cmake_desired_version +
+        raise Exception("Need minimum cmake version " + str(cmake_desired_version) +
                         " \n"
                         "Got: " + '.'.join(cmake_ver_list))
 
