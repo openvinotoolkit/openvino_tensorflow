@@ -54,4 +54,5 @@ class TestFusedMatMul(NgraphTest):
                 })
 
             assert np.allclose(
-                self.without_ngraph(run_test), self.with_ngraph(run_test))
+                self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,
+            1e-6)
