@@ -38,10 +38,6 @@ def main():
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
-    os.chdir(arguments.output_dir)
-
-    if not os.path.isdir(arguments.output_dir):
-        os.makedirs(arguments.output_dir)
     assert os.path.exists(
         arguments.output_dir), "path doesn't exist {0}".format(
             arguments.output_dir)
