@@ -306,3 +306,6 @@ spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 spacetobatch_op_test.SpaceToBatchNDTest.testOneBlockDimZeroRemainingDims
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsOneRemainingDim
 array_ops_test.ReverseV2Test.testReverse2DimAuto
+
+#precision loss in myriad
+batchtospace_op_test.BatchToSpaceDepthToSpace.testDepthToSpaceTranspose
