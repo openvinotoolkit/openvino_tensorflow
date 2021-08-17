@@ -8,9 +8,6 @@ include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
-include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\tensorflow\\core\\graph")
-include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\include\\tensorflow\\core\\framework")
-include_directories("C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\\\core\\framework")
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
@@ -57,21 +54,36 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
-#add_library(${LIB_NAME} STATIC ${SRC}) #SHARED
-target_link_libraries(
-        ${LIB_NAME}
-        "C:\\Users\\Intel\\ovtf_workspace\\protobuf\\cmake\\build\\release\\Release\\libprotobuf.lib"
-        "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
-        ovtf_logger
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        #ngraph_lib
-        "C:\\Program Files (x86)\\Intel\\openvino_2021.3.394\\deployment_tools\\ngraph\\lib\\ngraph.lib"
-        absl_algorithm
-        absl_container
-        absl_strings
-        ${InferenceEngine_LIBRARIES}
-        ocm
-    )
+
+if(WIN32)
+	get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+	target_link_libraries(
+            ${LIB_NAME}
+            ${PROTOBUF_ARTIFACTS_DIR}/cmake/build/release/Release/libprotobuf.lib
+            #${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib
+            "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
+            ovtf_logger
+            ${TensorFlow_FRAMEWORK_LIBRARY}
+            ${ngraph_lib_value}
+            absl_algorithm
+            absl_container
+            absl_strings
+            ${InferenceEngine_LIBRARIES}
+            ocm
+		)
+else()
+	target_link_libraries(
+            ${LIB_NAME}
+            ovtf_logger
+            ${TensorFlow_FRAMEWORK_LIBRARY}
+            ngraph_lib
+            absl_algorithm
+            absl_container
+            absl_strings
+            ${InferenceEngine_LIBRARIES}
+            ocm
+		)
+endif()
 
 target_compile_definitions(
     ${LIB_NAME} PRIVATE
@@ -116,7 +128,9 @@ if(WIN32)
 	set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
 	set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
 	install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-	install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.lib DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+	install(FILES "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+	install(FILES "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+	install(FILES ${PROTOBUF_ARTIFACTS_DIR}/cmake/build/release/Release/libprotobuf.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
 	set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
 	set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
