@@ -713,3 +713,56 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
     cmake_build(build_dir, openvino_src_dir, openvino_cmake_flags, verbosity, debug_enabled)
+
+def build_protobuf(artifacts_location, protobuf_branch, debug_enabled, verbosity):
+    pwd = os.getcwd()
+    os.chdir(artifacts_location)
+    download_repo(
+            "protobuf",
+            "https://github.com/protocolbuffers/protobuf.git",
+            protobuf_branch,
+            submodule_update=True)
+
+    src_location = os.path.abspath(os.path.join(artifacts_location, "protobuf"))
+    print("Source location: " + src_location)
+    os.chdir(src_location)
+    os.chdir("cmake")
+
+    # mkdir build directory
+    try:
+        os.makedirs("build")
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir("build"):
+            pass
+    os.chdir("build")
+    
+    if debug_enabled:
+        try:
+            os.makedirs("debug")
+        except OSError as exc:  # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir("debug"):
+                pass
+        os.chdir("debug")
+        cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Debug", "-DBUILD_SHARED_LIBS=ON", "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."]
+        command_executor(cmake_cmd, verbose=True)
+        
+        cmd = ["cmake", "--build", ".", "--config Debug"]
+        if verbosity:
+            cmd.extend(['--verbose'])
+        command_executor(cmd, verbose=True)
+    else:
+        try:
+            os.makedirs("release")
+        except OSError as exc:  # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir("release"):
+                pass
+        os.chdir("release")
+        cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_SHARED_LIBS=ON", "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."]
+        command_executor(cmake_cmd, verbose=True)
+        
+        cmd = ["cmake", "--build", ".", "--config Release"]
+        if verbosity:
+            cmd.extend(['--verbose'])
+        command_executor(cmd, verbose=True)
+    
+    os.chdir(pwd)

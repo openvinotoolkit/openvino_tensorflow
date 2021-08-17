@@ -152,6 +152,12 @@ def main():
         help="Specify a custom directory during build",
         action="store",
         default='build_cmake')
+     
+    parser.add_argument(
+        '--protobuf_branch',
+        help="Protobuf branch to be used for the Windows build",
+        action="store",
+        default='master')
 
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
@@ -458,6 +464,12 @@ def main():
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
+    
+    # Build protobuf from source for the Windows build
+    if (platform.system() == 'Windows'):
+        print("Building protobuf from source...")
+        build_protobuf(artifacts_location, arguments.protobuf_branch, arguments.debug_build, verbosity)
+        print("Completed protobuf build.")
 
     # Next build CMAKE options for the bridge
     atom_flags = ""
@@ -538,6 +550,12 @@ def main():
     if arguments.python_executable != '':
         openvino_tf_cmake_flags.extend(
             ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
+    if (platform.system() == 'Windows'):
+        protobuf_artifacts_dir = os.path.join(artifacts_location, "protobuf")
+        print("protobuf_artifacts_dir:",protobuf_artifacts_dir)
+        openvino_tf_cmake_flags.extend(
+            ["-DPROTOBUF_ARTIFACTS_DIR=" + protobuf_artifacts_dir.replace("\\","\\\\")])
+        
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
