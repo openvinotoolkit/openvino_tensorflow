@@ -25,6 +25,8 @@ except:
     os.system('pip install unittest-xml-reporting')
     import xmlrunner
 os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
+os.environ['OPENVINO_TF_DYNAMIC_FALLBACK'] = '0'
+
 """
 tf_unittest_runner is primarily used to run tensorflow python 
 unit tests using ngraph

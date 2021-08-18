@@ -16,6 +16,7 @@ from distutils.sysconfig import get_python_lib
 
 from tools.test_utils import *
 
+os.environ['OPENVINO_TF_DYNAMIC_FALLBACK'] = '0'
 
 def main():
     '''
