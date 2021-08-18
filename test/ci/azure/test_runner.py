@@ -18,6 +18,7 @@ from tools.test_utils import *
 
 os.environ['OPENVINO_TF_DYNAMIC_FALLBACK'] = '0'
 
+
 def main():
     '''
     Runs openvino_tensorflow tests. This script needs to be run after 
