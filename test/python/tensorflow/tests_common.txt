@@ -72,7 +72,6 @@ concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim0Grad
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad 
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad_UnknownInputDim 
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim2Grad 
-concat_op_test.ConcatOpTest.testInt32GPU 
 concat_op_test.ConcatOpTest.testRefType 
 concat_op_test.ConcatOpTest.testTensorConcatDim0Grad 
 concat_op_test.ConcatOpTest.testTensorConcatDim1Grad 
@@ -428,7 +427,6 @@ array_ops_test.StridedSliceTest.testDegenerateSlices
 array_ops_test.StridedSliceTest.testEllipsis
 array_ops_test.StridedSliceTest.testExpand
 array_ops_test.StridedSliceTest.testExpandVariable
-array_ops_test.StridedSliceTest.testInt64GPU
 array_ops_test.StridedSliceTest.testMasks
 array_ops_test.StridedSliceTest.testOptimizedCases
 array_ops_test.StridedSliceTest.testShrink
@@ -477,7 +475,6 @@ constant_op_test.ConstantTest.testStringWithNulls
 constant_op_test.ConstantTest.testVariant
 constant_op_test.ZerosLikeTest.testZerosLikeCPU
 constant_op_test.ZerosLikeTest.testZerosLikeDtype
-constant_op_test.ZerosLikeTest.testZerosLikeGPU
 constant_op_test.ZerosLikeTest.testZerosLikePartialShape
 constant_op_test.ZerosLikeTest.testZerosLikeVariant
 constant_op_test.ZerosLikeTest.test_session
@@ -912,7 +909,6 @@ relu_op_test.Relu6Test.testGradientFloat32
 relu_op_test.Relu6Test.testGradientFloat64
 relu_op_test.Relu6Test.testNpRelu6
 relu_op_test.Relu6Test.testNumbersCPU
-relu_op_test.Relu6Test.testNumbersGPU
 relu_op_test.Relu6Test.test_session
 relu_op_test.ReluTest.testNumbersCPU
 relu_op_test.ReluTest.testNoElement
@@ -967,10 +963,7 @@ softmax_op_test.SoftmaxTest.test3DTensorAsInput
 softmax_op_test.SoftmaxTest.test3DTensorAsInputNoReshape
 softmax_op_test.SoftmaxTest.testAlongNegativeDimension
 softmax_op_test.SoftmaxTest.testBfloat16
-softmax_op_test.SoftmaxTest.testDoubleGPU
 softmax_op_test.SoftmaxTest.testFloat
-softmax_op_test.SoftmaxTest.testFloatGPU
-softmax_op_test.SoftmaxTest.testHalfGPU
 softmax_op_test.SoftmaxTest.testInvalidAxis
 softmax_op_test.SoftmaxTest.testNpSoftmax
 softmax_op_test.SoftmaxTest.testShapeInference
@@ -981,7 +974,6 @@ split_op_test.SplitOpTest.testDegenerateVariable
 split_op_test.SplitOpTest.testOutputShape
 split_op_test.SplitOpTest.testVariableShapeFunction
 split_op_test.SplitOpTest.testShapeFunctionEdgeCases
-topk_op_test.TopKTest.testKNegative
 topk_op_test.TopKTest.testStableSort
 topk_op_test.TopKTest.testTensorK
 topk_op_test.TopKTest.testTop1

@@ -173,17 +173,11 @@ pooling_test.Pooling2DTest.test_maxpooling_2d
 pooling_test.Pooling3DTest.test_averagepooling_3d
 pooling_test.Pooling3DTest.test_maxpooling_3d
 
-# Unsupported TensorFlow data type: DT_INT16
-concat_op_test.ConcatOpTest.testRandom
-array_ops_test.StridedSliceTest.testExpand
-
-
 # unknown element type on an empty tensor
 constant_op_test.ZerosLikeTest.testZerosLikeCPU
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
 array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
-split_op_test.SplitOpTest.testNonexistentDimTensor
 
 # cannot find blob with name <xxx>
 
@@ -325,15 +319,14 @@ lrn_op_test.LRNOpTest.testCompute
 
 # Unhandled exception in op handler
 pooling_ops_test.PoolingTest.testAvgPooling
-topk_op_test.TopKTest.testKNegative
 conv_ops_test.Conv2DTest.testConv2DEmpty
 conv_ops_test.Conv2DTest.testConv2DEmptyDilation
-conv_ops_test.Conv2DTest.testConv2DLotsPadding
 
 # InvalidArgumentError: No translation handler registered for op: MaxPoolV2 (MaxPoolV2)
 pooling_ops_test.PoolingTest.testMaxPooling
 
 # Caught exception while executing cluster 1
+array_ops_test.StridedSliceTest.testExpand
 reduction_ops_test.MeanReductionTest.testInt32
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
 reduction_ops_test.MeanReductionTest.testFloat32
@@ -341,15 +334,12 @@ reduction_ops_test.MeanReductionTest.testInfinity
 reduction_ops_test.MeanReductionTest.testUint8
 shape_ops_test.ShapeOpsTest.testSqueezeGradient
 
+
 # Caught exception while executing cluster 2
 array_ops_test.StridedSliceTest.testOptimizedCases
 
 # Caught exception while executing cluster 0
 reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
-
-# length of size_splits must sum to the value of the dimension along split_dim
-split_op_test.SplitOpTest.testSpecialCasesVariable
-split_op_test.SplitOpTest.testDegenerateVariable
 
 # Not equal to tolerance rtol=0.001, atol=0.001
 cwise_ops_binary_test.BinaryOpTest.testBCast_15B
