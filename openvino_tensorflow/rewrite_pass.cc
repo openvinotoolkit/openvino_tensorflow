@@ -74,6 +74,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       } else {
         NGraphClusterManager::EnableClusterFallback();
       }
+    } else {
+      NGraphClusterManager::EnableClusterFallback();
     }
     bool dynamic_fallback_enabled =
         NGraphClusterManager::IsClusterFallbackEnabled();
