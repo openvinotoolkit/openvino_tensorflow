@@ -28,8 +28,8 @@ namespace openvino_tensorflow {
 namespace api {
 
 extern "C" {
-extern void enable();
-extern void disable();
+EXPORT_SYMBOL extern void enable();
+EXPORT_SYMBOL extern void disable();
 EXPORT_SYMBOL extern bool is_enabled();
 
 EXPORT_SYMBOL extern size_t backends_len();
