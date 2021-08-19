@@ -56,12 +56,11 @@ endif()
 add_library(${LIB_NAME} SHARED ${SRC})
 
 if(WIN32)
-	get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+    get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
 	target_link_libraries(
             ${LIB_NAME}
             ${PROTOBUF_ARTIFACTS_DIR}/cmake/build/release/Release/libprotobuf.lib
-            #${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib
-            "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.lib"
+            ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib
             ovtf_logger
             ${TensorFlow_FRAMEWORK_LIBRARY}
             ${ngraph_lib_value}
@@ -128,8 +127,8 @@ if(WIN32)
 	set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
 	set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
 	install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/ocm.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-	install(FILES "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow_cc.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-	install(FILES "C:\\Users\\Intel\\ovtf_workspace\\setup\\artifacts\\tensorflow\\bazel-bin\\tensorflow\\tensorflow.dll" DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+	install(FILES ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+	install(FILES ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 	install(FILES ${PROTOBUF_ARTIFACTS_DIR}/cmake/build/release/Release/libprotobuf.dll DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
 	set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
