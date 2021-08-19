@@ -217,25 +217,27 @@ def main():
             arguments.use_tensorflow_from_location
         ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
         loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
+        if (platform.system() == 'Windows'):
+            loc = loc + '/bazel-bin/tensorflow'
         assert os.path.isdir(
             loc), "Could not find artifacts/tensorflow directory"
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
         for i in os.listdir(loc):
-            if '.whl' in i:
-                found_whl = True
             if (platform.system() == 'Windows'):
                 if 'tensorflow_cc.lib' in i:
                     found_libtf_cc = True
                 if 'tensorflow.lib' in i:
                     found_libtf_fw = True
             else:
+                if '.whl' in i:
+                    found_whl = True
                 if 'libtensorflow_cc' in i:
                     found_libtf_cc = True
                 if 'libtensorflow_framework' in i:
                     found_libtf_fw = True
-        assert found_whl, "Did not find TF whl file"
+                assert found_whl, "Did not find TF whl file"
         assert found_libtf_fw, "Did not find tensorflow lib"
         assert found_libtf_cc, "Did not find tensorflow cc lib"
 
@@ -292,38 +294,30 @@ def main():
         # to contain one TF whl file, framework.so and cc.so
         print("Using TensorFlow from " + arguments.use_tensorflow_from_location)
         # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
-        if (platform.system() == 'Windows'):
-            tf_whl_loc = os.path.abspath(os.path.join(arguments.use_tensorflow_from_location,
-                                         'artifacts\\tensorflow'))
-            tf_whl_loc = tf_whl_loc.replace("\\","\\\\")
-        else:
+        if (platform.system() != 'Windows'):
             tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location +
                                      '/artifacts/tensorflow')
-        assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
-            tf_whl_loc)
-        possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-        assert len(
-            possible_whl
-        ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
-        # Make sure there is exactly 1 TF whl
-        if (platform.system() == 'Windows'):
-            tf_whl = os.path.abspath(tf_whl_loc + '\\' + possible_whl[0])
-        else:
+            assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
+                tf_whl_loc)
+            possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
+            assert len(possible_whl) == 1, "Expected one TF whl file, but found " + len(possible_whl)
+            # Make sure there is exactly 1 TF whl
             tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
-        assert os.path.isfile(tf_whl), "Did not find " + tf_whl
-        # Install the found TF whl file
-        if (platform.system() == 'Windows'):
-            command_executor(["pip", "install", "-U", "--force-reinstall", tf_whl.replace("\\","\\\\")])
-        else:
+            assert os.path.isfile(tf_whl), "Did not find " + tf_whl
+            # Install the found TF whl file
             command_executor(["pip", "install", "-U", "--force-reinstall", tf_whl])
-        tf_cxx_abi = get_tf_cxxabi()
+            tf_cxx_abi = get_tf_cxxabi()
 
-        assert (arguments.cxx11_abi_version == tf_cxx_abi), (
-            "Desired ABI version and user built tensorflow library provided with "
-            "use_tensorflow_from_location are incompatible")
+            assert (arguments.cxx11_abi_version == tf_cxx_abi), (
+                "Desired ABI version and user built tensorflow library provided with "
+                "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
-        os.chdir(tf_whl_loc)
+        if (platform.system() == 'Windows'):
+            tf_source_loc = os.path.abspath(os.path.join(arguments.use_tensorflow_from_location, "artifacts", "tensorflow"))
+            os.chdir(tf_source_loc)
+        else:
+            os.chdir(tf_whl_loc)
         tf_in_artifacts = os.path.join(
             os.path.abspath(artifacts_location), "tensorflow")
         if not os.path.isdir(tf_in_artifacts):
@@ -332,8 +326,12 @@ def main():
         # use_tensorflow_from_location/artifacts/tensorflow to
         # artifacts/tensorflow
         tf_version = get_tf_version()
-        copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
-                             use_intel_tf)
+        if (platform.system() == 'Windows'):
+            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
+                                 use_intel_tf)
+        else:
+            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
+                                 use_intel_tf)
         os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
@@ -398,7 +396,6 @@ def main():
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
-            #shutil.copyfile("C:\\Users\\iei\\ovtf_workspace\\tensorflow.lib", tf_lib_dir)
             shutil.copyfile(tf_lib_file, dst)
         else:
             print("Building TensorFlow from source")
@@ -526,7 +523,7 @@ def main():
             else:
                 openvino_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
-    openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=OFF"])
+    openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
     if not arguments.disable_cpp_api and arguments.build_tf_from_source:
         if (platform.system() == 'Windows'):
             openvino_tf_cmake_flags.extend([
@@ -555,6 +552,12 @@ def main():
         print("protobuf_artifacts_dir:",protobuf_artifacts_dir)
         openvino_tf_cmake_flags.extend(
             ["-DPROTOBUF_ARTIFACTS_DIR=" + protobuf_artifacts_dir.replace("\\","\\\\")])
+        openvino_tf_cmake_flags.extend(
+            ["-DTensorFlow_CXX_ABI=" + arguments.cxx11_abi_version])
+        openvino_tf_cmake_flags.extend(
+            ["-DTensorFlow_GIT_VERSION=" + tf_version])
+        openvino_tf_cmake_flags.extend(
+            ["-DTensorFlow_VERSION=" + tf_version.replace("v","")])
         
 
     # Now build the bridge
@@ -592,9 +595,14 @@ def main():
         base_dir = arguments.use_tensorflow_from_location
     if base_dir != None:
         dest_dir = os.path.join(artifacts_location, "tensorflow")
-        command_executor(
-            ['cp', '-r', base_dir + '/tensorflow/tensorflow/python', dest_dir],
-            verbose=True)
+        if (platform.system() == 'Windows'):
+            command_executor(
+                ['cp', '-r', base_dir + 'artifacts\\\\tensorflow\\\\tensorflow\\\\python', dest_dir.replace("\\","\\\\")],
+                verbose=True)
+        else:
+            command_executor(
+                ['cp', '-r', base_dir + '/tensorflow/tensorflow/python', dest_dir],
+                verbose=True)
     else:
         # Create a sym-link to
         if (platform.system() == 'Windows'):

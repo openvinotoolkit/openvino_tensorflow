@@ -16,79 +16,99 @@
 include(FindPackageHandleStandardArgs)
 message(STATUS "Looking for TensorFlow installation")
 
-execute_process(
-    COMMAND
-    python -c "import tensorflow as tf; print(tf.sysconfig.get_include())"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE TensorFlow_INCLUDE_DIR
-    ERROR_VARIABLE ERR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE
-)
+if( WIN32 )
+    set(TensorFlow_INCLUDE_DIR ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/include)
+else()
+	execute_process(
+		COMMAND
+		python -c "import tensorflow as tf; print(tf.sysconfig.get_include())"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE TensorFlow_INCLUDE_DIR
+		ERROR_VARIABLE ERR
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_STRIP_TRAILING_WHITESPACE
+	)
 
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR})
+	if(${result})
+		message(FATAL_ERROR "Cannot determine TensorFlow installation directory " ${ERR})
+	endif()
 endif()
 MESSAGE(STATUS "TensorFlow_INCLUDE_DIR: " ${TensorFlow_INCLUDE_DIR})
 
-execute_process(
-    COMMAND
-    python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE TensorFlow_DIR
-    ERROR_VARIABLE ERR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE
-)
+if( WIN32 )
+    set(TensorFlow_DIR ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow)
+else()
+	execute_process(
+		COMMAND
+		python -c "import tensorflow as tf; print(tf.sysconfig.get_lib())"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE TensorFlow_DIR
+		ERROR_VARIABLE ERR
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_STRIP_TRAILING_WHITESPACE
+	)
 
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR})
+	if(${result})
+		message(FATAL_ERROR "Cannot determine TensorFlow installation directory\n" ${ERR})
+	endif()
 endif()
 message(STATUS "TensorFlow_DIR: " ${TensorFlow_DIR})
 
-execute_process(
-    COMMAND
-    python -c "import tensorflow as tf; print(tf.__cxx11_abi_flag__)"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE TensorFlow_CXX_ABI
-    ERROR_VARIABLE ERR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE
-)
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR})
+if( WIN32 )
+    message(STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI})
+else()
+	execute_process(
+		COMMAND
+		python -c "import tensorflow as tf; print(tf.__cxx11_abi_flag__)"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE TensorFlow_CXX_ABI
+		ERROR_VARIABLE ERR
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_STRIP_TRAILING_WHITESPACE
+	)
+	if(${result})
+		message(FATAL_ERROR "Cannot determine TensorFlow __cxx11_abi_flag__\n" ${ERR})
+	endif()
+	message(STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI})
 endif()
-message(STATUS "TensorFlow_CXX_ABI: " ${TensorFlow_CXX_ABI})
 
-execute_process(
-    COMMAND
-    python -c "import tensorflow as tf; print(tf.__git_version__)"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE TensorFlow_GIT_VERSION
-    ERROR_VARIABLE ERR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE
-)
+if( WIN32 )
+	message(STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION})
+else()
+	execute_process(
+		COMMAND
+		python -c "import tensorflow as tf; print(tf.__git_version__)"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE TensorFlow_GIT_VERSION
+		ERROR_VARIABLE ERR
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_STRIP_TRAILING_WHITESPACE
+	)
 
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR})
+	if(${result})
+		message(FATAL_ERROR "Cannot determine TensorFlow __git_version__\n" ${ERR})
+	endif()
+	message(STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION})
 endif()
-message(STATUS "TensorFlow_GIT_VERSION: " ${TensorFlow_GIT_VERSION})
 
-execute_process(
-    COMMAND
-    python -c "import tensorflow as tf; print(tf.__version__)"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE TensorFlow_VERSION
-    ERROR_VARIABLE ERR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE
-)
+if( WIN32 )
+    message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
+else()
+	execute_process(
+		COMMAND
+		python -c "import tensorflow as tf; print(tf.__version__)"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE TensorFlow_VERSION
+		ERROR_VARIABLE ERR
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_STRIP_TRAILING_WHITESPACE
+	)
 
-if(${result})
-    message(FATAL_ERROR "Cannot determine TensorFlow __version__\n" ${ERR})
+	if(${result})
+		message(FATAL_ERROR "Cannot determine TensorFlow __version__\n" ${ERR})
+	endif()
+	message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
 endif()
-message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
 
 # Make sure that the TF library exists
 if ( APPLE )

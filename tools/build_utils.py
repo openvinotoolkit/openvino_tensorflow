@@ -443,8 +443,8 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
             mkl_lib_file = "bazel-tensorflow/external/mkl_linux/lib/libmklml_intel.so"
     else:
         if (platform.system() == 'Windows'):
-            tf_cc_lib_file = os.path.abspath(tf_prebuilt + '\\' + tf_cc_lib_name)
-            tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '\\' + tf_fmwk_lib_name)
+            tf_cc_lib_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_lib_name)
+            tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_fmwk_lib_name)
         else:
             tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
             tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' + tf_fmwk_lib_name)
@@ -463,11 +463,10 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
 
         print("Copying %s to %s" % (mkl_lib_file, artifacts_dir))
         shutil.copy(mkl_lib_file, artifacts_dir)
-
-    if tf_prebuilt is not None:
-        tf_whl = locate_tf_whl(tf_prebuilt)
-        shutil.copy(tf_whl, artifacts_dir)
-
+    if (platform.system() != 'Windows'):
+        if tf_prebuilt is not None:
+            tf_whl = locate_tf_whl(tf_prebuilt)
+            shutil.copy(tf_whl, artifacts_dir)
 
 def install_tensorflow(venv_dir, artifacts_dir):
 

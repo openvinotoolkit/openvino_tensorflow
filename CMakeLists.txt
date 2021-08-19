@@ -116,6 +116,13 @@ else()
     set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../tensorflow")
 endif()
 
+# Get the absolute file name for the source
+get_filename_component(
+    TensorFlow_SRC_DIR
+    "${TF_SRC_DIR}"
+    ABSOLUTE
+)
+
 # Find TensorFlow might encounter problems later on
 find_package(TensorFlow REQUIRED)
 
@@ -218,24 +225,20 @@ add_subdirectory(openvino_tensorflow)
 add_subdirectory(tools)
 add_subdirectory(ocm/OCM)
 
-# The following targets depend on the Tensorflow source code directory
-# Get the absolute file name for the source
-get_filename_component(
-    TensorFlow_SRC_DIR
-    "${TF_SRC_DIR}"
-    ABSOLUTE
-)
+if(NOT WIN32)
+	#The following targets depend on the Tensorflow source code directory
 
-add_subdirectory(examples)
-if (DEFINED TF_SRC_DIR)
-    message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
-    add_subdirectory(examples/classification_sample)
-else()
-    message(
-        STATUS
-        "TensorFlow source directory not provided. "
-        "C++ Examples won't be built"
-    )
+	add_subdirectory(examples)
+	if (DEFINED TF_SRC_DIR)
+	   message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+	   add_subdirectory(examples/classification_sample)
+	else()
+	   message(
+		   STATUS
+		   "TensorFlow source directory not provided. "
+		   "C++ Examples won't be built"
+	   )
+	endif()
 endif()
 
 if (UNIT_TEST_ENABLE)
