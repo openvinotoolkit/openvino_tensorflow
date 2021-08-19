@@ -24,6 +24,7 @@ from __future__ import division
 from __future__ import print_function
 
 import pytest
+import platform
 
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
@@ -73,7 +74,10 @@ class TestConv2DBackpropInput(NgraphTest):
 
         with pytest.raises(Exception) as excinfo:
             self.with_ngraph(run_test)
-        assert "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message
+        if (platform.system() == 'Windows'):
+            assert "Current implementation does not yet support strides in the batch and depth dimensions." in excinfo.value.message
+        else:
+            assert "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message
 
         # TF also fails
         with pytest.raises(Exception) as excinfo1:
