@@ -62,33 +62,43 @@ if(WIN32)
             ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib)
 endif()
 
-set_target_properties(
-    tensorflow_ops_testutil
-    PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/core/kernels/libops_testutil.so
-)
+if(WIN32)
+	set_target_properties(
+		tensorflow_ops_testutil
+		PROPERTIES IMPORTED_LOCATION
+		${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/core/kernels/ops_testutil.lib
+	)
+else()
+	set_target_properties(
+		tensorflow_ops_testutil
+		PROPERTIES IMPORTED_LOCATION
+		${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/core/kernels/libops_testutil.so
+	)
+endif()
 
-set(SRC
-    main.cpp
-    test_ovtf_exec.cpp
-    tf_exec.cpp
-    padding.cpp
-    conversions.cpp
-    graph_rewrites/assign_clusters.cc
-    # graph_rewrites/deadness_test.cc
-    graph_rewrites/backend_manager_test.cc
-    graph_rewrites/encapsulate_clusters_test.cc
-    # graph_rewrites/disable_ops_test.cc
-    # graph_rewrites/mark_for_clustering_test.cc
-    # graph_rewrites/op_by_op_capability_test.cc
-    test_utilities.cpp
-    test_math_ops.cpp
-    test_nn_ops.cpp
-    test_array_ops.cpp
-    opexecuter.cpp
-    test_thread_safe_queue.cc
-    pass/transpose_sinking_test.cpp
-)
+if(NOT WIN32)
+	set(SRC
+		main.cpp
+		test_ovtf_exec.cpp
+		tf_exec.cpp
+		padding.cpp
+		conversions.cpp
+		graph_rewrites/assign_clusters.cc
+		# graph_rewrites/deadness_test.cc
+		graph_rewrites/backend_manager_test.cc
+		graph_rewrites/encapsulate_clusters_test.cc
+		# graph_rewrites/disable_ops_test.cc
+		# graph_rewrites/mark_for_clustering_test.cc
+		# graph_rewrites/op_by_op_capability_test.cc
+		test_utilities.cpp
+		test_math_ops.cpp
+		test_nn_ops.cpp
+		test_array_ops.cpp
+		opexecuter.cpp
+		test_thread_safe_queue.cc
+		pass/transpose_sinking_test.cpp
+	)
+endif()
 
 if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     list(APPEND SRC graph_rewrites/config_for_grappler_test.cc)
@@ -104,55 +114,78 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DNDEBUG")
 message(STATUS "Compile Flags for test dir: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 
-add_executable(gtest_ovtf ${SRC})
-add_dependencies(gtest_ovtf ext_gtest)
-message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+if(NOT WIN32)
+	add_executable(gtest_ovtf ${SRC})
+	add_dependencies(gtest_ovtf ext_gtest)
+	message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
-# The following custom commands are used to create symlinks for various
-# input files needed by the unit test
-add_custom_command(
-    TARGET gtest_ovtf
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_int8_launchop.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_int8_launchop.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_axpy_8bit.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_general_graph.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_general_graph.pbtxt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_graph1.pbtxt
-        ${CMAKE_CURRENT_BINARY_DIR}/test_graph1.pbtxt
-)
+	# The following custom commands are used to create symlinks for various
+	# input files needed by the unit test
+	add_custom_command(
+		TARGET gtest_ovtf
+		PRE_BUILD
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_axpy.pbtxt
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_axpy_launchop.pbtxt
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_int8_launchop.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_axpy_int8_launchop.pbtxt
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_axpy_8bit.pbtxt
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_general_graph.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_general_graph.pbtxt
+		COMMAND ${CMAKE_COMMAND} -E create_symlink
+			${CMAKE_CURRENT_SOURCE_DIR}/test_graph1.pbtxt
+			${CMAKE_CURRENT_BINARY_DIR}/test_graph1.pbtxt
+	)
+endif()
 
 if (APPLE)
     set(OPENVINO_TF_CXX11_ABI 0)
 endif()
 
-target_link_libraries(
-    gtest_ovtf
-    openvino_tensorflow
-    ngraph_lib
-    libgtest
-    pthread
-    ${TensorFlow_FRAMEWORK_LIBRARY}
-    tensorflow_cc_lib
-    tensorflow_ops_testutil
-    absl_synchronization
-    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
-    ocm
-)
+if(WIN32)
+    get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+	get_target_property(tensorflow_cc_lib_value tensorflow_cc_lib IMPORTED_LOCATION)
+	get_target_property(tensorflow_ops_testutil_value tensorflow_ops_testutil IMPORTED_LOCATION)
+	target_link_libraries(
+		#gtest_ovtf
+		openvino_tensorflow
+		${ngraph_lib_value}
+		libgtest
+		#pthread
+		${TensorFlow_FRAMEWORK_LIBRARY}
+		${tensorflow_cc_lib_value}
+		${tensorflow_ops_testutil_value}
+		absl_synchronization
+		${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+		ocm
+	)
+else()
+	target_link_libraries(
+		gtest_ovtf
+		openvino_tensorflow
+		ngraph_lib
+		libgtest
+		pthread
+		${TensorFlow_FRAMEWORK_LIBRARY}
+		tensorflow_cc_lib
+		tensorflow_ops_testutil
+		absl_synchronization
+		${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+		ocm
+	)
+endif()
 
 # First install the libopenvino_tensorflow.so and headers
-install(TARGETS gtest_ovtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)  
+if(NOT WIN32)
+	install(TARGETS gtest_ovtf DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
+endif()
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_launchop.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_axpy_8bit.pbtxt DESTINATION ${CMAKE_INSTALL_PREFIX}/test)
