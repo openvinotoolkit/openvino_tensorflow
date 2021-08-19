@@ -33,12 +33,11 @@ __all__ = [
     'enable', 'disable', 'is_enabled', 'list_backends',
     'set_backend', 'get_backend',
     'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__', 'cxx11_abi_flag'
+    'is_logging_placement', '__version__', 'cxx11_abi_flag',
     'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
 ]
 
- 
 if system() == 'Darwin':
     ext = 'dylib'
 elif system() == 'Windows':
