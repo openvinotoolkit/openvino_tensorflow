@@ -85,9 +85,12 @@ def install_openvino_tensorflow(artifacts_dir):
         for whl in ovtf_wheel_files:
             print("Existing Wheel: " + whl)
         raise Exception("Error getting the openvino_tensorflow wheel file")
-
-    ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
-    command_executor(["pip", "install", "-U", ng_whl])
+    
+    if (platform.system() == 'Windows'):
+        command_executor(["pip", "install", "-U", ovtf_wheel_files[0].replace("\\","\\\\")])
+    else:
+        ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
+        command_executor(["pip", "install", "-U", ng_whl])
 
 
 def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
