@@ -24,12 +24,14 @@
 #endif
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/public/session.h"
-
 #include <cmath>
 #include "logging/tf_graph_writer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "test/opexecuter.h"
 #include "test/test_utilities.h"
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 using namespace std;
 
