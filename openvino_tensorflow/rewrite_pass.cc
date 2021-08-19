@@ -30,7 +30,7 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-//Telemetry 
+//Telemetry
 #define FAIL_ON_ERR(e) (void(0))
 
 template < typename T, uint32_t N >
@@ -154,7 +154,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     //Telemetry initialization
     std::wstring app_name{ L"OVTF" };
     std::wstring telemetry_id{ L"00000000-1111-2222-3333-444444444444" };
-    std::wstring app_version{ L"ovtf0.1" };
+    std::wstring app_version{ L"ovtf0.2" };
     std::wstring store_folder;
     std::wstring tel_options{ LR"({"post_did":"generate"})" };
     const wchar_t* const init_keys[] = { L"ikey1", L"ikey2" };
@@ -172,7 +172,6 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       init_keys,
       init_vals,
       countof(init_keys));
-    sleep(1);
     std::wcout << "\033[1;33mInitializeEx with res: 0x" << res << "\n";
     std::wcout << "\033[0;33mInitializeEx returned ovtf_handle: " << ovtf_handle << "\033[0m\n";
     FAIL_ON_ERR(res);
@@ -205,10 +204,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
-    // ovtf telemetry recording event and upload 
+    //ovtf telemetry recording event and upload
     const wchar_t* const ekeys[] = { L"Layer1", L"Layer2", L"Layer3" };
     const wchar_t* const evals[] = { L"eval1", L"eval2", L"eval3" };
-    std::wstring event_name{ L"OVTF_telemetry" };
+    std::wstring event_name{ L"OVTF_Initialized" };
 
     res = RecordEventEx(ovtf_handle, nullptr, event_name.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
     std::wcout << "Event recorded " << event_name.c_str() << std::endl;
@@ -221,7 +220,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     std::wcout << "Upload 0x" << std::setw(8) << res << "\n";
     std::wcout << "uploading finished " << std::endl;
     FAIL_ON_ERR(res);
-    // end of ovtf telemetry upload
+    //end of ovtf telemetry upload
 
     util::DumpTFGraph(graph, idx, "marked");
 

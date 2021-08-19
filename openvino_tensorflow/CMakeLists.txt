@@ -53,9 +53,14 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
+set(LANTERN_ROCK_INCLUDE_DIRS $ENV{LANTERN_ROCK_ROOT}/include)
+set(LANTERN_ROCK_LIB_DIRS $ENV{LANTERN_ROCK_ROOT}/lib/static)
+
 add_library(${LIB_NAME} SHARED ${SRC})
+target_link_directories(${LIB_NAME} PUBLIC ${LANTERN_ROCK_LIB_DIRS})
 target_link_libraries(
         ${LIB_NAME}
+        intel-ias3
         ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
         ngraph_lib
@@ -71,7 +76,7 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include" ${LANTERN_ROCK_INCLUDE_DIRS})
 
 string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
 list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
