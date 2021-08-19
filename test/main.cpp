@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
 #include <stdlib.h>
 #include <array>
 #include <cctype>
