@@ -21,11 +21,13 @@ namespace testing {
 
 void ActivateNGraph() {
   setenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
+  setenv("OPENVINO_TF_DYNAMIC_FALLBACK", "0", 1);
   unsetenv("OPENVINO_TF_DISABLE");
 }
 
 void DeactivateNGraph() {
   unsetenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS");
+  unsetenv("OPENVINO_TF_DYNAMIC_FALLBACK");
   setenv("OPENVINO_TF_DISABLE", "1", 1);
 }
 
