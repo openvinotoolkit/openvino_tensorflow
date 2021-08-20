@@ -212,15 +212,25 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     num_cores = int(psutil.cpu_count(logical=False))
     print("OMP_NUM_THREADS: %s " % str(num_cores))
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
+
+    openvino_tf_disable_deassign_clusters = os.environ.pop(
+        'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
     os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
     cmd = [
         "python", test_script, "--tensorflow_path", tf_src_dir,
         "--run_tests_from_file", test_manifest_file
     ]
+
     if xml_output:
         cmd.extend(["--xml_report", test_xml_report])
     command_executor(cmd, verbose=True)
+
+    os.environ.pop('OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
+
+    if openvino_tf_disable_deassign_clusters is not None:
+        os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
+            openvino_tf_disable_deassign_clusters
 
     assert os.path.exists(root_pwd), "Could not find the path"
     os.chdir(root_pwd)

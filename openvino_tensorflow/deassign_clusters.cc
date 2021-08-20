@@ -51,8 +51,6 @@ unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
 
 static void MaybeLogPlacement(const Graph* graph) {
-  if (!api::IsLoggingPlacement()) return;
-
   std::map<int, std::set<const Node*>> final_cluster_map;
   int number_of_nodes = 0, nodes_marked_for_clustering = 0,
       nodes_assigned_a_cluster = 0;
@@ -101,7 +99,7 @@ static void MaybeLogPlacement(const Graph* graph) {
   int num_encapsulates = final_cluster_map.size() - 1;
   std::cout << "OVTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
             << std::endl;
-  std::cout << "OVTF_SUMMARY: Nodes per cluster: "
+  std::cout << "OVTF_SUMMARY: Average Nodes per cluster: "
             << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
                                           float(num_encapsulates))
                                        : 0)
@@ -114,6 +112,9 @@ static void MaybeLogPlacement(const Graph* graph) {
                 << "]:\t" << kv.second.size() << std::endl;
     }
   }
+
+  // print device placement info only if logging placement info is enabled
+  if (!api::IsLoggingPlacement()) return;
 
   // log the ops gets deassigned
   std::cout << "OVTF_SUMMARY: Op_deassigned: ";
