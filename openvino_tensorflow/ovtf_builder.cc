@@ -973,6 +973,7 @@ static Status TranslateConv2DOp(const Node* op,
 
   std::vector<int32> tf_strides;
   std::vector<int32> tf_dilations;
+  std::vector<int32> tf_paddings;
   std::string tf_padding_type;
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
@@ -1024,9 +1025,29 @@ static Status TranslateConv2DOp(const Node* op,
 
   ng::CoordinateDiff ng_padding_below;
   ng::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, ng_padding_below,
-                       ng_padding_above);
+  if (tf_padding_type == "EXPLICIT") {
+    TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+    if (is_nhwc){
+      ng_padding_below.push_back(tf_paddings[2]);
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_above.push_back(tf_paddings[3]);
+      ng_padding_above.push_back(tf_paddings[5]);
+    }
+    else{
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_below.push_back(tf_paddings[6]);
+      ng_padding_above.push_back(tf_paddings[5]);
+      ng_padding_above.push_back(tf_paddings[7]);
+    } 
+    OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== " ;
+    OVTF_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+    OVTF_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+  }
+  else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+    ng_strides, ng_dilations, ng_padding_below,
+    ng_padding_above);
+  }
 
   ng::Output<ng::Node> ng_conv = ConstructNgNode<opset::Convolution>(
       op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,

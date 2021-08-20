@@ -27,7 +27,6 @@ tests_common.txt
 # Specify tests/patterns/regex that should be included
 
 
-
 ###################################################
 [SKIP]
 #Fails with this error : TopKImpl - Incorrect input data/index values precision.
@@ -114,6 +113,7 @@ reduction_ops_test.AnyReductionTest.testAxesType
 reduction_ops_test.MinReductionTest.testAxesType
 reduction_ops_test.ProdReductionTest.testAxesType
 cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
+identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 
 
 
@@ -220,6 +220,11 @@ slice_op_test.SliceTest.testScalarInput
 
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
 scan_ops_test.CumsumTest.test6D
+
+# The length of size_splits must sum to the value of the dimension along split_dim
+split_op_test.SplitOpTest.testDegenerateVariable
+split_op_test.SplitOpTest.testSpecialCasesVariable
+
 
 # Invalid reduction dimension 
 reduction_ops_test.MaxReductionTest.testGradient
@@ -347,3 +352,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_1B
 cwise_ops_binary_test.BinaryOpTest.testBCast_2B
 cwise_ops_binary_test.BinaryOpTest.testBCast_7B
 cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+
+# bad_alloc from OV-2021.4
+array_ops_test.StridedSliceTest.testTensorIndexing

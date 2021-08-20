@@ -81,7 +81,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_8B
 cwise_ops_binary_test.BinaryOpTest.testBCast_8C
 cwise_ops_binary_test.BinaryOpTest.testBCast_8D
 cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
-cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
 math_ops_test.AddNTest.testIndexedSlices
 pad_op_test.PadOpTest.testPaddingTypes
 reduction_ops_test.MeanReductionTest.testGradient
@@ -108,6 +107,7 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_10A
 cwise_ops_binary_test.BinaryOpTest.testBCast_10B
 cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
+cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
 
 #Failed to set Blob with precision not corresponding to user output precision.
 

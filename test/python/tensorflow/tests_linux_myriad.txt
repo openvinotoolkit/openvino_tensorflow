@@ -312,7 +312,6 @@ conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
 
 concat_op_test.ConcatOpTest.testHStack
 
-<<<<<<< HEAD
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 spacetobatch_op_test.SpaceToBatchNDTest.testOneBlockDimZeroRemainingDims
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsOneRemainingDim
@@ -323,8 +322,6 @@ batchtospace_op_test.BatchToSpaceDepthToSpace.testDepthToSpaceTranspose
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsTwoRemainingDims
 spacetobatch_op_test.SpaceToBatchSpaceToDepth.testSpaceToDepthTranspose
 
-=======
->>>>>>> updated tf tests list for cpu,gpu,myriad
 # tensorflow:Failed to translate Constant with TF type:DT_BFLOAT16
 constant_op_test.ConstantTest.testBFloat16
 
