@@ -3156,12 +3156,18 @@ static Status TranslateStridedSliceOp(
     return vec;
   };
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::StridedSlice>(
+  auto ng_strided_slice = ConstructNgNode<opset::StridedSlice>(
           op->name(), ng_input, begin, end, strides, mask_to_vec(begin_mask),
           mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
-          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
+          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask));
+  if (ng_strided_slice.get_shape().size() == 0) {
+    return errors::InvalidArgument(
+        "StridedSlice: Invalid output shape");
+  } else {
+    SaveNgOp(
+        ng_op_map, op->name(),
+        ng_strided_slice);
+  }
   return Status::OK();
 }
 
