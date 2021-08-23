@@ -60,9 +60,9 @@ add_library(${LIB_NAME} SHARED ${SRC})
 target_link_directories(${LIB_NAME} PUBLIC ${LANTERN_ROCK_LIB_DIRS})
 target_link_libraries(
         ${LIB_NAME}
-        intel-ias3
         ovtf_logger
         ${TensorFlow_FRAMEWORK_LIBRARY}
+        intel-ias3
         ngraph_lib
         absl_algorithm
         absl_container
