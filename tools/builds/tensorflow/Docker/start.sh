@@ -1,6 +1,6 @@
 #!/bin/bash
-/opt/intel/openvino_2021.3.394/install_dependencies/install_NEO_OCL_driver.sh -y
-/opt/intel/openvino_2021.3.394/install_dependencies/install_NCS_udev_rules.sh
+/opt/intel/openvino_2021.4.582/install_dependencies/install_NEO_OCL_driver.sh -y
+/opt/intel/openvino_2021.4.582/install_dependencies/install_NCS_udev_rules.sh
  
 set -e
 

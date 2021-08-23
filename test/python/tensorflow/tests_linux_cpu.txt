@@ -253,3 +253,6 @@ spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 
 #disabled due to empty tensor in test case
 array_ops_test.ReverseV2Test.testReverse2DimAuto
+
+#defect in OpenVINO 2021.4; appears to be a memory leak
+array_ops_test.StridedSliceTest.testEllipsis

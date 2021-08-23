@@ -24,9 +24,9 @@ const combination = new Map([
 ],
 ["000111","python3 build_ovtf.py "
 ],
-["100010","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
+["100010","#Use OpenVINO 2021.4,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
-["100110","#Use OpenVINO 2021.3,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
+["100110","#Use OpenVINO 2021.4,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
 ["100011","python3 build_ovtf.py"
 ],
