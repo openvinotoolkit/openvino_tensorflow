@@ -9,8 +9,6 @@
 
 #include "tensorflow/core/public/version.h"
 
-#include "ngraph/ngraph.hpp"
-
 #include "version.h"
 
 // OpenVINO™ integration with TensorFlow uses semantic versioning: see
@@ -36,13 +34,14 @@
       OV_TF_MINOR_VERSION) "." VERSION_STR(OV_TF_PATCH_VERSION) \
        OV_TF_VERSION_SUFFIX)
 
-extern "C" const char* get_ngraph_version_string();
-
 namespace tensorflow {
 namespace openvino_tensorflow {
 
 const char* version() { return (OV_TF_VERSION_STRING); }
-const char* ngraph_version() { return get_ngraph_version_string(); }
+
+// OPENVINO_BUILD_VERSION is a compile definition as openvino doesn't have
+// a version string in its source code
+const char* openvino_version() { return OPENVINO_BUILD_VERSION; }
 
 int cxx11_abi_flag() {
 #ifdef _GLIBCXX_USE_CXX11_ABI
