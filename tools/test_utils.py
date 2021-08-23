@@ -162,16 +162,9 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     root_pwd = os.getcwd()
     openvino_tf_src_dir = os.path.abspath(openvino_tf_src_dir)
 
-    # Check to see if we need to apply the patch for Grappler
-    import openvino_tensorflow
-    patch_file_name = "test/python/tensorflow/tf_unittest_ngraph" + (
-        "_with_grappler"
-        if openvino_tensorflow.is_grappler_enabled() else "") + ".patch"
-    patch_file = os.path.abspath(
-        os.path.join(openvino_tf_src_dir, patch_file_name))
-
-    # Next patch the TensorFlow so that the tests run using openvino_tensorflow
+    # Patch TensorFlow so that the tests run using openvino_tensorflow
     pwd = os.getcwd()
+    assert os.path.exists(pwd), "Could not find directory: {}".format(pwd)
 
     # Go to the location of TesorFlow install directory
     import tensorflow as tf
@@ -182,17 +175,18 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     os.chdir(tf_dir + '/python/framework')
     print("CURRENT DIR: " + os.getcwd())
 
-    print("Patching TensorFlow using: %s" % patch_file)
-    patch_command = ['patch', '-N', '-i', patch_file]
-    cmd = subprocess.Popen(patch_command, stdout=subprocess.PIPE)
-    printed_lines = cmd.communicate()
-    # Check if the patch is being applied for the first time, in which case
-    # cmd.returncode will be 0 or if the patch has already been applied, in
-    # which case the string will be found, in all other cases the assertion
-    # will fail
-    assert cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
-        printed_lines[0]), "Error applying the patch."
-    assert os.path.exists(pwd), "Could not find directory: {}".format(pwd)
+    f_test_util = "test_util.py"
+    if not "openvino_tensorflow" in open(f_test_util).read():
+        print("Adding `import openvino_tensorflow` to TensorFlow tests")
+
+        with open(f_test_util, "r") as f:
+            fi = f.read()
+
+        import_ovtf_ = fi.replace("super(TensorFlowTestCase, self).__init__(methodName)", \
+                "super(TensorFlowTestCase, self).__init__(methodName)\n    import openvino_tensorflow")
+
+        with open(f_test_util, "w") as f:
+            f.write(import_ovtf_)
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
