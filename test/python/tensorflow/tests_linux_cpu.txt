@@ -247,3 +247,9 @@ nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 # TBD
 softmax_op_test.SoftmaxTest.testEmptyInput
 reduction_ops_test.MeanReductionTest.testAxesType
+
+#const has zero dimension which is not allowed
+spacetobatch_op_test.SpaceToBatchNDTest.testDirect
+
+#disabled due to empty tensor in test case
+array_ops_test.ReverseV2Test.testReverse2DimAuto
