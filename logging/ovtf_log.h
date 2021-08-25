@@ -10,8 +10,8 @@
 #include <string>
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/default/logging.h"
-#include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/platform/env_time.h"
+#include "tensorflow/core/platform/macros.h"
 
 class NGraphLogMessage : public tensorflow::internal::LogMessage {
  public:
