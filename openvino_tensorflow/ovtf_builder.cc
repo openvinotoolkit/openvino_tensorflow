@@ -1499,6 +1499,86 @@ static Status TranslateExpandDimsOp(
   return Status::OK();
 }
 
+static Status TranslateFakeQuantWithMinMaxVarsOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_min, ng_max;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_min));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, ng_max));
+
+  bool narrow_range = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "narrow_range", &narrow_range));
+  int64 num_bits;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_bits", &num_bits));
+
+  auto levels = std::pow(2, num_bits) - int(narrow_range);
+
+  auto min_less_max = ConstructNgNode<opset::Less>(
+      op->name() + "/if_min_less_max", ng_min, ng_max);
+  auto minimum = ConstructNgNode<opset::Select>(op->name() + "/minimum",
+                                                min_less_max, ng_min, ng_max);
+  auto maximum = ConstructNgNode<opset::Select>(op->name() + "/maximum",
+                                                min_less_max, ng_max, ng_min);
+
+  auto zero =
+      ConstructNgNode<opset::Constant>(op->name(), ng_min.get_element_type(),
+                                       ngraph::Shape{}, std::vector<int>({0}));
+
+  auto min_greater_zero = ConstructNgNode<opset::Greater>(
+      op->name() + "/if_minimum_greater_zero", minimum, zero);
+  auto max_minus_min = ConstructNgNode<opset::Subtract>(
+      op->name() + "/max_minus_min", maximum, minimum);
+  minimum = ConstructNgNode<opset::Select>(op->name() + "/first_adj_min",
+                                           min_greater_zero, zero, minimum);
+  maximum = ConstructNgNode<opset::Select>(
+      op->name() + "/first_adj_max", min_greater_zero, max_minus_min, maximum);
+
+  auto max_less_zero = ConstructNgNode<opset::Less>(
+      op->name() + "/if_max_less_zero", maximum, zero);
+  auto min_minus_max = ConstructNgNode<opset::Subtract>(
+      op->name() + "/min_minus_max", minimum, maximum);
+  minimum = ConstructNgNode<opset::Select>(
+      op->name() + "/second_adj_min", max_less_zero, min_minus_max, minimum);
+  maximum = ConstructNgNode<opset::Select>(op->name() + "/second_adj_max",
+                                           max_less_zero, zero, maximum);
+
+  auto float_range = ConstructNgNode<opset::Subtract>(
+      op->name() + "/float_range", maximum, minimum);
+  auto quant_min_value = int(narrow_range);
+  auto quant_max_value = std::pow(2, num_bits) - 1;
+  auto value = quant_max_value - quant_min_value;
+  auto int_range = ConstructNgNode<opset::Constant>(
+      op->name() + "/int_range", ng::element::f32, ngraph::Shape{},
+      std::vector<float>({value}));
+  auto scale = ConstructNgNode<opset::Divide>(op->name() + "/scale",
+                                              float_range, int_range);
+  auto descaled_min = ConstructNgNode<opset::Divide>(
+      op->name() + "/descaled_min", minimum, scale);
+  auto rounded_descaled_min = ConstructNgNode<opset::Round>(
+      op->name() + "/rounded_descaled_min", descaled_min,
+      opset::Round::RoundMode::HALF_TO_EVEN);
+  auto min_adj = ConstructNgNode<opset::Multiply>(op->name() + "/min_adj",
+                                                  scale, rounded_descaled_min);
+  auto adjustment = ConstructNgNode<opset::Subtract>(
+      op->name() + "/limits_adjustment", min_adj, minimum);
+  auto max_adj =
+      ConstructNgNode<opset::Add>(op->name() + "/max_adj", maximum, adjustment);
+
+  auto ng_input_shape = ng_input.get_shape();
+  if (ng_input_shape.size() == 4)
+      Transpose<0, 3, 1, 2>(ng_input);
+  auto ng_output = ConstructNgNode<opset::FakeQuantize>(
+      op->name(), ng_input, min_adj, max_adj, min_adj, max_adj, levels);
+  if (ng_input_shape.size() == 4)
+      Transpose<0, 2, 3, 1>(ng_output);
+
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+
+  return Status::OK();
+}
+
+
 static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2666,8 +2746,14 @@ static Status TranslateRelu6Op(const Node* op,
                                Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6));
+  auto ng_input_shape = ng_input.get_shape();
+  if (ng_input_shape.size() == 4)
+      Transpose<0, 3, 1, 2>(ng_input);
+  auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
+  if (ng_input_shape.size() == 4)
+      Transpose<0, 2, 3, 1>(ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+
   return Status::OK();
 }
 
@@ -3404,6 +3490,7 @@ const static std::map<
         {"Equal", TranslateBinaryOp<opset::Equal>},
         {"Exp", TranslateUnaryOp<opset::Exp>},
         {"ExpandDims", TranslateExpandDimsOp},
+        {"FakeQuantWithMinMaxVars", TranslateFakeQuantWithMinMaxVarsOp},
         {"Fill", TranslateFillOp},
         {"Floor", TranslateUnaryOp<opset::Floor>},
         {"FloorDiv", TranslateFloorDivOp},
