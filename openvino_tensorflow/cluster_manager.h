@@ -28,10 +28,11 @@ class NGraphClusterManager {
   static void EnableClusterFallback();
   static void DisableClusterFallback();
   static bool IsClusterFallbackEnabled();
-  static void SetMRUExecutable(const size_t idx, std::shared_ptr<Executable> executable_ptr);
+  static void SetMRUExecutable(const size_t idx,
+                               std::shared_ptr<Executable> executable_ptr);
   static void ExportMRUIRs(const string& output_dir);
   static void SetClusterInfo(const size_t idx, const string cluster_info);
-  static void DumpClusterInfos(string &cluster_infos);
+  static void DumpClusterInfos(string& cluster_infos);
 
  private:
   static std::vector<tensorflow::GraphDef*> s_cluster_graphs;

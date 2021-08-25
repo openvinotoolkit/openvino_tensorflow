@@ -14,7 +14,8 @@ namespace openvino_tensorflow {
 // Static initializers
 std::vector<GraphDef*> NGraphClusterManager::s_cluster_graphs;
 std::vector<bool> NGraphClusterManager::s_cluster_fallback;
-std::vector<std::shared_ptr<Executable>> NGraphClusterManager::s_mru_executables;
+std::vector<std::shared_ptr<Executable>>
+    NGraphClusterManager::s_mru_executables;
 std::mutex NGraphClusterManager::s_cluster_graphs_mutex;
 bool NGraphClusterManager::s_cluster_fallback_enabled = true;
 int NGraphClusterManager::cluster_size = 0;
@@ -68,26 +69,28 @@ bool NGraphClusterManager::IsClusterFallbackEnabled() {
   return s_cluster_fallback_enabled;
 }
 
-void NGraphClusterManager::SetMRUExecutable(const size_t idx, std::shared_ptr<Executable> mru_executable_ptr) {
+void NGraphClusterManager::SetMRUExecutable(
+    const size_t idx, std::shared_ptr<Executable> mru_executable_ptr) {
   if (idx < s_mru_executables.size())
     s_mru_executables[idx] = mru_executable_ptr;
 }
 
 void NGraphClusterManager::ExportMRUIRs(const string& output_dir) {
-  for (int i=0; i<s_mru_executables.size(); i++) {
+  for (int i = 0; i < s_mru_executables.size(); i++) {
     if (s_mru_executables[i]) s_mru_executables[i]->ExportIR(output_dir);
   }
 }
 
-void NGraphClusterManager::SetClusterInfo(const size_t idx, const string cluster_info) {
-    s_cluster_info[idx] = cluster_info;
+void NGraphClusterManager::SetClusterInfo(const size_t idx,
+                                          const string cluster_info) {
+  s_cluster_info[idx] = cluster_info;
 }
 
-void NGraphClusterManager::DumpClusterInfos(string &cluster_infos) {
-    cluster_infos = "";
-    for (auto it = s_cluster_info.begin(); it != s_cluster_info.end(); it++) {
-        cluster_infos += it->second + "\n";
-    }
+void NGraphClusterManager::DumpClusterInfos(string& cluster_infos) {
+  cluster_infos = "";
+  for (auto it = s_cluster_info.begin(); it != s_cluster_info.end(); it++) {
+    cluster_infos += it->second + "\n";
+  }
 }
 
 }  // namespace openvino_tensorflow

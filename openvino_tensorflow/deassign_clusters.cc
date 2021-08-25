@@ -60,8 +60,8 @@ static void MaybeLogPlacement(const Graph* graph) {
     if (NodeIsMarkedForClustering(node)) {
       nodes_marked_for_clustering++;
       functional_nodes++;
-    } else if (node->type_string() != "NoOp" && node->type_string() != "_Arg"
-            && node->type_string() != "_Retval") {
+    } else if (node->type_string() != "NoOp" && node->type_string() != "_Arg" &&
+               node->type_string() != "_Retval") {
       functional_nodes++;
     }
 
@@ -114,10 +114,11 @@ static void MaybeLogPlacement(const Graph* graph) {
     if (cluster_idx != -1) {
       int perc_nodes_assigned =
           functional_nodes > 0
-              ? (int)((kv.second.size() * 100.0) /
-                      functional_nodes)
+              ? (int)((kv.second.size() * 100.0) / functional_nodes)
               : 0;
-      std::string cluster_info = "ovtf_cluster_"+std::to_string(cluster_idx)+": "+std::to_string(perc_nodes_assigned)+"%";
+      std::string cluster_info = "ovtf_cluster_" + std::to_string(cluster_idx) +
+                                 ": " + std::to_string(perc_nodes_assigned) +
+                                 "%";
       NGraphClusterManager::SetClusterInfo(cluster_idx, cluster_info);
       std::cout << "OVTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
                 << "]:\t" << kv.second.size() << std::endl;
