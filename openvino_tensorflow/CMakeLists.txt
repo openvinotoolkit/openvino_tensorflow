@@ -53,6 +53,10 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
+if(OPENVINO_BUILD_VERSION)
+    add_compile_definitions(OPENVINO_BUILD_VERSION="${OPENVINO_BUILD_VERSION}")
+endif()
+
 add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries(
         ${LIB_NAME}

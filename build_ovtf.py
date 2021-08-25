@@ -517,6 +517,10 @@ def main():
         openvino_tf_cmake_flags.extend(
             ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
 
+    # add openvino build version as compile time definition
+    openvino_tf_cmake_flags.extend(
+        ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
+
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                   openvino_tf_src_dir, venv_dir,
