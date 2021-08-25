@@ -264,4 +264,4 @@ conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
 
 #tests never end
 conv_ops_test.Conv2DTest.testConv2D1x2Filter
-conv_ops_test.Conv2DTest.testConv2D1x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2Filter
