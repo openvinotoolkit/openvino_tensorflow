@@ -11,10 +11,12 @@
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/macros.h"
+#include "tensorflow/core/platform/env_time.h"
 
 class NGraphLogMessage : public tensorflow::internal::LogMessage {
  public:
   static tensorflow::int64 MinNGraphVLogLevel();
+  static std::string GetTimeStampForLogging();
 };
 
 #define OVTF_VLOG_IS_ON(lvl) ((lvl) <= NGraphLogMessage::MinNGraphVLogLevel())
