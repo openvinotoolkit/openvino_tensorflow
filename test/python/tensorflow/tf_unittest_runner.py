@@ -455,12 +455,8 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
                 print('>> >> >> >> ({}) Testing: {} ...'.format(
                     run_test_counter, a_test.id()))
                 start = time.time()
-                if os.getenv('OPENVINO_TF_BACKEND', default="CPU") == "MYRIAD":
-                    test_result_map = run_singletest(testpattern, runner,
+                test_result_map = run_singletest(testpattern, runner,
                                                      a_test, timeout)
-                else:
-                    test_result_map = run_singletest_in_new_child_process(
-                        runner, a_test)
                 elapsed = time.time() - start
                 elapsed = str(timedelta(seconds=elapsed))
 
