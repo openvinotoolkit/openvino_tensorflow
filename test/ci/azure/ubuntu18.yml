@@ -16,7 +16,7 @@
     OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
     #Uncomment and comment the location respectively for using the version of TF BUILD
     #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
-    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_0
+    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_0_abi0
     
  steps:
  
@@ -37,7 +37,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION)
+      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION)  --use_tensorflow_from_location=$(TF_LOCATION)
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
@@ -60,6 +60,7 @@
       export OPENVINO_TF_BACKEND=CPU
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -71,6 +72,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -102,6 +104,7 @@
       export OPENVINO_TF_BACKEND=GPU
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -113,6 +116,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -145,6 +149,7 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -157,6 +162,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
