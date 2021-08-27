@@ -4,10 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include "tensorflow/core/lib/core/errors.h"
 
 #include "api.h"
 #include "backend_manager.h"
+
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -18,6 +22,7 @@ static bool _is_logging_placement = false;
 static std::set<std::string> disabled_op_types{};
 static char* backendName;
 static char* backendList[4];
+static char* clusterInfo;
 
 extern "C" {
 void enable() { Enable(); }
@@ -60,6 +65,7 @@ void freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
+void freeClusterInfo() { free(clusterInfo); }
 
 extern void set_disabled_ops(const char* op_type_list) {
   SetDisabledOps(std::string(op_type_list));
@@ -71,6 +77,18 @@ extern const char* get_disabled_ops() {
 
 void enable_dynamic_fallback() { EnableDynamicFallback(); }
 void disable_dynamic_fallback() { DisableDynamicFallback(); }
+
+bool export_ir(const char* output_dir, char** cluster_info,
+               bool confirm_before_overwrite) {
+  string str_cluster_info("");
+  if (!ExportIR(string(output_dir), str_cluster_info,
+                confirm_before_overwrite)) {
+    return false;
+  }
+  clusterInfo = strdup(str_cluster_info.c_str());
+  *cluster_info = clusterInfo;
+  return true;
+}
 }
 
 // note that TensorFlow always uses camel case for the C++ API, but not for
@@ -129,6 +147,83 @@ void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
 
 void DisableDynamicFallback() {
   NGraphClusterManager::DisableClusterFallback();
+}
+
+bool ExportIR(const string& output_dir, string& cluster_info,
+              bool confirm_before_overwrite) {
+  // Create the directory/directories
+  char* tmp = new char[output_dir.size()];
+  char* p = NULL;
+  size_t len;
+  int dir_err;
+  struct stat st;
+
+  snprintf(tmp, sizeof(tmp) * output_dir.size(), "%s", output_dir.c_str());
+  len = strlen(tmp);
+  if (tmp[len - 1] == '/') tmp[len - 1] = 0;
+  for (p = tmp + 1; *p; p++) {
+    if (*p == '/') {
+      *p = 0;
+      if (stat(tmp, &st) != 0) {
+        dir_err = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if (-1 == dir_err) {
+          delete[] tmp;
+          return false;
+        }
+      }
+      *p = '/';
+    }
+  }
+  if (stat(tmp, &st) != 0) {
+    dir_err = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (-1 == dir_err) {
+      delete[] tmp;
+      return false;
+    }
+  }
+  delete[] tmp;
+
+  // Check for existing files
+  if (confirm_before_overwrite) {
+    DIR* dir;
+    struct dirent* diread;
+    vector<char*> files;
+
+    if ((dir = opendir(output_dir.c_str())) != nullptr) {
+      while ((diread = readdir(dir)) != nullptr) {
+        files.push_back(diread->d_name);
+      }
+      closedir(dir);
+    } else {
+      perror("opendir");
+      return false;
+    }
+    for (auto file : files) {
+      size_t len_file = strlen(file);
+      if (len_file > 17 && strncmp(file, "ovtf_cluster_", 13) == 0 &&
+          (strncmp((file + len_file - 4), ".xml", 4) ||
+           strncmp((file + len_file - 4), ".bin", 4))) {
+        std::cout << "There are existing IR files in the directory you "
+                     "specified. New IR files may overwrite on the existing "
+                     "files. Do you want to continue? (y|n)"
+                  << endl;
+        int decision;
+        decision = getchar();
+        if (decision == 'y') {
+          break;
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+
+  // Export IR into the output directory
+  NGraphClusterManager::ExportMRUIRs(output_dir);
+
+  // Dump cluster info
+  NGraphClusterManager::DumpClusterInfos(cluster_info);
+  return true;
 }
 
 }  // namespace api

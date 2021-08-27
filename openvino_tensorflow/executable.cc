@@ -329,5 +329,12 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
   }
   return true;
 }
+
+void Executable::ExportIR(const string& output_dir) {
+  if (!m_function || !m_ie_engine) return;
+  auto& name = m_function->get_friendly_name();
+  m_network.serialize(output_dir + "/" + name + ".xml",
+                      output_dir + "/" + name + ".bin");
+}
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
