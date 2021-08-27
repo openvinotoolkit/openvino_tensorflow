@@ -455,8 +455,8 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
                 print('>> >> >> >> ({}) Testing: {} ...'.format(
                     run_test_counter, a_test.id()))
                 start = time.time()
-                test_result_map = run_singletest(testpattern, runner,
-                                                     a_test, timeout)
+                test_result_map = run_singletest(testpattern, runner, a_test,
+                                                 timeout)
                 elapsed = time.time() - start
                 elapsed = str(timedelta(seconds=elapsed))
 

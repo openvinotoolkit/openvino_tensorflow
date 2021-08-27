@@ -51,8 +51,6 @@
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       ./maint/check-code-format.sh
-      exit_code=$?
-      echo "Exit Result for Code format check is ${exit_code}"
      workingDirectory: $(WORK_DIR) 
      displayName: "Code format check"
     
