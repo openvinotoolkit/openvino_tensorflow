@@ -155,6 +155,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 #endif
 
     //Ovtf telemetry initialization
+    std::wcout << "--------------------------------------------------------------" << std::endl;
     std::wstring app_name{ L"OVTF" };
     std::wstring telemetry_id{ L"1dac89cb-04a1-4695-86b0-1d95c3d93731" };
     std::wstring app_version{ L"ovtf0.4" };
@@ -174,8 +175,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       init_keys,
       init_vals,
       countof(init_keys));
-    std::wcout << "\033[1;33mInitializeEx finished with res: 0x" << res << "\n";
     FAIL_ON_ERR(res);
+    std::wcout << "Telemetry initialized ... " << std::endl;
     //Telemetry initialization End
 
     //Ovtf telemetry recording that the TF app has initialized 
@@ -184,9 +185,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     std::wstring event_name{ L"TF_App_Initialized" };
     res = RecordEventEx(ovtf_handle, nullptr, event_name.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
-    std::wcout << "RecordEventEx Res: 0x" << res << std::endl;
-    std::wcout << "Event recorded: " << event_name.c_str() << std::endl;
     FAIL_ON_ERR(res);
+    std::wcout << "Event recorded: " << event_name.c_str() << std::endl;
     //End: Ovtf telemetry recording that the TF app has initialized 
 
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
@@ -230,58 +230,52 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // Naming the ops accordingly and recording them as telemetry events
     bool ovtf_initialized = false;
     bool model_fully_supported = true; // no fallback on tensorflow
+
+    // The inert ops, are the ones with no effect on performance, so 
+    // we consider the model as fully supported by openvino although
+    // these ops are not marked for clustering
+    std::set<string>  inert_op_set = {"NoOp", "_Arg", "_Retval"};
+
+    std::wcout << "Recording events for layers in the model..." << std::endl;
     tensorflow::Graph* tel_graph = options.graph->get();
     for (Node* node : tel_graph->nodes()) {
       const auto& optype = node->type_string();
-      int cluster = -1; 
-      Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
       std::wstring wop_type; 
-      if (s == Status::OK()) {
+      if (NodeIsMarkedForClustering(node)) {
         if (!ovtf_initialized) ovtf_initialized = true;
         wop_type = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(optype);
       } else {
-        if ( model_fully_supported && 
-             optype.compare("NoOp") != 0 &&
-             optype.compare("_Arg") != 0 &&
-             optype.compare("_Retval") != 0 ) {
-          model_fully_supported = false; 
-          wop_type = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(optype);
-          std::wcout << L"\033[31mNot supported optype: " << wop_type << "\033[0m" << std::endl;
-        } 
+        if ( model_fully_supported && !inert_op_set.count(optype)) model_fully_supported = false; 
         std::string ntype;
-        std::string fback{"_FallBack"};
+        std::string fback{"_Fallback"};
         ntype.append(optype);
         ntype.append(fback);
         wop_type = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(ntype);
       }
       auto res = RecordEventEx(ovtf_handle, nullptr, wop_type.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
-      std::wcout << "RecordEventEx Res: 0x" << res << std::endl;
-      std::wcout << "Recorded event: " << wop_type.c_str() << std::endl;
       FAIL_ON_ERR(res);
     } // End of for loop through nodes
     if (ovtf_initialized) {
       event_name = L"OVTF_Initialized";
       auto res = RecordEventEx(ovtf_handle, nullptr, event_name.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
-      std::wcout << "RecordEventEx Res: 0x" << res << std::endl;
-      std::wcout << "Event recorded " << event_name.c_str() << std::endl;
       FAIL_ON_ERR(res);
+      std::wcout << "Event recorded: " << event_name.c_str() << std::endl;
     }
     event_name = (model_fully_supported) ? L"Model_Fully_Supported" : L"Model_NOT_Fully_Supported";
     res = RecordEventEx(ovtf_handle, nullptr, event_name.c_str(), 1, 1.0, ekeys, evals, countof(ekeys));
-    std::wcout << "RecordEventEx Res: 0x" << res << std::endl;
-    std::wcout << "Event recorded " << event_name.c_str() << std::endl;
     FAIL_ON_ERR(res);
+    std::wcout << "Event recorded: " << event_name.c_str() << std::endl;
     // End: Ovtf telemetry recording all ops and flags
 
     // OVTF telemetry deinitialization and upload
     res = Deinitialize(ovtf_handle);
-    std::wcout << "Deinitializing in OVTF " << std::endl;
-    std::wcout << "start uploading ..." << std::endl;
-    res = Upload(telemetry_id.c_str(), LR"({"show":false, "wait": true})");
-    std::wcout << "Upload 0x" << std::setw(8) << res << "\n";
-    std::wcout << "uploading finished " << std::endl;
-    std::wcout << "--------------------------------------------------------------" << std::endl;
     FAIL_ON_ERR(res);
+    std::wcout << "Telemetry deinitialized ... " << std::endl;
+    std::wcout << "Start uploading ..." << std::endl;
+    res = Upload(telemetry_id.c_str(), LR"({"show":false, "wait": true})");
+    FAIL_ON_ERR(res);
+    std::wcout << "Uploading finished! " << std::endl;
+    std::wcout << "--------------------------------------------------------------" << std::endl;
     // End: OVTF telemetry deinitialization and upload 
 
     // 4. Encapsulate clusters then, if requested, dump the graphs.

@@ -109,6 +109,9 @@ else()
 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
 endif()
 
+# Install Lantern Rock library
+install(FILES ${LANTERN_ROCK_LIB_DIRS}/libintel-ias3.so DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+
 # Install OpenVINO libraries
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
