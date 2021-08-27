@@ -74,7 +74,7 @@ RUN cd /tmp/l_openvino_toolkit_p_2021.4.582 && sudo sed -i 's/decline/accept/g' 
 RUN cd /tmp/l_openvino_toolkit_p_2021.4.582 && sudo ./install.sh -s silent.cfg
 
 #Install OpenVINO Dependencies
-RUN cd /opt/intel/openvino_2021/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
+RUN cd /opt/intel/openvino_2021.4.582/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
 
 
 #for libusb

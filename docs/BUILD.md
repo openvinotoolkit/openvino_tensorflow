@@ -23,8 +23,8 @@ Since TensorFlow packages available in [PyPi](https://pypi.org) are built with C
 This **OpenVINO™ integration with TensorFlow** package includes pre-built libraries of OpenVINO™ version 2021.4. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
 
-        pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.5.0
+        pip3 install pip==21.0.1
+        pip3 install tensorflow==2.5.0
         pip3 install openvino-tensorflow
 
 ### Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
@@ -35,7 +35,7 @@ You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the 
 
 1. Ensure the following versions are being used for pip and numpy:
 
-        pip3 install --upgrade pip==21.0.1
+        pip3 install pip==21.0.1
         pip3 install numpy==1.20.2
 
 2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
@@ -91,7 +91,7 @@ $ git submodule update --recursive
 Install the following python packages
 
 ```bash
-$ pip3 install -U psutil==5.8.0 wheel==0.36.2
+$ pip3 install psutil==5.8.0 wheel==0.36.2
 ```
 
 ### **OpenVINO™ integration with TensorFlow**
@@ -120,7 +120,7 @@ Use one of the following build options based on the requirements
 
 6. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
 
 Select the `help` option of `build_ovtf.py` script to learn more about various build options.
 
@@ -147,7 +147,6 @@ This should produce an output like:
         OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 1
-        OpenVINO integration with TensorFlow built with Grappler: False
 
 
 Test the installation:

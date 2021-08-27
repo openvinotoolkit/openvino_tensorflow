@@ -51,8 +51,6 @@
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       ./maint/check-code-format.sh
-      exit_code=$?
-      echo "Exit Result for Code format check is ${exit_code}"
      workingDirectory: $(WORK_DIR) 
      displayName: "Code format check"
     
@@ -60,7 +58,7 @@
       export OPENVINO_TF_BACKEND=CPU
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -72,7 +70,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -104,7 +102,7 @@
       export OPENVINO_TF_BACKEND=GPU
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -116,7 +114,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -149,7 +147,7 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
      condition: always()
@@ -162,7 +160,7 @@
       
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/python/openvino_tensorflow/
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      condition: always()
      workingDirectory: $(WORK_DIR) 
