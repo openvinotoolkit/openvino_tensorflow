@@ -24,7 +24,8 @@ namespace openvino_tensorflow {
 // function.
 class Executable {
  public:
-  Executable(shared_ptr<ngraph::Function> func, string device, string device_type);
+  Executable(shared_ptr<ngraph::Function> func, string device,
+             string device_type);
   ~Executable() {}
   bool Call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
             vector<shared_ptr<ngraph::runtime::Tensor>>& outputs,

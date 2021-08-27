@@ -338,7 +338,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // expected
       ngraph::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
-      if(ng_element_type == ngraph::element::Type_t::f16 && precision == "FP16")
+      if (ng_element_type == ngraph::element::Type_t::f16 &&
+          precision == "FP16")
         ng_element_type = ngraph::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
