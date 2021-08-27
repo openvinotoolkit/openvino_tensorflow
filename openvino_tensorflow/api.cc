@@ -12,7 +12,6 @@
 #include "api.h"
 #include "backend_manager.h"
 
-
 namespace tensorflow {
 namespace openvino_tensorflow {
 namespace api {

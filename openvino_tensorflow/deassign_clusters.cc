@@ -94,8 +94,8 @@ static void MaybeLogPlacement(const Graph* graph) {
 
   if (api::IsLoggingPlacement()) {
     std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
-    std::cout << "OVTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
-              << std::endl;
+    std::cout << "OVTF_SUMMARY: Number of nodes in the graph: "
+              << number_of_nodes << std::endl;
     // print out the number of nodes marked before deassign
     std::cout << "OVTF_SUMMARY: Number of nodes marked for clustering: "
               << num_nodes_marked_before_deassign << " ("

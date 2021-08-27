@@ -86,12 +86,11 @@ void NGraphClusterManager::SetClusterInfo(const size_t idx,
 
 void NGraphClusterManager::DumpClusterInfos(string& cluster_infos) {
   cluster_infos = "";
-  //for (auto it = s_cluster_info.begin(); it != s_cluster_info.end(); it++) {
+  // for (auto it = s_cluster_info.begin(); it != s_cluster_info.end(); it++) {
   //  cluster_infos += it->second + "\n";
   //}
-  for (int i=0; i<s_mru_executables.size(); i++) {
-    if (s_mru_executables[i])
-      cluster_infos += s_cluster_info[i] + "\n";
+  for (int i = 0; i < s_mru_executables.size(); i++) {
+    if (s_mru_executables[i]) cluster_infos += s_cluster_info[i] + "\n";
   }
 }
 
