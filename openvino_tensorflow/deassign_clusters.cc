@@ -82,6 +82,14 @@ static void MaybeLogPlacement(const Graph* graph) {
                   num_nodes_marked_before_deassign)
           : 0;
 
+  std::cout << NGraphLogMessage::GetTimeStampForLogging()
+            << ": OVTF Summary -> " << nodes_assigned_a_cluster << " out of "
+            << number_of_nodes << " nodes in the graph ("
+            << perc_assigned_clusters_of_total
+            << "%) are now running with OpenVINO™ backend" << std::endl;
+
+  if (!api::IsLoggingPlacement()) return;
+
   std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
   std::cout << "OVTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
             << std::endl;
@@ -112,9 +120,6 @@ static void MaybeLogPlacement(const Graph* graph) {
                 << "]:\t" << kv.second.size() << std::endl;
     }
   }
-
-  // print device placement info only if logging placement info is enabled
-  if (!api::IsLoggingPlacement()) return;
 
   // log the ops gets deassigned
   std::cout << "OVTF_SUMMARY: Op_deassigned: ";
