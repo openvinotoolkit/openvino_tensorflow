@@ -52,10 +52,9 @@ chmod 400 the *.pem key.
 
 TensorFlow version:  2.5.0
 OpenVINO integration with TensorFlow version: b'0.5.0'
-OpenVINO version used for this build: b'2021.3'
+OpenVINO version used for this build: b'2021.4'
 TensorFlow version used for this build: v2.5.0
 CXX11_ABI flag used for this build: 0
-OpenVINO integration with TensorFlow built with Grappler: False
 ```
 
 - Clone the repo to run the example

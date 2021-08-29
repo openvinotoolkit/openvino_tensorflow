@@ -23,7 +23,7 @@ Check our [Interactive Installation Table](https://openvinotoolkit.github.io/ope
 
 ### Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.3 meaning you don't have to install OpenVINO™ separately. This package supports:
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4 meaning you don't have to install OpenVINO™ separately. This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
@@ -51,10 +51,9 @@ This should produce an output like:
 
         TensorFlow version:  2.5.0
         OpenVINO integration with TensorFlow version: b'0.5.0'
-        OpenVINO version used for this build: b'2021.3'
+        OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 0
-        OpenVINO integration with TensorFlow built with Grappler: False
 
 By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware on which inferencing is done.
 

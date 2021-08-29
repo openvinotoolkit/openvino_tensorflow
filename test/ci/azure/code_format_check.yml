@@ -11,7 +11,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
     
  steps:
  
@@ -34,7 +34,7 @@
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=/home/iotgecsp/ci_setup/setup/ --use_openvino_from_location=$(OV_LOCATION) --disable_packaging_openvino_libs --cxx11_abi_version=1
+      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION)
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      

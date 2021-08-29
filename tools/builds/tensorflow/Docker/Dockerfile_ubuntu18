@@ -65,13 +65,13 @@ RUN apt-get install -y nodejs
 RUN npm install -g @bazel/bazelisk
 
 #Get OpenVINO from Download link and install
-RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/17662/l_openvino_toolkit_p_2021.3.394.tgz -P /tmp
-RUN tar -xvf /tmp/l_openvino_toolkit_p_2021.3.394.tgz -C /tmp
-RUN cd /tmp/l_openvino_toolkit_p_2021.3.394 && sudo sed -i 's/decline/accept/g' silent.cfg
-RUN cd /tmp/l_openvino_toolkit_p_2021.3.394 && sudo ./install.sh -s silent.cfg
+RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/17988/l_openvino_toolkit_p_2021.4.582.tgz -P /tmp
+RUN tar -xvf /tmp/l_openvino_toolkit_p_2021.4.582.tgz -C /tmp
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.582 && sudo sed -i 's/decline/accept/g' silent.cfg
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.582 && sudo ./install.sh -s silent.cfg
 
 #Install OpenVINO Dependencies
-RUN cd /opt/intel/openvino_2021/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
+RUN cd /opt/intel/openvino_2021.4.582/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
 
 
 #for libusb

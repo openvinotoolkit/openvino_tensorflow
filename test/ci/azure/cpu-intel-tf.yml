@@ -28,7 +28,7 @@
    - script: |
       pwd
       export TF_LOCATION=/home/iotgecsp/setup/artifacts/tensorflow
-      export OV_LOCATION=/opt/intel/openvino_2021.3.394/ 
+      export OV_LOCATION=/opt/intel/caches/openvino_2021.4_0/ 
       export OPENVINO_TF_BACKEND=CPU
       export BUILD_OPTIONS=--use_intel_tensorflow
       virtualenv -p python3 /home/iotgecsp/azu_ag/myagent/4/s/venv 

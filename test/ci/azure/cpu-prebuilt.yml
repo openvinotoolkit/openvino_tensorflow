@@ -12,7 +12,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
     
  steps:
  
@@ -101,7 +101,7 @@
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source $(OV_LOCATION)/bin/setupvars.sh
+      
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
@@ -110,7 +110,7 @@
      
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source $(OV_LOCATION)/bin/setupvars.sh
+      
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install keras
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
