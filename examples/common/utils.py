@@ -50,22 +50,15 @@ def get_input_mode(input_path):
             return "video"
 
 
-@tf.function
-def get_graph_def(x):
-    return x
-
-
-graph_def = get_graph_def.get_concrete_function(1.).graph.as_graph_def()
-
-
 def load_graph(model_file):
-    global graph_def
     graph = tf.Graph()
+    graph_def = tf.compat.v1.GraphDef()
     assert os.path.exists(model_file), "Could not find model path"
     with open(model_file, "rb") as f:
         graph_def.ParseFromString(f.read())
     with graph.as_default():
-        tf.graph_util.import_graph_def(graph_def)
+        tf.import_graph_def(graph_def)
+
     return graph
 
 
