@@ -68,6 +68,7 @@ if __name__ == "__main__":
     input_std = 255
     input_layer = "input"
     output_layer = "InceptionV3/Predictions/Reshape_1"
+    supported_backends = ['CPU', 'GPU', 'MYRIAD', 'VAD-M']
     backend_name = "CPU"
 
     # overlay parameters
@@ -149,6 +150,7 @@ if __name__ == "__main__":
         #Print list of available backends
         print('Available Backends:')
         backends_list = ovtf.list_backends()
+        backends_list = [if b in supported_backends for b in backends_list]
         for backend in backends_list:
             print(backend)
         ovtf.set_backend(backend_name)

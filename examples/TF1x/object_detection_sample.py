@@ -174,6 +174,7 @@ if __name__ == "__main__":
     input_std = 255
     input_layer = "inputs"
     output_layer = "output_boxes"
+    supported_backends = ['CPU', 'GPU', 'MYRIAD', 'VAD-M']
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
@@ -273,6 +274,7 @@ if __name__ == "__main__":
         # Print list of available backends
         print('Available Backends:')
         backends_list = ovtf.list_backends()
+        backends_list = [if b in supported_backends for b in backends_list]
         for backend in backends_list:
             print(backend)
         ovtf.set_backend(backend_name)
