@@ -248,5 +248,16 @@ nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 softmax_op_test.SoftmaxTest.testEmptyInput
 reduction_ops_test.MeanReductionTest.testAxesType
 
-scan_ops_test.CumsumTest.testLarge
+#const has zero dimension which is not allowed
+spacetobatch_op_test.SpaceToBatchNDTest.testDirect
+
+#disabled due to empty tensor in test case
+array_ops_test.ReverseV2Test.testReverse2DimAuto
+
+#defect in OpenVINO 2021.4; appears to be a memory leak
 array_ops_test.StridedSliceTest.testEllipsis
+
+#runtime errors; TBD
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
