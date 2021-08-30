@@ -108,6 +108,7 @@ def preprocess_image_yolov3(image, model_image_size):
     image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
     return image_data
 
+
 def preprocess_image(image, model_image_size):
     """
     Prepare model input image data with letterbox
@@ -128,5 +129,3 @@ def preprocess_image(image, model_image_size):
     image_data = normalize_image(image_data)
     # image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
     return image_data
-
-    

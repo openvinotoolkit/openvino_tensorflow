@@ -15,12 +15,14 @@ from common.yolov3 import load_model
 anchors = get_anchors()
 num_anchors = len(anchors)
 
+
 def load_labels(label_file):
     label = []
     proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
     return label
+
 
 def load_coco_names(file_name):
     names = {}
@@ -30,6 +32,7 @@ def load_coco_names(file_name):
             names[coco_id] = name
     return names
 
+
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
     model_file = "examples/data/darknet53.h5"
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     input_width = 416
     input_mean = 0
     input_std = 255
-    
+
     supported_backends = ['CPU', 'GPU', 'MYRIAD', 'VAD-M']
     backend_name = "CPU"
     output_dir = "."
@@ -54,7 +57,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--graph", help="Optional. Path to graph/model to be executed.")
-   
+
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
@@ -93,7 +96,7 @@ if __name__ == "__main__":
         action='store_true')
     args = parser.parse_args()
     if args.graph:
-        model_file = args.graph        
+        model_file = args.graph
         if args.labels:
             label_file = args.labels
         else:
@@ -121,9 +124,10 @@ if __name__ == "__main__":
         num_classes = len(classes)
 
     # Load graph and process input image
-    yolov3_model = load_model(model_file,num_anchors, num_classes, (input_height, input_width))
+    yolov3_model = load_model(model_file, num_anchors, num_classes,
+                              (input_height, input_width))
     # yolov3_model = load_model(model_file)
-   
+
     if not args.disable_ovtf:
         # Print list of available backends
         print('Available Backends:')
@@ -154,7 +158,7 @@ if __name__ == "__main__":
     images_len = len(images)
     image_id = -1
     # Initialize session and run
-    
+
     while True:
         image_id += 1
         if input_mode in ['camera', 'video']:
@@ -175,7 +179,7 @@ if __name__ == "__main__":
         image = Image.fromarray(img)
 
         #preprocess the input frame
-        image_data = preprocess_image_yolov3(image, (input_height,input_width))
+        image_data = preprocess_image_yolov3(image, (input_height, input_width))
         image_shape = tuple((frame.shape[0], frame.shape[1]))
 
         #running the inference
@@ -188,31 +192,28 @@ if __name__ == "__main__":
 
         #post processing the results
         out_boxes, out_classes, out_scores = yolo3_postprocess_np(
-                results,
-                image_shape,
-                get_anchors(),
-                len(labels), (input_height, input_width),
-                max_boxes=100,
-                elim_grid_sense=True)
+            results,
+            image_shape,
+            get_anchors(),
+            len(labels), (input_height, input_width),
+            max_boxes=100,
+            elim_grid_sense=True)
 
         # modified draw_boxes function to return an openCV formatted image
-        img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores,
-                                labels, colors)
+        img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores, labels,
+                              colors)
         # draw information overlay onto the frames
-        cv2.putText(img_bbox,
-                    'Inference Running on : {0}'.format(backend_name),
+        cv2.putText(img_bbox, 'Inference Running on : {0}'.format(backend_name),
                     (30, 50), font, font_size, color, font_thickness)
         cv2.putText(
             img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                 int(fps), round((elapsed * 1000), 2)), (30, 80), font,
             font_size, color, font_thickness)
-        if 0 in set(out_classes):
-            cv2.imwrite("outs/out_{}.jpg".format(image_id),img_bbox)
         if not args.no_show:
             cv2.imshow("detections", img_bbox)
             if cv2.waitKey(1) & 0XFF == ord('q'):
-                break      
-        print(image_id)  
+                break
+        print(image_id)
     if cap:
         cap.release()
     cv2.destroyAllWindows()
