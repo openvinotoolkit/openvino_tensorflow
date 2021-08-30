@@ -62,8 +62,8 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      cd examples
-      bash convert_yolov3.sh
+      chmod +x convert_yolov3.sh
+      ./convert_yolov3.sh
       cd $(WORK_DIR) 
       python3 examples/object_detection_sample_video.py --no_show
      workingDirectory: $(WORK_DIR) 
