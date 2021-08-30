@@ -190,8 +190,6 @@ def setup_venv(venv_dir):
     print("PIP location")
     call(['which', 'pip'])
 
-
-
     # Install the pip packages
     command_executor(["pip3", "install", "-U", "pip"])
     package_list = [
