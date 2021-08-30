@@ -38,9 +38,11 @@ from PIL import Image, ImageFont, ImageDraw
 
 @tf.function
 def get_graph_def(x):
-  return x
+    return x
+
 
 graph_def = get_graph_def.get_concrete_function(1.).graph.as_graph_def()
+
 
 def load_graph(model_file):
     global graph_def
@@ -170,8 +172,9 @@ def non_max_suppression(predictions_with_boxes,
 
     return result
 
+
 def get_input_mode(input_path):
-    if input_path.lower() in ['cam','camera']:
+    if input_path.lower() in ['cam', 'camera']:
         return "camera"
     assert os.path.exists(input_file), "input path doesn't exist"
     if os.path.isdir(input_path):
@@ -186,8 +189,9 @@ def get_input_mode(input_path):
     elif os.path.isfile(input_path):
         if imghdr.what(input_path) != None:
             return "image"
-        elif input_path.rsplit('.',1)[1] in ['mp4','avi']:
+        elif input_path.rsplit('.', 1)[1] in ['mp4', 'avi']:
             return "video"
+
 
 def load_labels(label_file):
     label = []
@@ -195,6 +199,7 @@ def load_labels(label_file):
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
     return label
+
 
 if __name__ == "__main__":
     input_file = "examples/data/people-detection.mp4"
@@ -308,8 +313,6 @@ if __name__ == "__main__":
     else:
         ovtf.disable()
 
-    # open capturing device
-    assert os.path.exists(input_file), "Could not find input video file path"
     cap = None
     images = []
     if label_file:
@@ -339,7 +342,7 @@ if __name__ == "__main__":
                         break
                 else:
                     break
-            if input_mode in ['image','folder']:
+            if input_mode in ['image', 'folder']:
                 if image_id < images_len:
                     frame = cv2.imread(images[image_id])
                 else:
@@ -349,7 +352,7 @@ if __name__ == "__main__":
 
             # Run
             # frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            print (image_id)
+            print(image_id)
             start = time.time()
             detected_boxes = sess.run(
                 output_operation.outputs[0],
@@ -358,8 +361,8 @@ if __name__ == "__main__":
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
             # post-processing - apply non max suppression, draw boxes and save updated image
-            filtered_boxes = non_max_suppression(
-                detected_boxes, conf_threshold, iou_threshold)
+            filtered_boxes = non_max_suppression(detected_boxes, conf_threshold,
+                                                 iou_threshold)
 
             # OpenCV frame to PIL format conversions as the draw_box function uses PIL
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -367,7 +370,7 @@ if __name__ == "__main__":
 
             # modified draw_boxes function to return an openCV formatted image
             img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
-                                    (input_width, input_height), True)
+                                  (input_width, input_height), True)
 
             # draw information overlay onto the frames
             cv2.putText(img_bbox,
@@ -380,7 +383,7 @@ if __name__ == "__main__":
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
-                    break            
+                    break
     sess.close()
     if cap:
         cap.release()

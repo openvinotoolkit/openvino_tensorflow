@@ -35,11 +35,14 @@ import time
 import cv2
 import imghdr
 
+
 @tf.function
 def get_graph_def(x):
-  return x
+    return x
+
 
 graph_def = get_graph_def.get_concrete_function(1.).graph.as_graph_def()
+
 
 def load_graph(model_file):
     global graph_def
@@ -51,6 +54,7 @@ def load_graph(model_file):
         tf.graph_util.import_graph_def(graph_def)
 
     return graph
+
 
 def read_tensor_from_image_file(frame,
                                 input_height=299,
@@ -72,8 +76,9 @@ def load_labels(label_file):
         label.append(l.rstrip())
     return label
 
+
 def get_input_mode(input_path):
-    if input_path.lower() in ['cam','camera']:
+    if input_path.lower() in ['cam', 'camera']:
         return "camera"
     assert os.path.exists(input_file), "input path doesn't exist"
     if os.path.isdir(input_path):
@@ -88,10 +93,8 @@ def get_input_mode(input_path):
     elif os.path.isfile(input_path):
         if imghdr.what(input_path) != None:
             return "image"
-        elif input_path.rsplit('.',1)[1] in ['mp4','avi']:
+        elif input_path.rsplit('.', 1)[1] in ['mp4', 'avi']:
             return "video"
-
-            
 
 
 if __name__ == "__main__":
@@ -218,7 +221,7 @@ if __name__ == "__main__":
                         break
                 else:
                     break
-            if input_mode in ['image','folder']:
+            if input_mode in ['image', 'folder']:
                 if image_id < images_len:
                     frame = cv2.imread(images[image_id])
                 else:
@@ -232,27 +235,26 @@ if __name__ == "__main__":
             # run
             start = time.time()
             results = sess.run(output_operation.outputs[0],
-                                {input_operation.outputs[0]: t})
+                               {input_operation.outputs[0]: t})
             elapsed = time.time() - start
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
             results = np.squeeze(results)
             # print labels
             if label_file:
-                cv2.putText(
-                    frame,
-                    'Inference Running on : {0}'.format(backend_name),
-                    (30, 50), font, font_size, color, font_thickness)
+                cv2.putText(frame,
+                            'Inference Running on : {0}'.format(backend_name),
+                            (30, 50), font, font_size, color, font_thickness)
                 cv2.putText(
                     frame, 'FPS : {0} | Inference Time : {1}ms'.format(
-                        int(fps), round((elapsed * 1000), 2)), (30, 80),
-                    font, font_size, color, font_thickness)
+                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                    font_size, color, font_thickness)
                 top_k = results.argsort()[-5:][::-1]
                 c = 130
                 for i in top_k:
                     cv2.putText(frame, '{0} : {1}'.format(
-                        labels[i], results[i]), (30, c), font, font_size,
-                                color, font_thickness)
+                        labels[i], results[i]), (30, c), font, font_size, color,
+                                font_thickness)
                     print(labels[i], results[i])
                     c += 30
             else:
