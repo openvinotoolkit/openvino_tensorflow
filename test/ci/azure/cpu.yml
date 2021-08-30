@@ -73,8 +73,8 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r requirements.txt
       cd  examples/
+      pip3 install -r requirements.txt
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       cd $(WORK_DIR)
