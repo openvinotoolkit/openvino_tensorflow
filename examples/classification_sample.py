@@ -85,7 +85,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
-        "--input", help="Optional. An input video file to process.")
+        "--input",
+        help=
+        "Optional. The input to be processed. Path to an image or video or directory. Use 'cam' or 'camera' for using camera as input"
+    )
     parser.add_argument(
         "--input_height",
         type=int,
@@ -203,7 +206,6 @@ if __name__ == "__main__":
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
             results = np.squeeze(results)
-            # print labels
             if label_file:
                 cv2.putText(frame,
                             'Inference Running on : {0}'.format(backend_name),

@@ -87,7 +87,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
-        "--input", help="Optional. An input video file to be processed.")
+        "--input",
+        help=
+        "Optional. The input to be processed. Path to an image or video or directory. Use 'cam' or 'camera' for using camera as input."
+    )
     parser.add_argument(
         "--input_height",
         type=int,
