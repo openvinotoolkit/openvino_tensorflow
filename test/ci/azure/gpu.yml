@@ -59,7 +59,7 @@
      displayName: "C++ Inference Example"
 
    - script: |
-      cd  examples/TF1x/
+      cd  examples/TF_1_x/
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       export OPENVINO_TF_BACKEND=GPU

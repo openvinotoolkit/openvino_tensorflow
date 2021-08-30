@@ -186,7 +186,7 @@
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
    
    - script: |
-      cd  examples/TF1x/
+      cd  examples/TF_1_x/
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       export OPENVINO_TF_BACKEND=CPU
@@ -211,7 +211,7 @@
      displayName: "python CPU OD Inference Example TF2"
    
    - script: |
-      cd  examples/TF1x/
+      cd  examples/TF_1_x/
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       export OPENVINO_TF_BACKEND=GPU
@@ -236,7 +236,7 @@
      displayName: "python GPU OD Inference Example TF2"
    
    - script: |
-      cd  examples/TF1x/
+      cd  examples/TF_1_x/
       chmod +x convert_yolov3.sh
       ./convert_yolov3.sh
       export OPENVINO_TF_BACKEND=MYRIAD
