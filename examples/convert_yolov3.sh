@@ -8,7 +8,7 @@ model_name="yolo_v3_darknet"
 
 mkdir temp_build
 cd temp_build
-
+pip install matplotlib
 git clone https://github.com/david8862/keras-YOLOv3-model-set.git tensorflow-yolo-v3
 cd tensorflow-yolo-v3
 git checkout d38c3d8
