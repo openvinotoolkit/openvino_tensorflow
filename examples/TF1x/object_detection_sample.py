@@ -121,8 +121,10 @@ def non_max_suppression(predictions_with_boxes,
     result = {}
     for i, image_pred in enumerate(predictions):
         shape = image_pred.shape
-        non_zero_idxs = np.nonzero(image_pred)
-        image_pred = image_pred[non_zero_idxs]
+        temp = image_pred
+        sum_t = np.sum(temp, axis=1)
+        non_zero_idx = sum_t != 0
+        image_pred = image_pred[non_zero_idx, :]
         image_pred = image_pred.reshape(-1, shape[-1])
 
         bbox_attrs = image_pred[:, :5]

@@ -23,7 +23,7 @@ cd tensorflow-yolo-v3
 git checkout ed60b90
 wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
 wget https://pjreddie.com/media/files/yolov3.weights
-python3.6 convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
+python3 convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
 cp frozen_darknet_yolov3_model.pb ../../data/${model_name}.pb
 cp coco.names ../../data/
 cd ../..
