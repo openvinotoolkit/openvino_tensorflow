@@ -64,33 +64,33 @@ In this case, we are using the default image of Admiral Grace Hopper. As you can
 Next, try it out on your own image by passing the --image=argument, where argument is the path to your new image. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/tf1x/classification_sample.py --image=<absolute-or-relative-path-to-your-image>
+$ python3 examples/TF1x/classification_sample.py --image=<absolute-or-relative-path-to-your-image>
 ```
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/tf1x/classification_sample.py --image=examples/tf1x/data/my_image.png
+$ python3 examples/TF1x/classification_sample.py --image=examples/TF1x/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
-$ python3 examples/tf1x/classification_sample.py --help
+$ python3 examples/TF1x/classification_sample.py --help
 ```
 
 To run classification sample using video input, follow  the instructions below:
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/tf1x/classification_sample_video.py
+$ python3 examples/TF1x/classification_sample_video.py
 ```
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/tf1x/classification_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/TF1x/classification_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/tf1x/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/TF1x/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/tf1x/classification_sample_video.py --input=examples/tf1x/data/people-detection.mp4
+$ python3 examples/TF1x/classification_sample_video.py --input=examples/TF1x/data/people-detection.mp4
 ```
 
 ## Python implementation for object detection
@@ -102,6 +102,11 @@ For this example, we assume that you've already:
 
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
 
+Install the pre-requisites
+```bash
+$ cd <path-to-openvino_tensorflow-repository>/examples
+$ pip3 install -r requirements.txt
+```
 
 The TensorFlow Yolo v3 model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
 
@@ -122,14 +127,14 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/tf1x/object_detection_sample.py
+$ python3 examples/TF1x/object_detection_sample.py
 ```
 
 This uses the default example image that comes with this repository, and should
 output something similar as below:
 
 <p align="left">
-  <img src="../examples/tf1x/data/detections.jpg" width="200" height="200"
+  <img src="../examples/TF1x/data/detections.jpg" width="200" height="200"
 </p>
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
@@ -137,34 +142,34 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can 
 Next, try it out on your own image by passing the --image=argument, where argument is the path to your new image. You can provide either absolute or relative path in the argument e.g.
 
 ```bash
-$ python3 examples/tf1x/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>
+$ python3 examples/TF1x/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>
 ```
 
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/tf1x/object_detection_sample.py --image=examples/tf1x/data/my_image.png
+$ python3 examples/TF1x/object_detection_sample.py --image=examples/TF1x/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
-$ python3 examples/tf1x/object_detection_sample.py --help
+$ python3 examples/TF1x/object_detection_sample.py --help
 ```
 To run object detection sample with video input, follow the instructions below:
 ```bash
 $ pip3 install opencv-python
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/tf1x/object_detection_sample_video.py
+$ python3 examples/TF1x/object_detection_sample_video.py
 ```
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/tf1x/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/TF1x/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/tf1x/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/TF1x/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/tf1x/object_detection_sample_video.py --input=examples/tf1x/data/people-detection.mp4
+$ python3 examples/TF1x/object_detection_sample_video.py --input=examples/TF1x/data/people-detection.mp4
 ```
 
 To try on the yolo_v3_160 model for faster inference follow the below steps
@@ -181,7 +186,7 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/tf1x/object_detection_sample_video.py --input_height 160 --input_width 160 --graph "examples/tf1x/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/tf1x/data/coco.names"
+$ python3 examples/TF1x/object_detection_sample_video.py --input_height 160 --input_width 160 --graph "examples/TF1x/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/TF1x/data/coco.names"
 ```
 ## C++ Implementation for classification
 
@@ -200,7 +205,7 @@ The TensorFlow model used in this demo is not packaged in the repo because of it
 
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
-  tar -C <path-to-openvino_tensorflow-repository>/examples/tf1x/data -xz
+  tar -C <path-to-openvino_tensorflow-repository>/examples/TF1x/data -xz
 ```
 
 Run the following commands to build openvino_tensorflow with samples:
@@ -216,7 +221,7 @@ Now, a binary executable for classification_sample is built. Update the LD_LIBRA
 
 ```bash
 $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/lib:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/tensorflow
-$ ./build_cmake/examples/tf1x/classification_sample/infer_image
+$ ./build_cmake/examples/TF1x/classification_sample/infer_image
 ```
 
 This uses the default example image that comes with this repository, and should
@@ -238,16 +243,16 @@ Next, try it out on your own image by passing the --image= argument,  where argu
 
 
 ```bash
-$ ./build_cmake/examples/tf1x/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>
+$ ./build_cmake/examples/TF1x/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>
 ```
 
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ ./build_cmake/examples/tf1x/classification_sample/infer_image --image=examples/tf1x/data/my_image.png
+$ ./build_cmake/examples/TF1x/classification_sample/infer_image --image=examples/TF1x/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
-$ ./build_cmake/examples/tf1x/classification_sample/infer_image --help
+$ ./build_cmake/examples/TF1x/classification_sample/infer_image --help
 ```
