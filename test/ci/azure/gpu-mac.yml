@@ -34,7 +34,7 @@
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py
+      python3 build_ovtf.py --openvino_version=2021.4
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
