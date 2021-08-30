@@ -159,7 +159,7 @@ def load_venv(venv_dir):
 
     # add the virtual environments libraries to the host python import mechanism
     prev_length = len(sys.path)
-    for lib in "../lib/python3.8/site-packages".split(os.pathsep):
+    for lib in ("../lib/python3."+ str(sys.version_info.minor) + "/site-packages").split(os.pathsep):
         path = os.path.realpath(os.path.join(bin_dir, lib))
         site.addsitedir(path.decode("utf-8") if "" else path)
     sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]
