@@ -33,6 +33,7 @@ import tensorflow as tf
 import openvino_tensorflow as ovtf
 import time
 import cv2
+import imghdr
 
 
 def load_graph(model_file):
@@ -65,6 +66,27 @@ def load_labels(label_file):
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
     return label
+
+def get_input_mode(input_path):
+    if input_path.lower() in ['cam','camera']:
+        return "camera"
+    assert os.path.exists(input_file), "input path doesn't exist"
+    if os.path.isdir(input_path):
+        images = os.listdir(input_path)
+        if len(images) < 1:
+            assert False, "Input directory doesn't contain any images"
+        for i in images:
+            image_path = os.path.join(input_path, i)
+            if imghdr.what(image_path) == None:
+                assert False, "Input directory contains non image files"
+        return "folder"
+    elif os.path.isfile(input_path):
+        if imghdr.what(input_path) != None:
+            return "image"
+        elif input_path.rsplit('.',1)[1] in ['mp4','avi']:
+            return "video"
+
+            
 
 
 if __name__ == "__main__":
@@ -162,64 +184,81 @@ if __name__ == "__main__":
         ovtf.disable()
 
     #Load the labels
+    cap = None
+    images = []
     if label_file:
         labels = load_labels(label_file)
-
-    # Read input video file
-    assert os.path.exists(input_file), "Could not find input video file path"
-    cap = cv2.VideoCapture(input_file)
-
+    input_mode = get_input_mode(input_file)
+    if input_mode == "video":
+        cap = cv2.VideoCapture(input_file)
+    elif input_mode == "camera":
+        cap = cv2.VideoCapture(0)
+    elif input_mode == 'image':
+        images = [input_file]
+    elif input_mode == 'folder':
+        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+    images_len = len(images)
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
+    image_id = -1
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if ret is True:
-                # preprocessing
-                t = read_tensor_from_image_file(
-                    frame,
-                    input_height=input_height,
-                    input_width=input_width,
-                    input_mean=input_mean,
-                    input_std=input_std)
-
-                # run
-                start = time.time()
-                results = sess.run(output_operation.outputs[0],
-                                   {input_operation.outputs[0]: t})
-                elapsed = time.time() - start
-                fps = 1 / elapsed
-                print('Inference time in ms: %.2f' % (elapsed * 1000))
-                results = np.squeeze(results)
-
-                # print labels
-                if label_file:
-                    cv2.putText(
-                        frame,
-                        'Inference Running on : {0}'.format(backend_name),
-                        (30, 50), font, font_size, color, font_thickness)
-                    cv2.putText(
-                        frame, 'FPS : {0} | Inference Time : {1}ms'.format(
-                            int(fps), round((elapsed * 1000), 2)), (30, 80),
-                        font, font_size, color, font_thickness)
-                    top_k = results.argsort()[-5:][::-1]
-                    c = 130
-                    for i in top_k:
-                        cv2.putText(frame, '{0} : {1}'.format(
-                            labels[i], results[i]), (30, c), font, font_size,
-                                    color, font_thickness)
-                        print(labels[i], results[i])
-                        c += 30
-                else:
-                    print(
-                        "No label file provided. Cannot print classification results"
-                    )
-                if not args.no_show:
-                    cv2.imshow("results", frame)
-                    if cv2.waitKey(1) & 0XFF == ord('q'):
+        while True:
+            image_id += 1
+            if input_mode in ['camera', 'video']:
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    if ret is True:
+                        pass
+                    else:
                         break
+                else:
+                    break
+            if input_mode in ['image','folder']:
+                if image_id < images_len:
+                    frame = cv2.imread(images[image_id])
+                else:
+                    break
+            t = read_tensor_from_image_file(
+                frame,
+                input_height=input_height,
+                input_width=input_width,
+                input_mean=input_mean,
+                input_std=input_std)
+            # run
+            start = time.time()
+            results = sess.run(output_operation.outputs[0],
+                                {input_operation.outputs[0]: t})
+            elapsed = time.time() - start
+            fps = 1 / elapsed
+            print('Inference time in ms: %.2f' % (elapsed * 1000))
+            results = np.squeeze(results)
+            # print labels
+            if label_file:
+                cv2.putText(
+                    frame,
+                    'Inference Running on : {0}'.format(backend_name),
+                    (30, 50), font, font_size, color, font_thickness)
+                cv2.putText(
+                    frame, 'FPS : {0} | Inference Time : {1}ms'.format(
+                        int(fps), round((elapsed * 1000), 2)), (30, 80),
+                    font, font_size, color, font_thickness)
+                top_k = results.argsort()[-5:][::-1]
+                c = 130
+                for i in top_k:
+                    cv2.putText(frame, '{0} : {1}'.format(
+                        labels[i], results[i]), (30, c), font, font_size,
+                                color, font_thickness)
+                    print(labels[i], results[i])
+                    c += 30
             else:
-                break
+                print(
+                    "No label file provided. Cannot print classification results"
+                )
+            if not args.no_show:
+                cv2.imshow("results", frame)
+                if cv2.waitKey(1) & 0XFF == ord('q'):
+                    break
     sess.close()
-    cap.release()
-    cv2.destroyAllWindows()
+    if cap:
+        cap.release()
+        cv2.destroyAllWindows()
