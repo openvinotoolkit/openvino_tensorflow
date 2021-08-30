@@ -91,14 +91,30 @@ if (PYTHON)
      if (APPLE)
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             set(libMKLDNNPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libMKLDNNPlugind.so")
+            set(libmyriadPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libmyriadPlugind.so")
         else()
             set(libMKLDNNPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libMKLDNNPlugin.so")
+            set(libmyriadPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libmyriadPlugin.so")
         endif()
 
+        # libMKLDNNPluginPath
         execute_process(COMMAND
             install_name_tool -add_rpath
             @loader_path
             ${libMKLDNNPluginPath}
+            RESULT_VARIABLE result
+            ERROR_VARIABLE ERR
+            ERROR_STRIP_TRAILING_WHITESPACE
+        )
+        if(${result})
+             message(FATAL_ERROR "Cannot add rpath")
+        endif()
+
+        # libmyriadPluginPath
+        execute_process(COMMAND
+            install_name_tool -add_rpath
+            @loader_path
+            ${libmyriadPluginPath}
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
             ERROR_STRIP_TRAILING_WHITESPACE

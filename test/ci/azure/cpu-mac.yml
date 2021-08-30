@@ -65,6 +65,30 @@
      displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
      
    - script: |
+      export OPENVINO_TF_BACKEND=MYRIAD
+      export NGRAPH_TF_UTEST_RTOL=0.0001
+      pip install keras
+      
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+     condition: always()
+     workingDirectory: $(WORK_DIR) 
+     displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
+      export OPENVINO_TF_BACKEND=MYRIAD
+      export NGRAPH_TF_UTEST_RTOL=0.0001
+      pip install keras
+      
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+     condition: always()
+     workingDirectory: $(WORK_DIR)   
+     displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
       rm -rf *
      displayName: "Cleanup"   
      workingDirectory: $(WORK_DIR)
