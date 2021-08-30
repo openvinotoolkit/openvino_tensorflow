@@ -386,7 +386,8 @@ def main():
             else:
                 tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
             if (platform.system() == 'Darwin'):
-                if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
+                if (tf_version.startswith("v1.") or
+                    (tf_version.startswith("1."))):
                     tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
                 else:
                     tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
