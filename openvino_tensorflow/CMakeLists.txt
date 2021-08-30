@@ -109,9 +109,15 @@ else()
 endif()
 
 # Install OpenVINO libraries
+if (APPLE)
+  set(OCM_LIB libocm.dylib)
+else()
+  set(OCM_LIB libocm.so)
+endif()
+
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/libocm.so DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )

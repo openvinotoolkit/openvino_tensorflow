@@ -1,6 +1,6 @@
 # ******************************************************************************
 # Copyright (C) 2021 Intel Corporation
- 
+
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
@@ -88,54 +88,54 @@ if (PYTHON)
 
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})
-    if (APPLE)
-        execute_process(COMMAND
-            install_name_tool -change
-            libngraph.dylib
-            @loader_path/libngraph.dylib
-            ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libopenvino_tensorflow.dylib
-            RESULT_VARIABLE result
-            ERROR_VARIABLE ERR
-            ERROR_STRIP_TRAILING_WHITESPACE
-        )
-        if(${result})
-            message(FATAL_ERROR "Cannot update @loader_path")
-        endif()
+    # if (APPLE)
+    #     execute_process(COMMAND
+    #         install_name_tool -change
+    #         libngraph.dylib
+    #         @loader_path/libngraph.dylib
+    #         ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libopenvino_tensorflow.dylib
+    #         RESULT_VARIABLE result
+    #         ERROR_VARIABLE ERR
+    #         ERROR_STRIP_TRAILING_WHITESPACE
+    #     )
+    #     if(${result})
+    #         message(FATAL_ERROR "Cannot update @loader_path")
+    #     endif()
 
-        execute_process(COMMAND
-            install_name_tool -change
-            libngraph.dylib
-            @loader_path/libngraph.dylib
-            ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libcpu_backend.dylib
-            RESULT_VARIABLE result
-            ERROR_VARIABLE ERR
-            ERROR_STRIP_TRAILING_WHITESPACE
-        )
-        if(${result})
-            message(FATAL_ERROR "Cannot update @loader_path")
-        endif()
+    #     execute_process(COMMAND
+    #         install_name_tool -change
+    #         libngraph.dylib
+    #         @loader_path/libngraph.dylib
+    #         ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libcpu_backend.dylib
+    #         RESULT_VARIABLE result
+    #         ERROR_VARIABLE ERR
+    #         ERROR_STRIP_TRAILING_WHITESPACE
+    #     )
+    #     if(${result})
+    #         message(FATAL_ERROR "Cannot update @loader_path")
+    #     endif()
 
-        set(cpu_lib_list
-            libmkldnn.0.dylib
-            libmklml.dylib
-            libiomp5.dylib
-            libtbb.dylib
-        )
+    #     set(cpu_lib_list
+    #         libmkldnn.0.dylib
+    #         libmklml.dylib
+    #         libiomp5.dylib
+    #         libtbb.dylib
+    #     )
 
-        FOREACH(lib_file ${cpu_lib_list})
-            message("Library: " ${lib_file})
-            execute_process(COMMAND
-                install_name_tool -change
-                @rpath/${lib_file}
-                @loader_path/${lib_file}
-                ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libcpu_backend.dylib
-                RESULT_VARIABLE result
-                ERROR_VARIABLE ERR
-                ERROR_STRIP_TRAILING_WHITESPACE
-            )
-        ENDFOREACH()
+    #     FOREACH(lib_file ${cpu_lib_list})
+    #         message("Library: " ${lib_file})
+    #         execute_process(COMMAND
+    #             install_name_tool -change
+    #             @rpath/${lib_file}
+    #             @loader_path/${lib_file}
+    #             ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libcpu_backend.dylib
+    #             RESULT_VARIABLE result
+    #             ERROR_VARIABLE ERR
+    #             ERROR_STRIP_TRAILING_WHITESPACE
+    #         )
+    #     ENDFOREACH()
 
-    endif()
+    # endif()
 
     execute_process(
         COMMAND ${PYTHON} "setup.py" "bdist_wheel"

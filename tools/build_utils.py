@@ -106,7 +106,8 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    cmd = ["make", "-j" + num_cores]
+    adjusted_cores = str(int(num_cores) - 2)
+    cmd = ["make", "-j" + adjusted_cores]
     if verbose:
         cmd.extend(['VERBOSE=1'])
     command_executor(cmd, verbose=True)
@@ -143,6 +144,7 @@ def load_venv(venv_dir):
         compile(
             open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
         dict(__file__=activate_this_file))
+    # exec(open(activate_this_file).read(), {'__file__': activate_this_file})
 
     # excluding system-wide site-packages paths as they interfere when
     # venv tensorflow version is different from system-wide tensorflow version
@@ -165,16 +167,18 @@ def setup_venv(venv_dir):
     call(['which', 'pip'])
 
     # Patch the MacOS pip to avoid the TLS issue
-    if (platform.system() == 'Darwin'):
-        get_pip = open("get-pip.py", "wb")
-        call([
-            "curl",
-            "https://bootstrap.pypa.io/get-pip.py",
-        ], stdout=get_pip)
-        call(["python3", "./get-pip.py"])
+    # if (platform.system() == 'Darwin'):
+    #     get_pip = open("get-pip.py", "wb")
+    #     call([
+    #         "curl",
+    #         "https://bootstrap.pypa.io/get-pip.py",
+    #     ], stdout=get_pip)
+    #     call(["python3", "./get-pip.py"])
 
     # Install the pip packages
     package_list = [
+        "python",
+        "-m",
         "pip",
         "install",
         "-U",
@@ -681,13 +685,13 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     openvino_cmake_flags = [
         "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
+        "-DENABLE_VPU=OFF", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
         "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
-        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march=" +
-        target_arch + atom_flags, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi +
+        "-DENABLE_CPPLINT=OFF", "-DENABLE_SPEECH_DEMO=FALSE",
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DCMAKE_INSTALL_PREFIX=" + install_location
     ]
 
