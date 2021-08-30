@@ -175,24 +175,12 @@ def setup_venv(venv_dir):
 
     # Install the pip packages
     package_list = [
-        "pip",
-        "install",
-        "-U",
-        "pip",
-        "psutil",
-        "six>=1.12.0",
-        "numpy>=1.16.0,<1.19.0",
-        "wheel>=0.26",
-        "setuptools",
-        "mock",
-        "termcolor>=1.1.0",
-        "keras_applications>=1.0.6",
-        "--no-deps",
-        "keras",
-        "keras_preprocessing>=1.1.1,<1.2",
-        "--no-deps",
-        "yapf==0.26.0",
-        "opencv-python==4.5.2.54",
+        "pip", "install", "-U", "pip", "psutil", "six>=1.12.0",
+        "numpy>=1.16.0,<1.19.0", "wheel>=0.26", "setuptools", "mock",
+        "termcolor>=1.1.0", "keras_applications>=1.0.6", "--no-deps", "keras",
+        "keras_preprocessing>=1.1.1,<1.2", "--no-deps", "yapf==0.26.0",
+        "opencv-python==4.5.2.54", "scipy==1.5.4", "pillow==8.3.1",
+        "matplotlib==3.3.4"
     ]
     command_executor(package_list)
 
