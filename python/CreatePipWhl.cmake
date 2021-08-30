@@ -89,16 +89,22 @@ if (PYTHON)
     configure_file(${SETUP_PY_IN} ${SETUP_PY})
     configure_file(${INIT_PY_IN} ${INIT_PY})
      if (APPLE)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(libMKLDNNPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libMKLDNNPlugind.so")
+        else()
+            set(libMKLDNNPluginPath "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libMKLDNNPlugin.so")
+        endif()
+
         execute_process(COMMAND
             install_name_tool -add_rpath
             @loader_path
-            ${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/libMKLDNNPlugind.so
+            ${libMKLDNNPluginPath}
             RESULT_VARIABLE result
             ERROR_VARIABLE ERR
             ERROR_STRIP_TRAILING_WHITESPACE
         )
         if(${result})
-             message(FATAL_ERROR "Cannot update @loader_path")
+             message(FATAL_ERROR "Cannot add rpath")
         endif()
      endif()
 
