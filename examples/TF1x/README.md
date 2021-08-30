@@ -41,6 +41,12 @@ Once extracted, the data folder will contain two new files:
 
 Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
 
+Install the pre-requisites
+```bash
+$ cd <path-to-openvino_tensorflow-repository>/examples/TF1x
+$ pip3 install -r requirements.txt
+```
+
 Now, you can run classification sample using image input with the instructions below:
 
 
@@ -104,7 +110,7 @@ Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#
 
 Install the pre-requisites
 ```bash
-$ cd <path-to-openvino_tensorflow-repository>/examples
+$ cd <path-to-openvino_tensorflow-repository>/examples/TF1x
 $ pip3 install -r requirements.txt
 ```
 
