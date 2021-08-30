@@ -425,9 +425,9 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
         tf_cc_lib_name = 'libtensorflow_cc.so.1'
     if (platform.system() == 'Darwin'):
-        if (tf_version.startswith("v2.")):
+        if (tf_version.startswith("v2.") or (tf_version.startswith("2."))):
             tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
-        elif (tf_version.startswith("v1.")):
+        elif (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
