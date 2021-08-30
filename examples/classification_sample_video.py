@@ -35,25 +35,7 @@ import time
 import cv2
 import imghdr
 
-
-@tf.function
-def get_graph_def(x):
-    return x
-
-
-graph_def = get_graph_def.get_concrete_function(1.).graph.as_graph_def()
-
-
-def load_graph(model_file):
-    global graph_def
-    graph = tf.Graph()
-    assert os.path.exists(model_file), "Could not find model path"
-    with open(model_file, "rb") as f:
-        graph_def.ParseFromString(f.read())
-    with graph.as_default():
-        tf.graph_util.import_graph_def(graph_def)
-
-    return graph
+from common_utils import get_input_mode, load_graph
 
 
 def read_tensor_from_image_file(frame,
@@ -75,26 +57,6 @@ def load_labels(label_file):
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
     return label
-
-
-def get_input_mode(input_path):
-    if input_path.lower() in ['cam', 'camera']:
-        return "camera"
-    assert os.path.exists(input_file), "input path doesn't exist"
-    if os.path.isdir(input_path):
-        images = os.listdir(input_path)
-        if len(images) < 1:
-            assert False, "Input directory doesn't contain any images"
-        for i in images:
-            image_path = os.path.join(input_path, i)
-            if imghdr.what(image_path) == None:
-                assert False, "Input directory contains non image files"
-        return "folder"
-    elif os.path.isfile(input_path):
-        if imghdr.what(input_path) != None:
-            return "image"
-        elif input_path.rsplit('.', 1)[1] in ['mp4', 'avi']:
-            return "video"
 
 
 if __name__ == "__main__":
@@ -203,8 +165,10 @@ if __name__ == "__main__":
         cap = cv2.VideoCapture(0)
     elif input_mode == 'image':
         images = [input_file]
-    elif input_mode == 'folder':
+    elif input_mode == 'directory':
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+    else:
+        raise Exception("Unable to find the input mode")
     images_len = len(images)
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
@@ -221,7 +185,7 @@ if __name__ == "__main__":
                         break
                 else:
                     break
-            if input_mode in ['image', 'folder']:
+            if input_mode in ['image', 'directory']:
                 if image_id < images_len:
                     frame = cv2.imread(images[image_id])
                 else:
