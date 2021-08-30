@@ -64,10 +64,11 @@
       ./convert_yolov3.sh
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate      
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -r requirements.txt    
       python3 object_detection_sample.py --no_show
      workingDirectory: $(WORK_DIR) 
-     displayName: "python Inference Example TF1"
+     displayName: "python OD Inference Example TF1"
 
    - script: |
       export OPENVINO_TF_BACKEND=CPU
@@ -80,7 +81,7 @@
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show
      workingDirectory: $(WORK_DIR) 
-     displayName: "python Inference Example TF2"
+     displayName: "python OD Inference Example TF2"
    
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
