@@ -29,7 +29,6 @@ size_t backends_len() {
   return backends.size();
 }
 
-
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
   const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};

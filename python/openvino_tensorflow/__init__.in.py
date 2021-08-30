@@ -216,6 +216,7 @@ if ovtf_classic_loaded:
     def disable_dynamic_fallback():
         openvino_tensorflow_lib.disable_dynamic_fallback()
 
+
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
