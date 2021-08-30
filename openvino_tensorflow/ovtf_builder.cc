@@ -1281,8 +1281,8 @@ static Status TranslateCropAndResizeOp(
           std::vector<int64>({static_cast<int64>(box_ind[i]), y1, x1, 0}));
       auto end = ConstructNgNode<opset::Constant>(
           op->name(), ng::element::i64, ng::Shape{4},
-          std::vector<int64>(
-              {static_cast<int64>(box_ind[i]) + 1, y2 + 1, x2 + 1, static_cast<int64>(image_depth + 1)}));
+          std::vector<int64>({static_cast<int64>(box_ind[i]) + 1, y2 + 1,
+                              x2 + 1, static_cast<int64>(image_depth + 1)}));
       auto strides = ConstructNgNode<opset::Constant>(
           op->name(), ng::element::i64, ng::Shape{4},
           std::vector<int64>({1, stride_height, stride_width, 1}));
