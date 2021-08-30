@@ -29,11 +29,23 @@ size_t backends_len() {
   return backends.size();
 }
 
+
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
+  const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};
+  int i, j = 0;
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    backends[idx] = backendList[idx];
+    for (i = 0; i < 4; i++){
+        if (strcmp(backendList[idx],devices[i]) == 0)
+          break;
+    }
+    if (i != 4)
+      backends[j++] = backendList[idx];
+  }
+  if (j != 4){
+    for (; j<4; j++)
+      backends[j] = NULL;
   }
   return true;
 }

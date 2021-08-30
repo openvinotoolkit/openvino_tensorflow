@@ -141,7 +141,8 @@ if ovtf_classic_loaded:
         # convert bytes to string required for py3 (encode/decode bytes)
         backend_list = []
         for backend in list_result:
-            backend_list.append(backend.decode("utf-8"))
+            if backend:
+                backend_list.append(backend.decode("utf-8"))
         openvino_tensorflow_lib.freeBackendsList()
         return backend_list
 
