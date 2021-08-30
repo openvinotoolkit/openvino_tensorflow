@@ -67,7 +67,6 @@ if __name__ == "__main__":
     output_layer = [
         "conv2d_58/BiasAdd", "conv2d_66/BiasAdd", "conv2d_74/BiasAdd"
     ]
-    supported_backends = ['CPU', 'GPU', 'MYRIAD', 'VAD-M']
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
@@ -169,7 +168,6 @@ if __name__ == "__main__":
         # Print list of available backends
         print('Available Backends:')
         backends_list = ovtf.list_backends()
-        backends_list = [b for b in backends_list if b in supported_backends]
         for backend in backends_list:
             print(backend)
         ovtf.set_backend(backend_name)
