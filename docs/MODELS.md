@@ -123,5 +123,175 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [yolo-v3](https://download.01.org/opencv/public_models/022020/yolo_v3/yolov3.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo-v3-tiny-tf](https://download.01.org/opencv/public_models/082020/yolo-v3-tiny-tf/yolo-v3-tiny-tf.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo-v4](https://github.com/david8862/keras-YOLOv3-model-set)| CPU, iGPU, MYRIAD, VAD-M |
+| [image-retrieval-0001](https://download.01.org/opencv/openvino_training_extensions/models/image_retrieval/image-retrieval-0001.tar.gz)| CPU |
+| [ssd_resnet50_v1_fpn_coco](http://download.tensorflow.org/models/object_detection/ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz)| CPU |
+| [icnet-camvid-ava-0001](https://docs.openvinotoolkit.org/latest/omz_models_model_icnet_camvid_ava_0001.html)| CPU|
+| [icnet-camvid-ava-sparse-30-0001](https://download.01.org/opencv/2020/openvinotoolkit/2020.2/open_model_zoo/models_bin/2/icnet-camvid-ava-sparse-30-0001/)| CPU|
+| [icnet-camvid-ava-sparse-60-0001](https://download.01.org/opencv/2020/openvinotoolkit/2020.2/open_model_zoo/models_bin/2/icnet-camvid-ava-sparse-60-0001/)| CPU|
+| [person-vehicle-bike-detection-crossroad-yolov3-1020](https://docs.openvinotoolkit.org/latest/omz_models_model_person_vehicle_bike_detection_crossroad_yolov3_1020.html) | CPU |
+| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU |
+| [handwritten-score-recognition-0003](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/intel/handwritten-score-recognition-0003/README.md) | CPU |
+| [text-recognition-0012](https://docs.openvinotoolkit.org/latest/omz_models_model_text_recognition_0012.html) | CPU |
+| [mask_rcnn_resnet50_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz) | CPU |
+| [vehicle-license-plate-detection-barrier-0106](https://docs.openvinotoolkit.org/latest/omz_models_model_vehicle_license_plate_detection_barrier_0106.html) | CPU |
+| [BERT_LARGE](https://drive.google.com/drive/folders/1oQF4diVHNPCclykwdvQJw8n_VIWwV0PT) | CPU |
+| [SqueezeNet](https://github.com/Dawars/SqueezeNet-tf.git) | CPU |
+| [ResNet-50_v1.5](https://zenodo.org/record/2535873/files/resnet50_v1.pb) | CPU |
+| [faster_rcnn_inception_resnet_v2_atrous_oid](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_oid_2018_01_28.tar.gz) | CPU |
+| [ssd_mobilenet_v1_0.75_depth_300x300_coco](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_0.75_depth_quantized_300x300_coco14_sync_2018_07_18.tar.gz) | CPU |
+| [ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03.tar.gz) | CPU |
+| [faster_rcnn_resnet101_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_lowproposals_coco_2018_01_28.tar.gz) | CPU |
+| [faster_rcnn_resnet50_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_fgvc_2018_07_19.tar.gz) | CPU |
+| [ssd_resnet34_300x300](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_6/ssd_resnet34_fp32_bs1_pretrained_model.pb) | CPU |
+| [SSD_ResNet50_V1_FPN_640x640_RetinaNet50](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz) | CPU |
+| [faster_rcnn_nas_coco_2018_01_28](http://download.tensorflow.org/models/object_detection/faster_rcnn_nas_coco_2018_01_28.tar.gz) | CPU |
+| [faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco_2018_01_28.tar.gz) | CPU |
+| [ALBERT](https://storage.googleapis.com/albert_models/albert_base_v2.tar.gz  ) | CPU |
+| [NCF-1B]( https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_5/ncf_fp32_pretrained_model.tar.gz) | CPU |
+| [R-FCN](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz) | CPU |
+| [wavenet](https://storage.googleapis.com/intel-optimized-tensorflow/models/wavenet_fp32_pretrained_model.tar.gz) | CPU |
+| [ResNext_50](https://github.com/HiKapok/TF-SENet) | CPU |
+| [ResNeXt_101](https://drive.google.com/uc?id=1AEYDWTWEGh6xGN-fSFB_f94FujdTJyKS) | CPU |
+| [ACGAN](https://github.com/hwalsuklee/tensorflow-generative-model-collections) | CPU |
+| [ssd_resnet34_fp32_1200x1200_pretrained_model](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_fp32_1200x1200_pretrained_model.pb  ) | CPU |
+| [wide_deep](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/wide_deep_fp32_pretrained_model.pb) | CPU |
+| [EfficientDet-D0-512x512](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d0_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D1-640x640](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d1_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D2-768x768](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d2_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D3-896x896](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d3_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D4-1024x1024](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d4_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D5-1280x1280](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d5_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D6-1280x1280](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d6_coco17_tpu-32.tar.gz) | CPU |
+| [EfficientDet-D7-1536x1536](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d7_coco17_tpu-32.tar.gz) | CPU |
+| [ssd_resnet_101_fpn_oidv4](http://download.tensorflow.org/models/object_detection/ssd_resnet101_v1_fpn_shared_box_predictor_oid_512x512_sync_2019_01_20.tar.gz) | CPU |
+| [context_rcnn_resnet101_snapshot_serenget](http://download.tensorflow.org/models/object_detection/context_rcnn_resnet101_snapshot_serengeti_2020_06_10.tar.gz) | CPU |
+| [adv_inception_v3](http://download.tensorflow.org/models/adv_inception_v3_2017_08_18.tar.gz) | CPU |
+| [ens3_adv_inception_v3](http://download.tensorflow.org/models/ens3_adv_inception_v3_2017_08_18.tar.gz) | CPU |
+
+## Tensorflow Hub Models
+| Model Name | Supported Devices |
+|---|---|
+| [albert_en_base](https://tfhub.dev/tensorflow/albert_en_base/3)| CPU,  GPU,  MYRIAD |
+| [albert_en_preprocess](https://tfhub.dev/tensorflow/albert_en_preprocess/3)| CPU,  GPU,  MYRIAD |
+| [albert_en_xxlarge](https://tfhub.dev/tensorflow/albert_en_xxlarge/3?tf-hub-format=compressed)| CPU,  GPU,  MYRIAD |
+| [bert_en_cased_L-12_H-768_A-12](https://tfhub.dev/tensorflow/bert_en_cased_L-12_H-768_A-12/2)| CPU,  GPU,  MYRIAD |
+| [bert_en_cased_L-24_H-1024_A-16](https://tfhub.dev/tensorflow/bert_en_cased_L-24_H-1024_A-16/1)| CPU,  GPU,  MYRIAD |
+| [bert_en_uncased_L-12_H-768_A-12](https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/)| CPU, GPU, MYRIAD |
+| [bert_en_uncased_L-24_H-1024_A-16](https://tfhub.dev/tensorflow/brrt_en_uncased_L-24_H-1024_A-16/)| CPU,  GPU,  MYRIAD |
+| [bert_en_uncased_preprocess](https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3)| CPU,  GPU,  MYRIAD |
+| [bert_en_wwm_uncased_L-24_H-1024_A-16](https://tfhub.dev/tensorflow/bert_en_wwm_uncased_L-24_H-1024_A-16/4)| CPU,  GPU,  MYRIAD |
+| [bert_multi_cased_preprocess](https://tfhub.dev/tensorflow/bert_multi_cased_preprocess/2)| CPU,  GPU,  MYRIAD |
+| [bert_zh_L-12_H-768_A-12](https://tfhub.dev/tensorflow/bert_zh_L-12_H-768_A-12/1)| CPU, GPU, MYRIAD |
+| [bert_zh_preprocess](https://tfhub.dev/tensorflow/bert_zh_preprocess/3)| CPU,  GPU,  MYRIAD |
+| [bit​/m-r101x1](https://tfhub.dev/google/bit/m-r101x1/1)| CPU, GPU,  MYRIAD |
+| [bit​/m-r101x3](https://tfhub.dev/google/bit/m-r101x3/1)|    MYRIAD |
+| [bit​/m-r50x1](https://tfhub.dev/google/bit/m-r50x1/1)| CPU,  GPU,  MYRIAD |
+| [bit​/m-r50x1​/ilsvrc2012_classification](https://tfhub.dev/google/bit/m-r50x1/ilsvrc2012_classification/1)| CPU,  GPU,  MYRIAD |
+| [bit​/m-r50x3](https://tfhub.dev/google/bit/m-r50x3/1)| CPU, GPU,  MYRIAD |
+| [bit​/s-r50x1](https://tfhub.dev/google/bit/s-r50x1/1)| CPU,  GPU,  MYRIAD |
+| [centernet​/hourglass_512x512](https://tfhub.dev/tensorflow/centernet/hourglass_512x512/1)| GPU,  MYRIAD |
+| [centernet​/hourglass_512x512_kpts](https://tfhub.dev/tensorflow/centernet/hourglass_512x512_kpts/1)| CPU, GPU, MYRIAD |
+| [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)|  GPU,  MYRIAD |
+| [cropnet​/classifier​/cassava_disease_V1](https://tfhub.dev/google/cropnet/classifier/cassava_disease_V1/2)| CPU,  GPU,  MYRIAD |
+| [efficientdet​/d0](https://tfhub.dev/tensorflow/efficientdet/d0/1)| CPU,  GPU,  MYRIAD |
+| [efficientdet​/d4](https://tfhub.dev/tensorflow/efficientdet/d4/1)| CPU,  GPU,  MYRIAD |
+| [efficientdet​/d7](https://tfhub.dev/tensorflow/efficientdet/d7/1)|CPU,   MYRIAD |
+| [efficientdet​/lite0​/detection](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)| CPU,  MYRIAD |
+| [efficientdet​/lite0​/feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite0/feature-vector/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b0​/classification](https://tfhub.dev/google/efficientnet/b0/classification/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b0​/feature-vector](https://tfhub.dev/google/efficientnet/b0/feature-vector/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b3​/feature-vector](https://tfhub.dev/google/efficientnet/b3/feature-vector/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b4​/feature-vector](https://tfhub.dev/google/efficientnet/b4/feature-vector/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b7​/classification](https://tfhub.dev/google/efficientnet/b7/classification/1)| CPU,  GPU,  MYRIAD |
+| [efficientnet​/b7​/feature-vector](https://tfhub.dev/google/efficientnet/b7/feature-vector/1)| CPU,  GPU,  MYRIAD |
+| [electra_small](https://tfhub.dev/google/electra_small/2)| CPU,  GPU,  MYRIAD |
+| [esrgan-tf2](https://tfhub.dev/captain-pool/esrgan-tf2/1)| CPU,  GPU,  MYRIAD |
+| [experts​/bert​/wiki_books](https://tfhub.dev/google/experts/bert/wiki_books/2)| CPU,  GPU,  MYRIAD |
+| [faster_rcnn​/inception_resnet_v2_1024x1024](https://tfhub.dev/tensorflow/faster_rcnn/inception_resnet_v2_1024x1024/1)| CPU,  GPU,  MYRIAD |
+| [faster_rcnn​/inception_resnet_v2_640x640](https://tfhub.dev/tensorflow/faster_rcnn/inception_resnet_v2_640x640/1)| CPU, GPU, MYRIAD |
+| [faster_rcnn​/resnet50_v1_640x640](https://tfhub.dev/tensorflow/faster_rcnn/resnet50_v1_640x640/1)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_resnet_v2​/classification](https://tfhub.dev/google/imagenet/inception_resnet_v2/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_resnet_v2​/feature_vector](https://tfhub.dev/google/imagenet/inception_resnet_v2/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_v1​/classification](https://tfhub.dev/google/imagenet/inception_v1/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_v1​/feature_vector](https://tfhub.dev/google/imagenet/inception_v1/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_v2​/feature_vector](https://tfhub.dev/google/imagenet/inception_v2/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_v3​/classification](https://tfhub.dev/google/imagenet/inception_v3/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/inception_v3​/feature_vector](https://tfhub.dev/google/imagenet/inception_v3/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v1_025_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v1_025_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v1_050_160​/classification](https://tfhub.dev/google/imagenet/mobilenet_v1_050_160/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v1_100_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v1_100_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_035_128​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_035_128/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_035_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_035_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_035_96​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_035_96/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_050_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_050_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_075_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_075_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_100_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_100_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_130_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_130_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_140_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v2_140_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/mobilenet_v3_small_100_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_small_100_224/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/pnasnet_large​/feature_vector](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/5)| CPU,  MYRIAD |
+| [imagenet​/resnet_v1_50​/feature_vector](https://tfhub.dev/google/imagenet/resnet_v1_50/feature_vector/5)| CPU, GPU,  MYRIAD |
+| [imagenet​/resnet_v2_152​/feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/resnet_v2_50​/classification](https://tfhub.dev/google/imagenet/resnet_v2_50/classification/5)| CPU,  GPU,  MYRIAD |
+| [imagenet​/resnet_v2_50​/feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [inaturalist​/inception_v3​/feature_vector](https://tfhub.dev/google/inaturalist/inception_v3/feature_vector/5)| CPU,  GPU,  MYRIAD |
+| [LaBSE](https://tfhub.dev/google/LaBSE/2)| CPU,  GPU,  MYRIAD |
+| [mask_rcnn​/inception_resnet_v2_1024x1024](https://hub.tensorflow.google.cn/tensorflow/mask_rcnn/inception_resnet_v2_1024x1024/1)| CPU,  GPU,  MYRIAD |
+| [movenet​/singlepose​/lightning](https://tfhub.dev/google/movenet/singlepose/lightning/3)| CPU,  GPU,  MYRIAD |
+| [MuRIL](https://tfhub.dev/google/MuRIL/1)| CPU,  GPU,  MYRIAD |
+| [nnlm-de-dim50](https://tfhub.dev/google/nnlm-de-dim50/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-de-dim50-with-normalization](https://tfhub.dev/google/nnlm-de-dim50-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-en-dim128](https://tfhub.dev/google/nnlm-en-dim128/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-en-dim128-with-normalization](https://tfhub.dev/google/nnlm-en-dim128-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-en-dim50](https://tfhub.dev/google/nnlm-en-dim50/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-en-dim50-with-normalization](https://tfhub.dev/google/nnlm-en-dim50-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-es-dim128](https://tfhub.dev/google/nnlm-es-dim128/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-ja-dim128](https://tfhub.dev/google/nnlm-ja-dim128/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-ja-dim128-with-normalization](https://tfhub.dev/google/nnlm-ja-dim128-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [nnlm-ja-dim50](https://tfhub.dev/google/nnlm-ja-dim50/2)| CPU,  GPU,  MYRIAD |
+| [nonsemantic-speech-benchmark​/trill](https://tfhub.dev/google/nonsemantic-speech-benchmark/trill/3)| CPU,  GPU,  MYRIAD |
+| [nonsemantic-speech-benchmark​/trill-distilled](https://tfhub.dev/google/nonsemantic-speech-benchmark/trill-distilled/3)| CPU,  GPU,  MYRIAD |
+| [resnet_50​/classification](https://tfhub.dev/tensorflow/resnet_50/classification/1)| CPU,  GPU,  MYRIAD |
+| [resnet_50​/feature_vector](https://tfhub.dev/tensorflow/resnet_50/feature_vector/1?tf-hub-format=compressed)| CPU,  GPU,  MYRIAD |
+| [small_bert​/bert_en_uncased_L-2_H-128_A-2](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-128_A-2/2)| CPU,  GPU,  MYRIAD |
+| [small_bert​/bert_en_uncased_L-4_H-512_A-8](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/2)| CPU,  GPU,  MYRIAD |
+| [ssd_mobilenet_v2](https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2)| CPU,  GPU,  MYRIAD |
+| [ssd_mobilenet_v2​/fpnlite_320x320](https://tfhub.dev/tensorflow/ssd_mobilenet_v2/fpnlite_320x320/1)| CPU,  GPU,  MYRIAD |
+| [ssd_mobilenet_v2​/fpnlite_640x640](https://tfhub.dev/tensorflow/ssd_mobilenet_v2/fpnlite_640x640/1)| CPU, GPU,  MYRIAD |
+| [tf2-preview​/gnews-swivel-20dim](https://tfhub.dev/google/tf2-preview/gnews-swivel-20dim/1)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/gnews-swivel-20dim-with-oov](https://tfhub.dev/google/tf2-preview/gnews-swivel-20dim-with-oov/1)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/inception_v3​/classification](https://tfhub.dev/google/tf2-preview/inception_v3/classification/4)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/inception_v3​/feature_vector](https://tfhub.dev/google/tf2-preview/inception_v3/feature_vector/4)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/mobilenet_v2​/classification](https://tfhub.dev/google/tf2-preview/mobilenet_v2/classification/4)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/mobilenet_v2​/feature_vector](https://tfhub.dev/google/tf2-preview/mobilenet_v2/feature_vector/4)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/nnlm-en-dim128](https://tfhub.dev/google/tf2-preview/nnlm-en-dim128/1)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/nnlm-en-dim128-with-normalization](https://tfhub.dev/google/tf2-preview/nnlm-en-dim128-with-normalization/1)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/nnlm-en-dim50](https://tfhub.dev/google/tf2-preview/nnlm-en-dim50/1)| CPU,  GPU,  MYRIAD |
+| [tf2-preview​/nnlm-es-dim50-with-normalization](https://tfhub.dev/google/tf2-preview/nnlm-es-dim50-with-normalization/1)| CPU,  GPU,  MYRIAD |
+| [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/4)| CPU,  GPU,  MYRIAD |
+| [universal-sentence-encoder-cmlm​/multilingual-preprocess](https://tfhub.dev/google/universal-sentence-encoder-cmlm/multilingual-preprocess/)| CPU,  GPU,  MYRIAD |
+| [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/5)| CPU, MYRIAD |
+| [universal-sentence-encoder-multilingual](https://tfhub.dev/google/universal-sentence-encoder-multilingual/3)| CPU, GPU, MYRIAD |
+| [universal-sentence-encoder-multilingual-large](https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/3)| CPU, GPU, MYRIAD |
+| [universal-sentence-encoder-multilingual-qa](https://tfhub.dev/google/universal-sentence-encoder-multilingual-qa/3)| CPU, GPU, MYRIAD |
+| [universal-sentence-encoder-qa](https://tfhub.dev/google/universal-sentence-encoder-qa/3)| CPU,  MYRIAD |
+| [vggish](https://tfhub.dev/google/vggish/1)| CPU,  GPU,  MYRIAD |
+| [Wiki-words-250](https://tfhub.dev/google/Wiki-words-250/2)| CPU,  GPU,  MYRIAD |
+| [Wiki-words-250-with-normalization](https://tfhub.dev/google/Wiki-words-250-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [Wiki-words-500-with-normalization](https://tfhub.dev/google/Wiki-words-500-with-normalization/2)| CPU,  GPU,  MYRIAD |
+| [yamnet](https://tfhub.dev/google/yamnet/1)| CPU,  GPU,  MYRIAD |
+
+## OMZ MODELS 
+
+| Model Name | Supported Devices |
+|---|---|
+| [efficientdet-d0_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdett)|   CPU,  iGPU,  MYRIAD |
+| [efficientdet-d1_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdet)|    CPU,  iGPU,  MYRIAD |
+| [resnext50v2](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz) | CPU,  iGPU,  MYRIAD |
+
 
 Pre-trained frozen model files are provided for only some of these models. For the rest, please refer to the links provided.
+
