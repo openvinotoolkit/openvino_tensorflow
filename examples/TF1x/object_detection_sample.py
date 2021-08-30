@@ -163,7 +163,7 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    input_file = "data/grace_hopper.jpg "
+    input_file = "data/grace_hopper.jpg"
     model_file = "data/yolo_v3_darknet.pb"
     label_file = "data/coco.names"
     input_height = 416

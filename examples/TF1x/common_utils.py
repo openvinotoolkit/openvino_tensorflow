@@ -6,7 +6,8 @@ import tensorflow as tf
 def get_input_mode(input_path):
     if input_path.lower() in ['cam', 'camera']:
         return "camera"
-    assert os.path.exists(input_path), "input path doesn't exist"
+    assert os.path.exists(input_path), "input path doesn't exist {0}".format(
+        input_path)
     if os.path.isdir(input_path):
         images = os.listdir(input_path)
         if len(images) < 1:
