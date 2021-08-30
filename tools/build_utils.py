@@ -125,7 +125,7 @@ def install_virtual_env(venv_dir):
     venv_dir = os.path.abspath(venv_dir)
     # Note: We assume that we are using Python 3 (as this script is also being
     # executed under Python 3 as marked in line 1)
-    command_executor(["virtualenv", "-p", "python3", venv_dir])
+    command_executor(["python3", "-m", "venv", venv_dir])
 
 
 def load_venv(venv_dir):
@@ -136,15 +136,36 @@ def load_venv(venv_dir):
     #         or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
     print("Loading virtual environment from: %s" % venv_dir)
 
-    activate_this_file = venv_dir + "/bin/activate_this.py"
+    # Since activate_this.py is no longer available in python3's default venv support,
+    # we bring its functionality into this load_env module
+    # activate_this_file = venv_dir + "/bin/activate_this.py"
     # The execfile API is for Python 2. We keep here just in case you are on an
     # obscure system without Python 3
     # execfile(activate_this_file, dict(__file__=activate_this_file))
-    exec(
-        compile(
-            open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
-        dict(__file__=activate_this_file))
+    # exec(
+    #     compile(
+    #         open(activate_this_file, "rb").read(), activate_this_file, 'exec'),
+    #     dict(__file__=activate_this_file))
     # exec(open(activate_this_file).read(), {'__file__': activate_this_file})
+
+    bin_dir = os.path.join(venv_dir, "bin")
+    base = bin_dir[: -len("bin") - 1]  # strip away the bin part from the __file__, plus the path separator
+
+    # prepend bin to PATH (this file is inside the bin directory)
+    os.environ["PATH"] = os.pathsep.join([bin_dir] + os.environ.get("PATH", "").split(os.pathsep))
+    os.environ["VIRTUAL_ENV"] = base  # virtual env is right above bin directory
+
+    import site
+
+    # add the virtual environments libraries to the host python import mechanism
+    prev_length = len(sys.path)
+    for lib in "../lib/python3.8/site-packages".split(os.pathsep):
+        path = os.path.realpath(os.path.join(bin_dir, lib))
+        site.addsitedir(path.decode("utf-8") if "" else path)
+    sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]
+
+    sys.real_prefix = sys.prefix
+    sys.prefix = base
 
     # excluding system-wide site-packages paths as they interfere when
     # venv tensorflow version is different from system-wide tensorflow version
@@ -156,6 +177,8 @@ def load_venv(venv_dir):
     # ignore site-package installations in user-space
     import site
     site.ENABLE_USER_SITE = False
+
+    print(sys.path)
 
     return venv_dir
 
@@ -176,13 +199,10 @@ def setup_venv(venv_dir):
     #     call(["python3", "./get-pip.py"])
 
     # Install the pip packages
+    command_executor(["pip3", "install", "-U", "pip"])
     package_list = [
-        "python",
-        "-m",
-        "pip",
+        "pip3",
         "install",
-        "-U",
-        "pip",
         "psutil",
         "six>=1.12.0",
         "numpy>=1.16.0,<1.19.0",
