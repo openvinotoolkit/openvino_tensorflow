@@ -106,8 +106,7 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    adjusted_cores = str(int(num_cores) - 2)
-    cmd = ["make", "-j" + adjusted_cores]
+    cmd = ["make", "-j" + num_cores]
     if verbose:
         cmd.extend(['VERBOSE=1'])
     command_executor(cmd, verbose=True)
@@ -191,14 +190,7 @@ def setup_venv(venv_dir):
     print("PIP location")
     call(['which', 'pip'])
 
-    # Patch the MacOS pip to avoid the TLS issue
-    # if (platform.system() == 'Darwin'):
-    #     get_pip = open("get-pip.py", "wb")
-    #     call([
-    #         "curl",
-    #         "https://bootstrap.pypa.io/get-pip.py",
-    #     ], stdout=get_pip)
-    #     call(["python3", "./get-pip.py"])
+
 
     # Install the pip packages
     command_executor(["pip3", "install", "-U", "pip"])
@@ -707,7 +699,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     openvino_cmake_flags = [
         "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=OFF", "-DENABLE_GNA=OFF",
+        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
         "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi,
