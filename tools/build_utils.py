@@ -178,8 +178,6 @@ def load_venv(venv_dir):
     import site
     site.ENABLE_USER_SITE = False
 
-    print(sys.path)
-
     return venv_dir
 
 
