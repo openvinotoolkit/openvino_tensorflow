@@ -3,7 +3,6 @@
 
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
-[**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/aditya/samples_upgrade/examples/TF1x/README.md) For Tensorflow 1.15 implementation of the C++ and Python samples
 ## Demos showcased in the examples
 
 * Classification demo uses Google's Inception v3 model to classify a given image, video, directory and camera input.
@@ -104,6 +103,8 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system (TF2.x)
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
+[**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/examples/TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
+
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
 
 Install the pre-requisites
@@ -114,7 +115,6 @@ $ pip3 install -r requirements.txt
 
 The TensorFlow Yolo v3 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
 
-Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3.sh script activates a python virtual environment for conversion.
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>/examples
