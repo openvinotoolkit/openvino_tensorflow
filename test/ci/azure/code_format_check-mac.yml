@@ -1,0 +1,49 @@
+ resources:
+  repositories:
+  - repository: openvino_tensorflow
+    type: github
+    endpoint: openvinotoolkit
+    name: openvinotoolkit/openvino_tensorflow
+    
+ pool:
+  name: 'mac'
+  
+ variables:
+    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
+    BUILD_DIR: $(WORK_DIR)/build
+    OV_LOCATION: /opt/intel/openvino_2021.3.394/
+    
+ steps:
+ 
+   - script: |
+      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)
+      rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
+      
+   
+   - checkout: self
+     clean: true
+     lfs: false
+     path: openvino_tensorflow
+ 
+   - script: |
+      pip install -U pip yapf==0.26.0 pytest psutil keras==2.4.3
+     displayName: "Setup" 
+    
+   - script: |
+      echo $(WORK_DIR)
+      git submodule init
+      git submodule update
+      python3 build_ovtf.py
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Build"
+     
+   - script: |
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      ./maint/check-code-format.sh
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Code format check"
+     
+   - script: |
+      rm -rf *
+     displayName: "Cleanup"   
+     workingDirectory: $(WORK_DIR)
