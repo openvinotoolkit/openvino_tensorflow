@@ -150,7 +150,7 @@ if __name__ == "__main__":
         #Print list of available backends
         print('Available Backends:')
         backends_list = ovtf.list_backends()
-        backends_list = [if b in supported_backends for b in backends_list]
+        backends_list = [b for b in backends_list if b in supported_backends]
         for backend in backends_list:
             print(backend)
         ovtf.set_backend(backend_name)
