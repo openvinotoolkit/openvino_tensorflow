@@ -33,8 +33,13 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 import imghdr
+import sys
 from PIL import Image, ImageFont, ImageDraw
-from common_utils import get_input_mode, load_graph
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+utils_path = os.path.dirname(os.path.realpath(os.path.join(dir_path, '.')))
+sys.path.insert(0, utils_path)
+from common.utils import get_input_mode, load_graph
 
 
 def load_coco_names(file_name):
@@ -165,9 +170,9 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    input_file = "data/grace_hopper.jpg"
-    model_file = "data/yolo_v3_darknet.pb"
-    label_file = "data/coco.names"
+    input_file = "examples/data/grace_hopper.jpg"
+    model_file = "examples/data/yolo_v3_darknet_1.pb"
+    label_file = "examples/data/coco.names"
     input_height = 416
     input_width = 416
     input_mean = 0
