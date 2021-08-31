@@ -57,7 +57,7 @@ def load_labels(label_file):
 
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/yolo_v3_darknet.pb"
+    model_file = "examples/data/yolo_v3_darknet_2.pb"
     label_file = "examples/data/coco.names"
     input_height = 416
     input_width = 416
