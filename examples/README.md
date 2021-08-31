@@ -66,7 +66,7 @@ bulletproof vest (466): 0.00535091
 
 In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
-Next, try it out by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path to an image or video or directory.
+Next, try it out by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path to an image or video or directory of images.
 e.g.
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
@@ -223,17 +223,17 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own image by passing the --input= argument,  where argument is the path to your new input. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own image by passing the --image= argument,  where argument is the path to your new input. You can provide either absolute or relative path in the argument  e.g.
 
 
 ```bash
-$ ./build_cmake/examples/classification_sample/infer_image --input=<absolute-or-relative-path-to-your-image>
+$ ./build_cmake/examples/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>
 ```
 
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ ./build_cmake/examples/classification_sample/infer_image --input=examples/data/my_image.png
+$ ./build_cmake/examples/classification_sample/infer_image --image=examples/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
