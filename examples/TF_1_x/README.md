@@ -4,7 +4,7 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Demos showcased in the examples
 
- Object detection demo uses YOLOv3 daraknet model to detect objects in a given image, video, directory and camera input.
+ Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory and camera input.
 
 ## Setup for the examples
 
@@ -37,7 +37,7 @@ The TensorFlow Yolo v3 model used in this demo is not packaged in the repository
 Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3.sh script activates a python virtual environment for conversion.
 
 ```bash
-$ cd <path-to-openvino_tensorflow-repository>/examples
+$ cd <path-to-openvino_tensorflow-repository>/examples/TF_1_x
 $ chmod +x convert_yolov3.sh
 $ ./convert_yolov3.sh
 ```
@@ -45,7 +45,7 @@ $ ./convert_yolov3.sh
 Once completed, the data folder will contain following files needed to run the object detection example:
 
 * coco.names
-* yolo_v3_darknet.pb
+* yolo_v3_darknet_1.pb
 
 Run the object detection example using the instructions below:
 
@@ -58,7 +58,7 @@ This uses the default example image that comes with this repository, and should
 output something similar as below:
 
 <p align="left">
-  <img src="../examples/TF_1_x/data/detections.jpg" width="200" height="200"
+  <img src="../data/detections.jpg" width="200" height="200"
 </p>
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
@@ -72,28 +72,23 @@ $ python3 examples/TF_1_x/object_detection_sample.py --image=<absolute-or-relati
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --image=examples/TF_1_x/data/my_image.png
+$ python3 examples/TF_1_x/object_detection_sample.py --image=examples/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --help
 ```
-To run object detection sample with video input, follow the instructions below:
-```bash
-$ pip3 install opencv-python
-$ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/TF_1_x/object_detection_sample_video.py
-```
+
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/TF_1_x/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/TF_1_x/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample_video.py --input=examples/TF_1_x/data/people-detection.mp4
+$ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
 To try on the yolo_v3_160 model for faster inference follow the below steps
@@ -101,7 +96,7 @@ To try on the yolo_v3_160 model for faster inference follow the below steps
 Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3_160.sh script activates a python virtual environment for conversion.
 
 ```bash
-$ cd <path-to-openvino_tensorflow-repository>/examples
+$ cd <path-to-openvino_tensorflow-repository>/examples/TF_1_x
 $ chmod +x convert_yolov3_160.sh
 $ ./convert_yolov3_160.sh
 ```
@@ -110,5 +105,5 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/TF_1_x/object_detection_sample_video.py --input_height 160 --input_width 160 --graph "examples/TF_1_x/data/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/TF_1_x/data/coco.names"
+$ python3 examples/TF_1_x/object_detection_sample.py --input_height 160 --input_width 160 --graph "examples/TF_1_x/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
 ```

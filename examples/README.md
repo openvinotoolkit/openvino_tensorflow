@@ -1,12 +1,11 @@
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
-
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
 ## Demos showcased in the examples
 
-* Classification demo uses Google's Inception v3 model to classify a given image, video, directory and camera input.
-* Object detection demo uses YOLOv3 daraknet model to detect objects in a given image, video, directory and camera input.
+* Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images and camera input.
+* Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory of images and camera input.
 
 ## Setup for the examples
 
@@ -67,10 +66,10 @@ bulletproof vest (466): 0.00535091
 
 In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
-Next, try it out by passing the --input=argument, where argument is the path to your new image. You can provide either absolute or relative path to an image or video or directory.
+Next, try it out by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path to an image or video or directory.
 e.g.
 ```bash
-$ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-image>
+$ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
 ```
 If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
@@ -87,12 +86,12 @@ $ python3 examples/classification_sample.py --help
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/classification_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
 If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/classification_sample_video.py --input=examples/data/people-detection.mp4
+$ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
 ```
 
 
@@ -125,7 +124,7 @@ $ ./convert_yolov3.sh
 Once completed, the data folder will contain following files needed to run the object detection example:
 
 * coco.names
-* yolo_v3_darknet.pb
+* yolo_v3_darknet_2.pb
 
 Run the object detection example using the instructions below:
 
@@ -143,7 +142,7 @@ output something similar as below:
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
 
-Next, try it out on your own image by passing the --input=argument, where argument is the path to your new image. You can provide either absolute or relative path in the argument e.g.
+Next, try it out on your own image by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path in the argument e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
@@ -164,12 +163,12 @@ $ python3 examples/object_detection_sample.py --help
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
-$ python3 examples/object_detection_sample_video.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
 If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/object_detection_sample_video.py --input=examples/data/people-detection.mp4
+$ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
 ```
@@ -224,7 +223,7 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own image by passing the --input= argument,  where argument is the path to your new image. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own image by passing the --input= argument,  where argument is the path to your new input. You can provide either absolute or relative path in the argument  e.g.
 
 
 ```bash
