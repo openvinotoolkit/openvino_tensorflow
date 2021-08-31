@@ -141,8 +141,7 @@ if ovtf_classic_loaded:
         # convert bytes to string required for py3 (encode/decode bytes)
         backend_list = []
         for backend in list_result:
-            if backend:
-                backend_list.append(backend.decode("utf-8"))
+            backend_list.append(backend.decode("utf-8"))
         openvino_tensorflow_lib.freeBackendsList()
         return backend_list
 
@@ -215,7 +214,6 @@ if ovtf_classic_loaded:
 
     def disable_dynamic_fallback():
         openvino_tensorflow_lib.disable_dynamic_fallback()
-
 
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \

@@ -24,28 +24,33 @@ void enable() { Enable(); }
 void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
+bool check_backend(char* backend){
+  const char* devices[4] = {"xCPU", "GPU", "MYRIAD", "VAD-M"};
+  for (int i = 0; i < 4; i++){
+        if (strcmp(backend,devices[i]) == 0)
+          return true;
+    }
+  return false;
+}
 size_t backends_len() {
-  const auto backends = ListBackends();
-  return backends.size();
+  const auto ovtf_backends = ListBackends();
+  int backends_count = 0;
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    backendList[idx] = strdup(ovtf_backends[idx].c_str());
+        if (check_backend(backendList[idx]))
+          backends_count++;
+  }
+  return backends_count;
 }
 
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
-  const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};
-  int i, j = 0;
+  int i=0;
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    for (i = 0; i < 4; i++){
-        if (strcmp(backendList[idx],devices[i]) == 0)
-          break;
+    if (check_backend(backendList[idx]))
+          backends[i++] = backendList[idx];
     }
-    if (i != 4)
-      backends[j++] = backendList[idx];
-  }
-  if (j != 4){
-    for (; j<4; j++)
-      backends[j] = NULL;
-  }
   return true;
 }
 
