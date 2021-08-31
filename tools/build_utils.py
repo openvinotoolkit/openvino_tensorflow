@@ -706,6 +706,9 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DCMAKE_INSTALL_PREFIX=" + install_location
     ]
+    
+    if platform.system() == 'Linux':
+        openvino_cmake_flags.extend([" -march=" + target_arch + atom_flags])
 
     if debug_enabled:
         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
