@@ -10,13 +10,13 @@ const combination = new Map([
 ],
 ["000101"," pip3 install -U pip==21.0.1,pip3 install -U tensorflow==2.5.0,pip3 install openvino-tensorflow"
 ],
-["001101"," build from source only supported for Mac OS"
+["001101","Currently only build from source is supported for Mac OS"
 ],
 ["010001","pip3 install openvino-tensorflow"
 ],
 ["010101","pip3 install openvino-tensorflow"
 ],
-["011101","build from source only supported for Mac OS"
+["011101","Currently only build from source is supported for Mac OS""
 ],
 ["100000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
