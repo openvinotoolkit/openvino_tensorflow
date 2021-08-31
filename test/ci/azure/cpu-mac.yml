@@ -1,0 +1,95 @@
+ resources:
+  repositories:
+  - repository: openvino_tensorflow
+    type: github
+    endpoint: openvinotoolkit
+    name: openvinotoolkit/openvino_tensorflow
+    
+ pool:
+  name: 'mac'
+  
+ variables:
+    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
+    BUILD_DIR: $(WORK_DIR)/build
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
+    
+ steps:
+ 
+   - script: |
+      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)
+      rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
+      
+   
+   - checkout: self
+     clean: true
+     lfs: false
+     path: openvino_tensorflow
+ 
+   - script: |
+      pip3 install -U pip
+      pip3 install yapf==0.26.0 pytest psutil keras==2.4.3
+     displayName: "Setup" 
+    
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      echo $(WORK_DIR)
+      git submodule init
+      git submodule update
+      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION)
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Build"
+     
+   - script: |
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
+      pip3 install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
+     workingDirectory: $(WORK_DIR) 
+     displayName: "Install"
+   
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      pip3 install keras
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      pip3 install keras
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+     workingDirectory: $(WORK_DIR)   
+     displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
+     
+   - script: |
+      export OPENVINO_TF_BACKEND="MYRIAD"
+      export NGRAPH_TF_UTEST_RTOL=0.0001
+      pip install keras
+      
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+     condition: always()
+     workingDirectory: $(WORK_DIR) 
+     displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
+      export OPENVINO_TF_BACKEND="MYRIAD"
+      export NGRAPH_TF_UTEST_RTOL=0.0001
+      pip install keras
+      
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      PYTHONPATH=`pwd` python3 test/python/tensorflow/tf_unittest_runner.py \
+      --tensorflow_path build_cmake/artifacts//tensorflow/python \
+      --run_tests_from_file test/python/tensorflow/tests_darwin_myriad.txt
+     condition: always()
+     workingDirectory: $(WORK_DIR)   
+     displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
+     
+   - script: |
+      rm -rf *
+     displayName: "Cleanup"   
+     workingDirectory: $(WORK_DIR)

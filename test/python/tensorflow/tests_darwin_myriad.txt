@@ -26,13 +26,17 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
+
+
+
 ###################################################
 [SKIP]
 
-#Fails with this error : TopKImpl - Incorrect input data/index values precision.
-#https://github.com/openvinotoolkit/openvino/blob/master/inference-engine/src/mkldnn_plugin/nodes/topk.cpp#L39
-#OV TopK expects data to be F32 or BF16 and index I32
+
+# [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 argmax_op_test.ArgMaxTest.testDefaultAxis
+
+# BEGIN:TBD -->>
 
 # zero dim error
 argmax_op_test.ArgMaxTest.testEmpty
@@ -207,12 +211,54 @@ pool_test.PoolingTest.testGradient3D
 lrn_op_test.LRNOpTest.testGradients
 lrn_op_test.LRNOpTest.testCompute
 
+# END:TBD <<--
+
+concat_op_test.ConcatOpTest.testConcatLargeNumberOfTensors # takes long in GPU
+scan_ops_test.CumsumTest.testLarge # takes very long in GPU
+
+# AssertionError
+array_ops_test.StridedSliceTest.testShrink
+conv_ops_test.Conv2DTest.testInputGradientKernelSizeMatchesInputSize
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideOne
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideThree
+conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideTwo
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
+conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo
+math_ops_test.ModTest.testFloat
+softmax_op_test.SoftmaxTest.testFloat
+softmax_op_test.SoftmaxTest.testHalf
+split_op_test.SplitOpTest.testSplitRows
+
+# Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
+conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
+
+# implementation_map for N5cldnn11convolutionE could not find any implementation to match key
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2Filter
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
+conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
+
+
+# Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
+# Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
+nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
+
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
+# Fails because of trivial fn check at the bridge, passes without the check 
 image_ops_test.NonMaxSuppressionTest.testDataTypes
 
 # These tests fail because of the Range op dynamic output.
-# These pass with Constant Folding enabled.
 reduction_ops_test.SumReductionTest.testFloat64
 reduction_ops_test.SumReductionTest.testFloat16
 reduction_ops_test.SumReductionTest.testComplex64
@@ -236,28 +282,32 @@ topk_op_test.TopKTest.testLargeSort
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 
-# Tests randomly failing with error:
-# Caught exception while executing cluster: wstring_convert::to_bytes
-#conv_ops_test.Conv2DTest.testConv2D2x2Filter
-#conv_ops_test.Conv2DTest.testConv2D1x2Filter
-#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
-#conv_ops_test.Conv2DTest.testConv2D2x2Filter
-#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+lrn_op_test.LRNOpTest.testGradientsZeroInput
+softmax_op_test.SoftmaxTest.testEmptyInput
+
+# hangs in MYRIAD
+math_ops_test.AddNTest.testPartials
+split_op_test.SplitOpTest.testListOfScalarTensors
 
 # TBD
-softmax_op_test.SoftmaxTest.testEmptyInput
-reduction_ops_test.MeanReductionTest.testAxesType
+split_op_test.SplitOpTest.testSplitDim0
+split_op_test.SplitOpTest.testSplitCols
+split_op_test.SplitOpTest.testRandom
+split_op_test.SplitOpTest.testIdentity
+split_op_test.SplitOpTest.testGradientsAll
+pool_test.PoolingTest.testGradient2D
+cwise_ops_unary_test.UnaryOpTest.testGradGrad
+conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
+conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
+concat_op_test.ConcatOpTest.testVStack
+concat_op_test.ConcatOpTest.testHStack
 
-#const has zero dimension which is not allowed
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
-
-#disabled due to empty tensor in test case
+spacetobatch_op_test.SpaceToBatchNDTest.testOneBlockDimZeroRemainingDims
+spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsOneRemainingDim
 array_ops_test.ReverseV2Test.testReverse2DimAuto
 
-#defect in OpenVINO 2021.4; appears to be a memory leak
-array_ops_test.StridedSliceTest.testEllipsis
-
-#runtime errors; TBD
-conv_ops_test.Conv2DTest.testConv2D1x1Filter
-conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
-conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
+#precision loss in myriad
+batchtospace_op_test.BatchToSpaceDepthToSpace.testDepthToSpaceTranspose
+spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsTwoRemainingDims
+spacetobatch_op_test.SpaceToBatchSpaceToDepth.testSpaceToDepthTranspose

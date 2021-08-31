@@ -92,7 +92,11 @@ message(STATUS "TensorFlow_VERSION: " ${TensorFlow_VERSION})
 
 # Make sure that the TF library exists
 if ( APPLE )
-    set(TF_LIB_NAME libtensorflow_framework.dylib)
+    if(NOT(TensorFlow_VERSION LESS 2.0))
+        set(TF_LIB_NAME libtensorflow_framework.2.dylib)
+    else()
+        set(TF_LIB_NAME libtensorflow_framework.dylib)
+    endif()
 else()
     if(NOT(TensorFlow_VERSION LESS 2.0))
         set(TF_LIB_NAME libtensorflow_framework.so.2)
