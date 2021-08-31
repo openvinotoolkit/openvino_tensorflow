@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
-model_name="yolo_v3_darknet"
+model_name="yolo_v3_darknet_1"
 model_source="https://github.com/mystic123/tensorflow-yolo-v3"
 mkdir temp_build
 
@@ -34,8 +34,8 @@ else
     wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
     wget https://pjreddie.com/media/files/yolov3.weights
     $python_binary convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
-    cp frozen_darknet_yolov3_model.pb ../../data/${model_name}.pb
-    cp coco.names ../../data/
+    cp frozen_darknet_yolov3_model.pb ../../../data/${model_name}.pb
+    cp coco.names ../../../data/
     cd ../..
     deactivate
 fi

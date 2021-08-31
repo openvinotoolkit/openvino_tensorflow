@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
-model_name="yolo_v3_darknet"
+model_name="yolo_v3_darknet_2"
 
 mkdir temp_build
 cd temp_build

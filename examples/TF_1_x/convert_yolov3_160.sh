@@ -36,8 +36,8 @@ else
     cp ../../convert_yolov3.patch ./
     patch convert_weights_pb.py convert_yolov3.patch
     $python_binary convert_weights_pb.py --class_names coco.names --data_format NHWC --weights_file yolov3.weights
-    cp frozen_darknet_yolov3_model.pb ../../data/${model_name}.pb
-    cp coco.names ../../data/
+    cp frozen_darknet_yolov3_model.pb ../../../data/${model_name}.pb
+    cp coco.names ../../../data/
     cd ../..
     deactivate
 fi
