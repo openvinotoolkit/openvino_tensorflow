@@ -34,27 +34,15 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 
-
-def load_graph(model_file):
-    graph = tf.Graph()
-    graph_def = tf.compat.v1.GraphDef()
-    assert os.path.exists(model_file), "Could not find model path"
-    with open(model_file, "rb") as f:
-        graph_def.ParseFromString(f.read())
-    with graph.as_default():
-        tf.import_graph_def(graph_def)
-
-    return graph
+from common.utils import get_input_mode, load_graph
 
 
-def read_tensor_from_image_file(image_file,
+def read_tensor_from_image_file(frame,
                                 input_height=299,
                                 input_width=299,
                                 input_mean=0,
                                 input_std=255):
-    assert os.path.exists(image_file), "Could not find image file path"
-    image = cv2.imread(image_file)
-    resized = cv2.resize(image, (input_height, input_width))
+    resized = cv2.resize(frame, (input_height, input_width))
     img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
     resized_image = img.astype(np.float32)
     normalized_image = (resized_image - input_mean) / input_std
@@ -64,7 +52,6 @@ def read_tensor_from_image_file(image_file,
 
 def load_labels(label_file):
     label = []
-    assert os.path.exists(label_file), "Could not find label file path"
     proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
@@ -72,7 +59,7 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    file_name = "examples/data/grace_hopper.jpg"
+    input_file = "examples/data/grace_hopper.jpg"
     model_file = "examples/data/inception_v3_2016_08_28_frozen.pb"
     label_file = "examples/data/imagenet_slim_labels.txt"
     input_height = 299
@@ -83,6 +70,12 @@ if __name__ == "__main__":
     output_layer = "InceptionV3/Predictions/Reshape_1"
     backend_name = "CPU"
 
+    # overlay parameters
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_size = .6
+    color = (0, 0, 0)
+    font_thickness = 2
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--graph", help="Optional. Path to graph/model to be executed.")
@@ -92,21 +85,26 @@ if __name__ == "__main__":
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
-        "--image", help="Optional. Input image to be processed. ")
+        "--input",
+        help=
+        "Optional. The input to be processed. Path to an image or video or directory of images. Use 0 for using camera as input"
+    )
     parser.add_argument(
         "--input_height",
         type=int,
-        help="Optional. Specify input height value. ")
+        help="Optional. Specify input height value.")
     parser.add_argument(
         "--input_width", type=int, help="Optional. Specify input width value.")
     parser.add_argument(
-        "--input_mean", type=int, help="Optioanl. Specify input mean value.")
+        "--input_mean", type=int, help="Optional. Specify input mean value.")
     parser.add_argument(
         "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
-        help="Optional. Specify the target device to infer on;"
-        "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
+        help="Optional. Specify the target device to infer on; "
+        "CPU, GPU, MYRIAD or VAD-M is acceptable. Default value is CPU.")
+    parser.add_argument(
+        "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--disable_ovtf",
         help="Optional. Disable openvino_tensorflow pass and run on stock TF.",
@@ -127,8 +125,8 @@ if __name__ == "__main__":
             label_file = args.labels
         else:
             label_file = None
-    if args.image:
-        file_name = args.image
+    if args.input:
+        input_file = args.input
     if args.input_height:
         input_height = args.input_height
     if args.input_width:
@@ -157,33 +155,84 @@ if __name__ == "__main__":
     else:
         ovtf.disable()
 
+    #Load the labels
+    cap = None
+    images = []
+    if label_file:
+        labels = load_labels(label_file)
+    input_mode = get_input_mode(input_file)
+    if input_mode == "video":
+        cap = cv2.VideoCapture(input_file)
+    elif input_mode == "camera":
+        cap = cv2.VideoCapture(0)
+    elif input_mode == 'image':
+        images = [input_file]
+    elif input_mode == 'directory':
+        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+    else:
+        raise Exception(
+            "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
+        )
+    images_len = len(images)
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
+    image_id = -1
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
-        t = read_tensor_from_image_file(
-            file_name,
-            input_height=input_height,
-            input_width=input_width,
-            input_mean=input_mean,
-            input_std=input_std)
-
-        # Warmup
-        results = sess.run(output_operation.outputs[0],
-                           {input_operation.outputs[0]: t})
-
-        # Run
-        start = time.time()
-        results = sess.run(output_operation.outputs[0],
-                           {input_operation.outputs[0]: t})
-        elapsed = time.time() - start
-        print('Inference time in ms: %.2f' % (elapsed * 1000))
-    results = np.squeeze(results)
-
-    # print labels
-    if label_file:
-        top_k = results.argsort()[-5:][::-1]
-        labels = load_labels(label_file)
-        for i in top_k:
-            print(labels[i], results[i])
-    else:
-        print("No label file provided. Cannot print classification results")
+        while True:
+            image_id += 1
+            if input_mode in ['camera', 'video']:
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    if ret is True:
+                        pass
+                    else:
+                        break
+                else:
+                    break
+            if input_mode in ['image', 'directory']:
+                if image_id < images_len:
+                    frame = cv2.imread(images[image_id])
+                else:
+                    break
+            t = read_tensor_from_image_file(
+                frame,
+                input_height=input_height,
+                input_width=input_width,
+                input_mean=input_mean,
+                input_std=input_std)
+            # run
+            start = time.time()
+            results = sess.run(output_operation.outputs[0],
+                               {input_operation.outputs[0]: t})
+            elapsed = time.time() - start
+            fps = 1 / elapsed
+            print('Inference time in ms: %.2f' % (elapsed * 1000))
+            results = np.squeeze(results)
+            if label_file:
+                cv2.putText(frame,
+                            'Inference Running on : {0}'.format(backend_name),
+                            (30, 50), font, font_size, color, font_thickness)
+                cv2.putText(
+                    frame, 'FPS : {0} | Inference Time : {1}ms'.format(
+                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                    font_size, color, font_thickness)
+                top_k = results.argsort()[-5:][::-1]
+                c = 130
+                for i in top_k:
+                    cv2.putText(frame, '{0} : {1}'.format(
+                        labels[i], results[i]), (30, c), font, font_size, color,
+                                font_thickness)
+                    print(labels[i], results[i])
+                    c += 30
+            else:
+                print(
+                    "No label file provided. Cannot print classification results"
+                )
+            if not args.no_show:
+                cv2.imshow("results", frame)
+                if cv2.waitKey(1) & 0XFF == ord('q'):
+                    break
+    sess.close()
+    if cap:
+        cap.release()
+        cv2.destroyAllWindows()

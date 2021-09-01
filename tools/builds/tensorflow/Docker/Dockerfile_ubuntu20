@@ -27,7 +27,10 @@ ARG BUILD_DEPENDENCIES="ca-certificates \
                         lsb-core \
                         python3.8 \
                         gcc-7 \
-                        g++-7"
+                        g++-7 \
+                        python3.6"
+
+add-apt-repository ppa:deadsnakes/ppa
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} && \

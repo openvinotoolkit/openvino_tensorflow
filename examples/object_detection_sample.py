@@ -25,175 +25,58 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import argparse
 import os
+import argparse
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
 import time
-from PIL import Image, ImageFont, ImageDraw
+import cv2
+from PIL import Image
+from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors
+from common.pre_process import preprocess_image
+from common.post_process import yolo3_postprocess_np
 
 
-def load_graph(model_file):
-    graph = tf.Graph()
-    graph_def = tf.compat.v1.GraphDef()
-    assert os.path.exists(model_file), "Could not find model path"
-    with open(model_file, "rb") as f:
-        graph_def.ParseFromString(f.read())
-    with graph.as_default():
-        tf.import_graph_def(graph_def)
-
-    return graph
-
-
-def letter_box_image(image_path, input_height, input_width,
-                     fill_value) -> np.ndarray:
-    assert os.path.exists(image_path), "Could not find image path"
-    image = Image.open(image_path)
-    height_ratio = float(input_height) / image.size[1]
-    width_ratio = float(input_width) / image.size[0]
-    fit_ratio = min(width_ratio, height_ratio)
-    fit_height = int(image.size[1] * fit_ratio)
-    fit_width = int(image.size[0] * fit_ratio)
-    fit_image = np.asarray(
-        image.resize((fit_width, fit_height), resample=Image.BILINEAR))
-
-    fill_value = np.full(fit_image.shape[2], fill_value, fit_image.dtype)
-    to_return = np.tile(fill_value, (input_height, input_width, 1))
-    pad_top = int(0.5 * (input_height - fit_height))
-    pad_left = int(0.5 * (input_width - fit_width))
-    to_return[pad_top:pad_top + fit_height, pad_left:pad_left +
-              fit_width] = fit_image
-
-    return to_return, image
-
-
-def load_coco_names(label_file):
+def load_coco_names(file_name):
     names = {}
-    assert os.path.exists(label_file), "could not find label file path"
-    with open(label_file) as f:
-        for id, name in enumerate(f):
-            names[id] = name
+    assert os.path.exists(file_name), "could not find label file path"
+    with open(file_name) as f:
+        for coco_id, name in enumerate(f):
+            names[coco_id] = name
     return names
 
 
-def letter_box_pos_to_original_pos(letter_pos, current_size,
-                                   ori_image_size) -> np.ndarray:
-    letter_pos = np.asarray(letter_pos, dtype=np.float)
-    current_size = np.asarray(current_size, dtype=np.float)
-    ori_image_size = np.asarray(ori_image_size, dtype=np.float)
-    final_ratio = min(current_size[0] / ori_image_size[0],
-                      current_size[1] / ori_image_size[1])
-    pad = 0.5 * (current_size - final_ratio * ori_image_size)
-    pad = pad.astype(np.int32)
-    to_return_pos = (letter_pos - pad) / final_ratio
-    return to_return_pos
-
-
-def convert_to_original_size(box, size, original_size, is_letter_box_image):
-    if is_letter_box_image:
-        box = box.reshape(2, 2)
-        box[0, :] = letter_box_pos_to_original_pos(box[0, :], size,
-                                                   original_size)
-        box[1, :] = letter_box_pos_to_original_pos(box[1, :], size,
-                                                   original_size)
-    else:
-        ratio = original_size / size
-        box = box.reshape(2, 2) * ratio
-    return list(box.reshape(-1))
-
-
-def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
-    draw = ImageDraw.Draw(img)
-    for cls, bboxs in boxes.items():
-        color = (256, 256, 256)
-        for box, score in bboxs:
-            box = convert_to_original_size(box, np.array(detection_size),
-                                           np.array(img.size),
-                                           is_letter_box_image)
-            draw.rectangle(box, outline=color)
-            draw.text(
-                box[:2],
-                '{} {:.2f}%'.format(cls_names[cls], score * 100),
-                fill=color)
-
-
-def iou(box1, box2):
-    b1_x0, b1_y0, b1_x1, b1_y1 = box1
-    b2_x0, b2_y0, b2_x1, b2_y1 = box2
-
-    int_x0 = max(b1_x0, b2_x0)
-    int_y0 = max(b1_y0, b2_y0)
-    int_x1 = min(b1_x1, b2_x1)
-    int_y1 = min(b1_y1, b2_y1)
-
-    int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
-
-    b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
-    b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
-
-    iou = int_area / (b1_area + b2_area - int_area + 1e-05)
-
-    return iou
-
-
-def non_max_suppression(predictions_with_boxes,
-                        confidence_threshold,
-                        iou_threshold=0.4):
-    conf_mask = np.expand_dims(
-        (predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
-    predictions = predictions_with_boxes * conf_mask
-
-    result = {}
-    for i, image_pred in enumerate(predictions):
-        shape = image_pred.shape
-        non_zero_idxs = np.nonzero(image_pred)
-        image_pred = image_pred[non_zero_idxs]
-        image_pred = image_pred.reshape(-1, shape[-1])
-
-        bbox_attrs = image_pred[:, :5]
-        classes = image_pred[:, 5:]
-        classes = np.argmax(classes, axis=-1)
-
-        unique_classes = list(set(classes.reshape(-1)))
-
-        for cls in unique_classes:
-            cls_mask = classes == cls
-            cls_boxes = bbox_attrs[np.nonzero(cls_mask)]
-            cls_boxes = cls_boxes[cls_boxes[:, -1].argsort()[::-1]]
-            cls_scores = cls_boxes[:, -1]
-            cls_boxes = cls_boxes[:, :-1]
-
-            while len(cls_boxes) > 0:
-                box = cls_boxes[0]
-                score = cls_scores[0]
-                if not cls in result:
-                    result[cls] = []
-                result[cls].append((box, score))
-                cls_boxes = cls_boxes[1:]
-                # iou threshold check for overlapping boxes
-                ious = np.array([iou(box, x) for x in cls_boxes])
-                iou_mask = ious < iou_threshold
-                cls_boxes = cls_boxes[np.nonzero(iou_mask)]
-                cls_scores = cls_scores[np.nonzero(iou_mask)]
-
-    return result
+def load_labels(label_file):
+    label = []
+    proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
+    for l in proto_as_ascii_lines:
+        label.append(l.rstrip())
+    return label
 
 
 if __name__ == "__main__":
-    image_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/yolo_v3_darknet.pb"
+    input_file = "examples/data/grace_hopper.jpg"
+    model_file = "examples/data/yolo_v3_darknet_2.pb"
     label_file = "examples/data/coco.names"
     input_height = 416
     input_width = 416
     input_mean = 0
     input_std = 255
-    input_layer = "inputs"
-    output_layer = "output_boxes"
+    input_layer = "image_input"
+    output_layer = [
+        "conv2d_58/BiasAdd", "conv2d_66/BiasAdd", "conv2d_74/BiasAdd"
+    ]
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
     iou_threshold = 0.5
+
+    # overlay parameters
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_size = .6
+    color = (0, 0, 0)
+    font_thickness = 2
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -204,7 +87,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
-        "--image", help="Optional. Input image to be processed.")
+        "--input",
+        help=
+        "Optional. The input to be processed. Path to an image or video or directory of images. Use 0 for using camera as input."
+    )
     parser.add_argument(
         "--input_height",
         type=int,
@@ -217,13 +103,10 @@ if __name__ == "__main__":
         "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
-        help="Optional. Specify the target device to infer on;"
+        help="Optional. Specify the target device to infer on; "
         "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
-        "--output_dir",
-        help="Optional. Directory that stores the output"
-        " image with bounding boxes. Default is directory from where this sample is launched."
-    )
+        "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--conf_threshold",
         type=float,
@@ -234,7 +117,8 @@ if __name__ == "__main__":
         help="Optional. Specify iou threshold. Default is 0.5.")
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable openvino_tensorflow pass and run on stock TF",
+        help="Optional."
+        "Disable openvino_tensorflow pass and run on stock TF.",
         action='store_true')
     args = parser.parse_args()
     if args.graph:
@@ -251,8 +135,8 @@ if __name__ == "__main__":
             label_file = args.labels
         else:
             label_file = None
-    if args.image:
-        image_file = args.image
+    if args.input:
+        input_file = args.input
     if args.input_height:
         input_height = args.input_height
     if args.input_width:
@@ -263,8 +147,6 @@ if __name__ == "__main__":
         input_std = args.input_std
     if args.backend:
         backend_name = args.backend
-    if args.output_dir:
-        output_dir = args.output_dir
     if args.conf_threshold:
         conf_threshold = args.conf_threshold
     if args.iou_threshold:
@@ -272,21 +154,18 @@ if __name__ == "__main__":
 
     # Load graph and process input image
     graph = load_graph(model_file)
-    img_resized, img = letter_box_image(image_file, input_height, input_width,
-                                        128)
-    img_resized = img_resized.astype(np.float32)
-
-    # Load label file
+    # Load the labels
     if label_file:
         classes = load_coco_names(label_file)
-
     input_name = "import/" + input_layer
-    output_name = "import/" + output_layer
     input_operation = graph.get_operation_by_name(input_name)
-    output_operation = graph.get_operation_by_name(output_name)
+    output_operation = [
+        graph.get_operation_by_name("import/" + output_name)
+        for output_name in output_layer
+    ]
 
     if not args.disable_ovtf:
-        #Print list of available backends
+        # Print list of available backends
         print('Available Backends:')
         backends_list = ovtf.list_backends()
         for backend in backends_list:
@@ -295,25 +174,83 @@ if __name__ == "__main__":
     else:
         ovtf.disable()
 
+    cap = None
+    images = []
+    if label_file:
+        labels = load_labels(label_file)
+    colors = get_colors(labels)
+    input_mode = get_input_mode(input_file)
+    if input_mode == "video":
+        cap = cv2.VideoCapture(input_file)
+    elif input_mode == "camera":
+        cap = cv2.VideoCapture(0)
+    elif input_mode == 'image':
+        images = [input_file]
+    elif input_mode == 'directory':
+        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+    else:
+        raise Exception(
+            "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
+        )
+    images_len = len(images)
+    image_id = -1
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
-        # Warmup
-        detected_boxes = sess.run(output_operation.outputs[0],
-                                  {input_operation.outputs[0]: [img_resized]})
-        # Run
-        import time
-        start = time.time()
-        detected_boxes = sess.run(output_operation.outputs[0],
-                                  {input_operation.outputs[0]: [img_resized]})
-        elapsed = time.time() - start
-        print('Inference time in ms: %.2f' % (elapsed * 1000))
+        while True:
+            image_id += 1
+            if input_mode in ['camera', 'video']:
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    if ret is True:
+                        pass
+                    else:
+                        break
+                else:
+                    break
+            if input_mode in ['image', 'directory']:
+                if image_id < images_len:
+                    frame = cv2.imread(images[image_id])
+                else:
+                    break
+            img = frame
+            image = Image.fromarray(img)
+            img_resized = preprocess_image(image, (input_height, input_width))
+            # Run
+            start = time.time()
+            detected_boxes = sess.run(
+                (output_operation[0].outputs[0], output_operation[1].outputs[0],
+                 output_operation[2].outputs[0]),
+                {input_operation.outputs[0]: [img_resized]})
+            elapsed = time.time() - start
+            fps = 1 / elapsed
+            print('Inference time in ms: %.2f' % (elapsed * 1000))
+            # post-processing
+            image_shape = tuple((frame.shape[0], frame.shape[1]))
+            out_boxes, out_classes, out_scores = yolo3_postprocess_np(
+                detected_boxes,
+                image_shape,
+                get_anchors(),
+                len(labels), (input_height, input_width),
+                max_boxes=10,
+                elim_grid_sense=True)
 
-    # apply non max suppresion, draw boxes and save updated image
-    filtered_boxes = non_max_suppression(detected_boxes, conf_threshold,
-                                         iou_threshold)
-    draw_boxes(filtered_boxes, img, classes, (input_width, input_height), True)
-    if output_dir:
-        img.save(os.path.join(output_dir, "detections.jpg"))
-    else:
-        img.save("detections.jpg")
+            # modified draw_boxes function to return an openCV formatted image
+            img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores,
+                                  labels, colors)
+            # draw information overlay onto the frames
+            cv2.putText(img_bbox,
+                        'Inference Running on : {0}'.format(backend_name),
+                        (30, 50), font, font_size, color, font_thickness)
+            cv2.putText(
+                img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
+                    int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                font_size, color, font_thickness)
+            if not args.no_show:
+                cv2.imshow("detections", img_bbox)
+                if cv2.waitKey(1) & 0XFF == ord('q'):
+                    break
+    sess.close()
+    if cap:
+        cap.release()
+    cv2.destroyAllWindows()

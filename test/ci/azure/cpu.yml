@@ -57,7 +57,42 @@
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
      workingDirectory: $(WORK_DIR) 
      displayName: "C++ Inference Example"
-     
+
+   - script: |
+      cd  examples/TF_1_x/
+      chmod +x convert_yolov3.sh
+      ./convert_yolov3.sh
+      export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      cd $(WORK_DIR)
+      pip3 install -r examples/requirements.txt
+      python3 examples/TF_1_x/object_detection_sample.py --no_show
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python CPU OD Inference Example TF1"
+   
+   - script: |
+      export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      cd  examples/
+      pip3 install -r requirements.txt
+      chmod +x convert_yolov3.sh
+      ./convert_yolov3.sh
+      cd $(WORK_DIR)
+      python3 examples/object_detection_sample.py --no_show
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python CPU OD Inference Example TF2"
+   
+   - script: |
+      cd  $(WORK_DIR)
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -r examples/requirements.txt
+      python3 examples/classification_sample.py --no_show
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python CPU Classification Inference Example TF1"
+
+   
    - script: |
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
