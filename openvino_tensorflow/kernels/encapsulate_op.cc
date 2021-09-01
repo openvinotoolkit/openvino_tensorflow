@@ -297,6 +297,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto results = ng_exec->GetResults();
   std::string device;
   BackendManager::GetBackendName(device);
+  auto backend = BackendManager::GetBackend();
+  auto dev_type = backend->GetDeviceType();
+  std::string precision = dev_type.substr(dev_type.find("_") + 1);
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(
       results.size(), nullptr);
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(
@@ -335,6 +338,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // expected
       ngraph::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
+      if (ng_element_type == ngraph::element::Type_t::f16 &&
+          precision == "FP16")
+        ng_element_type = ngraph::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));

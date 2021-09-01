@@ -48,6 +48,7 @@ void IE_Backend_Engine::load_network() {
   // Load network to the plugin (m_device)
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
+  if (dev_type.find("GPU") != string::npos) dev_type = "GPU";
   m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(
       m_network, dev_type, config);
   m_network_ready = true;
