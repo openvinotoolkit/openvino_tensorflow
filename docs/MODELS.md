@@ -167,6 +167,10 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [context_rcnn_resnet101_snapshot_serenget](http://download.tensorflow.org/models/object_detection/context_rcnn_resnet101_snapshot_serengeti_2020_06_10.tar.gz) | CPU |
 | [adv_inception_v3](http://download.tensorflow.org/models/adv_inception_v3_2017_08_18.tar.gz) | CPU |
 | [ens3_adv_inception_v3](http://download.tensorflow.org/models/ens3_adv_inception_v3_2017_08_18.tar.gz) | CPU |
+
+## TensorFlow-Hub Models
+| Model Name | Supported Devices |
+|---|---|
 | [albert_en_base](https://tfhub.dev/tensorflow/albert_en_base/3)| CPU, iGPU,  MYRIAD |
 | [albert_en_preprocess](https://tfhub.dev/tensorflow/albert_en_preprocess/3)| CPU,  iGPU,  MYRIAD |
 | [albert_en_xxlarge](https://tfhub.dev/tensorflow/albert_en_xxlarge/3?tf-hub-format=compressed)| CPU,  iGPU,  MYRIAD |
@@ -279,6 +283,10 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [Wiki-words-250-with-normalization](https://tfhub.dev/google/Wiki-words-250-with-normalization/2)| CPU,  iGPU,  MYRIAD |
 | [Wiki-words-500-with-normalization](https://tfhub.dev/google/Wiki-words-500-with-normalization/2)| CPU,  iGPU,  MYRIAD |
 | [yamnet](https://tfhub.dev/google/yamnet/1)| CPU,  iGPU,  MYRIAD |
+
+## OMZ Models
+| Model Name | Supported Devices |
+|---|---|
 | [efficientdet-d0_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdett)|   CPU,  iGPU,  MYRIAD |
 | [efficientdet-d1_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdet)|    CPU,  iGPU,  MYRIAD |
 | [resnext50v2](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz) | CPU,  iGPU,  MYRIAD |
