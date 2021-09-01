@@ -188,6 +188,7 @@ int main(int argc, char** argv) {
   // Get the image from disk as a float array of numbers, resized and normalized
   // to the specifications the main graph expects.
   std::vector<Tensor> resized_tensors;
+  //const Tensor resized_tensor;
   string image_path = tensorflow::io::JoinPath(root_dir, image_file);
   Status read_tensor_status =
       ReadTensorFromImageFile(image_path, input_height, input_width, input_mean,
@@ -212,17 +213,17 @@ int main(int argc, char** argv) {
   }
 
   //  Run
-  tensorflow::openvino_tensorflow::Timer inference_timer;
-  run_status = session->Run({{input_layer, resized_tensor}}, {output_layer}, {},
-                            &outputs);
-  inference_timer.Stop();
-  cout << "Inference Time in ms: " << inference_timer.ElapsedInMS() << endl;
+  //tensorflow::openvino_tensorflow::Timer inference_timer;
+  //run_status = session->Run({{input_layer, resized_tensor}}, {output_layer}, {},
+  //                         &outputs);
+  //inference_timer.Stop();
+  //cout << "Inference Time in ms: " << inference_timer.ElapsedInMS() << endl;
 
-  if (!run_status.ok()) {
-    LOG(ERROR) << "Running model failed: " << run_status;
-    return -1;
-  }
-
+  //if (!run_status.ok()) {
+  //  LOG(ERROR) << "Running model failed: " << run_status;
+  //  return -1;
+  //}
+  
   // This is for automated testing to make sure we get the expected result with
   // the default settings. We know that label 653 (military uniform) should be
   // the top label for the Admiral Hopper image.

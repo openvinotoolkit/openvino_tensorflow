@@ -4,6 +4,24 @@
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
+#if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
+#    set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})
+#else()
+#    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install/")
+#endif()
+
+find_package(OpenCV REQUIRED PATHS /home/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_ubuntu18/opencv/cmake NO_DEFAULT_PATH)
+
+# If the package has been found, several variables will
+# be set, you can find the full list with descriptions
+# in the OpenCVConfig.cmake file.
+# Print some message showing some of them
+message(STATUS "OpenCV library status:")
+message(STATUS "    config: ${OpenCV_DIR}")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
 include_directories(${TensorFlow_INCLUDE_DIR})
 include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 
@@ -58,7 +76,8 @@ if (APPLE)
 endif()
 
 target_link_libraries(
-    ${APP_NAME}
+    ${APP_NAME} PRIVATE
+    /home/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_ubuntu18/opencv/libopencv_imgcodecs.so.4.5.2
     openvino_tensorflow
     ngraph_lib
     pthread
@@ -66,6 +85,7 @@ target_link_libraries(
     tensorflow_cc_lib
     absl_synchronization
     ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+    ${OpenCV_LIBS}
 )
 
 if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
@@ -75,4 +95,3 @@ else()
 endif()
 
 install(TARGETS ${APP_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/examples/classification_sample)
-
