@@ -122,6 +122,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    NGraphClusterManager::ClearMRUClusters();
+
     // Now Process the Graph
 
     // 1. Mark for clustering then, if requested, dump the graphs.

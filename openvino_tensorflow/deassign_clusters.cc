@@ -53,12 +53,16 @@ int num_nodes_marked_before_deassign = 0;
 static void MaybeLogPlacement(const Graph* graph) {
   std::map<int, std::set<const Node*>> final_cluster_map;
   int number_of_nodes = 0, nodes_marked_for_clustering = 0,
-      nodes_assigned_a_cluster = 0;
+      nodes_assigned_a_cluster = 0, functional_nodes = 0;
   for (auto node : graph->nodes()) {
     number_of_nodes++;
     // Check marked for clustering
     if (NodeIsMarkedForClustering(node)) {
       nodes_marked_for_clustering++;
+      functional_nodes++;
+    } else if (node->type_string() != "NoOp" && node->type_string() != "_Arg" &&
+               node->type_string() != "_Retval") {
+      functional_nodes++;
     }
 
     // Check Cluster Assignment
@@ -88,38 +92,50 @@ static void MaybeLogPlacement(const Graph* graph) {
             << perc_assigned_clusters_of_total
             << "%) are now running with OpenVINO™ backend" << std::endl;
 
-  if (!api::IsLoggingPlacement()) return;
-
-  std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
-  std::cout << "OVTF_SUMMARY: Number of nodes in the graph: " << number_of_nodes
-            << std::endl;
-  // print out the number of nodes marked before deassign
-  std::cout << "OVTF_SUMMARY: Number of nodes marked for clustering: "
-            << num_nodes_marked_before_deassign << " ("
-            << perc_marked_for_clustering_of_total << "% of total nodes)"
-            << std::endl;
-  // print out the number of nodes that are running on NGraph after deassign
-  std::cout << "OVTF_SUMMARY: Number of nodes assigned a cluster: "
-            << nodes_assigned_a_cluster << " ("
-            << perc_assigned_clusters_of_total << "% of total nodes) \t"
-            << " (" << perc_assigned_clusters_of_marked
-            << "% of nodes marked for clustering) \t" << std::endl;
-  int num_encapsulates = final_cluster_map.size() - 1;
-  std::cout << "OVTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
-            << std::endl;
-  std::cout << "OVTF_SUMMARY: Average Nodes per cluster: "
-            << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
-                                          float(num_encapsulates))
-                                       : 0)
-            << endl;
+  if (api::IsLoggingPlacement()) {
+    std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
+    std::cout << "OVTF_SUMMARY: Number of nodes in the graph: "
+              << number_of_nodes << std::endl;
+    // print out the number of nodes marked before deassign
+    std::cout << "OVTF_SUMMARY: Number of nodes marked for clustering: "
+              << num_nodes_marked_before_deassign << " ("
+              << perc_marked_for_clustering_of_total << "% of total nodes)"
+              << std::endl;
+    // print out the number of nodes that are running on NGraph after deassign
+    std::cout << "OVTF_SUMMARY: Number of nodes assigned a cluster: "
+              << nodes_assigned_a_cluster << " ("
+              << perc_assigned_clusters_of_total << "% of total nodes) \t"
+              << " (" << perc_assigned_clusters_of_marked
+              << "% of nodes marked for clustering) \t" << std::endl;
+    int num_encapsulates = final_cluster_map.size() - 1;
+    std::cout << "OVTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
+              << std::endl;
+    std::cout << "OVTF_SUMMARY: Average Nodes per cluster: "
+              << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
+                                            float(num_encapsulates))
+                                         : 0)
+              << endl;
+  }
 
   for (auto kv : final_cluster_map) {
     int cluster_idx = kv.first;
     if (cluster_idx != -1) {
-      std::cout << "OVTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
-                << "]:\t" << kv.second.size() << std::endl;
+      int perc_nodes_assigned =
+          functional_nodes > 0
+              ? (int)((kv.second.size() * 100.0) / functional_nodes)
+              : 0;
+      std::string cluster_info = "ovtf_cluster_" + std::to_string(cluster_idx) +
+                                 ": " + std::to_string(perc_nodes_assigned) +
+                                 "%";
+      NGraphClusterManager::SetClusterInfo(cluster_idx, cluster_info);
+      if (api::IsLoggingPlacement()) {
+        std::cout << "OVTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
+                  << "]:\t" << kv.second.size() << std::endl;
+      }
     }
   }
+
+  if (!api::IsLoggingPlacement()) return;
 
   // log the ops gets deassigned
   std::cout << "OVTF_SUMMARY: Op_deassigned: ";

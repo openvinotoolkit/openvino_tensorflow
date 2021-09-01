@@ -231,6 +231,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
     // Get ngraph executable and inputs information
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
+    NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
     if (getex_status != Status::OK()) {
       if (NGraphClusterManager::IsClusterFallbackEnabled()) {
         OP_REQUIRES_OK(ctx, Fallback(ctx));

@@ -43,6 +43,8 @@ class Executable {
     }
   }
 
+  void ExportIR(const string& output_dir);
+
  private:
   bool CallTrivial(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
                    vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
