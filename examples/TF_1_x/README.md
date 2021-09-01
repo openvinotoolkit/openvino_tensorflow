@@ -28,7 +28,7 @@ Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#
 
 Install the pre-requisites
 ```bash
-$ cd <path-to-openvino_tensorflow-repository>/examples/TF_1_x
+$ cd <path-to-openvino_tensorflow-repository>/examples
 $ pip3 install -r requirements.txt
 ```
 
