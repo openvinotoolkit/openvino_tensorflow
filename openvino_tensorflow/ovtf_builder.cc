@@ -1246,12 +1246,13 @@ static Status TranslateCropAndResizeOp(
 
   ng::OutputVector ng_crop_outputs(box_ind.size());
   if (box_ind.size() == 0) {
-    SaveNgOp(
-        ng_op_map, op->name(),
-        ConstructNgNode<opset::Constant>(
-            op->name(), ng::element::f32,
-            ngraph::Shape{0, crop_size.at(0), crop_size.at(1), image_depth},
-            std::vector<float>({})));
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng::element::f32,
+                 ngraph::Shape{0, static_cast<unsigned long>(crop_size.at(0)),
+                               static_cast<unsigned long>(crop_size.at(1)),
+                               image_depth},
+                 std::vector<float>({})));
   } else {
     for (int i = 0; i < box_ind.size(); i++) {
       int y1, x1, y2, x2;
