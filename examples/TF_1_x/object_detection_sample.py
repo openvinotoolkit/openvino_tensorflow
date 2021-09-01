@@ -201,7 +201,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input",
         help=
-        "Optional. The input to be processed. Path to an image or video or directory of images. Use 'cam' or 'camera' for using camera as input."
+        "Optional. The input to be processed. Path to an image or video or directory of images. Use 0 for using camera as input."
     )
     parser.add_argument(
         "--input_height",
