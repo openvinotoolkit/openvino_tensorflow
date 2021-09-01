@@ -2,6 +2,12 @@
 
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
+## Notebook Tutorial
+
+Please download our notebook tutorial using the link below.
+
+<a href="https://raw.githubusercontent.com/openvinotoolkit/openvino_tensorflow/notebook_demo_branch/examples/notebook_tutorial.ipynb" download>notebook_tutorial.ipynb</a>
+
 ## Demos showcased in the examples
 
 * Classification demo uses Google's Inception v3 model to classify a given image or video.
