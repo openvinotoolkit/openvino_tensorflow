@@ -245,7 +245,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [mozilla-deepspeech-0.6.1](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/deepspeech-0.6.1-models.tar.gz)| iGPU, MYRIAD |
 | [mozilla-deepspeech-0.7.1](https://github.com/mozilla/DeepSpeech/archive/v0.7.1.tar.gz)| CPU, iGPU |
 | [mozilla-deepspeech-0.8.2](https://github.com/mozilla/DeepSpeech)| CPU, MYRIAD |
-| [NCF-1B]( https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_5/ncf_fp32_pretrained_model.tar.gz) | CPU |
+| [NCF-1B](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_5/ncf_fp32_pretrained_model.tar.gz) | CPU |
 | [netvlad](http://rpg.ifi.uzh.ch/datasets/netvlad/vd16_pitts30k_conv5_3_vlad_preL2_intra_white.zip)| CPU, MYRIAD |
 | [NiftyNet](https://github.com/NifTK/NiftyNetModelZoo/tree/5-reorganising-with-lfs/mr_ct_regression)| CPU, iGPU, MYRIAD |
 | [openpose-pose](http://www.mediafire.com/file/qlzzr20mpocnpa3/graph_opt.pb)| CPU, iGPU, MYRIAD, VAD-M |
