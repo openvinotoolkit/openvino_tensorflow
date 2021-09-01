@@ -187,7 +187,6 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -200,7 +199,6 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=GPU
-      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -213,7 +211,6 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=MYRIAD
-      source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -224,6 +221,36 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF2"
     
+   - script: |
+      cd  $(WORK_DIR)
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      export OPENVINO_TF_BACKEND=CPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -r examples/requirements.txt
+      python3 examples/classification_sample.py --no_show
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python CPU Classification Inference Example TF1"
+   
+   - script: |
+      cd  $(WORK_DIR)
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      export OPENVINO_TF_BACKEND=GPU
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -r examples/requirements.txt
+      python3 examples/classification_sample.py --no_show --backend GPU
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python GPU Classification Inference Example TF1"
+
+   - script: |
+      cd  $(WORK_DIR)
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      export OPENVINO_TF_BACKEND=MYRIAD
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      pip3 install -r examples/requirements.txt
+      python3 examples/classification_sample.py --no_show --backend MYRIAD
+     workingDirectory: $(WORK_DIR) 
+     displayName: "python MYRIAD Classification Inference Example TF1"
+
    - script: |
       rm -rf *
      condition: always()
