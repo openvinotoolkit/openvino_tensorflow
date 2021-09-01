@@ -189,7 +189,9 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
     else:
-        raise Exception("Unable to find the input mode")
+        raise Exception(
+            "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
+        )
     images_len = len(images)
     image_id = -1
     # Initialize session and run
@@ -230,7 +232,7 @@ if __name__ == "__main__":
                 image_shape,
                 get_anchors(),
                 len(labels), (input_height, input_width),
-                max_boxes=100,
+                max_boxes=10,
                 elim_grid_sense=True)
 
             # modified draw_boxes function to return an openCV formatted image

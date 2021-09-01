@@ -170,7 +170,9 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
     else:
-        raise Exception("Unable to find the input mode")
+        raise Exception(
+            "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
+        )
     images_len = len(images)
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()

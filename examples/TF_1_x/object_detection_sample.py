@@ -298,7 +298,10 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
     else:
-        raise Exception("Unable to find the input mode")
+        raise Exception(
+            "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
+        )
+
     images_len = len(images)
     image_id = -1
     # Initialize session and run
@@ -324,8 +327,6 @@ if __name__ == "__main__":
             img_resized = cv2.resize(frame, (input_height, input_width))
 
             # Run
-            # frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            print(image_id)
             start = time.time()
             detected_boxes = sess.run(
                 output_operation.outputs[0],
