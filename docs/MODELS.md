@@ -191,9 +191,9 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [densenet161](https://drive.google.com/file/d/0B_fUSpodN0t0NmZvTnZZa2plaHc/view)| CPU, iGPU, MYRIAD, VAD-M |
 | [dilation](https://github.com/fyu/dilation)| CPU, iGPU |
 | [east_resnet_v1_50](https://github.com/argman/EAST#download)| CPU, iGPU, MYRIAD, VAD-M |
-| [efficientdet-d0_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdett)|   CPU,  iGPU,  MYRIAD |
+| [efficientdet-d0_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdett)| CPU,  iGPU,  MYRIAD |
 | [EfficientDet-D0-512x512](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d0_coco17_tpu-32.tar.gz) | CPU |
-| [efficientdet-d1_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdet)|    CPU,  iGPU,  MYRIAD |
+| [efficientdet-d1_frozen](https://github.com/google/automl/tree/aa6480fe7e07bd99030e56b7f05c75e5291db357/efficientdet)| CPU,  iGPU,  MYRIAD |
 | [EfficientDet-D1-640x640](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d1_coco17_tpu-32.tar.gz) | CPU |
 | [EfficientDet-D2-768x768](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d2_coco17_tpu-32.tar.gz) | CPU |
 | [EfficientDet-D3-896x896](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d3_coco17_tpu-32.tar.gz) | CPU |
@@ -212,7 +212,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU |
 | [faster_rcnn_resnet101_ava_v2.1](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_ava_v2.1_2018_04_30.tar.gz)| CPU|
 | [faster_rcnn_resnet101_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_fgvc_2018_07_19.tar.gz) | CPU|
-| [faster_rcnn_resnet101_kitti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_kitti_2018_01_28.tar.gz) |CPU |
+| [faster_rcnn_resnet101_kitti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_kitti_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_resnet101_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_lowproposals_coco_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_resnet101_snapshot_serengeti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_snapshot_serengeti_2020_06_10.tar.gz) | CPU |
 | [faster_rcnn_resnet50_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_fgvc_2018_07_19.tar.gz) | CPU |
@@ -225,7 +225,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [handwritten-score-recognition-0003](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/intel/handwritten-score-recognition-0003/README.md) | CPU |
 | [i3d-flow](https://github.com/deepmind/kinetics-i3d)| CPU, iGPU, MYRIAD |
 | [i3d-rgb](https://download.01.org/opencv/public_models/032020/i3d-rgb/rgb.frozen.pb)| CPU, iGPU, MYRIAD |
-| [icnet-camvid-ava-0001](https://docs.openvinotoolkit.org/latest/omz_models_model_icnet_camvid_ava_0001.html)| CPU|
+| [icnet-camvid-ava-0001](https://docs.openvinotoolkit.org/latest/omz_models_model_icnet_camvid_ava_0001.html)| CPU |
 | [icnet-camvid-ava-sparse-30-0001](https://download.01.org/opencv/2020/openvinotoolkit/2020.2/open_model_zoo/models_bin/2/icnet-camvid-ava-sparse-30-0001/)| CPU|
 | [icnet-camvid-ava-sparse-60-0001](https://download.01.org/opencv/2020/openvinotoolkit/2020.2/open_model_zoo/models_bin/2/icnet-camvid-ava-sparse-60-0001/)| CPU|
 | [image-retrieval-0001](https://download.01.org/opencv/openvino_training_extensions/models/image_retrieval/image-retrieval-0001.tar.gz)| CPU |
