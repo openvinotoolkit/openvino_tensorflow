@@ -37,7 +37,12 @@ tensorflow::int64 NGraphLogMessage::MinNGraphVLogLevel() {
 }
 
 std::string NGraphLogMessage::GetTimeStampForLogging() {
+#if TF_MAJOR_VERSION < 2
+  static tensorflow::EnvTime* env_time = tensorflow::EnvTime::Default();
+  tensorflow::uint64 now_micros = env_time->NowMicros();
+#else
   tensorflow::uint64 now_micros = tensorflow::EnvTime::NowMicros();
+#endif
   time_t now_seconds = static_cast<time_t>(now_micros / 1000000);
   tensorflow::int32 micros_remainder =
       static_cast<tensorflow::int32>(now_micros % 1000000);

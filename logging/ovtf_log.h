@@ -12,6 +12,7 @@
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/env_time.h"
 #include "tensorflow/core/platform/macros.h"
+#include "tensorflow/core/public/version.h"
 
 class NGraphLogMessage : public tensorflow::internal::LogMessage {
  public:

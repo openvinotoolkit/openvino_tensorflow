@@ -1238,10 +1238,10 @@ static Status TranslateCropAndResizeOp(
   std::vector<float> boxes;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &boxes));
 
-  std::vector<unsigned long> box_ind;
+  std::vector<int64> box_ind;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
 
-  std::vector<unsigned long> crop_size;
+  std::vector<int64> crop_size;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 3, static_input_map, &crop_size));
 
   ng::OutputVector ng_crop_outputs(box_ind.size());
