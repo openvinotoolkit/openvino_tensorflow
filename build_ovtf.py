@@ -448,17 +448,17 @@ def main():
         )
 
         if (arguments.openvino_version == "2021.4"):
-            openvino_branch = "releases/2021/4"
+            openvino_release_tag = "releases/2021/4"
         elif (arguments.openvino_version == "2021.3"):
-            openvino_branch = "releases/2021/3"
+            openvino_release_tag = "2021.3"
         elif (arguments.openvino_version == "2021.2"):
-            openvino_branch = "releases/2021/2"
+            openvino_release_tag = "2021.2"
 
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-            openvino_branch,
+            openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
