@@ -1238,20 +1238,21 @@ static Status TranslateCropAndResizeOp(
   std::vector<float> boxes;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &boxes));
 
-  std::vector<unsigned long> box_ind;
+  std::vector<int64> box_ind;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
 
-  std::vector<unsigned long> crop_size;
+  std::vector<int64> crop_size;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 3, static_input_map, &crop_size));
 
   ng::OutputVector ng_crop_outputs(box_ind.size());
   if (box_ind.size() == 0) {
-    SaveNgOp(
-        ng_op_map, op->name(),
-        ConstructNgNode<opset::Constant>(
-            op->name(), ng::element::f32,
-            ngraph::Shape{0, crop_size.at(0), crop_size.at(1), image_depth},
-            std::vector<float>({})));
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng::element::f32,
+                 ngraph::Shape{0, static_cast<unsigned long>(crop_size.at(0)),
+                               static_cast<unsigned long>(crop_size.at(1)),
+                               image_depth},
+                 std::vector<float>({})));
   } else {
     for (int i = 0; i < box_ind.size(); i++) {
       int y1, x1, y2, x2;
