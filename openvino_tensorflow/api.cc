@@ -24,16 +24,29 @@ void enable() { Enable(); }
 void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
+bool check_backend(char* backend) {
+  const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};
+  for (int i = 0; i < 4; i++) {
+    if (strcmp(backend, devices[i]) == 0) return true;
+  }
+  return false;
+}
 size_t backends_len() {
-  const auto backends = ListBackends();
-  return backends.size();
+  const auto ovtf_backends = ListBackends();
+  int backends_count = 0;
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    backendList[idx] = strdup(ovtf_backends[idx].c_str());
+    if (check_backend(backendList[idx])) backends_count++;
+  }
+  return backends_count;
 }
 
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
+  int i = 0;
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    backends[idx] = backendList[idx];
+    if (check_backend(backendList[idx])) backends[i++] = backendList[idx];
   }
   return true;
 }
