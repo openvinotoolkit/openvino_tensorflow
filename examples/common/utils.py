@@ -31,7 +31,7 @@ from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 
 
 def get_input_mode(input_path):
-    if input_path.lower() in ['cam', 'camera']:
+    if str(input_path).lower() == '0':
         return "camera"
     assert os.path.exists(input_path), "input path doesn't exist"
     if os.path.isdir(input_path):
@@ -48,6 +48,8 @@ def get_input_mode(input_path):
             return "image"
         elif input_path.rsplit('.', 1)[1] in ['mp4', 'avi']:
             return "video"
+    else:
+        return "Invalid input"
 
 
 def load_graph(model_file):
@@ -129,7 +131,6 @@ def draw_boxes(image,
             label = '{} {:.2f}'.format(class_name, score)
         else:
             label = '{}'.format(class_name)
-        #print(label, (xmin, ymin), (xmax, ymax))
 
         # if no color info, use black(0,0,0)
         if colors == None:
