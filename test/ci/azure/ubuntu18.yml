@@ -198,7 +198,7 @@
       export OPENVINO_TF_BACKEND=CPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r requirements.txt    
+      pip3 install -r ../requirements.txt    
       python3 object_detection_sample.py --no_show
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF1"
@@ -223,7 +223,7 @@
       export OPENVINO_TF_BACKEND=GPU
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r requirements.txt    
+      pip3 install -r ../requirements.txt    
       python3 object_detection_sample.py --no_show --backend GPU
      workingDirectory: $(WORK_DIR) 
      displayName: "python GPU OD Inference Example TF1"
@@ -248,7 +248,7 @@
       export OPENVINO_TF_BACKEND=MYRIAD
       source $(OV_LOCATION)/bin/setupvars.sh
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r requirements.txt    
+      pip3 install -r ../requirements.txt    
       python3 object_detection_sample.py --no_show --backend MYRIAD
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF1"
