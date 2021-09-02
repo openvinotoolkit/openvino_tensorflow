@@ -1,4 +1,4 @@
-<p>English | <a href="/openvinotoolkit/openvino_tensorflow/blob/master/README_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README_cn.md">简体中文</a></p>
 
 <p align="center">
   <img src="images/openvino_wbgd.png">

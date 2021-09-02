@@ -1,5 +1,5 @@
 
-<p>English | <a href="/openvino_tensorflow/docs/I05038-4-MODELS_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/I05038-4-MODELS_cn.md">简体中文</a></p>
 
 
 This document provides a list of all validated models that are supported by **OpenVINO™ integration with TensorFlow**. This list is continuously evolving as we enable more operators and models.

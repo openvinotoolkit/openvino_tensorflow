@@ -1,4 +1,4 @@
-<p>English | <a href="/openvino_tensorflow/docs/I05038-2-ARCHITECTURE_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/I05038-2-ARCHITECTURE_cn.md">简体中文</a></p>
 
 # Architecture of **OpenVINO™ integration with TensorFlow**
 
