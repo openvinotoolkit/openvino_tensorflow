@@ -1,3 +1,5 @@
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/ARCHITECTURE_cn.md">简体中文</a></p>
+
 # Architecture of **OpenVINO™ integration with TensorFlow**
 
 This document describes a high-level architecture of **OpenVINO™ integration with TensorFlow**. This capability is registered as a graph optimization pass in TensorFlow and optimizes the execution of supported operator clusters using OpenVINO™ runtime. Unsupported operators fall back on native TensorFlow runtime.

@@ -1,3 +1,5 @@
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/USAGE_cn.md">简体中文</a></p>
+
 # APIs and environment variables for **OpenVINO™ integration with TensorFlow**
 
 This document describes available Python APIs for **OpenVINO™ integration with TensorFlow**. The first section covers the essential APIs and lines of code required to leverage the functionality of **OpenVINO™ integration with TensorFlow** in TensorFlow applications.

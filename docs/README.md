@@ -1,3 +1,5 @@
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/README_cn.md">简体中文</a></p>
+
 # **OpenVINO™ integration with TensorFlow** Documentation
 
 [Introduction](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md)
