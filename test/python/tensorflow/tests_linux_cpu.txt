@@ -46,7 +46,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
 
 #Failed to set Blob with precision not corresponding to user output precision.
-
 cast_op_test.CastOpTest.testSmallValues
 spacetodepth_op_test.SpaceToDepthTest.testBasic
 scan_ops_test.CumsumTest.test1D
@@ -57,11 +56,9 @@ scan_ops_test.CumsumTest.test3D
 array_ops_test.StridedSliceGradTest.testInt64Indices
 math_ops_test.AddNTest.testInt
 math_ops_test.SquaredDifferenceTest.testSquaredDifference
-
 scan_ops_test.CumsumTest.testAxisType
 reduction_ops_test.SumReductionTest.testHighRank
 cwise_ops_binary_test.BinaryOpTest.testBCast_0A
-
 cwise_ops_binary_test.BinaryOpTest.testBCast_0C
 cwise_ops_binary_test.BinaryOpTest.testBCast_0D
 cwise_ops_binary_test.BinaryOpTest.testBCast_11A
@@ -104,8 +101,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_8A
 cwise_ops_binary_test.BinaryOpTest.testBCast_8C
 cwise_ops_binary_test.BinaryOpTest.testBCast_8D
 pad_op_test.PadOpTest.testPaddingTypes
-gather_op_test.GatherTest.testHigherRank
-cwise_ops_binary_test.BinaryOpTest.testBCast_0A
 
 #incorrect number of input/output dimensions
 array_ops_test.ShapeSizeRankTest.testSparseShape
@@ -113,9 +108,6 @@ reduction_ops_test.AnyReductionTest.testAxesType
 reduction_ops_test.MinReductionTest.testAxesType
 reduction_ops_test.ProdReductionTest.testAxesType
 cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
-identity_bijector_test.IdentityBijectorTest.testScalarCongruency
-
-
 
 # data doesn't exist
 concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
@@ -157,7 +149,6 @@ reduction_ops_test.MaxReductionTest.testFloatReduce3D
 reduction_ops_test.MaxReductionTest.testGradient2
 reduction_ops_test.MaxReductionTest.testInfinity
 reduction_ops_test.MaxReductionTest.testInt64Reduce3D
-
 reduction_ops_test.MinReductionTest.testFloatReduce3D
 reduction_ops_test.MinReductionTest.testGradient2
 reduction_ops_test.MinReductionTest.testInfinity
@@ -165,7 +156,6 @@ reduction_ops_test.ProdReductionTest.testEmptyGradients
 reduction_ops_test.ProdReductionTest.testFloat32
 reduction_ops_test.ProdReductionTest.testGradientWithZeros
 reduction_ops_test.ProdReductionTest.testInfinity
-
 pooling_test.Pooling1DTest.test_averagepooling_1d
 pooling_test.Pooling1DTest.test_maxpooling_1d
 pooling_test.Pooling2DTest.test_averagepooling_2d
@@ -180,7 +170,6 @@ reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
 array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
 
 # cannot find blob with name <xxx>
-
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
 gather_nd_op_test.GatherNdTest.testBadIndicesCPU
@@ -209,7 +198,6 @@ one_hot_op_test.OneHotTest.testSimpleCases
 one_hot_op_test.OneHotTest.testSingleValueGiven
 
 # AssertionError: Arrays are not equal
-
 reduction_ops_test.ReducedShapeTest.testSimple
 
 # Dim size cannot be less than -1
@@ -227,7 +215,6 @@ scan_ops_test.CumsumTest.test6D
 split_op_test.SplitOpTest.testDegenerateVariable
 split_op_test.SplitOpTest.testSpecialCasesVariable
 
-
 # Invalid reduction dimension 
 reduction_ops_test.MaxReductionTest.testGradient
 reduction_ops_test.MaxReductionTest.testGradient3
@@ -236,10 +223,8 @@ reduction_ops_test.MinReductionTest.testGradient4
 
 # Requires start >= limit when delta < 0: 0/4
 reduction_ops_test.MinReductionTest.testGradient3
-
 reduction_ops_test.SumReductionTest.testGradient
 reduction_ops_test.ReducedShapeTest.testZeros
-
 reduction_ops_test.MinReductionTest.testGradient
 reduction_ops_test.ReducedShapeTest.testNegAxes
 
@@ -271,15 +256,11 @@ reduction_ops_test.MeanReductionTest.testComplex128
 reduction_ops_test.MaxReductionTest.testDoubleReduce3D
 
 # Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
-
-
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 
 # Tests randomly failing with error:
 # Caught exception while executing cluster: wstring_convert::to_bytes
-
-
 # TBD
 softmax_op_test.SoftmaxTest.testEmptyInput
 
@@ -288,7 +269,6 @@ spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 
 #disabled due to empty tensor in test case
 array_ops_test.ReverseV2Test.testReverse2DimAuto
-
 #defect in OpenVINO 2021.4; appears to be a memory leak
 array_ops_test.StridedSliceTest.testEllipsis
 
@@ -320,7 +300,6 @@ array_ops_test.StridedSliceTest.test_basic_slice
 array_ops_test.StridedSliceTest.testExpandVariable
 conv_ops_test.Conv2DTest.testConv2D1x2Filter
 
-
 # AssertionError: False is not true
 lrn_op_test.LRNOpTest.testCompute  
 
@@ -341,7 +320,6 @@ reduction_ops_test.MeanReductionTest.testInfinity
 reduction_ops_test.MeanReductionTest.testUint8
 shape_ops_test.ShapeOpsTest.testSqueezeGradient
 
-
 # Caught exception while executing cluster 2
 array_ops_test.StridedSliceTest.testOptimizedCases
 
@@ -357,6 +335,3 @@ cwise_ops_binary_test.BinaryOpTest.testFloatBasic
 
 # bad_alloc from OV-2021.4
 array_ops_test.StridedSliceTest.testTensorIndexing
-
-#BatchToSpace dynamic shape
-pool_test.PoolingTest.testGradient2D
