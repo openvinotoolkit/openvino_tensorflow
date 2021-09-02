@@ -27,19 +27,16 @@ tests_common.txt
 # Specify tests/patterns/regex that should be included
 
 
-
-
 ###################################################
 [SKIP]
 
-
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
-argmax_op_test.ArgMaxTest.testDefaultAxis
+#argmax_op_test.ArgMaxTest.testDefaultAxis
 
 # BEGIN:TBD -->>
 
 # zero dim error
-argmax_op_test.ArgMaxTest.testEmpty
+#argmax_op_test.ArgMaxTest.testEmpty
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 math_ops_test.DivAndModTest.testFloorDivGrad
 reduction_ops_test.SumReductionTest.testDegenerate
@@ -48,10 +45,10 @@ reduction_ops_test.ProdReductionTest.testDegenerate
 cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad 
 
 #Failed to set Blob with precision not corresponding to user output precision.
-argmax_op_test.ArgMaxTest.testFloat 
-argmax_op_test.ArgMaxTest.testInt32
-cast_op_test.CastOpTest.testBasic
-cast_op_test.CastOpTest.testRandom
+#argmax_op_test.ArgMaxTest.testFloat 
+#argmax_op_test.ArgMaxTest.testInt32
+#cast_op_test.CastOpTest.testBasic
+#cast_op_test.CastOpTest.testRandom
 cast_op_test.CastOpTest.testSmallValues
 spacetodepth_op_test.SpaceToDepthTest.testBasic
 scan_ops_test.CumsumTest.test1D
@@ -59,17 +56,17 @@ scan_ops_test.CumsumTest.test2D
 scan_ops_test.CumsumTest.test3D
 
 #Unable to add a parameter to a function with no parameters!
-argmax_op_test.ArgMaxTest.testInt64
+#argmax_op_test.ArgMaxTest.testInt64
 array_ops_test.StridedSliceGradTest.testInt64Indices
-cast_op_test.CastOpTest.testIntToFloatBoundary
+#cast_op_test.CastOpTest.testIntToFloatBoundary
 math_ops_test.AddNTest.testInt
 math_ops_test.SquaredDifferenceTest.testSquaredDifference
-transpose_op_test.TransposeTest.test1D
-transpose_op_test.TransposeTest.testInt64
+#transpose_op_test.TransposeTest.test1D
+#transpose_op_test.TransposeTest.testInt64
 scan_ops_test.CumsumTest.testAxisType
 reduction_ops_test.SumReductionTest.testHighRank
-cwise_ops_unary_test.UnaryOpTest.testInt64Square
-cwise_ops_unary_test.UnaryOpTest.testInt64Basic
+#cwise_ops_unary_test.UnaryOpTest.testInt64Square
+#cwise_ops_unary_test.UnaryOpTest.testInt64Basic
 
 #incorrect number of input/output dimensions
 array_ops_test.ShapeSizeRankTest.testSparseShape
@@ -140,12 +137,25 @@ pooling_test.Pooling2DTest.test_averagepooling_2d
 pooling_test.Pooling2DTest.test_maxpooling_2d
 pooling_test.Pooling3DTest.test_averagepooling_3d
 pooling_test.Pooling3DTest.test_maxpooling_3d
+conv_ops_test.Conv2DTest.testConv2D2x2Depth1ValidBackpropInput
+conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInput
+Testing: conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInputStride1x2
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeBackpropInput
+cwise_ops_binary_test.BinaryOpTest.testBCast_6A
+depthtospace_op_test.DepthToSpaceTest.testBasic
+depthtospace_op_test.DepthToSpaceTest.testBlockSize2
+depthtospace_op_test.DepthToSpaceTest.testBlockSize2Batch10
+depthtospace_op_test.DepthToSpaceTest.testBlockSize4FlatInput
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleaved
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedDepth3
+depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedLarger
+Testing: depthtospace_op_test.DepthToSpaceTest.testNonSquare
 
 # unsupported type
-cast_op_test.CastOpTest.testBfloat16
+#cast_op_test.CastOpTest.testBfloat16
 
 # cannot find blob with name <xxx>
-slice_op_test.SliceTest.testSimple
+#slice_op_test.SliceTest.testSimple
 
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
@@ -173,7 +183,7 @@ one_hot_op_test.OneHotTest.testSimpleCases
 one_hot_op_test.OneHotTest.testSingleValueGiven
 
 # AssertionError: Arrays are not equal
-slice_op_test.SliceTest.testSliceOfSlice
+#slice_op_test.SliceTest.testSliceOfSlice
 reduction_ops_test.ReducedShapeTest.testSimple
 
 # Dim size cannot be less than -1
@@ -183,7 +193,7 @@ slice_op_test.SliceTest.testGradientsAll
 slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testScalarInput
 
-slice_op_test.SliceTest.testSingleDimension
+#slice_op_test.SliceTest.testSingleDimension
 
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
 scan_ops_test.CumsumTest.test6D
@@ -226,9 +236,10 @@ conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne
 conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
 conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo
 math_ops_test.ModTest.testFloat
-softmax_op_test.SoftmaxTest.testFloat
-softmax_op_test.SoftmaxTest.testHalf
+#softmax_op_test.SoftmaxTest.testFloat
+#softmax_op_test.SoftmaxTest.testHalf
 split_op_test.SplitOpTest.testSplitRows
+
 
 # Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
 conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
@@ -248,10 +259,9 @@ conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
 conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
 conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
 
-
 # Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
 # Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
+#nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
 
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
@@ -274,10 +284,10 @@ reduction_ops_test.MeanReductionTest.testComplex128
 reduction_ops_test.MaxReductionTest.testDoubleReduce3D
 
 # Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
-topk_op_test.TopKTest.testMediumTopK
-topk_op_test.TopKTest.testLargeTopK
-topk_op_test.TopKTest.testTop2
-topk_op_test.TopKTest.testLargeSort
+#topk_op_test.TopKTest.testMediumTopK
+#topk_op_test.TopKTest.testLargeTopK
+#topk_op_test.TopKTest.testTop2
+#topk_op_test.TopKTest.testLargeSort
 
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
@@ -299,7 +309,7 @@ pool_test.PoolingTest.testGradient2D
 cwise_ops_unary_test.UnaryOpTest.testGradGrad
 conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
 conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
-concat_op_test.ConcatOpTest.testVStack
+
 concat_op_test.ConcatOpTest.testHStack
 
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
@@ -311,3 +321,139 @@ array_ops_test.ReverseV2Test.testReverse2DimAuto
 batchtospace_op_test.BatchToSpaceDepthToSpace.testDepthToSpaceTranspose
 spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsTwoRemainingDims
 spacetobatch_op_test.SpaceToBatchSpaceToDepth.testSpaceToDepthTranspose
+
+# tensorflow:Failed to translate Constant with TF type:DT_BFLOAT16
+constant_op_test.ConstantTest.testBFloat16
+
+# Encountered unknown element type DT_UINT8 on an empty tensor
+constant_op_test.ZerosLikeTest.testZerosLikeCPU
+
+# Unhandled exception in op handler
+conv_ops_test.Conv2DTest.testConv2DEmpty
+conv_ops_test.Conv2DTest.testConv2DEmptyDilation
+topk_op_test.TopKTest.testKNegative
+concat_op_test.ConcatOpTest.testRandom
+
+# input sizes must be positive integers
+conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
+
+# Strides in batch and depth dimensions is not supported
+conv_ops_test.Conv2DTest.testOpEdgeCases
+
+# has zero dimension which is not allowed
+cwise_ops_binary_test.BinaryOpTest.testBCast_10A
+cwise_ops_binary_test.BinaryOpTest.testBCast_10B
+cwise_ops_binary_test.BinaryOpTest.testBCast_10C
+cwise_ops_binary_test.BinaryOpTest.testBCast_10D
+
+# The length of size_splits must sum to the value of the dimension along split_dim
+split_op_test.SplitOpTest.testSpecialCasesVariable
+split_op_test.SplitOpTest.testDegenerateVariable
+
+# Caught exception while executing cluster 0: Can not init Myriad device: NC_ERROR
+array_ops_test.StridedSliceTest.testEllipsis
+array_ops_test.StridedSliceTest.testSliceWithUndefinedDimension
+array_ops_test.StridedSliceTest.test_basic_slice
+concat_op_test.ConcatOpTest.testVStack
+constant_op_test.ZerosLikeTest.test_session
+conv_ops_test.Conv2DTest.testConv2D0x0Padding
+conv_ops_test.Conv2DTest.testConv2D1x1Filter
+conv_ops_test.Conv2DTest.testConv2D1x1Padding
+conv_ops_test.Conv2DTest.testConv2D2x2Filter2x1Dilation
+conv_ops_test.Conv2DTest.testConv2D2x2Padding
+conv_ops_test.Conv2DTest.testConv2DExplicitPaddingWithDilations
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSize
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
+conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideSame
+conv_ops_test.Conv2DTest.testConv2DLotsPadding
+conv_ops_test.Conv2DTest.testConv2DOnlyBottomPadding
+conv_ops_test.Conv2DTest.testConv2DOnlyTopRightPadding
+cwise_ops_binary_test.BinaryOpTest.testBCast_0A
+cwise_ops_binary_test.BinaryOpTest.testBCast_0B
+cwise_ops_binary_test.BinaryOpTest.testBCast_0C
+cwise_ops_binary_test.BinaryOpTest.testBCast_0D
+cwise_ops_binary_test.BinaryOpTest.testBCast_11A
+cwise_ops_binary_test.BinaryOpTest.testBCast_11B
+cwise_ops_binary_test.BinaryOpTest.testBCast_11C
+cwise_ops_binary_test.BinaryOpTest.testBCast_11D
+cwise_ops_binary_test.BinaryOpTest.testBCast_12A
+cwise_ops_binary_test.BinaryOpTest.testBCast_12B
+cwise_ops_binary_test.BinaryOpTest.testBCast_12C
+cwise_ops_binary_test.BinaryOpTest.testBCast_12D
+cwise_ops_binary_test.BinaryOpTest.testBCast_13A
+cwise_ops_binary_test.BinaryOpTest.testBCast_13B
+cwise_ops_binary_test.BinaryOpTest.testBCast_13C
+cwise_ops_binary_test.BinaryOpTest.testBCast_13D
+cwise_ops_binary_test.BinaryOpTest.testBCast_14A
+cwise_ops_binary_test.BinaryOpTest.testBCast_14B
+cwise_ops_binary_test.BinaryOpTest.testBCast_14C
+cwise_ops_binary_test.BinaryOpTest.testBCast_14D
+cwise_ops_binary_test.BinaryOpTest.testBCast_15A
+cwise_ops_binary_test.BinaryOpTest.testBCast_15B
+cwise_ops_binary_test.BinaryOpTest.testBCast_15C
+cwise_ops_binary_test.BinaryOpTest.testBCast_15D
+cwise_ops_binary_test.BinaryOpTest.testBCast_1A
+cwise_ops_binary_test.BinaryOpTest.testBCast_1B
+cwise_ops_binary_test.BinaryOpTest.testBCast_1C
+cwise_ops_binary_test.BinaryOpTest.testBCast_1D
+cwise_ops_binary_test.BinaryOpTest.testBCast_2A
+cwise_ops_binary_test.BinaryOpTest.testBCast_2B
+cwise_ops_binary_test.BinaryOpTest.testBCast_2C
+cwise_ops_binary_test.BinaryOpTest.testBCast_2D
+cwise_ops_binary_test.BinaryOpTest.testBCast_3A
+cwise_ops_binary_test.BinaryOpTest.testBCast_3B
+cwise_ops_binary_test.BinaryOpTest.testBCast_3C
+cwise_ops_binary_test.BinaryOpTest.testBCast_3D
+cwise_ops_binary_test.BinaryOpTest.testBCast_4A
+cwise_ops_binary_test.BinaryOpTest.testBCast_4B
+cwise_ops_binary_test.BinaryOpTest.testBCast_4C
+cwise_ops_binary_test.BinaryOpTest.testBCast_4D
+cwise_ops_binary_test.BinaryOpTest.testBCast_5A
+cwise_ops_binary_test.BinaryOpTest.testBCast_5B
+cwise_ops_binary_test.BinaryOpTest.testBCast_5C
+cwise_ops_binary_test.BinaryOpTest.testBCast_5D
+cwise_ops_binary_test.BinaryOpTest.testBCast_6B
+cwise_ops_binary_test.BinaryOpTest.testBCast_6C
+cwise_ops_binary_test.BinaryOpTest.testBCast_6D
+cwise_ops_binary_test.BinaryOpTest.testBCast_7A
+cwise_ops_binary_test.BinaryOpTest.testBCast_7B
+cwise_ops_binary_test.BinaryOpTest.testBCast_7C
+cwise_ops_binary_test.BinaryOpTest.testBCast_7D
+cwise_ops_binary_test.BinaryOpTest.testBCast_8A
+cwise_ops_binary_test.BinaryOpTest.testBCast_8B
+cwise_ops_binary_test.BinaryOpTest.testBCast_8C
+cwise_ops_binary_test.BinaryOpTest.testBCast_8D
+cwise_ops_binary_test.BinaryOpTest.testDoubleBasic
+cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+cwise_ops_binary_test.BinaryOpTest.testFloatDifferentShapes
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+cwise_ops_unary_test.UnaryOpTest.testFloatTanhEdge
+gather_op_test.GatherTest.testHigherRank
+math_ops_test.AddNTest.test_iterable
+math_ops_test.AddNTest.testIndexedSlices
+pad_op_test.PadOpTest.testPaddingTypes
+pooling_ops_test.PoolingTest.testAvgPooling
+pooling_ops_test.PoolingTest.testMaxPooling
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
+reduction_ops_test.MeanReductionTest.testUint8
+shape_ops_test.ShapeOpsTest.testSqueezeGradient
+shape_ops_test.ShapeOpsTest.testSqueezeGradientWithSqueezeDims
+split_op_test.SplitOpTest.testShapeInference
+split_op_test.SplitOpTest.testExplicitNum
+
+
+# Failed to queue inference: NC_ERROR
+gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
+math_ops_test.DivAndModTest.testFloorModFloat
+spacetobatch_op_test.SpaceToBatchNDTest.testOneBlockDimOneRemainingDim
+spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsZeroRemainingDims
+spacetobatch_op_test.SpaceToBatchTest.testBatchInput2x2
+spacetobatch_op_test.SpaceToBatchTest.testDepthInput2x2
+spacetobatch_op_test.SpaceToBatchTest.testLargerInput2x2
+spacetobatch_op_test.SpaceToBatchTest.testLargerInputBatch2x2
+spacetobatch_op_test.SpaceToBatchTest.testSmallInput2x2
+spacetobatch_op_test.SpaceToBatchTest.testSmallInput2x2Pad1x0

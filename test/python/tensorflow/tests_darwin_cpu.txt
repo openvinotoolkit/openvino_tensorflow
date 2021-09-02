@@ -26,28 +26,27 @@ tests_common.txt
 [RUN]
 # Specify tests/patterns/regex that should be included
 
+
 ###################################################
 [SKIP]
-
 #Fails with this error : TopKImpl - Incorrect input data/index values precision.
 #https://github.com/openvinotoolkit/openvino/blob/master/inference-engine/src/mkldnn_plugin/nodes/topk.cpp#L39
 #OV TopK expects data to be F32 or BF16 and index I32
-argmax_op_test.ArgMaxTest.testDefaultAxis
 
 # zero dim error
-argmax_op_test.ArgMaxTest.testEmpty
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 math_ops_test.DivAndModTest.testFloorDivGrad
 reduction_ops_test.SumReductionTest.testDegenerate
 reduction_ops_test.MeanReductionTest.testDegenerate
 reduction_ops_test.ProdReductionTest.testDegenerate
-cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad 
+Gather_op_test.GatherTest.testHigherRank
+cwise_ops_binary_test.BinaryOpTest.testBCast_10A
+cwise_ops_binary_test.BinaryOpTest.testBCast_10B
+cwise_ops_binary_test.BinaryOpTest.testBCast_10C
+cwise_ops_binary_test.BinaryOpTest.testBCast_10D
 
 #Failed to set Blob with precision not corresponding to user output precision.
-argmax_op_test.ArgMaxTest.testFloat 
-argmax_op_test.ArgMaxTest.testInt32
-cast_op_test.CastOpTest.testBasic
-cast_op_test.CastOpTest.testRandom
+
 cast_op_test.CastOpTest.testSmallValues
 spacetodepth_op_test.SpaceToDepthTest.testBasic
 scan_ops_test.CumsumTest.test1D
@@ -55,31 +54,70 @@ scan_ops_test.CumsumTest.test2D
 scan_ops_test.CumsumTest.test3D
 
 #Unable to add a parameter to a function with no parameters!
-argmax_op_test.ArgMaxTest.testInt64
 array_ops_test.StridedSliceGradTest.testInt64Indices
-cast_op_test.CastOpTest.testIntToFloatBoundary
 math_ops_test.AddNTest.testInt
 math_ops_test.SquaredDifferenceTest.testSquaredDifference
-transpose_op_test.TransposeTest.test1D
-transpose_op_test.TransposeTest.testInt64
+
 scan_ops_test.CumsumTest.testAxisType
 reduction_ops_test.SumReductionTest.testHighRank
-cwise_ops_unary_test.UnaryOpTest.testInt64Square
-cwise_ops_unary_test.UnaryOpTest.testInt64Basic
+cwise_ops_binary_test.BinaryOpTest.testBCast_0A
+
+cwise_ops_binary_test.BinaryOpTest.testBCast_0C
+cwise_ops_binary_test.BinaryOpTest.testBCast_0D
+cwise_ops_binary_test.BinaryOpTest.testBCast_11A
+cwise_ops_binary_test.BinaryOpTest.testBCast_11C
+cwise_ops_binary_test.BinaryOpTest.testBCast_11D
+cwise_ops_binary_test.BinaryOpTest.testBCast_12A
+cwise_ops_binary_test.BinaryOpTest.testBCast_12C
+cwise_ops_binary_test.BinaryOpTest.testBCast_12D
+cwise_ops_binary_test.BinaryOpTest.testBCast_13A
+cwise_ops_binary_test.BinaryOpTest.testBCast_13C
+cwise_ops_binary_test.BinaryOpTest.testBCast_13D
+cwise_ops_binary_test.BinaryOpTest.testBCast_14A
+cwise_ops_binary_test.BinaryOpTest.testBCast_14C
+cwise_ops_binary_test.BinaryOpTest.testBCast_14D
+cwise_ops_binary_test.BinaryOpTest.testBCast_15A
+cwise_ops_binary_test.BinaryOpTest.testBCast_15C
+cwise_ops_binary_test.BinaryOpTest.testBCast_15D
+cwise_ops_binary_test.BinaryOpTest.testBCast_1A
+cwise_ops_binary_test.BinaryOpTest.testBCast_1C
+cwise_ops_binary_test.BinaryOpTest.testBCast_1D
+cwise_ops_binary_test.BinaryOpTest.testBCast_2A
+cwise_ops_binary_test.BinaryOpTest.testBCast_2C
+cwise_ops_binary_test.BinaryOpTest.testBCast_2D
+cwise_ops_binary_test.BinaryOpTest.testBCast_3A
+cwise_ops_binary_test.BinaryOpTest.testBCast_3C
+cwise_ops_binary_test.BinaryOpTest.testBCast_3D
+cwise_ops_binary_test.BinaryOpTest.testBCast_4A
+cwise_ops_binary_test.BinaryOpTest.testBCast_4C
+cwise_ops_binary_test.BinaryOpTest.testBCast_4D
+cwise_ops_binary_test.BinaryOpTest.testBCast_5A
+cwise_ops_binary_test.BinaryOpTest.testBCast_5C
+cwise_ops_binary_test.BinaryOpTest.testBCast_5D
+cwise_ops_binary_test.BinaryOpTest.testBCast_6A
+cwise_ops_binary_test.BinaryOpTest.testBCast_6C
+cwise_ops_binary_test.BinaryOpTest.testBCast_6D
+cwise_ops_binary_test.BinaryOpTest.testBCast_7A
+cwise_ops_binary_test.BinaryOpTest.testBCast_7C
+cwise_ops_binary_test.BinaryOpTest.testBCast_7D
+cwise_ops_binary_test.BinaryOpTest.testBCast_8A
+cwise_ops_binary_test.BinaryOpTest.testBCast_8C
+cwise_ops_binary_test.BinaryOpTest.testBCast_8D
+pad_op_test.PadOpTest.testPaddingTypes
+gather_op_test.GatherTest.testHigherRank
+cwise_ops_binary_test.BinaryOpTest.testBCast_0A
 
 #incorrect number of input/output dimensions
 array_ops_test.ShapeSizeRankTest.testSparseShape
-reduction_ops_test.AllReductionTest.testAxesType
 reduction_ops_test.AnyReductionTest.testAxesType
 reduction_ops_test.MinReductionTest.testAxesType
 reduction_ops_test.ProdReductionTest.testAxesType
+cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
+identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 
-array_ops_test.StridedSliceTest.testExpand
-array_ops_test.StridedSliceTest.testExpandVariable
-array_ops_test.StridedSliceTest.testOptimizedCases
+
 
 # data doesn't exist
-array_ops_test.StridedSliceTest.testTensorIndexing
 concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
 concat_op_test.ConcatOpTest.testGradientsFirstDim
 concat_op_test.ConcatOpTest.testGradientsLastDim
@@ -119,9 +157,7 @@ reduction_ops_test.MaxReductionTest.testFloatReduce3D
 reduction_ops_test.MaxReductionTest.testGradient2
 reduction_ops_test.MaxReductionTest.testInfinity
 reduction_ops_test.MaxReductionTest.testInt64Reduce3D
-reduction_ops_test.MeanReductionTest.testFloat32
-reduction_ops_test.MeanReductionTest.testInfinity
-reduction_ops_test.MeanReductionTest.testInt32
+
 reduction_ops_test.MinReductionTest.testFloatReduce3D
 reduction_ops_test.MinReductionTest.testGradient2
 reduction_ops_test.MinReductionTest.testInfinity
@@ -129,7 +165,7 @@ reduction_ops_test.ProdReductionTest.testEmptyGradients
 reduction_ops_test.ProdReductionTest.testFloat32
 reduction_ops_test.ProdReductionTest.testGradientWithZeros
 reduction_ops_test.ProdReductionTest.testInfinity
-cwise_ops_unary_test.UnaryOpTest.testFloatBasic
+
 pooling_test.Pooling1DTest.test_averagepooling_1d
 pooling_test.Pooling1DTest.test_maxpooling_1d
 pooling_test.Pooling2DTest.test_averagepooling_2d
@@ -137,11 +173,13 @@ pooling_test.Pooling2DTest.test_maxpooling_2d
 pooling_test.Pooling3DTest.test_averagepooling_3d
 pooling_test.Pooling3DTest.test_maxpooling_3d
 
-# unsupported type
-cast_op_test.CastOpTest.testBfloat16
+# unknown element type on an empty tensor
+constant_op_test.ZerosLikeTest.testZerosLikeCPU
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
+array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
 
 # cannot find blob with name <xxx>
-slice_op_test.SliceTest.testSimple
 
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
@@ -169,20 +207,24 @@ one_hot_op_test.OneHotTest.testSimpleCases
 one_hot_op_test.OneHotTest.testSingleValueGiven
 
 # AssertionError: Arrays are not equal
-slice_op_test.SliceTest.testSliceOfSlice
+
 reduction_ops_test.ReducedShapeTest.testSimple
 
 # Dim size cannot be less than -1
 slice_op_test.SliceTest.testGradientsAll 
+conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
 
 # Input rank plus number of new axis has to be at least the size of Lower and Upper bounds vector.
 slice_op_test.SliceTest.testInvalidIndex
 slice_op_test.SliceTest.testScalarInput
 
-slice_op_test.SliceTest.testSingleDimension
-
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
 scan_ops_test.CumsumTest.test6D
+
+# The length of size_splits must sum to the value of the dimension along split_dim
+split_op_test.SplitOpTest.testDegenerateVariable
+split_op_test.SplitOpTest.testSpecialCasesVariable
+
 
 # Invalid reduction dimension 
 reduction_ops_test.MaxReductionTest.testGradient
@@ -195,7 +237,7 @@ reduction_ops_test.MinReductionTest.testGradient3
 
 reduction_ops_test.SumReductionTest.testGradient
 reduction_ops_test.ReducedShapeTest.testZeros
-reduction_ops_test.MeanReductionTest.testGradient
+
 reduction_ops_test.MinReductionTest.testGradient
 reduction_ops_test.ReducedShapeTest.testNegAxes
 
@@ -205,7 +247,6 @@ pool_test.PoolingTest.testGradient3D
 
 # Results don't match between TF and OV
 lrn_op_test.LRNOpTest.testGradients
-lrn_op_test.LRNOpTest.testCompute
 
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
@@ -228,25 +269,17 @@ reduction_ops_test.MeanReductionTest.testComplex128
 reduction_ops_test.MaxReductionTest.testDoubleReduce3D
 
 # Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
-topk_op_test.TopKTest.testMediumTopK
-topk_op_test.TopKTest.testLargeTopK
-topk_op_test.TopKTest.testTop2
-topk_op_test.TopKTest.testLargeSort
+
 
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
 nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
 
 # Tests randomly failing with error:
 # Caught exception while executing cluster: wstring_convert::to_bytes
-#conv_ops_test.Conv2DTest.testConv2D2x2Filter
-#conv_ops_test.Conv2DTest.testConv2D1x2Filter
-#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
-#conv_ops_test.Conv2DTest.testConv2D2x2Filter
-#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+
 
 # TBD
 softmax_op_test.SoftmaxTest.testEmptyInput
-reduction_ops_test.MeanReductionTest.testAxesType
 
 #const has zero dimension which is not allowed
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
@@ -262,4 +295,75 @@ conv_ops_test.Conv2DTest.testConv2D1x1Filter
 conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
 conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
 
+#ERROR:tensorflow:Strides in batch and depth dimensions is not supported: Conv2D
+conv_ops_test.Conv2DTest.testOpEdgeCases
+
+#RUNTIME ERROR:  exited with code: -6
+cwise_ops_binary_test.BinaryOpTest.testBCast_0B
+cwise_ops_binary_test.BinaryOpTest.testBCast_12B
+cwise_ops_binary_test.BinaryOpTest.testBCast_13B
+cwise_ops_binary_test.BinaryOpTest.testBCast_14B
+cwise_ops_binary_test.BinaryOpTest.testBCast_3B
+cwise_ops_binary_test.BinaryOpTest.testBCast_4B
+cwise_ops_binary_test.BinaryOpTest.testBCast_6B
+cwise_ops_binary_test.BinaryOpTest.testBCast_8B
+
+#RUNTIME ERROR:  exited with code: -11
+cwise_ops_binary_test.BinaryOpTest.testBCast_11B
+cwise_ops_binary_test.BinaryOpTest.testBCast_5B
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+math_ops_test.AddNTest.testIndexedSlices
+reduction_ops_test.MeanReductionTest.testGradient
+array_ops_test.StridedSliceTest.test_basic_slice
+array_ops_test.StridedSliceTest.testExpandVariable
+conv_ops_test.Conv2DTest.testConv2D1x2Filter
+
+
+# AssertionError: False is not true
+lrn_op_test.LRNOpTest.testCompute  
+
+# Unhandled exception in op handler
+pooling_ops_test.PoolingTest.testAvgPooling
+conv_ops_test.Conv2DTest.testConv2DEmpty
+conv_ops_test.Conv2DTest.testConv2DEmptyDilation
+
+# InvalidArgumentError: No translation handler registered for op: MaxPoolV2 (MaxPoolV2)
+pooling_ops_test.PoolingTest.testMaxPooling
+
+# Caught exception while executing cluster 1
+array_ops_test.StridedSliceTest.testExpand
+reduction_ops_test.MeanReductionTest.testInt32
+reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
+reduction_ops_test.MeanReductionTest.testFloat32
+reduction_ops_test.MeanReductionTest.testInfinity
+reduction_ops_test.MeanReductionTest.testUint8
+shape_ops_test.ShapeOpsTest.testSqueezeGradient
+
+
+# Caught exception while executing cluster 2
+array_ops_test.StridedSliceTest.testOptimizedCases
+
+# Caught exception while executing cluster 0
+reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
+
+# Not equal to tolerance rtol=0.001, atol=0.001
+cwise_ops_binary_test.BinaryOpTest.testBCast_15B
+cwise_ops_binary_test.BinaryOpTest.testBCast_1B
+cwise_ops_binary_test.BinaryOpTest.testBCast_2B
+cwise_ops_binary_test.BinaryOpTest.testBCast_7B
+cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+
+# bad_alloc from OV-2021.4
+array_ops_test.StridedSliceTest.testTensorIndexing
+
+#assertion failure
 scan_ops_test.CumsumTest.testLarge
+
+cwise_ops_unary_test.UnaryOpTest.testFloatBasic
+
+# Assertion Error
+gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
+
+# Ngraph operation BatchToSpace has dynamic shape 
+pool_test.PoolingTest.testGradient2D
