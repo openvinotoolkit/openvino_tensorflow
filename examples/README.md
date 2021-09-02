@@ -1,3 +1,7 @@
+
+<p>English | <a href="/openvino_tensorflow/examples/I05038-7-examples README_cn.md">简体中文</a></p>
+
+
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.

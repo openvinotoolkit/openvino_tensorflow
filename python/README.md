@@ -1,3 +1,6 @@
+
+<p>English | <a href="/openvino_tensorflow/python/I05038-10-python-README_cn.md">简体中文</a></p>
+
 # **OpenVINO™ integration with TensorFlow**
 
 This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product needed to enable OpenVINO™ runtime and optimizations for TensorFlow. **OpenVINO™ integration with TensorFlow** enables acceleration of AI inferencing across a vast number of use cases, using a variety of AI models, on a variety of Intel<sup>®</sup> silicon such as:

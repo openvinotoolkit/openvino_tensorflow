@@ -1,3 +1,7 @@
+
+
+<p>English | <a href="/openvino_tensorflow/docs/I05038-3-BUILD_cn.md">简体中文</a></p>
+
 # Installation and Build Options
 ## Prerequisites
 
