@@ -4,7 +4,7 @@
   <img src="images/openvino_wbgd.png">
 </p>
 
-# **OpenVINO™ integration with TensorFlow (Preview Release)**
+# **OpenVINO™ integration with TensorFlow**
 
 This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatibility. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
@@ -38,7 +38,7 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 
 If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md#install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
 
-For more details on other modes of installation, please refer to [BUILD.md](docs/BUILD.md)
+For more details on other modes of installation please refer to [INSTALL.md](docs/INSTALL.md), and for build from source options please refer to [BUILD.md](docs/BUILD.md)
 
 ## Configuration
 
