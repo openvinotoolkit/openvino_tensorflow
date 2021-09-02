@@ -18,9 +18,17 @@ import openvino_tensorflow
 
 __all__ = ['LIBOPENVINO_TENSORFLOW', 'NgraphTest']
 
-_ext = 'dylib' if platform.system() == 'Darwin' else 'so'
+if platform.system() == 'Darwin':
+    _ext = 'dylib'
+elif platform.system() == 'Windows':
+    _ext = 'dll'
+else:
+    _ext = 'so'
 
-LIBOPENVINO_TENSORFLOW = 'libopenvino_tensorflow.' + _ext
+if platform.system() == 'Windows':
+  LIBOPENVINO_TENSORFLOW = 'openvino_tensorflow.' + _ext
+else:
+  LIBOPENVINO_TENSORFLOW = 'libopenvino_tensorflow.' + _ext
 
 
 class NgraphTest(object):

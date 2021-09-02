@@ -17,7 +17,7 @@
 		#define EXPORT_SYMBOL __declspec(dllimport)
 	#endif
 #else
-    #define EXPORT_SYMBOL
+    #define EXPORT_SYMBOL __attribute__((visibility("default")))
 #endif
 
 
@@ -28,36 +28,36 @@ namespace openvino_tensorflow {
 namespace api {
 
 extern "C" {
-EXPORT_SYMBOL extern void enable();
-EXPORT_SYMBOL extern void disable();
-EXPORT_SYMBOL extern bool is_enabled();
+extern EXPORT_SYMBOL void enable();
+extern EXPORT_SYMBOL void disable();
+extern EXPORT_SYMBOL bool is_enabled();
 
-EXPORT_SYMBOL extern size_t backends_len();
-EXPORT_SYMBOL extern bool list_backends(char** backends);
-EXPORT_SYMBOL extern bool set_backend(const char* backend);
-EXPORT_SYMBOL extern bool is_supported_backend(const char* backend);
-EXPORT_SYMBOL extern bool get_backend(char** backend);
+extern EXPORT_SYMBOL size_t backends_len();
+extern EXPORT_SYMBOL bool list_backends(char** backends);
+extern EXPORT_SYMBOL bool set_backend(const char* backend);
+extern EXPORT_SYMBOL bool is_supported_backend(const char* backend);
+extern EXPORT_SYMBOL bool get_backend(char** backend);
 
-EXPORT_SYMBOL extern void start_logging_placement();
-EXPORT_SYMBOL extern void stop_logging_placement();
-EXPORT_SYMBOL extern bool is_logging_placement();
+extern EXPORT_SYMBOL void start_logging_placement();
+extern EXPORT_SYMBOL void stop_logging_placement();
+extern EXPORT_SYMBOL bool is_logging_placement();
 
-EXPORT_SYMBOL extern void set_disabled_ops(const char* op_type_list);
-EXPORT_SYMBOL extern const char* get_disabled_ops();
+extern EXPORT_SYMBOL void set_disabled_ops(const char* op_type_list);
+extern EXPORT_SYMBOL const char* get_disabled_ops();
 }
 
-extern void Enable();
-extern void Disable();
-extern bool IsEnabled();
+extern EXPORT_SYMBOL void Enable();
+extern EXPORT_SYMBOL void Disable();
+extern EXPORT_SYMBOL bool IsEnabled();
 
 // TODO: why is this not const?
-extern vector<string> ListBackends();
-extern bool SetBackend(const string& type);
-extern string GetBackend();
+extern EXPORT_SYMBOL vector<string> ListBackends();
+extern EXPORT_SYMBOL bool SetBackend(const string& type);
+extern EXPORT_SYMBOL string GetBackend();
 
-extern void StartLoggingPlacement();
-extern void StopLoggingPlacement();
-extern bool IsLoggingPlacement();
+extern EXPORT_SYMBOL void StartLoggingPlacement();
+extern EXPORT_SYMBOL  void StopLoggingPlacement();
+extern EXPORT_SYMBOL bool IsLoggingPlacement();
 
 extern std::set<string> GetDisabledOps();
 extern void SetDisabledOps(std::set<string>);

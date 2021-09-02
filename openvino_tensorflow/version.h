@@ -28,11 +28,11 @@ EXPORT_SYMBOL const char* ngraph_version();
 // Returns the 0 if _GLIBCXX_USE_CXX11_ABI wasn't set by the
 // compiler (e.g., clang or gcc pre 4.8) or the value of the
 // _GLIBCXX_USE_CXX11_ABI set during the compilation time
-EXPORT_SYMBOL int cxx11_abi_flag();
+int EXPORT_SYMBOL cxx11_abi_flag();
 
 // Returns true when openvino_tensorflow is using Grappler optimizer APIs for
 // graph rewriting
-EXPORT_SYMBOL bool is_grappler_enabled();
+bool EXPORT_SYMBOL is_grappler_enabled();
 
 // Returns the tensorflow version
 EXPORT_SYMBOL const char* tf_version();
