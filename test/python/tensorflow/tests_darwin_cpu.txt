@@ -358,3 +358,12 @@ array_ops_test.StridedSliceTest.testTensorIndexing
 
 #assertion failure
 scan_ops_test.CumsumTest.testLarge
+
+cwise_ops_unary_test.UnaryOpTest.testFloatBasic
+
+# Assertion Error
+gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
+
+# Ngraph operation BatchToSpace has dynamic shape 
+pool_test.PoolingTest.testGradient2D

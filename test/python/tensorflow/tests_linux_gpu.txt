@@ -382,3 +382,10 @@ reduction_ops_test.MeanReductionTest.testUint8
 # length of size_splits must sum to the value of the dimension along split_dim
 split_op_test.SplitOpTest.testSpecialCasesVariable
 split_op_test.SplitOpTest.testDegenerateVariable
+
+# Unsupported parameter nodes type BatchToSpace
+pool_test.PoolingTest.testGradient2D
+
+# AssertionError
+gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU

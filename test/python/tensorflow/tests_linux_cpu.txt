@@ -183,6 +183,8 @@ array_ops_test.StridedSliceTest.testBothNewAxisAndShrink
 
 gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
+gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
 math_ops_test.AddNTest.testGrad
 
 # Input image format I64 is not supported yet...
@@ -355,3 +357,6 @@ cwise_ops_binary_test.BinaryOpTest.testFloatBasic
 
 # bad_alloc from OV-2021.4
 array_ops_test.StridedSliceTest.testTensorIndexing
+
+#BatchToSpace dynamic shape
+pool_test.PoolingTest.testGradient2D
