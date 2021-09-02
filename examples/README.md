@@ -1,5 +1,5 @@
 
-<p>English | <a href="https://github.com/openvino_tensorflow/examples/I05038-7-examples README_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/examples/README_cn.md">简体中文</a></p>
 
 
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples

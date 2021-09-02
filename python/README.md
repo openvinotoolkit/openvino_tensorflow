@@ -1,5 +1,5 @@
 
-<p>English | <a href="https://github.com/openvino_tensorflow/python/I05038-10-python-README_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/python/README_cn.md">简体中文</a></p>
 
 # **OpenVINO™ integration with TensorFlow**
 

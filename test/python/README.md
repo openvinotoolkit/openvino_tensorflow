@@ -1,5 +1,5 @@
 
-<p>English | <a href="https://github.com/openvino_tensorflow/test/python/I05038-11-test-python-README_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/test/python/README_cn.md">简体中文</a></p>
 
 
 `flake8 *.py && pytest`
