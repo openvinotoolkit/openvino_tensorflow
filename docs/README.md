@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/docs/READMEE_cn.md">简体中文</a></p>
+<p>English | <a href="https://github.com/openvino_tensorflow/docs/README_cn.md">简体中文</a></p>
 
 # **OpenVINO™ integration with TensorFlow** Documentation
 
