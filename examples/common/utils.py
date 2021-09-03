@@ -17,6 +17,28 @@
 # Copyright (C) 2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
+# MIT License
+
+# Copyright (c) 2019 david8862
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ==============================================================================
 # Modified from the repository (https://github.com/david8862/keras-YOLOv3-model-set):
 # https://github.com/david8862/keras-YOLOv3-model-set/blob/master/common/utils.py
 
@@ -40,8 +62,8 @@ def get_input_mode(input_path):
             assert False, "Input directory doesn't contain any images"
         for i in images:
             image_path = os.path.join(input_path, i)
-            if imghdr.what(image_path) == None:
-                assert False, "Input directory contains non image files"
+            if os.path.isdir(image_path) or imghdr.what(image_path) == None:
+                assert False, "Input directory contains another sub directory or non image files"
         return "directory"
     elif os.path.isfile(input_path):
         if imghdr.what(input_path) != None:
@@ -137,6 +159,18 @@ def draw_boxes(image,
         else:
             color = colors[cls]
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), color, 1, cv2.LINE_AA)
+        print (label)
         image = draw_label(image, label, color, (xmin, ymin))
 
     return image
+
+def write_images(output_dir,  images):
+    output_dir = os.path.join(output_dir,'outputs')
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    idx = 0
+    for image in images:
+        out_file = os.path.join(output_dir,'detection_{}.jpg'.format(idx))
+        cv2.imwrite(out_file, image)
+        idx += 1
+    print ("Output images are saved in {}".format(output_dir))

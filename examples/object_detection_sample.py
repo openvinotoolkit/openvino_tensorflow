@@ -33,7 +33,7 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 from PIL import Image
-from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors
+from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors, write_images
 from common.pre_process import preprocess_image
 from common.post_process import yolo3_postprocess_np
 
@@ -196,6 +196,7 @@ if __name__ == "__main__":
         )
     images_len = len(images)
     image_id = -1
+    output_images = []
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
@@ -247,12 +248,16 @@ if __name__ == "__main__":
                 img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
+            if input_mode in 'directory':
+                output_images.append(img_bbox)
             if input_mode in 'image':
                 cv2.imwrite("detections.jpg", img_bbox)
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
+    if input_mode in 'directory':
+        write_images(input_file,  output_images)
     sess.close()
     if cap:
         cap.release()
