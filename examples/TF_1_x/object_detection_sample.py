@@ -355,6 +355,9 @@ if __name__ == "__main__":
                 img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
+            if input_mode in 'image':
+                cv2.imwrite("detections.jpg", img_bbox)
+                print ("Output image is saved in detections.jpg")
             if input_mode in 'directory':
                 output_images.append(img_bbox)
             if not args.no_show:

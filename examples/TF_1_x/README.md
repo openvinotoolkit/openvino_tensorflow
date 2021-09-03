@@ -54,8 +54,11 @@ $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/TF_1_x/object_detection_sample.py
 ```
 
+**Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
+
 This uses the default example image that comes with this repository, and should
-output something similar as below:
+output something similar as below and the result is written to detections.jpg:
+
 
 <p align="left">
   <img src="../data/detections.jpg" width="200" height="200"
@@ -90,6 +93,10 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
+
+For using camera as input use ```--input=0```
+
+**Note:** The results with input as an image or a directory of images, are written to output images. For video and camera input use the application display window for the results.
 
 To try on the yolo_v3_160 model for faster inference follow the below steps
 

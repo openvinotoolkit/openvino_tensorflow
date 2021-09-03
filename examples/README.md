@@ -65,6 +65,7 @@ academic gown (401): 0.010358
 pickelhaube (716): 0.00800814
 bulletproof vest (466): 0.00535091
 ```
+**Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
 In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
@@ -95,6 +96,7 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
 ```
+For using camera as input use ```--input=0```
 
 
 ## Python implementation for object detection
@@ -104,7 +106,7 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system (TF2.x)
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-[**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/examples/TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
+[**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/examples/TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
 
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
@@ -134,9 +136,10 @@ Run the object detection example using the instructions below:
 $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/object_detection_sample.py
 ```
+**Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
 This uses the default example image that comes with this repository, and should
-output something similar as below:
+output something similar as below and the result is written to detections.jpg:
 
 <p align="left">
   <img src="../examples/data/detections.jpg" width="200" height="200"
@@ -162,6 +165,7 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 $ python3 examples/object_detection_sample.py --help
 ```
 
+
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
@@ -172,6 +176,10 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 ```bash
 $ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
+
+For using camera as input use ```--input=0```
+
+**Note:** The results with input as an image or a directory of images, are written to output images. For video and camera input use the application display window for the results.
 
 ## C++ Implementation for classification
 

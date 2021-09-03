@@ -252,6 +252,7 @@ if __name__ == "__main__":
                 output_images.append(img_bbox)
             if input_mode in 'image':
                 cv2.imwrite("detections.jpg", img_bbox)
+                print ("Output image is saved in detections.jpg")
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
