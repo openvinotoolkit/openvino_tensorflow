@@ -159,18 +159,19 @@ def draw_boxes(image,
         else:
             color = colors[cls]
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), color, 1, cv2.LINE_AA)
-        print (label)
+        print(label)
         image = draw_label(image, label, color, (xmin, ymin))
 
     return image
 
-def write_images(output_dir,  images):
-    output_dir = os.path.join(output_dir,'outputs')
+
+def write_images(output_dir, images):
+    output_dir = os.path.join(output_dir, 'outputs')
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
     idx = 0
     for image in images:
-        out_file = os.path.join(output_dir,'detection_{}.jpg'.format(idx))
+        out_file = os.path.join(output_dir, 'detection_{}.jpg'.format(idx))
         cv2.imwrite(out_file, image)
         idx += 1
-    print ("Output images are saved in {}".format(output_dir))
+    print("Output images are saved in {}".format(output_dir))

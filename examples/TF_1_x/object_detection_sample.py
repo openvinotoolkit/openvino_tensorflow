@@ -357,7 +357,7 @@ if __name__ == "__main__":
                 font_size, color, font_thickness)
             if input_mode in 'image':
                 cv2.imwrite("detections.jpg", img_bbox)
-                print ("Output image is saved in detections.jpg")
+                print("Output image is saved in detections.jpg")
             if input_mode in 'directory':
                 output_images.append(img_bbox)
             if not args.no_show:
@@ -365,7 +365,7 @@ if __name__ == "__main__":
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
     if input_mode in 'directory':
-        write_images(input_file,  output_images)
+        write_images(input_file, output_images)
     sess.close()
     if cap:
         cap.release()
