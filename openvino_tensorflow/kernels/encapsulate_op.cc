@@ -192,6 +192,7 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
   std::ostringstream oss;
   oss << "Destroy Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(2) << "~NGraphEncapsulateOp::" << name();
+  NGraphClusterManager::SetMRUExecutable(m_cluster_id, nullptr);
   m_ng_exec_map.clear();
 }
 
