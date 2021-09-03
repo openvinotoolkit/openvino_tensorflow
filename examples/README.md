@@ -27,7 +27,7 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
 The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
@@ -106,7 +106,7 @@ For this example, we assume that you've already:
 
 [**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/examples/TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
 Install the pre-requisites
 ```bash
@@ -173,7 +173,6 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 $ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
-```
 ## C++ Implementation for classification
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.

@@ -24,7 +24,7 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
 Install the pre-requisites
 ```bash
