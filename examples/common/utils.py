@@ -64,12 +64,11 @@ def load_graph(model_file):
     return graph
 
 
-def get_anchors():
-    anchors = [
-        116, 90, 156, 198, 373, 326, 30, 61, 62, 45, 59, 119, 10, 13, 16, 30,
-        33, 23
-    ]
-    anchors = [float(x) for x in anchors]
+def get_anchors(anchors_path):
+    '''loads the anchors from a file'''
+    with open(anchors_path) as f:
+        anchors = f.readline()
+    anchors = [float(x) for x in anchors.split(',')]
     return np.array(anchors).reshape(-1, 2)
 
 
