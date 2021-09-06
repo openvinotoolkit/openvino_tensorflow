@@ -4,7 +4,7 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Demos showcased in the examples
 
- Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory and camera input.
+ Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory or camera input.
 
 ## Setup for the examples
 
@@ -32,7 +32,7 @@ $ cd <path-to-openvino_tensorflow-repository>/examples
 $ pip3 install -r requirements.txt
 ```
 
-The TensorFlow Yolo v3 model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
+The TensorFlow Yolo v3 model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
 
 Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3.sh script activates a python virtual environment for conversion.
 
@@ -42,7 +42,7 @@ $ chmod +x convert_yolov3.sh
 $ ./convert_yolov3.sh
 ```
 
-Once completed, the data folder will contain following files needed to run the object detection example:
+Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
 
 * coco.names
 * yolo_v3_darknet_1.pb
@@ -72,7 +72,7 @@ Next, try it out on your own image by passing the --image=argument, where argume
 $ python3 examples/TF_1_x/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>
 ```
 
-If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --image=examples/data/my_image.png
@@ -88,7 +88,7 @@ Next, try it out on your own video file by passing the --input=argument, where a
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/people-detection.mp4
@@ -96,7 +96,7 @@ $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/peopl
 
 For using camera as input use ```--input=0```
 
-**Note:** The results with input as an image or a directory of images, are written to output images. For video and camera input use the application display window for the results.
+**Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
 
 To try on the yolo_v3_160 model for faster inference follow the below steps
 
