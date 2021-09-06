@@ -1,3 +1,4 @@
+[English](./README.md) | 简体中文
 # 英特尔<sup>®</sup> OpenVINO<sup>TM</sup> 与 TensorFlow - C++ 和 Python 集成示例
 
 这些示例演示了如何使用**英特尔<sup>®</sup> </sup>OpenVINO<sup>TM</sup> integration with Tensorflow** 识别和检测在图像和视频中的对象。
@@ -220,7 +221,7 @@ $ python3 build_tf.py --output_dir <path-to-tensorflow-dir>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
 
-关于详细的构建说明，请参阅 [**BUILD.md**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#build-from-source)。
+关于详细的构建说明，请参阅 [**BUILD.md**](docs/BUILD.md#build-from-source)。
 
 现在，classification\_sample 的二进制可执行文件已构建完成。更新 LD\_LIBRARY\_PATH 并运行示例：
 

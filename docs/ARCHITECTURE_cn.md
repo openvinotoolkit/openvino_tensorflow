@@ -1,3 +1,4 @@
+[English](./ARCHITECTURE.md) | 简体中文
 # **OpenVINO™ integration with TensorFlow** 的架构
 
 本文介绍了 **OpenVINO™ integration with TensorFlow** 的高级架构。该功能注册为 TensorFlow 中的graph Optimization Pass，并使用 OpenVINO™ 运行时优化所支持的算子集群的执行。不支持的算子集群返回至原生 TensorFlow 运行时。

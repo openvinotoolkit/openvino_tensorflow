@@ -1,14 +1,14 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/docs/README_cn.md">简体中文</a></p>
+<p>English | <a href="./README_cn.md">简体中文</a></p>
 
 # **OpenVINO™ integration with TensorFlow** Documentation
 
-[Introduction](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README.md)
+[Introduction](./README.md)
 
-[Build Instructions](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/BUILD.md)
+[Build Instructions](./BUILD.md)
 
-[High Level Architecture](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/ARCHITECTURE.md)
+[High Level Architecture](./ARCHITECTURE.md)
 
-[Usage and APIs](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/USAGE.md)
+[Usage and APIs](./USAGE.md)
 
-[Validated Models supported by OpenVINO](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docs/MODELS.md)
+[Validated Models supported by OpenVINO](./MODELS.md)
 

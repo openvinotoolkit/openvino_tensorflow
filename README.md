@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/README_cn.md">简体中文</a></p>
+<p>English | <a href="./README_cn.md">简体中文</a></p>
 
 <p align="center">
   <img src="images/openvino_wbgd.png">
@@ -6,7 +6,7 @@
 
 # **OpenVINO™ integration with TensorFlow (Preview Release)**
 
-This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatibility. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatibility. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU
@@ -66,11 +66,11 @@ Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
 To determine what processing units are available on your system for inference, use the following function:
 
     openvino_tensorflow.list_backends()
-For more API calls and environment variables, see [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE.md).
+For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
 
 ## Examples
 
-To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](./examples) directory.
 
 ## License
 **OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](LICENSE).
