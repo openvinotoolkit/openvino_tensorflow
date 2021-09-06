@@ -1,3 +1,4 @@
+[English](./README.md) | 简体中文
 # **OpenVINO™ integration with TensorFlow**
 
 该仓库包含 **OpenVINO™ integration with TensorFlow** 的源代码，该产品可支持 OpenVINO™ 运行时并实现 TensorFlow 优化。**OpenVINO™ integration with TensorFlow** 支持在各种英特尔<sup>®</sup> 芯片（如下所示）上使用各种 AI 模型，加快各种用例中的 AI 推理速度：
@@ -22,7 +23,7 @@
         pip3 install -U tensorflow==2.4.1
         pip3 install openvino-tensorflow
 
-如要将 **OpenVINO™ integration with TensorFlow** 用于预安装的二进制文件，请访问此页了解详细说明： ([**OpenVINO™ integration with TensorFlow** - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD_cn.md))
+如要将 **OpenVINO™ integration with TensorFlow** 用于预安装的二进制文件，请访问此页了解详细说明： ([**OpenVINO™ integration with TensorFlow** - README](docs/BUILD_cn.md))
 
 ## 验证安装
 
@@ -60,11 +61,11 @@
 
     openvino_tensorflow.set_backend('backend_name')
 
-更多关于如何使用 **OpenVINO™ integration with TensorFlow** 的详细示例，请前往[**示例**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples)目录。
+更多关于如何使用 **OpenVINO™ integration with TensorFlow** 的详细示例，请前往[**示例**](./examples)目录。
 
 ## 许可
 
-**OpenVINO™ integration with TensorFlow** 依照 [Apache 许可版本 2.0](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/LICENSE)。通过贡献项目，您同意其中包含的许可和版权条款，并根据这些条款发布您的贡献。
+**OpenVINO™ integration with TensorFlow** 依照 [Apache 许可版本 2.0](./LICENSE)。通过贡献项目，您同意其中包含的许可和版权条款，并根据这些条款发布您的贡献。
 
 ## 支持
 

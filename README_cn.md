@@ -6,7 +6,7 @@
 
 # **OpenVINO™ integration with TensorFlow（预发布版）**
 
-该仓库包含 **OpenVINO™ integration with TensorFlow** 的源代码，该产品可提供所需的 [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) 内联优化和运行时，显著增强对TensorFlow 的兼容性。该产品专为开发人员设计，支持他们将 OpenVINO™ 运用在自己的推理应用，只需稍微修改代码，就可显著增强推理性能。**OpenVINO™ integration with TensorFlow** 可在各种英特尔<sup>®</sup> 芯片上加速AI模型（如下所示） [AI 模型](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/MODELS_cn.md)的推理速度：
+该仓库包含 **OpenVINO™ integration with TensorFlow** 的源代码，该产品可提供所需的 [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) 内联优化和运行时，显著增强对TensorFlow 的兼容性。该产品专为开发人员设计，支持他们将 OpenVINO™ 运用在自己的推理应用，只需稍微修改代码，就可显著增强推理性能。**OpenVINO™ integration with TensorFlow** 可在各种英特尔<sup>®</sup> 芯片上加速AI模型（如下所示） [AI 模型](docs/MODELS_cn.md)的推理速度：
 
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
@@ -71,11 +71,11 @@
 
     openvino_tensorflow.list_backends()
 
-如欲了解更多 API 调用和环境变量的信息，请查看 [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE_cn.md)。
+如欲了解更多 API 调用和环境变量的信息，请查看 [USAGE.md](docs/USAGE_cn.md)。
 
 ## 示例
 
-如欲了解 **OpenVINO™ integration with TensorFlow** 的具体功能，请查看[示例](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples)目录中的演示。
+如欲了解 **OpenVINO™ integration with TensorFlow** 的具体功能，请查看[示例](./examples)目录中的演示。
 
 ## 许可
 
