@@ -1,3 +1,4 @@
+[English](./USAGE.md) | 简体中文
 # 面向 **OpenVINO™ integration with TensorFlow** 的 API 和环境变量
 
 本文介绍了适用于 **OpenVINO™ integration with TensorFlow** 的 Python API。第一节主要介绍在 TensorFlow 应用中发挥 **OpenVINO™ integration with TensorFlow** 的功能所需的基本 API 和代码行。

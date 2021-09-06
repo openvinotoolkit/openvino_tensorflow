@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/docs/BUILD_cn.md">简体中文</a></p>
+<p>English | <a href="./BUILD_cn.md">简体中文</a></p>
 
 # Installation and Build Options
 ## Prerequisites

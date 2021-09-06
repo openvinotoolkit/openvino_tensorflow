@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/python/README_cn.md">简体中文</a></p>
+<p>English | <a href="./README_cn.md">简体中文</a></p>
 
 # **OpenVINO™ integration with TensorFlow**
 
@@ -23,7 +23,7 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
         pip3 install -U tensorflow==2.5.0
         pip3 install openvino-tensorflow
 
-To use **OpenVINO™ integration with TensorFlow** with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([**OpenVINO™ integration with TensorFlow** - README](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md))
+To use **OpenVINO™ integration with TensorFlow** with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([**OpenVINO™ integration with TensorFlow** - README](docs/BUILD.md))
 ## Verify Installation
 
 Verify that `openvino-tensorflow` installed correctly:
@@ -60,10 +60,10 @@ By default, CPU backend is enabled. You can substitute the default CPU backend w
 
     openvino_tensorflow.set_backend('backend_name')
 
-More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) directory.
+More detailed examples on how to use **OpenVINO™ integration with TensorFlow** are located in the [**examples**](./examples) directory.
 
 ## License
-**OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/LICENSE).
+**OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](./LICENSE).
 By contributing to the project, you agree to the license and copyright terms therein
 and release your contribution under these terms.  
 

@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/docs/USAGE_cn.md">简体中文</a></p>
+<p>English | <a href="./USAGE_cn.md">简体中文</a></p>
 
 # APIs and environment variables for **OpenVINO™ integration with TensorFlow**
 

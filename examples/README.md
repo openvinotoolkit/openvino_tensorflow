@@ -1,4 +1,4 @@
-<p>English | <a href="https://github.com/openvino_tensorflow/examples/README_cn.md">简体中文</a></p>
+<p>English | <a href="./README_cn.md">简体中文</a></p>
 
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples
 
@@ -104,7 +104,7 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system (TF2.x)
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-[**click-here**](https://github.com/openvinotoolkit/openvino_tensorflow/examples/TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
+[**click-here**](TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
 
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
 
@@ -201,7 +201,7 @@ $ cd <path-to-openvino_tensorflow-repository>
 $ python3 build_tf.py --output_dir <path-to-tensorflow-dir>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
-For detailed build instructions read [**BUILD.md**](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#build-from-source).
+For detailed build instructions read [**BUILD.md**](docs/BUILD.md#build-from-source).
 
 Now, a binary executable for classification_sample is built. Update the LD_LIBRARY_PATH and run the sample:
 

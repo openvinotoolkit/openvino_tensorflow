@@ -1,3 +1,4 @@
+[English](./README.md) | 简体中文
 ## 说明
 
 Tf\_unittest\_runner 主要用于使用 nGraph 运行 tensorflow python 单元测试
