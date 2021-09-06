@@ -6,6 +6,8 @@
 
 [Build Instructions](./BUILD.md)
 
+[Install Instructions](./INSTALL.md)
+
 [High Level Architecture](./ARCHITECTURE.md)
 
 [Usage and APIs](./USAGE.md)
