@@ -3,10 +3,65 @@
 # Installation and Build Options
 ## Prerequisites
 
-|Build Type| Requirements|
-|:-----------------------|-------------------|
-|Use pre-built packages| Python 3.6, 3.7, or 3.8, TensorFlow v2.5.0|
-|Build from source| Python 3.6, 3.7, or 3.8, GCC 7.5 (Ubuntu 18.04, 20.04),  cmake 3.14 or higher, Bazelisk v1.7.5, virtualenv 16.0.0 or higher, patchelf 0.9, libusb 1.0.0|
+### Ubuntu
+
+1. Install apt packages
+
+        apt-get update
+        apt-get install -y --no-install-recommends ca-certificates autoconf automake build-essential \
+        libtool unzip python3 python3-dev git unzip wget zlib1g zlib1g-dev bash-completion \
+        build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
+        lsb-core gcc-7 g++-7 libusb-1.0-0-dev patchelf
+
+        # create symbolic links for gcc
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 --slave /usr/bin/g++ \
+        g++ /usr/bin/g++-7 --slave /usr/bin/gcov gcov /usr/bin/gcov-7
+
+2. Install Pip and requirements
+
+        https://bootstrap.pypa.io/get-pip.py
+        python3 get-pip.py
+        pip3 install requirements.txt
+
+2. Install CMake 3.18.4
+        
+        wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+        tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+        cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+        cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/
+
+3. Install Bazelisk (Optional; required only while building TensorFlow from source)
+
+        apt-get update && apt-get install -y openjdk-8-jdk
+        curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+        apt-get install -y nodejs
+        npm install -g @bazel/bazelisk
+
+### macOS
+
+1. Install HomeBrew packages
+
+        brew install cmake autoconf automake libtool libusb wget python@3.9
+
+2. Install Pip and requirements
+
+        https://bootstrap.pypa.io/get-pip.py
+        python3 get-pip.py
+        pip3 install requirements.txt
+
+3. Install Bazelisk v1.10.1
+
+        wget https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
+        mv bazelisk-darwin-amd64 /usr/local/bin/bazel
+        chmod 777 /usr/local/bin/bazel
+
+4. Install Apple XCode Command Line Tools
+
+        xcode-select --install
+
+Notes:
+        Developed and Tested on macOS version 11.2.3, CMake version 3.21.1
+        User can install any desired version of Python
 
 ## Use Pre-Built Packages
 
@@ -88,12 +143,6 @@ $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
 $ cd openvino_tensorflow
 $ git submodule init
 $ git submodule update --recursive
-```
-
-Install the following python packages
-
-```bash
-$ pip3 install psutil==5.8.0 wheel==0.36.2
 ```
 
 ### **OpenVINO™ integration with TensorFlow**
