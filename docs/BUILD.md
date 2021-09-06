@@ -2,12 +2,12 @@
 
 <!-- markdown-toc -->
  1. [Prerequisites](#Prerequisites)
-	* 1.1. [Ubuntu](#Ubuntu)
-	* 1.2. [macOS](#macOS)
+	1.1. [Ubuntu](#Ubuntu)
+	1.2. [macOS](#macOS)
  2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
-	* 2.1. [Build Instructions](#BuildInstructions)
-	* 2.2. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
-	* 2.3. [ Build Verification](#BuildVerification)
+	2.1. [Build Instructions](#BuildInstructions)
+	2.2. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
+	2.3. [ Build Verification](#BuildVerification)
  3. [OpenVINO™](#OpenVINO)
  4. [TensorFlow](#TensorFlow)
  5. [Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
