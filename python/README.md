@@ -34,7 +34,7 @@ Verify that `openvino-tensorflow` installed correctly:
 This will produce something like this:
 
         TensorFlow version:  2.5.0
-        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO integration with TensorFlow version: b'1.0.0'
         OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 0

@@ -52,7 +52,7 @@ def main():
 
     # Component versions
     tf_version = "v2.5.0"
-    ovtf_version = "v0.5.0"
+    ovtf_version = "v1.0.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -342,17 +342,17 @@ def main():
                 if tags.interpreter == "cp36":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp37":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl"
                     ])
 
                 # ABI 1 TF required latest numpy

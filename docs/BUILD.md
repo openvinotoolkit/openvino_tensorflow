@@ -19,7 +19,7 @@
 
 2. Install Pip and requirements
 
-        https://bootstrap.pypa.io/get-pip.py
+        wget https://bootstrap.pypa.io/get-pip.py
         python3 get-pip.py
         pip3 install requirements.txt
 
@@ -45,7 +45,7 @@
 
 2. Install Pip and requirements
 
-        https://bootstrap.pypa.io/get-pip.py
+        wget https://bootstrap.pypa.io/get-pip.py
         python3 get-pip.py
         pip3 install requirements.txt
 
@@ -97,15 +97,15 @@ You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the 
 
 2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
 
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl
+        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl
 
 3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.4 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
@@ -115,15 +115,15 @@ You can build TensorFlow from source with -D_GLIBCXX_USE_CXX11_ABI=1 or use the 
 
 5. Install `openvino-tensorflow`. Based on your Python version, choose the appropriate package below:
 
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-linux_x86_64.whl
+        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp36-cp36m-linux_x86_64.whl
 
         or
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp37-cp37m-linux_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp37-cp37m-linux_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp38-cp38-linux_x86_64.whl
 
 
 
@@ -194,7 +194,7 @@ Verify that `openvino-tensorflow` is installed correctly:
 This should produce an output like:
 
         TensorFlow version:  2.5.0
-        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO integration with TensorFlow version: b'1.0.0'
         OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 1
@@ -245,5 +245,5 @@ To build wheel files compatible with manylinux2014, use the following commands. 
 
 ```bash
 cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v0.5.0 . -f Dockerfile.manylinux2014
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.0 . -f Dockerfile.manylinux2014
 ```
