@@ -49,7 +49,7 @@
         python3 get-pip.py
         pip3 install requirements.txt
 
-3. Install Bazelisk v1.10.1
+3. Install Bazelisk v1.10.1 (Optional; required only while building TensorFlow from source)
 
         wget https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
         mv bazelisk-darwin-amd64 /usr/local/bin/bazel
