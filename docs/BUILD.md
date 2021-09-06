@@ -1,22 +1,22 @@
 # Build Instructions
 
-<!-- vscode-markdown-toc -->
-* 1. [Prerequisites](#Prerequisites)
+<!-- markdown-toc -->
+ 1. [Prerequisites](#Prerequisites)
 	* 1.1. [Ubuntu](#Ubuntu)
 	* 1.2. [macOS](#macOS)
-* 2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
+ 2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
 	* 2.1. [Build Instructions](#BuildInstructions)
 	* 2.2. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
 	* 2.3. [ Build Verification](#BuildVerification)
-* 3. [OpenVINO™](#OpenVINO)
-* 4. [TensorFlow](#TensorFlow)
-* 5. [Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
+ 3. [OpenVINO™](#OpenVINO)
+ 4. [TensorFlow](#TensorFlow)
+ 5. [Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
 
-<!-- vscode-markdown-toc-config
+<!-- markdown-toc-config
 	numbering=true
 	autoSave=true
-	/vscode-markdown-toc-config -->
-<!-- /vscode-markdown-toc -->
+	/markdown-toc-config -->
+<!-- /markdown-toc -->
 ##  1. <a name='Prerequisites'></a>Prerequisites
 
 ###  1.1. <a name='Ubuntu'></a>Ubuntu
@@ -77,7 +77,7 @@
 
 Notes:
         Developed and Tested on macOS version 11.2.3 with CMake version 3.21.1
-        User can install any desired version of Python
+        User can install Python 3.7, 3.8, or 3.9
 
 
 
@@ -92,32 +92,32 @@ $ git submodule update --recursive
 ```
 
 ###  2.1. <a name='BuildInstructions'></a>Build Instructions
-Use one of the following build options based on the requirements
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enable only the Python APIs, TensorFlow C++ libraries built from source is required for using the C++ APIs.
 
-1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source.
+1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional, if not provided then default versions as specified in build_ovtf.py will be used. 
 
-        python3 build_ovtf.py
+        python3 build_ovtf.py --tf_version=v2.5.0 --openvino_version=2021.4
 
 2. Pulls compatible prebuilt TF package from PyPi. Uses OpenVINO™ binary.
 
         python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
 
-
-3. Pulls and builds TF and OpenVINO™ from source
-
-        python3 build_ovtf.py --build_tf_from_source
-
-4. Pulls and builds TF from Source. Uses OpenVINO™ binary.
-
-        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
-
-5. Uses pre-built TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TF from source everytime.
+3. Uses pre-built TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TF from source everytime.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
 
-6. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
+4. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
+
+5. Pulls and builds TF from Source. Uses OpenVINO™ binary.
+
+        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
+
+6. Pulls and builds TF and OpenVINO™ from source
+
+        python3 build_ovtf.py --build_tf_from_source
+
 
 Select the `help` option of `build_ovtf.py` script to learn more about various build options.
 

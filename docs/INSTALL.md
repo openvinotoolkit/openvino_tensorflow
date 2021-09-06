@@ -4,10 +4,10 @@
 
 Since TensorFlow packages available in [PyPi](https://pypi.org) are built with CXX11_ABI=0 and OpenVINO™ release packages are built with CXX11_ABI=1, binary releases of these packages **cannot be installed together**. Based on your needs, you can choose one of the two available methods:
 
-- **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
+- **OpenVINO™ integration with TensorFlow** PyPi release alongside PyPi TensorFlow
   (CXX11_ABI=0, no OpenVINO™ installation required, no VAD-M support)
 
-- **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
+- **OpenVINO™ integration with TensorFlow** package released in Github alongside the Intel® Distribution of OpenVINO™ Toolkit
   (CXX11_ABI=1, needs a custom TensorFlow package, enables VAD-M support)  
 <br/>  
 
@@ -33,7 +33,7 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
 This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.4. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs), and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M).
 
-You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1 or use the following TensorFlow package:
+You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1 or follow the instructions below to install the appropriate version:
 
 1. Ensure the following versions are being used for pip and numpy:
 

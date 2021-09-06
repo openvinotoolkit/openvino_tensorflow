@@ -31,9 +31,9 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
 
-        pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.5.0
-        pip3 install openvino-tensorflow
+        pip3 install pip==21.0.1
+        pip3 install tensorflow==2.5.0
+        pip3 install -U openvino-tensorflow
 
 
 If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md#install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
