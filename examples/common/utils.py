@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
-# ==============================================================================
 # Copyright (C) 2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -40,8 +38,8 @@ def get_input_mode(input_path):
             assert False, "Input directory doesn't contain any images"
         for i in images:
             image_path = os.path.join(input_path, i)
-            if imghdr.what(image_path) == None:
-                assert False, "Input directory contains non image files"
+            if os.path.isdir(image_path) or imghdr.what(image_path) == None:
+                assert False, "Input directory contains another sub directory or non image files"
         return "directory"
     elif os.path.isfile(input_path):
         if imghdr.what(input_path) != None:
@@ -64,12 +62,11 @@ def load_graph(model_file):
     return graph
 
 
-def get_anchors():
-    anchors = [
-        116, 90, 156, 198, 373, 326, 30, 61, 62, 45, 59, 119, 10, 13, 16, 30,
-        33, 23
-    ]
-    anchors = [float(x) for x in anchors]
+def get_anchors(anchors_path):
+    '''loads the anchors from a file'''
+    with open(anchors_path) as f:
+        anchors = f.readline()
+    anchors = [float(x) for x in anchors.split(',')]
     return np.array(anchors).reshape(-1, 2)
 
 
@@ -138,6 +135,19 @@ def draw_boxes(image,
         else:
             color = colors[cls]
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), color, 1, cv2.LINE_AA)
+        print(label)
         image = draw_label(image, label, color, (xmin, ymin))
 
     return image
+
+
+def write_images(output_dir, images):
+    output_dir = os.path.join(output_dir, 'outputs')
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    idx = 0
+    for image in images:
+        out_file = os.path.join(output_dir, 'detection_{}.jpg'.format(idx))
+        cv2.imwrite(out_file, image)
+        idx += 1
+    print("Output images are saved in {}".format(output_dir))

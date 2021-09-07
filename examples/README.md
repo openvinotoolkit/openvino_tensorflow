@@ -6,8 +6,8 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Demos showcased in the examples
 
-* Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images and camera input.
-* Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory of images and camera input.
+* Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images or camera input.
+* Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory of images or camera input.
 
 ## Setup for the examples
 
@@ -27,21 +27,21 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
-The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
+The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
   tar -C <path-to-openvino_tensorflow-repository>/examples/data -xz
 ```
 
-Once extracted, the data folder will contain two new files:
+Once extracted, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain two new files:
 
 * imagenet_slim_labels.txt
 * inception_v3_2016_08_28_frozen.pb
 
-Open `imagenet_slim_labels.txt` to read the labels in the data directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
+Open `imagenet_slim_labels.txt` to read the labels in the `<path-to-openvino_tensorflow-repository>/examples/data` directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
 
 Install the pre-requisites
 ```bash
@@ -65,6 +65,7 @@ academic gown (401): 0.010358
 pickelhaube (716): 0.00800814
 bulletproof vest (466): 0.00535091
 ```
+**Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
 In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
@@ -73,7 +74,7 @@ e.g.
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
 ```
-If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/my_image.png
@@ -90,23 +91,26 @@ Next, try it out on your own video file by passing the --input=argument, where a
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
 ```
+For using camera as input use ```--input=0```
 
 
 ## Python implementation for object detection
 
 For this example, we assume that you've already:
 
-* Installed TensorFlow on your system (TF2.x)
+* Installed TensorFlow on your system.
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-[**click-here**](TF_1_x/README.md) For the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
 
-Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for a quick install with pip.
+**Note:** Refer to [**this page**](TF_1_x/README.md) for the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
+
+
+Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
 Install the pre-requisites
 ```bash
@@ -114,7 +118,7 @@ $ cd <path-to-openvino_tensorflow-repository>/examples
 $ pip3 install -r requirements.txt
 ```
 
-The TensorFlow Yolo v3 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `data` directory in your `cloned repo of openvino_tensorflow`:
+The TensorFlow Yolo v3 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
 
 
 ```bash
@@ -123,7 +127,7 @@ $ chmod +x convert_yolov3.sh
 $ ./convert_yolov3.sh
 ```
 
-Once completed, the data folder will contain following files needed to run the object detection example:
+Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
 
 * coco.names
 * yolo_v3_darknet_2.pb
@@ -134,9 +138,10 @@ Run the object detection example using the instructions below:
 $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/object_detection_sample.py
 ```
+**Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
 This uses the default example image that comes with this repository, and should
-output something similar as below:
+output something similar as below and the result is written to detections.jpg:
 
 <p align="left">
   <img src="../examples/data/detections.jpg" width="200" height="200"
@@ -150,7 +155,7 @@ Next, try it out on your own image by passing the --input=argument, where argume
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
 ```
 
-If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
@@ -162,18 +167,22 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 $ python3 examples/object_detection_sample.py --help
 ```
 
+
 Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
-If you add the new video (e.g, examples/data/people-detection.mp4) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new video (e.g, examples/data/people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
-```
+For using camera as input use ```--input=0```
+
+**Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
+
 ## C++ Implementation for classification
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
@@ -187,7 +196,7 @@ Before you start building from source, you have to make sure that you installed 
 * Virtualenv 16.0.0 or higher
 * Patchelf 0.9
 
-The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
+The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
@@ -201,7 +210,7 @@ $ cd <path-to-openvino_tensorflow-repository>
 $ python3 build_tf.py --output_dir <path-to-tensorflow-dir>
 $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
-For detailed build instructions read [**BUILD.md**](docs/BUILD.md#build-from-source).
+For detailed build instructions read [**BUILD.md**](../docs/BUILD.md#build-from-source).
 
 Now, a binary executable for classification_sample is built. Update the LD_LIBRARY_PATH and run the sample:
 
@@ -232,7 +241,7 @@ Next, try it out on your own image by passing the --image= argument,  where argu
 $ ./build_cmake/examples/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>
 ```
 
-If you add the new image (e.g, my_image.png) to the existing data directory in the openvino_tensorflow repository, it will look like this:
+If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ ./build_cmake/examples/classification_sample/infer_image --image=examples/data/my_image.png

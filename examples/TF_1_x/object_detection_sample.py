@@ -39,7 +39,7 @@ from PIL import Image, ImageFont, ImageDraw
 dir_path = os.path.dirname(os.path.realpath(__file__))
 utils_path = os.path.dirname(os.path.realpath(os.path.join(dir_path, '.')))
 sys.path.insert(0, utils_path)
-from common.utils import get_input_mode, load_graph
+from common.utils import get_input_mode, load_graph, write_images
 
 
 def load_coco_names(file_name):
@@ -286,6 +286,7 @@ if __name__ == "__main__":
 
     cap = None
     images = []
+    output_images = []
     if label_file:
         labels = load_labels(label_file)
     input_mode = get_input_mode(input_file)
@@ -354,10 +355,17 @@ if __name__ == "__main__":
                 img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
+            if input_mode in 'image':
+                cv2.imwrite("detections.jpg", img_bbox)
+                print("Output image is saved in detections.jpg")
+            if input_mode in 'directory':
+                output_images.append(img_bbox)
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
+    if input_mode in 'directory':
+        write_images(input_file, output_images)
     sess.close()
     if cap:
         cap.release()
