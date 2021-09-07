@@ -46,7 +46,7 @@ TEST(OpByOpCapability, Backend) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(root.ToGraph(&graph));
 
-  bool is_supported;
+  bool is_supported = false;
   auto backend = BackendManager::GetBackend();
   ASSERT_NE(backend, nullptr);
 
