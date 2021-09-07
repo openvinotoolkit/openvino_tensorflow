@@ -19,7 +19,7 @@ RUN yum update -y && \
 
 RUN yum install -y zlib-devel libffi-devel \
     openssl-devel wget python-virtualenv libusb libusb-devel curl ca-certificates opencl-headers \
-    ocl-icd numactl-libs jq && \
+    ocl-icd numactl-libs jq devtoolset-7 && \
     yum clean all && rm -rf /var/cache/yum
 
 # install bazelisk
@@ -28,6 +28,11 @@ RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelis
     cp bazelisk-linux-amd64 /usr/local/bin/bazel
 
 # install cmake-3.18.4
+
+# remove pre-installed cmake
+RUN rm /usr/local/bin/cmake /usr/local/bin/cpack /usr/local/bin/ctest && \
+    rm -rf /opt/_internal/pipx/venvs/cmake
+
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
     tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
     cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
@@ -59,27 +64,16 @@ WORKDIR /opt/intel/openvino_tensorflow/
 
 RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 
-# Some ENV for auditwheel
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.6/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.7/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/python/openvino_tensorflow/:/opt/intel/openvino_tensorflow/build_cmake/openvino/bin/intel64/Release/lib/:/opt/intel/openvino_tensorflow/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_centos7/opencv/lib/
+RUN mkdir -p /whl/abi0/
 
-RUN mkdir -p /whl/abi1/ && mkdir -p /whl/abi0/
-
-# Build ABI-1 Wheels
-RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
-        PYBIN=/opt/python/${py_ver}/bin; \
-        "${PYBIN}/pip" install psutil virtualenv; \
-        sed -i "s#python3#${PYBIN}/python#g" tools/build_utils.py; \
-        "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=1 --disable_packaging_openvino_libs; \
-        cp build_cmake/artifacts/*.whl /whl/abi1/; \
-        git reset --hard HEAD; \
-        rm -rf build_cmake/; \
-    done
+RUN scl enable devtoolset-7 bash
 
 # Build ABI-0 Wheels
 RUN for py_ver in cp36-cp36m cp37-cp37m cp38-cp38; do \
         PYBIN=/opt/python/${py_ver}/bin; \
         "${PYBIN}/pip" install psutil virtualenv; \
-        sed -i "s#python3#${PYBIN}/python#g" tools/build_utils.py; \
+        git apply tools/builds/manylinux2014.patch; \
+        sed -i "s#\"python3\", \"-m\", \"venv\"#\"$PYBIN/python\", \"-m\", \"venv\"#g" tools/build_utils.py; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
         cp build_cmake/artifacts/*.whl /whl/abi0/; \
         git reset --hard HEAD; \
