@@ -28,7 +28,7 @@ const combination = new Map([
 ],
 ["000110"," Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline ,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
-["001110"," Mac OS not yet supported to use OpenVINO release package"
+["001110"," Mac OS not yet supported for VAD-M"
 ],
 ["000011","python3 build_ovtf.py "
 ],
@@ -40,7 +40,7 @@ const combination = new Map([
 ],
 ["100110","#Use OpenVINO 2021.4,python3 build_ovtf.py --use_openvino_from_location=$INTEL_OPENVINO_DIR --cxx11_abi_version=1"
 ],
-["101110"," Mac OS not yet supported to use OpenVINO release package"
+["101110"," Mac OS not yet supported for VAD-M"
 ],
 ["100011","python3 build_ovtf.py"
 ],
