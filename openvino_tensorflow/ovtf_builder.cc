@@ -1548,7 +1548,7 @@ static Status TranslateFakeQuantWithMinMaxVarsOp(
       op->name() + "/float_range", maximum, minimum);
   auto quant_min_value = int(narrow_range);
   auto quant_max_value = std::pow(2, num_bits) - 1;
-  auto value = quant_max_value - quant_min_value;
+  float value = static_cast<float>(quant_max_value - quant_min_value);
   auto int_range = ConstructNgNode<opset::Constant>(
       op->name() + "/int_range", ng::element::f32, ngraph::Shape{},
       std::vector<float>({value}));
@@ -3806,15 +3806,6 @@ Status Builder::TranslateGraph(
   //
   // Apply additional passes on the nGraph function here.
   //
-  std::string device;
-  BackendManager::GetBackendName(device);
-  if (device == "CPU") {
-    // Set the Constant Folding env variable to 1, if not already assigned any
-    // value
-    if (!setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", 0)) {
-      OVTF_VLOG(5) << "Enabling Constant Folding Pass for CPU backend";
-    }
-  }
   {
     ngraph::pass::Manager passes;
     if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {

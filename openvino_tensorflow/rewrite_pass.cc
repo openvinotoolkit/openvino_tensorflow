@@ -67,6 +67,18 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
+    // Set the Constant Folding env variable to 1, if not already assigned any
+    // value
+    std::string device;
+    BackendManager::GetBackendName(device);
+    if (device == "CPU") {
+      std::string env_value = util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING");
+      if (env_value.empty()) {
+        util::SetEnv("OPENVINO_TF_CONSTANT_FOLDING", "1");
+        OVTF_VLOG(5) << "Enabling Constant Folding Pass for CPU backend";
+      }
+    }
+
     if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
       int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
       if (dyn_fallback == 0) {
@@ -130,8 +142,6 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     std::set<string> skip_these_nodes = {};
 
     // OCM call for marking supported nodes
-    std::string device;
-    BackendManager::GetBackendName(device);
     const char* device_id(device.c_str());
     std::string ov_version;
 #if defined(OPENVINO_2021_2)
