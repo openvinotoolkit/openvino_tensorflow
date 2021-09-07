@@ -1,9 +1,13 @@
 diff --git a/tools/build_utils.py b/tools/build_utils.py
-index daefed0..505a29f 100755
+index daefed0..c2506dc 100755
 --- a/tools/build_utils.py
 +++ b/tools/build_utils.py
-@@ -705,14 +705,8 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-         "-DCMAKE_INSTALL_PREFIX=" + install_location
+@@ -702,16 +702,10 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+         "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
+         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
+         "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+-        "-DCMAKE_INSTALL_PREFIX=" + install_location
++        "-DCMAKE_INSTALL_PREFIX=" + install_location, "-DTREAT_WARNING_AS_ERROR=OFF"
      ]
  
 -    if platform.system() == 'Linux':
@@ -13,9 +17,7 @@ index daefed0..505a29f 100755
 -        ])
 -    else:
 -        openvino_cmake_flags.extend(
--            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
 +    openvino_cmake_flags.extend(
-+            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -Wno-error"])
+             ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
  
      if debug_enabled:
-         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
