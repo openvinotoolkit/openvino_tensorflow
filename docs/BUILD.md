@@ -21,84 +21,111 @@
 
 ###  1.1. <a name='Ubuntu'></a>Ubuntu
 
-1. Install apt packages
+1. Install apt packages  
 
-        apt-get update
-        apt-get python3 python3-dev
-        apt-get install -y --no-install-recommends ca-certificates autoconf automake build-essential \
-        libtool unzip git unzip wget zlib1g zlib1g-dev bash-completion \
-        build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
-        lsb-core gcc-7 g++-7 libusb-1.0-0-dev patchelf
+      ```bash  
+      # users may need sudo access to install some of the dependencies  
+      $ apt-get update
+      $ apt-get python3 python3-dev
+      $ apt-get install -y --no-install-recommends ca-certificates autoconf automake build-essential \
+      libtool unzip git unzip wget zlib1g zlib1g-dev bash-completion \
+      build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
+      lsb-core libusb-1.0-0-dev patchelf
+      ```  
 
-        # create symbolic links for gcc
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 --slave /usr/bin/g++ \
-        g++ /usr/bin/g++-7 --slave /usr/bin/gcov gcov /usr/bin/gcov-7
+      ```bash
+      # install required gcc package (Optional; if gcc-7 is not installed)
+      $ apt-get install gcc-7 g++-7  
 
-2. Install Python requirements
+      # if multiple gcc versions are installed then install alternatives
+      $ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 
+      $ update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 70
 
-        pip3 install -r requirements.txt
+      # configure alternatives (select the required gcc version)
+      $ update-alternatives --config gcc
+      $ update-alternatives --config g++
+      ```        
 
-2. Install CMake 3.18.4
+2. Install Python requirements  
+
+      ```bash
+      $ pip3 install -r requirements.txt
+      ```  
+
+2. Install CMake, supported version >=3.14.0 and =<3.20.0, 
         
-        wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
-        tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
-        cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+      ```bash
+      # to install CMake 3.18.2
+      $ wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+      $ tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+      $ cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
         cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/
+      ```
 
 3. Install Bazelisk (Optional; required only while building TensorFlow from source)
 
-        apt-get update && apt-get install -y openjdk-8-jdk
-        curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
-        apt-get install -y nodejs
-        npm install -g @bazel/bazelisk
+      ```bash
+      $ apt-get update && apt-get install -y openjdk-8-jdk
+      $ curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+      $ apt-get install -y nodejs
+      $ npm install -g @bazel/bazelisk
+      ```
 
 ###  1.2. <a name='macOS'></a>macOS
 
 1. Install HomeBrew packages
 
-        brew install python@3.9
-        brew install cmake autoconf automake libtool libusb wget 
+      ``` bash
+      $ brew install python@3.9
+      $ brew install cmake autoconf automake libtool libusb wget 
+      ```
 
 2. Install Pip and requirements
 
-        wget https://bootstrap.pypa.io/get-pip.py
-        python3 get-pip.py
-        pip3 install -r requirements.txt
+      ```bash
+      $ wget https://bootstrap.pypa.io/get-pip.py
+      $ python3 get-pip.py
+      $ pip3 install -r requirements.txt
+      ```
 
 3. Install Bazelisk v1.10.1 (Optional; required only while building TensorFlow from source)
 
-        wget https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
-        mv bazelisk-darwin-amd64 /usr/local/bin/bazel
-        chmod 777 /usr/local/bin/bazel
+      ```bash
+      $ wget https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
+      $ mv bazelisk-darwin-amd64 /usr/local/bin/bazel
+      $ chmod 777 /usr/local/bin/bazel
+      ```
 
 4. Install Apple XCode Command Line Tools
 
-        xcode-select --install
+      ```bash
+      $ xcode-select --install
+      ```
 
 Notes:
         Developed and Tested on macOS version 11.2.3 with CMake version 3.21.1
-        User can install Python 3.7, 3.8, or 3.9
+        User can install Python 3.7, 3.8, or 3.9. 
 
 
 
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 Clone the `openvino_tensorflow` repository:
 
-```bash
-$ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
-$ cd openvino_tensorflow
-$ git submodule init
-$ git submodule update --recursive
-```
+  ```bash
+  $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+  $ cd openvino_tensorflow
+  $ git submodule init
+  $ git submodule update --recursive
+  ```
 
 ###  2.1. <a name='BuildInstructions'></a>Build Instructions
-Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enable only the Python APIs, TensorFlow C++ libraries built from source is required for using the C++ APIs.
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enable only the Python APIs, TensorFlow C++ libraries built from source is required to use the C++ APIs.
 
 1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional, if not provided then default versions as specified in build_ovtf.py will be used. 
 
         python3 build_ovtf.py --tf_version=v2.5.0 --openvino_version=2021.4
 
-2. Pulls compatible prebuilt TF package from PyPi. Uses OpenVINO™ binary.
+2. Pulls compatible prebuilt TF package from PyPi. Uses OpenVINO™ binary from specified location.
 
         python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
 
@@ -106,11 +133,11 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
 
-4. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary. **This is only compatible with ABI1 built TF**.
+4. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary from specified location. **This is only compatible with ABI1 built TF**.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
 
-5. Pulls and builds TF from Source. Uses OpenVINO™ binary.
+5. Pulls and builds TF from Source. Uses OpenVINO™ binary from specified location.
 
         python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
 

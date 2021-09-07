@@ -26,7 +26,7 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
         pip3 install pip==21.0.1
         pip3 install tensorflow==2.5.0
-        pip3 install openvino-tensorflow
+        pip3 install -U openvino-tensorflow
 <br/> 
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
