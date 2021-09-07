@@ -24,6 +24,7 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
+#include "openvino_tensorflow/backend_manager.h"
 
 using tensorflow::int32;
 using namespace std;
@@ -2747,11 +2748,18 @@ static Status TranslateRelu6Op(const Node* op,
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
   auto ng_input_shape = ng_input.get_shape();
-  if (ng_input_shape.size() == 4)
-      Transpose<0, 3, 1, 2>(ng_input);
+  std::string device;
+  // Enable transpose before and after only for CPU device 
+  BackendManager::GetBackendName(device);
+  if (device=="CPU"){
+    if (ng_input_shape.size() == 4)
+        Transpose<0, 3, 1, 2>(ng_input);
+  }
   auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
-  if (ng_input_shape.size() == 4)
-      Transpose<0, 2, 3, 1>(ng_output);
+  if (device=="CPU"){
+    if (ng_input_shape.size() == 4)
+        Transpose<0, 2, 3, 1>(ng_output);
+  }
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
   return Status::OK();
@@ -3803,6 +3811,14 @@ Status Builder::TranslateGraph(
   //
   // Apply additional passes on the nGraph function here.
   //
+  std::string device;
+  BackendManager::GetBackendName(device);
+  if (device=="CPU"){
+    // Set the Constant Folding env variable to 1, if not already assigned any value
+    if(!setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", 0)){
+      std::cout << "Enabling Constant Folding Pass for CPU backend"<<std::endl;
+    }
+  }
   {
     ngraph::pass::Manager passes;
     if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
