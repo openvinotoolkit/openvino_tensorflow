@@ -18,13 +18,13 @@
 
 #include "api.h"
 #include "logging/ovtf_log.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/layout_conversions.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
-#include "openvino_tensorflow/backend_manager.h"
 
 using tensorflow::int32;
 using namespace std;
@@ -1567,18 +1567,15 @@ static Status TranslateFakeQuantWithMinMaxVarsOp(
       ConstructNgNode<opset::Add>(op->name() + "/max_adj", maximum, adjustment);
 
   auto ng_input_shape = ng_input.get_shape();
-  if (ng_input_shape.size() == 4)
-      Transpose<0, 3, 1, 2>(ng_input);
+  if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
   auto ng_output = ConstructNgNode<opset::FakeQuantize>(
       op->name(), ng_input, min_adj, max_adj, min_adj, max_adj, levels);
-  if (ng_input_shape.size() == 4)
-      Transpose<0, 2, 3, 1>(ng_output);
+  if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
 
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
   return Status::OK();
 }
-
 
 static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
@@ -2749,16 +2746,14 @@ static Status TranslateRelu6Op(const Node* op,
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
   auto ng_input_shape = ng_input.get_shape();
   std::string device;
-  // Enable transpose before and after only for CPU device 
+  // Enable transpose before and after only for CPU device
   BackendManager::GetBackendName(device);
-  if (device=="CPU"){
-    if (ng_input_shape.size() == 4)
-        Transpose<0, 3, 1, 2>(ng_input);
+  if (device == "CPU") {
+    if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
   }
   auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
-  if (device=="CPU"){
-    if (ng_input_shape.size() == 4)
-        Transpose<0, 2, 3, 1>(ng_output);
+  if (device == "CPU") {
+    if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
   }
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
@@ -3813,10 +3808,11 @@ Status Builder::TranslateGraph(
   //
   std::string device;
   BackendManager::GetBackendName(device);
-  if (device=="CPU"){
-    // Set the Constant Folding env variable to 1, if not already assigned any value
-    if(!setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", 0)){
-      std::cout << "Enabling Constant Folding Pass for CPU backend"<<std::endl;
+  if (device == "CPU") {
+    // Set the Constant Folding env variable to 1, if not already assigned any
+    // value
+    if (!setenv("OPENVINO_TF_CONSTANT_FOLDING", "1", 0)) {
+      OVTF_VLOG(5) << "Enabling Constant Folding Pass for CPU backend";
     }
   }
   {
