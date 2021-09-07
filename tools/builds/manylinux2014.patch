@@ -1,0 +1,21 @@
+diff --git a/tools/build_utils.py b/tools/build_utils.py
+index daefed0..505a29f 100755
+--- a/tools/build_utils.py
++++ b/tools/build_utils.py
+@@ -705,14 +705,8 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+         "-DCMAKE_INSTALL_PREFIX=" + install_location
+     ]
+ 
+-    if platform.system() == 'Linux':
+-        openvino_cmake_flags.extend([
+-            "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
+-            + target_arch + atom_flags
+-        ])
+-    else:
+-        openvino_cmake_flags.extend(
+-            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
++    openvino_cmake_flags.extend(
++            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -Wno-error"])
+ 
+     if debug_enabled:
+         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
