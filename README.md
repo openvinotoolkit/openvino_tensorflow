@@ -4,7 +4,7 @@
   <img src="images/openvino_wbgd.png">
 </p>
 
-# **OpenVINO™ integration with TensorFlow (Preview Release)**
+# **OpenVINO™ integration with TensorFlow**
 
 This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatibility. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
@@ -31,14 +31,14 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
 
-        pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.5.0
-        pip3 install openvino-tensorflow
+        pip3 install pip==21.0.1
+        pip3 install tensorflow==2.5.0
+        pip3 install -U openvino-tensorflow
 
 
 If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md#install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
 
-For more details on other modes of installation, please refer to [BUILD.md](docs/BUILD.md)
+For more details on other modes of installation please refer to [INSTALL.md](docs/INSTALL.md), and for build from source options please refer to [BUILD.md](docs/BUILD.md)
 
 ## Configuration
 
@@ -52,7 +52,7 @@ To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 This should produce an output like:
 
         TensorFlow version:  2.5.0
-        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO integration with TensorFlow version: b'1.0.0'
         OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 0

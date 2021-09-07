@@ -19,9 +19,9 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 
 This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
-        pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.5.0
-        pip3 install openvino-tensorflow
+        pip3 install pip==21.0.1
+        pip3 install tensorflow==2.5.0
+        pip3 install -U openvino-tensorflow
 
 To use **OpenVINO™ integration with TensorFlow** with pre-installed OpenVINO™ binaries, please visit this page for detailed instructions: ([**OpenVINO™ integration with TensorFlow** - README](docs/BUILD.md))
 ## Verify Installation
@@ -34,7 +34,7 @@ Verify that `openvino-tensorflow` installed correctly:
 This will produce something like this:
 
         TensorFlow version:  2.5.0
-        OpenVINO integration with TensorFlow version: b'0.5.0'
+        OpenVINO integration with TensorFlow version: b'1.0.0'
         OpenVINO version used for this build: b'2021.4'
         TensorFlow version used for this build: v2.5.0
         CXX11_ABI flag used for this build: 0

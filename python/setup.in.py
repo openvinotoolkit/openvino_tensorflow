@@ -49,7 +49,7 @@ package_data_dict['openvino_tensorflow'] = ng_data_list
 
 setup(
     name='openvino_tensorflow',
-    version='0.5.0',
+    version='1.0.0',
     description='OpenVINO™ integration with TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",
