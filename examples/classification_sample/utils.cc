@@ -73,10 +73,6 @@ limitations under the License.
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/util/command_line_flags.h"
 #include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgcodecs/imgcodecs.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 // These are all common classes it's handy to reference with no namespace.
 using tensorflow::Tensor;
@@ -115,20 +111,22 @@ Status ReadLabelsFile(const string& file_name, std::vector<string>* result,
   return Status::OK();
 }
 
-Tensor convertMatToTensor(Mat &input, const float input_std, const float input_mean)
-{
+//-----------------------------------------------------------------------------
+// Convert input Mat image to tensor.
+//-----------------------------------------------------------------------------
+Tensor convertMatToTensor(Mat &input, const float input_std,
+                          const float input_mean){
     int height = input.rows;
     int width = input.cols;
     int depth = input.channels();
-    Mat norm_img;
-    Tensor imgTensor(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, height, width, depth}));
+    Tensor imgTensor(tensorflow::DT_FLOAT,
+                     tensorflow::TensorShape({1, height, width, depth}));
     float* p = imgTensor.flat<float>().data();
     Mat outputImg(height, width, CV_32FC3, p);
     input.convertTo(outputImg, CV_32FC3, 1.0 / input_std, input_mean);
-    //int new_size[4] = { 1, 3, norm_img.rows, norm_img.cols};
-    //outputImg(4, new_size, norm_img.type(), norm_img.data);
     return imgTensor;
 }
+
 //-----------------------------------------------------------------------------
 // Given an image file name, read in the data,resize it to the requested size,
 // and then scale the values as desired.
@@ -136,22 +134,16 @@ Tensor convertMatToTensor(Mat &input, const float input_std, const float input_m
 Status ReadTensorFromImageFile(const string& file_name, const int input_height,
                                const int input_width, const float input_mean,
                                const float input_std,
-                               std::vector<Tensor>* out_tensor) {
+                               std::vector<Tensor>* out_tensor){
   Mat img, resized_img, cvt_img, norm_img, out_img;
-  std::cout << "input" << file_name << std::endl;
   img = imread(file_name, IMREAD_COLOR);
-  //Mat img(100, 100, CV_8UC3);
-  //randu(img, Scalar(0, 0, 0), Scalar(255, 255, 255));
   if (img.empty())
   {
     cout << "Couldn't read the image: " << file_name << endl;
-  }  
+  }
   resize(img, resized_img, Size(input_height, input_width), INTER_LINEAR);
   cvtColor(resized_img, cvt_img, COLOR_BGR2RGB);
-  vector<tensorflow::Tensor> out;
-  out.push_back(convertMatToTensor(out_img, input_std, input_mean));
-
-  out_tensor = &out;
+  out_tensor->push_back(convertMatToTensor(cvt_img, input_std, input_mean));
   return Status::OK();
 }
 
@@ -218,6 +210,7 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
     return read_labels_status;
   }
   const int how_many_labels = std::min(5, static_cast<int>(label_count));
+
   Tensor indices;
   Tensor scores;
   TF_RETURN_IF_ERROR(GetTopLabels(outputs, how_many_labels, &indices, &scores));
