@@ -1,8 +1,8 @@
 
 const combination = new Map([
-["000000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+["000000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp36-cp36m-manylinux2014_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
-["000100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+["000100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl , Download Intel® Distribution of OpenVINO™ Toolkit Link-https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html?operatingsystem=linux&distributions=webdownload&version=2021%203%20(latest)&options=offline , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
 ["001100"," Mac OS not yet supported for VAD-M"
 ],
@@ -18,9 +18,9 @@ const combination = new Map([
 ],
 ["011101","pip3 install -U openvino-tensorflow"
 ],
-["100000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-manylinux2014_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+["100000","# For Python3.7 and Python3.8 change the versions in the links appropriately , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl , pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp36-cp36m-manylinux2014_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
-["100100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
+["100100"," pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/openvino_tensorflow_abi1-1.0.0-cp38-cp38-linux_x86_64.whl , pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl , source $INTEL_OPENVINO_DIR/bin/setupvars.sh"
 ],
 ["101100"," Mac OS not yet supported for VAD-M"
 ],
