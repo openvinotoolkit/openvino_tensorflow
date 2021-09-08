@@ -144,7 +144,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2021.3')
+        default='2021.4')
 
     parser.add_argument(
         '--python_executable',
