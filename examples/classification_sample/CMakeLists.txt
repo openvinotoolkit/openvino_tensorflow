@@ -11,13 +11,13 @@ execute_process(COMMAND ${LSB_RELEASE_EXEC} -d
 )
 # Set opencv path to relevant path
 if (LSB_RELEASE_DETAILS MATCHES "Ubuntu 18.04")
-   set(OpenCV_DIR ${CMAKE_SOURCE_DIR}/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_ubuntu18/opencv/cmake)
+   set(OpenCV_PATH ${OPENVINO_TF_INSTALL_PREFIX}/opencv_4.5.2_ubuntu18/opencv/cmake)
 elseif (LSB_RELEASE_DETAILS MATCHES "Ubuntu 20.04")
-   set(OpenCV_DIR ${CMAKE_SOURCE_DIR}/build_cmake/openvino/inference-engine/temp/opencv_4.5.2_ubuntu20/opencv/cmake)
+   set(OpenCV_PATH ${OPENVINO_TF_INSTALL_PREFIX}/opencv_4.5.2_ubuntu20/opencv/cmake)
 else()
    message(FATAL_ERROR "OpenCV version not found")
 endif()
-find_package(OpenCV REQUIRED NO_DEFAULT_PATH) 
+find_package(OpenCV REQUIRED PATHS ${OpenCV_PATH} NO_DEFAULT_PATH) 
 message(STATUS "OpenCV DIR: ${OpenCV_DIR}")
 
 include_directories(${TensorFlow_INCLUDE_DIR})

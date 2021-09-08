@@ -460,6 +460,12 @@ def main():
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
+        
+        for dr in os.listdir(openvino_src_dir + '/inference-engine/temp/'):
+            if dr.startswith("opencv"):
+                command_executor(
+                    ['cp', '-r', openvino_src_dir + '/inference-engine/temp/' + dr, artifacts_location],
+                    verbose=True)
 
     # Next build CMAKE options for the bridge
     atom_flags = ""
