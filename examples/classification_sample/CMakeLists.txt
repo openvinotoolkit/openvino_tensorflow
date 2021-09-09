@@ -11,9 +11,9 @@ execute_process(COMMAND ${LSB_RELEASE_EXEC} -d
 )
 # Set opencv path to relevant path
 if (LSB_RELEASE_DETAILS MATCHES "Ubuntu 18.04")
-   set(OpenCV_PATH ${OPENVINO_TF_INSTALL_PREFIX}/opencv_4.5.2_ubuntu18/opencv/cmake)
+   set(OpenCV_PATH ${OPENVINO_ARTIFACTS_DIR}/opencv_4.5.2_ubuntu18/opencv/cmake)
 elseif (LSB_RELEASE_DETAILS MATCHES "Ubuntu 20.04")
-   set(OpenCV_PATH ${OPENVINO_TF_INSTALL_PREFIX}/opencv_4.5.2_ubuntu20/opencv/cmake)
+   set(OpenCV_PATH ${OPENVINO_ARTIFACTS_DIR}/opencv_4.5.2_ubuntu20/opencv/cmake)
 else()
    message(FATAL_ERROR "OpenCV version not found")
 endif()
