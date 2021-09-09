@@ -697,7 +697,9 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       }
       std::vector<const Edge*> output_edges;
       TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
-      m_session_output_names[index] = output_edges[0]->src()->name()+":"+std::to_string(output_edges[0]->src_output());
+      m_session_output_names[index] =
+          output_edges[0]->src()->name() + ":" +
+          std::to_string(output_edges[0]->src_output());
     }
   }
 
