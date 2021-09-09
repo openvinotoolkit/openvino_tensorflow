@@ -75,7 +75,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [bert_zh_L-12_H-768_A-12](https://tfhub.dev/tensorflow/bert_zh_L-12_H-768_A-12/1)| CPU, iGPU, MYRIAD |
 | [bert_zh_preprocess](https://tfhub.dev/tensorflow/bert_zh_preprocess/3)| CPU,  iGPU,  MYRIAD |
 | [bit​/m-r101x1](https://tfhub.dev/google/bit/m-r101x1/1)| CPU, iGPU,  MYRIAD |
-| [bit​/m-r101x3](https://tfhub.dev/google/bit/m-r101x3/1)|    MYRIAD |
+| [bit​/m-r101x3](https://tfhub.dev/google/bit/m-r101x3/1)| CPU, iGPU,  MYRIAD |
 | [bit​/m-r50x1](https://tfhub.dev/google/bit/m-r50x1/1)| CPU,  iGPU,  MYRIAD |
 | [bit​/m-r50x1​/ilsvrc2012_classification](https://tfhub.dev/google/bit/m-r50x1/ilsvrc2012_classification/1)| CPU,  iGPU,  MYRIAD |
 | [bit​/m-r50x3](https://tfhub.dev/google/bit/m-r50x3/1)| CPU, iGPU,  MYRIAD |
@@ -86,8 +86,8 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [cropnet​/classifier​/cassava_disease_V1](https://tfhub.dev/google/cropnet/classifier/cassava_disease_V1/2)| CPU,  iGPU,  MYRIAD |
 | [efficientdet​/d0](https://tfhub.dev/tensorflow/efficientdet/d0/1)| CPU,  iGPU,  MYRIAD |
 | [efficientdet​/d4](https://tfhub.dev/tensorflow/efficientdet/d4/1)| CPU,  iGPU,  MYRIAD |
-| [efficientdet​/d7](https://tfhub.dev/tensorflow/efficientdet/d7/1)|CPU,   MYRIAD |
-| [efficientdet​/lite0​/detection](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)| CPU,  MYRIAD |
+| [efficientdet​/d7](https://tfhub.dev/tensorflow/efficientdet/d7/1)|CPU,  iGPU,   MYRIAD |
+| [efficientdet​/lite0​/detection](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)| CPU,  iGPU,  MYRIAD |
 | [efficientdet​/lite0​/feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite0/feature-vector/1)| CPU,  iGPU,  MYRIAD |
 | [efficientnet​/b0​/classification](https://tfhub.dev/google/efficientnet/b0/classification/1)| CPU,  iGPU,  MYRIAD |
 | [efficientnet​/b0​/feature-vector](https://tfhub.dev/google/efficientnet/b0/feature-vector/1)| CPU,  iGPU,  MYRIAD |
@@ -123,7 +123,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [imagenet​/mobilenet_v2_140_224​/classification](https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/classification/5)| CPU,  iGPU,  MYRIAD |
 | [imagenet​/mobilenet_v2_140_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/feature_vector/5)| CPU,  iGPU,  MYRIAD |
 | [imagenet​/mobilenet_v3_small_100_224​/feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_small_100_224/feature_vector/5)| CPU,  iGPU,  MYRIAD |
-| [imagenet​/pnasnet_large​/feature_vector](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/5)| CPU,  MYRIAD |
+| [imagenet​/pnasnet_large​/feature_vector](https://tfhub.dev/google/imagenet/pnasnet_large/feature_vector/5)| CPU,  iGPU, MYRIAD |
 | [imagenet​/resnet_v1_50​/feature_vector](https://tfhub.dev/google/imagenet/resnet_v1_50/feature_vector/5)| CPU, iGPU,  MYRIAD |
 | [imagenet​/resnet_v2_152​/feature_vector](https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/5)| CPU,  iGPU,  MYRIAD |
 | [imagenet​/resnet_v2_50​/classification](https://tfhub.dev/google/imagenet/resnet_v2_50/classification/5)| CPU,  iGPU,  MYRIAD |
@@ -164,11 +164,11 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [tf2-preview​/nnlm-es-dim50-with-normalization](https://tfhub.dev/google/tf2-preview/nnlm-es-dim50-with-normalization/1)| CPU,  iGPU,  MYRIAD |
 | [universal-sentence-encoder](https://tfhub.dev/google/universal-sentence-encoder/4)| CPU,  iGPU,  MYRIAD |
 | [universal-sentence-encoder-cmlm​/multilingual-preprocess](https://tfhub.dev/google/universal-sentence-encoder-cmlm/multilingual-preprocess/)| CPU,  iGPU,  MYRIAD |
-| [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/5)| CPU, MYRIAD |
+| [universal-sentence-encoder-large](https://tfhub.dev/google/universal-sentence-encoder-large/5)| CPU, iGPU, MYRIAD |
 | [universal-sentence-encoder-multilingual](https://tfhub.dev/google/universal-sentence-encoder-multilingual/3)| CPU, iGPU, MYRIAD |
 | [universal-sentence-encoder-multilingual-large](https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/3)| CPU, iGPU, MYRIAD |
 | [universal-sentence-encoder-multilingual-qa](https://tfhub.dev/google/universal-sentence-encoder-multilingual-qa/3)| CPU, iGPU, MYRIAD |
-| [universal-sentence-encoder-qa](https://tfhub.dev/google/universal-sentence-encoder-qa/3)| CPU,  MYRIAD |
+| [universal-sentence-encoder-qa](https://tfhub.dev/google/universal-sentence-encoder-qa/3)| CPU,  iGPU,  MYRIAD |
 | [vggish](https://tfhub.dev/google/vggish/1)| CPU,  iGPU,  MYRIAD |
 | [Wiki-words-250](https://tfhub.dev/google/Wiki-words-250/2)| CPU,  iGPU,  MYRIAD |
 | [Wiki-words-250-with-normalization](https://tfhub.dev/google/Wiki-words-250-with-normalization/2)| CPU,  iGPU,  MYRIAD |
