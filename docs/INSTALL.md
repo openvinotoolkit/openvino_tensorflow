@@ -21,10 +21,10 @@ Since TensorFlow packages available in [PyPi](https://pypi.org) are built with C
 
 ## <a name='Prebuiltpackagessummary'></a>Pre-built packages summary
   
-|TensorFlow Pip Package| **OpenVINO™ integration with TensorFlow** Pip Package|Supported OpenVINO™ Flavor|Supported Hardware Backends|Comments|
+|TensorFlow Pip Package| **OpenVINO™ integration with TensorFlow** Pip Package|Supported OpenVINO™ Flavor|Supported Hardwares|Comments|
 | -----------------|-----------------------------------|----------------------------|---------------------------|----------------|
-|tensorflow| openvino-tensorflow|OpenVINO™ built from source|CPU,GPU,GPU_FP16,MYRIAD|**OpenVINO™** libraries are built from source and included in the wheel package|
-|tensorflow-abi1| openvino-tensorflow-abi1|Dynamically links to OpenVINO™ binary release|CPU,GPU,GPU_FP16,MYRIAD,VAD-M|**OpenVINO™ integration with TensorFlow** libraries are dynamically linked to OpenVINO™ binaries|
+|tensorflow| openvino-tensorflow|OpenVINO™ built from source|CPU,iGPU,MYRIAD|**OpenVINO™** libraries are built from source and included in the wheel package|
+|tensorflow-abi1| openvino-tensorflow-abi1|Dynamically links to OpenVINO™ binary release|CPU,iGPU,MYRIAD,VAD-M|**OpenVINO™ integration with TensorFlow** libraries are dynamically linked to OpenVINO™ binaries|
 <br/>  
 
 ##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow

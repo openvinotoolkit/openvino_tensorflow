@@ -164,9 +164,9 @@ Example:
 
 ## GPU Precision
 
-The default precision for GPU is FP32 which means if you set the backend name as **'GPU'**, the execution on GPU will be operated on FP32 precision. To change the GPU precision to FP16, use the device name **'GPU_FP16'**.
+The default precision for Intel Integrated GPU (iGPU) is FP32. So, if you set the backend name as **'GPU'**, the execution on iGPU will be operated on FP32 precision. To change the iGPU precision to FP16, use the device name **'GPU_FP16'**.
 
-Example for setting the GPU precision to FP32:
+Example for setting the iGPU precision to FP32:
 
     openvino_tensorflow.set_backend('GPU')
 
@@ -174,7 +174,7 @@ or
 
     OPENVINO_TF_BACKEND="GPU"
 
-Example for setting the GPU precision to FP16:
+Example for setting the iGPU precision to FP16:
 
     openvino_tensorflow.set_backend('GPU_FP16')
 
