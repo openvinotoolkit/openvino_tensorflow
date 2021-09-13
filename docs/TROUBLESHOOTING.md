@@ -7,7 +7,7 @@ There are two types of log messages in **OpenVINO™ Integration with TensorFlow
 
     OPENVINO_TF_LOG_PLACEMENT=1
 
-After activating the log placement, you will see several lines of output about the clustering and encapsulating phase. To check the brief summary of how the clusters are formed, see the lines starting with "OVTF_SUMMARY". These lines will provide the overall statistics like the reasons of clustering, the number of nodes clustered/declustered, the total number of clusters, the number of nodes per clusters, etc.
+After activating the log placement, you will see several lines of output about the clustering and encapsulating phase. To check the brief summary of how the clusters are formed, see the lines starting with "OVTF_SUMMARY". These lines will provide the overall statistics like the reasons for clustering, the number of nodes clustered/declustered, the total number of clusters, the number of nodes per clusters, etc.
 
 ```
 OVTF_SUMMARY: Summary of reasons why a pair of edge connected encapsulates did not merge
@@ -30,7 +30,7 @@ The initial lines of the log are related to assigning clusters. At this stage, a
 
     NONCONTRACTION: SAMECLUSTER: Preprocessor/mul/x<Const>[0] -> Preprocessor/mul<Mul>[1]
 
-A line like below tells that these nodes cannot be grouped into the same cluster since the second node is not supported by OpenVINO.
+A line like below tells that these nodes cannot be grouped into the same cluster since the second node is not supported by OpenVINO™.
 
     NONCONTRACTION: UNSUPPORTED: MultipleGridAnchorGenerator/assert_equal/Assert/Assert<Assert>[-1] -> Postprocessor/ExpandDims<ExpandDims>[-1]
 
@@ -38,7 +38,7 @@ Apart from the log placement, you can enable the VLOG level to print details fro
 
     OPENVINO_TF_VLOG_LEVEL=1
 
-This will print some details for each cluster executed on OpenVINO integration with TensorFlow like below:
+This will print some details for each cluster executed on **OpenVINO™ integration with TensorFlow** like below:
 
     OPENVINO_TF_MEM_PROFILE:  OP_ID: 0 Step_ID: 8 Cluster: ovtf_cluster_0 Input Tensors created: 0 MB Total process memory: 1 GB
     OPENVINO_TF_TIMING_PROFILE: OP_ID: 0 Step_ID: 8 Cluster: ovtf_cluster_0 Time-Compute: 10 Function-Create-or-Lookup: 0 Create-and-copy-tensors: 0 Execute: 10
@@ -73,13 +73,13 @@ Disable the nodes which cause the issue. If you are able to identify the operato
     OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
 
 ## 4. Setting Cluster Size Limit
-If there are multiple clusters executing and smaller clusters are causing the issue, you can set the cluster size limit which will only execute the larger clusters on OpenVINO. This way, the smaller clusters will be executed on native TensorFlow and you can still have the performance benefit of executing larger clusters on OpenVINO™. You should set the cluster size limit by setting the environment variable below. Adjust the value that works best for your model (see the example below).
+If there are multiple clusters executing and smaller clusters are causing the issue, you can set the cluster size limit which will only execute the larger clusters on OpenVINO™. This way, the smaller clusters will be executed on native TensorFlow and you can still have the performance benefit of executing larger clusters on OpenVINO™. You should set the cluster size limit by setting the environment variable below. Adjust the value that works best for your model (see the example below).
 
     OPENVINO_TF_MIN_NONTRIVIAL_NODES=25
 
 ## 5. Optimizing Keras Models for OpenVINO™ integration with TensorFlow
 
-Some Keras models may include training ops which leads TensorFlow to produce control flow ops. Since the control flow ops are not supported by OpenVINO™, the graph might be partitioned to smaller clusters. Freezing the model can remove these ops and improve the overall performance using OpenVINO™ integration with TensorFlow.
+Some Keras models may include training ops which leads TensorFlow to produce control flow ops. Since the control flow ops are not supported by OpenVINO™, the graph might be partitioned to smaller clusters. Freezing the model can remove these ops and improve the overall performance using **OpenVINO™ integration with TensorFlow**.
 
 Below is a sample inference application with DenseNet121 using Keras API.
 
@@ -101,7 +101,7 @@ model = DenseNet121(weights='imagenet')
 model.predict(input_data)
 ```
 
-Below is a sample code to freeze and run a Keras model to optimize it further to achieve the best performance using OpenVINO™ integration with TensorFlow.
+Below is a sample code to freeze and run a Keras model to optimize it further to achieve the best performance using **OpenVINO™ integration with TensorFlow**.
 
 ```python
 import tensorflow as tf
