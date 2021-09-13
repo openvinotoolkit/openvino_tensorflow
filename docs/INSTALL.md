@@ -25,7 +25,7 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
 
         pip3 install pip==21.0.1
-        pip3 install tensorflow==2.5.0
+        pip3 install tensorflow==2.5.1
         pip3 install -U openvino-tensorflow
 <br/> 
 
@@ -42,15 +42,15 @@ You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvi
 
 2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
 
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl
+        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp37-cp37m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl
 
 3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.4 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
