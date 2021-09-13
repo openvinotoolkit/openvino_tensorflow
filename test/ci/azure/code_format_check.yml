@@ -11,7 +11,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4.1_0/
     
  steps:
  

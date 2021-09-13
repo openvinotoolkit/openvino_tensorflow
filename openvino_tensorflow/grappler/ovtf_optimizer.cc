@@ -153,6 +153,9 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   ov_version = "2021.3";
 #elif defined(OPENVINO_2021_4)
   ov_version = "2021.4";
+#elif defined(OPENVINO_2021_4_1)
+  // ocm checks are same for the minor version update
+  ov_version = "2021.4";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);

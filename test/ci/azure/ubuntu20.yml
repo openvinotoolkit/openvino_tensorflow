@@ -13,7 +13,7 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/caches/openvino_2021.4_0/
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4.1_0/
     #Uncomment and comment the location respectively for using the version of TF BUILD
     #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
     TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_1_abi0
