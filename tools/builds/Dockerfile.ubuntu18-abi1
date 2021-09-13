@@ -15,7 +15,9 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 # yum dependencies
 RUN apt update
 
-RUN apt install -y libffi-dev wget python-virtualenv libusb-dev curl ca-certificates opencl-headers jq libeigen3-dev cpio pciutils unzip autoconf automake build-essential libtool git python3.6 python3.7 python3.8 sudo
+RUN apt install -y libffi-dev wget python-virtualenv libusb-dev curl ca-certificates opencl-headers \
+    jq libeigen3-dev cpio pciutils unzip autoconf automake build-essential libtool git sudo \
+    python3.6 python3.7 python3.8 python3.6-venv python3.7-venv python3.8-venv
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.6 get-pip.py
 
@@ -73,14 +75,14 @@ RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 
 RUN mkdir -p /whl/abi1/
 
-# Build ABI-1 Wheels
 RUN for py_ver in 3.6 3.7 3.8; do \
-        PYBIN=python${py_ver}; \
-        pip"${py_ver}" install psutil virtualenv; \
-        pip"${py_ver}" install -U wheel; \
-        sed -i "s#python3#${PYBIN}#g" tools/build_utils.py; \
-        "${PYBIN}" build_ovtf.py --python_executable="${PYBIN}" --cxx11_abi_version=1 --disable_packaging_openvino_libs --use_openvino_from_location=/opt/intel/openvino_2021.4.689/; \
-        cp build_cmake/artifacts/*.whl /whl/abi1/; \
-        git reset --hard HEAD; \
-        rm -rf build_cmake/; \
+        python${py_ver} -m venv venv_${py_ver}; \
+        source venv_${py_ver}/bin/activate; \
+        pip install -U pip; \
+        pip install virtualenv; \
+        pip install -r requirements.txt; \
+        python build_ovtf.py --python_executable=`which python` --cxx11_abi_version=1 --disable_packaging_openvino_libs --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --build_dir=build_venv_${py_ver}; \
+        cp build_venv_${py_ver}/artifacts/*.whl /whl/abi1/; \
+        rm -rf build_venv_${py_ver}; \
+        deactivate; \
     done

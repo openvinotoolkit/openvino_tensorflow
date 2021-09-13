@@ -21,7 +21,7 @@ Since TensorFlow packages available in [PyPi](https://pypi.org) are built with C
 
 ##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package includes pre-built libraries of OpenVINO™ version 2021.4. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
+This **OpenVINO™ integration with TensorFlow** package includes pre-built libraries of OpenVINO™ version 2021.4.1. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
 
 
         pip3 install pip==21.0.1
@@ -31,7 +31,7 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
 
-This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.4. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs), and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M).
+This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.4.1. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs), and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M).
 
 You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1 or follow the instructions below to install the appropriate version:
 
@@ -52,7 +52,7 @@ You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvi
 
         pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl
 
-3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.4 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
+3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2021.4.1 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
 4. Initialize the OpenVINO™ environment by running the `setupvars.sh` located in <code>\<openvino\_install\_directory\>\/bin</code> using the command below:
 

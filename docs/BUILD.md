@@ -123,11 +123,11 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
 1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional, if not provided then default versions as specified in build_ovtf.py will be used. 
 
-        python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4
+        python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4.1
 
 2. Pulls compatible prebuilt TF package from PyPi. Uses OpenVINO™ binary from specified location.
 
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
 
 3. Uses pre-built TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TF from source everytime.
 
@@ -135,11 +135,11 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
 4. Uses prebuilt TF from the given location ([refer the TensorFlow build instructions](#tensorflow)). Uses OpenVINO™ binary from specified location. **This is only compatible with ABI1 built TF**.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
 
 5. Pulls and builds TF from Source. Uses OpenVINO™ binary from specified location.
 
-        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.582/ --cxx11_abi_version=1
+        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
 
 6. Pulls and builds TF and OpenVINO™ from source
 
@@ -173,7 +173,7 @@ This should produce an output like:
 
         TensorFlow version:  2.5.1
         OpenVINO integration with TensorFlow version: b'1.0.0'
-        OpenVINO version used for this build: b'2021.4'
+        OpenVINO version used for this build: b'2021.4.1'
         TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 1
 
