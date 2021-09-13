@@ -59,7 +59,7 @@ By default, Intel<sup>®</sup> CPU is used to run inference. However, you can ch
 
     openvino_tensorflow.set_backend('<backend_name>')
 
-Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
+Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 
 To determine what processing units are available on your system for inference, use the following function:
 

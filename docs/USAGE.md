@@ -14,7 +14,7 @@ By default, CPU backend is enabled. You can set a different backend by using the
 
     openvino_tensorflow.set_backend('<backend_name>')
 
-Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
+Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 
 ## Additional APIs
 
@@ -93,7 +93,7 @@ Example:
     OPENVINO_TF_LOG_PLACEMENT="1"
 
 **OPENVINO_TF_BACKEND:**
-Backend device name can be set using this variable. It should be set to "CPU", "GPU", "MYRIAD", or "VAD-M".
+Backend device name can be set using this variable. It should be set to "CPU", "GPU", "GPU_FP16", "MYRIAD", or "VAD-M".
 
 Example:
 
@@ -161,3 +161,23 @@ This variable enables or disables dynamic fallback feature. Should be set to "0"
 Example:
 
     OPENVINO_TF_DYNAMIC_FALLBACK=0
+
+## GPU Precision
+
+The default precision for GPU is FP32 which means if you set the backend name as **'GPU'**, the execution on GPU will be operated on FP32 precision. To change the GPU precision to FP16, use the device name **'GPU_FP16'**.
+
+Example for setting the GPU precision to FP32:
+
+    openvino_tensorflow.set_backend('GPU')
+
+or
+
+    OPENVINO_TF_BACKEND="GPU"
+
+Example for setting the GPU precision to FP16:
+
+    openvino_tensorflow.set_backend('GPU_FP16')
+
+or
+
+    OPENVINO_TF_BACKEND="GPU_FP16"
