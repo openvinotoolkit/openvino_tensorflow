@@ -1,14 +1,22 @@
 # 1. <a name='Pre-BuiltPackages'></a>Installation using Pre-Built Packages
 
-**OpenVINO™ integration with TensorFlow** has two releases: one built with CXX11_ABI=0 and another built with CXX11_ABI=1.
+**OpenVINO™ integration with TensorFlow** is released in two different versions: one built with CXX11_ABI=0 and the other built with CXX11_ABI=1.
 
 Since TensorFlow packages available in [PyPi](https://pypi.org) are built with CXX11_ABI=0 and OpenVINO™ release packages are built with CXX11_ABI=1, binary releases of these packages **cannot be installed together**. Based on your needs, you can choose one of the two available methods:
 
-- **OpenVINO™ integration with TensorFlow** PyPi release alongside PyPi TensorFlow
-  (CXX11_ABI=0, no OpenVINO™ installation required, no VAD-M support)
+- **OpenVINO™ integration with TensorFlow** PyPi release alongside PyPi TensorFlow  
+    * Includes pre-built libraries of OpenVINO™ version 2021.4.1. The users do not have to install OpenVINO™ separately 
+    * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
+    * Build with CXX11_ABI=0  
 
-- **OpenVINO™ integration with TensorFlow** package released in Github alongside the Intel® Distribution of OpenVINO™ Toolkit
-  (CXX11_ABI=1, needs a custom TensorFlow package, enables VAD-M support)  
+<br/>  
+
+- **OpenVINO™ integration with TensorFlow** package released in Github alongside the Intel® Distribution of OpenVINO™ Toolkit  
+    * Compatible with OpenVINO™ version 2021.4.1
+    * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs),    and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M)
+    * Build with CXX11_ABI=1
+    * Needs a custom TensorFlow ABI1 package, which is available in Github release  
+
 <br/>  
 
 ## <a name='Prebuiltpackagessummary'></a>Pre-built packages summary
@@ -21,9 +29,6 @@ Since TensorFlow packages available in [PyPi](https://pypi.org) are built with C
 
 ##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
 
-This **OpenVINO™ integration with TensorFlow** package includes pre-built libraries of OpenVINO™ version 2021.4.1. The users do not have to install OpenVINO™ separately. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs).
-
-
         pip3 install pip==21.0.1
         pip3 install tensorflow==2.5.1
         pip3 install -U openvino-tensorflow
@@ -31,16 +36,12 @@ This **OpenVINO™ integration with TensorFlow** package includes pre-built libr
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit
 
-This **OpenVINO™ integration with TensorFlow** package is currently compatible with OpenVINO™ version 2021.4.1. This package supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs), and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M).
-
-You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1 or follow the instructions below to install the appropriate version:
-
 1. Ensure the following versions are being used for pip and numpy:
 
         pip3 install pip==21.0.1
         pip3 install numpy==1.20.2
 
-2. Install `TensorFlow`. Based on your Python version, use the appropriate package below:
+2. Install `TensorFlow` based on your Python version. You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1  or follow the insructions below to use the appropriate package:
 
         pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl
 

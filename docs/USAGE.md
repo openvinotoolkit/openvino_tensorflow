@@ -56,12 +56,12 @@ To disable execution of certain operators on the OpenVINO™ backend, use the fo
 
     openvino_tensorflow.get_disabled_ops()
 
-To disable or enable dynamic fallback use the the following API (When enabled, clusters having errors during runtime can fallback to native TF although they are assigned to run on OV).
+To enable or disable dynamic fallback, use the following API (When enabled, clusters causing errors during runtime can fall back to native TensorFlow although they are assigned to run on OpenVINO™).
 
     openvino_tensorflow.enable_dynamic_fallback()
     openvino_tensorflow.disable_dynamic_fallback()
 
-To export the translated IRs of the clusters use the API below. This will dump the clusters from the most recently executed model as ".xml" and ".bin" files which can be used for an OpenVINO application later. The first parameter to this API is the output directory. If there is any pre-existing cluster file in the corresponding directory, it will ask user to confirm before overwriting any of the older files. To disable this check, pass a "False" value as the second parameter(optional). Then, any pre-existing IR file will be overwritten without any confirmation if the cluster name is same.
+To export the translated Intermediate Representation (IR) of the clusters to a directory, use the API below. This API will export and save the IRs from the most recently executed model as ".xml" and ".bin" files, which can be used for an OpenVINO™ application later. The first parameter to this API is the output directory. If there is any pre-existing IR file in the corresponding directory, it will ask the user to confirm before overwriting any of the older files. To disable this check, pass a "False" value as the second parameter(optional). Then, any pre-existing IR files will be overwritten without any confirmation if the IR file name is the same.
 
     openvino_tensorflow.export_ir("output/directory/path")
 
@@ -72,7 +72,7 @@ or
 ## Environment Variables
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
-After clusters are formed, some of the clusters may still fall back to native TensorFlow due to some reasons (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.
+After clusters are formed, some of the clusters may still fall back to native TensorFlow (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
 Example:
 
@@ -149,14 +149,14 @@ Example:
     OPENVINO_TF_DISABLE=1
 
 **OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
-This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fallback to TensorFlow. By default, it is calculated based on the total graph size but it cannot be less than 6 unless it is set manually (Did not observe any performance benefit enabling very small clusters).
+This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fall back to TensorFlow. By default, it is calculated based on the total graph size, but it cannot be less than 6 unless it is set manually (Did not observe any performance benefit enabling very small clusters).
 
 Example:
 
     OPENVINO_TF_MIN_NONTRIVIAL_NODES=10
 
 **OPENVINO_TF_DYNAMIC_FALLBACK**
-This variable enables or disables dynamic fallback feature. Should be set to "0" to disable and "1" to enable dynamic fallback. When enabled, clusters having errors during runtime can fallback to native TF although they are assigned to run on OV. Enabled by default.
+This variable enables or disables dynamic fallback feature. Should be set to "0" to disable and "1" to enable dynamic fallback. When enabled, clusters causing errors during runtime can fallback to native TensorFlow although they are assigned to run on OpenVINO™. Enabled by default.
 
 Example:
 

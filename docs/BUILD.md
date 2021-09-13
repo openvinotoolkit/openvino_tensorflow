@@ -119,7 +119,7 @@ Clone the `openvino_tensorflow` repository:
   ```
 
 ###  2.1. <a name='BuildInstructions'></a>Build Instructions
-Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enable only the Python APIs, TensorFlow C++ libraries built from source is required to use the C++ APIs.
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. TensorFlow C++ libraries built from source is required to use the C++ APIs.
 
 1. Pulls compatible prebuilt TF package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional, if not provided then default versions as specified in build_ovtf.py will be used. 
 
@@ -151,12 +151,12 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
         python3 build_ovtf.py --help
 
 ###  2.2. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
-In order to build **OpenVINO™ integration with TensorFlow** to use on Intel Atom® processor, we recommend building TF from source. The command below will build TF and OpenVINO™ from source for Intel Atom® processors.
+In order to build **OpenVINO™ integration with TensorFlow** to use with the Intel Atom® processor, we recommend building TF from source, by using the following command:
 
         python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
 
 ###  2.3. <a name='BuildVerification'></a> Build Verification
-When the build is finished, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (ex: the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
+When the build is finished, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (e.g. the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
 
 Activate the following `virtualenv` to start using **OpenVINO™ integration with TensorFlow**.
 
