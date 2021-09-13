@@ -192,9 +192,11 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
 
-    assert not (
-        arguments.openvino_version not in ["2021.4.1", "2021.4", "2021.3", "2021.2"]), (
-            "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported")
+    assert not (arguments.openvino_version not in [
+        "2021.4.1", "2021.4", "2021.3", "2021.2"
+    ]), (
+        "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
+    )
 
     if arguments.use_openvino_from_location != '':
         ver_file = arguments.use_openvino_from_location + \
