@@ -1,4 +1,4 @@
-# Instructions to accelerate TensorFlow models on AWS with the **OpenVINO™ integration with TensorFlow**
+# Instructions to accelerate TensorFlow models on AWS with **OpenVINO™ integration with TensorFlow**
 
 -	Launch the Deep Learning AMI EC2 instance Ubuntu 18.04 Version 41.0
 
@@ -6,7 +6,7 @@
  <img src="images/AWS_image_1.png">
 </p>
 
--	Choose one of the C5 instances –these are optimized for inference. The larger the instance,the faster the inference
+-	Choose one of the C5 instances – these are optimized for inference. The larger the instance,the faster the inference
 
 <p align="center">
 <img src="images/AWS_image_2.png">
@@ -45,7 +45,7 @@ chmod 400 the *.pem key.
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U openvino-tensorflow
   
 ```
--	verify the installation 
+-	Verify the installation 
 
 ```bash
 (myenv) ubuntu@ip-10-0-0-123:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)"
