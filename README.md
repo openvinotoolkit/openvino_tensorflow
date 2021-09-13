@@ -19,7 +19,7 @@ This repository contains the source code of **OpenVINO™ integration with Tenso
 
 - Ubuntu 18.04, 20.04
 - Python 3.6, 3.7, or 3.8
-- TensorFlow v2.5.0
+- TensorFlow v2.5.1
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
@@ -32,7 +32,7 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 
 
         pip3 install pip==21.0.1
-        pip3 install tensorflow==2.5.0
+        pip3 install tensorflow==2.5.1
         pip3 install -U openvino-tensorflow
 
 
@@ -51,10 +51,10 @@ To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
 This should produce an output like:
 
-        TensorFlow version:  2.5.0
+        TensorFlow version:  2.5.1
         OpenVINO integration with TensorFlow version: b'1.0.0'
         OpenVINO version used for this build: b'2021.4'
-        TensorFlow version used for this build: v2.5.0
+        TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 0
 
 By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware on which inferencing is done.

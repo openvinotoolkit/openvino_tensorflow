@@ -1,28 +1,17 @@
-From 95619362b3c81cf5bfe94953fa3e51a93174ed14 Mon Sep 17 00:00:00 2001
-From: Suryaprakash Shanmugam <suryaprakash.shanmugam@intel.com>
-Date: Thu, 8 Apr 2021 21:57:44 +0530
-Subject: [PATCH] add resource constraints for build
-
----
- tensorflow/tools/ci_build/builds/pip_new.sh | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
 diff --git a/tensorflow/tools/ci_build/builds/pip_new.sh b/tensorflow/tools/ci_build/builds/pip_new.sh
-index 9090e5bf4a836..4aa0425728f85 100755
+index a4887adcb4e..bd0a07b8d3c 100755
 --- a/tensorflow/tools/ci_build/builds/pip_new.sh
 +++ b/tensorflow/tools/ci_build/builds/pip_new.sh
-@@ -309,7 +309,9 @@ bazel clean
- # Clean up and update bazel flags
- update_bazel_flags
- # Build. This outputs the file `build_pip_package`.
--bazel build ${TF_BUILD_FLAGS} ${PIP_BUILD_TARGET} || \
-+bazel build ${TF_BUILD_FLAGS} ${PIP_BUILD_TARGET} \
-+--local_ram_resources=12000 --jobs=8 --local_cpu_resources=8 \
-+ --config=noaws --config=nohdfs --config=nonccl --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=1"  || \
-   die "Error: Bazel build failed for target: '${PIP_BUILD_TARGET}'"
+@@ -315,6 +315,8 @@ bazel build \
+   --action_env=PYTHON_BIN_PATH=${PYTHON_BIN_PATH} \
+   ${TF_BUILD_FLAGS} \
+   ${PIP_BUILD_TARGET} \
++  --local_ram_resources=12000 --jobs=8 --local_cpu_resources=8 \
++  --config=noaws --config=nohdfs --config=nonccl --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=1" \
+   || die "Error: Bazel build failed for target: '${PIP_BUILD_TARGET}'"
  
  ###########################################################################
-@@ -678,7 +680,7 @@ if [[ "$BUILD_BOTH_GPU_PACKAGES" -eq "1" ]] || [[ "$BUILD_BOTH_CPU_PACKAGES" -eq
+@@ -684,7 +686,7 @@ if [[ "$BUILD_BOTH_GPU_PACKAGES" -eq "1" ]] || [[ "$BUILD_BOTH_CPU_PACKAGES" -eq
  fi
  
  # Run tests (if any is specified).

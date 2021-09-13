@@ -1,0 +1,86 @@
+# Copyright (C) 2019-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+FROM ubuntu:18.04 AS base
+
+LABEL Description="This is the Ubuntu based dockerfile that builds ABI1 Python 3.x whl packages \
+                   for Intel(R) OpenVINO(TM) integration with TensorFlow"
+LABEL Vendor="Intel Corporation"
+
+ARG OVTF_BRANCH
+
+USER root
+WORKDIR /
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+# yum dependencies
+RUN apt update
+
+RUN apt install -y libffi-dev wget python-virtualenv libusb-dev curl ca-certificates opencl-headers jq libeigen3-dev cpio pciutils unzip autoconf automake build-essential libtool git python3.6 python3.7 python3.8 sudo
+
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.6 get-pip.py
+
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.7 get-pip.py
+
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.8 get-pip.py
+
+RUN pip3.6 install psutil && pip3.7 install psutil && pip3.8 install psutil
+
+# install bazelisk
+RUN wget -q https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-linux-amd64 && \
+    chmod 700 bazelisk-linux-amd64 && chmod +x bazelisk-linux-amd64 &&  \
+    cp bazelisk-linux-amd64 /usr/local/bin/bazel
+
+# install cmake-3.18.4
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+    tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+    cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+    cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/
+
+# install libusb
+WORKDIR /opt
+RUN curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && \
+    unzip v1.0.22.zip && rm -rf v1.0.22.zip
+
+WORKDIR /opt/libusb-1.0.22
+RUN ./bootstrap.sh && \
+    ./configure --disable-udev --enable-shared && \
+    make -j4
+
+WORKDIR /opt/libusb-1.0.22/libusb
+RUN /bin/mkdir -p '/usr/local/lib' && \
+    /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && \
+    /bin/mkdir -p '/usr/local/include/libusb-1.0' && \
+    /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
+
+#Get OpenVINO from Download link and install
+RUN wget -q https://registrationcenter-download.intel.com/akdlm/irc_nas/18096/l_openvino_toolkit_p_2021.4.689.tgz -P /tmp
+RUN tar -xvf /tmp/l_openvino_toolkit_p_2021.4.689.tgz -C /tmp
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.689 && sudo sed -i 's/decline/accept/g' silent.cfg
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.689 && sudo ./install.sh -s silent.cfg
+
+#Install OpenVINO Dependencies
+RUN cd /opt/intel/openvino_2021/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
+
+# clone & build
+RUN mkdir -p /opt/intel/openvino_tensorflow/
+
+RUN git clone --quiet https://github.com/openvinotoolkit/openvino_tensorflow \
+    /opt/intel/openvino_tensorflow
+
+WORKDIR /opt/intel/openvino_tensorflow/
+
+RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
+
+RUN mkdir -p /whl/abi1/
+
+# Build ABI-1 Wheels
+RUN for py_ver in 3.6 3.7 3.8; do \
+        PYBIN=python${py_ver}; \
+        pip"${py_ver}" install psutil virtualenv; \
+        pip"${py_ver}" install -U wheel; \
+        sed -i "s#python3#${PYBIN}#g" tools/build_utils.py; \
+        "${PYBIN}" build_ovtf.py --python_executable="${PYBIN}" --cxx11_abi_version=1 --disable_packaging_openvino_libs --use_openvino_from_location=/opt/intel/openvino_2021.4.689/; \
+        cp build_cmake/artifacts/*.whl /whl/abi1/; \
+        git reset --hard HEAD; \
+        rm -rf build_cmake/; \
+    done
