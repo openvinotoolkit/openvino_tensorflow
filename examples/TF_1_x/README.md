@@ -112,5 +112,5 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/TF_1_x/object_detection_sample.py --input_height 160 --input_width 160 --graph "examples/TF_1_x/yolo_v3_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
+$ python3 examples/TF_1_x/object_detection_sample.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_darknet_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
 ```
