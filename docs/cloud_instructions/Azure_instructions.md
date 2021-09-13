@@ -1,12 +1,12 @@
-# Instructions to accelerate TensorFlow models on Azure with the **OpenVINO™ integration with TensorFlow**
+# Instructions to accelerate TensorFlow models on Azure with **OpenVINO™ integration with TensorFlow**
 
--	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
+-	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen2 image
 
 <p align="center">
  <img src="images/Azure_image_1.png">
 </p>
 
--	Pick an instance  like HC44rs. The bigger the instance the higher the performance 
+-	Pick an instance  like HC44rs. The larger the instance, the higher the performance 
 
 <p align="center">
 <img src="images/Azure_image_2.png">
