@@ -52,7 +52,7 @@ To disable execution of certain operators on the OpenVINO™ backend, use the fo
 
  The string of operators should be separated with commas and provided as an argument to the above API.
 
- To check the list of disabled ops which are declared as supported by the backend, but disabled programmatically, use the following API:
+ To check the list of disabled operators which are declared as supported by the backend, but disabled programmatically, use the following API:
 
     openvino_tensorflow.get_disabled_ops()
 
@@ -86,7 +86,7 @@ Example:
     OPENVINO_TF_VLOG_LEVEL="4"
 
 **OPENVINO_TF_LOG_PLACEMENT:**
-If this variable is set to 1, it will print the logs related to cluster forming and encapsulation.
+If this variable is set to 1, it will print the logs related to cluster formation and encapsulation.
 
 Example:
 
@@ -100,7 +100,7 @@ Example:
     OPENVINO_TF_BACKEND="MYRIAD"
 
 **OPENVINO_TF_DISABLED_OPS:**
-A list of disabled ops can be passed using this variable. Those ops will not be considered for clustering and they will fall back on to native TensorFlow.
+A list of disabled operators can be passed using this variable. These operators will not be considered for clustering and they will fall back on to native TensorFlow.
 
 Example:
 
@@ -128,14 +128,14 @@ Example:
     OPENVINO_TF_ENABLE_BATCHING="1"
 
 **OPENVINO_TF_DUMP_GRAPHS:**
-Setting this will serialize the full graphs in all stages during the optimization pass.
+Setting this will serialize the full graphs in all stages during the optimization pass and save them in the current directory.
 
 Example:
 
     OPENVINO_TF_DUMP_GRAPHS=1
 
 **OPENVINO_TF_DUMP_CLUSTERS:**
-Setting this variable to 1 will serialize all the clusters in ".pbtxt" format.
+Setting this variable to 1 will serialize all the clusters in ".pbtxt" format and save them in the current directory.
 
 Example:
 
@@ -149,7 +149,7 @@ Example:
     OPENVINO_TF_DISABLE=1
 
 **OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
-This variable sets the minimum number of ops that can exist in a cluster. If the number of ops is smaller than the specified number, the cluster will fall back to TensorFlow. By default, it is calculated based on the total graph size, but it cannot be less than 6 unless it is set manually (Did not observe any performance benefit enabling very small clusters).
+This variable sets the minimum number of operators that can exist in a cluster. If the number of operators is smaller than the specified number, the cluster will fall back to TensorFlow. By default, it is calculated based on the total graph size, but it cannot be less than 6 unless it is set manually. (No performance benefit is observed by enabling very small clusters).
 
 Example:
 
@@ -164,7 +164,7 @@ Example:
 
 ## GPU Precision
 
-The default precision for Intel Integrated GPU (iGPU) is FP32. So, if you set the backend name as **'GPU'**, the execution on iGPU will be operated on FP32 precision. To change the iGPU precision to FP16, use the device name **'GPU_FP16'**.
+The default precision for Intel<sup>®</sup> Integrated GPU (iGPU) is FP32. So, if you set the backend name as **'GPU'**, the execution on iGPU will be operated on FP32 precision. To change the iGPU precision to FP16, use the device name **'GPU_FP16'**.
 
 Example for setting the iGPU precision to FP32:
 
