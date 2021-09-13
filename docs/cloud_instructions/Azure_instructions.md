@@ -27,7 +27,7 @@ chmod 400 the *.pem key.
   $ scp -i *.pem  <source-file> <IP-addr-of-your-instance>:/tmp
   ```
 
-  SSH and SCP with the Azure instance should be working (Note: It worked seamlessly on our team Intel provided Azure account, but developers might need to configure networking to enable this.) 
+  SSH and SCP with the Azure instance should be working (Note: Please ensure that the networking is configured properly to enable SSH and SCP access to the selected VM instance.) 
   ```bash
   azureuser@tf-u27:~$ python3 --version
   Python 3.8.6
