@@ -240,7 +240,7 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own image by passing the --image= argument,  where argument is the path to your new input. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path in the argument  e.g.
 
 
 ```bash
