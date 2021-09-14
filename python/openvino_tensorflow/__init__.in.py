@@ -122,10 +122,12 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
     openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
-    openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), ctypes.c_bool]
+    openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.export_ir.restype = ctypes.c_bool
     openvino_tensorflow_lib.freeClusterInfo.argtypes = []
     openvino_tensorflow_lib.freeClusterInfo.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.freeErrMsg.argtypes = []
+    openvino_tensorflow_lib.freeErrMsg.restype = ctypes.c_void_p
 
     def enable():
         openvino_tensorflow_lib.enable()
@@ -220,10 +222,13 @@ if ovtf_classic_loaded:
     def disable_dynamic_fallback():
         openvino_tensorflow_lib.disable_dynamic_fallback()
 
-    def export_ir(output_dir, confirm_before_overwrite = True):
+    def export_ir(output_dir):
         cluster_info = ctypes.c_char_p()
-        if not openvino_tensorflow_lib.export_ir(output_dir.encode("utf-8"), ctypes.byref(cluster_info), confirm_before_overwrite):
-            raise Exception("Cannot export IR files")
+        err_msg = ctypes.c_char_p()
+        if not openvino_tensorflow_lib.export_ir(output_dir.encode("utf-8"), ctypes.byref(cluster_info), ctypes.byref(err_msg)):
+            err_string = err_msg.value.decode("utf-8")
+            openvino_tensorflow_lib.freeErrMsg()
+            raise Exception("Cannot export IR files: "+err_string)
         cluster_string = cluster_info.value.decode("utf-8")
         openvino_tensorflow_lib.freeClusterInfo()
 

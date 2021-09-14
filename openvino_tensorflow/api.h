@@ -38,7 +38,7 @@ extern void enable_dynamic_fallback();
 extern void disable_dynamic_fallback();
 
 extern bool export_ir(const char* output_dir, char** cluster_info,
-                      bool confirm_before_overwrite = true);
+                      char** err_msg);
 }
 
 extern void Enable();
@@ -62,7 +62,7 @@ extern void EnableDynamicFallback();
 extern void DisableDynamicFallback();
 
 extern bool ExportIR(const string& output_dir, string& cluster_info,
-                     bool confirm_before_overwrite = true);
+                     string& err_msg);
 }  // namespace api
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
