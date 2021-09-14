@@ -125,7 +125,7 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
         python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4.1
 
-2. Pulls compatible prebuilt TensorFlow package from PyPi. Uses OpenVINO™ binary from specified location.
+2. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
 
         python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
 
@@ -156,7 +156,7 @@ In order to build **OpenVINO™ integration with TensorFlow** to use with the In
         python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
 
 ###  2.3. <a name='BuildVerification'></a> Build Verification
-When the build is finished, a new `virtualenv` directory is created in `build_cmake/venv-tf-py3`. Build artifacts (e.g. the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
+When the build is finished, a new `virtualenv` directory with name `venv-tf-py3` is created in `build_cmake`. Build artifacts (e.g. the `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
 
 Activate the following `virtualenv` to start using **OpenVINO™ integration with TensorFlow**.
 
