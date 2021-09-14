@@ -1,12 +1,12 @@
-# Instructions to accelerate TensorFlow models on Azure with the **OpenVINO™ integration with TensorFlow**
+# Instructions to accelerate TensorFlow models on Azure with **OpenVINO™ integration with TensorFlow**
 
--	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen 2 mage
+-	Create a Virtual Machine – choose the  Ubuntu Server 20.10 – Gen2 image
 
 <p align="center">
  <img src="images/Azure_image_1.png">
 </p>
 
--	Pick an instance  like HC44rs. The bigger the instance the higher the performance 
+-	Pick an instance  like HC44rs. The larger the instance, the higher the performance 
 
 <p align="center">
 <img src="images/Azure_image_2.png">
@@ -27,7 +27,7 @@ chmod 400 the *.pem key.
   $ scp -i *.pem  <source-file> <IP-addr-of-your-instance>:/tmp
   ```
 
-  SSH and SCP with the Azure instance should be working (Note: It worked seamlessly on our team Intel provided Azure account, but developers might need to configure networking to enable this.) 
+  SSH and SCP with the Azure instance should be working (Note: Please ensure that the networking is configured properly to enable SSH and SCP access to the selected VM instance.) 
   ```bash
   azureuser@tf-u27:~$ python3 --version
   Python 3.8.6

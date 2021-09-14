@@ -1,10 +1,10 @@
 # Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow Python Object Detection Example
 
-These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
+This example demonstrates how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
-## Demos showcased in the examples
+## Demo showcased in this example
 
- Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory or camera input.
+ Object detection using YOLOv3 model converted from Darknet to detect objects in a given image, video, directory or camera input.
 
 ## Setup for the examples
 
@@ -66,7 +66,7 @@ output something similar as below and the result is written to detections.jpg:
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
 
-Next, try it out on your own image by passing the --image=argument, where argument is the path to your new image. You can provide either absolute or relative path in the argument e.g.
+Next, try it out on your own image by passing the path to your new image. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>
@@ -83,7 +83,7 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 $ python3 examples/TF_1_x/object_detection_sample.py --help
 ```
 
-Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path  e.g.
 
 ```bash
 $ python3 examples/TF_1_x/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
@@ -94,7 +94,7 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
-For using camera as input use ```--input=0```
+For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 **Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
 

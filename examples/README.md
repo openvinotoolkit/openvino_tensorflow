@@ -4,10 +4,16 @@
 
 These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** to recognize and detect objects in images and videos.
 
+## Quick Links for examples
+
+* [Python Implementation for classification](#python-implementation-for-classification)
+* [Python implementation for object detection](#python-implementation-for-object-detection)
+* [C++ Implementation for classification](#c-implementation-for-classification)
+
 ## Demos showcased in the examples
 
 * Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images or camera input.
-* Object detection demo uses YOLOv3 darknet model to detect objects in a given image, video, directory of images or camera input.
+* Object detection demo uses YOLOv3 model converted from Darknet to detect objects in a given image, video, directory of images or camera input.
 
 ## Setup for the examples
 
@@ -69,7 +75,7 @@ bulletproof vest (466): 0.00535091
 
 In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
 
-Next, try it out by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path to an image or video or directory of images.
+Next, try it out by passing the path to your new input. You can provide either absolute or relative path to an image or video or directory of images.
 e.g.
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
@@ -86,7 +92,7 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 $ python3 examples/classification_sample.py --help
 ```
 
-Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-video-file>
@@ -96,7 +102,7 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
 ```
-For using camera as input use ```--input=0```
+For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 
 ## Python implementation for object detection
@@ -149,7 +155,7 @@ output something similar as below and the result is written to detections.jpg:
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
 
-Next, try it out on your own image by passing the --input=argument, where argument is the path to your new input. You can provide either absolute or relative path in the argument e.g.
+Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
@@ -168,7 +174,7 @@ $ python3 examples/object_detection_sample.py --help
 ```
 
 
-Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
@@ -179,9 +185,9 @@ If you add the new video (e.g, examples/data/people-detection.mp4) to the existi
 $ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
 ```
 
-For using camera as input use ```--input=0```
+For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
-**Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
+**Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input, use the application display window for the results.
 
 ## C++ Implementation for classification
 
@@ -234,7 +240,7 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own image by passing the --image= argument,  where argument is the path to your new input. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path e.g.
 
 
 ```bash

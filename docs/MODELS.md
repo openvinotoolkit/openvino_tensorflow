@@ -305,5 +305,7 @@ Pre-trained frozen model files are provided for only some of these models. For t
  **OpenVINO™ integration with TensorFlow** now supports INT8 models quantized using Quantization-Aware Training (QAT) tools such as OpenVINO™ [Neural Network Compression Framework (NNCF)](https://github.com/openvinotoolkit/nncf) and [TensorFlow Model Optimization ToolKit (TFMOT)](https://www.tensorflow.org/model_optimization). This support is currently in a preview state and performance optimizations are in progress.
  
 Some examples of NNCF usage to produce quantized models can be found [here](https://github.com/openvinotoolkit/nncf/tree/develop/examples/tensorflow/).
+
+Some quantized models are shown to provide more optimized performance by setting the environment variable 'OPENVINO_TF_CONSTANT_FOLDING' to 1 before running inference.
  
  

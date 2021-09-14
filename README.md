@@ -6,26 +6,24 @@
 
 # **OpenVINO™ integration with TensorFlow**
 
-This repository contains the source code of **OpenVINO™ integration with TensorFlow**, a product that delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations and runtime needed for an enhanced level of TensorFlow compatibility. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations which enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
-- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred as VPU
-- Intel<sup>®</sup> Vision Accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred as VAD-M or HDDL
+- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred to as VPU
+- Intel<sup>®</sup> Vision Accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred to as VAD-M or HDDL
 
-[Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend going beyond this component to adopt native OpenVINO™ APIs and its runtime.]
+[Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend the developers to adopt native OpenVINO™ APIs and its runtime.]
 
 ## Installation
 ### Prerequisites
 
-- Ubuntu 18.04, 20.04
-- Python 3.6, 3.7, or 3.8
-- TensorFlow v2.5.1
+- Ubuntu 18.04, 20.04 or macOS 11.2.3
+- Python* 3.6, 3.7, 3.8 or 3.9
+- TensorFlow* v2.5.1
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
-### Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow
-
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.1 meaning you don't have to install OpenVINO™ separately. This package supports:
+The **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.1. The users do not have to install OpenVINO™ separately. This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
@@ -36,13 +34,13 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
         pip3 install -U openvino-tensorflow
 
 
-If you want to leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/BUILD.md#install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
+To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
 
-For more details on other modes of installation please refer to [INSTALL.md](docs/INSTALL.md), and for build from source options please refer to [BUILD.md](docs/BUILD.md)
+For more details on installation please refer to [INSTALL.md](docs/INSTALL.md), and for build from source options please refer to [BUILD.md](docs/BUILD.md)
 
 ## Configuration
 
-Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow to run inference using a trained model.
+Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow* to run inference using a trained model.
 
 To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
@@ -61,7 +59,7 @@ By default, Intel<sup>®</sup> CPU is used to run inference. However, you can ch
 
     openvino_tensorflow.set_backend('<backend_name>')
 
-Supported backends include 'CPU', 'GPU', 'MYRIAD', and 'VAD-M'.
+Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 
 To determine what processing units are available on your system for inference, use the following function:
 
@@ -89,3 +87,6 @@ We welcome community contributions to **OpenVINO™ integration with TensorFlow*
 * Submit a [pull request](https://github.com/openvinotoolkit/openvino_tensorflow/pulls).
 
 We will review your contribution as soon as possible. If any additional fixes or modifications are necessary, we will guide you and provide feedback. Before you make your contribution, make sure you can build **OpenVINO™ integration with TensorFlow** and run all the examples with your fix/patch. If you want to introduce a large feature, create test cases for your feature. Upon our verification of your pull request, we will merge it to the repository provided that the pull request has met the above mentioned requirements and proved acceptable.
+
+---
+\* Other names and brands may be claimed as the property of others.
