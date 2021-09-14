@@ -92,7 +92,7 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 $ python3 examples/classification_sample.py --help
 ```
 
-Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-video-file>
@@ -155,7 +155,7 @@ output something similar as below and the result is written to detections.jpg:
 
 In this case, we're using the default image of Admiral Grace Hopper. As you can see, the network detects and draws the bounding box around the person correctly.
 
-Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path in the argument e.g.
+Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
@@ -174,7 +174,7 @@ $ python3 examples/object_detection_sample.py --help
 ```
 
 
-Next, try it out on your own video file by passing the --input=argument, where argument is the path to your input video. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path e.g.
 
 ```bash
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
@@ -240,7 +240,7 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can
 see the network correctly spots she's wearing a military uniform, with a high
 score of 0.8.
 
-Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path in the argument  e.g.
+Next, try it out on your own image by passing the path to your new input. You can provide either absolute or relative path e.g.
 
 
 ```bash
