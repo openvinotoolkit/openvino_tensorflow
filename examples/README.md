@@ -187,14 +187,7 @@ For using camera as input use ```--input=0```
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
 
-Before you start building from source, you have to make sure that you installed the following dependencies:
-
-* Python 3.6, 3.7, or 3.8
-* GCC 7.5 (Ubuntu 18.04)
-* Cmake 3.14 or higher
-* [Bazelisk v1.7.5](https://github.com/bazelbuild/bazelisk/tree/v1.7.5)
-* Virtualenv 16.0.0 or higher
-* Patchelf 0.9
+Before you start building from source, you have to make sure that the [**prerequisites**](../docs/BUILD.md#1-prerequisites) are installed.
 
 The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
