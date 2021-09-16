@@ -14,18 +14,12 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 # yum dependencies
 RUN apt update
-
+RUN apt install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && apt update
 RUN apt install -y libffi-dev wget python-virtualenv libusb-dev curl ca-certificates opencl-headers \
     jq libeigen3-dev cpio pciutils unzip autoconf automake build-essential libtool git sudo \
-    python3.6 python3.7 python3.8 python3.6-venv python3.7-venv python3.8-venv
-
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.6 get-pip.py
-
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.7 get-pip.py
-
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.8 get-pip.py
-
-RUN pip3.6 install psutil && pip3.7 install psutil && pip3.8 install psutil
+    python3.6 python3.7 python3.8 python3.9 \
+    python3.6-venv python3.7-venv python3.8-venv python3.9-venv
 
 # install bazelisk
 RUN wget -q https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-linux-amd64 && \
@@ -75,7 +69,7 @@ RUN git checkout ${OVTF_BRANCH} && git submodule update --init --recursive
 
 RUN mkdir -p /whl/abi1/
 
-RUN for py_ver in 3.6 3.7 3.8; do \
+RUN for py_ver in 3.6 3.7 3.8 3.9; do \
         python${py_ver} -m venv venv_${py_ver}; \
         source venv_${py_ver}/bin/activate; \
         pip install -U pip; \
