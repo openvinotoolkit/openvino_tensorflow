@@ -26,7 +26,7 @@ else
     source env/bin/activate
     $python_binary -m pip install --upgrade pip
     $python_binary -m pip  install tensorflow==1.15.2
-    $python_binary -m pip  install pillow
+    $python_binary -m pip  install pillow==8.3.2
     $python_binary -m pip install numpy==1.19.5
     git clone https://github.com/mystic123/tensorflow-yolo-v3.git
     cd tensorflow-yolo-v3
