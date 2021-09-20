@@ -23,6 +23,8 @@ RUN git apply abi_flag.patch
 
 RUN cd "/usr/local/lib/bazel/bin" && curl -fLO https://releases.bazel.build/3.1.0/release/bazel-3.1.0-linux-x86_64 && chmod +x bazel-3.1.0-linux-x86_64
 
+RUN apt update && apt install patchelf
+
 RUN bash tensorflow/tools/ci_build/rel/ubuntu/cpu_py36_pip.sh
 
 RUN cp /tensorflow/pip_test/whl/* /
