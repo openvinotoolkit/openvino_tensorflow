@@ -182,6 +182,8 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [ACGAN](https://github.com/hwalsuklee/tensorflow-generative-model-collections) | CPU |
 | [adv_inception_v3](http://download.tensorflow.org/models/adv_inception_v3_2017_08_18.tar.gz) | CPU |
 | [ALBERT](https://storage.googleapis.com/albert_models/albert_base_v2.tar.gz  ) | CPU |
+| [arttrack-coco-multi](https://github.com/eldar/pose-tensorflow/tree/master/models/coco) | CPU, iGPU, MYRIAD |
+| [arttrack-mpii-single](https://github.com/eldar/pose-tensorflow/tree/master/models/mpii) | CPU, iGPU, MYRIAD |
 | [BERT_LARGE](https://drive.google.com/drive/folders/1oQF4diVHNPCclykwdvQJw8n_VIWwV0PT) | CPU |
 | [context_rcnn_resnet101_snapshot_serenget](http://download.tensorflow.org/models/object_detection/context_rcnn_resnet101_snapshot_serengeti_2020_06_10.tar.gz) | CPU |
 | [cpm-person](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU, iGPU, MYRIAD, VAD-M |

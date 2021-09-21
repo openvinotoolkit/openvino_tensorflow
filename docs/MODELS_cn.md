@@ -66,6 +66,8 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | 模型名称| 支持的设备
 |----------|----------
 | [3d-pose-baseline](https://drive.google.com/file/d/0BxWzojlLp259MF9qSFpiVjl0cU0/view?usp=sharing)| CPU，iGPU，MYRIAD
+| [arttrack-coco-multi](https://github.com/eldar/pose-tensorflow/tree/master/models/coco) | CPU, iGPU, MYRIAD
+| [arttrack-mpii-single](https://github.com/eldar/pose-tensorflow/tree/master/models/mpii) | CPU, iGPU, MYRIAD
 | [cpm-person](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU，iGPU，MYRIAD，VAD-M
 | [cpm-pose](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU，iGPU
 | [CRNN](https://github.com/MaybeShewill-CV/CRNN_Tensorflow)| CPU，iGPU，MYRIAD，VAD-M
