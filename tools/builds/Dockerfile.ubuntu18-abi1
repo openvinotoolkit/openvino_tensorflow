@@ -19,7 +19,7 @@ RUN apt install -y software-properties-common && \
 RUN DEBIAN_FRONTEND=noninteractive apt install -y libffi-dev wget python-virtualenv libusb-dev curl ca-certificates opencl-headers \
     jq libeigen3-dev cpio pciutils unzip autoconf automake build-essential libtool git sudo \
     python3.6 python3.7 python3.8 python3.9 \
-    python3.6-venv python3.7-venv python3.8-venv python3.9-venv
+    python3.6-venv python3.7-venv python3.8-venv python3.9-venv python3.9-dev
 
 # install bazelisk
 RUN wget -q https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-linux-amd64 && \
