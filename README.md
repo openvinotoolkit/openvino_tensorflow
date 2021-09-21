@@ -42,6 +42,8 @@ For more details on installation please refer to [INSTALL.md](docs/INSTALL.md), 
 
 Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow* to run inference using a trained model.
 
+For the best results, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`.
+
 To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
     python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
