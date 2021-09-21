@@ -66,6 +66,8 @@ To determine what processing units are available on your system for inference, u
     openvino_tensorflow.list_backends()
 For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
 
+[Note: If a CUDA capable device is present in the system then set the environment variable CUDA_VISIBLE_DEVICES to -1]  
+
 ## Examples
 
 To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](./examples) directory.
