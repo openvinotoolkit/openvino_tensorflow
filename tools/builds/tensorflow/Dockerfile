@@ -3,6 +3,10 @@
 
 FROM gcr.io/tensorflow-testing/nosla-cuda10.1-cudnn7-ubuntu16.04-manylinux2010-multipython
 
+USER root
+WORKDIR /
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
 ENV IS_NIGHTLY=0
 ENV TF_NEED_CUDA=0
 ENV TF_NEED_ROCM=0
@@ -30,5 +34,13 @@ RUN bash tensorflow/tools/ci_build/rel/ubuntu/cpu_py37_pip.sh
 RUN cp /tensorflow/pip_test/whl/* /
 
 RUN bash tensorflow/tools/ci_build/rel/ubuntu/cpu_py38_pip.sh
+
+RUN cp /tensorflow/pip_test/whl/* /
+
+# Install Python3.9 as it doesn't already exist
+RUN /install/build_and_install_python.sh "3.9.7"
+RUN /install/install_pip_packages_by_version.sh "/usr/local/bin/pip3.9"
+
+RUN bash tensorflow/tools/ci_build/rel/ubuntu/cpu_py39_pip.sh
 
 RUN cp /tensorflow/pip_test/whl/* /
