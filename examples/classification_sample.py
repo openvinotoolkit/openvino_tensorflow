@@ -203,7 +203,6 @@ if __name__ == "__main__":
 
             # Warmup
             if image_id == 0:
-                start = time.time()
                 results = sess.run(output_operation.outputs[0],
                                    {input_operation.outputs[0]: t})
             # run
