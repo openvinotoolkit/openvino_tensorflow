@@ -208,7 +208,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [efficientnet-b0_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU, iGPU |
 | [efficientnet-b7_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b7.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [ens3_adv_inception_v3](http://download.tensorflow.org/models/ens3_adv_inception_v3_2017_08_18.tar.gz) | CPU |
-| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU |
+| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU, iGPU, MYRIAD |
 | [faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_inception_resnet_v2_atrous_oid](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_oid_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_nas_coco](https://github.com/shaoqingren/faster_rcnn)| CPU |
@@ -235,6 +235,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [image-retrieval-0001](https://download.01.org/opencv/openvino_training_extensions/models/image_retrieval/image-retrieval-0001.tar.gz)| CPU |
 | [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)| CPU, iGPU, MYRIAD, VAD-M |
 | [license-plate-recognition-barrier-0007](https://download.01.org/openvinotoolkit/training_toolbox_tensorflow/models/lpr/chinese_lp/license-plate-recognition-barrier-0007.tar.gz)| CPU, iGPU, MYRIAD |
+| [lm_1b](http://download.tensorflow.org/models/LM_LSTM_CNN/graph-2016-09-10.pbtxt)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet101_atrous_coco](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet50_atrous](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet50_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz) | CPU |

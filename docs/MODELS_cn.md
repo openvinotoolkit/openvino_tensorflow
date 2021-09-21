@@ -78,6 +78,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [east\_resnet\_v1\_50](https://github.com/argman/EAST#download)| CPU，iGPU，MYRIAD，VAD-M
 | [efficientnet-b7\_auto\_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b7.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
 | [efficientnet-b0\_auto\_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU，iGPU
+| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU, iGPU, MYRIAD
 | [faster\_rcnn\_nas\_coco](https://github.com/shaoqingren/faster_rcnn)| CPU
 | [faster\_rcnn\_nas\_lowproposals\_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU
 | [fc\_densenet\_103](https://github.com/AI-slam/FC-DenseNet-Tiramisu)| CPU
@@ -90,6 +91,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [i3d-rgb](https://download.01.org/opencv/public_models/032020/i3d-rgb/rgb.frozen.pb)| CPU，iGPU，MYRIAD
 | [inception\_resnet\_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)| CPU，iGPU，MYRIAD，VAD-M
 | [license-plate-recognition-barrier-0007](https://download.01.org/openvinotoolkit/training_toolbox_tensorflow/models/lpr/chinese_lp/license-plate-recognition-barrier-0007.tar.gz)| CPU，iGPU，MYRIAD
+| [lm_1b](http://download.tensorflow.org/models/LM_LSTM_CNN/graph-2016-09-10.pbtxt)| CPU, iGPU, MYRIAD
 | [mask\_rcnn\_resnet50\_atrous](https://github.com/facebookresearch/Detectron)| CPU，iGPU，MYRIAD
 | [mask\_rcnn\_resnet101\_atrous\_coco](https://github.com/facebookresearch/Detectron)| CPU，iGPU，MYRIAD
 | [mobilenet\_v1\_0.25\_128](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.25_128.tgz)| CPU，iGPU，MYRIAD，VAD-M
