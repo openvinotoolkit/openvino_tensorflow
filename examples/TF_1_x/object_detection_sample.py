@@ -327,6 +327,12 @@ if __name__ == "__main__":
             img = frame
             img_resized = cv2.resize(frame, (input_height, input_width))
 
+            # Warmup
+            if image_id == 0:
+                detected_boxes = sess.run(
+                    output_operation.outputs[0],
+                    {input_operation.outputs[0]: [img_resized]})
+
             # Run
             start = time.time()
             detected_boxes = sess.run(

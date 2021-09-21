@@ -200,6 +200,11 @@ if __name__ == "__main__":
                 input_width=input_width,
                 input_mean=input_mean,
                 input_std=input_std)
+
+            # Warmup
+            if image_id == 0:
+                results = sess.run(output_operation.outputs[0],
+                                   {input_operation.outputs[0]: t})
             # run
             start = time.time()
             results = sess.run(output_operation.outputs[0],
