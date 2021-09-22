@@ -63,7 +63,7 @@ To determine what processing units are available on your system for inference, u
 
 For more API calls and environment variables, see [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE.md).
 
-[Note: For the best results, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`]
+[Note: For the best results with TensorFlow, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`]
 
 [Note: If a CUDA capable device is present in the system then set the environment variable CUDA_VISIBLE_DEVICES to -1]  
 
