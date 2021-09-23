@@ -11,6 +11,7 @@ from __future__ import print_function
 import importlib
 import os
 import sys
+import ast
 import time
 import getpass
 from platform import system
@@ -60,14 +61,14 @@ except TypeError:
 
 try:
     if TF_GIT_VERSION.startswith("b'"):  # TF version can be a bytes __repr__()
-        TF_GIT_VERSION = eval(TF_GIT_VERSION)
+        TF_GIT_VERSION = ast.literal_eval(TF_GIT_VERSION)
     TF_GIT_VERSION = str(TF_GIT_VERSION, 'ascii')
 except TypeError:
     pass
 
 try:
     if TF_GIT_VERSION_BUILT_WITH.startswith("b'"):
-        TF_GIT_VERSION_BUILT_WITH = eval(TF_GIT_VERSION_BUILT_WITH)
+        TF_GIT_VERSION_BUILT_WITH = ast.literal_eval(TF_GIT_VERSION_BUILT_WITH)
     TF_GIT_VERSION_BUILT_WITH = str(TF_GIT_VERSION_BUILT_WITH, 'ascii')
 except TypeError:
     pass
