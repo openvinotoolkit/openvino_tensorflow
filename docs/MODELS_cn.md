@@ -13,7 +13,7 @@
 | [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [MobileNet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU, VAD-M |
+| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU, iGPU, MYRIAD ,VAD-M |
 | [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)| CPU, iGPU, MYRIAD, VAD-M |
 | [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)| CPU, iGPU, MYRIAD, VAD-M |
 
@@ -192,7 +192,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [cpm-person](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU, iGPU, MYRIAD, VAD-M |
 | [cpm-pose](https://github.com/CMU-Perceptual-Computing-Lab/convolutional-pose-machines-release)| CPU, iGPU, VAD-M |
 | [CRNN](https://github.com/MaybeShewill-CV/CRNN_Tensorflow)| CPU, iGPU, MYRIAD, VAD-M |
-| [ctpn](https://github.com/eragonruan/text-detection-ctpn/releases/download/untagged-48d74c6337a71b6b5f87/ctpn.pb)| MYRIAD, VAD-M |
+| [ctpn](https://github.com/eragonruan/text-detection-ctpn/releases/download/untagged-48d74c6337a71b6b5f87/ctpn.pb)| CPU, iGPU,  MYRIAD, VAD-M |
 | [deeplab](http://download.tensorflow.org/models/deeplabv3_mnv2_cityscapes_train_2018_02_05.tar.gz) | CPU |
 | [deeplabv3](http://download.tensorflow.org/models/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz)| CPU, MYRIAD, VAD-M |
 | [densenet161](https://drive.google.com/file/d/0B_fUSpodN0t0NmZvTnZZa2plaHc/view)| CPU, iGPU, MYRIAD, VAD-M |
@@ -208,7 +208,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [EfficientDet-D5-1280x1280](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d5_coco17_tpu-32.tar.gz) | CPU |
 | [EfficientDet-D6-1280x1280](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d6_coco17_tpu-32.tar.gz) | CPU |
 | [EfficientDet-D7-1536x1536](http://download.tensorflow.org/models/object_detection/tf2/20200711/efficientdet_d7_coco17_tpu-32.tar.gz) | CPU |
-| [efficientnet-b0_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU, iGPU, VAD-M |
+| [efficientnet-b0_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU, iGPU,MYRIAD, VAD-M |
 | [efficientnet-b7_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b7.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [ens3_adv_inception_v3](http://download.tensorflow.org/models/ens3_adv_inception_v3_2017_08_18.tar.gz) | CPU |
 | [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU, iGPU, MYRIAD |
@@ -216,14 +216,14 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [faster_rcnn_inception_resnet_v2_atrous_oid](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_oid_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_nas_coco](https://github.com/shaoqingren/faster_rcnn)| CPU |
 | [faster_rcnn_nas_coco_2018_01_28](http://download.tensorflow.org/models/object_detection/faster_rcnn_nas_coco_2018_01_28.tar.gz) | CPU, VAD-M |
-| [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU, VAD-M |
+| [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU, MYRIAD VAD-M |
 | [faster_rcnn_resnet101_ava_v2.1](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_ava_v2.1_2018_04_30.tar.gz)| CPU|
 | [faster_rcnn_resnet101_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_fgvc_2018_07_19.tar.gz) | CPU|
 | [faster_rcnn_resnet101_kitti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_kitti_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_resnet101_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_lowproposals_coco_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_resnet101_snapshot_serengeti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_snapshot_serengeti_2020_06_10.tar.gz) | CPU |
 | [faster_rcnn_resnet50_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_fgvc_2018_07_19.tar.gz) | CPU |
-| [fc_densenet_103](https://github.com/AI-slam/FC-DenseNet-Tiramisu)| CPU, VAD-M |
+| [fc_densenet_103](https://github.com/AI-slam/FC-DenseNet-Tiramisu)| CPU, iGPU, MYRIAD, VAD-M |
 | [fcrn-dp-nyu-depth-v2-tf](http://campar.in.tum.de/files/rupprecht/depthpred/NYU_FCRN-checkpoint.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [googlenet-v1](http://download.tensorflow.org/models/inception_v1_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [googlenet-v2](http://download.tensorflow.org/models/inception_v2_2016_08_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
@@ -241,25 +241,25 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [lm_1b](http://download.tensorflow.org/models/LM_LSTM_CNN/graph-2016-09-10.pbtxt)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet101_atrous_coco](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD, VAD-M |
 | [mask_rcnn_resnet50_atrous](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
-| [mask_rcnn_resnet50_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz) | CPU, VAD-M |
+| [mask_rcnn_resnet50_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz) | CPU, iGPU, MYRIAD,  VAD-M |
 | [mobilenet_v1_0.25_128](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.25_128.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet_v1_0.50_160](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.5_160.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet_v1_0.50_224](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_0.5_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [mobilenet_v2_1.0_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.0_224.tgz)| CPU, iGPU, MYRIAD,  VAD-M |
-| [mobilenet_v2_fpn_ssdlite_crossroad](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet)| CPU, MYRIAD, VAD-M |
+| [mobilenet_v2_1.0_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
+| [mobilenet_v2_fpn_ssdlite_crossroad](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet-v3-large-1.0-224-tf](https://storage.googleapis.com/mobilenet_v3/checkpoints/v3-large_224_1.0_float.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet-v3-small-1.0-224-tf](https://storage.googleapis.com/mobilenet_v3/checkpoints/v3-small_224_1.0_float.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [mozilla-deepspeech-0.6.1](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/deepspeech-0.6.1-models.tar.gz)| iGPU, MYRIAD, VAD-M |
-| [mozilla-deepspeech-0.7.1](https://github.com/mozilla/DeepSpeech/archive/v0.7.1.tar.gz)| CPU, iGPU, VAD-M |
+| [mozilla-deepspeech-0.6.1](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/deepspeech-0.6.1-models.tar.gz)| CPU,  iGPU, MYRIAD, VAD-M |
+| [mozilla-deepspeech-0.7.1](https://github.com/mozilla/DeepSpeech/archive/v0.7.1.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mozilla-deepspeech-0.8.2](https://github.com/mozilla/DeepSpeech)| CPU, MYRIAD, VAD-M |
 | [NCF-1B](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_5/ncf_fp32_pretrained_model.tar.gz) | CPU |
-| [netvlad](http://rpg.ifi.uzh.ch/datasets/netvlad/vd16_pitts30k_conv5_3_vlad_preL2_intra_white.zip)| CPU, MYRIAD,  VAD-M |
+| [netvlad](http://rpg.ifi.uzh.ch/datasets/netvlad/vd16_pitts30k_conv5_3_vlad_preL2_intra_white.zip)| CPU, iGPU, MYRIAD,  VAD-M |
 | [NiftyNet](https://github.com/NifTK/NiftyNetModelZoo/tree/5-reorganising-with-lfs/mr_ct_regression)| CPU, iGPU, MYRIAD,  VAD-M |
 | [openpose-pose](http://www.mediafire.com/file/qlzzr20mpocnpa3/graph_opt.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [person-vehicle-bike-detection-crossroad-yolov3-1020](https://docs.openvinotoolkit.org/latest/omz_models_model_person_vehicle_bike_detection_crossroad_yolov3_1020.html) | CPU |
-| [pose-ae-multiperson](https://github.com/umich-vl/pose-ae-demo)| CPU, VAD-M |
-| [pose-ae-refinement](https://github.com/umich-vl/pose-ae-demo)| CPU, VAD-M |
+| [pose-ae-multiperson](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD VAD-M |
+| [pose-ae-refinement](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD VAD-M |
 | [PRNet](https://github.com/YadiraF/PRNet)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50_v1.5](https://zenodo.org/record/2535873/files/resnet50_v1.pb)| CPU, iGPU, MYRIAD, VAD-M |
@@ -276,7 +276,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [se-resnext-50](https://drive.google.com/drive/folders/1k5MtfqbNRA8ziE3f18vu00Q1FQCzk4__)| CPU, iGPU, MYRIAD, VAD-M |
 | [SqueezeNet](https://github.com/Dawars/SqueezeNet-tf.git) | CPU |
 | [squeezenet1.1](https://github.com/forresti/SqueezeNet)| CPU, iGPU, MYRIAD, VAD-M |
-| [srgan](https://github.com/tensorlayer/srgan)| CPU, iGPU, VAD-M |
+| [srgan](https://github.com/tensorlayer/srgan)| CPU, iGPU, MYRIAD, VAD-M |
 | [ssd_inception_v2_coco](http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2018_01_28.tar.gz) | CPU |
 | [ssd_mobilenet_v1_0.75_depth_300x300_coco](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_0.75_depth_quantized_300x300_coco14_sync_2018_07_18.tar.gz) | CPU |
 | [ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03.tar.gz) | CPU |
