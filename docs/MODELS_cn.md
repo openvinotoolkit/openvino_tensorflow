@@ -1,68 +1,66 @@
 [English](./MODELS.md) | 简体中文
-本文列出了所有经过验证，且 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们支持越来越多的算子和模型，该列表将会持续更新。
+
+本文列出了所有经过验证的 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们支持越来越多的算子和模型，该列表将会持续更新。
 
 ## TensorFlow-Slim 图像分类库
-
-| 模型名称| 支持的设备
-|----------|----------
-| [Inception V3](http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
-| [Inception_V4](http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
-| [Resnet V1 50](http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
-| [Resnet V2 152](http://download.tensorflow.org/models/resnet_v2_152_2017_04_14.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [Resnet V2 50](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
-| [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
-| [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
-| [MobileNet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU |
-| [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)| CPU, iGPU, MYRIAD, VAD-M |
-| [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)| CPU, iGPU, MYRIAD, VAD-M |
+| 模型名称| 支持的设备 |
+|----------|---------- |
+| [Inception V3](http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [Inception\_V4](http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [Resnet V1 50](http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [Resnet V2 152](http://download.tensorflow.org/models/resnet_v2_152_2017_04_14.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [Resnet V2 50](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [MobileNet\_v1\_1.0\_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)| CPU，iGPU，MYRIAD，VAD-M
+| [MobileNet\_v2\_1.4\_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU
+| [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)| CPU，iGPU，MYRIAD，VAD-M
+| [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)| CPU，iGPU，MYRIAD，VAD-M
 
 TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考 TensorFlow-Slim 模型[说明页面](https://github.com/tensorflow/models/tree/master/research/slim)，以便运行推理或冻结模型。（不提供针对 CifarNet 和 LeNet 的预训练checkpoint文件。）
 
 ## TensorFlow 对象检测 Model Zoo
+| 模型名称| 支持的设备 |
+|----------|---------- |
+| [faster\_rcnn\_inception\_resnet\_v2\_atrous\_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [faster\_rcnn\_inception\_v2\_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [faster\_rcnn\_resnet50\_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [faster\_rcnn\_resnet101\_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [faster\_rcnn\_resnet50\_lowproposals\_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_lowproposals_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssd\_inception\_v2](http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssd\_mobilenet\_v1](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssd\_mobilenet\_v1\_fpn](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssd\_mobilenet\_v2](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssd\_resnet\_50\_fpn](http://download.tensorflow.org/models/object_detection/ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [ssdlite\_mobilenet\_v2](http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [mask\_rcnn\_inception\_resnet\_v2\_atrous\_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
+| [mask\_rcnn\_inception\_v2\_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)| CPU，iGPU，MYRIAD，VAD-M
 
-| 模型名称| 支持的设备
-|----------|----------
-| [faster_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [faster_rcnn_inception_v2_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [faster_rcnn_resnet50_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [faster_rcnn_resnet101_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [faster_rcnn_resnet50_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_lowproposals_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssd_inception_v2](http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssd_mobilenet_v1](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssd_mobilenet_v1_fpn](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssd_mobilenet_v2](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssd_resnet_50_fpn](http://download.tensorflow.org/models/object_detection/ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [ssdlite_mobilenet_v2](http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [mask_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-| [mask_rcnn_inception_v2_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
-
-为这些模型提供了预训练frozen模型。
+为这些模型提供了预训练的frozen模型。
 
 ## TensorFlow Keras 应用
-
-| 模型名称| 支持的设备
-|----------|----------
-| [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)| CPU, iGPU, MYRIAD, VAD-M |
-| [DenseNet169](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet169)| CPU, iGPU, MYRIAD, VAD-M |
-| [DenseNet201](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet201)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB0](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB0)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB1](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB1)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB2)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB3)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB4](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB4)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB5](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB5)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB6](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB6)| CPU, iGPU, MYRIAD, VAD-M |
-| [EfficientnetB7](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB7)| CPU, iGPU, MYRIAD, VAD-M |
-| [InceptionV3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/InceptionV3)| CPU, iGPU, MYRIAD, VAD-M |
-| [NASNetLarge](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetLarge)| CPU, iGPU, MYRIAD, VAD-M |
-| [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetMobile)| CPU, iGPU, MYRIAD, VAD-M |
-| [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet50V2)| CPU, iGPU, MYRIAD, VAD-M |
+| 模型名称| 支持的设备 |
+|----------|---------- |
+| [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)| CPU，iGPU，MYRIAD，VAD-M
+| [DenseNet169](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet169)| CPU，iGPU，MYRIAD，VAD-M
+| [DenseNet201](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet201)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB0](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB0)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB1](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB1)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB2)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB3)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB4](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB4)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB5](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB5)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB6](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB6)| CPU，iGPU，MYRIAD，VAD-M
+| [EfficientnetB7](https://www.tensorflow.org/api_docs/python/tf/keras/applications/EfficientNetB7)| CPU，iGPU，MYRIAD，VAD-M
+| [InceptionV3](https://www.tensorflow.org/api_docs/python/tf/keras/applications/InceptionV3)| CPU，iGPU，MYRIAD，VAD-M
+| [NASNetLarge](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetLarge)| CPU，iGPU，MYRIAD，VAD-M
+| [NASNetMobile](https://www.tensorflow.org/api_docs/python/tf/keras/applications/NASNetMobile)| CPU，iGPU，MYRIAD，VAD-M
+| [ResNet50v2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet50V2)| CPU，iGPU，MYRIAD，VAD-M
 
 请参考 [Keras 应用](https://keras.io/api/applications/)页面上的说明，了解更多关于如何使用这些预训练模型的信息。
 
-## TensorFlow-Hub Models
-| 模型名称| 支持的设备
+## TensorFlow-Hub 模型
+| 模型名称 | 支持的设备 |
 |---|---|
 | [albert_en_base](https://tfhub.dev/tensorflow/albert_en_base/3)| CPU, iGPU,  MYRIAD |
 | [albert_en_preprocess](https://tfhub.dev/tensorflow/albert_en_preprocess/3)| CPU,  iGPU,  MYRIAD |
@@ -178,12 +176,9 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [yamnet](https://tfhub.dev/google/yamnet/1)| CPU,  iGPU,  MYRIAD |
 
 ## 其他模型
-
-| 模型名称| 支持的设备
-|----------|----------
+| 模型名称 | 支持的设备 |
+|---|---|
 | [3d-pose-baseline](https://drive.google.com/file/d/0BxWzojlLp259MF9qSFpiVjl0cU0/view?usp=sharing)| CPU, iGPU, MYRIAD |
-| [arttrack-coco-multi](https://github.com/eldar/pose-tensorflow/tree/master/models/coco) | CPU, iGPU, MYRIAD |
-| [arttrack-mpii-single](https://github.com/eldar/pose-tensorflow/tree/master/models/mpii) | CPU, iGPU, MYRIAD |
 | [ACGAN](https://github.com/hwalsuklee/tensorflow-generative-model-collections) | CPU |
 | [adv_inception_v3](http://download.tensorflow.org/models/adv_inception_v3_2017_08_18.tar.gz) | CPU |
 | [ALBERT](https://storage.googleapis.com/albert_models/albert_base_v2.tar.gz  ) | CPU |
@@ -211,7 +206,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [efficientnet-b0_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b0.tar.gz)| CPU, iGPU |
 | [efficientnet-b7_auto_aug](https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/ckptsaug/efficientnet-b7.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [ens3_adv_inception_v3](http://download.tensorflow.org/models/ens3_adv_inception_v3_2017_08_18.tar.gz) | CPU |
-| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU, iGPU, MYRIAD |
+| [facenet-20180408-102900](https://docs.openvinotoolkit.org/latest/omz_models_model_facenet_20180408_102900.html) | CPU |
 | [faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_lowproposals_coco_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_inception_resnet_v2_atrous_oid](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_oid_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_nas_coco](https://github.com/shaoqingren/faster_rcnn)| CPU |
@@ -238,7 +233,6 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [image-retrieval-0001](https://download.01.org/opencv/openvino_training_extensions/models/image_retrieval/image-retrieval-0001.tar.gz)| CPU |
 | [inception_resnet_v2](https://github.com/openvinotoolkit/open_model_zoo/blob/2021.2/models/public/inception-resnet-v2-tf/model.yml)| CPU, iGPU, MYRIAD, VAD-M |
 | [license-plate-recognition-barrier-0007](https://download.01.org/openvinotoolkit/training_toolbox_tensorflow/models/lpr/chinese_lp/license-plate-recognition-barrier-0007.tar.gz)| CPU, iGPU, MYRIAD |
-| [lm_1b](http://download.tensorflow.org/models/LM_LSTM_CNN/graph-2016-09-10.pbtxt)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet101_atrous_coco](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet50_atrous](https://github.com/facebookresearch/Detectron)| CPU, iGPU, MYRIAD |
 | [mask_rcnn_resnet50_atrous_coco](http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz) | CPU |
@@ -303,4 +297,15 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [yolo-v3-tiny-tf](https://download.01.org/opencv/public_models/082020/yolo-v3-tiny-tf/yolo-v3-tiny-tf.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo-v4](https://github.com/david8862/keras-YOLOv3-model-set)| CPU, iGPU, MYRIAD, VAD-M |
 
-仅为其中部分模型提供了预训练frozen模型文件。如欲获取其他模型的预训练frozen模型文件，请访问所提供的链接。
+
+仅针对其中一些模型提供了预训练的冻结模型文件。 其余的，请参考提供的链接。 
+
+## 量化支持 (Preview)
+
+ **OpenVINO™ integration with TensorFlow** 现在支持使用量化感知训练 (QAT) 工具量化的 INT8 模型，例如 OpenVINO™ [神经网络压缩框架 (NNCF)](https://github.com/openvinotoolkit/nncf) 和 [TensorFlow 模型优化工具包 (TFMOT)](https://www.tensorflow.org/model_optimization)。 此支持目前处于预览状态，性能优化正在进行中。 
+ 
+可以在 [此处](https://github.com/openvinotoolkit/nncf/tree/develop/examples/tensorflow/) 中找到一些使用 NNCF 生成量化模型的示例。
+
+通过在运行推理之前将环境变量“OPENVINO_TF_CONSTANT_FOLDING”设置为 1，一些量化模型可以获得更优的性能。 
+ 
+ 

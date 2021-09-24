@@ -36,9 +36,9 @@
 
 
 
-如果您想使用支持 Movidius™ 的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit)。
+如果您想使用支持 Movidius™ 的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit)。
 
-更多关于其他安装模式的详情，请参阅 [INSTALL.md](docs/INSTALL.md), 更多构建选项请参阅 [BUILD.md](docs/BUILD.md)
+更多关于其他安装模式的详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
 
 ## 配置
 
