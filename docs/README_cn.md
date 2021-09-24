@@ -5,7 +5,7 @@
 
 [构建指令](./BUILD_cn.md)
 
-[安装指令](./INSTALL.md)
+[安装指令](./INSTALL_cn.md)
 
 [高级架构](./ARCHITECTURE_cn.md)
 
