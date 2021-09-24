@@ -1,5 +1,3 @@
-<p>English | <a href="./README_cn.md">简体中文</a></p>
-
 # **OpenVINO™ integration with TensorFlow**
 
 [**OpenVINO™ integration with TensorFlow**](https://github.com/openvinotoolkit/openvino_tensorflow/) is a product designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations which enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:

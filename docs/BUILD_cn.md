@@ -1,81 +1,116 @@
 [English](./BUILD.md) | 简体中文
-# 安装和构建选项
 
-## 前提条件
+# 构建指令
 
-| 构建类型| 要求
-|:----------|----------
-| 使用预构建安装包| Python 3.6、3.7 或 3.8，TensorFlow v2.4.1
-| 基于源代码构建| Python 3.6、3.7 或 3.8，GCC 7.5 (Ubuntu 18.04, 20.04)，cmake 3.14 或更高版本，Bazelisk v1.7.5，virtualenv 16.0.0 或更高版本，patchelf 0.9，libusb 1.0.0
+<!-- markdown-toc -->
+ 1. [先决条件](#先决条件)
+	* 1.1. [Ubuntu](#Ubuntu)
+	* 1.2. [macOS](#macOS)
+ 2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
+	* 2.1. [构建指令](#BuildInstructions)
+	* 2.2. [Atom平台构建指令](#BuildInstructionsforIntelAtomProcessor)
+	* 2.3. [ 构建验证](#BuildVerification)
+ 3. [OpenVINO™](#OpenVINO)
+ 4. [TensorFlow](#TensorFlow)
+ 5. [构建ManyLinux2014兼容的 **OpenVINO™ integration with TensorFlow** 安装包](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
 
-## 使用预构建安装包
+<!-- markdown-toc-config
+	numbering=true
+	autoSave=true
+	/markdown-toc-config -->
+<!-- /markdown-toc -->
+##  1. <a name='Prerequisites'></a>Prerequisites
 
-**OpenVINO™ integration with TensorFlow** 有两个版本：一个用 CXX11\_ABI=0 构建，另一个用 CXX11\_ABI=1 构建。
+###  1.1. <a name='Ubuntu'></a>Ubuntu
 
-由于 [PyPi](https://pypi.org) 中提供的 TensorFlow 安装包用 CXX11\_ABI=0 构建，OpenVINO™ 版本的安装包用 CXX11\_ABI=1 构建，因此这些安装包的二进制版本**无法同时安装。**您可以根据自己的需求从以下两种方法中任选一种：
+1. 安装 apt 包  
 
-- **OpenVINO™ integration with TensorFlow** 以及 PyPi TensorFlow（CXX11\_ABI=0，无需安装 OpenVINO™，不支持 VAD-M）
+      ```bash  
+      # users may need sudo access to install some of the dependencies  
+      $ apt-get update
+      $ apt-get install python3 python3-dev
+      $ apt-get install -y --no-install-recommends ca-certificates autoconf automake build-essential \
+      libtool unzip git unzip wget zlib1g zlib1g-dev bash-completion \
+      build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
+      lsb-core libusb-1.0-0-dev patchelf
+      ```  
 
-- **OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件分发版（CXX11\_ABI=1，需要定制 TensorFlow 安装包，支持 VAD-M）
+      ```bash
+      # install required gcc package (Optional; if gcc-7 is not installed)
+      $ apt-get install gcc-7 g++-7  
 
-### 安装 **OpenVINO™ integration with TensorFlow** 以及 PyPi TensorFlow。
+      # if multiple gcc versions are installed then install alternatives
+      $ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 
+      $ update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 70
 
-此 **OpenVINO™ integration with TensorFlow** 安装包包含 OpenVINO™ 版 2021.3 的预构建库。用户无需单独安装 OpenVINO™。此安装包支持英特尔<sup>®</sup> CPU、英特尔<sup>®</sup> 集成 GPU 和英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)。
+      # configure alternatives (select the required gcc version)
+      $ update-alternatives --config gcc
+      $ update-alternatives --config g++
+      ```        
 
-        pip3 install -U pip==21.0.1
-        pip3 install -U tensorflow==2.4.1
-        pip3 install openvino-tensorflow
+2. 安装 Python 依赖  
 
-### 安装 **OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版
+      ```bash
+      $ pip3 install -r requirements.txt
+      ```  
 
-此 **OpenVINO™ integration with TensorFlow** 安装包目前兼容 OpenVINO™ 版 2021.3。此安装包支持英特尔<sup>®</sup> CPU、英特尔<sup>®</sup> 集成 GPU 和英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU) 和支持 Movidius™ 的英特尔<sup>®</sup> 视觉加速器设计 (VAD-M)。
+2. 安装 CMake, 版本要求 >=3.14.0 且 =<3.20.0, 
+        
+      ```bash
+      # to install CMake 3.18.2
+      $ wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+      $ tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+      $ cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+        cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/
+      ```
 
-您可以使用 -D\_GLIBCXX\_USE\_CXX11\_ABI=1 通过源代码构建 TensorFlow 或使用以下 TensorFlow 安装包：
+3. 安装 Bazelisk (可选; 仅在从源代码构建 TensorFlow 时需要)
 
-1. 确保以下版本用于 pip 或 numpy:
-   
-        pip3 install --upgrade pip==21.0.1
-        pip3 install numpy==1.20.2
+      ```bash
+      $ apt-get update && apt-get install -y openjdk-8-jdk
+      $ curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+      $ apt-get install -y nodejs
+      $ npm install -g @bazel/bazelisk
+      ```
 
-2. 安装 `TensorFlow`。您可以根据自己的 Python 版本使用相应的安装包：
-   
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp36-cp36m-manylinux2010_x86_64.whl
-       
-        or
-       
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp37-cp37m-manylinux2010_x86_64.whl
-       
-        or
-       
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/tensorflow_abi1-2.4.1-cp38-cp38-manylinux2010_x86_64.whl
+###  1.2. <a name='macOS'></a>macOS
 
-3. 下载并安装英特尔® OpenVINO™ 工具套件分发版 2021.3 及其关联组件 ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html))。
+1. 安装 HomeBrew 包
 
-4. 使用以下命令运行位于 <code>\<openvino\_install\_directory>/bin</code> 的 `setupvars.sh`，初始化 OpenVINO™ 环境：
-   
-        source setupvars.sh
+      ``` bash
+      $ brew install python@3.9
+      $ brew install cmake autoconf automake libtool libusb wget 
+      ```
 
-5. 安装 `openvino-tensorflow`。您可以根据自己的 Python 版本选择相应的安装包：
-   
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp36-cp36m-linux_x86_64.whl
-       
-        or
-       
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp37-cp37m-linux_x86_64.whl
-       
-        or
-       
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.5.0/openvino_tensorflow_abi1-0.5.0-cp38-cp38-linux_x86_64.whl
+2. 安装 Pip 和依赖
 
-### 预构建安装包汇总
+      ```bash
+      $ wget https://bootstrap.pypa.io/get-pip.py
+      $ python3 get-pip.py
+      $ pip3 install -r requirements.txt
+      ```
 
-| TensorFlow 安装包| **OpenVINO™ integration with TensorFlow** 安装包| 支持的 OpenVINO™ 版本| 支持的硬件后端| 注释
-|----------|----------|----------|----------|----------
-| tensorflow| openvino-tensorflow| 基于源代码构建的 OpenVINO™ | CPU，GPU，MYRIAD| OpenVINO™ 库通过源代码构建，包含在 wheel 安装包中
-| tensorflow-abi1| openvino-tensorflow-abi1| 动态链接至 OpenVINO™ 二进制版本| CPU，GPU，MYRIAD，VAD-M| **OpenVINO™ integration with TensorFlow** 库可动态链接至 OpenVINO™ 二进制文件
+3. 安装 Bazelisk 版本v1.10.1 (可选; 仅在从源代码构建 TensorFlow 时需要)
 
-## 基于源代码构建
+      ```bash
+      $ wget https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
+      $ mv bazelisk-darwin-amd64 /usr/local/bin/bazel
+      $ chmod 777 /usr/local/bin/bazel
+      ```
 
+4. 安装 Apple XCode 命令行工具
+
+      ```bash
+      $ xcode-select --install
+      ```
+
+注意:
+         在 macOS 版本 11.2.3 和 CMake 版本 3.21.1 上开发和测试
+         用户可以安装 Python 3.7、3.8 或 3.9。
+
+
+
+##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 克隆 `openvino_tensorflow` 库：
 
 ```bash
@@ -85,53 +120,51 @@ $ git submodule init
 $ git submodule update --recursive
 ```
 
-安装以下 python 安装包
+###  2.1. <a name='BuildInstructions'></a>构建指令
+根据要求使用以下构建选项之一, **OpenVINO™ integration with TensorFlow** 使用 PyPI TensorFlow 构建，仅支持 Python API。 使用 C++ API 需要从源代码构建的 TensorFlow C++ 库。
 
-```bash
-$ pip3 install -U psutil==5.8.0 wheel==0.36.2
-```
+1. 从 PyPi 中获取兼容的预构建 TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。
 
-### **OpenVINO™ integration with TensorFlow**
+        python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4.1
 
-根据要求选择以下任一构建选项
+2. 从 Github 发布版本中获取兼容的预构建 TensorFlow 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-1. 从 PyPi 中取出兼容的预构建 TF 安装包，克隆并通过源代码构建 OpenVINO™。
-   
-        python3 build_ovtf.py
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
 
-2. 从 PyPi 中取出兼容的预构建 TF 安装包。使用 OpenVINO™ 二进制文件。
-   
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1
+3. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#tensorflow)）。通过源代码构建 OpenVINO™。如需频繁构建 **OpenVINO™ integration with TensorFlow**，可以使用该方法，无需每次通过源代码构建 TF。
 
-3. 通过源代码取出并构建 TF 和 OpenVINO™
-   
-        python3 build_ovtf.py --build_tf_from_source
-
-4. 通过源代码取出并构建 TF。使用 OpenVINO™ 二进制文件。
-   
-        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.3.394/ --cxx11_abi_version=1
-
-5. 使用指定位置的预构建 TF（[参阅 TensorFlow 构建指令](#tensorflow)）。通过源代码取出并构建 OpenVINO™。如需频繁构建 **OpenVINO™ integration with TensorFlow**，可以使用该方法，无需每次通过源代码构建 TF。
-   
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
 
-6. 使用指定位置的预构建 TF（[参阅 TensorFlow 构建指令](#tensorflow)）。使用 OpenVINO™ 二进制文件。它仅兼容 ABI1 构建的 TF。
-   
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021/ --cxx11_abi_version=1
+4. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#tensorflow)）。使用 OpenVINO™ 二进制文件。** 它仅兼容 ABI1 构建的 TensorFlow **。
+
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
+
+5. 通过源代码取出并构建 TensorFlow。使用 OpenVINO™ 二进制文件。
+
+        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
+
+6. 从源代码中提取并构建 TensorFlow 和 OpenVINO™
+
+        python3 build_ovtf.py --build_tf_from_source
+
 
 选择 `build_ovtf.py` 脚本的 `help` 选项，了解更多关于各种构建选项的信息。
 
         python3 build_ovtf.py --help
 
-#### 验证
+###  2.2. <a name='BuildInstructionsforIntelAtomProcessor'></a>Intel Atom® 平台构建指令
+为了构建 **OpenVINO™ integration with TensorFlow** 与英特尔凌动® 处理器一起使用，我们建议使用以下命令从源代码构建 TensorFlow：
 
-构建完成后，`build_cmake/venv-tf-py3` 中创建了一个新的 `virtualenv` 目录。`build_cmake/artifacts/` 目录中创建了一些 Build artifact（如 `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`）
+        python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
 
-激活以下 `virtualenv`，开始使用 **OpenVINO™ integration with TensorFlow**。
+###  2.3. <a name='BuildVerification'></a> Build Verification
+构建完成后，会创建了一个新的 `virtualenv` 目录 `venv-tf-py3` 。`build_cmake/artifacts/` 目录中创建了一些构建包（如 `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`）
+
+激活以下 `virtualenv`，开始使用 **OpenVINO™ integration with TensorFlow** 。
 
         source build_cmake/venv-tf-py3/bin/activate
 
-您还可以在 `virtualenv` 之外安装 TensorFlow 和 **OpenVINO™ integration with TensorFlow。**Python `whl` 文件分别位于 `build_cmake/artifacts/` 和 `build_cmake/artifacts/tensorflow` 目录。
+您还可以在 `virtualenv` 之外安装 TensorFlow 和 **OpenVINO™ integration with TensorFlow ** 。 Python `whl` 文件分别位于 `build_cmake/artifacts/` 和 `build_cmake/artifacts/tensorflow` 目录。
 
 验证 `openvino-tensorflow` 是否安装正确：
 
@@ -140,58 +173,51 @@ $ pip3 install -U psutil==5.8.0 wheel==0.36.2
 
 它会生成以下输出：
 
-        TensorFlow version:  2.4.1
-        OpenVINO integration with TensorFlow version: b'0.5.0'
-        OpenVINO version used for this build: b'2021.3'
-        TensorFlow version used for this build: v2.4.1
+        TensorFlow version:  2.5.1
+        OpenVINO integration with TensorFlow version: b'1.0.0'
+        OpenVINO version used for this build: b'2021.4.1'
+        TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 1
-        OpenVINO integration with TensorFlow built with Grappler: False
+
 
 测试安装：
 
         python3 test_ovtf.py
 
-该命令将运行 `openvino_tensorflow` 源树的所有 C++ 和 Python 单元测试。还使用 OpenVINO™ 运行各种 TensorFlow Python 测试。
-
-### 构建用于英特尔® 凌动® 处理器的指令
-
-为了构建 **OpenVINO™ integration with TensorFlow** 以便用于英特尔® 凌动® 处理器，我们建议通过源代码构建 TF。以下命令将通过源代码构建用于英特尔® 凌动® 处理器的 TF 和 OpenVINO™。
-
-        python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
-
-## TensorFlow
-
-TensorFlow 可使用 `build_tf.py` 通过源代码来构建。build artifact 位于 ${PATH\_TO\_TF\_BUILD}/artifacts/ 下方
-
-- 设置构建路径
+该命令将运行 `openvino_tensorflow` 代码树的所有 C++ 和 Python 单元测试。还使用 OpenVINO™ 运行各种 TensorFlow Python 测试。
   
+##  3. <a name='OpenVINO'></a>OpenVINO™
+
+OpenVINO™ 可以使用 `build_ov.py` 从源代码独立构建
+##  4. <a name='TensorFlow'></a>TensorFlow
+
+TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_TF_BUILD}/artifacts/ 下找到构建工件
+
+- 设置你的构建路径
+
         export PATH_TO_TF_BUILD=/path/to/tensorflow/build/
 
 - 适用于所有可用构建选项
   
         python3 build_tf.py -h
 
-- 用 CXX11\_ABI=0 构建 TF。
+- 用 CXX11\_ABI=0 构建 TensorFlow。
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=0
 
-- 用 CXX11\_ABI=1 构建 TF。
+- 用 CXX11\_ABI=1 构建 TensorFlow。
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
 
-- 为使用所需的 TF 版本（如 v2.4.1）来构建
+- 为使用所需的 TensorFlow 版本（如 v2.5.1）来构建
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.4.1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.5.1
 
-## OpenVINO™
+##  5. <a name='BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels'></a>编译 ManyLinux2014 兼容的 **OpenVINO™ integration with TensorFlow** 包
 
-OpenVINO™ 可使用 `build_ov.py` 通过源代码单独构建。
-
-## 构建兼容 ManyLinux2014 的 **OpenVINO™ integration with TensorFlow** wheel
-
-如要构建兼容 manylinux2014 的 wheel 文件，可使用以下命令。build artifact 位于容器的 /whl/ 文件夹。
+如要构建兼容 manylinux2014 的 wheel 文件，可使用以下命令。构建包位于容器的 /whl/ 文件夹。
 
 ```bash
 cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v0.5.0 . -f Dockerfile.manylinux2014
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.0 . -f Dockerfile.manylinux2014
 ```

@@ -1,13 +1,12 @@
 [English](./README.md) | 简体中文
-## 说明
 
+## 说明
 Tf\_unittest\_runner 主要用于使用 nGraph 运行 tensorflow python 单元测试
 
 ## 测试内容
 
 - 使用 TensorFlow 构建的 nGraph 进行 Python 测试（使用[顶层文档页面](../../../README.md#option-3-using-the-upstreamed-version)操作说明中的选项 3）。
-
-- 通过为 TensorFlow 安装补丁，使用 TensorFlow 进行 Python 测试（使用[顶层文档页面](../../../README.md#option-3-using-the-upstreamed-version)操作说明中的选项 2），如下所示：
+- 通过为 TensorFlow 安装补丁，使用 TensorFlow 进行 Python 测试（使用[顶层文档页面](../../../README.md#option-2-build-ngraph-bridge-from-source-using-tensorflow-source)操作说明中的选项 2），如下所示：
   
   ```
   cp tf_unittest_ngraph.patch <your_virtual_env/lib/python<VERSION>/site-packages>
@@ -76,7 +75,6 @@ Tf\_unittest\_runner 主要用于使用 nGraph 运行 tensorflow python 单元�
 - 如要获取 Tensorflow 中的测试模块列表，可使用 bazel 查询`bazel query 'kind(".*_test rule", //tensorflow/python/...)' --output label`
 
 - 通过传递模块/测试的名称或正则表达式，可以通过一次指定一项或多项测试来运行测试。`--run_test` 参数支持的格式示例：
-
 ```math_ops_test.DivNoNanTest.testBasic
       math_ops_test.DivNoNanTest.*
       math_ops_test.D*
@@ -85,8 +83,7 @@ Tf\_unittest\_runner 主要用于使用 nGraph 运行 tensorflow python 单元�
       math_*_*_test
       math*_test
 ```
+注：math\_ops\_test 仅用于举例，可以是任何可用的 tensorflow 测试模块。
 
-注：math\_ops\_test 仅用于示例，可以是任何可用的 tensorflow 测试模块。
-
-- 可以在文本文件中列出带运行的测试，并将文件名传递给参数 `--run_tests_from_file` 以供运行。
-- 如要在运行测试时验证 ngraph 上的算子分布，可设置 OPENVINO_TF_LOG_PLACEMENT=1
+ - 可以在文本文件中列出带运行的测试，并将文件名传递给参数 `--run_tests_from_file` 以供运行。
+ - 如要在运行测试时验证 ngraph 上的算子分布，可设置 OPENVINO_TF_LOG_PLACEMENT=1

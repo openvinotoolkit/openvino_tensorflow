@@ -1,5 +1,6 @@
 [English](./MODELS.md) | 简体中文
-本文列出了所有经过验证，且 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们支持越来越多的算子和模型，该列表将会持续更新。
+
+本文列出了所有经过验证的 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们支持越来越多的算子和模型，该列表将会持续更新。
 
 ## TensorFlow-Slim 图像分类库
 
@@ -61,7 +62,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 
 请参考 [Keras 应用](https://keras.io/api/applications/)页面上的说明，了解更多关于如何使用这些预训练模型的信息。
 
-## TensorFlow-Hub Models
+## TensorFlow-Hub 模型
 | 模型名称| 支持的设备
 |---|---|
 | [albert_en_base](https://tfhub.dev/tensorflow/albert_en_base/3)| CPU, iGPU, MYRIAD |
@@ -303,4 +304,13 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [yolo-v3-tiny-tf](https://download.01.org/opencv/public_models/082020/yolo-v3-tiny-tf/yolo-v3-tiny-tf.zip)| CPU, iGPU, MYRIAD, VAD-M |
 | [yolo-v4](https://github.com/david8862/keras-YOLOv3-model-set)| CPU, iGPU, MYRIAD, VAD-M |
 
-仅为其中部分模型提供了预训练frozen模型文件。如欲获取其他模型的预训练frozen模型文件，请访问所提供的链接。
+
+仅针对其中一些模型提供了预训练的冻结模型文件。 其余的，请参考提供的链接。 
+
+## 量化支持 (Preview)
+
+ **OpenVINO™ integration with TensorFlow** 现在支持使用量化感知训练 (QAT) 工具量化的 INT8 模型，例如 OpenVINO™ [神经网络压缩框架 (NNCF)](https://github.com/openvinotoolkit/nncf) 和 [TensorFlow 模型优化工具包 (TFMOT)](https://www.tensorflow.org/model_optimization)。 此支持目前处于预览状态，性能优化正在进行中。 
+ 
+可以在 [此处](https://github.com/openvinotoolkit/nncf/tree/develop/examples/tensorflow/) 中找到一些使用 NNCF 生成量化模型的示例。
+
+通过在运行推理之前将环境变量“OPENVINO_TF_CONSTANT_FOLDING”设置为 1，一些量化模型可以获得更优的性能。 
