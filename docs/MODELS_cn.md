@@ -13,7 +13,7 @@
 | [VGG 16](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [VGG 19](http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz)              | CPU, iGPU, MYRIAD, VAD-M |
 | [MobileNet_v1_1.0_224](http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU, iGPU, MYRIAD ,VAD-M |
+| [MobileNet_v2_1.4_224](https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [CifarNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/cifarnet.py)| CPU, iGPU, MYRIAD, VAD-M |
 | [LeNet](https://github.com/tensorflow/models/blob/master/research/slim/nets/lenet.py)| CPU, iGPU, MYRIAD, VAD-M |
 
@@ -258,8 +258,8 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [NiftyNet](https://github.com/NifTK/NiftyNetModelZoo/tree/5-reorganising-with-lfs/mr_ct_regression)| CPU, iGPU, MYRIAD, VAD-M |
 | [openpose-pose](http://www.mediafire.com/file/qlzzr20mpocnpa3/graph_opt.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [person-vehicle-bike-detection-crossroad-yolov3-1020](https://docs.openvinotoolkit.org/latest/omz_models_model_person_vehicle_bike_detection_crossroad_yolov3_1020.html) | CPU |
-| [pose-ae-multiperson](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD VAD-M |
-| [pose-ae-refinement](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD VAD-M |
+| [pose-ae-multiperson](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD, VAD-M |
+| [pose-ae-refinement](https://github.com/umich-vl/pose-ae-demo)| CPU, iGPU, MYRIAD, VAD-M |
 | [PRNet](https://github.com/YadiraF/PRNet)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb)| CPU, iGPU, MYRIAD, VAD-M |
 | [resnet_50_v1.5](https://zenodo.org/record/2535873/files/resnet50_v1.pb)| CPU, iGPU, MYRIAD, VAD-M |
