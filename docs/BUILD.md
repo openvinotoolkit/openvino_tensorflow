@@ -26,7 +26,7 @@
       ```bash  
       # users may need sudo access to install some of the dependencies  
       $ apt-get update
-      $ apt-get python3 python3-dev
+      $ apt-get install python3 python3-dev
       $ apt-get install -y --no-install-recommends ca-certificates autoconf automake build-essential \
       libtool unzip git unzip wget zlib1g zlib1g-dev bash-completion \
       build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
