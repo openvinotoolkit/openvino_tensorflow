@@ -192,6 +192,7 @@ NGraphEncapsulateOp::~NGraphEncapsulateOp() {
   std::ostringstream oss;
   oss << "Destroy Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(2) << "~NGraphEncapsulateOp::" << name();
+  NGraphClusterManager::SetMRUExecutable(m_cluster_id, nullptr);
   m_ng_exec_map.clear();
 }
 
@@ -231,6 +232,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
     // Get ngraph executable and inputs information
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
+    NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
     if (getex_status != Status::OK()) {
       if (NGraphClusterManager::IsClusterFallbackEnabled()) {
         OP_REQUIRES_OK(ctx, Fallback(ctx));
@@ -261,7 +263,15 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
         ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);
       }
-      if (ng_shape.size() > 0 && ng_shape[0] == 0) continue;
+      auto check_ng_shape = [ng_shape]() {
+        if (ng_shape.size() > 0) {
+          for (auto dim : ng_shape) {
+            if (dim == 0) return true;
+          }
+        }
+        return false;
+      };
+      if (check_ng_shape()) continue;
       ngraph::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
@@ -289,6 +299,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto results = ng_exec->GetResults();
   std::string device;
   BackendManager::GetBackendName(device);
+  auto backend = BackendManager::GetBackend();
+  auto dev_type = backend->GetDeviceType();
+  std::string precision = dev_type.substr(dev_type.find("_") + 1);
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(
       results.size(), nullptr);
   std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(
@@ -327,6 +340,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // expected
       ngraph::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
+      if (ng_element_type == ngraph::element::Type_t::f16 &&
+          precision == "FP16")
+        ng_element_type = ngraph::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));
@@ -344,7 +360,16 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                                             output_tensor->data());
 #endif
 
-      if (!(ng_shape.size() > 0 && ng_shape[0] == 0)) {
+      auto check_ng_shape = [ng_shape]() {
+        if (ng_shape.size() > 0) {
+          for (auto dim : ng_shape) {
+            if (dim == 0) return true;
+          }
+        }
+        return false;
+      };
+
+      if (!(check_ng_shape())) {
         output_mappings[i] = j;
         ng_func_outputs[j++] = ng_outputs[i];
       }
@@ -414,9 +439,18 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       ctx->set_output(i, tf_tensor);
     }
   } else {
+    auto out_shape_check = [this](int i) {
+      if (ng_output_shapes[i].size() > 0) {
+        auto out_shape_list = ng_output_shapes[i];
+        for (auto dim : out_shape_list) {
+          if (dim == 0) return true;
+        }
+      }
+      return false;
+    };
     int j = 0;
     for (int i = 0; i < ng_result_list.size(); i++) {
-      if (ng_output_shapes[i].size() > 0 && ng_output_shapes[i][0] == 0) {
+      if (out_shape_check(i)) {
         auto ng_shape = ng_output_shapes[i];
         ngraph::element::Type expected_elem_type;
         auto ng_element = ng_result_list[i];
@@ -661,9 +695,11 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
         return errors::InvalidArgument("No index defined for _Retval");
       }
-      Node* cluster_output_node;
-      TF_RETURN_IF_ERROR(n->input_node(0, &cluster_output_node));
-      m_session_output_names[index] = cluster_output_node->name();
+      std::vector<const Edge*> output_edges;
+      TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
+      m_session_output_names[index] =
+          output_edges[0]->src()->name() + ":" +
+          std::to_string(output_edges[0]->src_output());
     }
   }
 

@@ -18,17 +18,23 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
     if use_prebuilt_tensorflow and not disable_cpp_api:
         # Check if the gcc version is at least 5.3.0
         if (platform.system() != 'Darwin'):
-            gcc_ver = get_gcc_version()
-            if gcc_ver < '5.3.0':
+            gcc_ver_list = get_gcc_version()
+            gcc_ver = float(".".join(gcc_ver_list[:2]))
+            gcc_desired_version = 5.3
+            if gcc_ver < gcc_desired_version:
                 raise Exception(
-                    "Need GCC 5.3.0 or newer to build using prebuilt TensorFlow\n"
-                    "Gcc version installed: " + gcc_ver + "\n"
+                    "Need GCC " + str(gcc_desired_version) +
+                    " or newer to build using prebuilt TensorFlow\n"
+                    "Gcc version installed: " + '.'.join(gcc_ver_list) + "\n"
                     "To build from source omit `use_prebuilt_tensorflow`")
     # Check cmake version
-    cmake_ver = get_cmake_version()
-    if (int(cmake_ver[0]) < 3 or int(cmake_ver[1]) < 14):
-        raise Exception("Need minimum cmake version 3.14\n"
-                        "Got: " + '.'.join(cmake_ver))
+    cmake_ver_list = get_cmake_version()
+    cmake_ver = float(".".join(cmake_ver_list[:2]))
+    cmake_desired_version = 3.14
+    if cmake_ver < cmake_desired_version:
+        raise Exception("Need minimum cmake version " +
+                        str(cmake_desired_version) + " \n"
+                        "Got: " + '.'.join(cmake_ver_list))
 
     if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
         # Check bazel version
@@ -45,8 +51,8 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.5.0"
-    ovtf_version = "v0.5.0"
+    tf_version = "v2.5.1"
+    ovtf_version = "v1.0.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -139,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2021.3')
+        default='2021.4.1')
 
     parser.add_argument(
         '--python_executable',
@@ -186,9 +192,11 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
 
-    assert not (arguments.openvino_version != "2021.3" and
-                arguments.openvino_version != "2021.2"), (
-                    "Only 2021.2 and 2021.3 are supported OpenVINO versions")
+    assert not (arguments.openvino_version not in [
+        "2021.4.1", "2021.4", "2021.3", "2021.2"
+    ]), (
+        "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
+    )
 
     if arguments.use_openvino_from_location != '':
         ver_file = arguments.use_openvino_from_location + \
@@ -295,7 +303,7 @@ def main():
         tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
         assert os.path.isfile(tf_whl), "Did not find " + tf_whl
         # Install the found TF whl file
-        command_executor(["pip", "install", "-U", tf_whl])
+        command_executor(["pip", "install", "--force-reinstall", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
 
         assert (arguments.cxx11_abi_version == tf_cxx_abi), (
@@ -324,29 +332,32 @@ def main():
             print("Install TensorFlow")
 
             if arguments.cxx11_abi_version == "0":
-                command_executor(
-                    ["pip", "install", "tensorflow==" + tf_version])
+                command_executor([
+                    "pip", "install", "--force-reinstall",
+                    "tensorflow==" + tf_version
+                ])
             elif arguments.cxx11_abi_version == "1":
                 tags = next(sys_tags())
 
                 if tags.interpreter == "cp36":
                     command_executor([
-                        "pip", "install",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp36-cp36m-manylinux2010_x86_64.whl"
+                        "pip", "install", "--force-reinstall",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp37":
                     command_executor([
-                        "pip", "install",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp37-cp37m-manylinux2010_x86_64.whl"
+                        "pip", "install", "--force-reinstall",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp37-cp37m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
-                        "pip", "install",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v0.6.0/tensorflow_abi1-2.5.0-cp38-cp38-manylinux2010_x86_64.whl"
+                        "pip", "install", "--force-reinstall",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl"
                     ])
 
                 # ABI 1 TF required latest numpy
-                command_executor(["pip", "install", "-U numpy"])
+                command_executor(
+                    ["pip", "install", "--force-reinstall", "-U numpy"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
@@ -375,7 +386,11 @@ def main():
             else:
                 tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
             if (platform.system() == 'Darwin'):
-                tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+                if (tf_version.startswith("v1.") or
+                    (tf_version.startswith("1."))):
+                    tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
+                else:
+                    tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
             import tensorflow as tf
             tf_lib_dir = tf.sysconfig.get_lib()
             tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
@@ -431,17 +446,20 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-
-        if (arguments.openvino_version == "2021.3"):
-            openvino_branch = "releases/2021/3"
+        if (arguments.openvino_version == "2021.4.1"):
+            openvino_release_tag = "2021.4.1"
+        elif (arguments.openvino_version == "2021.4"):
+            openvino_release_tag = "2021.4"
+        elif (arguments.openvino_version == "2021.3"):
+            openvino_release_tag = "2021.3"
         elif (arguments.openvino_version == "2021.2"):
-            openvino_branch = "releases/2021/2"
+            openvino_release_tag = "2021.2"
 
         # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino",
-            openvino_branch,
+            openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
@@ -503,6 +521,10 @@ def main():
     if arguments.python_executable != '':
         openvino_tf_cmake_flags.extend(
             ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
+
+    # add openvino build version as compile time definition
+    openvino_tf_cmake_flags.extend(
+        ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
 
     # Now build the bridge
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,

@@ -24,7 +24,8 @@ namespace openvino_tensorflow {
 // function.
 class Executable {
  public:
-  Executable(shared_ptr<ngraph::Function> func, string device);
+  Executable(shared_ptr<ngraph::Function> func, string device,
+             string device_type);
   ~Executable() {}
   bool Call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
             vector<shared_ptr<ngraph::runtime::Tensor>>& outputs,
@@ -42,6 +43,8 @@ class Executable {
     }
   }
 
+  void ExportIR(const string& output_dir);
+
  private:
   bool CallTrivial(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
                    vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
@@ -49,6 +52,7 @@ class Executable {
   InferenceEngine::CNNNetwork m_network;
   InferenceEngine::InferRequest m_infer_req;
   string m_device;
+  string m_device_type;
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;

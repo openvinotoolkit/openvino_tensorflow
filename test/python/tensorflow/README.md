@@ -1,4 +1,5 @@
-  
+<p>English | <a href="./README_cn.md">简体中文</a></p>
+
 ## Description
 tf_unittest_runner is primarily used to run tensorflow python unit tests using nGraph
 

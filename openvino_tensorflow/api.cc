@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include "tensorflow/core/lib/core/errors.h"
 
 #include "api.h"
@@ -16,24 +19,39 @@ namespace api {
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
 static std::set<std::string> disabled_op_types{};
-static char* backendName;
+static char* backendName = nullptr;
 static char* backendList[4];
+static char* clusterInfo = nullptr;
+static char* errMsg = nullptr;
 
 extern "C" {
 void enable() { Enable(); }
 void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
+bool CheckBackend(const char* backend) {
+  const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};
+  for (int i = 0; i < 4; i++) {
+    if (strcmp(backend, devices[i]) == 0) return true;
+  }
+  return false;
+}
 size_t backends_len() {
-  const auto backends = ListBackends();
-  return backends.size();
+  const auto ovtf_backends = ListBackends();
+  int backends_count = 0;
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    if (CheckBackend(ovtf_backends[idx].c_str())) backends_count++;
+  }
+  return backends_count;
 }
 
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
+  int i = 0;
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    backends[idx] = backendList[idx];
+    if (CheckBackend(ovtf_backends[idx].c_str()))
+      backends[i++] = backendList[idx];
   }
   return true;
 }
@@ -60,6 +78,8 @@ void freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
+void freeClusterInfo() { free(clusterInfo); }
+void freeErrMsg() { free(errMsg); }
 
 extern void set_disabled_ops(const char* op_type_list) {
   SetDisabledOps(std::string(op_type_list));
@@ -71,6 +91,19 @@ extern const char* get_disabled_ops() {
 
 void enable_dynamic_fallback() { EnableDynamicFallback(); }
 void disable_dynamic_fallback() { DisableDynamicFallback(); }
+
+bool export_ir(const char* output_dir, char** cluster_info, char** err_msg) {
+  string str_cluster_info("");
+  string str_err_msg("");
+  if (!ExportIR(string(output_dir), str_cluster_info, str_err_msg)) {
+    errMsg = strdup(str_err_msg.c_str());
+    *err_msg = errMsg;
+    return false;
+  }
+  clusterInfo = strdup(str_cluster_info.c_str());
+  *cluster_info = clusterInfo;
+  return true;
+}
 }
 
 // note that TensorFlow always uses camel case for the C++ API, but not for
@@ -129,6 +162,22 @@ void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
 
 void DisableDynamicFallback() {
   NGraphClusterManager::DisableClusterFallback();
+}
+
+bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
+  struct stat st;
+  if (stat(output_dir.c_str(), &st) != 0) {
+    err_msg = "Directory \"" + output_dir + "\" does not exist.";
+    return false;
+  }
+
+  // Export IR into the output directory
+  NGraphClusterManager::ExportMRUIRs(output_dir);
+
+  // Dump cluster info
+  NGraphClusterManager::DumpClusterInfos(cluster_info);
+  err_msg = "";
+  return true;
 }
 
 }  // namespace api

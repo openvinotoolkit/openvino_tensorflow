@@ -63,6 +63,12 @@ def main():
     if not arguments.artifacts_dir:
         raise Exception("Need to specify --artifacts_dir")
 
+    # disable dynamic fallback for OVTF and TF tests at once
+    openvino_tf_dynamic_fallback = os.environ.pop(
+        'OPENVINO_TF_DYNAMIC_FALLBACK', None)
+
+    os.environ['OPENVINO_TF_DYNAMIC_FALLBACK'] = '0'
+
     # Set the backend if specified
     backend = TestEnv.BACKEND()
     print("Openvino Tensorflow Backend set to:", backend)
@@ -70,12 +76,10 @@ def main():
     # Decide which tests to run
     if (arguments.test_cpp):
         test_filter = None
-        os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
         run_ovtf_cpp_gtests(arguments.artifacts_dir, './', test_filter)
     elif (arguments.test_python):
         run_ovtf_pytests_from_artifacts(arguments.artifacts_dir)
     elif (arguments.test_tf_python):
-        os.environ['OPENVINO_TF_LOG_0_DISABLED'] = '1'
         run_tensorflow_pytests_from_artifacts(
             './', arguments.artifacts_dir + '/tensorflow/python', False)
     elif (arguments.test_resnet):
@@ -100,6 +104,12 @@ def main():
                                               batch_size, iterations)
     else:
         raise Exception("No tests specified")
+
+    os.environ.pop('OPENVINO_TF_DYNAMIC_FALLBACK', None)
+
+    if openvino_tf_dynamic_fallback is not None:
+        os.environ[
+            'OPENVINO_TF_DYNAMIC_FALLBACK'] = openvino_tf_dynamic_fallback
 
     assert os.path.exists(root_pwd), "Path doesn't exist {0}".format(root_pwd)
     os.chdir(root_pwd)

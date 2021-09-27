@@ -13,7 +13,7 @@ extern "C" {
 const char* version();
 
 // Returns the nGraph version this bridge was compiled with
-const char* ngraph_version();
+const char* openvino_version();
 
 // Returns the 0 if _GLIBCXX_USE_CXX11_ABI wasn't set by the
 // compiler (e.g., clang or gcc pre 4.8) or the value of the

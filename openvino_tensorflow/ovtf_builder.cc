@@ -18,6 +18,7 @@
 
 #include "api.h"
 #include "logging/ovtf_log.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/layout_conversions.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
@@ -96,7 +97,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
   node->set_friendly_name(op_name + "/" + node->get_name());
   node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
-    cout << "TF_to_NG: " << op_name << " --> " << node << "\n";
+    cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
 }
 
@@ -756,6 +757,82 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateBatchNDAndSpaceNDOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_block_shape, ng_crops;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_input, ng_block_shape, ng_crops));
+
+  // ng_crops should be of shape N=[ng_input.get_shape()).size()]
+  // But TF's ng_crops input is limited only to the spatial dimensions (neither
+  // batch nor innermost),
+  // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
+  // Hence, pad ng_crops with zeros at both ends
+
+  std::vector<int> tf_block_shape;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
+
+  auto N = (int)ng_input.get_partial_shape().rank().get_length();
+  auto M = (int)tf_block_shape.size();
+
+  // return with input if rank < 2 as ngraph's impl doesn't support it
+  if (N < 2) {
+    SaveNgOp(ng_op_map, op->name(), ng_input);
+    return Status::OK();
+  }
+
+  auto crops = ConstructNgNode<opset::Pad>(
+      op->name(), ng_crops,
+      make_shared<opset::Constant>(ng_crops.get_element_type(), ng::Shape{2},
+                                   std::vector<int>{1, 0}),
+      make_shared<opset::Constant>(ng_crops.get_element_type(), ng::Shape{2},
+                                   std::vector<int>{N - M - 1, 0}),
+      ng::op::PadMode::CONSTANT);
+
+  // Padding needs to be done for block_shape as done for crops above but with
+  // value=1
+  auto block_shape = ConstructNgNode<opset::Pad>(
+      op->name(), ng_block_shape,
+      make_shared<opset::Constant>(ng_block_shape.get_element_type(),
+                                   ng::Shape{1}, std::vector<int>{1}),
+      make_shared<opset::Constant>(ng_block_shape.get_element_type(),
+                                   ng::Shape{1}, std::vector<int>{N - M - 1}),
+      make_shared<opset::Constant>(ng_block_shape.get_element_type(),
+                                   ng::Shape{}, 1),
+      ng::op::PadMode::CONSTANT);
+
+  auto target_axis =
+      make_shared<opset::Constant>(ng::element::i64, ng::Shape{}, 1);
+  // split into two 1-D vectors crops_begin and crops_end along axis 1
+  auto crops_split =
+      ConstructNgNode<opset::Split>(op->name(), crops, target_axis, 2);
+
+  // crops: [[0, 1], [1, 2], ...]
+  // crops_split: [[[0], [1]], [[1], [2]], ...]
+  // crops_begin: [0, 1, ...], crops_end: [1, 2, ...]
+  auto axes = make_shared<opset::Constant>(ng::element::i32, ng::Shape{}, -1);
+  auto crops_begin = ConstructNgNode<opset::Squeeze>(
+      op->name(), crops_split.get_node()->outputs()[0], axes);
+  auto crops_end = ConstructNgNode<opset::Squeeze>(
+      op->name(), crops_split.get_node()->outputs()[1], axes);
+
+  if (op->type_string() == "BatchToSpaceND") {
+    auto ng_batch_to_space_nd = ConstructNgNode<opset::BatchToSpace>(
+        op->name(), ng_input, block_shape, crops_begin, crops_end);
+    SaveNgOp(ng_op_map, op->name(), ng_batch_to_space_nd);
+  } else if (op->type_string() == "SpaceToBatchND") {
+    auto ng_space_to_batch_nd = ConstructNgNode<opset::SpaceToBatch>(
+        op->name(), ng_input, block_shape, crops_begin, crops_end);
+    SaveNgOp(ng_op_map, op->name(), ng_space_to_batch_nd);
+  } else {
+    return errors::Unknown("Unknown Op Name: ", op->name());
+  }
+
+  return Status::OK();
+}
+
 static Status TranslateBiasAddOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -897,6 +974,7 @@ static Status TranslateConv2DOp(const Node* op,
 
   std::vector<int32> tf_strides;
   std::vector<int32> tf_dilations;
+  std::vector<int32> tf_paddings;
   std::string tf_padding_type;
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
@@ -948,9 +1026,28 @@ static Status TranslateConv2DOp(const Node* op,
 
   ng::CoordinateDiff ng_padding_below;
   ng::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, ng_padding_below,
-                       ng_padding_above);
+  if (tf_padding_type == "EXPLICIT") {
+    TF_RETURN_IF_ERROR(
+        GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+    if (is_nhwc) {
+      ng_padding_below.push_back(tf_paddings[2]);
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_above.push_back(tf_paddings[3]);
+      ng_padding_above.push_back(tf_paddings[5]);
+    } else {
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_below.push_back(tf_paddings[6]);
+      ng_padding_above.push_back(tf_paddings[5]);
+      ng_padding_above.push_back(tf_paddings[7]);
+    }
+    OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
+    OVTF_VLOG(3) << "ng_padding_below: " << ng::join(ng_padding_below);
+    OVTF_VLOG(3) << "ng_padding_above: " << ng::join(ng_padding_above);
+  } else {
+    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                         ng_strides, ng_dilations, ng_padding_below,
+                         ng_padding_above);
+  }
 
   ng::Output<ng::Node> ng_conv = ConstructNgNode<opset::Convolution>(
       op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
@@ -1129,6 +1226,134 @@ static Status TranslateConv3DOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateCropAndResizeOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  /// ng_input: [batch, image_height, image_width, depth]
+  /// ng_boxes: [num_boxes, 4]; each box is a normalized [0.to 1.] co-ordinate
+  /// [y1,
+  /// x1, y2, x2]
+  /// ng_box_ind: [num_boxes]; i-th ng_box_ind refers to the image to crop and
+  /// ranges from 0 to batch
+  /// ng_crop_size: [crop_height, crop_width];
+
+  /// for each box b specified in ng_boxes:
+  ///  1. crop ng_input[ng_box_ind[b]] w/ co-ordinates in ng_boxes
+  ///  2. resize according to method
+
+  ng::Output<ng::Node> ng_input, ng_boxes, ng_box_ind, ng_size;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_input, ng_boxes, ng_box_ind, ng_size));
+
+  string tf_resize_method;
+  float tf_extrapolation_value;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "method", &tf_resize_method));
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "extrapolation_value", &tf_extrapolation_value));
+
+  auto spatial_shape = ng_input.get_shape();
+  auto image_height = spatial_shape[1];
+  auto image_width = spatial_shape[2];
+  auto image_depth = spatial_shape[3];
+
+  std::vector<float> boxes;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &boxes));
+
+  std::vector<int64> box_ind;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &box_ind));
+
+  std::vector<int64> crop_size;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 3, static_input_map, &crop_size));
+
+  ng::OutputVector ng_crop_outputs(box_ind.size());
+  if (box_ind.size() == 0) {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng::element::f32,
+                 ngraph::Shape{0, static_cast<unsigned long>(crop_size.at(0)),
+                               static_cast<unsigned long>(crop_size.at(1)),
+                               image_depth},
+                 std::vector<float>({})));
+  } else {
+    for (int i = 0; i < box_ind.size(); i++) {
+      int y1, x1, y2, x2;
+      y1 = boxes.at(0 + i * 4) * (image_height - 1);
+      x1 = boxes.at(1 + i * 4) * (image_width - 1);
+      y2 = boxes.at(2 + i * 4) * (image_height - 1);
+      x2 = boxes.at(3 + i * 4) * (image_width - 1);
+
+      int crop_height = std::abs(y2 - y1);
+      int crop_width = std::abs(x2 - x1);
+
+      // account for flip crops when y1>y2 or x1>x2 with negative striding
+      int stride_height = 1, stride_width = 1;
+      if (y1 > y2) {
+        y1 = y1 - image_height;
+        y2 = y2 - image_height - 2;
+        stride_height = -1;
+      }
+      if (x1 > x2) {
+        x1 = x1 - image_height;
+        x2 = x2 - image_height - 2;
+        stride_width = -1;
+      }
+
+      auto begin = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>({static_cast<int64>(box_ind[i]), y1, x1, 0}));
+      auto end = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>({static_cast<int64>(box_ind[i]) + 1, y2 + 1,
+                              x2 + 1, static_cast<int64>(image_depth + 1)}));
+      auto strides = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i64, ng::Shape{4},
+          std::vector<int64>({1, stride_height, stride_width, 1}));
+
+      // crop
+      auto ng_crop = ConstructNgNode<opset::StridedSlice>(
+          op->name(), ng_input, begin, end, strides, std::vector<int64_t>{},
+          std::vector<int64_t>{});
+
+      opset::Interpolate::InterpolateAttrs interpolate_attrs;
+      // always corner aligned
+      interpolate_attrs.coordinate_transformation_mode =
+          opset::Interpolate::CoordinateTransformMode::align_corners;
+
+      // TODO: handle the case when extrapolation value is greatger than 1.0
+      // arguments for resizing
+      auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i32, ng::Shape{2},
+          std::vector<int32>{crop_height, crop_width});
+      auto ng_input_shape = ConstructNgNode<opset::Convert>(
+          op->name(), ng_spatial_shape, ng::element::f32);
+      auto ng_crop_size = ConstructNgNode<opset::Convert>(op->name(), ng_size,
+                                                          ng::element::f32);
+      auto ng_scales = ConstructNgNode<opset::Divide>(op->name(), ng_crop_size,
+                                                      ng_input_shape);
+      auto ng_axes = ConstructNgNode<opset::Constant>(
+          op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
+
+      if (tf_resize_method == "bilinear") {
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+      } else {  // nearest
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+      }
+
+      Transpose<0, 3, 1, 2>(ng_crop);
+      auto ng_output = ConstructNgNode<opset::Interpolate>(
+          op->name(), ng_crop, ng_size, ng_scales, ng_axes, interpolate_attrs);
+      Transpose<0, 2, 3, 1>(ng_output);
+      ng_crop_outputs.at(i) = ng_output;
+    }
+
+    auto ng_crop_and_resize =
+        ConstructNgNode<opset::Concat>(op->name(), ng_crop_outputs, 0);
+
+    SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
+  }
+  return Status::OK();
+}
+
 static Status TranslateCumsumOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -1249,6 +1474,18 @@ static Status TranslateDepthwiseConv2dNativeOp(
   return Status::OK();
 }
 
+static Status TranslateEluOp(const Node* op,
+                             const std::vector<const Tensor*>& static_input_map,
+                             Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+
+  // No alpha in TF, so default to 1.0
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Elu>(op->name(), ng_input, 1.0));
+  return Status::OK();
+}
+
 static Status TranslateExpandDimsOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -1260,6 +1497,83 @@ static Status TranslateExpandDimsOp(
       op->name(), ng::element::i64, ngraph::Shape{dims.size()}, dims);
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dims));
+  return Status::OK();
+}
+
+static Status TranslateFakeQuantWithMinMaxVarsOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_min, ng_max;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_min));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, ng_max));
+
+  bool narrow_range = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "narrow_range", &narrow_range));
+  int64 num_bits;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "num_bits", &num_bits));
+
+  auto levels = std::pow(2, num_bits) - int(narrow_range);
+
+  auto min_less_max = ConstructNgNode<opset::Less>(
+      op->name() + "/if_min_less_max", ng_min, ng_max);
+  auto minimum = ConstructNgNode<opset::Select>(op->name() + "/minimum",
+                                                min_less_max, ng_min, ng_max);
+  auto maximum = ConstructNgNode<opset::Select>(op->name() + "/maximum",
+                                                min_less_max, ng_max, ng_min);
+
+  auto zero =
+      ConstructNgNode<opset::Constant>(op->name(), ng_min.get_element_type(),
+                                       ngraph::Shape{}, std::vector<int>({0}));
+
+  auto min_greater_zero = ConstructNgNode<opset::Greater>(
+      op->name() + "/if_minimum_greater_zero", minimum, zero);
+  auto max_minus_min = ConstructNgNode<opset::Subtract>(
+      op->name() + "/max_minus_min", maximum, minimum);
+  minimum = ConstructNgNode<opset::Select>(op->name() + "/first_adj_min",
+                                           min_greater_zero, zero, minimum);
+  maximum = ConstructNgNode<opset::Select>(
+      op->name() + "/first_adj_max", min_greater_zero, max_minus_min, maximum);
+
+  auto max_less_zero = ConstructNgNode<opset::Less>(
+      op->name() + "/if_max_less_zero", maximum, zero);
+  auto min_minus_max = ConstructNgNode<opset::Subtract>(
+      op->name() + "/min_minus_max", minimum, maximum);
+  minimum = ConstructNgNode<opset::Select>(
+      op->name() + "/second_adj_min", max_less_zero, min_minus_max, minimum);
+  maximum = ConstructNgNode<opset::Select>(op->name() + "/second_adj_max",
+                                           max_less_zero, zero, maximum);
+
+  auto float_range = ConstructNgNode<opset::Subtract>(
+      op->name() + "/float_range", maximum, minimum);
+  auto quant_min_value = int(narrow_range);
+  auto quant_max_value = std::pow(2, num_bits) - 1;
+  float value = static_cast<float>(quant_max_value - quant_min_value);
+  auto int_range = ConstructNgNode<opset::Constant>(
+      op->name() + "/int_range", ng::element::f32, ngraph::Shape{},
+      std::vector<float>({value}));
+  auto scale = ConstructNgNode<opset::Divide>(op->name() + "/scale",
+                                              float_range, int_range);
+  auto descaled_min = ConstructNgNode<opset::Divide>(
+      op->name() + "/descaled_min", minimum, scale);
+  auto rounded_descaled_min = ConstructNgNode<opset::Round>(
+      op->name() + "/rounded_descaled_min", descaled_min,
+      opset::Round::RoundMode::HALF_TO_EVEN);
+  auto min_adj = ConstructNgNode<opset::Multiply>(op->name() + "/min_adj",
+                                                  scale, rounded_descaled_min);
+  auto adjustment = ConstructNgNode<opset::Subtract>(
+      op->name() + "/limits_adjustment", min_adj, minimum);
+  auto max_adj =
+      ConstructNgNode<opset::Add>(op->name() + "/max_adj", maximum, adjustment);
+
+  auto ng_input_shape = ng_input.get_shape();
+  if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
+  auto ng_output = ConstructNgNode<opset::FakeQuantize>(
+      op->name(), ng_input, min_adj, max_adj, min_adj, max_adj, levels);
+  if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
+
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+
   return Status::OK();
 }
 
@@ -1346,6 +1660,7 @@ static Status TranslateFusedBatchNormOp(
       SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
     }
   }
+  return Status::OK();
 }
 
 static Status TranslateFusedMatMulOp(const Node* op,
@@ -1454,6 +1769,22 @@ static Status TranslateGatherV2Op(
                                                   ng_input_coords, ng_axis);
 
   SaveNgOp(ng_op_map, op->name(), gather_op);
+  return Status::OK();
+}
+
+static Status TranslateGatherNdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_input_indices;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_input_indices));
+
+  int batch_dims = 0;
+  // TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "batch_dims", &batch_dims));
+
+  auto gathernd_op = ConstructNgNode<opset::GatherND>(
+      op->name(), ng_input, ng_input_indices, batch_dims);
+
+  SaveNgOp(ng_op_map, op->name(), gathernd_op);
   return Status::OK();
 }
 
@@ -2413,8 +2744,19 @@ static Status TranslateRelu6Op(const Node* op,
                                Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6));
+  auto ng_input_shape = ng_input.get_shape();
+  std::string device;
+  // Enable transpose before and after only for CPU device
+  BackendManager::GetBackendName(device);
+  if (device == "CPU") {
+    if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
+  }
+  auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
+  if (device == "CPU") {
+    if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
+  }
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+
   return Status::OK();
 }
 
@@ -2435,6 +2777,111 @@ static Status TranslateReshapeOp(
       op->name(), ng::element::i64, ng::Shape{shape.size()}, shape);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Reshape>(
                                       op->name(), ng_input, ng_shape, false));
+  return Status::OK();
+}
+
+static Status TranslateRoundOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+
+  // using default round mode "half_to_even" in openvino,
+  // as TF has only that mode
+  opset::Round::RoundMode round_mode = opset::Round::RoundMode::HALF_TO_EVEN;
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Round>(op->name(), ng_input, round_mode));
+  return Status::OK();
+}
+
+static Status TranslateResizeBilinearOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp, ng_inp_sizes;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp, ng_inp_sizes));
+
+  // Get Interpolate attributes
+  using InterpolateV4Attrs = opset::Interpolate::InterpolateAttrs;
+  InterpolateV4Attrs interpolate_attrs;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+  interpolate_attrs.shape_calculation_mode =
+      opset::Interpolate::ShapeCalcMode::sizes;
+  bool align_corners = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
+  if (align_corners)
+    interpolate_attrs.coordinate_transformation_mode =
+        opset::Interpolate::CoordinateTransformMode::align_corners;
+
+  auto input_shape = ng_inp.get_shape();
+  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
+  auto ng_input_shape = ConstructNgNode<opset::Convert>(
+      op->name(), ng_spatial_shape, ng::element::f32);
+  auto ng_sizes = ConstructNgNode<opset::Convert>(op->name(), ng_inp_sizes,
+                                                  ng::element::f32);
+  auto ng_scales =
+      ConstructNgNode<opset::Divide>(op->name(), ng_sizes, ng_input_shape);
+  auto ng_axes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
+
+  Transpose<0, 3, 1, 2>(ng_inp);
+  auto ng_output = ConstructNgNode<opset::Interpolate>(
+      op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
+  Transpose<0, 2, 3, 1>(ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
+static Status TranslateResizeNearestNeighborOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_inp, ng_inp_sizes;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp, ng_inp_sizes));
+
+  opset::Interpolate::InterpolateAttrs interpolate_attrs;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+  interpolate_attrs.shape_calculation_mode =
+      opset::Interpolate::ShapeCalcMode::sizes;
+  bool align_corners = false;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
+  if (align_corners) {
+    interpolate_attrs.coordinate_transformation_mode =
+        opset::Interpolate::CoordinateTransformMode::align_corners;
+  }
+  interpolate_attrs.nearest_mode =
+      opset::Interpolate::NearestMode::round_prefer_floor;
+
+  auto input_shape = ng_inp.get_shape();
+  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
+  auto ng_input_shape = ConstructNgNode<opset::Convert>(
+      op->name(), ng_spatial_shape, ng::element::f32);
+  auto ng_sizes = ConstructNgNode<opset::Convert>(op->name(), ng_inp_sizes,
+                                                  ng::element::f32);
+  auto ng_scales =
+      ConstructNgNode<opset::Divide>(op->name(), ng_sizes, ng_input_shape);
+  auto ng_axes = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i32, ng::Shape{2}, std::vector<int>({2, 3}));
+
+  Transpose<0, 3, 1, 2>(ng_inp);
+  auto ng_output = ConstructNgNode<opset::Interpolate>(
+      op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
+  Transpose<0, 2, 3, 1>(ng_output);
+  SaveNgOp(ng_op_map, op->name(), ng_output);
+  return Status::OK();
+}
+
+static Status TranslateReverseOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input, ng_reversed_axis;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_reversed_axis));
+  ngraph::op::v1::Reverse::Mode mode = ngraph::op::v1::Reverse::Mode::INDEX;
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<ngraph::op::v1::Reverse>(op->name(), ng_input,
+                                                    ng_reversed_axis, mode));
   return Status::OK();
 }
 
@@ -2872,16 +3319,28 @@ static Status TranslateTopKV2Op(
     sort = "index";
   }
 
-  auto ng_result =
-      std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+  if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_input.get_element_type(), ngraph::Shape{0},
+                 std::vector<int>({0})));
 
-  ng::Output<ng::Node> ng_values = ng_result->output(0);
-  Builder::SetTracingInfo(op->name(), ng_values);
-  ng::Output<ng::Node> ng_indices = ng_result->output(1);
-  Builder::SetTracingInfo(op->name(), ng_indices);
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(op->name(), ng::element::i32,
+                                              ngraph::Shape{0},
+                                              std::vector<int>({0})));
+  } else {
+    auto ng_result =
+        std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
 
-  SaveNgOp(ng_op_map, op->name(), ng_values);
-  SaveNgOp(ng_op_map, op->name(), ng_indices);
+    ng::Output<ng::Node> ng_values = ng_result->output(0);
+    Builder::SetTracingInfo(op->name(), ng_values);
+    ng::Output<ng::Node> ng_indices = ng_result->output(1);
+    Builder::SetTracingInfo(op->name(), ng_indices);
+
+    SaveNgOp(ng_op_map, op->name(), ng_values);
+    SaveNgOp(ng_op_map, op->name(), ng_indices);
+  }
 
   return Status::OK();
 }
@@ -3015,6 +3474,7 @@ const static std::map<
         {"Atan", TranslateUnaryOp<opset::Atan>},
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp},
+        {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
         {"Ceil", TranslateUnaryOp<opset::Ceiling>},
@@ -3025,12 +3485,15 @@ const static std::map<
         {"Conv3D", TranslateConv3DOp},
         {"Cos", TranslateUnaryOp<opset::Cos>},
         {"Cosh", TranslateUnaryOp<opset::Cosh>},
+        {"CropAndResize", TranslateCropAndResizeOp},
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
+        {"Elu", TranslateEluOp},
         {"Equal", TranslateBinaryOp<opset::Equal>},
         {"Exp", TranslateUnaryOp<opset::Exp>},
         {"ExpandDims", TranslateExpandDimsOp},
+        {"FakeQuantWithMinMaxVars", TranslateFakeQuantWithMinMaxVarsOp},
         {"Fill", TranslateFillOp},
         {"Floor", TranslateUnaryOp<opset::Floor>},
         {"FloorDiv", TranslateFloorDivOp},
@@ -3040,6 +3503,7 @@ const static std::map<
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
         {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
+        {"GatherNd", TranslateGatherNdOp},
         {"_FusedBatchNormEx", TranslateFusedBatchNormOp},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedDepthwiseConv2dNative", TranslateFusedDepthwiseConv2dNativeOp},
@@ -3093,6 +3557,11 @@ const static std::map<
         {"Relu", TranslateUnaryOp<opset::Relu>},
         {"Relu6", TranslateRelu6Op},
         {"Reshape", TranslateReshapeOp},
+        {"Round", TranslateRoundOp},
+        {"ResizeBilinear", TranslateResizeBilinearOp},
+        {"ResizeNearestNeighbor", TranslateResizeNearestNeighborOp},
+        {"Reverse", TranslateReverseOp},
+        {"ReverseV2", TranslateReverseOp},
         {"Rsqrt", TranslateRsqrtOp},
         {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
@@ -3106,6 +3575,7 @@ const static std::map<
         {"Snapshot", TranslateIdentityOp},
         {"Softmax", TranslateSoftmaxOp},
         {"Softplus", TranslateSoftPlusOp},
+        {"SpaceToBatchND", TranslateBatchNDAndSpaceNDOp},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
@@ -3211,7 +3681,17 @@ Status Builder::TranslateGraph(
     GetNodeAttr(parm->attrs(), "_prov_tag", &prov_tag);
     auto ng_param =
         ConstructNgNode<opset::Parameter>(prov_tag, ng_et, ng_shape);
-    if (ng_shape.size() > 0 && ng_shape[0] == 0) {
+
+    auto ng_shape_check = [ng_shape]() {
+      if (ng_shape.size() > 0) {
+        for (auto val : ng_shape) {
+          if (val == 0) return true;
+        }
+      }
+      return false;
+    };
+
+    if (ng_shape_check()) {
       std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
       auto ng_const_input = ConstructNgNode<opset::Constant>(
           prov_tag, ng_et, ng_shape, constant_values);
@@ -3282,17 +3762,34 @@ Status Builder::TranslateGraph(
     ng_result_list[index] =
         ngraph::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
   }
+
+  auto param_dim_check = [ng_parameter_list](int i) {
+    auto param_shape_list = ng_parameter_list[i]->get_shape();
+    for (auto dim : param_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 &&
-          ng_parameter_list[i]->get_shape()[0] == 0)) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }
+
+  auto result_dim_check = [ng_result_list](int i) {
+    auto res_shape_list = ng_result_list[i]->get_shape();
+    for (auto dim : res_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (ng_result_list[i]->is_dynamic() ||
-        !(ng_result_list[i]->get_shape().size() > 0 &&
-          ng_result_list[i]->get_shape()[0] == 0))
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
       ng_func_result_list.push_back(ng_result_list[i]);
+    }
   }
 
   //

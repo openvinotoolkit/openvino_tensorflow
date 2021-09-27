@@ -1,4 +1,4 @@
-# Instructions to accelerate TensorFlow models on AWS with the **OpenVINO™ integration with TensorFlow**
+# Instructions to accelerate TensorFlow models on AWS with **OpenVINO™ integration with TensorFlow**
 
 -	Launch the Deep Learning AMI EC2 instance Ubuntu 18.04 Version 41.0
 
@@ -6,7 +6,7 @@
  <img src="images/AWS_image_1.png">
 </p>
 
--	Choose one of the C5 instances –these are optimized for inference. The larger the instance,the faster the inference
+-	Choose one of the C5 instances – these are optimized for inference. The larger the instance,the faster the inference
 
 <p align="center">
 <img src="images/AWS_image_2.png">
@@ -28,7 +28,7 @@ chmod 400 the *.pem key.
   $ scp -i *.pem  <source-file> <IP-addr-of-your-instance>:/tmp
   ```
 
-  SSH and SCP with the AWS instance should be working (Note: It worked seamlessly on our team Intel provided AWS account, but developers might need to configure networking to enable this). 
+  SSH and SCP with the AWS instance should be working (Note: Please ensure that the networking is configured properly to enable SSH and SCP access to the selected VM instance.) 
   
 - Install **OpenVINO™ integration with TensorFlow**
 
@@ -40,22 +40,21 @@ chmod 400 the *.pem key.
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install --upgrade pip
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.5.0
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.5.1
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U openvino-tensorflow
   
 ```
--	verify the installation 
+-	Verify the installation 
 
 ```bash
 (myenv) ubuntu@ip-10-0-0-123:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
-TensorFlow version:  2.5.0
-OpenVINO integration with TensorFlow version: b'0.5.0'
-OpenVINO version used for this build: b'2021.3'
-TensorFlow version used for this build: v2.5.0
+TensorFlow version:  2.5.1
+OpenVINO integration with TensorFlow version: b'1.0.0'
+OpenVINO version used for this build: b'2021.4.1'
+TensorFlow version used for this build: v2.5.1
 CXX11_ABI flag used for this build: 0
-OpenVINO integration with TensorFlow built with Grappler: False
 ```
 
 - Clone the repo to run the example

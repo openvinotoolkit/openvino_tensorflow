@@ -1,0 +1,22 @@
+--- tensorflow-yolo-v3/tools/model_converter/keras_to_tensorflow.py	2021-08-17 04:17:22.186256673 +0530
++++ keras_to_tensorflow_modified.py	2021-08-17 04:14:43.686249508 +0530
+@@ -22,7 +22,9 @@
+ 
+ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
+ from common.utils import get_custom_objects
+-
++# tf.enable_eager_execution()
++tf.compat.v1.disable_eager_execution()
++from tensorflow.python.keras.backend import get_session
+ K.set_learning_phase(0)
+ FLAGS = flags.FLAGS
+ 
+@@ -150,7 +152,7 @@
+     logging.info('Converted output node names are: %s',
+                  str(converted_output_node_names))
+ 
+-    sess = K.get_session()
++    sess = get_session()
+     if FLAGS.output_meta_ckpt:
+         saver = tf.train.Saver()
+         saver.save(sess, str(output_fld / output_model_stem))

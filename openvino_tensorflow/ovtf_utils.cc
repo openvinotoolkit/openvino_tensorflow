@@ -142,6 +142,9 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
     case DataType::DT_HALF:
       *ng_et = ngraph::element::f16;
       break;
+    case DataType::DT_INT16:
+      *ng_et = ngraph::element::i16;
+      break;
     default:
       return errors::Unimplemented("Unsupported TensorFlow data type: ",
                                    DataType_Name(tf_dt));

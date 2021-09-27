@@ -11,20 +11,21 @@ import re
 import fnmatch
 import time
 import warnings
+import platform
 
 from datetime import timedelta
 from fnmatch import fnmatch
 
-import multiprocessing
-mpmanager = multiprocessing.Manager()
-mpmanager_return_dict = mpmanager.dict()
+if not platform.system() == "Darwin":
+    import multiprocessing
+    mpmanager = multiprocessing.Manager()
+    mpmanager_return_dict = mpmanager.dict()
 
 try:
     import xmlrunner
 except:
     os.system('pip install unittest-xml-reporting')
     import xmlrunner
-os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 """
 tf_unittest_runner is primarily used to run tensorflow python 
 unit tests using ngraph
@@ -380,8 +381,7 @@ def timeout_handler(signum, frame):
 
 def run_singletest(testpattern, runner, a_test, timeout):
     # This func runs in the same process
-    mpmanager_return_dict.clear()
-    return_dict = mpmanager_return_dict
+    return_dict = {}
     import signal
     signal.signal(signal.SIGALRM, timeout_handler)
 
@@ -456,12 +456,8 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
                 print('>> >> >> >> ({}) Testing: {} ...'.format(
                     run_test_counter, a_test.id()))
                 start = time.time()
-                if os.getenv('OPENVINO_TF_BACKEND', default="CPU") == "MYRIAD":
-                    test_result_map = run_singletest(testpattern, runner,
-                                                     a_test, timeout)
-                else:
-                    test_result_map = run_singletest_in_new_child_process(
-                        runner, a_test)
+                test_result_map = run_singletest(testpattern, runner, a_test,
+                                                 timeout)
                 elapsed = time.time() - start
                 elapsed = str(timedelta(seconds=elapsed))
 

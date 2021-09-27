@@ -53,6 +53,10 @@ if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
     add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
 endif()
 
+if(OPENVINO_BUILD_VERSION)
+    add_compile_definitions(OPENVINO_BUILD_VERSION="${OPENVINO_BUILD_VERSION}")
+endif()
+
 add_library(${LIB_NAME} SHARED ${SRC})
 target_link_libraries(
         ${LIB_NAME}
@@ -105,9 +109,15 @@ else()
 endif()
 
 # Install OpenVINO libraries
+if (APPLE)
+  set(OCM_LIB libocm.dylib)
+else()
+  set(OCM_LIB libocm.so)
+endif()
+
 set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
 set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/libocm.so DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
@@ -136,6 +146,7 @@ install(CODE "set(OVTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(OVTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
+install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
 if(PYTHON_EXECUTABLE)
     install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
 endif()

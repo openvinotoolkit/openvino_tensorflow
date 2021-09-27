@@ -1,128 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    
+
     <title>OpenVINO™ integration with TensorFlow</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
 
     <!-- <script src="https://kit.fontawesome.com/e9fe64f610.js" crossorigin="anonymous"></script> -->
     <link rel="stylesheet" href="./docs/site/style.css">
 </head>
+
 <body>
-  <div class="jumbotron jumbotron-fluid">
-    <div class="container">
-      <h1 class="display-4"><img class="img-fluid center" src="https://docs.openvinotoolkit.org/assets/images/int-openvino-wht.svg" alt="OpenVino/Tensorflow"></h1>
-      <p class="lead center">OpenVINO™ integration with TensorFlow</p>
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4"><img class="img-fluid center" src="https://docs.openvinotoolkit.org/assets/images/int-openvino-wht.svg" alt="OpenVino/Tensorflow"></h1>
+            <p class="lead center">OpenVINO™ integration with TensorFlow</p>
+        </div>
     </div>
-  </div>
 
-<div class="container">
-  <div class="row">
-      <p style="display:inline">
-        <b>OpenVINO™ integration with TensorFlow</b> is a product that delivers OpenVINO™ inline optimizations and runtime needed for an enhanced level of TensorFlow compatiblity. It is designed for developers who want to get started with OpenVINO™ in their inferencing applications to enhance inferencing performance with minimal code modifications. <b>OpenVINO™ integration with TensorFlow</b> accelerates inference across many AI models on a variety of Intel® silicon such as:
-      </p>
-        <ul>
-          <li>Intel® CPUs</li>
-          <li>Intel® integrated GPUs</li>
-          <li>Intel® Movidius™  Vision Processing Units (VPUs)</li>
-          <li>Intel® Vision accelerator Design with 8 Intel Movidius™  MyriadX VPUs - referred as VAD-M or HDDL</li>
-        </ul>
-      
-  </div>
-</div>
+    <div class="container">
+        <div class="row">
+            <p style="display:inline; font-size:20px">
+                <b><br>Select your preferences by clicking on the cells below and run the installation command displayed.
+            </p>
+
+        </div>
+    </div>
 
 
- <!-- Table -->
- 
- <div class="container ml-0">
-   <div class="row">
-    <div class="col-sm-2 title-block" style="border-radius: 20px 0px 0px 0px;">
-      Installation Table
-     </div>
-     <div class="col title-block" style="border-radius: 0px 20px 0px 0px; color: #ffffff; background-color: #0071C5;">
-      <b>Click on the cells in the interactive table to display the right command for the installation</b>
-     </div>
-   </div>
+    <!-- Table -->
+
+    <div class="container ml-0">
     <div class="row ">
-        <div class="col-sm-2 title-block">
-          Pre-installed
+        <div class="col-sm-2 title-block" style="border-radius: 20px 0px 0px 0px;">
+            Pre-installed
         </div>
         <div class="col-sm title-block selected" id="option-byo-none">
-          None
+            None
         </div>
         <div class="col-sm title-block" id="option-byo-tensorflow">
-          TensorFlow
+            TensorFlow
         </div>
-        <div class="col-sm title-block" id="option-byo-openvino">
-          OpenVINO™ Release package
+        <div class="col-sm title-block" id="option-byo-openvino" style="border-radius: 0px 20px 0px 0px;">
+            OpenVINO™ Release package
         </div>
         <!-- <div class="col-sm title-block" id="option-byo-tfov">
         TensorFlow & OpenVino
         </div> -->
-      </div>
+    </div>
 
-      <div class="row ">
+    <div class="row ">
         <div class="col-sm-2 title-block">
-         Operating System
+            Operating System
         </div>
         <div class="col-sm title-block selected" id="option-os-ubuntu18">
-          Ubuntu 18.04
+            Ubuntu 18.04
         </div>
         <div class="col-sm title-block" id="option-os-ubuntu20">
-          Ubuntu 20.04
+            Ubuntu 20.04
         </div>
         <div class="col-sm title-block" id="option-os-windows">
-          Windows
+            Windows
         </div>
         <div class="col-sm title-block" id="option-os-mac">
-           MacOS
-          </div>
-      </div>
+            MacOS
+        </div>
+    </div>
 
-      <div class="row ">
+    <div class="row ">
         <div class="col-sm-2 title-block">
-         Distro
+            Distro
         </div>
         <div class="col-sm title-block selected" id="option-distro-pip">
-          Pip
+            Pip
         </div>
         <div class="col-sm title-block" id="option-distro-source">
-          Source
+            Source
         </div>
-      </div>
+    </div>
 
-      <div class="row ">
+    <div class="row ">
         <div class="col-sm-2 title-block">
-         VAD-M
+            VAD-M
         </div>
         <div class="col-sm title-block" id="option-hddl-yes">
-          Yes
+            Yes
         </div>
         <div class="col-sm title-block selected" id="option-hddl-no">
-          No
+            No
         </div>
-      </div>
+    </div>
 
-      <div class="row">
+    <div class="row">
         <div class="col-sm-2 title-block">
             Run this command:
         </div>
         <div class="col-sm title-block" id="command-area">
             Choose Features
         </div>
-      </div>
-  <!-- Announcement and Notification -->
-  <div class="row" style="background-color: #FFFDDE;">
-    <div style='padding-top:5px;text-align:center'> <b>NOTE: "Pre-installed OpenVINO™ and TensorFlow are ABI incompatible and cannot be used together"</b> </div> 
-    <div style='padding-top:5px;text-align:center'> <b>NOTE: "OpenVINO™ integration with TensorFlow build with PyPi OpenVINO™ package is not validated"</b> </div> 
-    <div style='padding-top:5px;text-align:center'> <b>NOTE: "In order to build OpenVINO™ integration with TensorFlow on Intel Atom® processor, refer to the build instructions <a href="https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#build-instructions-for-intel-atom-processor">here</a>" </b> </div> 
-  </div>
-      
- </div>
+    </div>
+    <!-- Announcement and Notification -->
+    <div class="row" style="background-color: #FFFDDE;">
+        <div style='padding-top:5px;text-align:center'> <b>NOTE: "Pre-installed OpenVINO™ and TensorFlow are ABI incompatible and cannot be used together"</b> </div>
+        <div style='padding-top:5px;text-align:center'> <b>NOTE: "OpenVINO™ integration with TensorFlow build with PyPi OpenVINO™ package is not validated"</b> </div>
+        <div style='padding-top:5px;text-align:center'> <b>NOTE: "In order to build OpenVINO™ integration with TensorFlow on Intel Atom® processor, refer to the build instructions <a href="https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#build-instructions-for-intel-atom-processor">here</a>" </b>            </div>
+    </div>
 
- <!-- Psuedo Table -->
- <!-- Footer -->
- <p><br></p>
+    </div>
+
+    <!-- Psuedo Table -->
+    <!-- Footer -->
+    <p><br></p>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
@@ -132,4 +120,5 @@
 
     <script src="./docs/site/main.js" type="module"></script>
 </body>
+
 </html>

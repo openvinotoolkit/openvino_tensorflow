@@ -1,0 +1,102 @@
+# Manifest to specify included & excluded tests
+# Comment lines start with #
+# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
+
+# Read comments in tests_common.txt for allowed regex/patterns
+
+###################################################
+[IMPORT]
+# Read in one/more external manifest file(s)
+# Path specified is relative to this file's path
+
+tests_common.txt
+
+###################################################
+[RUN]
+# Specify tests/patterns/regex that should be included
+
+# None
+
+###################################################
+[SKIP]
+# This test fails with Intel-TF; is added for reproducing the failure seen with TF py test
+test_maxpool3dgrad.TestMaxpool3DGrad.test_maxpool3d_grad
+
+# unsupported type
+test_bfloat16.TestBfloat16.test_conv2d_bfloat16
+test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
+
+# Failed to set Blob with precision not corresponding to user output precision
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_less[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_less[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_less[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_less[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_less[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater_equal[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_greater[1.4-1.0-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0--1.0-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_greater[-1.0-1000-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_greater[200-200-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v14-v24-expected4]
+test_elementwise_ops.TestElementwiseOperations.test_greater[v15-v25-expected5]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[False-True]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_1d[True-False]
+test_elementwise_ops.TestElementwiseOperations.test_logicalnot_2d
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-True-expected0]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[True-False-expected1]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[1.0--2.0-expected2]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[False-100-expected3]
+test_elementwise_ops.TestElementwiseOperations.test_logical_and[v14-v24-expected4]
+test_while_loop.TestWhileLoop.test_while_loop
+
+# data doesn't exist
+test_mnist_training.TestMnistTraining.test_mnist_training[adam]
+test_mnist_training.TestMnistTraining.test_mnist_training[sgd]
+test_mnist_training.TestMnistTraining.test_mnist_training[momentum]
+test_resize_to_dynamic_shape.TestResizeToDynamicShape.test_resize_to_dynamic_shape
+test_shared_const.TestSharedConst.test_sharedconst1
+
+# cannot find blob with name <parameter>
+test_pad.TestPadOperations.test_pad2
+
+# incorrect number of input/output dims
+test_prod.TestProductOperations.test_prod[v10--1-expected0]
+test_prod.TestProductOperations.test_prod[v11-0-expected1]
+test_prod.TestProductOperations.test_prod[v15-axis5-expected5]
+test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
+test_prod.TestProductOperations.test_dynamic_axis_fallback[v10-0-expected0]
+
+test_set_backend.TestSetBackend.test_set_backend
+
+# Segmentation fault
+test_slice.TestSliceOperations.test_strided_slice
+
+# Cannot find blob with name
+test_slice.TestSliceOperations.test_strided_slice_5
+
+# incorrect dimensions in the output data 0
+test_squeeze.TestSqueezeOperations.test_squeeze[shape0-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape1-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape3-None]
+test_squeeze.TestSqueezeOperations.test_squeeze[shape4-None]
+test_l2loss.TestL2Loss.test_l2loss[xshape1]
+
+# OP disable tests are not supported as of now
+test_op_disable.TestOpDisableOperations.*
+
+# Parameter mismtach: Failed to set output blob with precision: I32, if CNNNetwork output blob precision is: FP32
+test_topkv2.TestTopKV2.test_topkv2_1d
+test_topkv2.TestTopKV2.test_topkv2_2d
+test_topkv2.TestTopKV2.test_topkv2_3d
