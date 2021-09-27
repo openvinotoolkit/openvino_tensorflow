@@ -4,7 +4,7 @@
   <img src="images/openvino_wbgd.png">
 </p>
 
-# **OpenVINO™ integration with TensorFlow **
+# **OpenVINO™ integration with TensorFlow**
 
 该仓库包含 **OpenVINO™ integration with TensorFlow** 的源代码，该产品可提供所需的 [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) 内联优化和运行时，显著增强对TensorFlow 的兼容性。该产品专为开发人员设计，支持他们将 OpenVINO™ 运用在自己的推理应用，只需稍微修改代码，就可显著增强推理性能。**OpenVINO™ integration with TensorFlow** 可在各种英特尔<sup>®</sup> 芯片上加速AI模型（如下所示） [AI 模型](docs/MODELS_cn.md)的推理速度：
 
@@ -35,7 +35,6 @@
         pip3 install -U openvino-tensorflow
 
 
-
 如果您想使用支持 Movidius™ 的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit)。
 
 更多关于其他安装模式的详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
@@ -43,6 +42,8 @@
 ## 配置
 
 安装 **OpenVINO™ integration with TensorFlow** 后，您可以在TensorFlow* 上对训练好的模型运行推理操作。
+
+为了获得最佳效果，建议通过设置环境变量 `TF_ENABLE_ONEDNN_OPTS=1` 来启用[oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN)。
 
 如要查看 **OpenVINO™ integration with TensorFlow** 是否安装正确，请运行
 
@@ -68,9 +69,13 @@
     openvino_tensorflow.list_backends()
 如欲了解更多 API 调用和环境变量的信息，请查看 [USAGE.md](docs/USAGE_cn.md)。
 
+[注意：如果系统中存在支持 CUDA 的设备，则将环境变量 CUDA_VISIBLE_DEVICES 设置为 -1]
+
 ## 示例
 
 如欲了解 **OpenVINO™ integration with TensorFlow** 的具体功能，请查看[示例](./examples)目录中的演示。
+
+示例教程也托管在 [Intel<sup>®</sup> DevCloud for the Edge](https://software.intel.com/content/www/us/en/develop/tools/devcloud/edge/build/ ovtfoverview.html）。 演示应用程序是使用 Jupyter Notebooks 实现的。 您可以在Intel<sup>®</sup> DevCloud 节点上执行它们，比较 **OpenVINO™ integration with TensorFlow** 原生 TensorFlow 和 OpenVINO™ 不同实现方式的性能结果。
 
 ## 许可
 **OpenVINO™ integration with TensorFlow** 依照 [Apache 许可版本 2.0](LICENSE)。通过贡献项目，您同意其中包含的许可和版权条款，并根据这些条款发布您的贡献。
