@@ -30,7 +30,7 @@ void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
 bool CheckBackend(const char* backend) {
-  const char* devices[4] = {"CPU", "GPU", "MYRIAD", "VAD-M"};
+  const char* devices[4] = {"CPU", "GPU", "GPU_FP16", "MYRIAD", "VAD-M"};
   for (int i = 0; i < 4; i++) {
     if (strcmp(backend, devices[i]) == 0) return true;
   }
