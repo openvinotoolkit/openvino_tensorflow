@@ -237,5 +237,5 @@ if ovtf_classic_loaded:
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
-    "TensorFlow version used for this build: " + TF_GIT_VERSION_BUILT_WITH + "\n" \
+    "TensorFlow version used for this build: " + "v" + TF_VERSION + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"
