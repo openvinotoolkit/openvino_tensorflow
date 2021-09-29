@@ -237,8 +237,8 @@ def yolo_decode(prediction,
 
     grid_size = np.shape(prediction)[1:3]
     #check if stride on height & width are same
-    assert input_dims[0] // grid_size[0] == input_dims[1] // grid_size[
-        1], 'model stride mismatch.'
+    if not input_dims[0] // grid_size[0] == input_dims[1] // grid_size[1]:
+        raise AssertionError('model stride mismatch.')
     stride = input_dims[0] // grid_size[0]
 
     prediction = np.reshape(
@@ -603,8 +603,8 @@ def yolo3_decode(predictions,
     :param predictions: A list of three tensors with shape (N, 19, 19, 255), (N, 38, 38, 255) and (N, 76, 76, 255)
     :return: A tensor with the shape (N, num_boxes, 85)
     """
-    assert len(predictions) == len(
-        anchors) // 3, 'anchor numbers does not match prediction.'
+    if not len(predictions) == len(anchors) // 3:
+        raise AssertionError('anchor numbers does not match prediction.')
 
     if len(predictions) == 3:  # assume 3 set of predictions is YOLOv3
         anchor_mask = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]

@@ -35,7 +35,8 @@ class TestBfloat16(NgraphTest):
         def run_test(sess):
             return sess.run((out,), feed_dict={a: a_inp, x: x_inp})
 
-        assert self.with_ngraph(run_test) == self.without_ngraph(run_test)
+        if not self.with_ngraph(run_test) == self.without_ngraph(run_test):
+            raise AssertionError
 
     # For testing, we usually run the same graph on TF by disabling NGraph Rewrites.
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
@@ -75,7 +76,8 @@ class TestBfloat16(NgraphTest):
         ng_val = self.with_ngraph(run_test)
         expected_val = np.reshape(
             np.array([516, 560, 588, 640, 804, 884, 876, 968]), (1, 2, 2, 2))
-        assert np.allclose(ng_val, expected_val)
+        if not np.allclose(ng_val, expected_val):
+            raise AssertionError
 
     # For testing, we usually run the same graph on TF by disabling NGraph Rewrites.
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
@@ -120,4 +122,5 @@ class TestBfloat16(NgraphTest):
         ng_val = self.with_ngraph(run_test)
         expected_val = np.reshape(
             np.array([516, 560, 588, 640, 804, 884, 876, 968]), (1, 2, 2, 2))
-        assert np.allclose(ng_val, expected_val)
+        if not np.allclose(ng_val, expected_val):
+            raise AssertionError

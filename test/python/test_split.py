@@ -38,10 +38,13 @@ class TestSplitOperations(NgraphTest):
 
         sess_fn = lambda sess: sess.run([tensors], feed_dict={a: input_val})
         results = self.with_ngraph(sess_fn)
-        assert len(results[0]) == len(slices)
+        if not len(results[0]) == len(slices):
+            raise AssertionError
         for i in range(len(slices)):
-            assert slices[i].shape == results[0][i].shape
-            assert np.allclose(slices[i], results[0][i])
+            if not slices[i].shape == results[0][i].shape:
+                raise AssertionError
+            if not np.allclose(slices[i], results[0][i]):
+                raise AssertionError
 
     @pytest.mark.parametrize(("shape", "number", "split_dim"),
                              (((2, 7), 7, 1), ((2, 7), 1, 0), ((9, 9), 3, 0)))
@@ -54,10 +57,13 @@ class TestSplitOperations(NgraphTest):
 
         sess_fn = lambda sess: sess.run([tensors], feed_dict={a: input_val})
         results = self.with_ngraph(sess_fn)
-        assert len(results[0]) == len(slices)
+        if not len(results[0]) == len(slices):
+            raise AssertionError
         for i in range(len(slices)):
-            assert slices[i].shape == results[0][i].shape
-            assert np.allclose(slices[i], results[0][i])
+            if not slices[i].shape == results[0][i].shape:
+                raise AssertionError
+            if not np.allclose(slices[i], results[0][i]):
+                raise AssertionError
 
     def test_split_outputs_order(self):
         a = tf.compat.v1.placeholder(tf.float32, (5,))
@@ -72,10 +78,14 @@ class TestSplitOperations(NgraphTest):
         sess_fn = lambda sess: sess.run([t1plus, t0plus],
                                         feed_dict={a: [0, 1, 2, 3, 4]})
         (r1, r0) = self.with_ngraph(sess_fn)
-        assert len(r1) == 3
-        assert len(r0) == 2
-        assert np.allclose(r1, [2, 3, 4])
-        assert np.allclose(r0, [0, 0])
+        if not len(r1) == 3:
+            raise AssertionError
+        if not len(r0) == 2:
+            raise AssertionError
+        if not np.allclose(r1, [2, 3, 4]):
+            raise AssertionError
+        if not np.allclose(r0, [0, 0]):
+            raise AssertionError
 
     def test_split_cpu_one_output(self):
         a = tf.compat.v1.placeholder(tf.float32, (5,))
@@ -85,5 +95,7 @@ class TestSplitOperations(NgraphTest):
         sess_fn = lambda sess: sess.run([t1plus],
                                         feed_dict={a: [0, 1, 2, 3, 4]})
         r1 = self.with_ngraph(sess_fn)
-        assert len(r1[0]) == 3
-        assert np.allclose(r1[0], [2, 3, 4])
+        if not len(r1[0]) == 3:
+            raise AssertionError
+        if not np.allclose(r1[0], [2, 3, 4]):
+            raise AssertionError

@@ -37,9 +37,8 @@ class TestCropAndResize(NgraphTest):
         def run_test(sess):
             return sess.run((output,))
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,
-            1e-6)
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,1e-6):
+            raise AssertionError
 
     def test_crop_and_resize_upscale_nearest(self):
 
@@ -61,6 +60,5 @@ class TestCropAndResize(NgraphTest):
         def run_test(sess):
             return sess.run((output,))
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,
-            1e-6)
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,1e-6):
+            raise AssertionError

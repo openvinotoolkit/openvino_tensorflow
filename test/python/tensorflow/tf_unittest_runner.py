@@ -12,6 +12,7 @@ import fnmatch
 import time
 import warnings
 import platform
+import subprocess
 
 from datetime import timedelta
 from fnmatch import fnmatch
@@ -24,7 +25,7 @@ if not platform.system() == "Darwin":
 try:
     import xmlrunner
 except:
-    os.system('pip install unittest-xml-reporting')
+    subprocess.run(["pip"," install"," unittest","-xml","-reporting"])
     import xmlrunner
 """
 tf_unittest_runner is primarily used to run tensorflow python 
@@ -282,7 +283,8 @@ def read_tests_from_manifest(manifestfile,
     run_items = set()
     skipped_items = set()
     g_imported_files.add(manifestfile)
-    assert os.path.isfile(manifestfile), "Could not find the file"
+    if not os.path.isfile(manifestfile):
+        raise AssertionError("Could not find the file")
     with open(manifestfile) as fh:
         curr_section = ''
         for line in fh.readlines():
@@ -308,8 +310,8 @@ def read_tests_from_manifest(manifestfile,
                 g_imported_files.add(line)
                 new_runs, new_skips = read_tests_from_manifest(
                     line, tensorflow_path, g_imported_files)
-                assert (new_runs.isdisjoint(new_skips))
-                run_items |= new_runs
+                if not (new_runs.isdisjoint(new_skips)):
+                    run_items |= new_runs
                 skipped_items |= new_skips
                 run_items -= skipped_items
                 continue
@@ -322,9 +324,8 @@ def read_tests_from_manifest(manifestfile,
                 new_skips = set([x for x in new_skips if x in run_items])
                 run_items -= new_skips
                 skipped_items |= new_skips
-        assert (run_items.isdisjoint(skipped_items))
-        print('\n#Tests to Run={}, Skip={} (manifest = {})\n'.format(
-            len(run_items), len(skipped_items), manifestfile))
+        if not (run_items.isdisjoint(skipped_items)):
+            raise AssertionError("\n#Tests to Run={}, Skip={} (manifest = {})\n".format(len(run_items), len(skipped_items), manifestfile))
 
     return run_items, skipped_items
 
@@ -432,7 +433,8 @@ def run_test(test_list, xml_report, timeout=60, verbosity=0):
         for testpattern in test_list:
             tests = loader.loadTestsFromName(testpattern)
             suite.addTest(tests)
-        assert os.path.isfile(xml_report), "Could not find the file"
+        if not os.path.isfile(xml_report):
+            raise AssertionError("Could not find the file")
         with open(xml_report, 'wb') as output:
             sys.stdout = open(os.devnull, "w")
             sys.stderr = open(os.devnull, "w")

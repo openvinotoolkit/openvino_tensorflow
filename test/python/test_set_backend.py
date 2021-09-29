@@ -42,7 +42,8 @@ class TestSetBackend(NgraphTest):
             if backend_name == backend_interpreter:
                 found_interpreter = True
         print(" ******************************** ")
-        assert (found_cpu and found_interpreter) == True
+        if not (found_cpu and found_interpreter) == True:
+            raise AssertionError
 
         # Create Graph
         val = tf.compat.v1.placeholder(tf.float32)
@@ -52,7 +53,8 @@ class TestSetBackend(NgraphTest):
         # set INTERPRETER backend
         openvino_tensorflow.set_backend(backend_interpreter)
         current_backend = openvino_tensorflow.get_backend()
-        assert current_backend == backend_interpreter
+        if not current_backend == backend_interpreter:
+            raise AssertionError
 
         # create new session to execute graph
         # If you want to re-confirm which backend the graph was executed
@@ -60,17 +62,20 @@ class TestSetBackend(NgraphTest):
         with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         current_backend = openvino_tensorflow.get_backend()
-        assert current_backend == backend_interpreter
+        if not current_backend == backend_interpreter:
+            raise AssertionError
 
         # set CPU backend
         openvino_tensorflow.set_backend(backend_cpu)
         current_backend = openvino_tensorflow.get_backend()
-        assert current_backend == backend_cpu
+        if not current_backend == backend_cpu:
+            raise AssertionError
         # create new session to execute graph
         with tf.compat.v1.Session() as sess:
             sess.run((out2,), feed_dict={val: ((1.4, -0.5, -1))})
         current_backend = openvino_tensorflow.get_backend()
-        assert current_backend == backend_cpu
+        if not current_backend == backend_cpu:
+            raise AssertionError
 
         # restore env_variables
         self.restore_env_variables(env_var_map)

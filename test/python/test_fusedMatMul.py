@@ -53,6 +53,5 @@ class TestFusedMatMul(NgraphTest):
                     z: bias_values,
                 })
 
-            assert np.allclose(
-                self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5,
-                1e-6)
+            if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test), 1e-5, 1e-6):
+                raise AssertionError

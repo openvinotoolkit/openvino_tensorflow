@@ -59,12 +59,12 @@ def command_executor(cmd,
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd, file=stdout)
     try:
-        process = subprocess.Popen(
+        process = subprocess.check_output(
             shlex.split(cmd), stdout=stdout, stderr=stderr)
         so, se = process.communicate()
         retcode = process.returncode
-        assert retcode == 0, "dir:" + os.getcwd(
-        ) + ". Error in running command: " + cmd
+        if not retcode == 0:
+            raise AssertionError("dir:" + os.getcwd( ) + ". Error in running command: " + cmd)
     except OSError as e:
         print(
             "!!! Execution failed !!!",
@@ -113,7 +113,8 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
     command_executor(cmd, verbose=True)
     cmd = ["make", "install"]
     command_executor(cmd, verbose=True)
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
 
@@ -189,7 +190,8 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    call(['which', 'pip'])
+    subprocess.check_output(['which', 'pip'])
+    subprocess.run(['which', 'pip'])
 
     # Install the pip packages
     command_executor(["pip3", "install", "-U", "pip"])
@@ -244,7 +246,8 @@ def build_tensorflow(tf_version,
     # Update the artifacts directory
     artifacts_dir = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
     print("ARTIFACTS DIR: %s" % artifacts_dir)
-    assert os.path.exists(src_dir), "Path doesn't exist {0}".format(src_dir)
+    if not os.path.exists(src_dir):
+        raise AssertionError("Path doesn't exist {0}".format(src_dir))
     os.chdir(src_dir)
 
     base = sys.prefix
@@ -331,7 +334,8 @@ def build_tensorflow(tf_version,
         print("TF Wheel: %s" % tf_wheel_files[0])
 
     # popd
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
 
@@ -369,14 +373,14 @@ def build_tensorflow_cc(tf_version,
     # Update the artifacts directory
     artifacts_dir = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
     print("ARTIFACTS DIR: %s" % artifacts_dir)
-    assert os.path.exists(src_dir), "Path doesn't exist {0}".format(src_dir)
+    if not os.path.exists(src_dir):
+        raise AssertionError("Path doesn't exist {0}".format(src_dir))
     os.chdir(src_dir)
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
         try:
-            assert os.path.exists(
-                doomed_file), "File not present for unlinking {0}".format(
-                    doomed_file)
+            if not os.path.exists(doomed_file):
+                raise AssertionError("File not present for unlinking {0}".format(doomed_file))
         except Exception as e:
             print("Cannot remove: %s" % e)
             pass
@@ -393,18 +397,20 @@ def build_tensorflow_cc(tf_version,
 
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
 
 def locate_tf_whl(tf_whl_loc):
-    assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
-        tf_whl_loc)
+    if not os.path.exists(tf_whl_loc):
+        raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
     possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-    assert len(possible_whl
-              ) == 1, "Expected 1 TF whl file, but found " + len(possible_whl)
+    if not len(possible_whl) == 1:
+        raise AssertionError("Expected 1 TF whl file, but found " + len(possible_whl))
     tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
-    assert os.path.isfile(tf_whl), "Did not find " + tf_whl
+    if not os.path.isfile(tf_whl):
+        raise AssertionError("Did not find " + tf_whl)
     return tf_whl
 
 
@@ -426,9 +432,8 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         os.unlink(doomed_file)
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
         try:
-            assert os.path.exists(
-                doomed_file), "File not present for unlinking {0}".format(
-                    doomed_file)
+            if not os.path.exists(doomed_file):
+                raise AssertionError("File not present for unlinking {0}".format(doomed_file))
         except Exception as e:
             print("Cannot remove: %s" % e)
             pass
@@ -477,9 +482,8 @@ def install_tensorflow(venv_dir, artifacts_dir):
     tf_pip = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
 
     pwd = os.getcwd()
-    assert os.path.exists(os.path.join(
-        artifacts_dir, "tensorflow")), "Path doesn't exist {0}".format(
-            os.path.join(artifacts_dir, "tensorflow"))
+    if not os.path.exists(os.path.join(artifacts_dir, "tensorflow")):
+        raise AssertionError("Path doesn't exist {0}".format(os.path.join(artifacts_dir, "tensorflow")))
     os.chdir(os.path.join(artifacts_dir, "tensorflow"))
 
     # Get the name of the TensorFlow pip package
@@ -497,7 +501,8 @@ def install_tensorflow(venv_dir, artifacts_dir):
     print("CXX_ABI: %d" % cxx_abi)
 
     # popd
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
     return str(cxx_abi)
@@ -517,15 +522,16 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
 
     ovtf_src_loc = os.path.abspath(ovtf_src_loc)
     print("Source location: " + ovtf_src_loc)
-    assert os.path.exists(ovtf_src_loc), "Path doesn't exist {0}".format(
-        ovtf_src_loc)
+    if not os.path.exists(ovtf_src_loc):
+        raise AssertionError("Path doesn't exist {0}".format(ovtf_src_loc))
     os.chdir(ovtf_src_loc)
 
     # mkdir build directory
     path = build_dir
     try:
         try:
-            assert os.path.exists(path), "Path doesn't exist {0}".format(path)
+            if not os.path.exists(path):
+                raise AssertionError("Path doesn't exist {0}".format(path))
             os.makedirs(path)
         except Exception as e:
             print("Path doesn't exist: %s" % e)
@@ -533,7 +539,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
     # Run cmake
-    assert os.path.exists(path), "Path doesn't exist {0}".format(path)
+    if not os.path.exists(path):
+        raise AssertionError("Path doesn't exist {0}".format(path))
     os.chdir(path)
     cmake_cmd = ["cmake"]
     cmake_cmd.extend(cmake_flags)
@@ -547,9 +554,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
         make_cmd.extend(['VERBOSE=1'])
 
     command_executor(make_cmd)
-    assert os.path.exists(os.path.join(
-        "python", "dist")), "Path doesn't exist {0}".format(
-            os.path.join("python", "dist"))
+    if not os.path.exists(os.path.join("python", "dist")):
+        raise AssertionError("Path doesn't exist {0}".format(os.path.join("python", "dist")))
     os.chdir(os.path.join("python", "dist"))
     ovtf_wheel_files = glob.glob("openvino_tensorflow*.whl")
     if (len(ovtf_wheel_files) != 1):
@@ -573,7 +579,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
 
     # Now copy
     shutil.copy2(output_wheel, artifacts_location)
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
     return output_wheel
 
@@ -599,21 +606,26 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    call(["git", "clone", repo, target_name])
+    subprocess.check_output(["git", "clone", repo, target_name])
+    subprocess.run(["git", "clone", repo, target_name])
 
     pwd = os.getcwd()
-    assert os.path.exists(target_name), "Path doesn't exist {0}".format(
-        target_name)
+    if not os.path.exists(target_name):
+        raise AssertionError("Path doesn't exist {0}".format(target_name))
     os.chdir(target_name)
 
     # checkout the specified branch and get the latest changes
-    call(["git", "fetch"])
+    subprocess.check_output(["git", "fetch"])
+    subprocess.run(["git", "fetch"])
     command_executor(["git", "checkout", version])
-    call(["git", "pull"])
+    subprocess.check_output(["git", "pull"])
+    subprocess.run(["git", "pull"])
 
     if submodule_update:
-        call(["git", "submodule", "update", "--init", "--recursive"])
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+        subprocess.check_output(["git", "submodule", "update", "--init", "--recursive"])
+        subprocess.run(["git", "submodule", "update", "--init", "--recursive"])
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
 
@@ -627,20 +639,21 @@ def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,
     # please ensure the latest `libdvdnav-dev` or `libdvdnav-devel` is installed.
     patch_command = ['patch', '-P', str(level), '-N', '-i', patch_file]
-    cmd = subprocess.Popen(patch_command, stdout=subprocess.PIPE)
+    cmd = subprocess.check_output(patch_command, stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in
     # which case the string will be found, in all other cases the assertion
     # will fail
-    assert cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
-        printed_lines[0]), "Error applying the patch."
+    if not cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(printed_lines[0]):
+        raise AssertionError("Error applying the patch.")
 
 
 def get_gcc_version():
-    cmd = subprocess.Popen(
+    cmd = subprocess.run(
         shlex.split('gcc -dumpfullversion -dumpversion'),
         stdout=subprocess.PIPE,
+        shell=False,
         bufsize=1,
         universal_newlines=True)
     output = cmd.communicate()[0].rstrip()
@@ -650,9 +663,10 @@ def get_gcc_version():
 
 
 def get_cmake_version():
-    cmd = subprocess.Popen(
+    cmd = subprocess.run(
         shlex.split('cmake --version'),
         stdout=subprocess.PIPE,
+        shell=False,
         bufsize=1,
         universal_newlines=True)
     output = cmd.communicate()[0].rstrip()
@@ -662,9 +676,10 @@ def get_cmake_version():
 
 
 def get_bazel_version():
-    cmd = subprocess.Popen(
+    cmd = subprocess.run(
         shlex.split('bazel version'),
         stdout=subprocess.PIPE,
+        shell=False,
         bufsize=1,
         universal_newlines=True)
     # The bazel version format is a multi line output:
