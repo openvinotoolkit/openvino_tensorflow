@@ -26,7 +26,7 @@ try:
     import xmlrunner
 except:
     subprocess.check_output(["pip"," install"," unittest","-xml","-reporting"])
-    subprocess.run(["pip"," install"," unittest","-xml","-reporting"])
+    
     import xmlrunner
 """
 tf_unittest_runner is primarily used to run tensorflow python 
