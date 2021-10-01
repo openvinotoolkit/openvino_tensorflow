@@ -25,7 +25,7 @@ if not platform.system() == "Darwin":
 try:
     import xmlrunner
 except:
-    subprocess.Popen(["pip"," install"," unittest","-xml","-reporting"])
+    subprocess.run(["pip"," install"," unittest","-xml","-reporting"])
     
     import xmlrunner
 """
