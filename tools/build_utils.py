@@ -663,7 +663,7 @@ def get_gcc_version():
 
 
 def get_cmake_version():
-    cmd = subprocess.Popen(
+    cmd = subprocess.check_output(
         shlex.split('cmake --version'),
         shell=False,
         stdout=subprocess.PIPE,
