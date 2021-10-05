@@ -190,7 +190,7 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    subprocess.run(['which', 'pip'])
+    subprocess.Popen(shlex.split('which pip'))
     
 
     # Install the pip packages
@@ -606,7 +606,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    subprocess.run(["git", "clone", repo, target_name])
+    subprocess.popen(shlex.split("git clone  repo target_name"))
     
 
     pwd = os.getcwd()
@@ -615,14 +615,14 @@ def download_repo(target_name, repo, version, submodule_update=False):
     os.chdir(target_name)
 
     # checkout the specified branch and get the latest changes
-    subprocess.run(["git", "fetch"])
+    subprocess.Popen(shlex.split("git fetch"))
   
     command_executor(["git", "checkout", version])
-    subprocess.run(["git", "pull"])
+    subprocess.Popen(shlex.split("git pull"))
    
 
     if submodule_update:
-        subprocess.run(["git", "submodule", "update", "--init", "--recursive"])
+        subprocess.Popen(shlex.split("git submodule update --init --recursive"))
        
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
