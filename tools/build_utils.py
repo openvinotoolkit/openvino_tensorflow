@@ -651,7 +651,7 @@ def apply_patch(patch_file, level=1):
 
 def get_gcc_version():
     cmd = subprocess.Popen(
-        'gcc -dumpfullversion -dumpversion',
+        shlex.split('gcc -dumpfullversion -dumpversion'),
         shell=False,
         stdout=subprocess.PIPE,
         bufsize=1,
@@ -677,7 +677,7 @@ def get_cmake_version():
 
 def get_bazel_version():
     cmd = subprocess.Popen(
-        'bazel version',
+        shlex.split('bazel version'),
         shell=False,
         stdout=subprocess.PIPE,
         bufsize=1,
