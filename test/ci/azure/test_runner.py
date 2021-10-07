@@ -7,15 +7,12 @@
 import argparse
 import errno
 import os
-from subprocess import  call
 import sys
 import shutil
 import glob
 import platform
 from distutils.sysconfig import get_python_lib
-
 from tools.test_utils import *
-
 
 def main():
     '''
