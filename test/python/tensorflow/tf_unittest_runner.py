@@ -12,7 +12,7 @@ import fnmatch
 import time
 import warnings
 import platform
-import subprocess
+from subprocess import Popen
 import shlex
 
 from datetime import timedelta
@@ -26,7 +26,7 @@ if not platform.system() == "Darwin":
 try:
     import xmlrunner
 except:
-    subprocess.Popen(shlex.split("pip install unittest-xml-reporting"))
+    Popen(shlex.split("pip install unittest-xml-reporting"))
     
     import xmlrunner
 """
