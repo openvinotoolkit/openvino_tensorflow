@@ -139,15 +139,3 @@ def draw_boxes(image,
         image = draw_label(image, label, color, (xmin, ymin))
 
     return image
-
-
-def write_images(output_dir, images):
-    output_dir = os.path.join(output_dir, 'outputs')
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    idx = 0
-    for image in images:
-        out_file = os.path.join(output_dir, 'detection_{}.jpg'.format(idx))
-        cv2.imwrite(out_file, image)
-        idx += 1
-    print("Output images are saved in {}".format(output_dir))
