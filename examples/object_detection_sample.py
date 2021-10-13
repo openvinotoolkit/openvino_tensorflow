@@ -33,7 +33,7 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 from PIL import Image
-from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors, write_images
+from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors, rename_file
 from common.pre_process import preprocess_image
 from common.post_process import yolo3_postprocess_np
 
@@ -97,6 +97,11 @@ if __name__ == "__main__":
         type=int,
         help="Optional. Specify input height value.")
     parser.add_argument(
+        "--rename",
+        help=
+        "Optional. The input image or the directory of the images will be renamed",
+        action='store_true')
+    parser.add_argument(
         "--input_width", type=int, help="Optional. Specify input width value.")
     parser.add_argument(
         "--input_mean", type=int, help="Optional. Specify input mean value.")
@@ -152,7 +157,19 @@ if __name__ == "__main__":
         conf_threshold = args.conf_threshold
     if args.iou_threshold:
         iou_threshold = args.iou_threshold
-
+    if args.rename:
+        print(40 * '-')
+        print(
+            "--rename argument is enabled, this will rename the input image or directory of images in your disk.\n Press 'y' to continue.\n Press 'n' to proceed without renaming.\n Press 'a' to abort."
+        )
+        print(40 * '-')
+        val = input()
+        if val == 'n':
+            print("Renaming has been disabled")
+            args.rename = False
+        elif val == 'a':
+            print("Aborted")
+            exit(0)
     # Load graph and process input image
     graph = load_graph(model_file)
     # Load the labels
@@ -190,13 +207,15 @@ if __name__ == "__main__":
         images = [input_file]
     elif input_mode == 'directory':
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        result_dir = os.path.join(input_file, '../detections')
+        if not os.path.exists(result_dir):
+            os.mkdir(result_dir)
     else:
         raise Exception(
             "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
         )
     images_len = len(images)
     image_id = -1
-    output_images = []
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
     with tf.compat.v1.Session(graph=graph, config=config) as sess:
@@ -258,7 +277,9 @@ if __name__ == "__main__":
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
             if input_mode in 'directory':
-                output_images.append(img_bbox)
+                out_file = "detections_{0}.jpg".format(image_id)
+                out_file = os.path.join(result_dir, out_file)
+                cv2.imwrite(out_file, img_bbox)
             if input_mode in 'image':
                 cv2.imwrite("detections.jpg", img_bbox)
                 print("Output image is saved in detections.jpg")
@@ -266,8 +287,11 @@ if __name__ == "__main__":
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
+            if args.rename:
+                rename_file(images[image_id], out_classes, labels)
     if input_mode in 'directory':
-        write_images(input_file, output_images)
+        print("Output images is saved in {0}".format(
+            os.path.abspath(result_dir)))
     sess.close()
     if cap:
         cap.release()

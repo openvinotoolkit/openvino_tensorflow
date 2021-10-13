@@ -22,10 +22,54 @@ import os
 import numpy as np
 import time
 import cv2, colorsys
-from PIL import Image
+from PIL import Image, ExifTags
+from PIL.ExifTags import TAGS
+from collections import Counter
 import imghdr
 import tensorflow as tf
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+
+
+def rename_file(filePath, out_classes, labels):
+    newName = ''
+    datetimeVal = ''
+    makeModel = ''
+    objTags = ''
+    if len(out_classes) > 0:
+        for key, value in Counter(out_classes).items():
+            temp = labels[key].replace(" ", "")
+            if value > 1:
+                objTags += str(value) + temp + '-'
+            else:
+                objTags += temp + '-'
+    else:
+        objTags = "NoObjectsDetected-"
+
+    current_fileName = os.path.basename(filePath)
+    current_directory = os.path.dirname(filePath)
+    fileName, fileExtension = current_fileName.rsplit('.', 1)
+    objTags = objTags + "IntelOpenVINO.{0}".format(fileExtension)
+
+    img = Image.open(filePath)
+    img_exif = img.getexif()
+
+    if len(img_exif) == 0:
+        print('Sorry, image has no exif data.')
+        newName = fileName + '-' + objTags
+    else:
+        for key, val in img_exif.items():
+            if key in ExifTags.TAGS:
+                if ExifTags.TAGS[key] == 'DateTime':
+                    datetimeVal = val.replace(':', '-').replace(' ', '-')
+                if ExifTags.TAGS[key] == 'Make':
+                    makeModel = val
+        newName = datetimeVal + '-' + makeModel + '-' + objTags
+    if newName.startswith('-'):
+        newName = newName.strip('-')
+        newName = fileName + '-' + newName
+    new_filePath = current_directory + os.sep + newName
+    print("newfilename ", new_filePath)
+    os.rename(filePath, new_filePath)
 
 
 def get_input_mode(input_path):
@@ -139,15 +183,3 @@ def draw_boxes(image,
         image = draw_label(image, label, color, (xmin, ymin))
 
     return image
-
-
-def write_images(output_dir, images):
-    output_dir = os.path.join(output_dir, 'outputs')
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    idx = 0
-    for image in images:
-        out_file = os.path.join(output_dir, 'detection_{}.jpg'.format(idx))
-        cv2.imwrite(out_file, image)
-        idx += 1
-    print("Output images are saved in {}".format(output_dir))
