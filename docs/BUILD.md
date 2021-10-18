@@ -17,6 +17,16 @@
 	autoSave=true
 	/markdown-toc-config -->
 <!-- /markdown-toc -->
+
+First, clone the `openvino_tensorflow` repository:
+
+  ```bash
+  $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+  $ cd openvino_tensorflow
+  $ git submodule init
+  $ git submodule update --recursive
+  ```
+
 ##  1. <a name='Prerequisites'></a>Prerequisites
 
 ###  1.1. <a name='Ubuntu'></a>Ubuntu
@@ -109,14 +119,6 @@ Notes:
 
 
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
-Clone the `openvino_tensorflow` repository:
-
-  ```bash
-  $ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
-  $ cd openvino_tensorflow
-  $ git submodule init
-  $ git submodule update --recursive
-  ```
 
 ###  2.1. <a name='BuildInstructions'></a>Build Instructions
 Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. TensorFlow C++ libraries built from source is required to use the C++ APIs.
