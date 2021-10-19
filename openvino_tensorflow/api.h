@@ -11,13 +11,13 @@
 #include <vector>
 
 #ifdef _WIN32
-	#ifdef BUILD_API
-		#define EXPORT_SYMBOL __declspec(dllexport)
-	#else
-		#define EXPORT_SYMBOL __declspec(dllimport)
-	#endif
+#ifdef BUILD_API
+#define EXPORT_SYMBOL __declspec(dllexport)
 #else
-    #define EXPORT_SYMBOL __attribute__((visibility("default")))
+#define EXPORT_SYMBOL __declspec(dllimport)
+#endif
+#else
+#define EXPORT_SYMBOL __attribute__((visibility("default")))
 #endif
 
 using namespace std;
@@ -48,7 +48,7 @@ extern EXPORT_SYMBOL void enable_dynamic_fallback();
 extern EXPORT_SYMBOL void disable_dynamic_fallback();
 
 extern EXPORT_SYMBOL bool export_ir(const char* output_dir, char** cluster_info,
-                      char** err_msg);
+                                    char** err_msg);
 }
 
 extern void Enable();

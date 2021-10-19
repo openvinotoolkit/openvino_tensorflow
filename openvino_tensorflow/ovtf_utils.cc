@@ -195,11 +195,11 @@ void PrintNodeHistogram(const std::unordered_map<string, int>& histogram,
 
 inline size_t GetMemPageSize() {
 #ifdef _WIN32
-    SYSTEM_INFO si = {};
-    GetSystemInfo(&si);
-    return si.dwAllocationGranularity;
+  SYSTEM_INFO si = {};
+  GetSystemInfo(&si);
+  return si.dwAllocationGranularity;
 #else
-    return sysconf(_SC_PAGE_SIZE);
+  return sysconf(_SC_PAGE_SIZE);
 #endif
 }
 
@@ -220,14 +220,14 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
     rss = std::stol(mem_str[23]);
 
     long page_size_kb;
-    #ifdef _WIN32
-      page_size_kb = GetMemPageSize() /
-                        1024;  // in case x86-64 is configured to use 2MB pages
-    #else
-      page_size_kb = sysconf(_SC_PAGE_SIZE) /
-                        1024;  // in case x86-64 is configured to use 2MB pages
-    #endif
-    vm_usage = vsize / 1024;   // unit kb
+#ifdef _WIN32
+    page_size_kb = GetMemPageSize() /
+                   1024;  // in case x86-64 is configured to use 2MB pages
+#else
+    page_size_kb = sysconf(_SC_PAGE_SIZE) /
+                   1024;  // in case x86-64 is configured to use 2MB pages
+#endif
+    vm_usage = vsize / 1024;  // unit kb
     resident_set = rss * page_size_kb;
   }
 }

@@ -28,9 +28,10 @@ else:
     _ext = 'so'
 
 if platform.system() == 'Windows':
-  LIBOPENVINO_TENSORFLOW = 'openvino_tensorflow.' + _ext
+    LIBOPENVINO_TENSORFLOW = 'openvino_tensorflow.' + _ext
 else:
-  LIBOPENVINO_TENSORFLOW = 'libopenvino_tensorflow.' + _ext
+    LIBOPENVINO_TENSORFLOW = 'libopenvino_tensorflow.' + _ext
+
 
 class NgraphTest(object):
 

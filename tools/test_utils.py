@@ -87,7 +87,8 @@ def install_openvino_tensorflow(artifacts_dir):
         raise Exception("Error getting the openvino_tensorflow wheel file")
 
     if (platform.system() == 'Windows'):
-        command_executor(["pip", "install", "-U", ovtf_wheel_files[0].replace("\\","\\\\")])
+        command_executor(
+            ["pip", "install", "-U", ovtf_wheel_files[0].replace("\\", "\\\\")])
     else:
         ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
         command_executor(["pip", "install", "-U", ng_whl])

@@ -6,13 +6,13 @@
 #pragma once
 
 #ifdef _WIN32
-	#ifdef BUILD_API
-		#define EXPORT_SYMBOL __declspec(dllexport)
-	#else
-		#define EXPORT_SYMBOL __declspec(dllimport)
-	#endif
+#ifdef BUILD_API
+#define EXPORT_SYMBOL __declspec(dllexport)
 #else
-    #define EXPORT_SYMBOL
+#define EXPORT_SYMBOL __declspec(dllimport)
+#endif
+#else
+#define EXPORT_SYMBOL
 #endif
 
 namespace tensorflow {

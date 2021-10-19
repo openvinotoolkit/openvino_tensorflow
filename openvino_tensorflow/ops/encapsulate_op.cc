@@ -9,8 +9,9 @@
 #include "tensorflow/core/framework/shape_inference.h"
 
 #ifdef _WIN32
-    #define EXPAND(x) x
-    #define TF_NEW_ID_FOR_INIT_2(m, c, ...) EXPAND(m(c, __VA_ARGS__)) // L145 selective_registration.h
+#define EXPAND(x) x
+#define TF_NEW_ID_FOR_INIT_2(m, c, ...) \
+  EXPAND(m(c, __VA_ARGS__))  // L145 selective_registration.h
 #endif
 
 namespace tensorflow {
