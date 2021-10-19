@@ -63,6 +63,9 @@ void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
 // Get an environment variable
 string GetEnv(const std::string& env);
 
+// Get backend device names 
+std::vector<std::string> GetDeviceIds(string device_name);
+
 // Set the environment variable env with val
 void SetEnv(const char* env, const char* val);
 

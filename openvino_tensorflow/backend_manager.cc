@@ -34,16 +34,9 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if (!status.ok() || backend == nullptr) {
     return errors::Internal("Failed to set backend: ", status.error_message());
   }
-
   lock_guard<mutex> lock(m_backend_mutex);
   m_backend = backend;
-  if (bname.find("MYRIAD") != string::npos) {
-    m_backend_name = "MYRIAD";
-  } else if (bname.find("GPU") != string::npos) {
-    m_backend_name = "GPU";
-  } else {
-    m_backend_name = bname;
-  }
+  m_backend_name = bname;
   return Status::OK();
 }
 
@@ -61,7 +54,6 @@ shared_ptr<Backend> BackendManager::GetBackend() {
 }
 
 Status BackendManager::GetBackendName(string& backend_name) {
-  OVTF_VLOG(2) << "BackendManager::GetBackendName()";
   if (m_backend == nullptr) {
     auto status = SetBackend();
     if (!status.ok()) {
@@ -72,6 +64,7 @@ Status BackendManager::GetBackendName(string& backend_name) {
   }
   lock_guard<mutex> lock(m_backend_mutex);
   backend_name = m_backend_name;
+  OVTF_VLOG(2) << "BackendManager::GetBackendName(): " << backend_name ;
   return Status::OK();
 }
 
@@ -79,13 +72,9 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                                      string& backend_name) {
   const char* env = std::getenv("OPENVINO_TF_BACKEND");
   // Checkmarx fix. Array of max length MYRIAD.
-  char backendName[6];
-
   if (env != nullptr) {
-    strncpy((char*)backendName, env, sizeof(backendName));
-    backend_name = std::string(backendName);
+    backend_name = std::string(env);
   }
-
   try {
     backend = make_shared<Backend>(backend_name);
   } catch (const std::exception& e) {

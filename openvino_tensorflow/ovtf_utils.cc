@@ -257,6 +257,20 @@ string GetEnv(const std::string& env) {
   return val == NULL ? std::string() : std::string(val);
 }
 
+std::vector<std::string> GetDeviceIds(std::string device){
+  std::vector<std::string> device_ids;
+  int plugin_pos = device.find(":");
+  if (plugin_pos!=std::string::npos)
+    device = device.substr(plugin_pos+1);
+
+  std::stringstream iss(device);
+  std::string item;
+  while (std::getline(iss, item, ',')) {
+      device_ids.push_back(item);
+  }
+  return device_ids;
+}
+
 void SetEnv(const char* env, const char* val) { setenv(env, val, 1); }
 
 }  // namespace util

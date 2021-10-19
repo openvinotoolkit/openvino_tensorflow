@@ -132,7 +132,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // OCM call for marking supported nodes
     std::string device;
     BackendManager::GetBackendName(device);
-    const char* device_id(device.c_str());
+    std::vector<std::string> device_ids;
+    device_ids = util::GetDeviceIds(device);
+
     std::string ov_version;
 #if defined(OPENVINO_2021_2)
     ov_version = "2021.2";
@@ -145,29 +147,34 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     ov_version = "2021.4";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
-    ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
-                                  options.graph->get());
-    std::set<std::string> disabled_ops_set = api::GetDisabledOps();
-    if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
-      std::vector<std::string> batched_disabled_ops = {"Shape"};
-      for (int i = 0; i < batched_disabled_ops.size(); i++) {
-        disabled_ops_set.insert(batched_disabled_ops[i]);
+    for(auto backend_name=device_ids.begin(); backend_name != device_ids.end(); backend_name++){
+      ocm::FrameworkNodesChecker FC(fName, *backend_name, ov_version,
+                                    options.graph->get());
+      std::set<std::string> disabled_ops_set = api::GetDisabledOps();
+      if (*backend_name == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
+        std::vector<std::string> batched_disabled_ops = {"Shape"};
+        for (int i = 0; i < batched_disabled_ops.size(); i++) {
+          disabled_ops_set.insert(batched_disabled_ops[i]);
+        }
       }
-    }
-    FC.SetDisabledOps(disabled_ops_set);
-    std::vector<void*> nodes_list = FC.MarkSupportedNodes();
+      FC.SetDisabledOps(disabled_ops_set);
+      std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
-    // cast back the nodes in the TF format and mark the nodes for clustering
-    // (moved out from MarkForClustering function)
-    const std::map<std::string, SetAttributesFunction>& set_attributes_map =
-        GetAttributeSetters();
-    for (auto void_node : nodes_list) {
-      // TODO(amprocte): move attr name to a constant
-      tensorflow::Node* node = (tensorflow::Node*)void_node;
-      node->AddAttr("_ovtf_marked_for_clustering", true);
-      auto it = set_attributes_map.find(node->type_string());
-      if (it != set_attributes_map.end()) {
-        it->second(node);
+      // cast back the nodes in the TF format and mark the nodes for clustering
+      // (moved out from MarkForClustering function)
+      const std::map<std::string, SetAttributesFunction>& set_attributes_map =
+          GetAttributeSetters();
+      for (auto void_node : nodes_list) {
+        // TODO(amprocte): move attr name to a constant
+        tensorflow::Node* node = (tensorflow::Node*)void_node;
+        bool mark;
+        if(GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering", &mark) != Status::OK()){
+          node->AddAttr("_ovtf_marked_for_clustering", true);
+          auto it = set_attributes_map.find(node->type_string());
+          if (it != set_attributes_map.end()) {
+            it->second(node);
+            }
+        }
       }
     }
 
