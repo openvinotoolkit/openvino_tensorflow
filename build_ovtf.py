@@ -163,7 +163,7 @@ def main():
         '--protobuf_branch',
         help="Protobuf branch to be used for the Windows build",
         action="store",
-        default='master')
+        default='v3.18.1')
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 

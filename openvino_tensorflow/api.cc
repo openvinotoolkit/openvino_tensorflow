@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 #include <sys/stat.h>
 
 #include "tensorflow/core/lib/core/errors.h"
@@ -78,8 +80,8 @@ void EXPORT_SYMBOL freeBackend() { free(backendName); }
 void start_logging_placement() { StartLoggingPlacement(); }
 void stop_logging_placement() { StopLoggingPlacement(); }
 bool is_logging_placement() { return IsLoggingPlacement(); }
-void freeClusterInfo() { free(clusterInfo); }
-void freeErrMsg() { free(errMsg); }
+void EXPORT_SYMBOL freeClusterInfo() { free(clusterInfo); }
+void EXPORT_SYMBOL freeErrMsg() { free(errMsg); }
 
 extern void set_disabled_ops(const char* op_type_list) {
   SetDisabledOps(std::string(op_type_list));

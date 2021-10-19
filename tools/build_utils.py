@@ -18,6 +18,8 @@ import platform
 import shlex
 import math
 import psutil as psu
+from sysconfig import get_paths
+from subprocess import call
 from wheel.vendored.packaging.tags import sys_tags
 
 
@@ -162,10 +164,16 @@ def load_venv(venv_dir):
     #     dict(__file__=activate_this_file))
     # exec(open(activate_this_file).read(), {'__file__': activate_this_file})
 
-    bin_dir = os.path.join(venv_dir, "bin")
-    base = bin_dir[:-len(
-        "bin"
-    ) - 1]  # strip away the bin part from the __file__, plus the path separator
+    if (platform.system() == "Windows"):
+        bin_dir = os.path.join(venv_dir, "Scripts")
+        base = bin_dir[:-len(
+            "Scripts"
+        ) - 1]  # strip away the bin part from the __file__, plus the path separator
+    else:
+        bin_dir = os.path.join(venv_dir, "bin")
+        base = bin_dir[:-len(
+            "bin"
+        ) - 1]  # strip away the bin part from the __file__, plus the path separator
 
     # prepend bin to PATH (this file is inside the bin directory)
     os.environ["PATH"] = os.pathsep.join(
@@ -223,7 +231,7 @@ def setup_venv(venv_dir):
         "install",
         "psutil",
         "six>=1.12.0",
-        "numpy~=1.19.2",
+        "numpy>=1.19.5",
         "wheel>=0.26",
         "setuptools",
         "mock",
@@ -617,7 +625,6 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     if (platform.system() == 'Windows'):
         cmake_cmd = ["cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Release"]
         cmake_cmd.extend(cmake_flags)
-        cmake_cmd.extend(["-DBUILD_API=TRUE"])
         cmake_cmd.extend([ovtf_src_loc.replace("\\","\\\\")])
     else:    
         cmake_cmd = ["cmake"]
