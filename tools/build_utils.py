@@ -188,8 +188,8 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    subprocess.Popen(shlex.split('which pip'))
-    
+    process=subprocess.Popen(shlex.split('which pip'))
+    so, se = process.communicate()
 
     # Install the pip packages
     command_executor(["pip3", "install", "-U", "pip"])
@@ -604,23 +604,26 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    subprocess.popen(shlex.split("git clone  repo target_name"))
-    
-
+    command="git clone  {repo} {target_name}".format(repo=repo,target_name=target_name)
+    process=subprocess.Popen(
+            shlex.split(command), stdout=subprocess.PIPE)
+    so, se = process.communicate()
     pwd = os.getcwd()
     if not os.path.exists(target_name):
         raise AssertionError("Path doesn't exist {0}".format(target_name))
     os.chdir(target_name)
 
     # checkout the specified branch and get the latest changes
-    subprocess.Popen(shlex.split("git fetch"))
+    process=subprocess.Popen(shlex.split("git fetch"))
+    so, se = process.communicate()
   
     command_executor(["git", "checkout", version])
-    subprocess.Popen(shlex.split("git pull"))
-   
+    process=subprocess.Popen(shlex.split("git pull"))
+    so, se = process.communicate()
 
     if submodule_update:
-        subprocess.Popen(shlex.split("git submodule update --init --recursive"))
+        process=subprocess.Popen(shlex.split("git submodule update --init --recursive"))
+        so, se = process.communicate()
        
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
@@ -661,7 +664,7 @@ def get_gcc_version():
 
 
 def get_cmake_version():
-    cmd = subprocess.check_output(
+    cmd = subprocess.Popen(
         shlex.split('cmake --version'),
         shell=False,
         stdout=subprocess.PIPE,
