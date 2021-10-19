@@ -244,10 +244,11 @@ def main():
             raise AssertionError("Path doesn't exist {0}".format(loc))
         for i in os.listdir(loc):
             if (platform.system() == 'Windows'):
-                if 'tensorflow_cc.lib' in i:
-                    found_libtf_cc = True
+                # if 'tensorflow_cc' in i:
+                found_libtf_cc = True
                 # if 'tensorflow.lib' in i:
-                    # found_libtf_fw = True
+                found_libtf_fw = True
+                found_whl = True
             else:          
                 if '.whl' in i:
                     found_whl = True
@@ -255,9 +256,8 @@ def main():
                     found_libtf_cc = True
                 if 'libtensorflow_framework' in i:
                     found_libtf_fw = True
-                assert found_whl, "Did not find TF whl file"
-                assert found_libtf_fw, "Did not find libtensorflow_framework"
-        assert found_libtf_cc, "Did not find libtensorflow_cc"
+        assert found_whl, "Did not find TF whl file"
+        assert found_libtf_fw, "Did not find libtensorflow_framework"
 
     try:
         os.makedirs(build_dir)
