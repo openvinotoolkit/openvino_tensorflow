@@ -33,7 +33,7 @@ import openvino_tensorflow as ovtf
 import time
 import cv2
 from PIL import Image
-from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors
+from common.utils import get_input_mode, load_graph, get_colors, draw_boxes, get_anchors, rename_file
 from common.pre_process import preprocess_image
 from common.post_process import yolo3_postprocess_np
 
@@ -97,6 +97,11 @@ if __name__ == "__main__":
         type=int,
         help="Optional. Specify input height value.")
     parser.add_argument(
+        "--rename",
+        help=
+        "Optional. The input image or the directory of the images will be renamed",
+        action='store_true')
+    parser.add_argument(
         "--input_width", type=int, help="Optional. Specify input width value.")
     parser.add_argument(
         "--input_mean", type=int, help="Optional. Specify input mean value.")
@@ -152,6 +157,21 @@ if __name__ == "__main__":
         conf_threshold = args.conf_threshold
     if args.iou_threshold:
         iou_threshold = args.iou_threshold
+    if args.rename:
+        print(40 * '-')
+        print(
+            "--rename argument is enabled, this will rename the input image or directory of images in your disk.\n Press 'y' to continue.\n Press 'a' to abort.\n Press any other key to proceed without renaming."
+        )
+        print(40 * '-')
+        val = input()
+        if val == 'y':
+            print(" Renaming has been enabled")
+        elif val == 'a':
+            print("Aborted")
+            exit(0)
+        else:
+            print("Renaming has been disabled")
+            args.rename = False
 
     # Load graph and process input image
     graph = load_graph(model_file)
@@ -270,6 +290,8 @@ if __name__ == "__main__":
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
+            if args.rename:
+                rename_file(images[image_id], out_classes, labels)
     if input_mode in 'directory':
         print("Output images is saved in {0}".format(
             os.path.abspath(result_dir)))
