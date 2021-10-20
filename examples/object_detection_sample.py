@@ -160,16 +160,19 @@ if __name__ == "__main__":
     if args.rename:
         print(40 * '-')
         print(
-            "--rename argument is enabled, this will rename the input image or directory of images in your disk.\n Press 'y' to continue.\n Press 'n' to proceed without renaming.\n Press 'a' to abort."
+            "--rename argument is enabled, this will rename the input image or directory of images in your disk.\n Press 'y' to continue.\n Press 'a' to abort.\n Press any other key to proceed without renaming."
         )
         print(40 * '-')
         val = input()
-        if val == 'n':
-            print("Renaming has been disabled")
-            args.rename = False
+        if val == 'y':
+            print(" Renaming has been enabled")
         elif val == 'a':
             print("Aborted")
             exit(0)
+        else:
+            print("Renaming has been disabled")
+            args.rename = False
+
     # Load graph and process input image
     graph = load_graph(model_file)
     # Load the labels

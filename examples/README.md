@@ -146,7 +146,7 @@ $ python3 examples/object_detection_sample.py
 ```
 **Note**: 
 * use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
-* use ```--rename``` to rename the input image or the directory of the images.
+* use ```--rename``` to rename the input image or the directory of the images in the format ***exiftags-objtags-IntelOpenVINO.img_extension***
 
 This uses the default example image that comes with this repository, and should
 output something similar as below and the result is written to detections.jpg:
