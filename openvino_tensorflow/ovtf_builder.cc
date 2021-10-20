@@ -3600,10 +3600,10 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function) {
+    shared_ptr<ng::Function>& ng_function, const std::vector<Tensor>& tf_input_tensors) {
   ng::ResultVector ng_result_list;
   TranslateGraph(inputs, static_input_map, input_graph, name, ng_function,
-                 ng_result_list);
+                 ng_result_list, tf_input_tensors);
   return Status::OK();
 }
 
@@ -3611,7 +3611,7 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function, ng::ResultVector& ng_result_list) {
+    shared_ptr<ng::Function>& ng_function, ng::ResultVector& ng_result_list, const std::vector<Tensor>& tf_input_tensors) {
   //
   // We will visit ops in topological order.
   //
@@ -3691,17 +3691,37 @@ Status Builder::TranslateGraph(
       return false;
     };
 
+    bool is_variable = false;
+    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") == "1"){
+        try{
+          GetNodeAttr(parm->attrs(),"_is_variable", &is_variable);
+        }catch(const std::exception&){
+          OVTF_VLOG(1) << "Parameter " << parm->name() << " is not a variable";
+        }
+    }
+
     if (ng_shape_check()) {
       std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
       auto ng_const_input = ConstructNgNode<opset::Constant>(
           prov_tag, ng_et, ng_shape, constant_values);
       SaveNgOp(ng_op_map, parm->name(), ng_const_input);
-    } else {
-      SaveNgOp(ng_op_map, parm->name(), ng_param);
+    }
+    else {
+      if(is_variable){
+        std::vector<float> vec_float;
+        OVTF_VLOG(1) << "Converting " << parm->name() << " to constant";
+        TF_RETURN_IF_ERROR(TensorDataToVector(tf_input_tensors[index], &vec_float));
+        auto ng_const_input = ConstructNgNode<opset::Constant>(
+            prov_tag, ng_et, ng_shape, vec_float);
+        SaveNgOp(ng_op_map, parm->name(), ng_const_input);
+      }
+      else
+        SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
     ng_parameter_list[index] =
         ngraph::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
   }
+
 
   //
   // Now create the nGraph ops from TensorFlow ops.

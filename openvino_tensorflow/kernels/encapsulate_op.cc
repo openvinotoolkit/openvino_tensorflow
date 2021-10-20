@@ -231,6 +231,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     step_id = ctx->step_id();
 
     // Get ngraph executable and inputs information
+
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
     NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
     if (getex_status != Status::OK()) {
@@ -538,6 +539,7 @@ Status NGraphEncapsulateOp::GetExecutable(
   std::vector<const Tensor*> static_input_map;
   std::vector<TensorShape> input_shapes;
   std::stringstream signature_ss;
+
   for (int i = 0; i < tf_input_tensors.size(); i++) {
     const Tensor& input_tensor = tf_input_tensors[i];
     input_shapes.push_back(input_tensor.shape());
@@ -576,7 +578,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
                                                &m_graph, m_name, ng_function,
-                                               ng_result_list));
+                                               ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());
