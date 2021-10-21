@@ -7,7 +7,6 @@
 import argparse
 import errno
 import os
-from subprocess import check_output, call
 import sys
 import shutil
 import glob
