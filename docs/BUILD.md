@@ -174,7 +174,7 @@ Verify that `openvino-tensorflow` is installed correctly:
 This should produce an output like:
 
         TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.0'
+        OpenVINO integration with TensorFlow version: b'1.0.1'
         OpenVINO version used for this build: b'2021.4.1'
         TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 1
@@ -219,5 +219,5 @@ To build wheel files compatible with manylinux2014, use the following commands. 
 
 ```bash
 cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.0 . -f Dockerfile.manylinux2014
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.1 . -f Dockerfile.manylinux2014
 ```
