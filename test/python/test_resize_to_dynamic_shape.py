@@ -48,5 +48,5 @@ class TestResizeToDynamicShape(NgraphTest):
                     do_function_inlining=False,
                 )))
 
-        assert (self.without_ngraph(run_test, config) == self.with_ngraph(
-            run_test, config)).all()
+        if not (self.without_ngraph(run_test, config) == self.with_ngraph(run_test, config)).all():
+            raise AssertionError

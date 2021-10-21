@@ -43,8 +43,8 @@ class TestNMSOperations(NgraphTest):
                     max_output_size: max_output_size_np
                 })
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test))
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+            raise AssertionError
 
     def test_NMSV3(self):
 
@@ -73,5 +73,5 @@ class TestNMSOperations(NgraphTest):
                     max_output_size: max_output_size_np
                 })
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test))
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+            raise AssertionError

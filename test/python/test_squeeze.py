@@ -33,8 +33,10 @@ class TestSqueezeOperations(NgraphTest):
 
         sess_fn = lambda sess: sess.run((a1,), feed_dict={a: a_val})
         (result_a,) = self.with_ngraph(sess_fn)
-        assert result_a.shape == a_sq.shape
-        assert np.allclose(result_a, a_sq)
+        if not result_a.shape == a_sq.shape:
+            raise AssertionError
+        if not np.allclose(result_a, a_sq):
+            raise AssertionError
 
     def test_incorrect_squeeze(self):
         shape1 = (1, 2, 3, 1)
