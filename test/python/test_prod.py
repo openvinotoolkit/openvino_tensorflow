@@ -41,8 +41,7 @@ class TestProductOperations(NgraphTest):
     def test_prod_no_axis(self, v1, expected):
         tensor = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.reduce_prod(tensor)
-        sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})
-        assert np.allclose(self.with_ngraph(sess_fn), expected)
+        sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})        
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError
 

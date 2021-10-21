@@ -15,6 +15,8 @@ from tensorflow.core.protobuf import rewriter_config_pb2
 from google.protobuf import text_format
 
 import openvino_tensorflow
+from random import SystemRandom
+cryptogen = SystemRandom()
 
 __all__ = ['LIBOPENVINO_TENSORFLOW', 'NgraphTest']
 
@@ -86,8 +88,8 @@ class NgraphTest(object):
                                 end,
                                 datatype="DTYPE_FLOAT"):
         if datatype == "DTYPE_INT":
-            return [random.randint(start, end) for i in range(vector_length)]
-        return [random.uniform(start, end) for i in range(vector_length)]
+            return [cryptogen.randint(start, end) for i in range(vector_length)]
+        return [cryptogen.uniform(start, end) for i in range(vector_length)]
 
     # returns true if the the env variable is set
     def is_env_variable_set(self, env_var):

@@ -40,7 +40,8 @@ from common.post_process import yolo3_postprocess_np
 
 def load_coco_names(file_name):
     names = {}
-    assert os.path.exists(file_name), "could not find label file path"
+    if not os.path.exists(file_name):
+        raise AssertionError("could not find label file path")
     with open(file_name) as f:
         for coco_id, name in enumerate(f):
             names[coco_id] = name

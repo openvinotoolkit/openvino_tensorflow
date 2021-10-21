@@ -8,7 +8,6 @@
 import argparse
 import errno
 import os
-from subprocess import check_output, call, Popen
 import sys
 import shutil
 import glob

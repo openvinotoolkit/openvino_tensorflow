@@ -18,7 +18,6 @@ import platform
 import shlex
 import math
 import psutil as psu
-from subprocess import call
 from wheel.vendored.packaging.tags import sys_tags
 
 
