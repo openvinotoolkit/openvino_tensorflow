@@ -137,8 +137,8 @@ class TestWhere(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
     def test_where_complexshape1(self):
         a = np.random.random(size=[7]).astype(np.float32)

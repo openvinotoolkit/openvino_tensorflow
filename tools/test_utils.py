@@ -28,7 +28,7 @@ class TestEnv:
 
     @staticmethod
     def get_linux_type():
-        linux_distro = subprocess.run(
+        linux_distro = subprocess.check_output(
             """awk -F= '$1=="ID" { print $2 ;}' /etc/os-release""", shell=False)
         if "ubuntu" in linux_distro.decode("utf-8"):
             return 'Ubuntu'
@@ -243,13 +243,13 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
-    subprocess.check_output(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
-    subprocess.run(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
+    subprocess.check_output(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'], stderr=subprocess.STDOUT,  stdout=subprocess.PIPE)
+    
     if not os.path.exists('benchmarks'):
         raise AssertionError("Could not find directory: {}".format('benchmarks'))
     os.chdir('benchmarks')
-    subprocess.check_output(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'])
-    subprocess.run(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'])
+    subprocess.check_output(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'], stderr=subprocess.STDOUT,  stdout=subprocess.PIPE)
+    
 
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
@@ -267,8 +267,8 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
 
     # Update the script by adding `import openvino_tensorflow`
     with open('convnet_builder.py', 'a') as outfile:
-        subprocess.check_output(['echo', 'import openvino_tensorflow'], stdout=outfile)
-        subprocess.run(['echo', 'import openvino_tensorflow'], stdout=outfile)
+        subprocess.check_output(['echo', 'import openvino_tensorflow'], stdout=outfile,stderr=subprocess.STDOUT)
+       
 
     # Setup the env flags
     import psutil

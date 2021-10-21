@@ -60,7 +60,7 @@ def command_executor(cmd,
         print(tag + cmd, file=stdout)
     try:
         process = subprocess.check_output(
-            shlex.split(cmd), stdout=stdout, stderr=stderr)
+            shlex.split(cmd), stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         so, se = process.communicate()
         retcode = process.returncode
         if not retcode == 0:
@@ -191,7 +191,7 @@ def setup_venv(venv_dir):
 
     print("PIP location")
     subprocess.check_output(['which', 'pip'])
-    subprocess.run(['which', 'pip'])
+    
 
     # Install the pip packages
     command_executor(["pip3", "install", "-U", "pip"])
@@ -607,7 +607,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
     subprocess.check_output(["git", "clone", repo, target_name])
-    subprocess.run(["git", "clone", repo, target_name])
+    
 
     pwd = os.getcwd()
     if not os.path.exists(target_name):
@@ -616,14 +616,14 @@ def download_repo(target_name, repo, version, submodule_update=False):
 
     # checkout the specified branch and get the latest changes
     subprocess.check_output(["git", "fetch"])
-    subprocess.run(["git", "fetch"])
+  
     command_executor(["git", "checkout", version])
     subprocess.check_output(["git", "pull"])
-    subprocess.run(["git", "pull"])
+   
 
     if submodule_update:
         subprocess.check_output(["git", "submodule", "update", "--init", "--recursive"])
-        subprocess.run(["git", "submodule", "update", "--init", "--recursive"])
+       
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
@@ -639,7 +639,7 @@ def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,
     # please ensure the latest `libdvdnav-dev` or `libdvdnav-devel` is installed.
     patch_command = ['patch', '-P', str(level), '-N', '-i', patch_file]
-    cmd = subprocess.check_output(patch_command, stdout=subprocess.PIPE)
+    cmd = subprocess.check_output(patch_command, stderr=subprocess.STDOUT,  stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in
@@ -650,8 +650,9 @@ def apply_patch(patch_file, level=1):
 
 
 def get_gcc_version():
-    cmd = subprocess.run(
+    cmd = subprocess.check_output(
         shlex.split('gcc -dumpfullversion -dumpversion'),
+        stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         shell=False,
         bufsize=1,
@@ -665,6 +666,7 @@ def get_gcc_version():
 def get_cmake_version():
     cmd = subprocess.run(
         shlex.split('cmake --version'),
+        stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         shell=False,
         bufsize=1,
@@ -678,6 +680,7 @@ def get_cmake_version():
 def get_bazel_version():
     cmd = subprocess.run(
         shlex.split('bazel version'),
+        stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         shell=False,
         bufsize=1,
