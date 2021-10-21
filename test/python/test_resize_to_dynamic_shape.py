@@ -19,7 +19,8 @@ import numpy as np
 import random
 
 from common import NgraphTest
-
+from random import SystemRandom
+cryptogen = SystemRandom()
 
 class TestResizeToDynamicShape(NgraphTest):
 
@@ -31,7 +32,7 @@ class TestResizeToDynamicShape(NgraphTest):
         # Reshape to a random permutation of the input shape. We use a fixed seed
         # so that we get same results on CPU and nGraph, and we have to do some
         # hackery to make sure the actual op survives constant folding.
-        seed = random.randint(0, 999999)
+        seed = cryptogen.randint(0, 999999)
         shuffled_shape = tf.compat.v1.random_shuffle(tf.shape(val), seed=seed)
         out = tf.reshape(val, shuffled_shape)
 

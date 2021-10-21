@@ -59,7 +59,7 @@ def command_executor(cmd,
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd, file=stdout)
     try:
-        process = subprocess.check_output(
+        process = subprocess.run(
             shlex.split(cmd))
         so, se = process.communicate()
         retcode = process.returncode
@@ -190,7 +190,7 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    subprocess.call(['which', 'pip'])
+    subprocess.run(['which', 'pip'])
     
 
     # Install the pip packages
@@ -606,7 +606,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    subprocess.call(["git", "clone", repo, target_name])
+    subprocess.run(["git", "clone", repo, target_name])
     
 
     pwd = os.getcwd()
@@ -615,14 +615,14 @@ def download_repo(target_name, repo, version, submodule_update=False):
     os.chdir(target_name)
 
     # checkout the specified branch and get the latest changes
-    subprocess.call(["git", "fetch"])
+    subprocess.run(["git", "fetch"])
   
     command_executor(["git", "checkout", version])
-    subprocess.call(["git", "pull"])
+    subprocess.run(["git", "pull"])
    
 
     if submodule_update:
-        subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
+        subprocess.run(["git", "submodule", "update", "--init", "--recursive"])
        
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
@@ -639,7 +639,7 @@ def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,
     # please ensure the latest `libdvdnav-dev` or `libdvdnav-devel` is installed.
     patch_command = ['patch', '-P', str(level), '-N', '-i', patch_file]
-    cmd = subprocess.check_output(patch_command)
+    cmd = subprocess.run(patch_command)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in
