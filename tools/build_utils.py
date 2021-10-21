@@ -82,8 +82,8 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
 
     src_location = os.path.abspath(src_location)
     print("Source location: " + src_location)
-    assert os.path.exists(src_location), "Path doesn't exist {0}".format(
-        src_location)
+    if not os.path.exists(src_location):
+        raise AssertionError("Path doesn't exist {0}".format(src_location))
     os.chdir(src_location)
 
     # mkdir build directory
@@ -95,7 +95,8 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
             pass
 
     # Run cmake
-    assert os.path.exists(build_dir), "Path doesn't exist {0}".format(build_dir)
+    if not os.path.exists(build_dir):
+        raise AssertionError("Path doesn't exist {0}".format(build_dir))
     os.chdir(build_dir)
 
     cmake_cmd = ["cmake"]
@@ -638,8 +639,7 @@ def apply_patch(patch_file, level=1):
 
 def get_gcc_version():
     cmd = subprocess.Popen(
-        'gcc -dumpfullversion -dumpversion',
-        shell=True,
+        shlex.split('gcc -dumpfullversion -dumpversion'),
         stdout=subprocess.PIPE,
         bufsize=1,
         universal_newlines=True)
@@ -651,8 +651,7 @@ def get_gcc_version():
 
 def get_cmake_version():
     cmd = subprocess.Popen(
-        'cmake --version',
-        shell=True,
+        shlex.split('cmake --version'),
         stdout=subprocess.PIPE,
         bufsize=1,
         universal_newlines=True)
@@ -664,8 +663,7 @@ def get_cmake_version():
 
 def get_bazel_version():
     cmd = subprocess.Popen(
-        'bazel version',
-        shell=True,
+        shlex.split('bazel version'),
         stdout=subprocess.PIPE,
         bufsize=1,
         universal_newlines=True)
