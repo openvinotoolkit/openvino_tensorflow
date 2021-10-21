@@ -26,7 +26,7 @@ if not platform.system() == "Darwin":
 try:
     import xmlrunner
 except:
-    subprocess.Popen(shlex.split("pip install unittest-xml-reporting"))
+    subprocess.check_output(shlex.split("pip install unittest-xml-reporting"), shell=False)
     
     import xmlrunner
 """
