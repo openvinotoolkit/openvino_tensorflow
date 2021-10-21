@@ -174,7 +174,7 @@ $ git submodule update --recursive
 它会生成以下输出：
 
         TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.0'
+        OpenVINO integration with TensorFlow version: b'1.0.1'
         OpenVINO version used for this build: b'2021.4.1'
         TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 1
@@ -219,5 +219,5 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
 
 ```bash
 cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.0 . -f Dockerfile.manylinux2014
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.1 . -f Dockerfile.manylinux2014
 ```

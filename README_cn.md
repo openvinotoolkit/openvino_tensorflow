@@ -53,7 +53,7 @@
 它会生成以下输出：
 
         TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.0'
+        OpenVINO integration with TensorFlow version: b'1.0.1'
         OpenVINO version used for this build: b'2021.4.1'
         TensorFlow version used for this build: v2.5.1
         CXX11_ABI flag used for this build: 0
