@@ -30,11 +30,12 @@ class TestProductOperations(NgraphTest):
     ))
     def test_prod(self, v1, axis, expected):
         tensor = tf.compat.v1.placeholder(tf.float32, shape=(None))
-        assert np.allclose(np.prod(v1, axis), expected)
+        if not np.allclose(np.prod(v1, axis), expected):
+            raise AssertionError
         out = tf.reduce_prod(tensor, axis=axis)
         sess_fn = lambda sess: sess.run([out], feed_dict={tensor: v1})
-        assert np.allclose(
-            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn))
+        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+            raise AssertionError
 
     @pytest.mark.parametrize(("v1", "expected"), (((2.0, 2.0), [4.0]),))
     def test_prod_no_axis(self, v1, expected):
@@ -42,6 +43,8 @@ class TestProductOperations(NgraphTest):
         out = tf.reduce_prod(tensor)
         sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})
         assert np.allclose(self.with_ngraph(sess_fn), expected)
+        if not np.allclose(self.with_ngraph(sess_fn), expected):
+            raise AssertionError
 
     @pytest.mark.parametrize(("v1", "axis", "expected"),
                              (((2.0, 2.0), 0, [4.0]),))
@@ -54,7 +57,8 @@ class TestProductOperations(NgraphTest):
                                             tensor: v1,
                                             tf_axis: axis
                                         })
-        assert np.allclose(self.with_ngraph(sess_fn), expected)
+        if not np.allclose(self.with_ngraph(sess_fn), expected):
+            raise AssertionError
 
     @pytest.mark.parametrize(("v1", "axis", "expected"),
                              (([[2.0, 2.0]], 1, [[4.0]]),))
@@ -63,6 +67,7 @@ class TestProductOperations(NgraphTest):
         out = tf.reduce_prod(tensor, axis, keepdims=True)
         sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})
         result = self.with_ngraph(sess_fn)
-        assert np.allclose(
-            len(np.array(result[0].shape)), len(np.array(v1).shape))
-        assert np.allclose(result, expected)
+        if not np.allclose(len(np.array(result[0].shape)), len(np.array(v1).shape)):
+            raise AssertionError
+        if not np.allclose(result, expected):
+            raise AssertionError

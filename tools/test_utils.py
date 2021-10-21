@@ -14,6 +14,7 @@ import shutil
 import glob
 import platform
 import subprocess
+import shlex
 from distutils.sysconfig import get_python_lib
 
 from tools.build_utils import load_venv, command_executor, apply_patch
@@ -28,8 +29,8 @@ class TestEnv:
 
     @staticmethod
     def get_linux_type():
-        linux_distro = subprocess.check_output(
-            """awk -F= '$1=="ID" { print $2 ;}' /etc/os-release""", shell=True)
+        linux_distro = subprocess.Popen(shlex.split(
+            """awk -F= '$1=="ID" { print $2 ;}' /etc/os-release"""), shell=False)
         if "ubuntu" in linux_distro.decode("utf-8"):
             return 'Ubuntu'
         elif "centos" in linux_distro.decode("utf-8"):
@@ -110,7 +111,8 @@ def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
 
     os.environ['LD_LIBRARY_PATH'] = os.getenv(
         "LD_LIBRARY_PATH", "") + ':' + os.path.join(artifacts_dir, lib_dir)
-    assert os.path.exists(artifacts_dir), "Could not find directory"
+    if not os.path.exists(artifacts_dir):
+        raise AssertionError("Could not find directory")
     os.chdir(os.path.join(artifacts_dir, "test"))
     if (filters != None):
         gtest_filters = "--gtest_filter=" + filters
@@ -119,7 +121,8 @@ def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
         cmd = ['./gtest_ovtf']
 
     command_executor(cmd)
-    assert os.path.exists(root_pwd), "Could not find directory"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find directory")
     os.chdir(root_pwd)
 
 
@@ -136,8 +139,8 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
         raise Exception("test directory doesn't exist: " + test_dir)
 
     # Change the directory to the test_dir
-    assert os.path.exists(test_dir), "Could not find directory: {}".format(
-        test_dir)
+    if not os.path.exists(test_dir):
+        raise AssertionError("Could not find directory: {}".format(test_dir))
     os.chdir(test_dir)
 
     # Next run the ngraph-tensorflow python tests
@@ -153,7 +156,8 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
         ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
     ])
 
-    assert os.path.exists(root_pwd), "Could not find directory"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find directory")
     os.chdir(root_pwd)
 
 
@@ -164,14 +168,14 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
 
     # Patch TensorFlow so that the tests run using openvino_tensorflow
     pwd = os.getcwd()
-    assert os.path.exists(pwd), "Could not find directory: {}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Could not find directory: {}".format(pwd))
 
     # Go to the location of TesorFlow install directory
     import tensorflow as tf
     tf_dir = tf.sysconfig.get_lib()
-    assert os.path.exists(
-        tf_dir + '/python/framework'), "Could not find directory: {}".format(
-            tf_dir + '/python/framework')
+    if not os.path.exists(tf_dir + '/python/framework'):
+        raise AssertionError("Could not find directory: {}".format(tf_dir + '/python/framework'))
     os.chdir(tf_dir + '/python/framework')
     print("CURRENT DIR: " + os.getcwd())
 
@@ -194,11 +198,12 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
-    assert os.path.exists(test_src_dir), "Path doesn't exist {}".format(
-        test_src_dir)
+    if not os.path.exists(test_src_dir):
+        raise AssertionError("Path doesn't exist {}".format(test_src_dir))
     if not os.path.isabs(test_manifest_file):
         test_manifest_file = os.path.join(test_src_dir, test_manifest_file)
-    assert os.path.exists(test_manifest_file), "Could not find file"
+    if not os.path.exists(test_manifest_file):
+        raise AssertionError("Could not find file")
 
     test_xml_report = './junit_tensorflow_tests.xml'
 
@@ -226,7 +231,8 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
         os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = \
             openvino_tf_disable_deassign_clusters
 
-    assert os.path.exists(root_pwd), "Could not find the path"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find the path")
     os.chdir(root_pwd)
 
 
@@ -238,11 +244,11 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
-    call(['git', 'clone', 'https://github.com/tensorflow/benchmarks.git'])
-    assert os.path.exists('benchmarks'), "Could not find directory: {}".format(
-        'benchmarks')
+    subprocess.Popen(shlex.split('git clone https://github.com/tensorflow/benchmarks.git'))
+    if not os.path.exists('benchmarks'):
+        raise AssertionError("Could not find directory: {}".format('benchmarks'))
     os.chdir('benchmarks')
-    call(['git', 'checkout', 'aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'])
+    subprocess.Popen(shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'))
 
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
@@ -252,16 +258,15 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     if openvino_tensorflow.is_grappler_enabled():
         print("Patching repo using: %s" % patch_file)
         apply_patch(patch_file)
-    assert os.path.exists(
-        'scripts/tf_cnn_benchmarks/'), "Could not find directory: {}".format(
-            'scripts/tf_cnn_benchmarks/')
+    if not os.path.exists('scripts/tf_cnn_benchmarks/'):
+        raise AssertionError("Could not find directory: {}".format('scripts/tf_cnn_benchmarks/'))
     os.chdir('scripts/tf_cnn_benchmarks/')
 
     # junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
 
     # Update the script by adding `import openvino_tensorflow`
     with open('convnet_builder.py', 'a') as outfile:
-        call(['echo', 'import openvino_tensorflow'], stdout=outfile)
+        subprocess.Popen(shlex.split('echo import openvino_tensorflow'), stdout=outfile)
 
     # Setup the env flags
     import psutil
@@ -297,7 +302,8 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     # Commenting the eval since it currently fails with TF2.0
     command_executor(cmd, verbose=True)
 
-    assert os.path.exists(root_pwd), "Could not find the path"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find the path")
     os.chdir(root_pwd)
 
 
@@ -314,9 +320,8 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
         os.path.join(root_pwd, '../pretrained_models'))
     if not os.path.exists(pretrained_models_dir):
         os.mkdir(pretrained_models_dir, 0o755)
-    assert os.path.exists(
-        pretrained_models_dir), "Could not find the path: {}".format(
-            pretrained_models_dir)
+    if not os.path.exists(pretrained_models_dir):
+        raise AssertionError("Could not find the path: {}".format(pretrained_models_dir))
     os.chdir(pretrained_models_dir)
     pretrained_model = os.path.join(pretrained_models_dir, 'resnet50_v1.pb')
     if not os.path.exists(pretrained_model):
@@ -337,7 +342,8 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
     os.environ['OMP_NUM_THREADS'] = str(num_cores)
     os.environ["KMP_AFFINITY"] = 'granularity=fine,compact,1,0'
 
-    assert os.path.exists(root_pwd), "Could not find the path"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find the path")
     os.chdir(root_pwd)
     cmd = [
         'python',
@@ -350,5 +356,6 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
         str(batch_size * iterations),
     ]
     command_executor(cmd, verbose=True)
-    assert os.path.exists(root_pwd), "Could not find the path"
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Could not find the path")
     os.chdir(root_pwd)

@@ -38,13 +38,11 @@ def main():
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
-    assert os.path.exists(
-        arguments.output_dir), "path doesn't exist {0}".format(
-            arguments.output_dir)
+    if not os.path.exists(arguments.output_dir):
+            raise AssertionError("Path doesn't exist {0}".format(arguments.output_dir))
     os.chdir(arguments.output_dir)
-    assert os.path.exists(
-        arguments.output_dir), "Directory doesn't exist {0}".format(
-            arguments.output_dir)
+    if not os.path.exists(arguments.output_dir):
+            raise AssertionError("Directory doesn't exist {0}".format(arguments.output_dir))
     if not os.path.isdir(os.path.join(arguments.output_dir, "openvino")):
         # Download OpenVINO
         download_repo(
@@ -54,19 +52,17 @@ def main():
             submodule_update=True)
     else:
         pwd = os.getcwd()
-        assert os.path.exists(
-            arguments.output_dir), "path doesn't exist {0}".format(
-                arguments.output_dir)
+        if not os.path.exists(arguments.output_dir):
+            raise AssertionError("Path doesn't exist {0}".format(arguments.output_dir))
         os.chdir(os.path.join(arguments.output_dir, "openvino"))
         call(["git", "fetch"])
         command_executor(["git", "checkout", openvino_version])
         call(["git", "pull"])
-        assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+        if not os.path.exists(pwd):
+            raise AssertionError("Path doesn't exist {0}".format(pwd))
         os.chdir(pwd)
-    assert os.path.exists(
-        os.path.join(arguments.output_dir,
-                     "openvino")), "Path doesn't exist {0}/openvino".format(
-                         arguments.output_dir)
+    if not os.path.exists(os.path.join(arguments.output_dir, "openvino")):
+        raise AssertionError("Path doesn't exist {0}/openvino".format(arguments.output_dir))
     openvino_src_dir = os.path.join(arguments.output_dir, "openvino")
     print("OV_SRC_DIR: ", openvino_src_dir)
 

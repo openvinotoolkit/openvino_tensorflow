@@ -33,7 +33,9 @@ class TestLog1pOperations(NgraphTest):
         ng_result = self.with_ngraph(run_test)
         tf_result = self.without_ngraph(run_test)
 
-        assert (len(ng_result) == len(tf_result))
+        if not (len(ng_result) == len(tf_result)):
+            raise AssertionError
 
         for i, j in zip(ng_result, tf_result):
-            assert (i == j) or (np.isnan(i) and np.isnan(j))
+            if not (i == j) or (np.isnan(i) and np.isnan(j)):
+                raise AssertionError

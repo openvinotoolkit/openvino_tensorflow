@@ -63,8 +63,8 @@ class TestFusedConv2D(NgraphTest):
                             bias: bias_values,
                         })
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test))
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+            raise AssertionError
 
     @pytest.mark.parametrize(("relutype",), (
         ('relu',),
@@ -106,11 +106,8 @@ class TestFusedConv2D(NgraphTest):
                     variance: variance_values,
                 })
 
-        assert np.allclose(
-            self.without_ngraph(run_test),
-            self.with_ngraph(run_test),
-            rtol=0,
-            atol=5e-5)
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test), rtol=0, atol=5e-5):
+            raise AssertionError
 
     @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
     def test_fusedconv2d_squeeze_bias(self):
@@ -134,5 +131,5 @@ class TestFusedConv2D(NgraphTest):
                             bias: bias_values,
                         })
 
-        assert np.allclose(
-            self.without_ngraph(run_test), self.with_ngraph(run_test))
+        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+            raise AssertionError

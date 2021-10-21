@@ -26,14 +26,13 @@ class TestFloorOperations(NgraphTest):
         val = tf.compat.v1.placeholder(tf.float32, shape=(1,))
         out = tf.floor(val)
         sess_fn = lambda sess: sess.run(out, feed_dict={val: (test_input,)})
-        assert np.isclose(
-            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)).all()
+        if not np.isclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)).all():
+            raise AssertionError
 
     def test_floor_2d(self):
         test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
         expected = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
         val = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
         out = tf.floor(val)
-        assert np.isclose(
-            self.with_ngraph(lambda sess: sess.run(
-                out, feed_dict={val: test_input})), np.array(expected)).all()
+        if not np.isclose(self.with_ngraph(lambda sess: sess.run(out, feed_dict={val: test_input})), np.array(expected)).all():
+            raise AssertionError

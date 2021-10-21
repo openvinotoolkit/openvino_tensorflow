@@ -73,7 +73,8 @@ class TestConv2DBackpropInput(NgraphTest):
 
         with pytest.raises(Exception) as excinfo:
             self.with_ngraph(run_test)
-        assert "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message
+        if not "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message:
+            raise AssertionError
 
         # TF also fails
         with pytest.raises(Exception) as excinfo1:

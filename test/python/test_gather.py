@@ -31,8 +31,8 @@ class TestGatherOperations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: (10.0, 20.0, 30.0, 40.0, 50.0)})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
 
 class TestGatherV2Operations(NgraphTest):
@@ -46,8 +46,8 @@ class TestGatherV2Operations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: (10.0, 20.0, 30.0, 40.0, 50.0)})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
     # Vector indices, no broadcast required
     def test_gather_1(self):
@@ -58,8 +58,8 @@ class TestGatherV2Operations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: (10.0, 20.0, 30.0, 40.0, 50.0)})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
     # Vector indices, broadcast required
     def test_gather_2(self):
@@ -70,8 +70,8 @@ class TestGatherV2Operations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: np.arange(10).reshape([2, 5])})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
         print(self.with_ngraph(run_test))
 
     # Vector indices, broadcast required, negative axis
@@ -83,8 +83,8 @@ class TestGatherV2Operations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: np.arange(10).reshape([2, 5])})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
         print(self.with_ngraph(run_test))
 
     # higher rank indices... not working right now
@@ -96,8 +96,8 @@ class TestGatherV2Operations(NgraphTest):
             return sess.run((out,),
                             feed_dict={val: np.arange(10).reshape([2, 5])})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
         print(self.with_ngraph(run_test))
 
 
@@ -112,8 +112,8 @@ class TestGatherNdOperations(NgraphTest):
             return sess.run((out,), feed_dict={val: [['a', 'b'], ['c',
                                                                   'd']]})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
     # Slice indexing into a matrix
     def test_gather_1(self):
@@ -124,8 +124,8 @@ class TestGatherNdOperations(NgraphTest):
             return sess.run((out,), feed_dict={val: [['a', 'b'], ['c',
                                                                   'd']]})[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
 
     # Indexing into a 3-tensor
     def test_gather_2(self):
@@ -139,5 +139,5 @@ class TestGatherNdOperations(NgraphTest):
                                       [['a1', 'b1'], ['c1', 'd1']]]
                             })[0]
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+            raise AssertionError
