@@ -243,7 +243,7 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
-    subprocess.Popen(shlex.split('git clone https://github.com/tensorflow/benchmarks.git'))
+    subprocess.check_output(['git' ,'clone' ,'https://github.com/tensorflow/benchmarks.git'])
     
     if not os.path.exists('benchmarks'):
         raise AssertionError("Could not find directory: {}".format('benchmarks'))
