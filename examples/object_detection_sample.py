@@ -164,7 +164,7 @@ if __name__ == "__main__":
             "--rename argument is enabled, this will rename the input image or directory of images in your disk.\n Press 'y' to continue.\n Press 'a' to abort.\n Press any other key to proceed without renaming."
         )
         print(40 * '-')
-        val = input()
+        val = raw_input()
         if val == 'y':
             print(" Renaming has been enabled")
         elif val == 'a':
