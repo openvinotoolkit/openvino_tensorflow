@@ -58,7 +58,7 @@ def command_executor(cmd,
         tag = 'Running COMMAND: ' if msg is None else msg
         print(tag + cmd, file=stdout)
     try:
-        process = subprocess.check_output(
+        process = subprocess.Popen(
             shlex.split(cmd), stdout=stdout, stderr=stderr)
         so, se = process.communicate()
         retcode = process.returncode
