@@ -32,10 +32,12 @@ class TestOpDisableOperations(NgraphTest):
                                             ('_InvalidOp',)))
     def test_disable_op_1(self, op_list):
         openvino_tensorflow.set_disabled_ops(op_list)
-        if not openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8"):
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
             raise AssertionError
         # Running get_disabled_ops twice to see nothing has changed between 2 consecutive calls
-        if not openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8"):
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
             raise AssertionError
         # Clean up
         openvino_tensorflow.set_disabled_ops('')
@@ -74,13 +76,15 @@ class TestOpDisableOperations(NgraphTest):
     def test_disable_op_env(self):
         op_list = 'Select,Where'
         openvino_tensorflow.set_disabled_ops(op_list)
-        if not openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8"):
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
             raise AssertionError
 
         env_map = self.store_env_variables('OPENVINO_TF_DISABLED_OPS')
         env_list = 'Squeeze'
         self.set_env_variable('OPENVINO_TF_DISABLED_OPS', env_list)
-        if not openvino_tensorflow.get_disabled_ops() == env_list.encode("utf-8"):
+        if not openvino_tensorflow.get_disabled_ops() == env_list.encode(
+                "utf-8"):
             raise AssertionError
         self.unset_env_variable('OPENVINO_TF_DISABLED_OPS')
         self.restore_env_variables(env_map)

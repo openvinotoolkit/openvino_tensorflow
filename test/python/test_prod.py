@@ -34,14 +34,15 @@ class TestProductOperations(NgraphTest):
             raise AssertionError
         out = tf.reduce_prod(tensor, axis=axis)
         sess_fn = lambda sess: sess.run([out], feed_dict={tensor: v1})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
 
     @pytest.mark.parametrize(("v1", "expected"), (((2.0, 2.0), [4.0]),))
     def test_prod_no_axis(self, v1, expected):
         tensor = tf.compat.v1.placeholder(tf.float32, shape=(None))
         out = tf.reduce_prod(tensor)
-        sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})        
+        sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError
 
@@ -66,7 +67,8 @@ class TestProductOperations(NgraphTest):
         out = tf.reduce_prod(tensor, axis, keepdims=True)
         sess_fn = lambda sess: sess.run((out,), feed_dict={tensor: v1})
         result = self.with_ngraph(sess_fn)
-        if not np.allclose(len(np.array(result[0].shape)), len(np.array(v1).shape)):
+        if not np.allclose(
+                len(np.array(result[0].shape)), len(np.array(v1).shape)):
             raise AssertionError
         if not np.allclose(result, expected):
             raise AssertionError

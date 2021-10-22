@@ -63,7 +63,8 @@ def command_executor(cmd,
         so, se = process.communicate()
         retcode = process.returncode
         if not retcode == 0:
-            raise AssertionError("dir:" + os.getcwd( ) + ". Error in running command: " + cmd)
+            raise AssertionError("dir:" + os.getcwd() +
+                                 ". Error in running command: " + cmd)
     except OSError as e:
         print(
             "!!! Execution failed !!!",
@@ -189,7 +190,7 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    process=subprocess.Popen(shlex.split('which pip'))
+    process = subprocess.Popen(shlex.split('which pip'))
     so, se = process.communicate()
 
     # Install the pip packages
@@ -379,7 +380,8 @@ def build_tensorflow_cc(tf_version,
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
         try:
             if not os.path.exists(doomed_file):
-                raise AssertionError("File not present for unlinking {0}".format(doomed_file))
+                raise AssertionError(
+                    "File not present for unlinking {0}".format(doomed_file))
         except Exception as e:
             print("Cannot remove: %s" % e)
             pass
@@ -406,7 +408,8 @@ def locate_tf_whl(tf_whl_loc):
         raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
     possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
     if not len(possible_whl) == 1:
-        raise AssertionError("Expected 1 TF whl file, but found " + len(possible_whl))
+        raise AssertionError("Expected 1 TF whl file, but found " +
+                             len(possible_whl))
     tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
     if not os.path.isfile(tf_whl):
         raise AssertionError("Did not find " + tf_whl)
@@ -432,7 +435,8 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         doomed_file = os.path.join(artifacts_dir, tf_fmwk_lib_name)
         try:
             if not os.path.exists(doomed_file):
-                raise AssertionError("File not present for unlinking {0}".format(doomed_file))
+                raise AssertionError(
+                    "File not present for unlinking {0}".format(doomed_file))
         except Exception as e:
             print("Cannot remove: %s" % e)
             pass
@@ -482,7 +486,8 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
     pwd = os.getcwd()
     if not os.path.exists(os.path.join(artifacts_dir, "tensorflow")):
-        raise AssertionError("Path doesn't exist {0}".format(os.path.join(artifacts_dir, "tensorflow")))
+        raise AssertionError("Path doesn't exist {0}".format(
+            os.path.join(artifacts_dir, "tensorflow")))
     os.chdir(os.path.join(artifacts_dir, "tensorflow"))
 
     # Get the name of the TensorFlow pip package
@@ -554,7 +559,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
 
     command_executor(make_cmd)
     if not os.path.exists(os.path.join("python", "dist")):
-        raise AssertionError("Path doesn't exist {0}".format(os.path.join("python", "dist")))
+        raise AssertionError("Path doesn't exist {0}".format(
+            os.path.join("python", "dist")))
     os.chdir(os.path.join("python", "dist"))
     ovtf_wheel_files = glob.glob("openvino_tensorflow*.whl")
     if (len(ovtf_wheel_files) != 1):
@@ -605,9 +611,9 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    command="git clone  {repo} {target_name}".format(repo=repo,target_name=target_name)
-    process=subprocess.Popen(
-            shlex.split(command), stdout=subprocess.PIPE)
+    command = "git clone  {repo} {target_name}".format(
+        repo=repo, target_name=target_name)
+    process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     so, se = process.communicate()
 
     pwd = os.getcwd()
@@ -616,14 +622,15 @@ def download_repo(target_name, repo, version, submodule_update=False):
     os.chdir(target_name)
 
     # checkout the specified branch and get the latest changes
-    process=subprocess.Popen(shlex.split("git fetch"))
+    process = subprocess.Popen(shlex.split("git fetch"))
     so, se = process.communicate()
     command_executor(["git", "checkout", version])
-    process=subprocess.Popen(shlex.split("git pull"))
+    process = subprocess.Popen(shlex.split("git pull"))
     so, se = process.communicate()
 
     if submodule_update:
-        process=subprocess.Popen(shlex.split("git submodule update --init --recursive"))
+        process = subprocess.Popen(
+            shlex.split("git submodule update --init --recursive"))
         so, se = process.communicate()
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
@@ -646,7 +653,8 @@ def apply_patch(patch_file, level=1):
     # cmd.returncode will be 0 or if the patch has already been applied, in
     # which case the string will be found, in all other cases the assertion
     # will fail
-    if not cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(printed_lines[0]):
+    if not cmd.returncode == 0 or 'patch detected!  Skipping patch' in str(
+            printed_lines[0]):
         raise AssertionError("Error applying the patch.")
 
 

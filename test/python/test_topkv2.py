@@ -29,7 +29,8 @@ class TestTopKV2(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: input}).values
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_topkv2_2d(self):
@@ -40,7 +41,8 @@ class TestTopKV2(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: input}).values
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_topkv2_3d(self):
@@ -52,7 +54,8 @@ class TestTopKV2(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: input}).values
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_topkv2_nosort(self):
@@ -63,5 +66,6 @@ class TestTopKV2(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: input}).values
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError

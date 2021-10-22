@@ -80,7 +80,9 @@ class TestConv2DBackpropInput(NgraphTest):
             inp = tf.transpose(inp, [0, 3, 1, 2])
             return sess.run(inp)
 
-        if not np.allclose(self.with_ngraph(run_test_ngraph), self.without_ngraph(run_test_tf)):
+        if not np.allclose(
+                self.with_ngraph(run_test_ngraph),
+                self.without_ngraph(run_test_tf)):
             raise AssertionError
 
     @pytest.mark.parametrize("padding", ("VALID", "SAME"))
@@ -102,5 +104,6 @@ class TestConv2DBackpropInput(NgraphTest):
         def run_test(sess):
             return sess.run(inp)
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError

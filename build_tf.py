@@ -49,9 +49,11 @@ def main():
         os.makedirs(arguments.output_dir)
 
     if not os.path.isdir(arguments.output_dir):
-        raise AssertionError( "Did not find output directory: " + arguments.output_dir)
+        raise AssertionError("Did not find output directory: " +
+                             arguments.output_dir)
     if not os.path.exists(arguments.output_dir):
-        raise AssertionError("path doesn't exist {0}".format(arguments.output_dir))
+        raise AssertionError("path doesn't exist {0}".format(
+            arguments.output_dir))
     os.chdir(arguments.output_dir)
 
     venv_dir = './venv3/'
@@ -60,7 +62,8 @@ def main():
     load_venv(venv_dir)
     setup_venv(venv_dir)
     if not os.path.exists(arguments.output_dir):
-        raise AssertionError("Directory doesn't exist {0}".format(arguments.output_dir))
+        raise AssertionError("Directory doesn't exist {0}".format(
+            arguments.output_dir))
     if not os.path.isdir(os.path.join(arguments.output_dir, "tensorflow")):
         # Download TensorFlow
         download_repo("tensorflow",
@@ -69,7 +72,8 @@ def main():
     else:
         pwd = os.getcwd()
         if not os.path.exists(arguments.output_dir):
-            raise AssertionError("Path doesn't exist {}".format(arguments.output_dir))
+            raise AssertionError("Path doesn't exist {}".format(
+                arguments.output_dir))
         os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
         call(["git", "fetch"])
         command_executor(["git", "checkout", arguments.tf_version])

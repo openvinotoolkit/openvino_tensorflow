@@ -81,12 +81,15 @@ def get_input_mode(input_path):
         images = os.listdir(input_path)
         if len(images) < 1:
             if not False:
-                raise AssertionError("Input directory doesn't contain any images")
+                raise AssertionError(
+                    "Input directory doesn't contain any images")
         for i in images:
             image_path = os.path.join(input_path, i)
             if os.path.isdir(image_path) or imghdr.what(image_path) == None:
                 if not False:
-                    raise AssertionError("Input directory contains another sub directory or non image files")
+                    raise AssertionError(
+                        "Input directory contains another sub directory or non image files"
+                    )
         return "directory"
     elif os.path.isfile(input_path):
         if imghdr.what(input_path) != None:

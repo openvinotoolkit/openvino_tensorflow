@@ -46,5 +46,6 @@ class TestConv2D(NgraphTest):
                     bias: bias_values,
                 })
 
-        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+        if not np.allclose(
+                self.without_ngraph(run_test), self.with_ngraph(run_test)):
             raise AssertionError

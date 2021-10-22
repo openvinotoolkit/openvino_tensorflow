@@ -25,7 +25,7 @@ if not platform.system() == "Darwin":
 try:
     import xmlrunner
 except:
-    subprocess.Popen(shlex.split("pip install unittest-xml-reporting"))
+    os.system("pip install unittest-xml-reporting")
     import xmlrunner
 """
 tf_unittest_runner is primarily used to run tensorflow python 
@@ -326,7 +326,9 @@ def read_tests_from_manifest(manifestfile,
                 run_items -= new_skips
                 skipped_items |= new_skips
         if not (run_items.isdisjoint(skipped_items)):
-            raise AssertionError("\n#Tests to Run={}, Skip={} (manifest = {})\n".format(len(run_items), len(skipped_items), manifestfile))
+            raise AssertionError(
+                "\n#Tests to Run={}, Skip={} (manifest = {})\n".format(
+                    len(run_items), len(skipped_items), manifestfile))
         print('\n#Tests to Run={}, Skip={} (manifest = {})\n'.format(
             len(run_items), len(skipped_items), manifestfile))
 

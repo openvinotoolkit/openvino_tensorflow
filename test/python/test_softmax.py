@@ -34,7 +34,8 @@ class TestSoftmax(NgraphTest):
         expected = a_np
         a = tf.nn.softmax(x)
         sess_fn = lambda sess: sess.run((a), feed_dict={x: x_np})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError
@@ -52,7 +53,8 @@ class TestSoftmax(NgraphTest):
         expected = a_np
         a = tf.nn.softmax(x)
         sess_fn = lambda sess: sess.run((a), feed_dict={x: x_np})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError
@@ -70,7 +72,8 @@ class TestSoftmax(NgraphTest):
         expected = a_np
         a = tf.nn.softmax(x)
         sess_fn = lambda sess: sess.run((a), feed_dict={x: x_np})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError

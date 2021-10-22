@@ -44,5 +44,6 @@ class TestUpdateConfig(NgraphTest):
             raise AssertionError
         config_new_1 = openvino_tensorflow.update_config(config)
         config_new_2 = openvino_tensorflow.update_config(config_new_1)
-        if not count_ng_optimizers(config) == count_ng_optimizers(config_new_1) == count_ng_optimizers(config_new_2) == 1:
+        if not count_ng_optimizers(config) == count_ng_optimizers(
+                config_new_1) == count_ng_optimizers(config_new_2) == 1:
             raise AssertionError

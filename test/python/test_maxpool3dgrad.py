@@ -49,5 +49,6 @@ class TestMaxpool3DGrad(NgraphTest):
                         grad: grad_values,
                     })
 
-        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+        if not np.allclose(
+                self.without_ngraph(run_test), self.with_ngraph(run_test)):
             raise AssertionError

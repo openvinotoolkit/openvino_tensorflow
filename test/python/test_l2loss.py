@@ -28,7 +28,8 @@ class TestL2Loss(NgraphTest):
         out = tf.nn.l2_loss(x)
         values = np.random.rand(*xshape)
         sess_fn = lambda sess: sess.run((out), feed_dict={x: values})
-        if not np.allclose( self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
 
     def test_l2loss_empty(self):

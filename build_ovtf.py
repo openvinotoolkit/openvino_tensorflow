@@ -163,10 +163,11 @@ def main():
     arguments = parser.parse_args()
 
     if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
-        if not  (tf_version == arguments.tf_version):
-            raise AssertionError("Currently ABI1 Tensorflow %s wheel is unavailable. " %
+        if not (tf_version == arguments.tf_version):
+            raise AssertionError(
+                "Currently ABI1 Tensorflow %s wheel is unavailable. " %
                 arguments.tf_version +
-                 "Please consider adding --build_tf_from_source")
+                "Please consider adding --build_tf_from_source")
 
     # Update the build time tensorflow version with the user specified version
     tf_version = arguments.tf_version
@@ -186,16 +187,16 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (
-        arguments.use_tensorflow_from_location != '' and
-         arguments.build_tf_from_source):
-            raise AssertionError(
-             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
-             "cannot be used together.")
+    if (arguments.use_tensorflow_from_location != '' and
+            arguments.build_tf_from_source):
+        raise AssertionError(
+            "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
+            "cannot be used together.")
     if (arguments.openvino_version not in [
-        "2021.4.1", "2021.4", "2021.3", "2021.2"]):
-         raise AssertionError(
-         "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
+            "2021.4.1", "2021.4", "2021.3", "2021.2"
+    ]):
+        raise AssertionError(
+            "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
         )
 
     if arguments.use_openvino_from_location != '':
@@ -216,12 +217,14 @@ def main():
 
     if arguments.use_tensorflow_from_location != '':
         # Check if the prebuilt folder has necessary files
-        if not os.path.isdir(
-            arguments.use_tensorflow_from_location):
-            raise AssertionError("Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist")
+        if not os.path.isdir(arguments.use_tensorflow_from_location):
+            raise AssertionError("Prebuilt TF path " +
+                                 arguments.use_tensorflow_from_location +
+                                 " does not exist")
         loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
         if not os.path.isdir(loc):
-            raise AssertionError("Could not find artifacts/tensorflow directory")
+            raise AssertionError(
+                "Could not find artifacts/tensorflow directory")
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
@@ -301,9 +304,9 @@ def main():
         if not os.path.exists(tf_whl_loc):
             raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
         possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-        if not len(
-            possible_whl) == 1:
-                raise AssertionError("Expected one TF whl file, but found " + len(possible_whl))
+        if not len(possible_whl) == 1:
+            raise AssertionError("Expected one TF whl file, but found " +
+                                 len(possible_whl))
         # Make sure there is exactly 1 TF whl
         tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
         if not os.path.isfile(tf_whl):
@@ -313,12 +316,13 @@ def main():
         tf_cxx_abi = get_tf_cxxabi()
 
         if not (arguments.cxx11_abi_version == tf_cxx_abi):
-            raise AssertionError("Desired ABI version and user built tensorflow library provided with "
-            "use_tensorflow_from_location are incompatible")
+            raise AssertionError(
+                "Desired ABI version and user built tensorflow library provided with "
+                "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
         if not os.path.exists(tf_whl_loc):
-            raise AssertionError("Path doesn't exist {0}".format( tf_whl_loc))
+            raise AssertionError("Path doesn't exist {0}".format(tf_whl_loc))
         os.chdir(tf_whl_loc)
         tf_in_artifacts = os.path.join(
             os.path.abspath(artifacts_location), "tensorflow")
@@ -374,15 +378,16 @@ def main():
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
                 raise AssertionError(
-                "Desired ABI version and tensorflow library installed with "
-                "pip are incompatible")
+                    "Desired ABI version and tensorflow library installed with "
+                    "pip are incompatible")
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
             pwd_now = os.getcwd()
             if not os.path.exists(artifacts_location):
-                raise AssertionError("Path doesn't exist {0}".format(artifacts_location))
+                raise AssertionError(
+                    "Path doesn't exist {0}".format(artifacts_location))
             os.chdir(artifacts_location)
             print("DOWNLOADING TF: PWD", os.getcwd())
             download_repo("tensorflow",
@@ -408,7 +413,8 @@ def main():
             print("SYSCFG LIB: ", tf_lib_file)
             dst_dir = os.path.join(artifacts_location, "tensorflow")
             if not os.path.exists(dst_dir):
-                raise AssertionError("Directory doesn't exist {0}".format(dst_dir))
+                raise AssertionError(
+                    "Directory doesn't exist {0}".format(dst_dir))
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
@@ -546,7 +552,8 @@ def main():
     if not os.path.exists(artifacts_location):
         raise AssertionError("Path not found {}".format(artifacts_location))
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
-        raise AssertionError("Cannot locate nGraph whl in the artifacts location")
+        raise AssertionError(
+            "Cannot locate nGraph whl in the artifacts location")
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 

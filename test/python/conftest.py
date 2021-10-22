@@ -116,7 +116,9 @@ def read_tests_from_manifest(manifestfile):
                 run_items -= new_skips
                 skipped_items |= new_skips
         if not run_items.isdisjoint(skipped_items):
-            raise AssertionError("#Tests to Run={}, Skip={} (manifest = {})".format(len(run_items), len(skipped_items), manifestfile))
+            raise AssertionError(
+                "#Tests to Run={}, Skip={} (manifest = {})".format(
+                    len(run_items), len(skipped_items), manifestfile))
 
     return run_items, skipped_items  # 2 sets
 

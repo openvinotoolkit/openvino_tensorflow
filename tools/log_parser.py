@@ -31,9 +31,13 @@ def parse_logs(log_lines, verbose=False):
         log_lines = log_lines.split('\n')
     else:
         if not type(log_lines) == type([]):
-            raise AssertionError("If log_lines if not a string, it should have been a list, but instead it is a " + type(log_lines))
+            raise AssertionError(
+                "If log_lines if not a string, it should have been a list, but instead it is a "
+                + type(log_lines))
     if not all([type(i) == type('') and '\n' not in i for i in log_lines]):
-        raise AssertionError('Each element of the list should be a string and not contain new lines')
+        raise AssertionError(
+            'Each element of the list should be a string and not contain new lines'
+        )
     all_results = {}
     curr_result = {}
     ctr = 0

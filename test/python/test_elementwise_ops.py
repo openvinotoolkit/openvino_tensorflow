@@ -34,10 +34,11 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
-            raise  AssertionError
+            raise AssertionError
 
     @pytest.mark.parametrize(
         ("v1", "v2", "expected"),
@@ -55,7 +56,8 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -76,7 +78,8 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -97,7 +100,8 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -118,7 +122,8 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -138,7 +143,8 @@ class TestElementwiseOperations(NgraphTest):
                                             val1: (v1,),
                                             val2: (v2,)
                                         })[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -151,7 +157,8 @@ class TestElementwiseOperations(NgraphTest):
 
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})[
             0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError
@@ -163,7 +170,8 @@ class TestElementwiseOperations(NgraphTest):
         out = tf.logical_not(val)
 
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})[0]
-        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)).all():
+        if not (self.with_ngraph(sess_fn) == self.without_ngraph(sess_fn)
+               ).all():
             raise AssertionError
         if not (self.with_ngraph(sess_fn) == expected).all():
             raise AssertionError

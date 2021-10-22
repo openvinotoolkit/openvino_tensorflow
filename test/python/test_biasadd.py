@@ -40,7 +40,8 @@ class TestBiasAddOperations(NgraphTest):
                     bias_var: bias_data
                 })
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_BiasAdd2(self):
@@ -60,7 +61,8 @@ class TestBiasAddOperations(NgraphTest):
                     bias_var: bias_data
                 })
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_BiasAdd3(self):
@@ -81,7 +83,8 @@ class TestBiasAddOperations(NgraphTest):
                     bias_var: bias_data
                 })
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_BiasAdd4(self):
@@ -102,5 +105,6 @@ class TestBiasAddOperations(NgraphTest):
                     bias_var: bias_data
                 })
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError

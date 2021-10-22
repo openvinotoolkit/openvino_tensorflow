@@ -24,5 +24,10 @@ class TestLogSoftmaxOperations(NgraphTest):
         logsoftmax = tf.nn.log_softmax(features)
         sess_fn = lambda sess: sess.run([logsoftmax])
         out = self.with_ngraph(sess_fn)
-        if not np.allclose(np.array([[-1.386294, -1.386294, -1.386294, -1.386294],  [0, -max, -max, -max]]),  out,  rtol=1.e-5,  atol=1.e-5):
+        if not np.allclose(
+                np.array([[-1.386294, -1.386294, -1.386294, -1.386294],
+                          [0, -max, -max, -max]]),
+                out,
+                rtol=1.e-5,
+                atol=1.e-5):
             raise AssertionError

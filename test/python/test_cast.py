@@ -27,7 +27,8 @@ class TestCastOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={val: (5.5, 2.0)})
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError
 
     def test_cast_2d(self):
@@ -38,5 +39,6 @@ class TestCastOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={val: test_input})
 
-        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)).all():
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
             raise AssertionError

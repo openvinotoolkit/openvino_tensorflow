@@ -174,7 +174,8 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     import tensorflow as tf
     tf_dir = tf.sysconfig.get_lib()
     if not os.path.exists(tf_dir + '/python/framework'):
-        raise AssertionError("Could not find directory: {}".format(tf_dir + '/python/framework'))
+        raise AssertionError(
+            "Could not find directory: {}".format(tf_dir + '/python/framework'))
     os.chdir(tf_dir + '/python/framework')
     print("CURRENT DIR: " + os.getcwd())
 
@@ -243,11 +244,14 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     install_openvino_tensorflow(artifact_dir)
 
     # Now clone the repo and proceed
-    subprocess.Popen(shlex.split('git clone https://github.com/tensorflow/benchmarks.git'))
+    subprocess.Popen(
+        shlex.split('git clone https://github.com/tensorflow/benchmarks.git'))
     if not os.path.exists('benchmarks'):
-        raise AssertionError("Could not find directory: {}".format('benchmarks'))
+        raise AssertionError(
+            "Could not find directory: {}".format('benchmarks'))
     os.chdir('benchmarks')
-    subprocess.Popen(shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'))
+    subprocess.Popen(
+        shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'))
 
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
@@ -258,14 +262,16 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
         print("Patching repo using: %s" % patch_file)
         apply_patch(patch_file)
     if not os.path.exists('scripts/tf_cnn_benchmarks/'):
-        raise AssertionError("Could not find directory: {}".format('scripts/tf_cnn_benchmarks/'))
+        raise AssertionError(
+            "Could not find directory: {}".format('scripts/tf_cnn_benchmarks/'))
     os.chdir('scripts/tf_cnn_benchmarks/')
 
     # junit_script = os.path.abspath('%s/test/ci/junit-wrap.sh' % root_pwd)
 
     # Update the script by adding `import openvino_tensorflow`
     with open('convnet_builder.py', 'a') as outfile:
-        subprocess.Popen(shlex.split('echo import openvino_tensorflow'), stdout=outfile)
+        subprocess.Popen(
+            shlex.split('echo import openvino_tensorflow'), stdout=outfile)
 
     # Setup the env flags
     import psutil
@@ -320,7 +326,8 @@ def run_resnet50_infer_from_artifacts(artifact_dir, batch_size, iterations):
     if not os.path.exists(pretrained_models_dir):
         os.mkdir(pretrained_models_dir, 0o755)
     if not os.path.exists(pretrained_models_dir):
-        raise AssertionError("Could not find the path: {}".format(pretrained_models_dir))
+        raise AssertionError(
+            "Could not find the path: {}".format(pretrained_models_dir))
     os.chdir(pretrained_models_dir)
     pretrained_model = os.path.join(pretrained_models_dir, 'resnet50_v1.pb')
     if not os.path.exists(pretrained_model):

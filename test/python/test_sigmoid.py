@@ -43,5 +43,6 @@ class TestSigmoid(NgraphTest):
                                             y: y_np,
                                             z: z_np
                                         })
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError

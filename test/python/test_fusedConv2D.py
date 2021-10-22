@@ -63,7 +63,8 @@ class TestFusedConv2D(NgraphTest):
                             bias: bias_values,
                         })
 
-        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+        if not np.allclose(
+                self.without_ngraph(run_test), self.with_ngraph(run_test)):
             raise AssertionError
 
     @pytest.mark.parametrize(("relutype",), (
@@ -106,7 +107,11 @@ class TestFusedConv2D(NgraphTest):
                     variance: variance_values,
                 })
 
-        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test), rtol=0, atol=5e-5):
+        if not np.allclose(
+                self.without_ngraph(run_test),
+                self.with_ngraph(run_test),
+                rtol=0,
+                atol=5e-5):
             raise AssertionError
 
     @pytest.mark.skipif(platform.system() == 'Darwin', reason='Only for Linux')
@@ -131,5 +136,6 @@ class TestFusedConv2D(NgraphTest):
                             bias: bias_values,
                         })
 
-        if not np.allclose(self.without_ngraph(run_test), self.with_ngraph(run_test)):
+        if not np.allclose(
+                self.without_ngraph(run_test), self.with_ngraph(run_test)):
             raise AssertionError

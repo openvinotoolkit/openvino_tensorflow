@@ -26,7 +26,8 @@ class TestSignOperations(NgraphTest):
         val = tf.compat.v1.placeholder(tf.float32, shape=(1,))
         out = tf.sign(val)
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError
@@ -37,7 +38,8 @@ class TestSignOperations(NgraphTest):
         val = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
         out = tf.sign(val)
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})
-        if not np.allclose(self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
+        if not np.allclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)):
             raise AssertionError
         if not np.allclose(self.with_ngraph(sess_fn), expected):
             raise AssertionError

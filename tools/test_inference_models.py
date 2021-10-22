@@ -85,7 +85,8 @@ def main():
     # Next is to go to the model directory
     if not os.path.exists(arguments.model_location):
         raise AssertionError("Could not find the path")
-    if not os.path.exists(os.path.join(arguments.model_location, "tensorflow_scripts")):
+    if not os.path.exists(
+            os.path.join(arguments.model_location, "tensorflow_scripts")):
         raise AssertionError("Could not find the path")
     os.chdir(os.path.join(arguments.model_location, "tensorflow_scripts"))
 
