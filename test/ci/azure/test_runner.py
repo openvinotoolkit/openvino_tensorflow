@@ -7,7 +7,6 @@
 import argparse
 import errno
 import os
-from subprocess import check_output, call
 import sys
 import shutil
 import glob
@@ -111,7 +110,8 @@ def main():
         os.environ[
             'OPENVINO_TF_DYNAMIC_FALLBACK'] = openvino_tf_dynamic_fallback
 
-    assert os.path.exists(root_pwd), "Path doesn't exist {0}".format(root_pwd)
+    if not os.path.exists(root_pwd):
+        raise AssertionError("Path doesn't exist {0}".format(root_pwd))
     os.chdir(root_pwd)
 
 

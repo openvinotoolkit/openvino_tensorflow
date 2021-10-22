@@ -44,8 +44,9 @@ class TestSharedConst(NgraphTest):
         def run_test(sess):
             return sess.run(pad2, feed_dict={input_data1: inp})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
         # Clean up
         openvino_tensorflow.set_disabled_ops('')

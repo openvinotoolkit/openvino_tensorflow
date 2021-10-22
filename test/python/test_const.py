@@ -33,8 +33,9 @@ class TestConstOperations(NgraphTest):
         def run_test(sess):
             return sess.run(zz)
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_const_listvals_2(self):
         zz = tf.constant([[1, 2, 3], [4, 5, 6]], dtype=float, shape=[2, 3])
@@ -42,8 +43,9 @@ class TestConstOperations(NgraphTest):
         def run_test(sess):
             return sess.run(zz)
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_const_scalarval(self):
         zz = tf.constant(-3, dtype=float, shape=[2, 3])
@@ -51,19 +53,24 @@ class TestConstOperations(NgraphTest):
         def run_test(sess):
             return sess.run(zz)
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_const_lastfill(self):
         try:
             zz = tf.constant([1, 2], dtype=float, shape=[2, 3])
-            assert False, 'TF2.0 is now able construct constants with less elements, update test accordingly'
+            if not False:
+                raise AssertionError(
+                    'TF2.0 is now able construct constants with less elements, update test accordingly'
+                )
 
             def run_test(sess):
                 return sess.run(zz)
 
-            assert (self.with_ngraph(run_test) == self.without_ngraph(run_test)
-                   ).all()
+            if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+                   ).all():
+                raise AssertionError
         except:
             return
 
@@ -71,7 +78,10 @@ class TestConstOperations(NgraphTest):
         log = logging.getLogger('test_const_empty')
         try:
             zz = tf.constant([], dtype=float, shape=[2, 3])
-            assert False, 'TF2.0 is able to construct constants with 0 elements, update test accordingly'
+            if not False:
+                raise AssertionError(
+                    'TF2.0 is able to construct constants with 0 elements, update test accordingly'
+                )
 
             def run_test(sess):
                 log.debug('Invoking sess.run(zz)')
@@ -86,9 +96,11 @@ class TestConstOperations(NgraphTest):
             try:
                 # This test is expected to fail currently
                 res = self.with_ngraph(run_test)
-                assert False, 'Failed, expected test to raise error'
+                if not False:
+                    raise AssertionError('Failed, expected test to raise error')
             except:
                 log.debug('Passed, expected NG to raise error...')
-                assert True
+                if not True:
+                    raise AssertionError
         except:
             return

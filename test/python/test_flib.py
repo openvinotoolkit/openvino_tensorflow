@@ -39,9 +39,11 @@ class TestFlibOperations(NgraphTest):
 
             exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
             # Note both run on Host (because NgraphEncapsulate can only run on host)
-            assert np.isclose(res1, res2).all()
+            if not np.isclose(res1, res2).all():
+                raise AssertionError
             # Comparing with expected value
-            assert np.isclose(res1, exp).all()
+            if not np.isclose(res1, exp).all():
+                raise AssertionError
 
     @pytest.mark.skip(reason="Not passing through grappler")
     def test_flib_2(self):
@@ -65,6 +67,8 @@ class TestFlibOperations(NgraphTest):
             res2 = self.without_ngraph(sess_fn)
             exp = [np.full((2, 3), 3.0), np.full((2, 3), 0.95257413)]
             # Note both run on Host (because NgraphEncapsulate can only run on host)
-            assert np.isclose(res1, res2).all()
+            if not np.isclose(res1, res2).all():
+                raise AssertionError
             # Comparing with expected value
-            assert np.isclose(res1, exp).all()  #fails
+            if not np.isclose(res1, exp).all():
+                raise AssertionError  #fails

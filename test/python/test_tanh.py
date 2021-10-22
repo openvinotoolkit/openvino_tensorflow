@@ -31,7 +31,8 @@ class TestTanhOp(NgraphTest):
 
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: (test_input,)})
         result = self.with_ngraph(sess_fn)
-        assert np.amax(np.absolute(result[0] - expected)) < atol
+        if not np.amax(np.absolute(result[0] - expected)) < atol:
+            raise AssertionError
 
     def test_tanh_2d(self):
         test_input = ((1.5, 2.5, 3.5), (4.5, 5.5, 6.5))
@@ -43,4 +44,5 @@ class TestTanhOp(NgraphTest):
         out = tf.tanh(val)
         sess_fn = lambda sess: sess.run((out,), feed_dict={val: test_input})
         (result,) = self.with_ngraph(sess_fn)
-        assert np.amax(np.absolute(result == expected)) < atol
+        if not np.amax(np.absolute(result == expected)) < atol:
+            raise AssertionError

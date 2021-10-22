@@ -63,7 +63,8 @@ def main():
     openvino_tensorflow_wheel = ovtf_wheel_files[0]
 
     print("NGRAPH Wheel: ", openvino_tensorflow_wheel)
-    assert os.path.exists(arguments.python_location), "Could not find the path"
+    if not os.path.exists(arguments.python_location):
+        raise AssertionError("Could not find the path")
     command_executor([
         os.path.join(arguments.python_location, "pip"), "install", "-U",
         openvino_tensorflow_wheel
@@ -71,7 +72,8 @@ def main():
 
     # Print the version information
     print("\nnGraph-TensorFlow Information ")
-    assert os.path.exists(arguments.python_location), "Path doesn't exist"
+    if not os.path.exists(arguments.python_location):
+        raise AssertionError("Path doesn't exist")
     python_exe = os.path.join(arguments.python_location, "python3")
     command_executor([
         python_exe, "-c", "\"import tensorflow as tf; " +
@@ -81,10 +83,11 @@ def main():
     ])
 
     # Next is to go to the model directory
-    assert os.path.exists(arguments.model_location), "Could not find the path"
-    assert os.path.exists(
-        os.path.join(arguments.model_location,
-                     "tensorflow_scripts")), "Could not find the path"
+    if not os.path.exists(arguments.model_location):
+        raise AssertionError("Could not find the path")
+    if not os.path.exists(
+            os.path.join(arguments.model_location, "tensorflow_scripts")):
+        raise AssertionError("Could not find the path")
     os.chdir(os.path.join(arguments.model_location, "tensorflow_scripts"))
 
     # Execute the inference runs
