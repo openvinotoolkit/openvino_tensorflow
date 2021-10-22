@@ -37,5 +37,5 @@ class TestLog1pOperations(NgraphTest):
             raise AssertionError
 
         for i, j in zip(ng_result, tf_result):
-            if not (i == j) or (np.isnan(i) and np.isnan(j)):
+            if not ((i == j) or (np.isnan(i) and np.isnan(j))):
                 raise AssertionError
