@@ -200,6 +200,9 @@ def main():
         )
 
     if arguments.use_openvino_from_location != '':
+        if not os.path.isdir(arguments.use_openvino_from_location):
+            raise AssertionError("Path doesn't exist {0}".format(
+                arguments.use_openvino_from_location))
         ver_file = arguments.use_openvino_from_location + \
                       '/deployment_tools/inference_engine/version.txt'
         if not os.path.exists(ver_file):
@@ -264,11 +267,12 @@ def main():
         artifacts_location = os.path.abspath(arguments.artifacts_dir)
 
     artifacts_location = os.path.abspath(artifacts_location)
-    print("ARTIFACTS location: " + artifacts_location)
 
     #If artifacts doesn't exist create
     if not os.path.isdir(artifacts_location):
         os.mkdir(artifacts_location)
+
+    print("ARTIFACTS location: " + artifacts_location)
 
     #install virtualenv
     install_virtual_env(venv_dir)
@@ -282,8 +286,6 @@ def main():
     target_arch = 'native'
     if (arguments.target_arch):
         target_arch = arguments.target_arch
-
-    print("Target Arch: %s" % target_arch)
 
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
@@ -339,7 +341,6 @@ def main():
         os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
-            print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
 
             if arguments.cxx11_abi_version == "0":
@@ -384,7 +385,6 @@ def main():
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
-            pwd_now = os.getcwd()
             if not os.path.exists(artifacts_location):
                 raise AssertionError(
                     "Path doesn't exist {0}".format(artifacts_location))
@@ -393,6 +393,8 @@ def main():
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
+            print("Using TensorFlow version", tf_version)
+            pwd_now = os.getcwd()
             if not os.path.exists(pwd_now):
                 raise AssertionError("Path doesn't exist {0}".format(pwd_now))
             os.chdir(pwd_now)
