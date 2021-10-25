@@ -385,6 +385,7 @@ def main():
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
+            pwd_now = os.getcwd()
             if not os.path.exists(artifacts_location):
                 raise AssertionError(
                     "Path doesn't exist {0}".format(artifacts_location))
@@ -394,7 +395,6 @@ def main():
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
             print("Using TensorFlow version", tf_version)
-            pwd_now = os.getcwd()
             if not os.path.exists(pwd_now):
                 raise AssertionError("Path doesn't exist {0}".format(pwd_now))
             os.chdir(pwd_now)
