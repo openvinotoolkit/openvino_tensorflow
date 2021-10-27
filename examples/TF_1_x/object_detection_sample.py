@@ -39,12 +39,13 @@ from PIL import Image, ImageFont, ImageDraw
 dir_path = os.path.dirname(os.path.realpath(__file__))
 utils_path = os.path.dirname(os.path.realpath(os.path.join(dir_path, '.')))
 sys.path.insert(0, utils_path)
-from common.utils import get_input_mode, load_graph, write_images
+from common.utils import get_input_mode, load_graph
 
 
 def load_coco_names(file_name):
     names = {}
-    assert os.path.exists(file_name), "could not find label file path"
+    if not os.path.exists(file_name):
+        raise AssertionError("could not find label file path")
     with open(file_name) as f:
         for coco_id, name in enumerate(f):
             names[coco_id] = name
@@ -286,7 +287,6 @@ if __name__ == "__main__":
 
     cap = None
     images = []
-    output_images = []
     if label_file:
         labels = load_labels(label_file)
     input_mode = get_input_mode(input_file)
@@ -297,7 +297,12 @@ if __name__ == "__main__":
     elif input_mode == 'image':
         images = [input_file]
     elif input_mode == 'directory':
+        if not os.path.isdir(input_file):
+            raise AssertionError("Path doesn't exist {0}".format(input_file))
         images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        result_dir = os.path.join(input_file, '../detections')
+        if not os.path.exists(result_dir):
+            os.mkdir(result_dir)
     else:
         raise Exception(
             "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
@@ -365,13 +370,16 @@ if __name__ == "__main__":
                 cv2.imwrite("detections.jpg", img_bbox)
                 print("Output image is saved in detections.jpg")
             if input_mode in 'directory':
-                output_images.append(img_bbox)
+                out_file = "detections_{0}.jpg".format(image_id)
+                out_file = os.path.join(result_dir, out_file)
+                cv2.imwrite(out_file, img_bbox)
             if not args.no_show:
                 cv2.imshow("detections", img_bbox)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
     if input_mode in 'directory':
-        write_images(input_file, output_images)
+        print("Output images is saved in {0}".format(
+            os.path.abspath(result_dir)))
     sess.close()
     if cap:
         cap.release()

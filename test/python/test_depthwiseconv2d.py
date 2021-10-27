@@ -54,5 +54,6 @@ class TestDepthwiseConv2dOperations(NgraphTest):
             t1, t2, strides=[1, 1, 1, 1], padding=padding)
         sess_fn = lambda sess: sess.run(conv)
 
-        assert np.isclose(
-            self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)).all()
+        if not np.isclose(
+                self.with_ngraph(sess_fn), self.without_ngraph(sess_fn)).all():
+            raise AssertionError

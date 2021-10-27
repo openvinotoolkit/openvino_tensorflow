@@ -40,8 +40,10 @@ class TestUpdateConfig(NgraphTest):
         # allow_soft_placement is set just to simulate
         # a real world non-empty initial ConfigProto
         config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
-        assert count_ng_optimizers(config) == 0
+        if not count_ng_optimizers(config) == 0:
+            raise AssertionError
         config_new_1 = openvino_tensorflow.update_config(config)
         config_new_2 = openvino_tensorflow.update_config(config_new_1)
-        assert count_ng_optimizers(config) == count_ng_optimizers(
-            config_new_1) == count_ng_optimizers(config_new_2) == 1
+        if not count_ng_optimizers(config) == count_ng_optimizers(
+                config_new_1) == count_ng_optimizers(config_new_2) == 1:
+            raise AssertionError

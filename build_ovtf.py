@@ -52,7 +52,7 @@ def main():
 
     # Component versions
     tf_version = "v2.5.1"
-    ovtf_version = "v1.0.0"
+    ovtf_version = "v1.0.1"
     use_intel_tf = False
 
     # Command line parser options
@@ -163,10 +163,11 @@ def main():
     arguments = parser.parse_args()
 
     if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
-        assert (tf_version == arguments.tf_version), (
-            "Currently ABI1 Tensorflow %s wheel is unavailable. " %
-            arguments.tf_version +
-            "Please consider adding --build_tf_from_source")
+        if not (tf_version == arguments.tf_version):
+            raise AssertionError(
+                "Currently ABI1 Tensorflow %s wheel is unavailable. " %
+                arguments.tf_version +
+                "Please consider adding --build_tf_from_source")
 
     # Update the build time tensorflow version with the user specified version
     tf_version = arguments.tf_version
@@ -186,28 +187,32 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    assert not (
-        arguments.use_tensorflow_from_location != '' and
-        arguments.build_tf_from_source), (
+    if (arguments.use_tensorflow_from_location != '' and
+            arguments.build_tf_from_source):
+        raise AssertionError(
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
-
-    assert not (arguments.openvino_version not in [
-        "2021.4.1", "2021.4", "2021.3", "2021.2"
-    ]), (
-        "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
-    )
+    if (arguments.openvino_version not in [
+            "2021.4.1", "2021.4", "2021.3", "2021.2"
+    ]):
+        raise AssertionError(
+            "Only 2021.2, 2021.3, 2021.4 and 2021.4.1 OpenVINO versions are supported"
+        )
 
     if arguments.use_openvino_from_location != '':
+        if not os.path.isdir(arguments.use_openvino_from_location):
+            raise AssertionError("Path doesn't exist {0}".format(
+                arguments.use_openvino_from_location))
         ver_file = arguments.use_openvino_from_location + \
                       '/deployment_tools/inference_engine/version.txt'
-        assert os.path.exists(ver_file), "Path doesn't exist {0}".format(
-            ver_file)
+        if not os.path.exists(ver_file):
+            raise AssertionError("Path doesn't exist {0}".format(ver_file))
         with open(ver_file) as f:
             line = f.readline()
-            assert line.find(arguments.openvino_version) != -1, "OpenVINO version " + \
-                arguments.openvino_version + \
-                " does not match the version specified in use_openvino_from_location"
+            if not line.find(arguments.openvino_version) != -1:
+                raise AssertionError("OpenVINO version " + \
+                 arguments.openvino_version + \
+                    " does not match the version specified in use_openvino_from_location")
 
     version_check((not arguments.build_tf_from_source),
                   (arguments.use_tensorflow_from_location != ''),
@@ -215,16 +220,19 @@ def main():
 
     if arguments.use_tensorflow_from_location != '':
         # Check if the prebuilt folder has necessary files
-        assert os.path.isdir(
-            arguments.use_tensorflow_from_location
-        ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
+        if not os.path.isdir(arguments.use_tensorflow_from_location):
+            raise AssertionError("Prebuilt TF path " +
+                                 arguments.use_tensorflow_from_location +
+                                 " does not exist")
         loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
-        assert os.path.isdir(
-            loc), "Could not find artifacts/tensorflow directory"
+        if not os.path.isdir(loc):
+            raise AssertionError(
+                "Could not find artifacts/tensorflow directory")
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
-        assert os.path.exists(loc), "Path doesn't exist {0}".format(loc)
+        if not os.path.exists(loc):
+            raise AssertionError("Path doesn't exist {0}".format(loc))
         for i in os.listdir(loc):
             if '.whl' in i:
                 found_whl = True
@@ -232,9 +240,12 @@ def main():
                 found_libtf_cc = True
             if 'libtensorflow_framework' in i:
                 found_libtf_fw = True
-        assert found_whl, "Did not find TF whl file"
-        assert found_libtf_fw, "Did not find libtensorflow_framework"
-        assert found_libtf_cc, "Did not find libtensorflow_cc"
+        if not found_whl:
+            raise AssertionError("Did not find TF whl file")
+        if not found_libtf_fw:
+            raise AssertionError("Did not find libtensorflow_framework")
+        if not found_libtf_cc:
+            raise AssertionError("Did not find libtensorflow_cc")
 
     try:
         os.makedirs(build_dir)
@@ -246,8 +257,8 @@ def main():
     openvino_tf_src_dir = os.path.abspath(pwd)
     print("OVTF SRC DIR: " + openvino_tf_src_dir)
     build_dir_abs = os.path.abspath(build_dir)
-    assert os.path.exists(build_dir_abs), "Directory doesn't exist {}".format(
-        build_dir_abs)
+    if not os.path.exists(build_dir_abs):
+        raise AssertionError("Directory doesn't exist {}".format(build_dir_abs))
     os.chdir(build_dir)
 
     venv_dir = 'venv-tf-py3'
@@ -256,11 +267,12 @@ def main():
         artifacts_location = os.path.abspath(arguments.artifacts_dir)
 
     artifacts_location = os.path.abspath(artifacts_location)
-    print("ARTIFACTS location: " + artifacts_location)
 
     #If artifacts doesn't exist create
     if not os.path.isdir(artifacts_location):
         os.mkdir(artifacts_location)
+
+    print("ARTIFACTS location: " + artifacts_location)
 
     #install virtualenv
     install_virtual_env(venv_dir)
@@ -274,8 +286,6 @@ def main():
     target_arch = 'native'
     if (arguments.target_arch):
         target_arch = arguments.target_arch
-
-    print("Target Arch: %s" % target_arch)
 
     # The cxx_abi flag is translated to _GLIBCXX_USE_CXX11_ABI
     # For gcc older than 5.3, this flag is set to 0 and for newer ones,
@@ -293,26 +303,28 @@ def main():
         # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
         tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location +
                                      '/artifacts/tensorflow')
-        assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
-            tf_whl_loc)
+        if not os.path.exists(tf_whl_loc):
+            raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
         possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-        assert len(
-            possible_whl
-        ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
+        if not len(possible_whl) == 1:
+            raise AssertionError("Expected one TF whl file, but found " +
+                                 len(possible_whl))
         # Make sure there is exactly 1 TF whl
         tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
-        assert os.path.isfile(tf_whl), "Did not find " + tf_whl
+        if not os.path.isfile(tf_whl):
+            raise AssertionError("Did not find " + tf_whl)
         # Install the found TF whl file
         command_executor(["pip", "install", "--force-reinstall", "-U", tf_whl])
         tf_cxx_abi = get_tf_cxxabi()
 
-        assert (arguments.cxx11_abi_version == tf_cxx_abi), (
-            "Desired ABI version and user built tensorflow library provided with "
-            "use_tensorflow_from_location are incompatible")
+        if not (arguments.cxx11_abi_version == tf_cxx_abi):
+            raise AssertionError(
+                "Desired ABI version and user built tensorflow library provided with "
+                "use_tensorflow_from_location are incompatible")
 
         cwd = os.getcwd()
-        assert os.path.exists(tf_whl_loc), "Path doesn't exist {0}".format(
-            tf_whl_loc)
+        if not os.path.exists(tf_whl_loc):
+            raise AssertionError("Path doesn't exist {0}".format(tf_whl_loc))
         os.chdir(tf_whl_loc)
         tf_in_artifacts = os.path.join(
             os.path.abspath(artifacts_location), "tensorflow")
@@ -324,11 +336,11 @@ def main():
         tf_version = get_tf_version()
         copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                              use_intel_tf)
-        assert os.path.exists(cwd), "Path doesn't exist {0}".format(cwd)
+        if not os.path.exists(cwd):
+            raise AssertionError("Path doesn't exist {0}".format(cwd))
         os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
-            print("Using TensorFlow version", tf_version)
             print("Install TensorFlow")
 
             if arguments.cxx11_abi_version == "0":
@@ -342,43 +354,49 @@ def main():
                 if tags.interpreter == "cp36":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp37":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp37-cp37m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp37-cp37m-manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.0/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl"
                     ])
-
+                if tags.interpreter == "cp39":
+                    command_executor([
+                        "pip", "install", "--force-reinstall",
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp39-cp39-manylinux2010_x86_64.whl"
+                    ])
                 # ABI 1 TF required latest numpy
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
-            assert (arguments.cxx11_abi_version == tf_cxx_abi), (
-                "Desired ABI version and tensorflow library installed with "
-                "pip are incompatible")
+            if not (arguments.cxx11_abi_version == tf_cxx_abi):
+                raise AssertionError(
+                    "Desired ABI version and tensorflow library installed with "
+                    "pip are incompatible")
 
             tf_src_dir = os.path.join(artifacts_location, "tensorflow")
             print("TF_SRC_DIR: ", tf_src_dir)
             # Download TF source for enabling TF python tests
             pwd_now = os.getcwd()
-            assert os.path.exists(
-                artifacts_location), "Path doesn't exist {0}".format(
-                    artifacts_location)
+            if not os.path.exists(artifacts_location):
+                raise AssertionError(
+                    "Path doesn't exist {0}".format(artifacts_location))
             os.chdir(artifacts_location)
             print("DOWNLOADING TF: PWD", os.getcwd())
             download_repo("tensorflow",
                           "https://github.com/tensorflow/tensorflow.git",
                           tf_version)
-            assert os.path.exists(pwd_now), "Path doesn't exist {0}".format(
-                pwd_now)
+            print("Using TensorFlow version", tf_version)
+            if not os.path.exists(pwd_now):
+                raise AssertionError("Path doesn't exist {0}".format(pwd_now))
             os.chdir(pwd_now)
             # Finally, copy the libtensorflow_framework.so to the artifacts
             if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
@@ -396,8 +414,9 @@ def main():
             tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
             print("SYSCFG LIB: ", tf_lib_file)
             dst_dir = os.path.join(artifacts_location, "tensorflow")
-            assert os.path.exists(
-                dst_dir), "Directory doesn't exist {0}".format(dst_dir)
+            if not os.path.exists(dst_dir):
+                raise AssertionError(
+                    "Directory doesn't exist {0}".format(dst_dir))
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
@@ -532,11 +551,11 @@ def main():
                                   openvino_tf_cmake_flags, verbosity)
 
     # Make sure that the openvino_tensorflow whl is present in the artfacts directory
-    assert os.path.exists(artifacts_location), "Path not found {}".format(
-        artifacts_location)
-    assert os.path.isfile(os.path.join(
-        artifacts_location,
-        ov_tf_whl)), "Cannot locate nGraph whl in the artifacts location"
+    if not os.path.exists(artifacts_location):
+        raise AssertionError("Path not found {}".format(artifacts_location))
+    if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
+        raise AssertionError(
+            "Cannot locate nGraph whl in the artifacts location")
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise Exception("Cannot locate nGraph whl in the artifacts location")
 
@@ -578,8 +597,8 @@ def main():
         command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     # Run a quick test
-    assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
-        artifacts_location)
+    if not os.path.exists(artifacts_location):
+        raise AssertionError("Path doesn't exist {}".format(artifacts_location))
     install_openvino_tf(tf_version, venv_dir,
                         os.path.join(artifacts_location, ov_tf_whl))
 

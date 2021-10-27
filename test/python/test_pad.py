@@ -35,8 +35,9 @@ class TestPadOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={input_data: inp, paddings: pad})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_pad2(self):
         input_data = tf.compat.v1.placeholder(tf.int32, shape=(2, 3, 2))
@@ -54,8 +55,9 @@ class TestPadOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={input_data: inp, paddings: pad})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_pad3(self):
         input_data = tf.compat.v1.placeholder(tf.int32, shape=(2, 3))
@@ -69,8 +71,9 @@ class TestPadOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={input_data: inp, paddings: pad})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_pad4(self):
         input_data = tf.compat.v1.placeholder(tf.int32, shape=(2, 3))
@@ -84,5 +87,6 @@ class TestPadOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={input_data: inp, paddings: pad})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError

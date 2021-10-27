@@ -55,4 +55,5 @@ class TestRewriterConfigBackendSetting(NgraphTest):
                     b: np.ones((dim1, dim2)),
                     x: np.ones((dim1, dim2))
                 })
-        assert (outval == 2.5 * (np.ones((dim1, dim2)))).all()
+        if not (outval == 2.5 * (np.ones((dim1, dim2)))).all():
+            raise AssertionError

@@ -29,8 +29,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_select_sameshape(self):
         a = [True, False, True, True]
@@ -40,8 +41,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_select_diffrank(self):
         a = [1, 1]
@@ -53,8 +55,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_select_complexshape1(self):
         a = np.random.random(size=[7]).astype(np.float32)
@@ -66,8 +69,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return (sess.run(out, feed_dict={p: a}))
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_select_complexshape2(self):
         a = np.random.random(size=[7]).astype(np.float32)
@@ -79,8 +83,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return (sess.run(out, feed_dict={p: a}))
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_select_complexshape3(self):
         a = np.random.random(size=[5]).astype(np.float32)
@@ -92,8 +97,9 @@ class TestSelect(NgraphTest):
         def run_test(sess):
             return (sess.run(out, feed_dict={p: a}))
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
 
 class TestWhere(NgraphTest):
@@ -115,8 +121,9 @@ class TestWhere(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_where_scalar(self):
         a = [1.5]
@@ -126,8 +133,9 @@ class TestWhere(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError
 
     def test_where_bool(self):
         a = [True, False, False, True, False]
@@ -137,8 +145,8 @@ class TestWhere(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={p: a})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not os.path.exists(root_pwd):
+            raise AssertionError("Could not find the path")
 
     def test_where_complexshape1(self):
         a = np.random.random(size=[7]).astype(np.float32)
@@ -148,5 +156,6 @@ class TestWhere(NgraphTest):
         def run_test(sess):
             return (sess.run(out, feed_dict={p: a}))
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError

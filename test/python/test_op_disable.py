@@ -24,16 +24,21 @@ from common import NgraphTest
 class TestOpDisableOperations(NgraphTest):
     # Initially nothing is disabled
     def test_disable_op_0(self):
-        assert openvino_tensorflow.get_disabled_ops() == b''
+        if not openvino_tensorflow.get_disabled_ops() == b'':
+            raise AssertionError
 
     # Note it is possible to set an invalid op name (as long as mark_for_clustering is not called)
     @pytest.mark.parametrize(("op_list",), (('Add',), ('Add,Sub',), ('',),
                                             ('_InvalidOp',)))
     def test_disable_op_1(self, op_list):
         openvino_tensorflow.set_disabled_ops(op_list)
-        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
+            raise AssertionError
         # Running get_disabled_ops twice to see nothing has changed between 2 consecutive calls
-        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
+            raise AssertionError
         # Clean up
         openvino_tensorflow.set_disabled_ops('')
 
@@ -54,7 +59,8 @@ class TestOpDisableOperations(NgraphTest):
             def run_test(sess):
                 return sess.run(c, feed_dict={a: np.ones((5,))})
 
-            assert (self.without_ngraph(run_test) == np.ones(5,) * 2).all()
+            if not (self.without_ngraph(run_test) == np.ones(5,) * 2).all():
+                raise AssertionError
             #import pdb; pdb.set_trace()
             try:
                 # This test is expected to fail,
@@ -64,18 +70,22 @@ class TestOpDisableOperations(NgraphTest):
                 # Clean up
                 openvino_tensorflow.set_disabled_ops('')
                 return
-            assert False, 'Had expected test to raise error'
+            if not False:
+                raise AssertionError('Had expected test to raise error')
 
     def test_disable_op_env(self):
         op_list = 'Select,Where'
         openvino_tensorflow.set_disabled_ops(op_list)
-        assert openvino_tensorflow.get_disabled_ops() == op_list.encode("utf-8")
+        if not openvino_tensorflow.get_disabled_ops() == op_list.encode(
+                "utf-8"):
+            raise AssertionError
 
         env_map = self.store_env_variables('OPENVINO_TF_DISABLED_OPS')
         env_list = 'Squeeze'
         self.set_env_variable('OPENVINO_TF_DISABLED_OPS', env_list)
-        assert openvino_tensorflow.get_disabled_ops() == env_list.encode(
-            "utf-8")
+        if not openvino_tensorflow.get_disabled_ops() == env_list.encode(
+                "utf-8"):
+            raise AssertionError
         self.unset_env_variable('OPENVINO_TF_DISABLED_OPS')
         self.restore_env_variables(env_map)
 

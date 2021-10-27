@@ -16,7 +16,7 @@
 
 #define OV_TF_MAJOR_VERSION 1
 #define OV_TF_MINOR_VERSION 0
-#define OV_TF_PATCH_VERSION 0
+#define OV_TF_PATCH_VERSION 1
 
 // The version suffix is used for pre-release version numbers
 // For example before v0.7.0 we may do a pre-release i.e., a release

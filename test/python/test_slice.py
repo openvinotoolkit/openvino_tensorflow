@@ -270,4 +270,5 @@ class TestSliceOperations(NgraphTest):
 
         with pytest.raises(Exception) as excinfo:
             slice_vals = self.with_ngraph(run_test)
-        assert excinfo.value.message
+        if not excinfo.value.message:
+            raise AssertionError

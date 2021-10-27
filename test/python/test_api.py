@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 import ctypes
 import pytest
+from re import A
 
 from common import NgraphTest
 import openvino_tensorflow
@@ -19,11 +20,13 @@ class TestNgraphAPI(NgraphTest):
 
     def test_disable(self):
         openvino_tensorflow.disable()
-        assert openvino_tensorflow.is_enabled() == 0
+        if not openvino_tensorflow.is_enabled() == 0:
+            raise AssertionError
 
     def test_enable(self):
         openvino_tensorflow.enable()
-        assert openvino_tensorflow.is_enabled() == 1
+        if not openvino_tensorflow.is_enabled() == 1:
+            raise AssertionError
 
     def test_set_backend_invalid(self):
         env_var_map = self.store_env_variables(["OPENVINO_TF_BACKEND"])
@@ -36,15 +39,19 @@ class TestNgraphAPI(NgraphTest):
             error_thrown = True
         openvino_tensorflow.set_backend(current_backend)
         self.restore_env_variables(env_var_map)
-        assert error_thrown
+        if not error_thrown:
+            raise AssertionError
 
     def test_list_backends(self):
-        assert len(openvino_tensorflow.list_backends())
+        if not len(openvino_tensorflow.list_backends()):
+            raise AssertionError
 
     def test_start_logging_placement(self):
         openvino_tensorflow.start_logging_placement()
-        assert openvino_tensorflow.is_logging_placement() == 1
+        if not openvino_tensorflow.is_logging_placement() == 1:
+            raise AssertionError
 
     def test_stop_logging_placement(self):
         openvino_tensorflow.stop_logging_placement()
-        assert openvino_tensorflow.is_logging_placement() == 0
+        if not openvino_tensorflow.is_logging_placement() == 0:
+            raise AssertionError

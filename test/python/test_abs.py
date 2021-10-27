@@ -29,7 +29,8 @@ class TestAbsOperations(NgraphTest):
         def run_test(sess):
             return sess.run((out,), feed_dict={val: (test_input,)})
 
-        assert self.with_ngraph(run_test) == self.without_ngraph(run_test)
+        if not self.with_ngraph(run_test) == self.without_ngraph(run_test):
+            raise AssertionError
 
     def test_abs_2d(self):
         test_input = ((1.5, -2.5, 0.0, -3.5), (-4.5, -5.5, 6.5, 1.0))
@@ -39,5 +40,6 @@ class TestAbsOperations(NgraphTest):
         def run_test(sess):
             return sess.run(out, feed_dict={val: test_input})
 
-        assert (
-            self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
+        if not (self.with_ngraph(run_test) == self.without_ngraph(run_test)
+               ).all():
+            raise AssertionError

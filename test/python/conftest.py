@@ -75,8 +75,8 @@ def read_tests_from_manifest(manifestfile):
     run_items = set()
     skipped_items = set()
     pytest.g_imported_files.add(manifestfile)
-    assert os.path.isfile(manifestfile), "File doesn't exist {0}".format(
-        manifestfile)
+    if not os.path.isfile(manifestfile):
+        raise AssertionError("File doesn't exist {0}".format(manifestfile))
     with open(manifestfile) as fh:
         curr_section = ''
         for line in fh.readlines():
@@ -101,7 +101,8 @@ def read_tests_from_manifest(manifestfile):
                              manifestfile)
                 pytest.g_imported_files.add(line)
                 new_runs, new_skips = read_tests_from_manifest(line)
-                assert new_runs.isdisjoint(new_skips)
+                if not new_runs.isdisjoint(new_skips):
+                    raise AssertionError
                 run_items |= new_runs
                 skipped_items |= new_skips
                 run_items -= skipped_items
@@ -114,9 +115,10 @@ def read_tests_from_manifest(manifestfile):
                 new_skips = list_matching_tests(line)
                 run_items -= new_skips
                 skipped_items |= new_skips
-        assert run_items.isdisjoint(skipped_items)
-        print('#Tests to Run={}, Skip={} (manifest = {})'.format(
-            len(run_items), len(skipped_items), manifestfile))
+        if not run_items.isdisjoint(skipped_items):
+            raise AssertionError(
+                "#Tests to Run={}, Skip={} (manifest = {})".format(
+                    len(run_items), len(skipped_items), manifestfile))
 
     return run_items, skipped_items  # 2 sets
 
