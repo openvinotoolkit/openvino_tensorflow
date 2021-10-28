@@ -231,7 +231,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     step_id = ctx->step_id();
 
     // Get ngraph executable and inputs information
-
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
     NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
     if (getex_status != Status::OK()) {
@@ -539,7 +538,6 @@ Status NGraphEncapsulateOp::GetExecutable(
   std::vector<const Tensor*> static_input_map;
   std::vector<TensorShape> input_shapes;
   std::stringstream signature_ss;
-
   for (int i = 0; i < tf_input_tensors.size(); i++) {
     const Tensor& input_tensor = tf_input_tensors[i];
     input_shapes.push_back(input_tensor.shape());

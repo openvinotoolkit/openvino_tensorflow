@@ -461,6 +461,18 @@ static Status ValuesFromConstNode(const NodeDef& node,
   return Status::OK();
 }
 
+template <typename T>
+static Status MakeConstOpForParam(const Tensor& tensor, string prov_tag,
+                                  ng::element::Type ng_et, ng::Shape ng_shape,
+                                  ng::Output<ng::Node>& ng_node) {
+  vector<T> const_values;
+
+  TensorDataToVector(tensor, &const_values);
+  ng_node = ConstructNgNode<opset::Constant>(prov_tag, ng_et, ng_shape, const_values);
+
+  return Status::OK();
+}
+
 // Helper for Builder::TranslateGraph ("Const" op)
 template <typename T, typename VecT = T>
 static Status MakeConstOp(const Node* op, ng::element::Type et,
@@ -3692,7 +3704,7 @@ Status Builder::TranslateGraph(
     };
 
     bool is_variable = false;
-    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") == "1"){
+    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0"){
         try{
           GetNodeAttr(parm->attrs(),"_is_variable", &is_variable);
         }catch(const std::exception&){
@@ -3708,11 +3720,49 @@ Status Builder::TranslateGraph(
     }
     else {
       if(is_variable){
-        std::vector<float> vec_float;
+        ng::Output<ng::Node> ng_const_input;
+        const Tensor input_tensor = tf_input_tensors[index];
         OVTF_VLOG(1) << "Converting " << parm->name() << " to constant";
-        TF_RETURN_IF_ERROR(TensorDataToVector(tf_input_tensors[index], &vec_float));
-        auto ng_const_input = ConstructNgNode<opset::Constant>(
-            prov_tag, ng_et, ng_shape, vec_float);
+        switch (dtype) {
+          case DT_FLOAT:
+            MakeConstOpForParam<float>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_DOUBLE:
+            MakeConstOpForParam<double>(input_tensor,prov_tag,ng_et,ng_shape,ng_const_input);
+            break;
+          case DT_INT8:
+            MakeConstOpForParam<int8>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_INT16:
+            MakeConstOpForParam<int16>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_INT32:
+            MakeConstOpForParam<int32>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_INT64:
+            MakeConstOpForParam<int64>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_UINT8:
+            MakeConstOpForParam<uint8>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_UINT16:
+            MakeConstOpForParam<uint16>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_UINT32:
+            MakeConstOpForParam<uint32>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_UINT64:
+            MakeConstOpForParam<uint64>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          case DT_BOOL:
+            MakeConstOpForParam<bool>(input_tensor, prov_tag, ng_et, ng_shape, ng_const_input);
+            break;
+          default:
+            return errors::Internal("Tensor has element type ",
+                                    DataType_Name(dtype),
+                                    "; don't know how to convert");
+        }
+
         SaveNgOp(ng_op_map, parm->name(), ng_const_input);
       }
       else
