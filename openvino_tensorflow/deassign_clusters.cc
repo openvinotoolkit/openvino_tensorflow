@@ -324,46 +324,47 @@ Status DeassignClusters(Graph* graph) {
       }
       continue;
     }
-
-    if (device == "HDDL") {
-      std::vector<std::string> illegal_input_nodes = {"Unpack"};
-      std::vector<std::string> illegal_output_nodes = {"Greater"};
-      bool omit_cluster = false;
-      for (auto node : nodes) {
-        if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(),
-                      node->type_string()) != illegal_output_nodes.end()) {
-          for (auto it : node->out_nodes()) {
-            int out_cluster;
-            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-            if ((s == Status::OK() && out_cluster != cluster_idx) ||
-                (s != Status::OK())) {
-              omit_cluster = true;
-              break;
+    if (device.find("HETERO") == std::string::npos){
+        if (device == "HDDL") {
+          std::vector<std::string> illegal_input_nodes = {"Unpack"};
+          std::vector<std::string> illegal_output_nodes = {"Greater"};
+          bool omit_cluster = false;
+          for (auto node : nodes) {
+            if (std::find(illegal_output_nodes.begin(), illegal_output_nodes.end(),
+                          node->type_string()) != illegal_output_nodes.end()) {
+              for (auto it : node->out_nodes()) {
+                int out_cluster;
+                Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+                if ((s == Status::OK() && out_cluster != cluster_idx) ||
+                    (s != Status::OK())) {
+                  omit_cluster = true;
+                  break;
+                }
+              }
+            }
+            if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(),
+                          node->type_string()) != illegal_input_nodes.end()) {
+              for (auto it : node->in_nodes()) {
+                int in_cluster;
+                Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
+                if ((s == Status::OK() && in_cluster != cluster_idx) ||
+                    s != Status::OK()) {
+                  omit_cluster = true;
+                  break;
+                }
+              }
             }
           }
-        }
-        if (std::find(illegal_input_nodes.begin(), illegal_input_nodes.end(),
-                      node->type_string()) != illegal_input_nodes.end()) {
-          for (auto it : node->in_nodes()) {
-            int in_cluster;
-            Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
-            if ((s == Status::OK() && in_cluster != cluster_idx) ||
-                s != Status::OK()) {
-              omit_cluster = true;
-              break;
+          if (omit_cluster) {
+            for (auto node : nodes) {
+              node->ClearAttr("_ovtf_cluster");
+              node->ClearAttr("_ovtf_marked_for_clustering");
+              deassigned_histogram[node->type_string()]++;
             }
+            continue;
           }
-        }
       }
-      if (omit_cluster) {
-        for (auto node : nodes) {
-          node->ClearAttr("_ovtf_cluster");
-          node->ClearAttr("_ovtf_marked_for_clustering");
-          deassigned_histogram[node->type_string()]++;
-        }
-        continue;
-      }
-    }
+  }
 
     if (max_cluster_idx == -1) {
       max_cluster_idx = cluster_idx;
@@ -375,7 +376,7 @@ Status DeassignClusters(Graph* graph) {
     alive_clusters.push_back(cluster_idx);
   }
 
-  if (device == "HDDL" || device == "MYRIAD") {
+  if (device.find("HDDL")!=std::string::npos || device.find("MYRIAD")!=std::string::npos) {
     for (int i = 0; i < alive_clusters.size(); i++) {
       int alive_cluster_idx = alive_clusters[i];
       if (alive_cluster_idx != max_cluster_idx) {

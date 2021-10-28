@@ -24,12 +24,15 @@ Status BackendManager::SetBackend(const string& backend_name) {
   OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
-  if (bname == "HDDL") {
+  if (bname.find("HDDL")!= string::npos) {
     return errors::Internal("Failed to set backend: ",
                             bname + " backend not available");
   }
-  if (bname == "VAD-M") bname = "HDDL";
-
+  int vad_pos = bname.find("VAD-M");
+  if (vad_pos != string::npos) 
+    bname.replace(vad_pos, 5, "HDDL");
+  // std::cout << " Backend name in setBackend =  :  " << bname << std::endl;
+  // exit(1);
   auto status = CreateBackend(backend, bname);
   if (!status.ok() || backend == nullptr) {
     return errors::Internal("Failed to set backend: ", status.error_message());
