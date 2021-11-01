@@ -84,6 +84,7 @@ struct Cluster {
   std::set<tensorflow::Node*> nodes;
   std::string predicate_string;
   std::set<const Edge*> outgoing_edges;
+  int type;
 };
 
 // Returns the predicate of the merged cluster
@@ -286,12 +287,16 @@ Status AssignClusters(Graph* graph) {
 
   GraphCycles gc;
 
+  std::vector<std::string> dyn_out_nodes = {"NonMaxSuppressionV2", "Reshape"};
+  std::vector<std::string> stat_in_nodes = {"ZerosLike", "Size", "Conv2D", "Unpack"};
+
   // Initial Step: Each node is a cluster of its own
   for (auto node : graph->nodes()) {
     int new_index = gc.NewNode();
     cluster_map[node] = std::make_shared<Cluster>();
     cluster_map[node]->index = new_index;
     cluster_map[node]->nodes.insert(node);
+    cluster_map[node]->type = 0;
     OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
                  << node->name() << "[" << node->type_string() << "]";
 
@@ -305,6 +310,16 @@ Status AssignClusters(Graph* graph) {
         node->out_edges().begin(), node->out_edges().end());
     OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
                  << "  : Predicate " << pred_string;
+
+    if (std::find(dyn_out_nodes.begin(), dyn_out_nodes.end(),
+                      node->type_string()) != dyn_out_nodes.end()) {
+        node->AddAttr("_ovtf_dynamic_out", (bool)true);
+      cluster_map[node]->type = 1;
+    } else if (std::find(stat_in_nodes.begin(), stat_in_nodes.end(),
+                      node->type_string()) != stat_in_nodes.end()) {
+        node->AddAttr("_ovtf_dynamic_in", (bool)false);
+      cluster_map[node]->type = 2;
+    }
   }
 
   // Check for existing cyclicity in the graph
@@ -414,6 +429,58 @@ Status AssignClusters(Graph* graph) {
 
   string device;
   BackendManager::GetBackendName(device);
+
+  for (auto edge : graph->edges()) {
+    Node* src = edge->src();
+    Node* dst = edge->dst();
+    if (!src->IsOp() || !dst->IsOp()) {
+      continue;
+    }
+    if (!NodeIsMarkedForClustering(src) || !NodeIsMarkedForClustering(dst)) {
+      continue;
+    }
+    bool is_deadness_ok = false;
+    TF_RETURN_IF_ERROR(
+        CanContractEdgeDeadnessCheck(edge, cluster_map, is_deadness_ok));
+    if (!is_deadness_ok) {
+      continue;
+    }
+    int src_index = cluster_map[src]->index;
+    int dst_index = cluster_map[dst]->index;
+    if (!(gc.HasEdge(src_index, dst_index) &&
+          gc.CanContractEdge(src_index, dst_index))) {
+      continue;
+    }
+
+    bool src_dynamic_out = false;
+    Status s = GetNodeAttr(src->attrs(), "_ovtf_dynamic_out", &src_dynamic_out);
+    if (s == Status::OK() && src_dynamic_out == true) {
+        src_dynamic_out = true;
+    }
+    bool src_dynamic_in = true;
+    s = GetNodeAttr(src->attrs(), "_ovtf_dynamic_in", &src_dynamic_in);
+    if (s == Status::OK() && src_dynamic_in == false) {
+        src_dynamic_in = false;
+    }
+    bool dst_dynamic_in = true;
+    s = GetNodeAttr(dst->attrs(), "_ovtf_dynamic_in", &dst_dynamic_in);
+    if (s == Status::OK() && dst_dynamic_in == false) {
+        dst_dynamic_in = false;
+    }
+    bool dst_dynamic_out = false;
+    s = GetNodeAttr(dst->attrs(), "_ovtf_dynamic_out", &dst_dynamic_out);
+    if (s == Status::OK() && dst_dynamic_out == true) {
+        dst_dynamic_out = true;
+    }
+    if (src_dynamic_out && !dst_dynamic_in) {
+        dst->ClearAttr("_ovtf_marked_for_clustering");
+        continue;
+    } else if (src_dynamic_out) {
+        dst->AddAttr("_ovtf_dynamic_out", (bool)true);
+    } else if (!dst_dynamic_in) {
+        src->AddAttr("_ovtf_dynamic_in", (bool)false);
+    }
+  }
 
   // Drop Shape if it's the output node of HDDL cluster.
   // Drop Sub if it's the input node and the input is from a Const node.
