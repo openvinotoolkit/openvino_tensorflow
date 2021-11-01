@@ -125,7 +125,7 @@ $ git submodule update --recursive
 
 1. 从 PyPi 中获取兼容的预构建 TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。
 
-        python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4.1
+        python3 build_ovtf.py --tf_version=v2.6.0 --openvino_version=2021.4.1
 
 2. 从 Github 发布版本中获取兼容的预构建 TensorFlow 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
@@ -173,10 +173,10 @@ $ git submodule update --recursive
 
 它会生成以下输出：
 
-        TensorFlow version:  2.5.1
+        TensorFlow version:  2.6.0
         OpenVINO integration with TensorFlow version: b'1.0.1'
         OpenVINO version used for this build: b'2021.4.1'
-        TensorFlow version used for this build: v2.5.1
+        TensorFlow version used for this build: v2.6.0
         CXX11_ABI flag used for this build: 1
 
 
@@ -209,9 +209,9 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
 
-- 为使用所需的 TensorFlow 版本（如 v2.5.1）来构建
+- 为使用所需的 TensorFlow 版本（如 v2.6.0）来构建
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.5.1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.6.0
 
 ##  5. <a name='BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels'></a>编译 ManyLinux2014 兼容的 **OpenVINO™ integration with TensorFlow** 包
 

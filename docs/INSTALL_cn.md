@@ -32,7 +32,7 @@ English | [简体中文](./INSTALL_cn.md)
 ##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>安装 **OpenVINO™ integration with TensorFlow** 及 PyPi TensorFlow
 
         pip3 install pip==21.0.1
-        pip3 install tensorflow==2.5.1
+        pip3 install tensorflow==2.6.0
         pip3 install -U openvino-tensorflow
 <br/> 
 
@@ -45,15 +45,15 @@ English | [简体中文](./INSTALL_cn.md)
 
 2. 根据您的 Python 版本安装 `TensorFlow`，您可以使用 -D_GLIBCXX_USE_CXX11_ABI=1 构建 [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD_cn.md#tensorflow) 或按照以下说明使用适当的包：
 
-        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp36-cp36m-manylinux2010_x86_64.whl
+        pip3.6 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.6.0-cp36-cp36m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp37-cp37m-manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.6.0-cp37-cp37m-manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.5.1-cp38-cp38-manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.0.1/tensorflow_abi1-2.6.0-cp38-cp38-manylinux2010_x86_64.whl
 
 3. 下载并安装英特尔® OpenVINO™ Toolkit 2021.4.1 发行版及其依赖项 ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 

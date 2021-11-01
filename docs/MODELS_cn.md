@@ -315,4 +315,4 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 
 通过在运行推理之前将环境变量“OPENVINO_TF_CONSTANT_FOLDING”设置为 1，一些量化模型可以获得更优的性能。 
 
- [注意：NNCF 和 **OpenVINO™ integration with TensorFlow** 支持的最新 TensorFlow 版本可能不同。 建议用户创建一个单独的虚拟环境来使用 NNCF 量化模型，以避免任何 TensorFlow 版本不兼容问题。 然后可以在兼容 **OpenVINO™ integration with TensorFlow** 的环境中运行量化模型。 NNCF兼容TensorFlow 2.4.2， **OpenVINO™ integration with TensorFlow** 兼容 TensorFlow 2.5.1，已经过验证。]
+ [注意：NNCF 和 **OpenVINO™ integration with TensorFlow** 支持的最新 TensorFlow 版本可能不同。 建议用户创建一个单独的虚拟环境来使用 NNCF 量化模型，以避免任何 TensorFlow 版本不兼容问题。 然后可以在兼容 **OpenVINO™ integration with TensorFlow** 的环境中运行量化模型。 NNCF兼容TensorFlow 2.4.2， **OpenVINO™ integration with TensorFlow** 兼容 TensorFlow 2.6.0，已经过验证。]
