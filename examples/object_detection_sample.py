@@ -64,8 +64,6 @@ if __name__ == "__main__":
     anchor_file = "examples/data/yolov3_anchors.txt"
     input_height = 160
     input_width = 160
-    input_mean = 0
-    input_std = 255
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
@@ -99,10 +97,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_width", type=int, help="Optional. Specify input width value.")
     parser.add_argument(
-        "--input_mean", type=int, help="Optional. Specify input mean value.")
-    parser.add_argument(
-        "--input_std", type=int, help="Optional. Specify input std value.")
-    parser.add_argument(
         "--backend",
         help="Optional. Specify the target device to infer on; "
         "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
@@ -135,10 +129,6 @@ if __name__ == "__main__":
         input_height = args.input_height
     if args.input_width:
         input_width = args.input_width
-    if args.input_mean:
-        input_mean = args.input_mean
-    if args.input_std:
-        input_std = args.input_std
     if args.backend:
         backend_name = args.backend
     if args.conf_threshold:
