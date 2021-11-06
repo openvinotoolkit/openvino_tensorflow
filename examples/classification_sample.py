@@ -31,23 +31,24 @@ import os
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
-from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
 from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+from PIL import Image
 import time
 import cv2
 
 from common.utils import get_input_mode
 
-def read_tensor_from_image_file(frame,
-                                input_height=299,
-                                input_width=299,
-                                input_mean=0,
-                                input_std=255):
-    resized = cv2.resize(frame, (input_height, input_width))
-    img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-    resized_image = img.astype(np.float32)
-    normalized_image = (resized_image - input_mean) / input_std
-    result = np.expand_dims(normalized_image, 0)
+def preprocess_image(frame,
+                    input_height=299,
+                    input_width=299):
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(img)
+    resized_image = pil_img.resize((input_height, input_width))
+    img_arr = image.img_to_array(resized_image)
+    result = preprocess_input(img_arr[tf.newaxis,...])
+
     return result
 
 def load_labels(label_file):
@@ -59,7 +60,9 @@ def load_labels(label_file):
 
 
 if __name__ == "__main__":
-    input_file = "examples/data/grace_hopper.jpg"
+    input_file = tf.keras.utils.get_file(
+    'grace_hopper.jpg',
+    "https://www.tensorflow.org/images/grace_hopper.jpg")
     model_file = ""
     label_file = tf.keras.utils.get_file(
     'ImageNetLabels.txt',
@@ -172,12 +175,10 @@ if __name__ == "__main__":
             else:
                 break
 
-        t = read_tensor_from_image_file(
+        t = preprocess_image(
                 frame,
                 input_height=input_height,
-                input_width=input_width,
-                input_mean=input_mean,
-                input_std=input_std)
+                input_width=input_width)
 
         # Warmup
         if image_id == 0:
