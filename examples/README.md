@@ -20,10 +20,10 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 Before you proceed to run the examples, you will have to clone the `openvino_tensorflow` repository to your local machine. For this, run the following commands:
 
 ```bash
-$ git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
-$ cd openvino_tensorflow
-$ git submodule init
-$ git submodule update --recursive
+git clone https://github.com/openvinotoolkit/openvino_tensorflow.git
+cd openvino_tensorflow
+git submodule init
+git submodule update --recursive
 ```
 
 ## Python implementation for classification
