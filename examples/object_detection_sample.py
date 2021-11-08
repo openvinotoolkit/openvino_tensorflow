@@ -62,8 +62,8 @@ if __name__ == "__main__":
     model_file = "examples/data/darknet53.h5"
     label_file = "examples/data/coco.names"
     anchor_file = "examples/data/yolov3_anchors.txt"
-    input_height = 160
-    input_width = 160
+    input_height = 416
+    input_width = 416
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
