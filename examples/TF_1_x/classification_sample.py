@@ -35,6 +35,7 @@ import time
 import cv2
 import imghdr
 
+
 def get_input_mode(input_path):
     if str(input_path).lower() == '0':
         return "camera"
@@ -74,6 +75,7 @@ def load_graph(model_file):
         tf.import_graph_def(graph_def)
 
     return graph
+
 
 def read_tensor_from_image_file(frame,
                                 input_height=299,

@@ -15,9 +15,7 @@ patch tools/model_converter/keras_to_tensorflow.py ../../keras_to_tensorflow.pat
 wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
 wget -O weights/yolov3.weights https://pjreddie.com/media/files/yolov3.weights
 python3 tools/model_converter/convert.py cfg/yolov3.cfg weights/yolov3.weights weights/darknet53.h5
-python3 tools/model_converter/keras_to_tensorflow.py --input_model weights/darknet53.h5 --output_model=weights/${model_name}.pb
-cp weights/${model_name}.pb ../../data/${model_name}.pb
-cp weights/darknet53.h5 ../../data/darknet53.h5
+cp weights/darknet53.h5 ../../data/yolo_v3_darknet_2.h5
 cp coco.names ../../data/
 cd ../..
 

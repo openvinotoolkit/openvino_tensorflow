@@ -59,7 +59,7 @@ def load_labels(label_file):
 
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/darknet53.h5"
+    model_file = "examples/data/yolo_v3_darknet_2.h5"
     label_file = "examples/data/coco.names"
     anchor_file = "examples/data/yolov3_anchors.txt"
     input_height = 416
@@ -236,11 +236,10 @@ if __name__ == "__main__":
             iou_threshold=iou_threshold,
             elim_grid_sense=True)
         # modified draw_boxes function to return an openCV formatted image
-        img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores,
-                                labels, colors)
+        img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores, labels,
+                              colors)
         # draw information overlay onto the frames
-        cv2.putText(img_bbox,
-                    'Inference Running on : {0}'.format(backend_name),
+        cv2.putText(img_bbox, 'Inference Running on : {0}'.format(backend_name),
                     (30, 50), font, font_size, color, font_thickness)
         cv2.putText(
             img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(

@@ -20,6 +20,7 @@
 
 # Modified from TensorFlow example:
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/label_image.py
+# https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/guide/saved_model.ipynb
 #
 
 from __future__ import absolute_import
@@ -40,16 +41,16 @@ import cv2
 
 from common.utils import get_input_mode
 
-def preprocess_image(frame,
-                    input_height=299,
-                    input_width=299):
+
+def preprocess_image(frame, input_height=299, input_width=299):
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img)
     resized_image = pil_img.resize((input_height, input_width))
     img_arr = image.img_to_array(resized_image)
-    result = preprocess_input(img_arr[tf.newaxis,...])
+    result = preprocess_input(img_arr[tf.newaxis, ...])
 
     return result
+
 
 def load_labels(label_file):
     label = []
@@ -61,12 +62,13 @@ def load_labels(label_file):
 
 if __name__ == "__main__":
     input_file = tf.keras.utils.get_file(
-    'grace_hopper.jpg',
-    "https://www.tensorflow.org/images/grace_hopper.jpg")
+        'grace_hopper.jpg',
+        "https://www.tensorflow.org/images/grace_hopper.jpg")
     model_file = ""
     label_file = tf.keras.utils.get_file(
-    'ImageNetLabels.txt',
-    'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt')
+        'ImageNetLabels.txt',
+        'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
+    )
     input_height = 299
     input_width = 299
     input_mean = 0
@@ -176,9 +178,7 @@ if __name__ == "__main__":
                 break
 
         t = preprocess_image(
-                frame,
-                input_height=input_height,
-                input_width=input_width)
+            frame, input_height=input_height, input_width=input_width)
 
         # Warmup
         if image_id == 0:
@@ -203,15 +203,12 @@ if __name__ == "__main__":
             top_k = results.argsort()[-5:][::-1]
             c = 130
             for i in top_k:
-                    cv2.putText(frame, '{0} : {1}'.format(
-                        labels[i], results[i]), (30, c), font, font_size, color,
-                                font_thickness)
-                    print(labels[i+1], results[i])
-                    c+=30
+                cv2.putText(frame, '{0} : {1}'.format(labels[i], results[i]),
+                            (30, c), font, font_size, color, font_thickness)
+                print(labels[i + 1], results[i])
+                c += 30
         else:
-            print(
-                "No label file provided. Cannot print classification results"
-            )
+            print("No label file provided. Cannot print classification results")
         if not args.no_show:
             cv2.imshow("results", frame)
             if cv2.waitKey(1) & 0XFF == ord('q'):
