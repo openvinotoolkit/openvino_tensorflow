@@ -266,8 +266,9 @@ Status Encapsulator::AnalysisPass() {
       SetAttrValue(input_prov_tag,
                    &((*(new_input_node_def->mutable_attr()))["_prov_tag"]));
 
-      if (src->type_string() == "ReadVariableOp"){
-          SetAttrValue(true, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      if (src->type_string() == "ReadVariableOp") {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
       }
 
       arg_index_count[dst_cluster_idx]++;
