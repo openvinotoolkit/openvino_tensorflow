@@ -234,7 +234,7 @@ def setup_venv(venv_dir):
         "install",
         "psutil",
         "six>=1.12.0",
-        "numpy>=1.19.5",
+        # "numpy>=1.19.5",
         "wheel>=0.26",
         "setuptools",
         "mock",
@@ -408,7 +408,7 @@ def build_tensorflow_cc(tf_version,
         tf_cc_lib_name = "libtensorflow_cc.so.1"
 
     if (platform.system() == 'Windows'):
-        tf_cc_lib_name = "tensorflow_cc.lib"
+        tf_cc_lib_name = "tensorflow_cc.dll.if.lib"
 
     build_tensorflow(
         tf_version,
@@ -494,7 +494,7 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     if (platform.system() == 'Windows'):
         # tf_fmwk_lib_name = 'tensorflow.lib'
-        tf_cc_lib_name = 'tensorflow_cc.lib'
+        tf_cc_lib_name = 'tensorflow_cc.dll.if.lib'
 
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)

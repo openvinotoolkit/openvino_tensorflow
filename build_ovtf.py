@@ -229,13 +229,12 @@ def main():
                 "\\", "\\\\")
 
         # Check if the prebuilt folder has necessary files
-        if not os.path.isdir(arguments.use_tensorflow_from_location):
-            raise AssertionError("Prebuilt TF path " +
-                                 arguments.use_tensorflow_from_location +
-                                 " does not exist")
-        loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
+        assert os.path.isdir(
+            arguments.use_tensorflow_from_location
+        ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
+        loc = arguments.use_tensorflow_from_location + '\\\\tensorflow' #'\\\\artifacts\\\\tensorflow'
         if (platform.system() == 'Windows'):
-            loc = loc + '/bazel-bin/tensorflow'
+            loc = loc + '\\\\bazel-bin\\\\tensorflow'
         assert os.path.isdir(
             loc), "Could not find artifacts/tensorflow directory"
         found_whl = False
@@ -245,8 +244,8 @@ def main():
             raise AssertionError("Path doesn't exist {0}".format(loc))
         for i in os.listdir(loc):
             if (platform.system() == 'Windows'):
-                # if 'tensorflow_cc' in i:
-                found_libtf_cc = True
+                if 'tensorflow_cc' in i:
+                    found_libtf_cc = True
                 # if 'tensorflow.lib' in i:
                 found_libtf_fw = True
                 found_whl = True
@@ -259,6 +258,7 @@ def main():
                     found_libtf_fw = True
         assert found_whl, "Did not find TF whl file"
         assert found_libtf_fw, "Did not find libtensorflow_framework"
+        assert found_libtf_cc, "Did not find libtensorflow_cc"
 
     try:
         os.makedirs(build_dir)
@@ -317,7 +317,8 @@ def main():
         if (platform.system() == 'Windows'):
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
-                             "artifacts", "tensorflow"))
+                             "tensorflow")) 
+                             #"artifacts", "tensorflow"))
             os.chdir(tf_source_loc)
         else:
             tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location
@@ -345,23 +346,23 @@ def main():
                 tf_whl_loc)
             os.chdir(tf_whl_loc)
 
-        tf_in_artifacts = os.path.join(
-            os.path.abspath(artifacts_location), "tensorflow")
-        if not os.path.isdir(tf_in_artifacts):
-            os.mkdir(tf_in_artifacts)
-        # This function copies the .so files from
-        # use_tensorflow_from_location/artifacts/tensorflow to
-        # artifacts/tensorflow
-        if (platform.system() == 'Windows'):
-            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
-                                 use_intel_tf)
-        else:
-            tf_version = get_tf_version()
-            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
-                             use_intel_tf)
-        if not os.path.exists(cwd):
-            raise AssertionError("Path doesn't exist {0}".format(cwd))
-        os.chdir(cwd)
+            tf_in_artifacts = os.path.join(
+                os.path.abspath(artifacts_location), "tensorflow")
+            if not os.path.isdir(tf_in_artifacts):
+                os.mkdir(tf_in_artifacts)
+            # This function copies the .so files from
+            # use_tensorflow_from_location/artifacts/tensorflow to
+            # artifacts/tensorflow
+            if (platform.system() == 'Windows'):
+                copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
+                                    use_intel_tf)
+            else:
+                tf_version = get_tf_version()
+                copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
+                                use_intel_tf)
+            if not os.path.exists(cwd):
+                raise AssertionError("Path doesn't exist {0}".format(cwd))
+            os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
             print("Install TensorFlow")
@@ -534,11 +535,11 @@ def main():
                        artifacts_location, arguments.debug_build, verbosity)
 
     # Build protobuf from source for the Windows build
-    if (platform.system() == 'Windows'):
-        print("Building protobuf from source...")
-        build_protobuf(artifacts_location, arguments.protobuf_branch,
-                       arguments.debug_build, verbosity)
-        print("Completed protobuf build.")
+    # if (platform.system() == 'Windows'):
+    #     print("Building protobuf from source...")
+    #     build_protobuf(artifacts_location, arguments.protobuf_branch,
+    #                    arguments.debug_build, verbosity)
+    #     print("Completed protobuf build.")
 
     # Next build CMAKE options for the bridge
     atom_flags = ""
@@ -583,7 +584,7 @@ def main():
             openvino_tf_cmake_flags.extend([
                 "-DTF_SRC_DIR=" + (os.path.abspath(
                     arguments.use_tensorflow_from_location.replace(
-                        "\\", "\\\\") + '\\artifacts\\tensorflow')).replace(
+                        "\\", "\\\\") + '\\tensorflow')).replace(
                             "\\", "\\\\")
             ])
         else:
@@ -685,7 +686,7 @@ def main():
         if (platform.system() == 'Windows'):
             command_executor([
                 'cp', '-r',
-                base_dir + 'artifacts\\\\tensorflow\\\\tensorflow\\\\python',
+                base_dir + '\\\\tensorflow\\\\tensorflow\\\\python', # base_dir + '\\\\artifacts\\\\tensorflow\\\\tensorflow\\\\python',
                 dest_dir.replace("\\", "\\\\")
             ],
                              verbose=True)
@@ -695,32 +696,23 @@ def main():
             ],
                              verbose=True)
     else:
+        # Create a sym-link to
         if (platform.system() == 'Windows'):
             link_src = os.path.join(artifacts_location,
                                     "tensorflow\\tensorflow\\python")
-            link_dst = os.path.join(artifacts_location, "tensorflow\\python")
+            link_dst = os.path.join(artifacts_location,
+                                    "tensorflow\\python")
             command_executor(
-                ['mklink', '/j', link_dst.replace("\\", "\\\\")],
-                link_src.replace("\\", "\\\\"),
+                ['mklink', '/j',
+                  link_dst.replace("\\", "\\\\"),
+                link_src.replace("\\", "\\\\")],
                 verbose=True)
         else:
-            # Create a sym-link to
-            if (platform.system() == 'Windows'):
-                link_src = os.path.join(artifacts_location,
-                                        "tensorflow\\tensorflow\\python")
-                link_dst = os.path.join(artifacts_location,
-                                        "tensorflow\\python")
-                command_executor(
-                    ['mklink', '/j',
-                     link_dst.replace("\\", "\\\\")],
-                    link_src.replace("\\", "\\\\"),
-                    verbose=True)
-            else:
-                link_src = os.path.join(artifacts_location,
-                                        "tensorflow/tensorflow/python")
-                link_dst = os.path.join(artifacts_location, "tensorflow/python")
-                command_executor(['ln', '-sf', link_src, link_dst],
-                                 verbose=True)
+            link_src = os.path.join(artifacts_location,
+                                    "tensorflow/tensorflow/python")
+            link_dst = os.path.join(artifacts_location, "tensorflow/python")
+            command_executor(['ln', '-sf', link_src, link_dst],
+                              verbose=True)
 
     assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
         artifacts_location)

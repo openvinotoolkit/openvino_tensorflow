@@ -57,7 +57,7 @@ extern bool IsEnabled();
 
 // TODO: why is this not const?
 extern vector<string> ListBackends();
-extern bool SetBackend(const string& type);
+extern EXPORT_SYMBOL bool SetBackend(const string& type);
 extern string GetBackend();
 
 extern void StartLoggingPlacement();

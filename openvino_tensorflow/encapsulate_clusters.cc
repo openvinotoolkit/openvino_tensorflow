@@ -216,7 +216,13 @@ Status Encapsulator::AnalysisPass() {
       ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
       string output_name = ss.str();
       auto new_output_node_def =
-          NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+        NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+
+#ifdef _WIN32
+      auto src_node_def = src->def(); 
+      *new_output_node_def = src_node_def;
+      new_output_node_def->Clear();
+#endif      
       new_output_node_def->set_name(output_name);
       new_output_node_def->set_op("_Retval");
       edge_is_retval = true;
@@ -256,6 +262,12 @@ Status Encapsulator::AnalysisPass() {
 
       auto new_input_node_def =
           NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
+
+#ifdef _WIN32
+      auto src_node_def = src->def(); 
+      *new_input_node_def = src_node_def;
+      new_input_node_def->Clear();
+#endif      
       new_input_node_def->set_name(new_input_name);
       new_input_node_def->set_op("_Arg");
       edge_is_arg = true;
@@ -472,7 +484,13 @@ Status Encapsulator::RewritePass(
 
     TF_RETURN_IF_ERROR(
         GetStaticInputs(&graph_for_current_encapsulate, &static_input_indexes));
+#ifdef _WIN32
+    if (!static_input_indexes.empty()){
+      nb.Attr("_ovtf_static_inputs", static_input_indexes);
+    }
+#else
     nb.Attr("_ovtf_static_inputs", static_input_indexes);
+#endif
 
     Status status = nb.Finalize(graph, &n);
     TF_RETURN_IF_ERROR(status);

@@ -247,7 +247,7 @@ get_filename_component(
     ABSOLUTE
 )
 
-if(NOT WIN32)
+if(WIN32)
   add_subdirectory(examples)
   if (DEFINED TF_SRC_DIR)
       message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
@@ -282,7 +282,7 @@ if (UNIT_TEST_ENABLE)
         endif()
     endif()
 
-    add_subdirectory(test)
+    # add_subdirectory(test)
     message(STATUS "unit tests enabled")
 endif()
 

@@ -21,6 +21,9 @@
 
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace std;
 

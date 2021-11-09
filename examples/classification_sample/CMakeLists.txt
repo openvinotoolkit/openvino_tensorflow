@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
+# include_directories(${TensorFlow_INCLUDE_DIR})
+# include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
@@ -28,7 +28,7 @@ if(WIN32)
     set_target_properties(
     tensorflow_cc_lib
     PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.lib)
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.dll.if.lib)
 else()
   if(NOT(TensorFlow_VERSION LESS 2.0))
       set_target_properties(
@@ -44,8 +44,8 @@ else()
 endif()
 
 set(SRC
-    thread_safe_queue.h
-    utils.cc
+    # thread_safe_queue.h
+    # utils.cc
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
@@ -56,7 +56,7 @@ message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
 set(APP_NAME infer_image)
 add_executable(
-    ${APP_NAME} ${SRC} main.cc
+    ${APP_NAME} ${SRC} debug.cc #main.cc
 )
 
 if (APPLE)
