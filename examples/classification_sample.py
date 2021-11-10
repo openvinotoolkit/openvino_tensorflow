@@ -203,7 +203,7 @@ if __name__ == "__main__":
             top_k = results.argsort()[-5:][::-1]
             c = 130
             for i in top_k:
-                cv2.putText(frame, '{0} : {1}'.format(labels[i], results[i]),
+                cv2.putText(frame, '{0} : {1}'.format(labels[i+1], results[i]),
                             (30, c), font, font_size, color, font_thickness)
                 print(labels[i + 1], results[i])
                 c += 30
