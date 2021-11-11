@@ -3613,9 +3613,9 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function,
-    const std::vector<Tensor>& tf_input_tensors) {
+    shared_ptr<ng::Function>& ng_function) {
   ng::ResultVector ng_result_list;
+  std::vector<Tensor> tf_input_tensors;
   TranslateGraph(inputs, static_input_map, input_graph, name, ng_function,
                  ng_result_list, tf_input_tensors);
   return Status::OK();
@@ -3707,7 +3707,8 @@ Status Builder::TranslateGraph(
     };
 
     bool is_variable = false;
-    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
+    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0" &&
+        !tf_input_tensors.empty()) {
       try {
         GetNodeAttr(parm->attrs(), "_is_variable", &is_variable);
       } catch (const std::exception&) {

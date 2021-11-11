@@ -22,8 +22,7 @@ class Builder {
   static Status TranslateGraph(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
-      const string name, std::shared_ptr<ngraph::Function>& ng_function,
-      const std::vector<Tensor>& tf_input_tensors);
+      const string name, std::shared_ptr<ngraph::Function>& ng_function);
 
   static Status TranslateGraph(
       const std::vector<TensorShape>& inputs,
