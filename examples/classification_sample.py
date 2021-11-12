@@ -39,14 +39,20 @@ import cv2
 
 from common.utils import get_input_mode
 
-def preprocess_image(frame, input_height=299, input_width=299, input_mean=0, input_std=255):
+
+def preprocess_image(frame,
+                     input_height=299,
+                     input_width=299,
+                     input_mean=0,
+                     input_std=255):
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     image = Image.fromarray(image)
-    resized_image = image.resize((input_height,input_width))
+    resized_image = image.resize((input_height, input_width))
     resized_image = np.asarray(resized_image, np.float32)
     normalized_image = (resized_image - input_mean) / input_std
     result = np.expand_dims(normalized_image, 0)
     return result
+
 
 def load_labels(label_file):
     label = []
@@ -129,7 +135,8 @@ if __name__ == "__main__":
         backend_name = args.backend
 
     if model_file == "":
-        model = hub.load("https://tfhub.dev/google/imagenet/inception_v3/classification/4")
+        model = hub.load(
+            "https://tfhub.dev/google/imagenet/inception_v3/classification/4")
     else:
         model = tf.saved_model.load(model_file)
 
@@ -181,8 +188,9 @@ if __name__ == "__main__":
             else:
                 break
 
-        t = tf.convert_to_tensor(preprocess_image(
-            frame, input_height=input_height, input_width=input_width))
+        t = tf.convert_to_tensor(
+            preprocess_image(
+                frame, input_height=input_height, input_width=input_width))
 
         # Warmup
         if image_id == 0:
@@ -204,11 +212,14 @@ if __name__ == "__main__":
                 frame, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
-            top_5 = tf.argsort(results, axis=-1, direction="DESCENDING")[0][:5].numpy()
+            top_5 = tf.argsort(
+                results, axis=-1, direction="DESCENDING")[0][:5].numpy()
             c = 130
-            for i,item in enumerate(top_5):
-                cv2.putText(frame, '{0} : {1}'.format(labels[item], results[0][top_5][i]),
-                            (30, c), font, font_size, color, font_thickness)
+            for i, item in enumerate(top_5):
+                cv2.putText(
+                    frame, '{0} : {1}'.format(labels[item],
+                                              results[0][top_5][i]), (30, c),
+                    font, font_size, color, font_thickness)
                 print(labels[item], results[0][top_5][i])
                 c += 30
         else:

@@ -212,7 +212,8 @@ if __name__ == "__main__":
                 break
         img = frame
         image = Image.fromarray(img)
-        img_resized = tf.convert_to_tensor(preprocess_image(image, (input_height, input_width)))
+        img_resized = tf.convert_to_tensor(
+            preprocess_image(image, (input_height, input_width)))
 
         # Warmup
         if image_id == 0:
