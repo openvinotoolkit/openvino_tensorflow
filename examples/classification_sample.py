@@ -180,20 +180,21 @@ if __name__ == "__main__":
             else:
                 break
 
-        t = preprocess_image(
-            frame, input_height=input_height, input_width=input_width)
+        t = tf.convert_to_tensor(preprocess_image(
+            frame, input_height=input_height, input_width=input_width))
 
         # Warmup
         if image_id == 0:
-            results = tf.nn.softmax(model(t)).numpy()
+            results = model(t)
 
         # run
         start = time.time()
-        results = tf.nn.softmax(model(t)).numpy()
+        results = model(t)
         elapsed = time.time() - start
         fps = 1 / elapsed
         print('Inference time in ms: %.2f' % (elapsed * 1000))
 
+        results = tf.nn.softmax(results).numpy()
         if label_file:
             cv2.putText(frame,
                         'Inference Running on : {0}'.format(backend_name),
