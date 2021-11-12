@@ -56,15 +56,15 @@ $ python3 examples/classification_sample.py
 `classification_sample.py` does inference on the example image from "https://www.tensorflow.org/images/grace_hopper.jpg" and should output something similar to:
 
 ```
-military uniform 0.6942859
-mortarboard 0.03387985
-academic gown 0.017031182
-bow tie 0.014171944
-theater curtain 0.013718579
+military uniform 0.79601693
+mortarboard 0.02091024
+academic gown 0.014557127
+suit 0.009166162
+comic book 0.007978318
 ```
 **Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
-In this case, we are using the image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.69.
+In this case, we are using the image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.79.
 
 Next, try it out by passing the path to your new input. You can provide either absolute or relative path to an image or video or directory of images.
 e.g.

@@ -40,9 +40,10 @@ import cv2
 from common.utils import get_input_mode
 
 def preprocess_image(frame, input_height=299, input_width=299, input_mean=0, input_std=255):
-    resized = cv2.resize(frame, (input_height, input_width))
-    img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-    resized_image = img.astype(np.float32)
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    image = Image.fromarray(image)
+    resized_image = image.resize((input_height,input_width))
+    resized_image = np.asarray(resized_image, np.float32)
     normalized_image = (resized_image - input_mean) / input_std
     result = np.expand_dims(normalized_image, 0)
     return result
