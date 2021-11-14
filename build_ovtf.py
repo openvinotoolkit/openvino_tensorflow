@@ -699,20 +699,20 @@ def main():
         # Create a sym-link to
         if (platform.system() == 'Windows'):
             link_src = os.path.join(artifacts_location,
-                                    "tensorflow\\tensorflow\\python")
+                                    "tensorflow\\tensorflow\\python").replace("\\", "\\\\")
             link_dst = os.path.join(artifacts_location,
-                                    "tensorflow\\python")
-            command_executor(
-                ['mklink', '/j',
-                  link_dst.replace("\\", "\\\\"),
-                link_src.replace("\\", "\\\\")],
-                verbose=True)
+                                    "tensorflow\\python").replace("\\", "\\\\")
+            # if destination link already exists, then delete it
+            if (os.path.exists(link_dst)):
+                print("Link %s already exists, deleting it."%link_dst)
+                command_executor(['rm', '-rf', link_dst])
         else:
             link_src = os.path.join(artifacts_location,
                                     "tensorflow/tensorflow/python")
             link_dst = os.path.join(artifacts_location, "tensorflow/python")
-            command_executor(['ln', '-sf', link_src, link_dst],
-                              verbose=True)
+
+        command_executor(['ln', '-sf', link_src, link_dst],
+                            verbose=True)
 
     assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
         artifacts_location)

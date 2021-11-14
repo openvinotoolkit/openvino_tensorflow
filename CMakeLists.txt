@@ -163,12 +163,6 @@ if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     find_package(TBB COMPONENTS tbb tbbmalloc)
 endif()
 
-if(WIN32)
-  set(protobuf_dir ${PROTOBUF_ARTIFACTS_DIR}/cmake)  
-  find_package(protobuf REQUIRED)
-  set(LIBPROTOBUF "libprotobuf.lib")
-endif()
-
 message(STATUS "UNIT_TEST_TF_CC_DIR:        ${TF_PRE_BUILT_LOCATION}")
 if(UNIT_TEST_TF_CC_DIR)
     # Check if the path specified is ABSOLUTE or RELATVE
@@ -247,18 +241,16 @@ get_filename_component(
     ABSOLUTE
 )
 
-if(WIN32)
-  add_subdirectory(examples)
-  if (DEFINED TF_SRC_DIR)
-      message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
-      add_subdirectory(examples/classification_sample)
-  else()
-      message(
-          STATUS
-          "TensorFlow source directory not provided. "
-          "C++ Examples won't be built"
-      )
-  endif()
+add_subdirectory(examples)
+if (DEFINED TF_SRC_DIR)
+    message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+    add_subdirectory(examples/classification_sample)
+else()
+    message(
+        STATUS
+        "TensorFlow source directory not provided. "
+        "C++ Examples won't be built"
+    )
 endif()
 
 if (UNIT_TEST_ENABLE)
@@ -282,7 +274,7 @@ if (UNIT_TEST_ENABLE)
         endif()
     endif()
 
-    # add_subdirectory(test)
+    add_subdirectory(test)
     message(STATUS "unit tests enabled")
 endif()
 
