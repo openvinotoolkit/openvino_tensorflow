@@ -59,10 +59,10 @@ static Status CheckIfOutputNode(const Node* node,
 // Marks the input indices in "inputs" as static
 static inline void SetStaticInputs(Node* n, std::vector<int32> inputs) {
 #ifdef _WIN32
-  if(!inputs.empty()){
+  if (!inputs.empty()) {
     n->AddAttr("_ovtf_static_inputs", inputs);
   }
-#else  
+#else
   n->AddAttr("_ovtf_static_inputs", inputs);
 #endif
 }

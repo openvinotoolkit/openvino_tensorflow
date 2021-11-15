@@ -232,9 +232,11 @@ def main():
         assert os.path.isdir(
             arguments.use_tensorflow_from_location
         ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
-        loc = arguments.use_tensorflow_from_location + '\\\\tensorflow' #'\\\\artifacts\\\\tensorflow'
         if (platform.system() == 'Windows'):
+            loc = arguments.use_tensorflow_from_location + '\\\\tensorflow'  #'\\\\artifacts\\\\tensorflow'
             loc = loc + '\\\\bazel-bin\\\\tensorflow'
+        else:
+            loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
         assert os.path.isdir(
             loc), "Could not find artifacts/tensorflow directory"
         found_whl = False
@@ -317,8 +319,8 @@ def main():
         if (platform.system() == 'Windows'):
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
-                             "tensorflow")) 
-                             #"artifacts", "tensorflow"))
+                             "tensorflow"))
+            #"artifacts", "tensorflow"))
             os.chdir(tf_source_loc)
         else:
             tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location
@@ -355,7 +357,7 @@ def main():
             # artifacts/tensorflow
             if (platform.system() == 'Windows'):
                 copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
-                                    use_intel_tf)
+                                     use_intel_tf)
             else:
                 tf_version = get_tf_version()
                 copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
@@ -584,8 +586,7 @@ def main():
             openvino_tf_cmake_flags.extend([
                 "-DTF_SRC_DIR=" + (os.path.abspath(
                     arguments.use_tensorflow_from_location.replace(
-                        "\\", "\\\\") + '\\tensorflow')).replace(
-                            "\\", "\\\\")
+                        "\\", "\\\\") + '\\tensorflow')).replace("\\", "\\\\")
             ])
         else:
             openvino_tf_cmake_flags.extend([
@@ -684,12 +685,15 @@ def main():
     if base_dir != None:
         dest_dir = os.path.join(artifacts_location, "tensorflow")
         if (platform.system() == 'Windows'):
-            command_executor([
-                'cp', '-r',
-                base_dir + '\\\\tensorflow\\\\tensorflow\\\\python', # base_dir + '\\\\artifacts\\\\tensorflow\\\\tensorflow\\\\python',
-                dest_dir.replace("\\", "\\\\")
-            ],
-                             verbose=True)
+            command_executor(
+                [
+                    'cp',
+                    '-r',
+                    base_dir +
+                    '\\\\tensorflow\\\\tensorflow\\\\python',  # base_dir + '\\\\artifacts\\\\tensorflow\\\\tensorflow\\\\python',
+                    dest_dir.replace("\\", "\\\\")
+                ],
+                verbose=True)
         else:
             command_executor([
                 'cp', '-r', base_dir + '/tensorflow/tensorflow/python', dest_dir
@@ -699,20 +703,20 @@ def main():
         # Create a sym-link to
         if (platform.system() == 'Windows'):
             link_src = os.path.join(artifacts_location,
-                                    "tensorflow\\tensorflow\\python").replace("\\", "\\\\")
+                                    "tensorflow\\tensorflow\\python").replace(
+                                        "\\", "\\\\")
             link_dst = os.path.join(artifacts_location,
                                     "tensorflow\\python").replace("\\", "\\\\")
             # if destination link already exists, then delete it
             if (os.path.exists(link_dst)):
-                print("Link %s already exists, deleting it."%link_dst)
+                print("Link %s already exists, deleting it." % link_dst)
                 command_executor(['rm', '-rf', link_dst])
         else:
             link_src = os.path.join(artifacts_location,
                                     "tensorflow/tensorflow/python")
             link_dst = os.path.join(artifacts_location, "tensorflow/python")
 
-        command_executor(['ln', '-sf', link_src, link_dst],
-                            verbose=True)
+        command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
         artifacts_location)
