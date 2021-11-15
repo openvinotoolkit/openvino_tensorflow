@@ -514,8 +514,8 @@ def check_and_print_summary(test_results, invalid_list):
 if __name__ == '__main__':
     if not platform.system() == "Darwin":
         import multiprocessing
-    mpmanager = multiprocessing.Manager()
-    mpmanager_return_dict = mpmanager.dict()
+        mpmanager = multiprocessing.Manager()
+        mpmanager_return_dict = mpmanager.dict()
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
