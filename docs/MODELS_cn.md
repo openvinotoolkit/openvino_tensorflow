@@ -89,6 +89,10 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [centernet​/hourglass_512x512](https://tfhub.dev/tensorflow/centernet/hourglass_512x512/1)| iGPU, MYRIAD |
 | [centernet​/hourglass_512x512_kpts](https://tfhub.dev/tensorflow/centernet/hourglass_512x512_kpts/1)| CPU, iGPU, MYRIAD |
 | [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)|  iGPU, MYRIAD |
+| [centernet_hourglass_1024x1024](https://tfhub.dev/tensorflow/centernet/hourglass_1024x1024/1)| CPU, iGPU, MYRIAD |
+| [centernet_resnet101v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet101v1_fpn_512x512/1)| CPU, iGPU, MYRIAD |
+| [centernet_resnet50v1_fpn_512x512_kpts](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512_kpts/1)| CPU, iGPU, MYRIAD |
+| [centernet_resnet50v2_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v2_512x512/1)| CPU, iGPU, MYRIAD |
 | [cord-19_swivel-128d](https://tfhub.dev/tensorflow/cord-19/swivel-128d/3?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [cropnet​/classifier​/cassava_disease_V1](https://tfhub.dev/google/cropnet/classifier/cassava_disease_V1/2)| CPU, iGPU, MYRIAD |
 | [efficientdet​/d0](https://tfhub.dev/tensorflow/efficientdet/d0/1)| CPU, iGPU, MYRIAD |
@@ -228,6 +232,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [Wiki-words-500](https://tfhub.dev/google/Wiki-words-500/2?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [Wiki-words-500-with-normalization](https://tfhub.dev/google/Wiki-words-500-with-normalization/2)| CPU, iGPU, MYRIAD |
 | [yamnet](https://tfhub.dev/google/yamnet/1)| CPU, iGPU, MYRIAD |
+
 
 ## 其他模型
 
