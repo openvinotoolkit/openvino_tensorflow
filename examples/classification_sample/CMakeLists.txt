@@ -44,8 +44,8 @@ else()
 endif()
 
 set(SRC
-    # thread_safe_queue.h
-    # utils.cc
+    thread_safe_queue.h
+    utils.cc
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
@@ -56,7 +56,7 @@ message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
 
 set(APP_NAME infer_image)
 add_executable(
-    ${APP_NAME} ${SRC} debug.cc #main.cc
+    ${APP_NAME} ${SRC} main.cc
 )
 
 if (APPLE)
