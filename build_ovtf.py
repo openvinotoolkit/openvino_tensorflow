@@ -229,16 +229,15 @@ def main():
                 "\\", "\\\\")
 
         # Check if the prebuilt folder has necessary files
-        assert os.path.isdir(
-            arguments.use_tensorflow_from_location
-        ), "Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist"
+        if not os.path.isdir(arguments.use_tensorflow_from_location):
+             raise AssertionError("Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist")
         if (platform.system() == 'Windows'):
             loc = arguments.use_tensorflow_from_location + '\\\\tensorflow'  #'\\\\artifacts\\\\tensorflow'
             loc = loc + '\\\\bazel-bin\\\\tensorflow'
         else:
             loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
-        assert os.path.isdir(
-            loc), "Could not find artifacts/tensorflow directory"
+        if not os.path.isdir(loc):
+            raise AssertionError("Could not find artifacts/tensorflow directory")
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
@@ -258,9 +257,12 @@ def main():
                     found_libtf_cc = True
                 if 'libtensorflow_framework' in i:
                     found_libtf_fw = True
-        assert found_whl, "Did not find TF whl file"
-        assert found_libtf_fw, "Did not find libtensorflow_framework"
-        assert found_libtf_cc, "Did not find libtensorflow_cc"
+        if not found_whl:
+            raise AssertionError("Did not find TF whl file")
+        if not found_libtf_fw:
+            raise AssertionError("Did not find libtensorflow_framework")
+        if not found_libtf_cc:
+            raise AssertionError("Did not find libtensorflow_cc")
 
     try:
         os.makedirs(build_dir)
@@ -315,56 +317,56 @@ def main():
         # should have: ./artifacts/tensorflow, which is expected
         # to contain one TF whl file, framework.so and cc.so
         print("Using TensorFlow from " + arguments.use_tensorflow_from_location)
-        # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
+        tf_in_artifacts = os.path.join(
+            os.path.abspath(artifacts_location), "tensorflow")
+        if not os.path.isdir(tf_in_artifacts):
+            os.mkdir(tf_in_artifacts)
+        cwd = os.getcwd()
+
         if (platform.system() == 'Windows'):
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
                              "tensorflow"))
             #"artifacts", "tensorflow"))
             os.chdir(tf_source_loc)
+            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
+              use_intel_tf)
         else:
+            # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
             tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location
                                          + '/artifacts/tensorflow')
-            assert os.path.exists(tf_whl_loc), "path doesn't exist {0}".format(
-                tf_whl_loc)
+            if not os.path.exists(tf_whl_loc):
+                raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
             possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
-            assert len(
-                possible_whl
-            ) == 1, "Expected one TF whl file, but found " + len(possible_whl)
+            if not len(possible_whl) == 1:
+                raise AssertionError("Expected one TF whl file, but found " +
+                                    len(possible_whl))
             # Make sure there is exactly 1 TF whl
             tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
-            assert os.path.isfile(tf_whl), "Did not find " + tf_whl
+            if not os.path.isfile(tf_whl):
+                raise AssertionError("Did not find " + tf_whl)
             # Install the found TF whl file
-            command_executor(
-                ["pip", "install", "--force-reinstall", "-U", tf_whl])
+            command_executor(["pip", "install", "--force-reinstall", "-U", tf_whl])
             tf_cxx_abi = get_tf_cxxabi()
 
-            assert (arguments.cxx11_abi_version == tf_cxx_abi), (
-                "Desired ABI version and user built tensorflow library provided with "
-                "use_tensorflow_from_location are incompatible")
+            if not (arguments.cxx11_abi_version == tf_cxx_abi):
+                raise AssertionError(
+                    "Desired ABI version and user built tensorflow library provided with "
+                    "use_tensorflow_from_location are incompatible")
 
-            cwd = os.getcwd()
-            assert os.path.exists(tf_whl_loc), "Path doesn't exist {0}".format(
-                tf_whl_loc)
+            if not os.path.exists(tf_whl_loc):
+                raise AssertionError("Path doesn't exist {0}".format(tf_whl_loc))
             os.chdir(tf_whl_loc)
 
-            tf_in_artifacts = os.path.join(
-                os.path.abspath(artifacts_location), "tensorflow")
-            if not os.path.isdir(tf_in_artifacts):
-                os.mkdir(tf_in_artifacts)
             # This function copies the .so files from
             # use_tensorflow_from_location/artifacts/tensorflow to
             # artifacts/tensorflow
-            if (platform.system() == 'Windows'):
-                copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
-                                     use_intel_tf)
-            else:
-                tf_version = get_tf_version()
-                copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
-                                use_intel_tf)
-            if not os.path.exists(cwd):
-                raise AssertionError("Path doesn't exist {0}".format(cwd))
-            os.chdir(cwd)
+            tf_version = get_tf_version()
+            copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
+                            use_intel_tf)
+        if not os.path.exists(cwd):
+            raise AssertionError("Path doesn't exist {0}".format(cwd))
+        os.chdir(cwd)
     else:
         if not arguments.build_tf_from_source:
             print("Install TensorFlow")
@@ -718,8 +720,8 @@ def main():
 
         command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
-    assert os.path.exists(artifacts_location), "Path doesn't exist {}".format(
-        artifacts_location)
+    if not os.path.exists(artifacts_location):
+        raise AssertionError("Path doesn't exist {}".format(artifacts_location))
     # Run a quick test
     if (platform.system() == 'Windows'):
         install_openvino_tf(

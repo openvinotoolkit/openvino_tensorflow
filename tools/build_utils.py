@@ -127,7 +127,8 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
         command_executor(cmd, verbose=True)
         cmd = ["make", "install"]
         command_executor(cmd, verbose=True)
-    assert os.path.exists(pwd), "Path doesn't exist {0}".format(pwd)
+    if not os.path.exists(pwd):
+        raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
 
 
@@ -222,7 +223,8 @@ def setup_venv(venv_dir):
     if (platform.system() == 'Windows'):
         call(['where', 'pip'])
     else:
-        call(['which', 'pip'])
+        process = subprocess.Popen(shlex.split('which pip'))
+        so, se = process.communicate()
 
     # Install the pip packages
     if (platform.system() == "Windows"):
