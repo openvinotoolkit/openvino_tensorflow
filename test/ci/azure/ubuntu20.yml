@@ -16,7 +16,7 @@
     OV_LOCATION: /opt/intel/caches/openvino_2021.4.1_0/
     #Uncomment and comment the location respectively for using the version of TF BUILD
     #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
-    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_6_0_abi0
+    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_7_0_abi0
     
  steps:
  

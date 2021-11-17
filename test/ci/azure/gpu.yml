@@ -34,7 +34,7 @@
       echo $(WORK_DIR)
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION) --use_tensorflow_from_location=/home/iotgecsp/ci_setup/tf_2_6_0_abi0
+      python3 build_ovtf.py --use_openvino_from_location=$(OV_LOCATION) --use_tensorflow_from_location=/home/iotgecsp/ci_setup/tf_2_7_0_abi0
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
