@@ -33,12 +33,11 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
-**Note:** Refer to [**this page**](TF_1_x/README.md) for python classification sample using Tensorflow 1.x.
+**Note:** Refer to [**this page**](TF_1_x/README.md) for python classification sample using TF1 Inception v3 model.
 
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
-This demo uses TF Hub image classification model InceptionV3 and ImageNet labels (https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt)
-for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
+This demo uses TF Hub image classification model [**InceptionV3**](https://tfhub.dev/google/imagenet/inception_v3/classification/4) and [**ImageNet labels**](https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt) for the possible classifications. In labels file, you'll find 1,000 categories that were used in the Imagenet competition.
 
 Install the pre-requisites
 ```bash
@@ -53,7 +52,7 @@ $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/classification_sample.py
 ```
 
-`classification_sample.py` does inference on the example image from "https://www.tensorflow.org/images/grace_hopper.jpg" and should output something similar to:
+`classification_sample.py` does inference on the [**image**]("https://www.tensorflow.org/images/grace_hopper.jpg") and should output something similar to:
 
 ```
 military uniform 0.79601693

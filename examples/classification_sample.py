@@ -20,7 +20,7 @@
 
 # Modified from TensorFlow example:
 # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/label_image.py
-# https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/guide/saved_model.ipynb
+#https://colab.research.google.com/github/tensorflow/hub/blob/master/examples/colab/image_classification.ipynb
 #
 
 from __future__ import absolute_import
