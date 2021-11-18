@@ -88,7 +88,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [bit​/s-r50x1](https://tfhub.dev/google/bit/s-r50x1/1)| CPU, iGPU, MYRIAD |
 | [centernet​/hourglass_512x512](https://tfhub.dev/tensorflow/centernet/hourglass_512x512/1)| iGPU, MYRIAD |
 | [centernet​/hourglass_512x512_kpts](https://tfhub.dev/tensorflow/centernet/hourglass_512x512_kpts/1)| CPU, iGPU, MYRIAD |
-| [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)|  iGPU, MYRIAD |
+| [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)| iGPU, MYRIAD |
 | [centernet_hourglass_1024x1024](https://tfhub.dev/tensorflow/centernet/hourglass_1024x1024/1)| CPU, iGPU, MYRIAD |
 | [centernet_resnet101v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet101v1_fpn_512x512/1)| CPU, iGPU, MYRIAD |
 | [centernet_resnet50v1_fpn_512x512_kpts](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512_kpts/1)| CPU, iGPU, MYRIAD |
@@ -157,7 +157,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [imagenet_efficientnet_v2_imagenet21k_xl_feature_vector](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet21k_xl/feature_vector/2?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [imagenet_mobilenet_v2_100_96_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_100_96/feature_vector/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [imagenet_mobilenet_v2_130_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v2_130_224/feature_vector/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
-| [imagenet_mobilenet_v3_large_100_224_classification](https://tfhub.dev/google/imagenet/mobilenet_v3_large_100_224/classification/5?tf-hub-format=compressed)  | CPU, iGPU, RIAD |
+| [imagenet_mobilenet_v3_large_100_224_classification](https://tfhub.dev/google/imagenet/mobilenet_v3_large_100_224/classification/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [imagenet_mobilenet_v3_large_100_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_large_100_224/feature_vector/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [imagenet_mobilenet_v3_small_075_224_classification](https://tfhub.dev/google/imagenet/mobilenet_v3_small_075_224/classification/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [imagenet_mobilenet_v3_small_100_224_classification](https://tfhub.dev/google/imagenet/mobilenet_v3_small_100_224/classification/5?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |

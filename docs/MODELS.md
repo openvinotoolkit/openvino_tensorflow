@@ -85,7 +85,7 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [bit​/s-r50x1](https://tfhub.dev/google/bit/s-r50x1/1)| CPU, iGPU, MYRIAD |
 | [centernet​/hourglass_512x512](https://tfhub.dev/tensorflow/centernet/hourglass_512x512/1)| iGPU, MYRIAD |
 | [centernet​/hourglass_512x512_kpts](https://tfhub.dev/tensorflow/centernet/hourglass_512x512_kpts/1)| CPU, iGPU, MYRIAD |
-| [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)|  iGPU, MYRIAD |
+| [centernet​/resnet50v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512/1)| iGPU, MYRIAD |
 | [centernet_hourglass_1024x1024](https://tfhub.dev/tensorflow/centernet/hourglass_1024x1024/1)| CPU, iGPU, MYRIAD |
 | [centernet_resnet101v1_fpn_512x512](https://tfhub.dev/tensorflow/centernet/resnet101v1_fpn_512x512/1)| CPU, iGPU, MYRIAD |
 | [centernet_resnet50v1_fpn_512x512_kpts](https://tfhub.dev/tensorflow/centernet/resnet50v1_fpn_512x512_kpts/1)| CPU, iGPU, MYRIAD |
