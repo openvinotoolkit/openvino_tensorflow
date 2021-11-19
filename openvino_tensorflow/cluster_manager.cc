@@ -41,6 +41,9 @@ size_t NGraphClusterManager::NumberOfClusters() {
 void NGraphClusterManager::EvictAllClusters() {
   s_cluster_graphs.clear();
   s_cluster_fallback.clear();
+}
+
+void NGraphClusterManager::EvictMRUClusters() {
   s_mru_executables.clear();
 }
 

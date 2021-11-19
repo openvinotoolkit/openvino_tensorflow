@@ -72,6 +72,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();
+    NGraphClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
     return Status::OK();
   }

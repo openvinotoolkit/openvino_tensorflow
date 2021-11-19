@@ -21,6 +21,7 @@ class NGraphClusterManager {
   static size_t NewCluster();
   static tensorflow::GraphDef* GetClusterGraph(size_t idx);
   static void EvictAllClusters();
+  static void EvictMRUClusters();
   static size_t NumberOfClusters();
   static bool CheckClusterFallback(const size_t idx);
   static void SetClusterFallback(const size_t idx, const bool fallback);
