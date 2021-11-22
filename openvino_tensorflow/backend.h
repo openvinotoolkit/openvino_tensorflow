@@ -26,6 +26,8 @@ class Backend {
   Backend(const string& configuration_string);
   ~Backend() {
     NGraphClusterManager::EvictAllClusters();
+    if (m_device != "GPU")
+      NGraphClusterManager::EvictMRUClusters();
     ReleaseGlobalContext();
   }
 
