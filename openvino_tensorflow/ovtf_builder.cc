@@ -10,12 +10,12 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/slice_plan.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 
 #include "api.h"
 #include "logging/ovtf_log.h"
@@ -726,7 +726,8 @@ static Status TranslateAvgPoolOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
 
-  if ((tf_data_format != "NHWC") && (tf_data_format != "NCHW") && (tf_data_format != "NDHWC")) {
+  if ((tf_data_format != "NHWC") && (tf_data_format != "NCHW") &&
+      (tf_data_format != "NDHWC")) {
     return errors::InvalidArgument(
         "AvgPool data format is none of NHWC, NCHW, or NDHWC");
   }
@@ -742,7 +743,7 @@ static Status TranslateAvgPoolOp(const Node* op,
   ng::Shape ng_image_shape(N);
   ng::Shape ng_kernel_shape(N);
   ng::Shape ng_dilations{N, 1};
-  
+
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
   NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
   NHWCtoHW(is_nhwc, tf_ksize, ng_kernel_shape);
@@ -753,7 +754,7 @@ static Status TranslateAvgPoolOp(const Node* op,
 
   ng::CoordinateDiff padding_below;
   ng::CoordinateDiff padding_above;
-  
+
   Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
                        ng_strides, ng_dilations, padding_below, padding_above);
 
@@ -763,12 +764,13 @@ static Status TranslateAvgPoolOp(const Node* op,
   ng::Shape ng_padding_above(padding_above.begin(), padding_above.end());
 
   ng::op::PadType auto_pad_type;
-  if (tf_padding_type=="SAME")
+  if (tf_padding_type == "SAME")
     auto_pad_type = ng::op::PadType::SAME_UPPER;
-  else if (tf_padding_type=="VALID")
+  else if (tf_padding_type == "VALID")
     auto_pad_type = ng::op::PadType::VALID;
 
-  // since we are using auto_pad, all the explicit padding arguments will be ignored
+  // since we are using auto_pad, all the explicit padding arguments will be
+  // ignored
   ng::Output<ng::Node> ng_avgpool = ConstructNgNode<opset::AvgPool>(
       op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
       ng_kernel_shape, true, ng::op::RoundingType::FLOOR, auto_pad_type);
@@ -3027,7 +3029,8 @@ static Status TranslateScatterNdOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
   ng::Output<ng::Node> ng_input_indices, ng_updates, ng_shape;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input_indices, ng_updates, ng_shape));
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_input_indices, ng_updates, ng_shape));
 
   std::vector<size_t> shape;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &shape));

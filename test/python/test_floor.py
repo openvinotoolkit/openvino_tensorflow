@@ -44,13 +44,16 @@ class TestFloorOperations(NgraphTest):
             self.with_ngraph(lambda sess: sess.run(
                 out, feed_dict={val: test_input})), np.array(expected)).all()
 
+
 class TestFloorOperations2(test.TestCase, NgraphTest):
+
     def _compare(self, x, dtype):
         np_floor, np_ceil = np.floor(x), np.ceil(x)
 
         inx = ops.convert_to_tensor(x)
         inx = tf.compat.v1.placeholder(dtype, shape=inx.shape)
-        tf_floor = lambda sess: sess.run(math_ops.floor(inx), feed_dict={inx: x})
+        tf_floor = lambda sess: sess.run(
+            math_ops.floor(inx), feed_dict={inx: x})
 
         self.assertAllEqual(np_floor, self.with_ngraph(tf_floor))
 
@@ -59,7 +62,9 @@ class TestFloorOperations2(test.TestCase, NgraphTest):
         self._compare(data, dtype)
 
     def testTypes(self):
-        for dtype in [np.float16, np.float32, np.float64,
-                    dtypes_lib.bfloat16.as_numpy_dtype]:
+        for dtype in [
+                np.float16, np.float32, np.float64,
+                dtypes_lib.bfloat16.as_numpy_dtype
+        ]:
             with self.subTest(dtype=dtype):
                 self._testDtype(dtype)
