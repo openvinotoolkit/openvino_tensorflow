@@ -135,6 +135,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["ConcatV2"] = SetStaticInputs({-1});
     set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
     set_attributes_map["CropAndResize"] = SetStaticInputs({1, 2, 3});
+    set_attributes_map["Einsum"] = SetStaticInputs({0});
     set_attributes_map["ExpandDims"] = SetStaticInputs({1});
     set_attributes_map["Fill"] = SetStaticInputs({0});
     set_attributes_map["GatherV2"] = SetStaticInputs({2});

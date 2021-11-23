@@ -87,8 +87,8 @@ std::string Backend::GetDeviceType() { return m_device_type; }
 bool Backend::IsSupported(const Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
-  // that the selected backend supports all opset5 ops
-  const auto& opset = ngraph::get_opset5();
+  // that the selected backend supports all opset7 ops
+  const auto& opset = ngraph::get_opset7();
   return opset.contains_op_type(&node);
 }
 
