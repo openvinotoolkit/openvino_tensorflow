@@ -47,7 +47,6 @@ utils_path = os.path.dirname(os.path.realpath(os.path.join(dir_path, '.')))
 sys.path.insert(0, utils_path)
 
 
-
 def load_coco_names(file_name):
     names = {}
     if not os.path.exists(file_name):
@@ -57,12 +56,14 @@ def load_coco_names(file_name):
             names[coco_id] = name
     return names
 
+
 def load_labels(label_file):
     label = []
     proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
     return label
+
 
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
@@ -233,7 +234,8 @@ if __name__ == "__main__":
                     break
             img = frame
             image = Image.fromarray(img)
-            img_resized = preprocess_image(image, (input_height, input_width))[0]
+            img_resized = preprocess_image(image,
+                                           (input_height, input_width))[0]
 
             # Warmup
             if image_id == 0:
@@ -255,17 +257,17 @@ if __name__ == "__main__":
 
             image_shape = tuple((frame.shape[0], frame.shape[1]))
             out_boxes, out_classes, out_scores = yolo3_postprocess_np(
-            detected_boxes,
-            image_shape,
-            anchors,
-            len(labels), (input_height, input_width),
-            max_boxes=10,
-            confidence=conf_threshold,
-            iou_threshold=iou_threshold,
-            elim_grid_sense=True)
+                detected_boxes,
+                image_shape,
+                anchors,
+                len(labels), (input_height, input_width),
+                max_boxes=10,
+                confidence=conf_threshold,
+                iou_threshold=iou_threshold,
+                elim_grid_sense=True)
 
-            img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores, labels,
-                              colors)
+            img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores,
+                                  labels, colors)
 
             # draw information overlay onto the frames
             cv2.putText(img_bbox,
