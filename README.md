@@ -6,7 +6,13 @@
 
 # **OpenVINO™ integration with TensorFlow**
 
-This repository contains the source code of **OpenVINO™ integration with TensorFlow**, designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations which enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
+This repository contains the source code of **OpenVINO™ integration with TensorFlow**, designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. TensorFlow* developers can now take advantage of [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) toolkit optimizations with TensorFlow inference applications across a wide range of Intel® compute devices by adding just two lines of code.
+
+    import openvino_tensorflow
+    openvino_tensorflow.set_backend('<backend_name>')
+
+This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations which enhance inferencing performance with minimal code modifications.  **OpenVINO™ integration with TensorFlow accelerates** inference across many AI models on a variety of Intel<sup>®</sup> silicon such as:
+
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units - referred to as VPU
