@@ -740,28 +740,15 @@ static Status TranslateAvgPoolOp(const Node* op,
   OVTF_VLOG(3) << tf_data_format;
 
   ng::Strides ng_strides(N);
-  ng::Shape ng_image_shape(N);
   ng::Shape ng_kernel_shape(N);
-  ng::Shape ng_dilations{N, 1};
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
   NHWCtoHW(is_nhwc, tf_ksize, ng_kernel_shape);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
   OVTF_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
-  OVTF_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
   OVTF_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
-  ng::CoordinateDiff padding_below;
-  ng::CoordinateDiff padding_above;
-
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, padding_below, padding_above);
-
-  // TODO: remove this once nGraph supports negative padding
-  // (CoordinateDiff) for AvgPool
-  ng::Shape ng_padding_below(padding_below.begin(), padding_below.end());
-  ng::Shape ng_padding_above(padding_above.begin(), padding_above.end());
+  ng::Shape ng_padding_below, ng_padding_above;
 
   ng::op::PadType auto_pad_type;
   if (tf_padding_type == "SAME")
