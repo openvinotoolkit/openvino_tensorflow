@@ -457,3 +457,6 @@ spacetobatch_op_test.SpaceToBatchTest.testLargerInput2x2
 spacetobatch_op_test.SpaceToBatchTest.testLargerInputBatch2x2
 spacetobatch_op_test.SpaceToBatchTest.testSmallInput2x2
 spacetobatch_op_test.SpaceToBatchTest.testSmallInput2x2Pad1x0
+
+# Conv3D is not enabled for MYD
+conv3d_transpose_test.Conv3DTransposeTest.testGradient
