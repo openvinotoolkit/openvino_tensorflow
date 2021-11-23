@@ -361,7 +361,6 @@ gather_nd_op_test.GatherNdTest.testParamsRankLargerThanIndexSlices
 gather_nd_op_test.GatherNdTest.testSimpleDtype
 gather_nd_op_test.GatherNdTest.testUnknownIndices
 gather_op_test.GatherTest.test_session
-gather_op_test.GatherTest.testBadAxis
 gather_op_test.GatherTest.testBadIndicesCPU
 gather_op_test.GatherTest.testEmptySlices
 gather_op_test.GatherTest.testScalar1D

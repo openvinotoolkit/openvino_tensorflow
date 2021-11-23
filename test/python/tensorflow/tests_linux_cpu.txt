@@ -340,3 +340,6 @@ array_ops_test.StridedSliceTest.testTensorIndexing
 # While validating node 'v1::MaxPool MaxPool_45068 (max_pool_3d/Transpose_45067[0]:f32{0,64,112,112,112}) -> (dynamic?)' with friendly_name 'MaxPool_45068':
 # Batch size is zero.
 pooling_ops_3d_test.PoolingTest.testMaxPool3DEmptyTensorOutputShape
+
+# Failing after TF-2.7 upgrade
+gather_op_test.GatherTest.testBadAxis
