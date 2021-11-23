@@ -1,0 +1,24 @@
+diff --git a/tools/model_converter/keras_to_tensorflow.py b/tools/model_converter/keras_to_tensorflow.py
+index 07865a8..b3817af 100644
+--- a/tools/model_converter/keras_to_tensorflow.py
++++ b/tools/model_converter/keras_to_tensorflow.py
+@@ -23,6 +23,10 @@ from tensorflow.keras.models import model_from_json, model_from_yaml, load_model
+ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
+ from common.utils import get_custom_objects
+
++# tf.enable_eager_execution()
++tf.compat.v1.disable_eager_execution()
++from tensorflow.python.keras.backend import get_session
++
+ K.set_learning_phase(0)
+ FLAGS = flags.FLAGS
+
+@@ -150,7 +156,7 @@ def main(args):
+     logging.info('Converted output node names are: %s',
+                  str(converted_output_node_names))
+ 
+-    sess = K.get_session()
++    sess = get_session()
+     if FLAGS.output_meta_ckpt:
+         saver = tf.train.Saver()
+         saver.save(sess, str(output_fld / output_model_stem))

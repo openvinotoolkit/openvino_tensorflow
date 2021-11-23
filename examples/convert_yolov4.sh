@@ -4,18 +4,18 @@
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
-model_name="yolo_v3_darknet_2"
+model_name="yolo_v4"
 
 mkdir temp_build
 cd temp_build
-git clone https://github.com/david8862/keras-YOLOv3-model-set.git tensorflow-yolo-v3
-cd tensorflow-yolo-v3
+git clone https://github.com/david8862/keras-YOLOv3-model-set.git tensorflow-yolo-v4
+cd tensorflow-yolo-v4
 git checkout d38c3d8
 patch tools/model_converter/keras_to_tensorflow.py ../../keras_to_tensorflow.patch
 wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
-wget -O weights/yolov3.weights https://pjreddie.com/media/files/yolov3.weights
-python3 tools/model_converter/convert.py cfg/yolov3.cfg weights/yolov3.weights weights/darknet53.h5
-python3 tools/model_converter/keras_to_tensorflow.py --input_model weights/darknet53.h5 --output_model=weights/${model_name} --saved_model
+wget -O weights/yolov4.weights https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights
+python tools/model_converter/convert.py --yolo4_reorder cfg/yolov4.cfg weights/yolov4.weights weights/yolov4.h5
+python3 tools/model_converter/keras_to_tensorflow.py --input_model weights/yolov4.h5 --output_model=weights/${model_name} --saved_model
 cp -r weights/${model_name} ../../data/${model_name}
 cp coco.names ../../data/
 cd ../..
