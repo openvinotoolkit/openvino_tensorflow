@@ -269,7 +269,8 @@ Status DeassignClusters(Graph* graph) {
                 it->type_string() == "Unpack") {
               invalid_dyn_op = true;
               break;
-            } else if (visited_node_check.find(it) == visited_node_check.end()) {
+            } else if (visited_node_check.find(it) ==
+                       visited_node_check.end()) {
               dyn_node_check.push_back(it);
               visited_node_check.insert(it);
             }
