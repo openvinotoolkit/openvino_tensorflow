@@ -825,6 +825,36 @@ xent_op_test.XentTest.testZeroDimension
 # test for tf.floor
 cwise_ops_test.RoundingTest.testTypes
 
+scatter_ops_test.ScatterTest.testVariableRankAdd
+scatter_ops_test.ScatterTest.testVariableRankAddScalar
+scatter_ops_test.ScatterTest.testVariableRankDiv
+scatter_ops_test.ScatterTest.testVariableRankDivScalar
+scatter_ops_test.ScatterTest.testVariableRankMax
+scatter_ops_test.ScatterTest.testVariableRankMaxScalar
+scatter_ops_test.ScatterTest.testVariableRankMin
+scatter_ops_test.ScatterTest.testVariableRankMinScalar
+scatter_ops_test.ScatterTest.testVariableRankMul
+scatter_ops_test.ScatterTest.testVariableRankMulScalar
+scatter_ops_test.ScatterTest.testVariableRankSub
+scatter_ops_test.ScatterTest.testVariableRankSubScalar
+scatter_ops_test.ScatterTest.testVariableRankUpdate
+scatter_ops_test.ScatterTest.testVariableRankUpdateScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesAdd
+scatter_ops_test.ScatterTest.testRepeatIndicesAddScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesDiv
+scatter_ops_test.ScatterTest.testRepeatIndicesDivScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesMax
+scatter_ops_test.ScatterTest.testRepeatIndicesMaxScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesMin
+scatter_ops_test.ScatterTest.testRepeatIndicesMinScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesMul
+scatter_ops_test.ScatterTest.testRepeatIndicesMulScalar
+scatter_ops_test.ScatterTest.testRepeatIndicesSub
+scatter_ops_test.ScatterTest.testRepeatIndicesSubScalar
+scatter_ops_test.ScatterTest.testVariableRankUpdateScalar
+scatter_ops_test.ScatterTest.testBooleanScatterUpdate
+scatter_ops_test.ScatterTest.testScatterOutOfRangeCpu
+
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped

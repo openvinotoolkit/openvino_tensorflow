@@ -149,6 +149,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["PadV2"] = SetStaticInputs({1});
     set_attributes_map["Prod"] = SetStaticInputs({1});
     set_attributes_map["Reshape"] = SetStaticInputs({1});
+    set_attributes_map["ScatterNd"] = SetStaticInputs({2});
     set_attributes_map["Slice"] = SetStaticInputs({1, 2});
     set_attributes_map["SpaceToBatchND"] = SetStaticInputs({1});
     set_attributes_map["Split"] = SetStaticInputs({0});
