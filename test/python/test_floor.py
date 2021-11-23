@@ -12,6 +12,11 @@ from __future__ import print_function
 
 import pytest
 
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.framework import dtypes as dtypes_lib
+from tensorflow.python.platform import test
+
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 import numpy as np
@@ -35,8 +40,26 @@ class TestFloorOperations(NgraphTest):
         expected = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
         val = tf.compat.v1.placeholder(tf.float32, shape=(2, 3))
         out = tf.floor(val)
-        if not np.isclose(
-                self.with_ngraph(lambda sess: sess.run(
-                    out, feed_dict={val: test_input})),
-                np.array(expected)).all():
-            raise AssertionError
+        assert np.isclose(
+            self.with_ngraph(lambda sess: sess.run(
+                out, feed_dict={val: test_input})), np.array(expected)).all()
+
+class TestFloorOperations2(test.TestCase, NgraphTest):
+    def _compare(self, x, dtype):
+        np_floor, np_ceil = np.floor(x), np.ceil(x)
+
+        inx = ops.convert_to_tensor(x)
+        inx = tf.compat.v1.placeholder(dtype, shape=inx.shape)
+        tf_floor = lambda sess: sess.run(math_ops.floor(inx), feed_dict={inx: x})
+
+        self.assertAllEqual(np_floor, self.with_ngraph(tf_floor))
+
+    def _testDtype(self, dtype):
+        data = (np.arange(-3, 3) / 4.).reshape(1, 3, 2).astype(dtype)
+        self._compare(data, dtype)
+
+    def testTypes(self):
+        for dtype in [np.float16, np.float32, np.float64,
+                    dtypes_lib.bfloat16.as_numpy_dtype]:
+            with self.subTest(dtype=dtype):
+                self._testDtype(dtype)

@@ -34,16 +34,6 @@ argmax_op_test.ArgMaxTest.testFloatInt32Output
 argmax_op_test.ArgMaxTest.testInt32
 argmax_op_test.ArgMaxTest.testInt64
 argmax_op_test.ArgMaxTest.testOutputEmpty
-array_ops_test.ReverseV2Test.testInvalid
-array_ops_test.ReverseV2Test.testInvalidAxis
-array_ops_test.ReverseV2Test.testReverse0DimAuto
-array_ops_test.ReverseV2Test.testReverse1DimAuto
-array_ops_test.ReverseV2Test.testReverse2DimAuto
-array_ops_test.ReverseV2Test.testReverseColumnsOf3Channels
-array_ops_test.ReverseV2Test.testReverseInvalidShape
-array_ops_test.ReverseV2Test.testReverseRowsOf3Channels
-array_ops_test.ReverseV2Test.testReverseRowsOf4Channels
-array_ops_test.ReverseV2Test.testUnknownDims
 array_ops_test.ShapeSizeRankTest.testDenseShape
 array_ops_test.ShapeSizeRankTest.testSizeDtype
 array_ops_test.ShapeSizeRankTest.testSparseShape
@@ -832,10 +822,39 @@ xent_op_test.XentTest.testZeroDimension
 #reduction_ops_test.MinReductionTest.testEmptyGradients
 #reduction_ops_test.SumReductionTest.testFloat32 # it might need lot of memory in some random runs and cause SIGSEGV crash, see .../tensorflow/tensorflow/python/kernel_tests/reduction_ops_test.py
 
-
+# test for tf.floor
+cwise_ops_test.RoundingTest.testTypes
 
 ###################################################
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
+
+einsum_op_test.EinsumOpTest.testUnary
+einsum_op_test.EinsumOpTest.testUnaryWithRepeatedLabels
+einsum_op_test.EinsumOpTest.testUnaryEllipsis
+einsum_op_test.EinsumOpTest.testBinarySimple
+einsum_op_test.EinsumOpTest.testReducedIndices
+einsum_op_test.EinsumOpTest.testRepeatedIndices
+einsum_op_test.EinsumOpTest.testEllipsis
+einsum_op_test.EinsumOpTest.testBroadcasting
+einsum_op_test.EinsumOpTest.testBroadcastingWithRepeatedIndices
+einsum_op_test.EinsumOpTest.testDTypes
+einsum_op_test.EinsumOpTest.testInvalid
+einsum_op_test.EinsumOpTest.testPlaceholder
+einsum_op_test.EinsumOpTest.testOutputRepeatedLabels
+einsum_op_test.EinsumOpTest.testEmpty
+einsum_op_test.EinsumOpTest.testEmptyWithRepeatedLabels
+
+array_ops_test.ReverseV2Test.testInvalid
+array_ops_test.ReverseV2Test.testInvalidAxis
+array_ops_test.ReverseV2Test.testReverse0DimAuto
+array_ops_test.ReverseV2Test.testReverse1DimAuto
+array_ops_test.ReverseV2Test.testReverse2DimAuto
+array_ops_test.ReverseV2Test.testReverseColumnsOf3Channels
+array_ops_test.ReverseV2Test.testReverseInvalidShape
+array_ops_test.ReverseV2Test.testReverseRowsOf3Channels
+array_ops_test.ReverseV2Test.testReverseRowsOf4Channels
+array_ops_test.ReverseV2Test.testUnknownDims
+
 
 # None as of now
