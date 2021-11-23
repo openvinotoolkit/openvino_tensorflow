@@ -115,3 +115,5 @@ test_op_disable.TestOpDisableOperations.*
 test_topkv2.TestTopKV2.test_topkv2_1d
 test_topkv2.TestTopKV2.test_topkv2_2d
 test_topkv2.TestTopKV2.test_topkv2_3d
+
+test_conv3d.Conv3DTest.*
