@@ -119,6 +119,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                           (already_processed ? "graph is already preprocessed"
                                              : "ngraph is disabled");
       NGraphClusterManager::EvictAllClusters();
+      NGraphClusterManager::EvictMRUClusters();
       return Status::OK();
     }
 
