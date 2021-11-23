@@ -33,21 +33,11 @@ For this example, we assume that you've already:
 * Installed TensorFlow on your system
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
+**Note:** Refer to [**this page**](TF_1_x/README.md) for python classification sample using TF1 Inception v3 model.
+
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
 
-The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
-
-```bash
-$ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
-  tar -C <path-to-openvino_tensorflow-repository>/examples/data -xz
-```
-
-Once extracted, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain two new files:
-
-* imagenet_slim_labels.txt
-* inception_v3_2016_08_28_frozen.pb
-
-Open `imagenet_slim_labels.txt` to read the labels in the `<path-to-openvino_tensorflow-repository>/examples/data` directory for the possible classifications. In the .txt file, you'll find 1,000 categories that were used in the Imagenet competition.
+This demo uses TF Hub image classification model [**InceptionV3**](https://tfhub.dev/google/imagenet/inception_v3/classification/4) and [**ImageNet labels**](https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt) for the possible classifications. In labels file, you'll find 1,000 categories that were used in the Imagenet competition.
 
 Install the pre-requisites
 ```bash
@@ -62,18 +52,18 @@ $ cd <path-to-openvino_tensorflow-repository>
 $ python3 examples/classification_sample.py
 ```
 
-`classification_sample.py` does inference on the default example image that comes with this repository and should output something similar to:
+`classification_sample.py` does inference on the [**image**]("https://www.tensorflow.org/images/grace_hopper.jpg") and should output something similar to:
 
 ```
-military uniform (653): 0.834306
-mortarboard (668): 0.0218693
-academic gown (401): 0.010358
-pickelhaube (716): 0.00800814
-bulletproof vest (466): 0.00535091
+military uniform 0.79601693
+mortarboard 0.02091024
+academic gown 0.014557127
+suit 0.009166162
+comic book 0.007978318
 ```
 **Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
 
-In this case, we are using the default image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.8.
+In this case, we are using the image of Admiral Grace Hopper. As you can see, the network correctly spots that she's wearing a military uniform, with a high score of 0.79.
 
 Next, try it out by passing the path to your new input. You can provide either absolute or relative path to an image or video or directory of images.
 e.g.
@@ -136,7 +126,7 @@ $ ./convert_yolov3.sh
 Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
 
 * coco.names
-* yolo_v3_darknet_2.pb
+* yolo_v3_darknet_2
 
 Run the object detection example using the instructions below:
 
