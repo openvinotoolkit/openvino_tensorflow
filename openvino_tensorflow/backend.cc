@@ -84,7 +84,7 @@ void Backend::ReleaseGlobalContext() { g_global_context.reset(); }
 
 std::string Backend::GetDeviceType() { return m_device_type; }
 
-bool Backend::IsSupported(const Node& node) const {
+bool Backend::IsSupported(const ngraph::Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
   // that the selected backend supports all opset7 ops

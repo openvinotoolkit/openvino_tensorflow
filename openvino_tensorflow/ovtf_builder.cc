@@ -445,7 +445,12 @@ static Status ValuesFromConstNode(const NodeDef& node,
                                        " on an empty tensor");
       }
       if (val_size == 0) {
+#if (TF_MAJOR_VERSION > 1 && TF_MINOR_VERSION >= 7)
+        val_i = 0;
+#else
         return errors::InvalidArgument("Empty values vector");
+#endif
+
       } else if (i < val_size) {
         (*values)[i] = val_i;
         val_lastsaved = val_i;
