@@ -9,7 +9,7 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Demo showcased in this example
  Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images or camera input.
- Object detection using YOLOv3 model converted from Darknet to detect objects in a given image, video, directory or camera input.
+ Object detection using YOLOv4 model converted from Darknet to detect objects in a given image, video, directory or camera input.
 
 ## Setup for the examples
 
@@ -114,20 +114,20 @@ $ cd <path-to-openvino_tensorflow-repository>/examples
 $ pip3 install -r requirements.txt
 ```
 
-The TensorFlow Yolo v3 model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
+The TensorFlow Yolo v4 model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
 
-Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3.sh script activates a python virtual environment for conversion.
+Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov4.sh script activates a python virtual environment for conversion.
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>/examples/TF_1_x
-$ chmod +x convert_yolov3.sh
-$ ./convert_yolov3.sh
+$ chmod +x convert_yolov4.sh
+$ ./convert_yolov4.sh
 ```
 
 Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
 
 * coco.names
-* yolo_v3_darknet_1.pb
+* yolo_v4.pb
 
 Run the object detection example using the instructions below:
 
@@ -179,20 +179,3 @@ $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/peopl
 For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 **Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
-
-To try on the yolo_v3_160 model for faster inference follow the below steps
-
-Please note: The instructions below should not be executed in an active virtual environment. The convert_yolov3_160.sh script activates a python virtual environment for conversion.
-
-```bash
-$ cd <path-to-openvino_tensorflow-repository>/examples/TF_1_x
-$ chmod +x convert_yolov3_160.sh
-$ ./convert_yolov3_160.sh
-```
-
-Run the object detection example using the instructions below:
-
-```bash
-$ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/TF_1_x/object_detection_sample.py --input_height 160 --input_width 160 --graph "examples/data/yolo_v3_darknet_160.pb" --input_layer "inputs" --output_layer "output_boxes" --labels "examples/data/coco.names"
-```

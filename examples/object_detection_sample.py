@@ -58,9 +58,9 @@ def load_labels(label_file):
 
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/yolo_v3_darknet_2"
+    model_file = "examples/data/yolo_v4"
     label_file = "examples/data/coco.names"
-    anchor_file = "examples/data/yolov3_anchors.txt"
+    anchor_file = "examples/data/yolov4_anchors.txt"
     input_height = 416
     input_width = 416
     backend_name = "CPU"

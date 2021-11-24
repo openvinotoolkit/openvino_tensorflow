@@ -190,8 +190,8 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show
      workingDirectory: $(WORK_DIR) 
@@ -202,8 +202,8 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show --backend GPU
      workingDirectory: $(WORK_DIR) 
@@ -214,8 +214,8 @@
       source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show --backend MYRIAD
      workingDirectory: $(WORK_DIR) 
