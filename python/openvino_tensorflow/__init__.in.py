@@ -41,7 +41,12 @@ __all__ = [
     'export_ir',
 ]
 
-ext = 'dylib' if system() == 'Darwin' else 'so'
+if system() == 'Darwin':
+    ext = 'dylib'
+elif system() == 'Windows':
+    ext = 'dll'
+else:
+    ext = 'so'
 
 TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
@@ -89,7 +94,10 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
-    full_lib_path = os.path.join(libpath, 'libopenvino_tensorflow.' + ext)
+    if system() == 'Windows':
+        full_lib_path = os.path.join(libpath, 'openvino_tensorflow.' + ext)
+    else:
+      full_lib_path = os.path.join(libpath, 'libopenvino_tensorflow.' + ext)
     _ = load_library.load_op_library(full_lib_path)
     openvino_tensorflow_lib = ctypes.cdll.LoadLibrary(full_lib_path)
 else:

@@ -18,6 +18,8 @@ import platform
 import shlex
 import math
 import psutil as psu
+from sysconfig import get_paths
+from subprocess import call
 from wheel.vendored.packaging.tags import sys_tags
 
 
@@ -101,18 +103,31 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
 
     cmake_cmd = ["cmake"]
     cmake_cmd.extend(cmake_flags)
-    cmake_cmd.extend([src_location])
+    if (platform.system() == 'Windows'):
+        cmake_cmd.extend([src_location.replace("\\", "\\\\")])
+    else:
+        cmake_cmd.extend([src_location])
 
     command_executor(cmake_cmd, verbose=True)
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    cmd = ["make", "-j" + num_cores]
-    if verbose:
-        cmd.extend(['VERBOSE=1'])
-    command_executor(cmd, verbose=True)
-    cmd = ["make", "install"]
-    command_executor(cmd, verbose=True)
+    if (platform.system() == 'Windows'):
+        # TODO: Enable Debug config for windows
+        cmd = [
+            "cmake", "--build", ".", "--config Release", "-j" + num_cores,
+            "--target install"
+        ]
+        if verbose:
+            cmd.extend(['--verbose'])
+        command_executor(cmd, verbose=True)
+    else:
+        cmd = ["make", "-j" + num_cores]
+        if verbose:
+            cmd.extend(['VERBOSE=1'])
+        command_executor(cmd, verbose=True)
+        cmd = ["make", "install"]
+        command_executor(cmd, verbose=True)
     if not os.path.exists(pwd):
         raise AssertionError("Path doesn't exist {0}".format(pwd))
     os.chdir(pwd)
@@ -124,9 +139,14 @@ def install_virtual_env(venv_dir):
 
     # Setup virtual environment
     venv_dir = os.path.abspath(venv_dir)
+    if (platform.system() == 'Windows'):
+        venv_dir = venv_dir.replace("\\", "\\\\")
     # Note: We assume that we are using Python 3 (as this script is also being
     # executed under Python 3 as marked in line 1)
-    command_executor(["python3", "-m", "venv", venv_dir])
+    if (platform.system() == 'Windows'):
+        command_executor(["python", "-m", "venv", venv_dir])
+    else:
+        command_executor(["python3", "-m", "venv", venv_dir])
 
 
 def load_venv(venv_dir):
@@ -149,10 +169,16 @@ def load_venv(venv_dir):
     #     dict(__file__=activate_this_file))
     # exec(open(activate_this_file).read(), {'__file__': activate_this_file})
 
-    bin_dir = os.path.join(venv_dir, "bin")
-    base = bin_dir[:-len(
-        "bin"
-    ) - 1]  # strip away the bin part from the __file__, plus the path separator
+    if (platform.system() == "Windows"):
+        bin_dir = os.path.join(venv_dir, "Scripts")
+        base = bin_dir[:-len(
+            "Scripts"
+        ) - 1]  # strip away the bin part from the __file__, plus the path separator
+    else:
+        bin_dir = os.path.join(venv_dir, "bin")
+        base = bin_dir[:-len(
+            "bin"
+        ) - 1]  # strip away the bin part from the __file__, plus the path separator
 
     # prepend bin to PATH (this file is inside the bin directory)
     os.environ["PATH"] = os.pathsep.join(
@@ -163,10 +189,15 @@ def load_venv(venv_dir):
 
     # add the virtual environments libraries to the host python import mechanism
     prev_length = len(sys.path)
-    for lib in ("../lib/python3." + str(sys.version_info.minor) +
-                "/site-packages").split(os.pathsep):
-        path = os.path.realpath(os.path.join(bin_dir, lib))
-        site.addsitedir(path.decode("utf-8") if "" else path)
+    if (platform.system() == 'Windows'):
+        for lib in ("../Lib/site-packages").split(os.pathsep):
+            path = os.path.realpath(os.path.join(bin_dir, lib))
+            site.addsitedir(path.decode("utf-8") if "" else path)
+    else:
+        for lib in ("../lib/python3." + str(sys.version_info.minor) +
+                    "/site-packages").split(os.pathsep):
+            path = os.path.realpath(os.path.join(bin_dir, lib))
+            site.addsitedir(path.decode("utf-8") if "" else path)
     sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]
 
     sys.real_prefix = sys.prefix
@@ -190,17 +221,23 @@ def setup_venv(venv_dir):
     load_venv(venv_dir)
 
     print("PIP location")
-    process = subprocess.Popen(shlex.split('which pip'))
-    so, se = process.communicate()
+    if (platform.system() == 'Windows'):
+        call(['where', 'pip'])
+    else:
+        process = subprocess.Popen(shlex.split('which pip'))
+        so, se = process.communicate()
 
     # Install the pip packages
-    command_executor(["pip3", "install", "-U", "pip"])
+    if (platform.system() == "Windows"):
+        command_executor(["python -m pip", "install", "-U", "pip"])
+    else:
+        command_executor(["pip", "install", "-U", "pip"])
     package_list = [
         "pip3",
         "install",
         "psutil",
         "six>=1.12.0",
-        "numpy>=1.16.0,<1.19.0",
+        "numpy>=1.19.5",
         "wheel>=0.26",
         "setuptools",
         "mock",
@@ -214,6 +251,9 @@ def setup_venv(venv_dir):
         "opencv-python==4.5.2.54",
     ]
     command_executor(package_list)
+    # TF on windows needs a higher version of numpy
+    if (platform.system == "Windows"):
+        command_executor(["pip", "install", "numpy>=1.21.2"])
 
     # Print the current packages
     command_executor(["pip", "list"])
@@ -244,16 +284,24 @@ def build_tensorflow(tf_version,
     print("SOURCE DIR: " + src_dir)
 
     # Update the artifacts directory
-    artifacts_dir = os.path.join(os.path.abspath(artifacts_dir), "tensorflow")
+    if (platform.system() == 'Windows'):
+        artifacts_dir = os.path.join(pwd, "tensorflow")
+    else:
+        artifacts_dir = os.path.join(
+            os.path.abspath(artifacts_dir), "tensorflow")
     print("ARTIFACTS DIR: %s" % artifacts_dir)
     if not os.path.exists(src_dir):
         raise AssertionError("Path doesn't exist {0}".format(src_dir))
     os.chdir(src_dir)
 
     base = sys.prefix
-    python_lib_path = os.path.join(base, 'lib', 'python%s' % sys.version[:3],
-                                   'site-packages')
-    python_executable = os.path.join(base, "bin", "python")
+    if (platform.system() == 'Windows'):
+        python_lib_path = os.path.join(base, 'Lib', 'site-packages')
+        python_executable = os.path.join(base, "Scripts", "python.exe")
+    else:
+        python_lib_path = os.path.join(
+            base, 'lib', 'python%s' % sys.version[:3], 'site-packages')
+        python_executable = os.path.join(base, "bin", "python")
 
     print("PYTHON_BIN_PATH: " + python_executable)
 
@@ -276,16 +324,22 @@ def build_tensorflow(tf_version,
         os.environ[
             "CC_OPT_FLAGS"] = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
 
-    command_executor("./configure")
+    if (platform.system() == 'Windows'):
+        os.environ["TF_OVERRIDE_EIGEN_STRONG_INLINE"] = "1"
+        os.environ["CC_OPT_FLAGS"] = "/arch:AVX"
+        command_executor(["python", "configure.py"])
+    else:
+        command_executor("./configure")
 
-    cmd = [
-        "bazel",
-        "build",
-        "--config=opt",
-        "--config=noaws",
-        "--config=nohdfs",
-        "--config=nonccl",
-    ]
+    cmd = ["bazel", "build", "--config=opt"]
+
+    if (platform.system() != 'Windows'):
+        cmd.extend([
+            "--config=noaws",
+            "--config=nohdfs",
+            "--config=nonccl",
+        ])
+
     if use_intel_tf:
         print("Building Intel-Tensorflow")
         cmd.extend([
@@ -323,10 +377,16 @@ def build_tensorflow(tf_version,
 
     # If target is not specified, we assume default TF wheel build and copy the wheel to artifacts dir
     if target == '//tensorflow/tools/pip_package:build_pip_package':
-        command_executor([
-            "bazel-bin/tensorflow/tools/pip_package/build_pip_package",
-            artifacts_dir
-        ])
+        if (platform.system() == 'Windows'):
+            command_executor([
+                "bazel-bin\\\\tensorflow\\\\tools\\\\pip_package\\\\build_pip_package",
+                artifacts_dir.replace("\\", "\\\\")
+            ])
+        else:
+            command_executor([
+                "bazel-bin/tensorflow/tools/pip_package/build_pip_package",
+                artifacts_dir
+            ])
 
         # Get the name of the TensorFlow pip package
         tf_wheel_files = glob.glob(
@@ -352,6 +412,9 @@ def build_tensorflow_cc(tf_version,
         tf_cc_lib_name = "libtensorflow_cc.so.2"
     elif (tf_version.startswith("v1.") or tf_version.startswith("1.")):
         tf_cc_lib_name = "libtensorflow_cc.so.1"
+
+    if (platform.system() == 'Windows'):
+        tf_cc_lib_name = "tensorflow_cc.dll.if.lib"
 
     build_tensorflow(
         tf_version,
@@ -392,9 +455,16 @@ def build_tensorflow_cc(tf_version,
 
     # Now copy the TF libraries
     if tf_prebuilt is None:
-        tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
+        if (platform.system() == 'Windows'):
+            tf_cc_lib_file = "bazel-bin\\tensorflow\\" + tf_cc_lib_name
+        else:
+            tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
     else:
-        tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
+        if (platform.system() == 'Windows'):
+            tf_cc_lib_file = os.path.abspath(tf_prebuilt + '\\' +
+                                             tf_cc_lib_name)
+        else:
+            tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
 
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
@@ -428,6 +498,12 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
             tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
         elif (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
+    if (platform.system() == 'Windows'):
+        tf_cc_dll_name = 'tensorflow_cc.dll'
+        tf_cc_lib_name = 'tensorflow_cc.dll.if.lib'
+        tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'
+        tf_fmwk_lib_name = '_pywrap_tensorflow_internal.lib'
+
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
         # assert os.path.exists(doomed_file), "File not present for unlinking {0}".format(doomed_file)
@@ -447,23 +523,51 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
 
     # Now copy the TF libraries
     if tf_prebuilt is None:
-        tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
-        tf_cc_fmwk_file = "bazel-bin/tensorflow/" + tf_fmwk_lib_name
+        if (platform.system() == 'Windows'):
+            tf_cc_lib_file = "bazel-bin\\tensorflow\\" + tf_cc_lib_name
+            tf_cc_dll_file = "bazel-bin\\tensorflow\\" + tf_cc_dll_name
+            tf_fmwk_lib_file = "bazel-bin\\tensorflow\\python\\" + tf_fmwk_lib_name
+            tf_fmwk_dll_file = "bazel-bin\\tensorflow\\python\\" + tf_fmwk_dll_name
+        else:
+            tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
+            tf_cc_fmwk_file = "bazel-bin/tensorflow/" + tf_fmwk_lib_name
         if use_intel_tf:
             opm_lib_file = "bazel-tensorflow/external/mkl_linux/lib/libiomp5.so"
             mkl_lib_file = "bazel-tensorflow/external/mkl_linux/lib/libmklml_intel.so"
     else:
-        tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
-        tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' + tf_fmwk_lib_name)
+        if (platform.system() == 'Windows'):
+            tf_cc_lib_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_lib_name)
+            tf_cc_dll_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_dll_name)
+            tf_fmwk_lib_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' +
+                tf_fmwk_lib_name)
+            tf_fmwk_dll_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' +
+                tf_fmwk_dll_name)
+        else:
+            tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
+            tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' +
+                                              tf_fmwk_lib_name)
         if use_intel_tf:
             opm_lib_file = os.path.abspath(tf_prebuilt + '/libiomp5.so')
             mkl_lib_file = os.path.abspath(tf_prebuilt + '/libmklml_intel.so')
+
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
+    if (platform.system() == "Windows"):
+        print("Copying %s to %s" % (tf_cc_dll_file, artifacts_dir))
+        shutil.copy(tf_cc_dll_file, artifacts_dir)
+        print("Copying %s to %s" % (tf_fmwk_lib_file, artifacts_dir))
+        shutil.copy(tf_fmwk_lib_file, artifacts_dir)
+        print("Copying %s to %s" % (tf_fmwk_dll_file, artifacts_dir))
+        shutil.copy(tf_fmwk_dll_file, artifacts_dir)
+    else:
+        print("Copying %s to %s" % (tf_cc_fmwk_file, artifacts_dir))
+        shutil.copy(tf_cc_fmwk_file, artifacts_dir)
 
-    print("Copying %s to %s" % (tf_cc_fmwk_file, artifacts_dir))
-    shutil.copy(tf_cc_fmwk_file, artifacts_dir)
     if use_intel_tf:
         print("Copying %s to %s" % (opm_lib_file, artifacts_dir))
         shutil.copy(opm_lib_file, artifacts_dir)
@@ -471,9 +575,10 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         print("Copying %s to %s" % (mkl_lib_file, artifacts_dir))
         shutil.copy(mkl_lib_file, artifacts_dir)
 
-    if tf_prebuilt is not None:
-        tf_whl = locate_tf_whl(tf_prebuilt)
-        shutil.copy(tf_whl, artifacts_dir)
+    if (platform.system() != 'Windows'):
+        if tf_prebuilt is not None:
+            tf_whl = locate_tf_whl(tf_prebuilt)
+            shutil.copy(tf_whl, artifacts_dir)
 
 
 def install_tensorflow(venv_dir, artifacts_dir):
@@ -546,14 +651,28 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     if not os.path.exists(path):
         raise AssertionError("Path doesn't exist {0}".format(path))
     os.chdir(path)
-    cmake_cmd = ["cmake"]
-    cmake_cmd.extend(cmake_flags)
-    cmake_cmd.extend([ovtf_src_loc])
+    if (platform.system() == 'Windows'):
+        cmake_cmd = [
+            "cmake", "-G \"Visual Studio 16 2019\"",
+            "-DCMAKE_BUILD_TYPE=Release"
+        ]
+        cmake_cmd.extend(cmake_flags)
+        cmake_cmd.extend([ovtf_src_loc.replace("\\", "\\\\")])
+    else:
+        cmake_cmd = ["cmake"]
+        cmake_cmd.extend(cmake_flags)
+        cmake_cmd.extend([ovtf_src_loc])
     command_executor(cmake_cmd)
 
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
-    make_cmd = ["make", "-j" + num_cores, "install"]
+    if (platform.system() == 'Windows'):
+        make_cmd = [
+            "cmake", "--build", ".", "--config Release", "-j" + num_cores,
+            "--target install"
+        ]
+    else:
+        make_cmd = ["make", "-j" + num_cores, "install"]
     if verbose:
         make_cmd.extend(['VERBOSE=1'])
 
@@ -721,11 +840,21 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
-        "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
-        "-DCMAKE_INSTALL_PREFIX=" + install_location
+        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
     ]
+
+    if (platform.system() == 'Windows'):
+        openvino_cmake_flags.extend([
+            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools\\ngraph\\",
+            "-DCMAKE_INSTALL_PREFIX=" + install_location.replace("\\", "\\\\"),
+            "-G \"Visual Studio 16 2019\"", "-A x64"
+        ])
+    else:
+        openvino_cmake_flags.extend([
+            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
+            "-DCMAKE_INSTALL_PREFIX=" + install_location
+        ])
 
     if platform.system() == 'Linux':
         openvino_cmake_flags.extend([
@@ -740,3 +869,66 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
 
     cmake_build(build_dir, openvino_src_dir, openvino_cmake_flags, verbosity)
+
+
+def build_protobuf(artifacts_location, protobuf_branch, debug_enabled,
+                   verbosity):
+    pwd = os.getcwd()
+    os.chdir(artifacts_location)
+    download_repo(
+        "protobuf",
+        "https://github.com/protocolbuffers/protobuf.git",
+        protobuf_branch,
+        submodule_update=True)
+
+    src_location = os.path.abspath(os.path.join(artifacts_location, "protobuf"))
+    print("Source location: " + src_location)
+    os.chdir(src_location)
+    os.chdir("cmake")
+
+    # mkdir build directory
+    try:
+        os.makedirs("build")
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir("build"):
+            pass
+    os.chdir("build")
+
+    if debug_enabled:
+        try:
+            os.makedirs("debug")
+        except OSError as exc:  # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir("debug"):
+                pass
+        os.chdir("debug")
+        cmake_cmd = [
+            "cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Debug",
+            "-DBUILD_SHARED_LIBS=ON",
+            "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."
+        ]
+        command_executor(cmake_cmd, verbose=True)
+
+        cmd = ["cmake", "--build", ".", "--config Debug"]
+        if verbosity:
+            cmd.extend(['--verbose'])
+        command_executor(cmd, verbose=True)
+    else:
+        try:
+            os.makedirs("release")
+        except OSError as exc:  # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir("release"):
+                pass
+        os.chdir("release")
+        cmake_cmd = [
+            "cmake", "-G \"Visual Studio 16 2019\"",
+            "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_SHARED_LIBS=ON",
+            "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."
+        ]
+        command_executor(cmake_cmd, verbose=True)
+
+        cmd = ["cmake", "--build", ".", "--config Release"]
+        if verbosity:
+            cmd.extend(['--verbose'])
+        command_executor(cmd, verbose=True)
+
+    os.chdir(pwd)

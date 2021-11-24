@@ -58,17 +58,33 @@ if(OPENVINO_BUILD_VERSION)
 endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
-target_link_libraries(
-        ${LIB_NAME}
-        ovtf_logger
-        ${TensorFlow_FRAMEWORK_LIBRARY}
-        ngraph_lib
-        absl_algorithm
-        absl_container
-        absl_strings
-        ${InferenceEngine_LIBRARIES}
-        ocm
+
+if(WIN32)
+  get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+  target_link_libraries(
+            ${LIB_NAME}
+            ovtf_logger
+            ${TensorFlow_FRAMEWORK_LIBRARY}
+            ${ngraph_lib_value}
+            absl_algorithm
+            absl_container
+            absl_strings
+            ${InferenceEngine_LIBRARIES}
+            ocm
     )
+else()
+  target_link_libraries(
+          ${LIB_NAME}
+          ovtf_logger
+          ${TensorFlow_FRAMEWORK_LIBRARY}
+          ngraph_lib
+          absl_algorithm
+          absl_container
+          absl_strings
+          ${InferenceEngine_LIBRARIES}
+          ocm
+      )
+endif()
 
 target_compile_definitions(
     ${LIB_NAME} PRIVATE
@@ -111,17 +127,35 @@ endif()
 # Install OpenVINO libraries
 if (APPLE)
   set(OCM_LIB libocm.dylib)
+elseif(WIN32)
+  set(OCM_LIB ocm.dll)
 else()
   set(OCM_LIB libocm.so)
 endif()
 
-set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
-set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
-install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+if(WIN32)
+  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
+  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+else()
+  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
+  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+endif()
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
     if(USE_OPENVINO_FROM_LOCATION)
+      if(WIN32)
+        file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/*" "${TBB_LIBS}/*")
+        foreach(LIB_FILE ${NGRAPH_LIB_FILES})
+          get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
+          get_filename_component(lib_file_name ${LIB_FILE} NAME)
+          if(${lib_file_name} MATCHES ".dll*")
+            install(CODE "execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)")
+          endif()
+        endforeach()
+      else()
         file(GLOB NGRAPH_LIB_FILES "${IE_LIBS}/lib*" "${TBB_LIBS}/lib*")
         foreach(LIB_FILE ${NGRAPH_LIB_FILES})
             get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
@@ -131,7 +165,8 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
                 execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
                 ")
             endif()
-        endforeach()
+          endforeach()
+        endif()
     endif()
 endif()
 

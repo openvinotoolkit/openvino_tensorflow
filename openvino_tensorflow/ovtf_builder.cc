@@ -2927,7 +2927,7 @@ static Status TranslateResizeBilinearOp(
         opset::Interpolate::CoordinateTransformMode::align_corners;
 
   auto input_shape = ng_inp.get_shape();
-  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
   auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
   auto ng_input_shape = ConstructNgNode<opset::Convert>(
@@ -2967,7 +2967,7 @@ static Status TranslateResizeNearestNeighborOp(
       opset::Interpolate::NearestMode::round_prefer_floor;
 
   auto input_shape = ng_inp.get_shape();
-  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
   auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
   auto ng_input_shape = ConstructNgNode<opset::Convert>(

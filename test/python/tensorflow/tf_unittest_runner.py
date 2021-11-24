@@ -17,11 +17,6 @@ from datetime import timedelta
 from fnmatch import fnmatch
 import shlex
 
-if not platform.system() == "Darwin":
-    import multiprocessing
-    mpmanager = multiprocessing.Manager()
-    mpmanager_return_dict = mpmanager.dict()
-
 try:
     import xmlrunner
 except:
@@ -388,11 +383,13 @@ def timeout_handler(signum, frame):
 def run_singletest(testpattern, runner, a_test, timeout):
     # This func runs in the same process
     return_dict = {}
-    import signal
-    signal.signal(signal.SIGALRM, timeout_handler)
+    # SIGALRM is not available on windows
+    if (platform.system() != "Windows"):
+        import signal
+        signal.signal(signal.SIGALRM, timeout_handler)
 
-    # set timeout here
-    signal.alarm(timeout)
+        #set timeout here
+        signal.alarm(timeout)
 
     try:
         test_result = runner.run(a_test)
@@ -515,6 +512,11 @@ def check_and_print_summary(test_results, invalid_list):
 
 
 if __name__ == '__main__':
+    if not platform.system() == "Darwin":
+        import multiprocessing
+        mpmanager = multiprocessing.Manager()
+        mpmanager_return_dict = mpmanager.dict()
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         status = main()
