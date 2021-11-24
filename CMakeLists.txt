@@ -20,6 +20,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4308 /wd4146 /wd4703 /wd4244 /wd4819 /EHsc")
 endif()
 
 # In order to compile ngraph-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.
@@ -121,6 +123,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
     message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
+    message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")    
 endif()
 
 if(APPLE)
@@ -129,9 +135,15 @@ if(APPLE)
     else()
         set(LIBNGRAPH "libngraph.dylib")
     endif()
+elseif(WIN32)
+    set(LIBNGRAPH "ngraph.lib")
 else()
     set(LIBNGRAPH "libngraph.so")
 endif(APPLE)
+
+if(WIN32)
+	add_definitions(-DNOMINMAX)
+endif()
 
 # Build options
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
@@ -149,6 +161,12 @@ include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
     find_package(TBB COMPONENTS tbb tbbmalloc)
+endif()
+
+if(WIN32)
+  set(protobuf_dir ${PROTOBUF_ARTIFACTS_DIR}/cmake)  
+  find_package(protobuf REQUIRED)
+  set(LIBPROTOBUF "libprotobuf.lib")
 endif()
 
 message(STATUS "UNIT_TEST_TF_CC_DIR:        ${TF_PRE_BUILT_LOCATION}")
@@ -187,6 +205,11 @@ elseif (${OPENVINO_VERSION} MATCHES "2021.2")
 else()
   message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
 endif()
+
+if(WIN32)
+    add_definitions(-DBUILD_API=1)    
+endif()
+
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 else()
@@ -224,16 +247,18 @@ get_filename_component(
     ABSOLUTE
 )
 
-add_subdirectory(examples)
-if (DEFINED TF_SRC_DIR)
-    message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
-    add_subdirectory(examples/classification_sample)
-else()
-    message(
-        STATUS
-        "TensorFlow source directory not provided. "
-        "C++ Examples won't be built"
-    )
+if(NOT WIN32)
+  add_subdirectory(examples)
+  if (DEFINED TF_SRC_DIR)
+      message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+      add_subdirectory(examples/classification_sample)
+  else()
+      message(
+          STATUS
+          "TensorFlow source directory not provided. "
+          "C++ Examples won't be built"
+      )
+  endif()
 endif()
 
 if (UNIT_TEST_ENABLE)

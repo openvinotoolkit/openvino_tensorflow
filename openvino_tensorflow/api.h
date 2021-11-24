@@ -10,6 +10,16 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+	#ifdef BUILD_API
+		#define EXPORT_SYMBOL __declspec(dllexport)
+	#else
+		#define EXPORT_SYMBOL __declspec(dllimport)
+	#endif
+#else
+    #define EXPORT_SYMBOL __attribute__((visibility("default")))
+#endif
+
 using namespace std;
 
 namespace tensorflow {
@@ -17,27 +27,27 @@ namespace openvino_tensorflow {
 namespace api {
 
 extern "C" {
-extern void enable();
-extern void disable();
-extern bool is_enabled();
+extern EXPORT_SYMBOL void enable();
+extern EXPORT_SYMBOL void disable();
+extern EXPORT_SYMBOL bool is_enabled();
 
-extern size_t backends_len();
-extern bool list_backends(char** backends);
-extern bool set_backend(const char* backend);
-extern bool is_supported_backend(const char* backend);
-extern bool get_backend(char** backend);
+extern EXPORT_SYMBOL size_t backends_len();
+extern EXPORT_SYMBOL bool list_backends(char** backends);
+extern EXPORT_SYMBOL bool set_backend(const char* backend);
+extern EXPORT_SYMBOL bool is_supported_backend(const char* backend);
+extern EXPORT_SYMBOL bool get_backend(char** backend);
 
-extern void start_logging_placement();
-extern void stop_logging_placement();
-extern bool is_logging_placement();
+extern EXPORT_SYMBOL void start_logging_placement();
+extern EXPORT_SYMBOL void stop_logging_placement();
+extern EXPORT_SYMBOL bool is_logging_placement();
 
-extern void set_disabled_ops(const char* op_type_list);
-extern const char* get_disabled_ops();
+extern EXPORT_SYMBOL void set_disabled_ops(const char* op_type_list);
+extern EXPORT_SYMBOL const char* get_disabled_ops();
 
-extern void enable_dynamic_fallback();
-extern void disable_dynamic_fallback();
+extern EXPORT_SYMBOL void enable_dynamic_fallback();
+extern EXPORT_SYMBOL void disable_dynamic_fallback();
 
-extern bool export_ir(const char* output_dir, char** cluster_info,
+extern EXPORT_SYMBOL bool export_ir(const char* output_dir, char** cluster_info,
                       char** err_msg);
 }
 
