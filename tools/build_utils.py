@@ -113,6 +113,7 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
     import psutil
     num_cores = str(psutil.cpu_count(logical=True))
     if (platform.system() == 'Windows'):
+        # TODO: Enable Debug config for windows
         cmd = [
             "cmake", "--build", ".", "--config Release", "-j" + num_cores,
             "--target install"
@@ -236,7 +237,7 @@ def setup_venv(venv_dir):
         "install",
         "psutil",
         "six>=1.12.0",
-        # "numpy>=1.19.5",
+        "numpy>=1.19.5",
         "wheel>=0.26",
         "setuptools",
         "mock",
@@ -250,6 +251,9 @@ def setup_venv(venv_dir):
         "opencv-python==4.5.2.54",
     ]
     command_executor(package_list)
+    # TF on windows needs a higher version of numpy
+    if (platform.system == "Windows"):
+        command_executor(["pip", "install", "numpy>=1.21.2"])
 
     # Print the current packages
     command_executor(["pip", "list"])
@@ -327,7 +331,7 @@ def build_tensorflow(tf_version,
     else:
         command_executor("./configure")
 
-    cmd = ["bazel", "build"]
+    cmd = ["bazel", "build", "--config=opt"]
 
     if (platform.system() != 'Windows'):
         cmd.extend([

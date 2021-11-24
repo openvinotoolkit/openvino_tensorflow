@@ -108,5 +108,6 @@ test_pad.TestPadOperations.test_pad1
 test_pad.TestPadOperations.test_pad2
 test_pad.TestPadOperations.test_pad3
 test_pad.TestPadOperations.test_pad4
+test_scatternd_update.*
 
 

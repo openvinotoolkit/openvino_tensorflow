@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
-# include_directories(${TensorFlow_INCLUDE_DIR})
-# include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
    message(

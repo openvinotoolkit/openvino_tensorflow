@@ -21,7 +21,11 @@ install(
     PATTERN "*.pb"
     PATTERN "tests_*.txt"
 )
-return()
+# C++ gtests are not enabled for Windows yet
+if (WIN32)
+    return()
+endif()
+
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
    message(
