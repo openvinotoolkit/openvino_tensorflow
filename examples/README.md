@@ -13,7 +13,7 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 ## Demos showcased in the examples
 
 * Classification demo uses Google's Inception v3 model to classify a given image, video, directory of images or camera input.
-* Object detection demo uses YOLOv3 model converted from Darknet to detect objects in a given image, video, directory of images or camera input.
+* Object detection demo uses YOLOv4 model converted from Darknet to detect objects in a given image, video, directory of images or camera input.
 
 ## Setup for the examples
 
@@ -103,7 +103,7 @@ For this example, we assume that you've already:
 * Installed **Intel<sup>®</sup> </sup> OpenVINO<sup>TM</sup> integration with Tensorflow** on your system
 
 
-**Note:** Refer to [**this page**](TF_1_x/README.md) for the conversion of yolov3 darknet model using Tensorflow 1.15 and it's python object detection sample.
+**Note:** Refer to [**this page**](TF_1_x/README.md) for the conversion of yolov4 darknet model and it's python object detection sample.
 
 
 Refer to [**this page**](https://github.com/openvinotoolkit/openvino_tensorflow#installation) for quick installation using pip.
@@ -114,19 +114,19 @@ $ cd <path-to-openvino_tensorflow-repository>/examples
 $ pip3 install -r requirements.txt
 ```
 
-The TensorFlow Yolo v3 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
+The TensorFlow Yolo v4 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
 
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>/examples
-$ chmod +x convert_yolov3.sh
-$ ./convert_yolov3.sh
+$ chmod +x convert_yolov4.sh
+$ ./convert_yolov4.sh
 ```
 
 Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
 
 * coco.names
-* yolo_v3_darknet_2
+* yolo_v4
 
 Run the object detection example using the instructions below:
 
