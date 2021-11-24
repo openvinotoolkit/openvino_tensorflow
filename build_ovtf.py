@@ -230,14 +230,17 @@ def main():
 
         # Check if the prebuilt folder has necessary files
         if not os.path.isdir(arguments.use_tensorflow_from_location):
-             raise AssertionError("Prebuilt TF path " + arguments.use_tensorflow_from_location + " does not exist")
+            raise AssertionError("Prebuilt TF path " +
+                                 arguments.use_tensorflow_from_location +
+                                 " does not exist")
         if (platform.system() == 'Windows'):
             loc = arguments.use_tensorflow_from_location + '\\\\tensorflow'  #'\\\\artifacts\\\\tensorflow'
             loc = loc + '\\\\bazel-bin\\\\tensorflow'
         else:
             loc = arguments.use_tensorflow_from_location + '/artifacts/tensorflow'
         if not os.path.isdir(loc):
-            raise AssertionError("Could not find artifacts/tensorflow directory")
+            raise AssertionError(
+                "Could not find artifacts/tensorflow directory")
         found_whl = False
         found_libtf_fw = False
         found_libtf_cc = False
@@ -332,23 +335,25 @@ def main():
                              "tensorflow"))
             os.chdir(tf_source_loc)
             copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
-              use_intel_tf)
+                                 use_intel_tf)
         else:
             # The tf whl should be in use_tensorflow_from_location/artifacts/tensorflow
             tf_whl_loc = os.path.abspath(arguments.use_tensorflow_from_location
                                          + '/artifacts/tensorflow')
             if not os.path.exists(tf_whl_loc):
-                raise AssertionError("path doesn't exist {0}".format(tf_whl_loc))
+                raise AssertionError(
+                    "path doesn't exist {0}".format(tf_whl_loc))
             possible_whl = [i for i in os.listdir(tf_whl_loc) if '.whl' in i]
             if not len(possible_whl) == 1:
                 raise AssertionError("Expected one TF whl file, but found " +
-                                    len(possible_whl))
+                                     len(possible_whl))
             # Make sure there is exactly 1 TF whl
             tf_whl = os.path.abspath(tf_whl_loc + '/' + possible_whl[0])
             if not os.path.isfile(tf_whl):
                 raise AssertionError("Did not find " + tf_whl)
             # Install the found TF whl file
-            command_executor(["pip", "install", "--force-reinstall", "-U", tf_whl])
+            command_executor(
+                ["pip", "install", "--force-reinstall", "-U", tf_whl])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -357,7 +362,8 @@ def main():
                     "use_tensorflow_from_location are incompatible")
 
             if not os.path.exists(tf_whl_loc):
-                raise AssertionError("Path doesn't exist {0}".format(tf_whl_loc))
+                raise AssertionError(
+                    "Path doesn't exist {0}".format(tf_whl_loc))
             os.chdir(tf_whl_loc)
 
             # This function copies the .so files from
@@ -365,7 +371,7 @@ def main():
             # artifacts/tensorflow
             tf_version = get_tf_version()
             copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
-                            use_intel_tf)
+                                 use_intel_tf)
         if not os.path.exists(cwd):
             raise AssertionError("Path doesn't exist {0}".format(cwd))
         os.chdir(cwd)
@@ -511,7 +517,7 @@ def main():
             copy_tf_to_artifacts(tf_version, dst_dir, None, use_intel_tf)
             os.chdir(cwd)
 
-    # OpenVINO Build 
+    # OpenVINO Build
     if arguments.use_openvino_from_location != "":
         print("Using OpenVINO from " + arguments.use_openvino_from_location)
     else:
@@ -542,7 +548,6 @@ def main():
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
-       
     # Next build CMAKE options for the bridge
     atom_flags = ""
     if (target_arch == "silvermont"):

@@ -501,7 +501,7 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
     if (platform.system() == 'Windows'):
         tf_cc_dll_name = 'tensorflow_cc.dll'
         tf_cc_lib_name = 'tensorflow_cc.dll.if.lib'
-        tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'        
+        tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'
         tf_fmwk_lib_name = '_pywrap_tensorflow_internal.lib'
 
     try:
@@ -538,10 +538,14 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         if (platform.system() == 'Windows'):
             tf_cc_lib_file = os.path.abspath(
                 tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_lib_name)
-            tf_cc_dll_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_dll_name)
+            tf_cc_dll_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_dll_name)
             tf_fmwk_lib_file = os.path.abspath(
-                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' + tf_fmwk_lib_name)
-            tf_fmwk_dll_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' + tf_fmwk_dll_name)
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' +
+                tf_fmwk_lib_name)
+            tf_fmwk_dll_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' +
+                tf_fmwk_dll_name)
         else:
             tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
             tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' +
@@ -549,7 +553,7 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         if use_intel_tf:
             opm_lib_file = os.path.abspath(tf_prebuilt + '/libiomp5.so')
             mkl_lib_file = os.path.abspath(tf_prebuilt + '/libmklml_intel.so')
-    
+
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
