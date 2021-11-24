@@ -311,6 +311,7 @@ def main():
     # To maintain compatibility, a single ABI flag should be used for both builds
     cxx_abi = arguments.cxx11_abi_version
 
+    # TensorFlow Build
     if arguments.use_tensorflow_from_location != "":
         # Some asserts to make sure the directory structure of
         # use_tensorflow_from_location is correct. The location
@@ -323,11 +324,12 @@ def main():
             os.mkdir(tf_in_artifacts)
         cwd = os.getcwd()
 
+        # TF on windows is build separately and not using build_tf.py
+        # and there is no artifacts folder in TF source location
         if (platform.system() == 'Windows'):
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
                              "tensorflow"))
-            #"artifacts", "tensorflow"))
             os.chdir(tf_source_loc)
             copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_source_loc,
               use_intel_tf)
@@ -373,6 +375,7 @@ def main():
 
             if arguments.cxx11_abi_version == "0":
                 if (platform.system() == "Windows"):
+                    # TODO: Add windows custom TF wheel installation
                     pass
                 else:
                     command_executor([
@@ -508,6 +511,7 @@ def main():
             copy_tf_to_artifacts(tf_version, dst_dir, None, use_intel_tf)
             os.chdir(cwd)
 
+    # OpenVINO Build 
     if arguments.use_openvino_from_location != "":
         print("Using OpenVINO from " + arguments.use_openvino_from_location)
     else:
@@ -538,13 +542,7 @@ def main():
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
-    # Build protobuf from source for the Windows build
-    # if (platform.system() == 'Windows'):
-    #     print("Building protobuf from source...")
-    #     build_protobuf(artifacts_location, arguments.protobuf_branch,
-    #                    arguments.debug_build, verbosity)
-    #     print("Completed protobuf build.")
-
+       
     # Next build CMAKE options for the bridge
     atom_flags = ""
     if (target_arch == "silvermont"):

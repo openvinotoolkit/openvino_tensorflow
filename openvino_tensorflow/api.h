@@ -56,7 +56,7 @@ extern void Disable();
 extern bool IsEnabled();
 
 // TODO: why is this not const?
-extern vector<string> ListBackends();
+extern EXPORT_SYMBOL vector<string> ListBackends();
 extern EXPORT_SYMBOL bool SetBackend(const string& type);
 extern string GetBackend();
 

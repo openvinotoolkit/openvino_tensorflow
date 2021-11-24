@@ -346,3 +346,4 @@ conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
 conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo 
 cwise_ops_binary_test.BinaryOpTest.testBCast_9D
 scan_ops_test.CumsumTest.testLarge
+cwise_ops_binary_test.BinaryOpTest.testDoubleBasic

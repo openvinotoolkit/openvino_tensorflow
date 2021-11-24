@@ -495,8 +495,10 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         elif (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
             tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
     if (platform.system() == 'Windows'):
-        # tf_fmwk_lib_name = 'tensorflow.lib'
+        tf_cc_dll_name = 'tensorflow_cc.dll'
         tf_cc_lib_name = 'tensorflow_cc.dll.if.lib'
+        tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'        
+        tf_fmwk_lib_name = '_pywrap_tensorflow_internal.lib'
 
     try:
         doomed_file = os.path.join(artifacts_dir, tf_cc_lib_name)
@@ -519,7 +521,9 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
     if tf_prebuilt is None:
         if (platform.system() == 'Windows'):
             tf_cc_lib_file = "bazel-bin\\tensorflow\\" + tf_cc_lib_name
-            # tf_cc_fmwk_file = "bazel-bin\\tensorflow\\" + tf_fmwk_lib_name
+            tf_cc_dll_file = "bazel-bin\\tensorflow\\" + tf_cc_dll_name
+            tf_fmwk_lib_file = "bazel-bin\\tensorflow\\python\\" + tf_fmwk_lib_name
+            tf_fmwk_dll_file = "bazel-bin\\tensorflow\\python\\" + tf_fmwk_dll_name
         else:
             tf_cc_lib_file = "bazel-bin/tensorflow/" + tf_cc_lib_name
             tf_cc_fmwk_file = "bazel-bin/tensorflow/" + tf_fmwk_lib_name
@@ -530,7 +534,10 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         if (platform.system() == 'Windows'):
             tf_cc_lib_file = os.path.abspath(
                 tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_lib_name)
-            # tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_fmwk_lib_name)
+            tf_cc_dll_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\' + tf_cc_dll_name)
+            tf_fmwk_lib_file = os.path.abspath(
+                tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' + tf_fmwk_lib_name)
+            tf_fmwk_dll_file = os.path.abspath(tf_prebuilt + '\\bazel-bin\\tensorflow\\python\\' + tf_fmwk_dll_name)
         else:
             tf_cc_lib_file = os.path.abspath(tf_prebuilt + '/' + tf_cc_lib_name)
             tf_cc_fmwk_file = os.path.abspath(tf_prebuilt + '/' +
@@ -538,13 +545,21 @@ def copy_tf_to_artifacts(tf_version, artifacts_dir, tf_prebuilt, use_intel_tf):
         if use_intel_tf:
             opm_lib_file = os.path.abspath(tf_prebuilt + '/libiomp5.so')
             mkl_lib_file = os.path.abspath(tf_prebuilt + '/libmklml_intel.so')
+    
     print("PWD: ", os.getcwd())
     print("Copying %s to %s" % (tf_cc_lib_file, artifacts_dir))
     shutil.copy(tf_cc_lib_file, artifacts_dir)
-
-    if (platform.system() != 'Windows'):
+    if (platform.system() == "Windows"):
+        print("Copying %s to %s" % (tf_cc_dll_file, artifacts_dir))
+        shutil.copy(tf_cc_dll_file, artifacts_dir)
+        print("Copying %s to %s" % (tf_fmwk_lib_file, artifacts_dir))
+        shutil.copy(tf_fmwk_lib_file, artifacts_dir)
+        print("Copying %s to %s" % (tf_fmwk_dll_file, artifacts_dir))
+        shutil.copy(tf_fmwk_dll_file, artifacts_dir)
+    else:
         print("Copying %s to %s" % (tf_cc_fmwk_file, artifacts_dir))
         shutil.copy(tf_cc_fmwk_file, artifacts_dir)
+
     if use_intel_tf:
         print("Copying %s to %s" % (opm_lib_file, artifacts_dir))
         shutil.copy(opm_lib_file, artifacts_dir)

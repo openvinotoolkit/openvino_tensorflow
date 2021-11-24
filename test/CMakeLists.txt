@@ -21,7 +21,7 @@ install(
     PATTERN "*.pb"
     PATTERN "tests_*.txt"
 )
-
+return()
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
    message(
