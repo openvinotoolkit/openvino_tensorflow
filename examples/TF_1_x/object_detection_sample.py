@@ -176,8 +176,6 @@ if __name__ == "__main__":
         graph.get_operation_by_name("import/" + output_name)
         for output_name in output_layer
     ]
-    print(input_operation, output_operation)
-
     if not args.disable_ovtf:
         # Print list of available backends
         print('Available Backends:')
