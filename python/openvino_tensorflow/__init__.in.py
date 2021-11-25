@@ -8,13 +8,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import importlib
 import os
-import sys
 import ast
-import time
-import getpass
 from platform import system
+
+# Intel OneDNN Optimization for TensorFlow is now enabled by default
+# along with OpenVINO optimizations. This ensures that some compute-intensive
+# vanilla ops that fallback to TF runtime get a speed-up on the framework side
+
+# If OneDNN usage preference is not explicitly expressed, enable it
+if not ('TF_ENABLE_ONEDNN_OPTS' in os.environ):
+    os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
 
 import numpy as np
 import tensorflow as tf
@@ -38,7 +42,7 @@ __all__ = [
     'is_grappler_enabled', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
     'enable_dynamic_fallback', 'disable_dynamic_fallback',
-    'export_ir',
+    'export_ir', 'enable_onednn', 'disable_onednn'
 ]
 
 if system() == 'Darwin':
@@ -77,11 +81,6 @@ try:
     TF_GIT_VERSION_BUILT_WITH = str(TF_GIT_VERSION_BUILT_WITH, 'ascii')
 except TypeError:
     pass
-
-# print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
-#                                                        TF_GIT_VERSION))
-# print("Openvino_Tensorflow built with: {0} ({1})".format(TF_VERSION_NEEDED,
-#                                                    TF_GIT_VERSION_BUILT_WITH))
 
 # We need to revisit this later. We can automate that using cmake configure
 # command.
@@ -206,17 +205,6 @@ if ovtf_classic_loaded:
             ovtf_optimizer.name = opt_name
             ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
             config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-            # For reference, if we want to provide configuration support(backend parameters)
-            # in a python script using the ovtf-optimizer
-            # rewriter_options = rewriter_config_pb2.RewriterConfig()
-            # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            # rewriter_options.min_graph_nodes=-1
-            # ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            # ovtf_optimizer.name = "ovtf-optimizer"
-            # ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            # ovtf_optimizer.parameter_map["max_batch_size"].s = b'64'
-            # ovtf_optimizer.parameter_map["ice_cores"].s = b'12'
-            # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
         return config
 
     def set_disabled_ops(unsupported_ops):
@@ -242,6 +230,13 @@ if ovtf_classic_loaded:
         openvino_tensorflow_lib.freeClusterInfo()
 
         return cluster_string
+
+    def enable_onednn():
+        os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
+    
+    def disable_onednn():
+        del os.environ["TF_ENABLE_ONEDNN_OPTS"]
+
 
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
