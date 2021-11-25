@@ -208,7 +208,10 @@ if __name__ == "__main__":
     elif input_mode == 'image':
         images = [input_file]
     elif input_mode == 'directory':
-        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        if os.path.exists(input_file):
+          images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        else:
+          raise AssertionError("Path doesn't exist {0}".format(input_file))
     else:
         raise Exception(
             "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
