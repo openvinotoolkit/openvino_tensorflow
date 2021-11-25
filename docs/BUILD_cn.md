@@ -125,11 +125,11 @@ $ git submodule update --recursive
 
 1. 从 PyPi 中获取兼容的预构建 TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。
 
-        python3 build_ovtf.py --tf_version=v2.5.1 --openvino_version=2021.4.1
+        python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
 
 2. 从 Github 发布版本中获取兼容的预构建 TensorFlow 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
 
 3. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#tensorflow)）。通过源代码构建 OpenVINO™。如需频繁构建 **OpenVINO™ integration with TensorFlow**，可以使用该方法，无需每次通过源代码构建 TF。
 
@@ -137,11 +137,11 @@ $ git submodule update --recursive
 
 4. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#tensorflow)）。使用 OpenVINO™ 二进制文件。** 它仅兼容 ABI1 构建的 TensorFlow **。
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
 
 5. 通过源代码取出并构建 TensorFlow。使用 OpenVINO™ 二进制文件。
 
-        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.689/ --cxx11_abi_version=1
+        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
 
 6. 从源代码中提取并构建 TensorFlow 和 OpenVINO™
 
@@ -158,7 +158,7 @@ $ git submodule update --recursive
         python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
 
 ###  2.3. <a name='BuildVerification'></a> Build Verification
-构建完成后，会创建了一个新的 `virtualenv` 目录 `venv-tf-py3` 。`build_cmake/artifacts/` 目录中创建了一些构建包（如 `openvino_tensorflow-<VERSION>-cp36-cp36m-manylinux2014_x86_64.whl`）
+构建完成后，会创建了一个新的 `virtualenv` 目录 `venv-tf-py3` 。`build_cmake/artifacts/` 目录中创建了一些构建包（如 `openvino_tensorflow-<VERSION>-cp38-cp38-manylinux2014_x86_64.whl`）
 
 激活以下 `virtualenv`，开始使用 **OpenVINO™ integration with TensorFlow** 。
 
@@ -173,10 +173,10 @@ $ git submodule update --recursive
 
 它会生成以下输出：
 
-        TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.1'
-        OpenVINO version used for this build: b'2021.4.1'
-        TensorFlow version used for this build: v2.5.1
+        TensorFlow version:  2.7.0
+        OpenVINO integration with TensorFlow version: b'1.1.0'
+        OpenVINO version used for this build: b'2021.4.2'
+        TensorFlow version used for this build: v2.7.0
         CXX11_ABI flag used for this build: 1
 
 
@@ -209,9 +209,9 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
 
-- 为使用所需的 TensorFlow 版本（如 v2.5.1）来构建
+- 为使用所需的 TensorFlow 版本（如 v2.7.0）来构建
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.5.1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0
 
 ##  5. <a name='BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels'></a>编译 ManyLinux2014 兼容的 **OpenVINO™ integration with TensorFlow** 包
 
@@ -219,5 +219,5 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
 
 ```bash
 cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.0.1 . -f Dockerfile.manylinux2014
+docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.1.0 . -f Dockerfile.manylinux2014
 ```

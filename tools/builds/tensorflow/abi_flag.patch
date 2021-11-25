@@ -1,5 +1,5 @@
 diff --git a/tensorflow/tools/ci_build/builds/pip_new.sh b/tensorflow/tools/ci_build/builds/pip_new.sh
-index a4887adcb4e..bd0a07b8d3c 100755
+index 27208591d50..d89fa862569 100755
 --- a/tensorflow/tools/ci_build/builds/pip_new.sh
 +++ b/tensorflow/tools/ci_build/builds/pip_new.sh
 @@ -315,6 +315,8 @@ bazel build \
@@ -11,12 +11,13 @@ index a4887adcb4e..bd0a07b8d3c 100755
    || die "Error: Bazel build failed for target: '${PIP_BUILD_TARGET}'"
  
  ###########################################################################
-@@ -684,7 +686,7 @@ if [[ "$BUILD_BOTH_GPU_PACKAGES" -eq "1" ]] || [[ "$BUILD_BOTH_CPU_PACKAGES" -eq
+@@ -696,7 +698,7 @@ if [[ "$BUILD_BOTH_GPU_PACKAGES" -eq "1" ]] || [[ "$BUILD_BOTH_CPU_PACKAGES" -eq
  fi
  
  # Run tests (if any is specified).
 -run_all_tests
-+# run_all_tests
++#run_all_tests
  
  
- if [[ ${OS_TYPE} == "ubuntu" ]]; then
+ if [[ ${OS_TYPE} == "ubuntu" ]] && \
+
