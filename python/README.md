@@ -13,17 +13,17 @@
 ### Requirements
 
 - Ubuntu 18.04, 20.04 or macOS 11.2.3
-- Python* 3.6, 3.7, 3.8 or 3.9
-- TensorFlow* v2.5.1
+- Python* 3.7, 3.8 or 3.9
+- TensorFlow* v2.7.0
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.1 meaning you do not have to install OpenVINO™ separately.
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.2 meaning you do not have to install OpenVINO™ separately.
 This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
         pip3 install pip==21.0.1
-        pip3 install tensorflow==2.5.1
+        pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 
 To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
@@ -41,10 +41,10 @@ To check if **OpenVINO™ integration with TensorFlow** is properly installed, r
 
 This should produce an output like:
 
-        TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.1'
-        OpenVINO version used for this build: b'2021.4.1'
-        TensorFlow version used for this build: v2.5.1
+        TensorFlow version:  2.7.0
+        OpenVINO integration with TensorFlow version: b'1.1.0'
+        OpenVINO version used for this build: b'2021.4.2'
+        TensorFlow version used for this build: v2.7.0
         CXX11_ABI flag used for this build: 0
 
 ## Usage

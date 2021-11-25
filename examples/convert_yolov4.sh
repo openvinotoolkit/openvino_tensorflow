@@ -11,7 +11,7 @@ cd temp_build
 python3 -m venv env
 source env/bin/activate
 python3 -m pip install --upgrade pip
-python3 -m pip install tensorflow==2.5.1 opencv-python==4.2.0.32
+python3 -m pip install tensorflow==2.7.0 opencv-python==4.2.0.32
 python3 -m pip install pillow numpy matplotlib keras_applications
 git clone https://github.com/david8862/keras-YOLOv3-model-set.git tensorflow-yolo-v4
 cd tensorflow-yolo-v4

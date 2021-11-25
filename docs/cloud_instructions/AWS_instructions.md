@@ -40,7 +40,7 @@ chmod 400 the *.pem key.
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install --upgrade pip
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.5.1
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.7.0
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U openvino-tensorflow
   
@@ -50,10 +50,10 @@ chmod 400 the *.pem key.
 ```bash
 (myenv) ubuntu@ip-10-0-0-123:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)"
 
-TensorFlow version:  2.5.1
-OpenVINO integration with TensorFlow version: b'1.0.1'
-OpenVINO version used for this build: b'2021.4.1'
-TensorFlow version used for this build: v2.5.1
+TensorFlow version:  2.7.0
+OpenVINO integration with TensorFlow version: b'1.1.0'
+OpenVINO version used for this build: b'2021.4.2'
+TensorFlow version used for this build: v2.7.0
 CXX11_ABI flag used for this build: 0
 ```
 
