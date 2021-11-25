@@ -181,7 +181,7 @@ if __name__ == "__main__":
     elif input_mode == 'image':
         images = [input_file]
     elif input_mode == 'directory':
-        if not os.path.isdir(input_file):
+        if os.path.exists(input_file):
           images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
         else:
           raise AssertionError("Path doesn't exist {0}".format(input_file))
