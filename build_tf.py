@@ -6,10 +6,10 @@
 # ==============================================================================
 
 from tools.build_utils import *
-import os, shutil
+import os
 import argparse
-from  subprocess import call
-
+import  subprocess
+import shlex
 
 def main():
     # Command line parser options
@@ -79,9 +79,10 @@ def main():
             raise AssertionError("Path doesn't exist {}".format(
                 arguments.output_dir))
         os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
-        call(["git", "fetch"])
+        subprocess.Popen(shlex.split('git fetch'))
+        
         command_executor(["git", "checkout", arguments.tf_version])
-        call(["git", "pull"])
+        subprocess.Popen(shlex.split('git pull'))
         if not os.path.exists(pwd):
             raise AssertionError("Path doesn't exist {0}".format(pwd))
         os.chdir(pwd)
