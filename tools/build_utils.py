@@ -222,7 +222,7 @@ def setup_venv(venv_dir):
 
     print("PIP location")
     if (platform.system() == 'Windows'):
-        call(['where', 'pip'])
+        subprocess.Popen(shlex.split('where pip'))
     else:
         process = subprocess.Popen(shlex.split('which pip'))
         so, se = process.communicate()
