@@ -552,7 +552,6 @@ def main():
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
                 "\\", "\\\\"),
-            "-DCMAKE_CXX_FLAGS=-march=" + target_arch + atom_flags,
         ]
     else:
         openvino_tf_cmake_flags = [
@@ -627,11 +626,6 @@ def main():
         openvino_tf_cmake_flags.extend(
             ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
     if (platform.system() == 'Windows'):
-        protobuf_artifacts_dir = os.path.join(artifacts_location, "protobuf")
-        openvino_tf_cmake_flags.extend([
-            "-DPROTOBUF_ARTIFACTS_DIR=" + protobuf_artifacts_dir.replace(
-                "\\", "\\\\")
-        ])
         openvino_tf_cmake_flags.extend(
             ["-DTensorFlow_CXX_ABI=" + arguments.cxx11_abi_version])
         openvino_tf_cmake_flags.extend(
