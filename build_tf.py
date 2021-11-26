@@ -79,8 +79,8 @@ def main():
             raise AssertionError("Path doesn't exist {}".format(
                 arguments.output_dir))
         os.chdir(os.path.join(arguments.output_dir, "tensorflow"))
-        cmd = "git fetch"
-        subprocess.run(shlex.split(cmd),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+      
+        subprocess.Popen(shlex.split( "git fetch"),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         
         
         command_executor(["git", "checkout", arguments.tf_version])

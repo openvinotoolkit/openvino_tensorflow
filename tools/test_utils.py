@@ -269,8 +269,8 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
         raise AssertionError(
             "Could not find directory: {}".format('benchmarks'))
     os.chdir('benchmarks')
-    subprocess.Popen(
-        shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'))
+    args = shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff')
+    subprocess.run(args )
 
     # Check to see if we need to patch the repo for Grappler
     # benchmark_cnn.patch will only work for the CPU backend
@@ -289,8 +289,8 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
 
     # Update the script by adding `import openvino_tensorflow`
     with open('convnet_builder.py', 'a') as outfile:
-        subprocess.Popen(
-            shlex.split('echo import openvino_tensorflow'), stdout=outfile)
+        args =  shlex.split("echo import openvino_tensorflow")
+        subprocess.Popen(args , stdout=outfile)
 
     # Setup the env flags
     import psutil
