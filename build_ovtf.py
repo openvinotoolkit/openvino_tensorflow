@@ -330,6 +330,11 @@ def main():
         # TF on windows is build separately and not using build_tf.py
         # and there is no artifacts folder in TF source location
         if (platform.system() == 'Windows'):
+            tf_whl = os.path.abspath(arguments.use_tensorflow_from_location + "\\\\tensorflow\\\\tensorflow-2.7.0-cp39-cp39-win_amd64.whl")
+            command_executor([
+                "pip", "install", "--force-reinstall",
+                tf_whl.replace("\\", "\\\\")
+            ])
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
                              "tensorflow"))
@@ -470,11 +475,11 @@ def main():
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
             dst = os.path.join(dst_dir, tf_fmwk_lib_name)
+            shutil.copyfile(tf_lib_file, dst)
             # copy pyd file for windows
             if (platform.system() == 'Windows'):
                 dst = os.path.join(dst_dir, tf_fmwk_dll_name)
                 shutil.copyfile(tf_dll_file, dst)
-            shutil.copyfile(tf_lib_file, dst)
         else:
             print("Building TensorFlow from source")
             if (platform.system() == 'Windows'):

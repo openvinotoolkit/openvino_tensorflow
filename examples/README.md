@@ -6,9 +6,15 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Quick Links for examples
 
-* [Python Implementation for classification](#python-implementation-for-classification)
-* [Python implementation for object detection](#python-implementation-for-object-detection)
-* [C++ Implementation for classification](#c-implementation-for-classification)
+- [Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples](#intelsupsup-openvinosuptmsup-integration-with-tensorflow---c-and-python-examples)
+  - [Quick Links for examples](#quick-links-for-examples)
+  - [Demos showcased in the examples](#demos-showcased-in-the-examples)
+  - [Setup for the examples](#setup-for-the-examples)
+  - [Python implementation for classification](#python-implementation-for-classification)
+  - [Python implementation for object detection](#python-implementation-for-object-detection)
+  - [C++ Implementation for classification](#c-implementation-for-classification)
+    - [Linux and macOS](#linux-and-macos)
+    - [Windows](#windows)
 
 ## Demos showcased in the examples
 
@@ -189,12 +195,14 @@ Before you start building from source, you have to make sure that the [**prerequ
 
 The TensorFlow model used in this demo is not packaged in the repo because of its size. So, download the model to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow` and extract the file:
 
+### Linux and macOS
+- Download model
 ```bash
 $ curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" |
   tar -C <path-to-openvino_tensorflow-repository>/examples/data -xz
 ```
 
-Run the following commands to build openvino_tensorflow with samples:
+- Run the following commands to build openvino_tensorflow with samples:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
@@ -203,11 +211,29 @@ $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
 For detailed build instructions read [**BUILD.md**](../docs/BUILD.md#build-from-source).
 
-Now, a binary executable for classification_sample is built. Update the LD_LIBRARY_PATH and run the sample:
+- Now, a binary executable for classification_sample is built. Update the LD_LIBRARY_PATH and run the sample:
 
 ```bash
 $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/lib:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/tensorflow
 $ ./build_cmake/examples/classification_sample/infer_image
+```
+
+### Windows
+- Download following model "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz"
+uncompress it and  copy it to <path-to-openvino_tensorflow-repository>\examples\data 
+
+- [Build TensorFlow from source](../docs/BUILD.md#Windows)  
+- Run the following commands to build openvino_tensorflow with samples
+```bash
+cd <path-to-openvino_tensorflow-repository>
+python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+```
+
+- Now, a binary executable for classification_sample is built. Update the PATH and run the sample:
+
+```bash
+set PATH=%PATH%;<path-to-openvino_tensorflow-repository>\build_cmake\artifacts\lib;<path-to-openvino_tensorflow-repository>\build_cmake\artifacts\tensorflow
+build_cmake\examples\classification_sample\Release\infer_image.exe
 ```
 
 This uses the default example image that comes with this repository, and should
