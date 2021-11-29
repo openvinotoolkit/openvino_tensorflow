@@ -31,7 +31,7 @@ English | [简体中文](./INSTALL_cn.md)
 
 ##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>安装 **OpenVINO™ integration with TensorFlow** 及 PyPi TensorFlow
 
-        pip3 install pip==21.0.1
+        pip3 install -U pip
         pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 <br/> 
@@ -40,7 +40,7 @@ English | [简体中文](./INSTALL_cn.md)
 
 1. 确保 pip 和 numpy版本如下：
 
-        pip3 install pip==21.0.1
+        pip3 install -U pip
         pip3 install numpy==1.20.2
 
 2. 根据您的 Python 版本安装 `TensorFlow`，您可以使用 -D_GLIBCXX_USE_CXX11_ABI=1 构建 [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD_cn.md#tensorflow) 或按照以下说明使用适当的包：

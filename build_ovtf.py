@@ -378,19 +378,24 @@ def main():
     else:
         if not arguments.build_tf_from_source:
             print("Install TensorFlow")
-
+            # get the python version tag
+            tags = next(sys_tags())
             if arguments.cxx11_abi_version == "0":
                 if (platform.system() == "Windows"):
-                    # TODO: Add windows custom TF wheel installation
-                    pass
+                    if tags.interpreter == "cp39":
+                        command_executor([
+                            "pip", "install", "--force-reinstall",
+                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl"
+                        ])                        
+                    else:
+                        raise AssertionError("Only python39 is supported on Windows") 
+                    
                 else:
                     command_executor([
                         "pip", "install", "--force-reinstall",
                         "tensorflow==" + tf_version
                     ])
             elif arguments.cxx11_abi_version == "1":
-                tags = next(sys_tags())
-
                 if tags.interpreter == "cp37":
                     command_executor([
                         "pip", "install", "--force-reinstall",

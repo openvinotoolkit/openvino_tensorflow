@@ -30,7 +30,7 @@
 - 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
   
 
-        pip3 install pip==21.0.1
+        pip3 install -U pip
         pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 

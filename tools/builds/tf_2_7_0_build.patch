@@ -1,0 +1,110 @@
+diff --git a/tensorflow/core/graph/graph.cc b/tensorflow/core/graph/graph.cc
+index ea5c789072c..378919e0e69 100644
+--- a/tensorflow/core/graph/graph.cc
++++ b/tensorflow/core/graph/graph.cc
+@@ -38,7 +38,7 @@ limitations under the License.
+ 
+ namespace tensorflow {
+ 
+-const int Graph::kControlSlot = -1;
++TF_EXPORT const int Graph::kControlSlot = -1;
+ 
+ // Node
+ Node::NodeClass Node::GetNodeClassForOp(const std::string& ts) {
+diff --git a/tensorflow/core/graph/graph.h b/tensorflow/core/graph/graph.h
+index 1474168683b..6149adb2c14 100644
+--- a/tensorflow/core/graph/graph.h
++++ b/tensorflow/core/graph/graph.h
+@@ -531,7 +531,7 @@ class Graph {
+   // Clone the current graph into a new one.
+   std::unique_ptr<Graph> Clone();
+ 
+-  static const int kControlSlot;
++  TF_EXPORT static const int kControlSlot;
+ 
+   // The GraphDef version range of this graph (see graph.proto).
+   const VersionDef& versions() const;
+diff --git a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
+index 47d9214b1cd..09513f9b38c 100644
+--- a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
++++ b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
+@@ -276,6 +276,79 @@ def main():
+     def_fp.write("\t ?MaybeSavedModelDirectory@tensorflow@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
+     def_fp.write("\t ?_TensorShapeProto_default_instance_@tensorflow@@3VTensorShapeProtoDefaultTypeInternal@1@A\n")
+     def_fp.write("\t ?_GraphDef_default_instance_@tensorflow@@3VGraphDefDefaultTypeInternal@1@A\n")
++    
++	# OVTF core linking issues
++    def_fp.write("\t ?GetReversePostOrder@tensorflow@@YAXAEBVGraph@1@PEAV?$vector@PEAVNode@tensorflow@@V?$allocator@PEAVNode@tensorflow@@@std@@@std@@AEBV?$function@$$A6A_NPEBVNode@tensorflow@@0@Z@4@AEBV?$function@$$A6A_NAEBVEdge@tensorflow@@@Z@4@@Z\n")
++    def_fp.write("\t ?ConvertGraphDefToGraph@tensorflow@@YA?AVStatus@1@AEBUGraphConstructorOptions@1@AEBVGraphDef@1@PEAVGraph@1@@Z\n")
++    def_fp.write("\t ?ValidateGraphDef@graph@tensorflow@@YA?AVStatus@2@AEBVGraphDef@2@AEBVOpRegistryInterface@2@@Z\n")
++    def_fp.write("\t ?Register@OptimizationPassRegistry@tensorflow@@QEAAXW4Grouping@12@HV?$unique_ptr@VGraphOptimizationPass@tensorflow@@U?$default_delete@VGraphOptimizationPass@tensorflow@@@std@@@std@@@Z\n")
++    def_fp.write("\t ??1FunctionBody@tensorflow@@QEAA@XZ\n")
++    def_fp.write("\t ?FunctionDefToBodyHelper@tensorflow@@YA?AVStatus@1@AEBVFunctionDef@1@AEBVAttrSlice@1@PEBVFunctionLibraryDefinition@1@AEBV?$function@$$A6A?AVStatus@tensorflow@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAPEBVOpDef@2@@Z@std@@PEAV?$unique_ptr@UFunctionBody@tensorflow@@U?$default_delete@UFunctionBody@tensorflow@@@std@@@7@@Z\n")
++    def_fp.write("\t ?CopyGraph@tensorflow@@YAXAEBVGraph@1@PEAV21@@Z\n")
++    def_fp.write("\t ?_TensorProto_default_instance_@tensorflow@@3VTensorProtoDefaultTypeInternal@1@A\n")
++    def_fp.write("\t ?Global@OptimizationPassRegistry@tensorflow@@SAPEAV12@XZ\n")
++    #def_fp.write("\t ?kControlSlot@Graph@tensorflow@@2HB\n")
++	
++	# for C++ example
++    def_fp.write("\t ??0Operation@tensorflow@@QEAA@PEAVNode@1@@Z\n")
++    def_fp.write("\t ??0Initializer@Input@tensorflow@@QEAA@AEBV?$initializer_list@UInitializer@Input@tensorflow@@@std@@@Z\n")	
++    def_fp.write("\t ??1Scope@tensorflow@@QEAA@XZ\n")
++    def_fp.write("\t ?NewRootScope@Scope@tensorflow@@SA?AV12@XZ\n")
++    def_fp.write("\t ??0Placeholder@ops@tensorflow@@QEAA@AEBVScope@2@W4DataType@2@@Z\n")
++    def_fp.write("\t ?ToGraphDef@Scope@tensorflow@@QEBA?AVStatus@2@PEAVGraphDef@2@@Z\n")
++    def_fp.write("\t ?WithOpNameImpl@Scope@tensorflow@@AEBA?AV12@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
++    def_fp.write("\t ?Const@ops@tensorflow@@YA?AVOutput@2@AEBVScope@2@AEBUInitializer@Input@2@@Z\n")
++    def_fp.write("\t ??0DecodeBmp@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
++    def_fp.write("\t ??0DecodeGif@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
++    def_fp.write("\t ??0DecodeJpeg@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@AEBUAttrs@012@@Z\n")
++    def_fp.write("\t ??0DecodePng@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@AEBUAttrs@012@@Z\n")
++    def_fp.write("\t ??0ResizeBilinear@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
++    def_fp.write("\t ??0ExpandDims@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
++    def_fp.write("\t ??0Squeeze@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
++    def_fp.write("\t ??0Cast@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@W4DataType@2@@Z\n")
++    def_fp.write("\t ??0Div@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
++    def_fp.write("\t ??0Subtract@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
++    def_fp.write("\t ??0TopK@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")	
++	
++	# for protobuf
++    def_fp.write("\t ?empty@?$RepeatedField@_N@protobuf@google@@QEBA_NXZ\n")
++    def_fp.write("\t ?size@?$RepeatedField@_N@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedField@_N@protobuf@google@@QEBAAEB_NH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedField@_N@protobuf@google@@QEAAPEA_NXZ\n")
++    def_fp.write("\t ?end@?$RepeatedField@_N@protobuf@google@@QEAAPEA_NXZ\n")
++    def_fp.write("\t ?empty@?$RepeatedField@H@protobuf@google@@QEBA_NXZ\n")
++    def_fp.write("\t ?size@?$RepeatedField@H@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedField@H@protobuf@google@@QEBAAEBHH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedField@H@protobuf@google@@QEAAPEAHXZ\n")
++    def_fp.write("\t ?end@?$RepeatedField@H@protobuf@google@@QEAAPEAHXZ\n")
++    def_fp.write("\t ?empty@?$RepeatedField@_J@protobuf@google@@QEBA_NXZ\n")
++    def_fp.write("\t ?size@?$RepeatedField@_J@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedField@_J@protobuf@google@@QEBAAEB_JH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedField@_J@protobuf@google@@QEAAPEA_JXZ\n")
++    def_fp.write("\t ?end@?$RepeatedField@_J@protobuf@google@@QEAAPEA_JXZ\n")
++    def_fp.write("\t ?empty@?$RepeatedField@M@protobuf@google@@QEBA_NXZ\n")
++    def_fp.write("\t ?size@?$RepeatedField@M@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedField@M@protobuf@google@@QEBAAEBMH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedField@M@protobuf@google@@QEAAPEAMXZ\n")
++    def_fp.write("\t ?end@?$RepeatedField@M@protobuf@google@@QEAAPEAMXZ\n")
++    def_fp.write("\t ?empty@?$RepeatedField@N@protobuf@google@@QEBA_NXZ\n")
++    def_fp.write("\t ?size@?$RepeatedField@N@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedField@N@protobuf@google@@QEBAAEBNH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedField@N@protobuf@google@@QEAAPEANXZ\n")
++    def_fp.write("\t ?end@?$RepeatedField@N@protobuf@google@@QEAAPEANXZ\n")
++    def_fp.write("\t ?NameOfEnum@internal@protobuf@google@@YAAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBVEnumDescriptor@23@H@Z\n")
++    def_fp.write("\t ?DebugString@Message@protobuf@google@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ\n")
++    def_fp.write("\t ?Reserve@RepeatedPtrFieldBase@internal@protobuf@google@@IEAAXH@Z\n")
++    def_fp.write("\t ?size@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Get@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBAAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z\n")
++    def_fp.write("\t ?Add@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAPEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ\n")
++    def_fp.write("\t ?Add@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAX$$QEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
++    def_fp.write("\t ?Clear@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAXXZ\n")
++    def_fp.write("\t ?Reserve@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAXH@Z\n")
++    def_fp.write("\t ?begin@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
++    def_fp.write("\t ?end@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
++    def_fp.write("\t ?PrintToString@TextFormat@protobuf@google@@SA_NAEBVMessage@23@PEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
++    def_fp.write("\t ?PrintDebugString@Message@protobuf@google@@QEBAXXZ\n")	
+ 
+     # Each symbols returned by undname matches the same position in candidates.
+     # We compare on undname but use the decorated name from candidates.
