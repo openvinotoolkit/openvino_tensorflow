@@ -330,7 +330,9 @@ def main():
         # TF on windows is build separately and not using build_tf.py
         # and there is no artifacts folder in TF source location
         if (platform.system() == 'Windows'):
-            tf_whl = os.path.abspath(arguments.use_tensorflow_from_location + "\\\\tensorflow\\\\tensorflow-2.7.0-cp39-cp39-win_amd64.whl")
+            tf_whl = os.path.abspath(
+                arguments.use_tensorflow_from_location +
+                "\\\\tensorflow\\\\tensorflow-2.7.0-cp39-cp39-win_amd64.whl")
             command_executor([
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
@@ -391,10 +393,11 @@ def main():
                         command_executor([
                             "pip", "install", "--force-reinstall",
                             "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl"
-                        ])                        
+                        ])
                     else:
-                        raise AssertionError("Only python39 is supported on Windows") 
-                    
+                        raise AssertionError(
+                            "Only python39 is supported on Windows")
+
                 else:
                     command_executor([
                         "pip", "install", "--force-reinstall",
