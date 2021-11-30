@@ -172,7 +172,7 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
 
         python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752"
 
-2. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#Windows). Uses OpenVINO™ binary from specified location.
+2. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#TFWindows). Uses OpenVINO™ binary from specified location.
 
         python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 
@@ -239,7 +239,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0
 
-### <a name='Windows'></a> For Windows
+### <a name='TFWindows'></a> For Windows
 - Complete the setup steps: https://www.tensorflow.org/install/source_windows#setup_for_windows
 - Download TensorFlow source code and apply patch
   

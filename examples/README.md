@@ -6,13 +6,9 @@ These examples demonstrate how to use **Intel<sup>®</sup> </sup> OpenVINO<sup>T
 
 ## Quick Links for examples
 
-- [Intel<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ and Python Examples](#intelsupsup-openvinosuptmsup-integration-with-tensorflow---c-and-python-examples)
-  - [Quick Links for examples](#quick-links-for-examples)
-  - [Demos showcased in the examples](#demos-showcased-in-the-examples)
-  - [Setup for the examples](#setup-for-the-examples)
   - [Python implementation for classification](#python-implementation-for-classification)
   - [Python implementation for object detection](#python-implementation-for-object-detection)
-  - [C++ Implementation for classification](#c-implementation-for-classification)
+  - [C++ implementation for classification](#c-implementation-for-classification)
     - [Linux and macOS](#linux-and-macos)
     - [Windows](#windows)
 
@@ -187,7 +183,7 @@ For using camera as input use ```--input=0```. Here '0' refers to the camera pre
 
 **Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input, use the application display window for the results.
 
-## C++ Implementation for classification
+## C++ implementation for classification
 
 For running C++ examples, we need to build TensorFlow framework from source since examples have a dependency on the TensorFlow libraries.
 
@@ -222,7 +218,7 @@ $ ./build_cmake/examples/classification_sample/infer_image
 - Download following model "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz"
 uncompress it and  copy it to <path-to-openvino_tensorflow-repository>\examples\data 
 
-- [Build TensorFlow from source](../docs/BUILD.md#Windows)  
+- [Build TensorFlow from source](../docs/BUILD.md#TFWindows)  
 - Run the following commands to build openvino_tensorflow with samples
 ```bash
 cd <path-to-openvino_tensorflow-repository>
