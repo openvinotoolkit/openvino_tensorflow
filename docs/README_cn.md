@@ -1,8 +1,6 @@
 [English](./README.md) | 简体中文
 # **OpenVINO™ integration with TensorFlow** 文档
 
-[简介](./README_cn.md)
-
 [构建指令](./BUILD_cn.md)
 
 [安装指令](./INSTALL_cn.md)

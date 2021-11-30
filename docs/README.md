@@ -2,8 +2,6 @@
 
 # **OpenVINO™ integration with TensorFlow** Documentation
 
-[Introduction](./README.md)
-
 [Build Instructions](./BUILD.md)
 
 [Install Instructions](./INSTALL.md)

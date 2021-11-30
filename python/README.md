@@ -73,6 +73,9 @@ For more API calls and environment variables, see [USAGE.md](https://github.com/
 
 To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) repository.
 
+## Try it on Intel<sup>®</sup> DevCloud
+Sample tutorials are also hosted on [Intel<sup>®</sup> DevCloud](https://software.intel.com/content/www/us/en/develop/tools/devcloud/edge/build/ovtfoverview.html). The demo applications are implemented using Jupyter Notebooks. You can interactively execute them on Intel<sup>®</sup> DevCloud nodes, compare the results of **OpenVINO™ integration with TensorFlow**, native TensorFlow and OpenVINO™. 
+
 ## License
 **OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/LICENSE).
 By contributing to the project, you agree to the license and copyright terms therein
