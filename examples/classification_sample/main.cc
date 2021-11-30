@@ -43,6 +43,8 @@ limitations under the License.
 // Note that, for GIF inputs, to reuse existing code, only single-frame ones
 // are supported.
 
+// Added this macro as getting compilation error with LOG(ERROR) usage
+#define NOGDI
 #include <thread>
 
 #include "tensorflow/cc/client/client_session.h"
