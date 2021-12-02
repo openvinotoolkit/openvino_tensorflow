@@ -41,11 +41,11 @@ The **OpenVINO™ integration with TensorFlow** package comes with pre-built lib
         pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 
+For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
+
 To use Intel<sup>®</sup> integrated GPUs for inference, make sure to install the [Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 
 To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, install [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
-
-For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
 For more details on installation please refer to [INSTALL.md](docs/INSTALL.md), and for build from source options please refer to [BUILD.md](docs/BUILD.md)
 
