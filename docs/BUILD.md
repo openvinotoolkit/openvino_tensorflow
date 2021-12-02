@@ -130,6 +130,7 @@ Notes:
         Microsoft Build Tools 2019
 
 3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0 and =<3.20.1,
+4. [Download and Install OpenVINO™ Toolkit 2021.4.2 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
 
@@ -152,15 +153,7 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
 4. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Uses OpenVINO™ binary from specified location. **This is only compatible with ABI1 built TensorFlow**.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/  --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
-
-5. Pulls and builds TensorFlow from Source. Uses OpenVINO™ binary from specified location.
-
-        python3 build_ovtf.py --build_tf_from_source --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
-
-6. Pulls and builds TensorFlow and OpenVINO™ from source
-
-        python3 build_ovtf.py --build_tf_from_source
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
 
 
 Select the `help` option of `build_ovtf.py` script to learn more about various build options.
@@ -227,17 +220,13 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
         python3 build_tf.py -h
 
-- Builds TensorFlow with CXX11_ABI=0.
+- Builds TensorFlow with CXX11_ABI=0 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=0
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=0 
 
-- Builds TensorFlow with CXX11_ABI=1
+- Builds TensorFlow with CXX11_ABI=1 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --cxx11_abi_version=1
-
-- To build with a desired TensorFlow version, for example: v2.7.0
-
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=1
 
 ### <a name='TFWindows'></a> For Windows
 - Complete the setup steps: https://www.tensorflow.org/install/source_windows#setup_for_windows
