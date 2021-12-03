@@ -95,20 +95,20 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [centernet_resnet50v2_512x512](https://tfhub.dev/tensorflow/centernet/resnet50v2_512x512/1)| CPU, iGPU, MYRIAD |
 | [cord-19_swivel-128d](https://tfhub.dev/tensorflow/cord-19/swivel-128d/3?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [cropnet​/classifier​/cassava_disease_V1](https://tfhub.dev/google/cropnet/classifier/cassava_disease_V1/2)| CPU, iGPU, MYRIAD |
-| [efficientdet​/d0](https://tfhub.dev/tensorflow/efficientdet/d0/1)| CPU, iGPU, MYRIAD |
-| [efficientdet​/d4](https://tfhub.dev/tensorflow/efficientdet/d4/1)| CPU, iGPU, MYRIAD |
+| [efficientdet​/d0](https://tfhub.dev/tensorflow/efficientdet/d0/1)| MYRIAD |
+| [efficientdet​/d4](https://tfhub.dev/tensorflow/efficientdet/d4/1)| MYRIAD |
 | [efficientdet​/d7](https://tfhub.dev/tensorflow/efficientdet/d7/1)|CPU, iGPU, MYRIAD |
-| [efficientdet​/lite0​/detection](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)| CPU, iGPU, MYRIAD |
+| [efficientdet​/lite0​/detection](https://tfhub.dev/tensorflow/efficientdet/lite0/detection/1)| CPU, MYRIAD |
 | [efficientdet​/lite0​/feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite0/feature-vector/1)| CPU, iGPU, MYRIAD |
-| [efficientdet_d1 ](https://tfhub.dev/tensorflow/efficientdet/d1/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
-| [efficientdet_d2](https://tfhub.dev/tensorflow/efficientdet/d2/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
+| [efficientdet_d1 ](https://tfhub.dev/tensorflow/efficientdet/d1/1?tf-hub-format=compressed)  | iGPU, MYRIAD |
+| [efficientdet_d2](https://tfhub.dev/tensorflow/efficientdet/d2/1?tf-hub-format=compressed)  | iGPU, MYRIAD |
 | [efficientdet_d6](https://tfhub.dev/tensorflow/efficientdet/d6/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
-| [efficientdet_lite1_detection](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
+| [efficientdet_lite1_detection](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1?tf-hub-format=compressed)  | CPU, MYRIAD |
 | [efficientdet_lite1_feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite1/feature-vector/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite2_feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite2/feature-vector/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite3_detection](https://tfhub.dev/tensorflow/efficientdet/lite3/detection/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite3x_detection](https://tfhub.dev/tensorflow/efficientdet/lite3x/detection/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
-| [efficientdet_lite4_detection](https://tfhub.dev/tensorflow/efficientdet/lite4/detection/2?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
+| [efficientdet_lite4_detection](https://tfhub.dev/tensorflow/efficientdet/lite4/detection/2?tf-hub-format=compressed)  | CPU, MYRIAD |
 | [efficientdet_lite4_feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite4/feature-vector/2?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientnet​/b0​/classification](https://tfhub.dev/google/efficientnet/b0/classification/1)| CPU, iGPU, MYRIAD |
 | [efficientnet​/b0​/feature-vector](https://tfhub.dev/google/efficientnet/b0/feature-vector/1)| CPU, iGPU, MYRIAD |
