@@ -49,21 +49,21 @@
 |tensorflow-abi1| openvino-tensorflow-abi1|Dynamically links to OpenVINO™ binary release|CPU,iGPU,MYRIAD,VAD-M|**OpenVINO™ integration with TensorFlow** libraries are dynamically linked to **OpenVINO™** binaries|
 <br/>  
 
-##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow (Linux, macOS)
+##  1.1. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside PyPi TensorFlow (Works on Linux, macOS)
 
         pip3 install -U pip
         pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 <br/> 
 
-##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside TensorFlow released on Github (Windows)
+##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside TensorFlow released on Github (Works on Windows)
 
-        pip3 install -U pip
-        pip3 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl
-        pip3 install -U openvino-tensorflow
+        pip3.9 install -U pip
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl
+        pip3.9 install -U openvino-tensorflow
 <br/> 
 
-##  1.3. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit (Linux)
+##  1.3. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit (Works on Linux)
 
 1. Ensure the following versions are being used for pip and numpy:
 
