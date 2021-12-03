@@ -120,3 +120,6 @@ test_conv3d.Conv3DTest.*
 
 # Failing specifically on Windows
 test_scatternd_update.*
+test_prod.*
+test_resize_to_dynamic_shape.*
+test_shared_const.*

@@ -17,7 +17,7 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
     # Check pre-requisites
     if use_prebuilt_tensorflow and not disable_cpp_api:
         # Check if the gcc version is at least 5.3.0
-        if (platform.system() != 'Darwin' or platform.system() != 'Windows'):
+        if (platform.system() != 'Darwin' and platform.system() != 'Windows'):
             gcc_ver_list = get_gcc_version()
             gcc_ver = float(".".join(gcc_ver_list[:2]))
             gcc_desired_version = 5.3
