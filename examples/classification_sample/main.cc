@@ -177,7 +177,8 @@ int main(int argc, char** argv) {
 
   // Enable differnt backends(CPU/GPU/MYRIAD/HDDL) to run the network.
   if (!tensorflow::openvino_tensorflow::api::SetBackend(backend_name)) {
-    std::cout << "Error: Device is not available " << backend_name << "\n" << usage;
+    std::cout << "Error: Device is not available " << backend_name << "\n"
+              << usage;
     return -1;
   }
 
