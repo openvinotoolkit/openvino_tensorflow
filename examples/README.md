@@ -28,6 +28,8 @@ $ git submodule init
 $ git submodule update --recursive
 ```
 
+<br/> 
+
 ## Python implementation for classification
 
 For this example, we assume that you've already:
@@ -72,30 +74,24 @@ e.g.
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
 ```
-If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
+If you add a new image or video (e.g, my_image.png or people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/my_image.png
+
+or
+
+$ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
 ```
 
+For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ python3 examples/classification_sample.py --help
 ```
 
-Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path e.g.
-
-```bash
-$ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-video-file>
-```
-If you add the new video (e.g, examples/data/people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
-
-```bash
-$ python3 examples/classification_sample.py --input=examples/data/people-detection.mp4
-```
-For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
-
+<br/> 
 
 ## Python implementation for object detection
 
@@ -182,6 +178,8 @@ $ python3 examples/object_detection_sample.py --input=examples/data/people-detec
 For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 **Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input, use the application display window for the results.
+
+<br/> 
 
 ## C++ implementation for classification
 

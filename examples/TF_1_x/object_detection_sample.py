@@ -94,7 +94,8 @@ if __name__ == "__main__":
         "--graph", help="Optional. Path to graph/model to be executed.")
     parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--output_layer", help="Optional. Name of output layer.")
+        "--output_layer",
+        help="Optional. Name of output layer(s). Comma Separated.")
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
@@ -141,11 +142,9 @@ if __name__ == "__main__":
         if not args.output_layer:
             raise Exception("Specify output layer for this network")
         else:
-            output_layer = args.output_layer
+            output_layer = [x for x in args.output_layer.split(",")]
         if args.labels:
             label_file = args.labels
-        else:
-            label_file = None
     if args.input:
         input_file = args.input
     if args.input_height:
