@@ -137,17 +137,19 @@ Notes:
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 
 ###  2.1. <a name='BuildInstructionsLinuxAndmacOS'></a>Build Instructions for **Linux and macOS**
-Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. TensorFlow C++ libraries built from source is required to use the C++ APIs.
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs.
 
-1. Pulls compatible prebuilt TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. 
+To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with TensorFlow C++ libraries (using the option --use_tensorflow_from_location). For VAD-M support, build with OpenVINO™ binary (using the option --use_openvino_from_location).
+
+1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. 
 
         python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
 
-2. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
+2. Pulls compatible TensorFlow ABI1 package from Github release assets. Uses OpenVINO™ binary from specified location.
 
         python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
 
-3. Uses pre-built TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TensorFlow from source everytime.
+3. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TensorFlow from source everytime.
 
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
 

@@ -30,16 +30,27 @@ def main():
 
     load_venv(venv_dir)
 
+    # disable dynamic fallback for OVTF and TF tests at once
+    openvino_tf_dynamic_fallback = os.environ.pop(
+        'OPENVINO_TF_DYNAMIC_FALLBACK', None)
+
+    os.environ['OPENVINO_TF_DYNAMIC_FALLBACK'] = '0'
+
     # First run the C++ gtests
     run_ovtf_cpp_gtests(artifacts_dir, './', None)
 
     # Next run Python unit tests
     run_ovtf_pytests_from_artifacts(artifacts_dir)
 
-    # Finally run Resnet50
-    #run_resnet50_infer_from_artifacts(artifacts_dir, 1, 1)
-    os.chdir(root_pwd)
+    # Run Python tests borrowed from TF
+    run_tensorflow_pytests_from_artifacts(
+            './', artifacts_dir + '/tensorflow/python', False)
 
+    os.environ.pop('OPENVINO_TF_DYNAMIC_FALLBACK', None)
+
+    if openvino_tf_dynamic_fallback is not None:
+        os.environ[
+            'OPENVINO_TF_DYNAMIC_FALLBACK'] = openvino_tf_dynamic_fallback
 
 if __name__ == '__main__':
     main()

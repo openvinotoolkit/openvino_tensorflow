@@ -94,7 +94,8 @@ if __name__ == "__main__":
         "--graph", help="Optional. Path to graph/model to be executed.")
     parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--output_layer", help="Optional. Name of output layer(s). Comma Separated.")
+        "--output_layer",
+        help="Optional. Name of output layer(s). Comma Separated.")
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
