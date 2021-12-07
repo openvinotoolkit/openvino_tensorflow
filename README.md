@@ -27,7 +27,7 @@ This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en
 - Python* 3.7, 3.8 or 3.9
 - TensorFlow* v2.7.0
 
-<sup>1</sup>Windows release is in preview mode and supports only Python3.9 
+<sup>1</sup>Windows is released in Beta preview mode and supports only Python3.9 
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
