@@ -16,10 +16,10 @@ python3 -m pip install pillow numpy matplotlib keras_applications
 git clone https://github.com/david8862/keras-YOLOv3-model-set.git tensorflow-yolo-v4
 cd tensorflow-yolo-v4
 git checkout d38c3d8
-patch tools/model_converter/keras_to_tensorflow.py ../../keras_to_tensorflow.patch
+git apply ../../keras_to_tensorflow.patch
 wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
 wget -O weights/yolov4.weights https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights
-python tools/model_converter/convert.py --yolo4_reorder cfg/yolov4.cfg weights/yolov4.weights weights/yolov4.h5
+python3 tools/model_converter/convert.py --yolo4_reorder cfg/yolov4.cfg weights/yolov4.weights weights/yolov4.h5
 python3 tools/model_converter/keras_to_tensorflow.py --input_model weights/yolov4.h5 --output_model=weights/${model_name} --saved_model
 cp -r weights/${model_name} ../../data/${model_name}
 cp coco.names ../../data/
