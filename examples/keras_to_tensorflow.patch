@@ -5,7 +5,7 @@ index 07865a8..b3817af 100644
 @@ -23,6 +23,10 @@ from tensorflow.keras.models import model_from_json, model_from_yaml, load_model
  sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
  from common.utils import get_custom_objects
-
+ 
 +# tf.enable_eager_execution()
 +tf.compat.v1.disable_eager_execution()
 +from tensorflow.python.keras.backend import get_session
@@ -19,7 +19,7 @@ index 07865a8..b3817af 100644
                       'loaded in TensorFlow to continue training.')
 +flags.DEFINE_boolean('saved_model', False,
 +                    'If set, model is saved in saved model format')
-
+ 
  flags.mark_flag_as_required('input_model')
  flags.mark_flag_as_required('output_model')
 @@ -150,7 +156,7 @@ def main(args):
