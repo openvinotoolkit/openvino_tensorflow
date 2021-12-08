@@ -114,11 +114,19 @@ $ pip3 install -r requirements.txt
 
 The TensorFlow Yolo v4 darknet model used in this demo is not packaged in the repository because of its size. So, follow the instructions below to convert the model from DarkNet to TensorFlow and download the labels and weights to the `<path-to-openvino_tensorflow-repository>/examples/data` directory in your `cloned repo of openvino_tensorflow`:
 
+**For Linux and macOS**
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>/examples
 $ chmod +x convert_yolov4.sh
 $ ./convert_yolov4.sh
+```
+
+**For Windows**
+
+```bash
+$ cd <path-to-openvino_tensorflow-repository>\examples
+$ convert_yolov4.bat
 ```
 
 Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:

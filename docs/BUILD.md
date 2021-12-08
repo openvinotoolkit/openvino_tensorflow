@@ -141,7 +141,7 @@ Use one of the following build options based on the requirements. **OpenVINO™ 
 
 To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with TensorFlow C++ libraries (using the option --use_tensorflow_from_location). For VAD-M support, build with OpenVINO™ binary (using the option --use_openvino_from_location).
 
-1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. 
+1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. This is the recommended build option for most of the use cases.
 
         python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
 
