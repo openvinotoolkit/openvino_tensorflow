@@ -17,7 +17,7 @@
 
 #### Operator Capability Manager
 
-Operator Capability Manager (OCM) 对 TensorFlow 算子实施几项检查，以确定 OpenVINO™ 后端（英特尔<sup>®</sup> 硬件）是否支持该算子。检查包括支持的算子类型、数据类型、属性值、输入输出节点和其他条件。这些检查的实施基于数千项算子测试和模型测试的结果。随着我们将更多算子测试和模型测试添加到测试基础设施中，OCM 将持续演进和发展。这是一个重要模块，它决定模型中的哪些层前往 OpenVINO™ 后端，哪些层返回 TensorFlow 原生运行时。OCM 将 TensorFlow 图作为输入，返回一个可标记进行集群化的算子列表，以便这些算子在 OpenVINO™ 后端中运行。
+Operator Capability Manager (OCM) 对 TensorFlow 算子实施几项检查，以确定 OpenVINO™ 后端（英特尔<sup>®</sup> 硬件）是否支持该算子。检查包括支持的算子类型、数据类型、属性值、输入输出节点和其他条件。这些检查的实施基于数千项算子测试和模型测试的结果。随着我们将更多算子测试和模型测试添加到测试基础设施中，OCM 将持续演进和发展。这是一个重要模块，它决定模型中的哪些层前往 OpenVINO™后端，哪些层返回TensorFlow原生运行时。OCM将TensorFlow图作为输入，返回一个可标记进行集群化的算子列表，以便这些算子在 OpenVINO™ 后端中运行。
 
 #### Graph Partitioner
 

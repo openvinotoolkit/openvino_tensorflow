@@ -5,6 +5,8 @@
 
 [安装指令](./INSTALL_cn.md)
 
+[示例](../examples/)
+
 [高级架构](./ARCHITECTURE_cn.md)
 
 [用法和 API](./USAGE_cn.md)
