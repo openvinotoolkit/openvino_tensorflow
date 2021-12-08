@@ -41,7 +41,7 @@
         pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 
-关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
+关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
 如果您想使用Intel<sup>®</sup> 集成显卡进行推理，请先安装[Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 

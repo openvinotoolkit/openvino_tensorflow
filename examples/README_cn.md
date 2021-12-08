@@ -115,11 +115,19 @@ $ pip3 install -r requirements.txt
 
 本演示中使用的 TensorFlow Yolo v4 darknet模型由于其大小而未打包在存储库中。 因此请按照以下说明将 DarkNet 模型转换为 TensorFlow模型，并将标签和权重下载到“openvino_tensorflow 的克隆存储库”中的“<path-to-openvino_tensorflow-repository>/examples/data”目录：
 
+**For Linux and macOS**
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>/examples
 $ chmod +x convert_yolov4.sh
 $ ./convert_yolov4.sh
+```
+
+**For Windows**
+
+```bash
+cd <path-to-openvino_tensorflow-repository>\examples
+convert_yolov4.bat
 ```
 
 完成后，`<path-to-openvino_tensorflow-repository>/examples/data`文件夹将包含运行对象检测示例所需的以下文件：
