@@ -10,6 +10,7 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -444,7 +445,12 @@ static Status ValuesFromConstNode(const NodeDef& node,
                                        " on an empty tensor");
       }
       if (val_size == 0) {
+#if (TF_MAJOR_VERSION > 1 && TF_MINOR_VERSION >= 7)
+        val_i = 0;
+#else
         return errors::InvalidArgument("Empty values vector");
+#endif
+
       } else if (i < val_size) {
         (*values)[i] = val_i;
         val_lastsaved = val_i;
@@ -457,6 +463,19 @@ static Status ValuesFromConstNode(const NodeDef& node,
     port::CopyToArray(tensor.tensor_content(),
                       reinterpret_cast<char*>(values->data()));
   }
+
+  return Status::OK();
+}
+
+template <typename T>
+static Status MakeConstOpForParam(const Tensor& tensor, string prov_tag,
+                                  ng::element::Type ng_et, ng::Shape ng_shape,
+                                  ng::Output<ng::Node>& ng_node) {
+  vector<T> const_values;
+
+  TensorDataToVector(tensor, &const_values);
+  ng_node =
+      ConstructNgNode<opset::Constant>(prov_tag, ng_et, ng_shape, const_values);
 
   return Status::OK();
 }
@@ -696,6 +715,7 @@ static Status TranslateArgMinOp(
   return (TranslateArgMinMax(op, static_input_map, ng_op_map, "min"));
 }
 
+template <unsigned int N>
 static Status TranslateAvgPoolOp(const Node* op,
                                  const std::vector<const Tensor*>&,
                                  Builder::OpMap& ng_op_map) {
@@ -711,43 +731,41 @@ static Status TranslateAvgPoolOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
 
-  if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
+  if ((tf_data_format != "NHWC") && (tf_data_format != "NCHW") &&
+      (tf_data_format != "NDHWC")) {
     return errors::InvalidArgument(
-        "AvgPool data format is neither NHWC nor NCHW");
+        "AvgPool data format is none of NHWC, NCHW, or NDHWC");
   }
 
-  bool is_nhwc = (tf_data_format == "NHWC");
+  bool is_nhwc = (tf_data_format == "NHWC") || (tf_data_format == "NDHWC");
 
   OVTF_VLOG(3) << ng::join(tf_strides);
   OVTF_VLOG(3) << ng::join(tf_ksize);
   OVTF_VLOG(3) << tf_padding_type;
   OVTF_VLOG(3) << tf_data_format;
 
-  ng::Strides ng_strides(2);
-  ng::Shape ng_image_shape(2);
-  ng::Shape ng_kernel_shape(2);
+  ng::Strides ng_strides(N);
+  ng::Shape ng_kernel_shape(N);
+
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
   NHWCtoHW(is_nhwc, tf_ksize, ng_kernel_shape);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
   OVTF_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
-  OVTF_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
   OVTF_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
 
-  ng::CoordinateDiff padding_below;
-  ng::CoordinateDiff padding_above;
-  ng::Shape ng_dilations{1, 1};
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, padding_below, padding_above);
+  ng::Shape ng_padding_below, ng_padding_above;
 
-  // TODO: remove this once nGraph supports negative padding
-  // (CoordinateDiff) for AvgPool
-  ng::Shape ng_padding_below(padding_below.begin(), padding_below.end());
-  ng::Shape ng_padding_above(padding_above.begin(), padding_above.end());
+  ng::op::PadType auto_pad_type;
+  if (tf_padding_type == "SAME")
+    auto_pad_type = ng::op::PadType::SAME_UPPER;
+  else if (tf_padding_type == "VALID")
+    auto_pad_type = ng::op::PadType::VALID;
 
+  // since we are using auto_pad, all the explicit padding arguments will be
+  // ignored
   ng::Output<ng::Node> ng_avgpool = ConstructNgNode<opset::AvgPool>(
       op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
-      ng_kernel_shape, true, ng::op::RoundingType::FLOOR);
+      ng_kernel_shape, true, ng::op::RoundingType::FLOOR, auto_pad_type);
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_avgpool);
   OVTF_VLOG(3) << "avgpool outshape: {" << ng::join(ng_avgpool.get_shape())
@@ -1223,6 +1241,102 @@ static Status TranslateConv3DOp(const Node* op,
 
   NCHWtoNHWC(op->name(), is_ndhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
+  return Status::OK();
+}
+
+static Status TranslateConv3DBackpropInputV2Op(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_filter, ng_out_backprop, ng_unused;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_unused, ng_filter, ng_out_backprop));
+
+  // TODO: refactor me to be less redundant with other convolution ops
+  std::vector<int32> tf_strides;
+  std::vector<int32> tf_dilations;
+  std::string tf_padding_type;
+  std::string tf_data_format;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "dilations", &tf_dilations));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "padding", &tf_padding_type));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "data_format", &tf_data_format));
+
+  if (tf_data_format != "NDHWC" && tf_data_format != "NCDHW") {
+    return errors::InvalidArgument(
+        "Conv2DBackpropInput data format is neither NDHWC nor NCDHW: %s",
+        tf_data_format);
+  }
+
+  std::vector<int64> tf_input_sizes;
+  TF_RETURN_IF_ERROR(
+      GetStaticInputVector(op, 0, static_input_map, &tf_input_sizes));
+
+  if (std::any_of(tf_input_sizes.begin(), tf_input_sizes.end(),
+                  [](int32 size) { return size <= 0; })) {
+    return errors::InvalidArgument(
+        "Conv2DBackpropInput input sizes must be positive integers");
+  }
+
+  bool is_ndhwc = (tf_data_format == "NDHWC");
+
+  OVTF_VLOG(3) << ng::join(tf_strides);
+  OVTF_VLOG(3) << ng::join(tf_dilations);
+  OVTF_VLOG(3) << tf_padding_type;
+  OVTF_VLOG(3) << tf_data_format;
+
+  ng::Strides ng_strides(3);
+  ng::Strides ng_dilations(3);
+  ng::Shape ng_image_shape(3);
+  ng::Shape ng_kernel_shape(3);
+  ng::Shape ng_batch_shape(5);
+
+  NHWCtoHW(is_ndhwc, tf_strides, ng_strides);
+  NHWCtoHW(is_ndhwc, tf_dilations, ng_dilations);
+  NHWCtoHW(is_ndhwc, tf_input_sizes, ng_image_shape);
+  NHWCtoNCHW(op->name(), is_ndhwc, ng_out_backprop);
+  if (is_ndhwc) {
+    ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
+                      static_cast<unsigned long>(tf_input_sizes[4]),
+                      static_cast<unsigned long>(tf_input_sizes[1]),
+                      static_cast<unsigned long>(tf_input_sizes[2]),
+                      static_cast<unsigned long>(tf_input_sizes[3])};
+  } else {
+    ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
+                      static_cast<unsigned long>(tf_input_sizes[1]),
+                      static_cast<unsigned long>(tf_input_sizes[2]),
+                      static_cast<unsigned long>(tf_input_sizes[3]),
+                      static_cast<unsigned long>(tf_input_sizes[4])};
+  }
+
+  OVTF_VLOG(3) << "ng_strides: " << ng::join(ng_strides);
+  OVTF_VLOG(3) << "ng_dilations: " << ng::join(ng_dilations);
+  OVTF_VLOG(3) << "ng_image_shape: " << ng::join(ng_image_shape);
+
+  auto& ng_filter_shape = ng_filter.get_shape();
+  ng_kernel_shape[0] = ng_filter_shape[0];
+  ng_kernel_shape[1] = ng_filter_shape[1];
+  ng_kernel_shape[2] = ng_filter_shape[2];
+  Transpose3D<4, 3, 0, 1, 2>(ng_filter);
+  Builder::SetTracingInfo(op->name(), ng_filter);
+
+  OVTF_VLOG(3) << "ng_kernel_shape: " << ng::join(ng_kernel_shape);
+
+  ng::CoordinateDiff ng_padding_below;
+  ng::CoordinateDiff ng_padding_above;
+  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+                       ng_strides, ng_dilations, ng_padding_below,
+                       ng_padding_above);
+
+  auto ng_output_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ng::element::i64, ng::Shape{ng_batch_shape.size() - 2},
+      vector<size_t>(ng_batch_shape.begin() + 2, ng_batch_shape.end()));
+
+  auto ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
+      op->name(), ng_out_backprop, ng_filter, ng_output_shape, ng_strides,
+      ng_padding_below, ng_padding_above, ng_dilations);
+
+  NCHWtoNHWC(op->name(), is_ndhwc, ng_data);
+  SaveNgOp(ng_op_map, op->name(), ng_data);
   return Status::OK();
 }
 
@@ -2813,7 +2927,7 @@ static Status TranslateResizeBilinearOp(
         opset::Interpolate::CoordinateTransformMode::align_corners;
 
   auto input_shape = ng_inp.get_shape();
-  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
   auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
   auto ng_input_shape = ConstructNgNode<opset::Convert>(
@@ -2853,7 +2967,7 @@ static Status TranslateResizeNearestNeighborOp(
       opset::Interpolate::NearestMode::round_prefer_floor;
 
   auto input_shape = ng_inp.get_shape();
-  std::vector<unsigned long> spatial_shape = {input_shape[1], input_shape[2]};
+  std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
   auto ng_spatial_shape = ConstructNgNode<opset::Constant>(
       op->name(), ng::element::i32, ng::Shape{2}, spatial_shape);
   auto ng_input_shape = ConstructNgNode<opset::Convert>(
@@ -2901,6 +3015,26 @@ static Status TranslateRsqrtOp(
         // Raise each element of the input to the power -0.5.
         return ConstructNgNode<opset::Power>(op->name(), n, ng_exponent);
       });
+}
+
+static Status TranslateScatterNdOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ng::Output<ng::Node> ng_input_indices, ng_updates, ng_shape;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_input_indices, ng_updates, ng_shape));
+
+  std::vector<size_t> shape;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &shape));
+
+  auto ng_input = ConstructNgNode<opset::Constant>(
+      op->name(), ng_updates.get_element_type(), ng::Shape(shape), 0);
+
+  auto scatternd_op = ConstructNgNode<opset::ScatterNDUpdate>(
+      op->name(), ng_input, ng_input_indices, ng_updates);
+
+  SaveNgOp(ng_op_map, op->name(), scatternd_op);
+  return Status::OK();
 }
 
 static Status TranslateShapeOp(const Node* op,
@@ -3473,7 +3607,8 @@ const static std::map<
         {"Asinh", TranslateUnaryOp<opset::Asinh>},
         {"Atan", TranslateUnaryOp<opset::Atan>},
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
-        {"AvgPool", TranslateAvgPoolOp},
+        {"AvgPool", TranslateAvgPoolOp<2>},
+        {"AvgPool3D", TranslateAvgPoolOp<3>},
         {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
@@ -3483,6 +3618,7 @@ const static std::map<
         {"Conv2D", TranslateConv2DOp},
         {"Conv2DBackpropInput", TranslateConv2DBackpropInputOp},
         {"Conv3D", TranslateConv3DOp},
+        {"Conv3DBackpropInputV2", TranslateConv3DBackpropInputV2Op},
         {"Cos", TranslateUnaryOp<opset::Cos>},
         {"Cosh", TranslateUnaryOp<opset::Cosh>},
         {"CropAndResize", TranslateCropAndResizeOp},
@@ -3563,6 +3699,7 @@ const static std::map<
         {"Reverse", TranslateReverseOp},
         {"ReverseV2", TranslateReverseOp},
         {"Rsqrt", TranslateRsqrtOp},
+        {"ScatterNd", TranslateScatterNdOp},
         {"Select", TranslateSelectOp},
         {"SelectV2", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
@@ -3602,8 +3739,9 @@ Status Builder::TranslateGraph(
     const Graph* input_graph, const string name,
     shared_ptr<ng::Function>& ng_function) {
   ng::ResultVector ng_result_list;
+  std::vector<Tensor> tf_input_tensors;
   TranslateGraph(inputs, static_input_map, input_graph, name, ng_function,
-                 ng_result_list);
+                 ng_result_list, tf_input_tensors);
   return Status::OK();
 }
 
@@ -3611,7 +3749,8 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ng::Function>& ng_function, ng::ResultVector& ng_result_list) {
+    shared_ptr<ng::Function>& ng_function, ng::ResultVector& ng_result_list,
+    const std::vector<Tensor>& tf_input_tensors) {
   //
   // We will visit ops in topological order.
   //
@@ -3691,13 +3830,80 @@ Status Builder::TranslateGraph(
       return false;
     };
 
+    bool is_variable = false;
+    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0" &&
+        !tf_input_tensors.empty()) {
+      try {
+        GetNodeAttr(parm->attrs(), "_is_variable", &is_variable);
+      } catch (const std::exception&) {
+        OVTF_VLOG(1) << "Parameter " << parm->name() << " is not a variable";
+      }
+    }
+
     if (ng_shape_check()) {
       std::vector<std::string> constant_values(ng::shape_size(ng_shape), "0");
       auto ng_const_input = ConstructNgNode<opset::Constant>(
           prov_tag, ng_et, ng_shape, constant_values);
       SaveNgOp(ng_op_map, parm->name(), ng_const_input);
     } else {
-      SaveNgOp(ng_op_map, parm->name(), ng_param);
+      if (is_variable) {
+        ng::Output<ng::Node> ng_const_input;
+        const Tensor input_tensor = tf_input_tensors[index];
+        OVTF_VLOG(1) << "Converting " << parm->name() << " to constant";
+        switch (dtype) {
+          case DT_FLOAT:
+            MakeConstOpForParam<float>(input_tensor, prov_tag, ng_et, ng_shape,
+                                       ng_const_input);
+            break;
+          case DT_DOUBLE:
+            MakeConstOpForParam<double>(input_tensor, prov_tag, ng_et, ng_shape,
+                                        ng_const_input);
+            break;
+          case DT_INT8:
+            MakeConstOpForParam<int8>(input_tensor, prov_tag, ng_et, ng_shape,
+                                      ng_const_input);
+            break;
+          case DT_INT16:
+            MakeConstOpForParam<int16>(input_tensor, prov_tag, ng_et, ng_shape,
+                                       ng_const_input);
+            break;
+          case DT_INT32:
+            MakeConstOpForParam<int32>(input_tensor, prov_tag, ng_et, ng_shape,
+                                       ng_const_input);
+            break;
+          case DT_INT64:
+            MakeConstOpForParam<int64>(input_tensor, prov_tag, ng_et, ng_shape,
+                                       ng_const_input);
+            break;
+          case DT_UINT8:
+            MakeConstOpForParam<uint8>(input_tensor, prov_tag, ng_et, ng_shape,
+                                       ng_const_input);
+            break;
+          case DT_UINT16:
+            MakeConstOpForParam<uint16>(input_tensor, prov_tag, ng_et, ng_shape,
+                                        ng_const_input);
+            break;
+          case DT_UINT32:
+            MakeConstOpForParam<uint32>(input_tensor, prov_tag, ng_et, ng_shape,
+                                        ng_const_input);
+            break;
+          case DT_UINT64:
+            MakeConstOpForParam<uint64>(input_tensor, prov_tag, ng_et, ng_shape,
+                                        ng_const_input);
+            break;
+          case DT_BOOL:
+            MakeConstOpForParam<bool>(input_tensor, prov_tag, ng_et, ng_shape,
+                                      ng_const_input);
+            break;
+          default:
+            return errors::Internal("Tensor has element type ",
+                                    DataType_Name(dtype),
+                                    "; don't know how to convert");
+        }
+
+        SaveNgOp(ng_op_map, parm->name(), ng_const_input);
+      } else
+        SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
     ng_parameter_list[index] =
         ngraph::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());

@@ -12,18 +12,13 @@
     
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    BUILD_DIR: $(WORK_DIR)/build
-    OV_LOCATION: /opt/intel/caches/openvino_2021.4.1_0/
-    #Uncomment and comment the location respectively for using the version of TF BUILD
-    #TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_4_1 
-    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_5_1_abi0
+    OV_LOCATION: /opt/intel/caches/openvino_2021.4.2_0/
+    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_7_0_abi0
     
  steps:
  
    - script: |
-      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)
-      rm -rf $(BUILD_DIR) ; mkdir $(BUILD_DIR)
-      
+      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
    
    - checkout: self
      clean: true
@@ -31,7 +26,8 @@
      path: openvino_tensorflow
  
    - script: |
-      pip install -U pip yapf==0.26.0 pytest psutil keras==2.3.1
+      pip3 install -r requirements.txt
+      pip3 install -U yapf==0.26.0 pytest 
      displayName: "Setup" 
     
    - script: |
@@ -42,9 +38,9 @@
      displayName: "Build"
      
    - script: |
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      pip install -U $(WORK_DIR)/build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      pip install --no-deps -U $(WORK_DIR)/build_cmake/artifacts/openvino_tensorflow*.whl
+      source build_cmake/venv-tf-py3/bin/activate
+      pip3 install -U build_cmake/artifacts/tensorflow/tensorflow-*.whl
+      pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
     
@@ -55,20 +51,18 @@
      displayName: "Code format check"
     
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
+      --artifacts build_cmake/artifacts/ --test_cpp
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "CPU tf_ov C++ Tests"
      
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
@@ -77,42 +71,36 @@
      displayName: "CPU C++ Inference Example"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
-      pip install keras
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+      --artifacts build_cmake/artifacts --test_python
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "CPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
-      pip install keras
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+        --artifacts build_cmake/artifacts --test_tf_python
      condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "CPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
+      --artifacts build_cmake/artifacts/ --test_cpp
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "GPU tf_ov C++ Tests"
      
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
@@ -122,43 +110,44 @@
      
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
-      pip install keras
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+      --artifacts build_cmake/artifacts --test_python
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "GPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
       export OPENVINO_TF_BACKEND=GPU
-      pip install keras
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+      # Only run this test for changes in cc or h files found in ovtf or test list
+      # as this test alone takes about half an hour
+      ovtf_cx=`git diff --name-only HEAD HEAD~1 | grep -c "\.cc\|\.h"`
+      test_list_cx=`git diff --name-only HEAD HEAD~1 | grep -c "test/python/tensorflow/tests_linux_gpu.txt"`
+
+      if [[ $ovtf_cx > 0 ]] || [[ $test_list_cx >0 ]]; then
+         source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+         PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+         --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+      fi
      condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "GPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts/ --test_cpp
+      --artifacts build_cmake/artifacts/ --test_cpp
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD tf_ov C++ Tests"
      
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd test/ci/azure/      
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
       bash run_inception_v3.sh $(WORK_DIR)/build_cmake/artifacts/
@@ -166,129 +155,134 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD C++ Inference Example"
      
-   
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
-      pip install keras
-      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-      --artifacts $(WORK_DIR)/build_cmake/artifacts --test_python
+      --artifacts build_cmake/artifacts --test_python
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
-      pip install keras      
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-        --artifacts $(WORK_DIR)/build_cmake/artifacts --test_tf_python
+        --artifacts build_cmake/artifacts --test_tf_python
      condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd $(WORK_DIR)
       pip3 install -r examples/requirements.txt
       python3 examples/TF_1_x/object_detection_sample.py --no_show
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF1"
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF2"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       export OPENVINO_TF_BACKEND=GPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd $(WORK_DIR)
       pip3 install -r examples/requirements.txt
       python3 examples/TF_1_x/object_detection_sample.py --no_show --backend GPU
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python GPU OD Inference Example TF1"
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show --backend GPU
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python GPU OD Inference Example TF2"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       export OPENVINO_TF_BACKEND=MYRIAD
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd $(WORK_DIR)
       pip3 install -r examples/requirements.txt
       python3 examples/TF_1_x/object_detection_sample.py --no_show --backend MYRIAD
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF1"
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
-      chmod +x convert_yolov3.sh
-      ./convert_yolov3.sh
+      chmod +x convert_yolov4.sh
+      ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show --backend MYRIAD
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF2"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
-      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=CPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU Classification Inference Example TF1"
    
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
-      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=GPU
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend GPU
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python GPU Classification Inference Example TF1"
 
    - script: |
+      source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
-      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C $(WORK_DIR)/examples/data -xz
+      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=MYRIAD
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
+     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD Classification Inference Example TF1"
    

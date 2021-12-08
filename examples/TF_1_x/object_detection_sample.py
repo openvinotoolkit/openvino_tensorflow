@@ -36,10 +36,15 @@ import imghdr
 import sys
 from PIL import Image, ImageFont, ImageDraw
 
+sys.path.append(sys.path.append(os.path.join(os.path.dirname(__file__), "..")))
+from common.utils import draw_boxes, get_colors, get_anchors
+from common.post_process import yolo3_postprocess_np
+from common.utils import get_input_mode, load_graph
+from common.pre_process import preprocess_image_yolov3 as preprocess_image
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 utils_path = os.path.dirname(os.path.realpath(os.path.join(dir_path, '.')))
 sys.path.insert(0, utils_path)
-from common.utils import get_input_mode, load_graph
 
 
 def load_coco_names(file_name):
@@ -52,116 +57,6 @@ def load_coco_names(file_name):
     return names
 
 
-def letter_box_pos_to_original_pos(letter_pos, current_size,
-                                   ori_image_size) -> np.ndarray:
-    letter_pos = np.asarray(letter_pos, dtype=np.float)
-    current_size = np.asarray(current_size, dtype=np.float)
-    ori_image_size = np.asarray(ori_image_size, dtype=np.float)
-    final_ratio = min(current_size[0] / ori_image_size[0],
-                      current_size[1] / ori_image_size[1])
-    pad = 0.5 * (current_size - final_ratio * ori_image_size)
-    pad = pad.astype(np.int32)
-    to_return_pos = (letter_pos - pad) / final_ratio
-    return to_return_pos
-
-
-def convert_to_original_size(box, size, original_size, is_letter_box_image):
-    if is_letter_box_image:
-        box = box.reshape(2, 2)
-        box[0, :] = letter_box_pos_to_original_pos(box[0, :], size,
-                                                   original_size)
-        box[1, :] = letter_box_pos_to_original_pos(box[1, :], size,
-                                                   original_size)
-    else:
-        ratio = original_size / size
-        box = box.reshape(2, 2) * ratio
-    return list(box.reshape(-1))
-
-
-def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
-    draw = ImageDraw.Draw(img)
-    for cls, bboxs in boxes.items():
-        color = (256, 256, 256)
-        for box, score in bboxs:
-            box = convert_to_original_size(box, np.array(detection_size),
-                                           np.array(img.size),
-                                           is_letter_box_image)
-            draw.rectangle(box, outline=color)
-            draw.text(
-                box[:2],
-                '{} {:.2f}%'.format(cls_names[cls], score * 100),
-                fill=color)
-            print('{},{:.2f}'.format(cls_names[cls].rstrip(), score * 100))
-    # converting PIL image back to OpenCV format
-    im_np = np.asarray(img)
-    im_np = cv2.cvtColor(im_np, cv2.COLOR_RGB2BGR)
-    return im_np
-
-
-def iou(box1, box2):
-    b1_x0, b1_y0, b1_x1, b1_y1 = box1
-    b2_x0, b2_y0, b2_x1, b2_y1 = box2
-
-    int_x0 = max(b1_x0, b2_x0)
-    int_y0 = max(b1_y0, b2_y0)
-    int_x1 = min(b1_x1, b2_x1)
-    int_y1 = min(b1_y1, b2_y1)
-
-    int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
-
-    b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
-    b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
-
-    iou = int_area / (b1_area + b2_area - int_area + 1e-05)
-
-    return iou
-
-
-def non_max_suppression(predictions_with_boxes,
-                        confidence_threshold,
-                        iou_threshold=0.4):
-    conf_mask = np.expand_dims(
-        (predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
-    predictions = predictions_with_boxes * conf_mask
-
-    result = {}
-    for i, image_pred in enumerate(predictions):
-        shape = image_pred.shape
-        temp = image_pred
-        sum_t = np.sum(temp, axis=1)
-        non_zero_idx = sum_t != 0
-        image_pred = image_pred[non_zero_idx, :]
-        image_pred = image_pred.reshape(-1, shape[-1])
-
-        bbox_attrs = image_pred[:, :5]
-        classes = image_pred[:, 5:]
-        classes = np.argmax(classes, axis=-1)
-
-        unique_classes = list(set(classes.reshape(-1)))
-
-        for cls in unique_classes:
-            cls_mask = classes == cls
-            cls_boxes = bbox_attrs[np.nonzero(cls_mask)]
-            cls_boxes = cls_boxes[cls_boxes[:, -1].argsort()[::-1]]
-            cls_scores = cls_boxes[:, -1]
-            cls_boxes = cls_boxes[:, :-1]
-
-            while len(cls_boxes) > 0:
-                box = cls_boxes[0]
-                score = cls_scores[0]
-                if cls not in result:
-                    result[cls] = []
-                result[cls].append((box, score))
-                cls_boxes = cls_boxes[1:]
-                # iou threshold check for overlapping boxes
-                ious = np.array([iou(box, x) for x in cls_boxes])
-                iou_mask = ious < iou_threshold
-                cls_boxes = cls_boxes[np.nonzero(iou_mask)]
-                cls_scores = cls_scores[np.nonzero(iou_mask)]
-
-    return result
-
-
 def load_labels(label_file):
     label = []
     proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
@@ -172,14 +67,17 @@ def load_labels(label_file):
 
 if __name__ == "__main__":
     input_file = "examples/data/grace_hopper.jpg"
-    model_file = "examples/data/yolo_v3_darknet_1.pb"
+    model_file = "examples/data/yolo_v4.pb"
     label_file = "examples/data/coco.names"
+    anchor_file = "examples/data/yolov4_anchors.txt"
     input_height = 416
     input_width = 416
     input_mean = 0
     input_std = 255
-    input_layer = "inputs"
-    output_layer = "output_boxes"
+    input_layer = "image_input"
+    output_layer = [
+        "conv2d_109/BiasAdd", "conv2d_101/BiasAdd", "conv2d_93/BiasAdd"
+    ]
     backend_name = "CPU"
     output_dir = "."
     conf_threshold = 0.6
@@ -196,7 +94,8 @@ if __name__ == "__main__":
         "--graph", help="Optional. Path to graph/model to be executed.")
     parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--output_layer", help="Optional. Name of output layer.")
+        "--output_layer",
+        help="Optional. Name of output layer(s). Comma Separated.")
     parser.add_argument(
         "--labels", help="Optional. Path to labels mapping file.")
     parser.add_argument(
@@ -243,11 +142,9 @@ if __name__ == "__main__":
         if not args.output_layer:
             raise Exception("Specify output layer for this network")
         else:
-            output_layer = args.output_layer
+            output_layer = [x for x in args.output_layer.split(",")]
         if args.labels:
             label_file = args.labels
-        else:
-            label_file = None
     if args.input:
         input_file = args.input
     if args.input_height:
@@ -270,11 +167,14 @@ if __name__ == "__main__":
     # Load the labels
     if label_file:
         classes = load_coco_names(label_file)
+    colors = get_colors(classes)
+    anchors = get_anchors(anchor_file)
     input_name = "import/" + input_layer
-    output_name = "import/" + output_layer
     input_operation = graph.get_operation_by_name(input_name)
-    output_operation = graph.get_operation_by_name(output_name)
-
+    output_operation = [
+        graph.get_operation_by_name("import/" + output_name)
+        for output_name in output_layer
+    ]
     if not args.disable_ovtf:
         # Print list of available backends
         print('Available Backends:')
@@ -330,33 +230,41 @@ if __name__ == "__main__":
                 else:
                     break
             img = frame
-            img_resized = cv2.resize(frame, (input_height, input_width))
+            image = Image.fromarray(img)
+            img_resized = preprocess_image(image,
+                                           (input_height, input_width))[0]
 
             # Warmup
             if image_id == 0:
                 detected_boxes = sess.run(
-                    output_operation.outputs[0],
+                    (output_operation[0].outputs[0],
+                     output_operation[1].outputs[0],
+                     output_operation[2].outputs[0]),
                     {input_operation.outputs[0]: [img_resized]})
 
             # Run
             start = time.time()
             detected_boxes = sess.run(
-                output_operation.outputs[0],
+                (output_operation[0].outputs[0], output_operation[1].outputs[0],
+                 output_operation[2].outputs[0]),
                 {input_operation.outputs[0]: [img_resized]})
             elapsed = time.time() - start
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
-            # post-processing - apply non max suppression, draw boxes and save updated image
-            filtered_boxes = non_max_suppression(detected_boxes, conf_threshold,
-                                                 iou_threshold)
 
-            # OpenCV frame to PIL format conversions as the draw_box function uses PIL
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            im_pil = Image.fromarray(img)
+            image_shape = tuple((frame.shape[0], frame.shape[1]))
+            out_boxes, out_classes, out_scores = yolo3_postprocess_np(
+                detected_boxes,
+                image_shape,
+                anchors,
+                len(labels), (input_height, input_width),
+                max_boxes=10,
+                confidence=conf_threshold,
+                iou_threshold=iou_threshold,
+                elim_grid_sense=True)
 
-            # modified draw_boxes function to return an openCV formatted image
-            img_bbox = draw_boxes(filtered_boxes, im_pil, classes,
-                                  (input_width, input_height), True)
+            img_bbox = draw_boxes(img, out_boxes, out_classes, out_scores,
+                                  labels, colors)
 
             # draw information overlay onto the frames
             cv2.putText(img_bbox,

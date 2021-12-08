@@ -21,6 +21,10 @@ install(
     PATTERN "*.pb"
     PATTERN "tests_*.txt"
 )
+# C++ gtests are not enabled for Windows yet
+if (WIN32)
+    return()
+endif()
 
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
@@ -92,7 +96,7 @@ endif()
 # https://github.com/tensorflow/tensorflow/issues/17316
 # Also, the openvino_tensorflow code when compiled has this flag enabled(https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/openvino_tensorflow/CMakeLists.txt#L23)
 # hence the error seen while testing the custom op does not show up there.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DNDEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -DNDEBUG")
 
 message(STATUS "Compile Flags for test dir: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")

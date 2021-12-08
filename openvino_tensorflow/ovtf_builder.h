@@ -28,7 +28,8 @@ class Builder {
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
       const string name, std::shared_ptr<ngraph::Function>& ng_function,
-      ngraph::ResultVector& ng_func_result_list);
+      ngraph::ResultVector& ng_func_result_list,
+      const std::vector<Tensor>& tf_input_tensors);
 
   using OpMap = std::unordered_map<std::string,
                                    std::vector<ngraph::Output<ngraph::Node>>>;

@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-
 # Get this location from the CMAKE variables passed during the cmake time
 if (NOT DEFINED TF_SRC_DIR)
    message(
@@ -24,24 +21,34 @@ include_directories(${TensorFlow_SRC_DIR}/bazel-bin)
 
 add_library(tensorflow_cc_lib SHARED IMPORTED)
 message(${TensorFlow_VERSION})
-if(NOT(TensorFlow_VERSION LESS 2.0))
-    set_target_properties(
-        tensorflow_cc_lib
-        PROPERTIES IMPORTED_LOCATION
-        ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2)
-else()
+if(WIN32)
     set_target_properties(
     tensorflow_cc_lib
     PROPERTIES IMPORTED_LOCATION
-    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1)
+    ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/tensorflow_cc.dll.if.lib)
+else()
+  if(NOT(TensorFlow_VERSION LESS 2.0))
+      set_target_properties(
+          tensorflow_cc_lib
+          PROPERTIES IMPORTED_LOCATION
+          ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.2)
+  else()
+      set_target_properties(
+      tensorflow_cc_lib
+      PROPERTIES IMPORTED_LOCATION
+      ${TensorFlow_SRC_DIR}/bazel-bin/tensorflow/libtensorflow_cc.so.1)
+  endif()
 endif()
 
 set(SRC
     thread_safe_queue.h
     utils.cc
 )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
@@ -57,16 +64,30 @@ if (APPLE)
     add_definitions(-DTEST_SINGLE_INSTANCE)
 endif()
 
-target_link_libraries(
-    ${APP_NAME}
-    openvino_tensorflow
-    ngraph_lib
-    pthread
-    ${TensorFlow_FRAMEWORK_LIBRARY}
-    tensorflow_cc_lib
-    absl_synchronization
-    ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
-)
+if(WIN32)
+  get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+	get_target_property(tensorflow_cc_lib_value tensorflow_cc_lib IMPORTED_LOCATION)
+	target_link_libraries(
+		${APP_NAME}
+		openvino_tensorflow
+		${ngraph_lib_value}
+		${TensorFlow_FRAMEWORK_LIBRARY}
+		${tensorflow_cc_lib_value}
+		absl_synchronization
+		${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+	)
+else()
+  target_link_libraries(
+      ${APP_NAME}
+      openvino_tensorflow
+      ngraph_lib
+      pthread
+      ${TensorFlow_FRAMEWORK_LIBRARY}
+      tensorflow_cc_lib
+      absl_synchronization
+      ${InferenceEngine_LIBRARIES} ${TBB_IMPORTED_TARGETS}
+  )
+endif()
 
 if (DEFINED OPENVINO_TF_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${OPENVINO_TF_INSTALL_PREFIX})

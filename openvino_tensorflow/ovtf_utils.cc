@@ -21,6 +21,9 @@
 
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace std;
 
@@ -193,6 +196,16 @@ void PrintNodeHistogram(const std::unordered_map<string, int>& histogram,
   std::cout << std::endl;
 }
 
+inline size_t GetMemPageSize() {
+#ifdef _WIN32
+  SYSTEM_INFO si = {};
+  GetSystemInfo(&si);
+  return si.dwAllocationGranularity;
+#else
+  return sysconf(_SC_PAGE_SIZE);
+#endif
+}
+
 void MemoryProfile(long& vm_usage, long& resident_set) {
   vm_usage = 0;
   resident_set = 0;
@@ -209,9 +222,15 @@ void MemoryProfile(long& vm_usage, long& resident_set) {
     vsize = std::stol(mem_str[22]);
     rss = std::stol(mem_str[23]);
 
-    long page_size_kb = sysconf(_SC_PAGE_SIZE) /
-                        1024;  // in case x86-64 is configured to use 2MB pages
-    vm_usage = vsize / 1024;   // unit kb
+    long page_size_kb;
+#ifdef _WIN32
+    page_size_kb = GetMemPageSize() /
+                   1024;  // in case x86-64 is configured to use 2MB pages
+#else
+    page_size_kb = sysconf(_SC_PAGE_SIZE) /
+                   1024;  // in case x86-64 is configured to use 2MB pages
+#endif
+    vm_usage = vsize / 1024;  // unit kb
     resident_set = rss * page_size_kb;
   }
 }

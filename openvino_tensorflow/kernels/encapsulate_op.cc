@@ -34,6 +34,14 @@
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 
+#ifdef _WIN32
+#define EXPAND(x) x
+#define TF_NEW_ID_FOR_INIT_2(m, c, ...) \
+  EXPAND(m(c, __VA_ARGS__))  // L145 selective_registration.h
+#define TF_EXTRACT_KERNEL_NAME_IMPL(m, ...) \
+  EXPAND(m(__VA_ARGS__))  // L1431 op_kernel.h
+#endif
+
 using namespace std;
 
 namespace tensorflow {
@@ -574,9 +582,9 @@ Status NGraphEncapsulateOp::GetExecutable(
     ng_result_list.clear();
     ng_output_shapes.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-    TF_RETURN_IF_ERROR(Builder::TranslateGraph(input_shapes, static_input_map,
-                                               &m_graph, m_name, ng_function,
-                                               ng_result_list));
+    TF_RETURN_IF_ERROR(Builder::TranslateGraph(
+        input_shapes, static_input_map, &m_graph, m_name, ng_function,
+        ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());

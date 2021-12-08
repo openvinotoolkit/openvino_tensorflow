@@ -72,6 +72,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();
+    NGraphClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
     return Status::OK();
   }
@@ -154,7 +155,10 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 #elif defined(OPENVINO_2021_4)
   ov_version = "2021.4";
 #elif defined(OPENVINO_2021_4_1)
-  // ocm checks are same for the minor version update
+  // ocm checks are same as 2021.4 for this minor version update
+  ov_version = "2021.4";
+#elif defined(OPENVINO_2021_4_2)
+  // ocm checks are same as 2021.4 for this minor version update
   ov_version = "2021.4";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;

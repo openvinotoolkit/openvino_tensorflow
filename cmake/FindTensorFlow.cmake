@@ -97,6 +97,8 @@ if ( APPLE )
     else()
         set(TF_LIB_NAME libtensorflow_framework.dylib)
     endif()
+elseif ( WIN32 )
+    set(TF_LIB_NAME _pywrap_tensorflow_internal.lib)
 else()
     if(NOT(TensorFlow_VERSION LESS 2.0))
         set(TF_LIB_NAME libtensorflow_framework.so.2)
@@ -107,12 +109,21 @@ endif()
 
 message(STATUS "TF_LIB: " ${TF_LIB_NAME})
 
-find_library(
-  TensorFlow_FRAMEWORK_LIBRARY
-  NAME ${TF_LIB_NAME}
-  PATHS ${TensorFlow_DIR}
-  NO_DEFAULT_PATH
-)
+if (WIN32)
+  find_library(
+    TensorFlow_FRAMEWORK_LIBRARY
+    NAME ${TF_LIB_NAME}
+    PATHS ${TensorFlow_DIR}/python
+    NO_DEFAULT_PATH
+  )
+else()
+  find_library(
+    TensorFlow_FRAMEWORK_LIBRARY
+    NAME ${TF_LIB_NAME}
+    PATHS ${TensorFlow_DIR}
+    NO_DEFAULT_PATH
+  )
+endif()
 
 find_package_handle_standard_args(
   TensorFlow

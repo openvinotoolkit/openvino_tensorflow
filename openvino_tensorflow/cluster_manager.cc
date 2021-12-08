@@ -41,8 +41,9 @@ size_t NGraphClusterManager::NumberOfClusters() {
 void NGraphClusterManager::EvictAllClusters() {
   s_cluster_graphs.clear();
   s_cluster_fallback.clear();
-  s_mru_executables.clear();
 }
+
+void NGraphClusterManager::EvictMRUClusters() { s_mru_executables.clear(); }
 
 bool NGraphClusterManager::CheckClusterFallback(const size_t idx) {
   return (s_cluster_fallback_enabled && idx < s_cluster_fallback.size())

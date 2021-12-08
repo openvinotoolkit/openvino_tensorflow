@@ -86,8 +86,12 @@ def install_openvino_tensorflow(artifacts_dir):
             print("Existing Wheel: " + whl)
         raise Exception("Error getting the openvino_tensorflow wheel file")
 
-    ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
-    command_executor(["pip", "install", "-U", ng_whl])
+    if (platform.system() == 'Windows'):
+        command_executor(
+            ["pip", "install", "-U", ovtf_wheel_files[0].replace("\\", "\\\\")])
+    else:
+        ng_whl = os.path.join(artifacts_dir, ovtf_wheel_files[0])
+        command_executor(["pip", "install", "-U", ng_whl])
 
 
 def run_ovtf_cpp_gtests(artifacts_dir, log_dir, filters):
@@ -149,11 +153,17 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
     test_manifest_file = TestEnv.get_test_manifest_filename()
     # export the env-var for pytest to process manifest in conftest.py
     os.environ['OPENVINO_TF_TEST_MANIFEST'] = test_manifest_file
-
-    command_executor([
-        "python", "-m", "pytest",
-        ('--junitxml=%s/xunit_pytest.xml' % artifacts_dir)
-    ])
+    if (platform.system() == "Windows"):
+        command_executor([
+            sys.executable.replace("\\", "\\\\"), "-m", "pytest",
+            ('--junitxml=%s\\xunit_pytest.xml' % artifacts_dir).replace(
+                "\\", "\\\\")
+        ])
+    else:
+        command_executor([
+            sys.executable, "-m", "pytest",
+            ('--junitxml=%s\\xunit_pytest.xml' % artifacts_dir)
+        ])
 
     if not os.path.exists(root_pwd):
         raise AssertionError("Could not find directory")
@@ -194,7 +204,8 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
     os.chdir(pwd)
 
     # Now run the TensorFlow python tests
-    test_src_dir = os.path.join(openvino_tf_src_dir, "test/python/tensorflow")
+    test_src_dir = os.path.join(openvino_tf_src_dir, "test", "python",
+                                "tensorflow")
     test_script = os.path.join(test_src_dir, "tf_unittest_runner.py")
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
@@ -216,10 +227,18 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
         'OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
     os.environ['OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS'] = '1'
 
-    cmd = [
-        "python", test_script, "--tensorflow_path", tf_src_dir,
-        "--run_tests_from_file", test_manifest_file
-    ]
+    if (platform.system() == "Windows"):
+        cmd = [
+            sys.executable.replace("\\", "\\\\"),
+            test_script.replace("\\", "\\\\"), "--tensorflow_path",
+            tf_src_dir.replace("\\", "\\\\"), "--run_tests_from_file",
+            test_manifest_file.replace("\\", "\\\\")
+        ]
+    else:
+        cmd = [
+            sys.executable, test_script, "--tensorflow_path", tf_src_dir,
+            "--run_tests_from_file", test_manifest_file
+        ]
 
     if xml_output:
         cmd.extend(["--xml_report", test_xml_report])

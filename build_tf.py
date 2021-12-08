@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.5.1")
+        default="v2.7.0")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -56,7 +56,10 @@ def main():
             arguments.output_dir))
     os.chdir(arguments.output_dir)
 
-    venv_dir = './venv3/'
+    if (platform.system() == 'Windows'):
+        venv_dir = '.\\venv3\\'
+    else:
+        venv_dir = './venv3/'
 
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
@@ -99,7 +102,10 @@ def main():
         False, arguments.use_intel_tensorflow, arguments.cxx11_abi_version)
 
     pwd = os.getcwd()
-    artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
+    if (platform.system() == 'Windows'):
+        artifacts_dir = os.path.join(pwd, 'tensorflow')
+    else:
+        artifacts_dir = os.path.join(pwd, 'artifacts/tensorflow')
     os.chdir("tensorflow")
 
     copy_tf_to_artifacts(arguments.tf_version, artifacts_dir, None,

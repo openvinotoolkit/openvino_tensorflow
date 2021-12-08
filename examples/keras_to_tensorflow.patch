@@ -1,17 +1,28 @@
---- tensorflow-yolo-v3/tools/model_converter/keras_to_tensorflow.py	2021-08-17 04:17:22.186256673 +0530
-+++ keras_to_tensorflow_modified.py	2021-08-17 04:14:43.686249508 +0530
-@@ -22,7 +22,9 @@
- 
+diff --git a/tools/model_converter/keras_to_tensorflow.py b/tools/model_converter/keras_to_tensorflow.py
+index 07865a8..b3817af 100644
+--- a/tools/model_converter/keras_to_tensorflow.py
++++ b/tools/model_converter/keras_to_tensorflow.py
+@@ -23,6 +23,10 @@ from tensorflow.keras.models import model_from_json, model_from_yaml, load_model
  sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
  from common.utils import get_custom_objects
--
+ 
 +# tf.enable_eager_execution()
 +tf.compat.v1.disable_eager_execution()
 +from tensorflow.python.keras.backend import get_session
++
  K.set_learning_phase(0)
  FLAGS = flags.FLAGS
  
-@@ -150,7 +152,7 @@
+@@ -53,6 +57,8 @@ flags.DEFINE_boolean('output_meta_ckpt', False,
+                      'If set to True, exports the model as .meta, .index, and '
+                      '.data files, with a checkpoint file. These can be later '
+                      'loaded in TensorFlow to continue training.')
++flags.DEFINE_boolean('saved_model', False,
++                    'If set, model is saved in saved model format')
+ 
+ flags.mark_flag_as_required('input_model')
+ flags.mark_flag_as_required('output_model')
+@@ -150,7 +156,7 @@ def main(args):
      logging.info('Converted output node names are: %s',
                   str(converted_output_node_names))
  
@@ -20,3 +31,34 @@
      if FLAGS.output_meta_ckpt:
          saver = tf.train.Saver()
          saver.save(sess, str(output_fld / output_model_stem))
+@@ -172,16 +178,20 @@ def main(args):
+             transformed_graph_def,
+             converted_output_node_names)
+     else:
+-        constant_graph = graph_util.convert_variables_to_constants(
+-            sess,
+-            sess.graph.as_graph_def(),
+-            converted_output_node_names)
+-
+-    graph_io.write_graph(constant_graph, str(output_fld), output_model_name,
+-                         as_text=False)
+-    logging.info('Saved the freezed graph at %s',
+-                 str(Path(output_fld) / output_model_name))
+-
++        if FLAGS.saved_model:
++            tf.saved_model.save(model, output_model)
++            logging.info("Saved model in TF2 saved model format at %s",
++                        str(Path(output_fld) / output_model_name))
++        else:
++            constant_graph = graph_util.convert_variables_to_constants(
++                sess,
++                sess.graph.as_graph_def(),
++                converted_output_node_names)
++
++            graph_io.write_graph(constant_graph, str(output_fld), output_model_name,
++                                as_text=False)
++            logging.info('Saved the freezed graph at %s',
++                        str(Path(output_fld) / output_model_name))
+ 
+ if __name__ == "__main__":
+     app.run(main)

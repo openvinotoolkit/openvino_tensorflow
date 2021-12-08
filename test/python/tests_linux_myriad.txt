@@ -11,7 +11,6 @@
 
 tests_common.txt
 
-
 ###################################################
 [SKIP]
 
@@ -25,4 +24,7 @@ test_cast.*
 test_const.*
 test_conv2D_KernelChecks.*
 test_conv2dbackpropinput.*
-
+test_maxpool3d.*
+test_floor.*
+test_scatternd_update.*
+test_avgpool3d.*

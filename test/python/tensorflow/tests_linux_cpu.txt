@@ -335,3 +335,11 @@ cwise_ops_binary_test.BinaryOpTest.testFloatBasic
 
 # bad_alloc from OV-2021.4
 array_ops_test.StridedSliceTest.testTensorIndexing
+
+# what(): Check 'batch_size.is_dynamic() || batch_size.get_length() > 0' failed at core/src/validation_util.cpp:531:
+# While validating node 'v1::MaxPool MaxPool_45068 (max_pool_3d/Transpose_45067[0]:f32{0,64,112,112,112}) -> (dynamic?)' with friendly_name 'MaxPool_45068':
+# Batch size is zero.
+pooling_ops_3d_test.PoolingTest.testMaxPool3DEmptyTensorOutputShape
+
+# Failing after TF-2.7 upgrade
+gather_op_test.GatherTest.testBadAxis

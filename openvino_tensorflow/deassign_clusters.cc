@@ -244,10 +244,12 @@ Status DeassignClusters(Graph* graph) {
     }
     // Disable dynamic to static
     std::vector<Node*> dyn_node_check;
+    std::set<Node*> visited_node_check;
     for (auto node : nodes) {
       if (node->type_string() == "NonMaxSuppressionV2" ||
           node->type_string() == "Reshape") {
         dyn_node_check.push_back(node);
+        visited_node_check.insert(node);
       }
     }
     bool invalid_dyn_op = false;
@@ -267,8 +269,10 @@ Status DeassignClusters(Graph* graph) {
                 it->type_string() == "Unpack") {
               invalid_dyn_op = true;
               break;
-            } else {
+            } else if (visited_node_check.find(it) ==
+                       visited_node_check.end()) {
               dyn_node_check.push_back(it);
+              visited_node_check.insert(it);
             }
           }
         }

@@ -12,21 +12,25 @@
 
 ### Requirements
 
-- Ubuntu 18.04, 20.04 or macOS 11.2.3
-- Python* 3.6, 3.7, 3.8 or 3.9
-- TensorFlow* v2.5.1
+- Ubuntu 18.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
+- Python* 3.7, 3.8 or 3.9
+- TensorFlow* v2.7.0
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.1 meaning you do not have to install OpenVINO™ separately.
+<sup>1</sup>Windows release is in preview mode and supports only Python3.9 
+
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.2 meaning you do not have to install OpenVINO™ separately.
 This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
-        pip3 install pip==21.0.1
-        pip3 install tensorflow==2.5.1
+        pip3 install -U pip
+        pip3 install tensorflow==2.7.0
         pip3 install -U openvino-tensorflow
 
 To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
+
+For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
 For more details on installation please refer to [INSTALL.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md), and for build from source options please refer to [BUILD.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md)
 
@@ -41,10 +45,10 @@ To check if **OpenVINO™ integration with TensorFlow** is properly installed, r
 
 This should produce an output like:
 
-        TensorFlow version:  2.5.1
-        OpenVINO integration with TensorFlow version: b'1.0.1'
-        OpenVINO version used for this build: b'2021.4.1'
-        TensorFlow version used for this build: v2.5.1
+        TensorFlow version:  2.7.0
+        OpenVINO integration with TensorFlow version: b'1.1.0'
+        OpenVINO version used for this build: b'2021.4.2'
+        TensorFlow version used for this build: v2.7.0
         CXX11_ABI flag used for this build: 0
 
 ## Usage
@@ -68,6 +72,9 @@ For more API calls and environment variables, see [USAGE.md](https://github.com/
 ## Examples
 
 To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) repository.
+
+## Try it on Intel<sup>®</sup> DevCloud
+Sample tutorials are also hosted on [Intel<sup>®</sup> DevCloud](https://software.intel.com/content/www/us/en/develop/tools/devcloud/edge/build/ovtfoverview.html). The demo applications are implemented using Jupyter Notebooks. You can interactively execute them on Intel<sup>®</sup> DevCloud nodes, compare the results of **OpenVINO™ integration with TensorFlow**, native TensorFlow and OpenVINO™. 
 
 ## License
 **OpenVINO™ integration with TensorFlow** is licensed under [Apache License Version 2.0](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/LICENSE).
