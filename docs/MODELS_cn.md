@@ -5,7 +5,7 @@
 ## TensorFlow-Slim 图像分类库
 
 | 模型名称| 支持的设备
-|----------|----------
+|---|---|
 | [Inception V3](http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
 | [Inception_V4](http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
 | [Resnet V1 50](http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz)  | CPU, iGPU, MYRIAD, VAD-M |
@@ -23,7 +23,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 ## TensorFlow 对象检测 Model Zoo
 
 | 模型名称| 支持的设备
-|----------|----------
+|---|---|
 | [faster_rcnn_inception_resnet_v2_atrous_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [faster_rcnn_inception_v2_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [faster_rcnn_resnet50_coco](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
@@ -41,9 +41,8 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 为这些模型提供了预训练frozen模型。
 
 ## TensorFlow Keras 应用
-
 | 模型名称| 支持的设备
-|----------|----------
+|---|---|
 | [DenseNet121](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet121)| CPU, iGPU, MYRIAD, VAD-M |
 | [DenseNet169](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet169)| CPU, iGPU, MYRIAD, VAD-M |
 | [DenseNet201](https://www.tensorflow.org/api_docs/python/tf/keras/applications/DenseNet201)| CPU, iGPU, MYRIAD, VAD-M |
@@ -237,7 +236,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 ## 其他模型
 
 | 模型名称| 支持的设备
-|----------|----------
+|---|---|
 | [3d-pose-baseline](https://drive.google.com/file/d/0BxWzojlLp259MF9qSFpiVjl0cU0/view?usp=sharing)| CPU, iGPU, MYRIAD, VAD-M |
 | [ACGAN](https://github.com/hwalsuklee/tensorflow-generative-model-collections) | CPU |
 | [adv_inception_v3](http://download.tensorflow.org/models/adv_inception_v3_2017_08_18.tar.gz) | CPU |
@@ -273,7 +272,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [faster_rcnn_inception_resnet_v2_atrous_oid](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_oid_2018_01_28.tar.gz) | CPU |
 | [faster_rcnn_nas_coco](https://github.com/shaoqingren/faster_rcnn)| CPU |
 | [faster_rcnn_nas_coco_2018_01_28](http://download.tensorflow.org/models/object_detection/faster_rcnn_nas_coco_2018_01_28.tar.gz) | CPU, VAD-M |
-| [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU, MYRIAD VAD-M |
+| [faster_rcnn_nas_lowproposals_coco](https://github.com/rbgirshick/py-faster-rcnn)| CPU, MYRIAD, VAD-M |
 | [faster_rcnn_resnet101_ava_v2.1](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_ava_v2.1_2018_04_30.tar.gz)| CPU|
 | [faster_rcnn_resnet101_fgvc](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_fgvc_2018_07_19.tar.gz) | CPU|
 | [faster_rcnn_resnet101_kitti](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_kitti_2018_01_28.tar.gz) | CPU |
@@ -307,7 +306,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [mobilenet_v2_fpn_ssdlite_crossroad](https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet-v3-large-1.0-224-tf](https://storage.googleapis.com/mobilenet_v3/checkpoints/v3-large_224_1.0_float.tgz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mobilenet-v3-small-1.0-224-tf](https://storage.googleapis.com/mobilenet_v3/checkpoints/v3-small_224_1.0_float.tgz)| CPU, iGPU, MYRIAD, VAD-M |
-| [mozilla-deepspeech-0.6.1](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/deepspeech-0.6.1-models.tar.gz)| CPU,  iGPU, MYRIAD, VAD-M |
+| [mozilla-deepspeech-0.6.1](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/deepspeech-0.6.1-models.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mozilla-deepspeech-0.7.1](https://github.com/mozilla/DeepSpeech/archive/v0.7.1.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [mozilla-deepspeech-0.8.2](https://github.com/mozilla/DeepSpeech)| CPU, MYRIAD, VAD-M |
 | [NCF-1B](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_5/ncf_fp32_pretrained_model.tar.gz) | CPU |
@@ -327,7 +326,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [resnet-50-tf](http://download.tensorflow.org/models/official/20181001_resnet/savedmodels/resnet_v1_fp32_savedmodel_NHWC_jpg.tar.gz)| CPU, iGPU, MYRIAD, VAD-M |
 | [ResNeXt_101](https://drive.google.com/uc?id=1AEYDWTWEGh6xGN-fSFB_f94FujdTJyKS) | CPU |
 | [ResNext_50](https://github.com/HiKapok/TF-SENet) | CPU |
-| [resnext50v2](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz) | CPU,  iGPU,  MYRIAD, VAD-M |
+| [resnext50v2](http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz) | CPU, iGPU, MYRIAD, VAD-M |
 | [R-FCN](https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz) | CPU |
 | [rfcn_resnet101_coco](https://download.pytorch.org/models/resnet50-19c8e357.pth)| CPU, iGPU, MYRIAD, VAD-M |
 | [se-resnext-50](https://drive.google.com/drive/folders/1k5MtfqbNRA8ziE3f18vu00Q1FQCzk4__)| CPU, iGPU, MYRIAD, VAD-M |

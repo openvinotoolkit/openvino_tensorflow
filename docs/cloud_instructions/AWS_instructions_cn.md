@@ -1,4 +1,4 @@
-[English](./AWS_instructions_cn.md) | 中文简体
+[English](./AWS_instructions.md) | 中文简体
 # 使用 **OpenVINO™ integration with TensorFlow** 在 AWS 上加速 TensorFlow 模型
 
 -	启动 Deep Learning AMI EC2 实例 Ubuntu 18.04 版本 41.0

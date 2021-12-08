@@ -125,8 +125,8 @@ $ ./convert_yolov4.sh
 **For Windows**
 
 ```bash
-$ cd <path-to-openvino_tensorflow-repository>\examples
-$ convert_yolov4.bat
+cd <path-to-openvino_tensorflow-repository>\examples
+convert_yolov4.bat
 ```
 
 Once completed, the `<path-to-openvino_tensorflow-repository>/examples/data` folder will contain following files needed to run the object detection example:
