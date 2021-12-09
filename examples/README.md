@@ -270,3 +270,7 @@ To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
 $ ./build_cmake/examples/classification_sample/infer_image --help
 ```
+
+<br/>
+
+**Note**: In the above samples a warm-up run is executed first and then inference time is measured on the subsequent runs. The execution time of first run is in general higher compared to the next runs as it includes many one-time graph transformations and optimizations steps.
