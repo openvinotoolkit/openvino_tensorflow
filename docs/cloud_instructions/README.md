@@ -1,2 +1,1 @@
 The newer and updated Colab notebooks can be found in [examples](../../examples/notebooks).
-The notebooks in this folder are deprecated. They are being kept for reference to older releases and will be removed in the upcoming release.
