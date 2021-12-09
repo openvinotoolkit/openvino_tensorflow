@@ -1,6 +1,7 @@
 <p>English | <a href="./MODELS_cn.md">简体中文</a></p>
 
-This document provides a list of all validated models that are supported by **OpenVINO™ integration with TensorFlow**. This list is continuously evolving as we enable more operators and models.
+This document provides a list of all validated models that are supported by **OpenVINO™ integration with TensorFlow**. The list of supported models and performance is continuously evolving as we are optimizing models and enabling more operators. The performance gain depends on various factors such as model architecture, Intel<sup>®</sup> Platform (e.g. Xeon<sup>®</sup> or Core<sup>TM</sup>), Backend device (e.g. CPU, GPU or VPU) etc. 
+
 
 ## TensorFlow-Slim Image Classification Library
 | Model Name | Supported Devices |
