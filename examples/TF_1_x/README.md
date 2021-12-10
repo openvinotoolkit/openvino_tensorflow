@@ -133,7 +133,7 @@ Run the object detection example using the instructions below:
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/TF_1_x/object_detection_sample.py
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py
 ```
 
 **Note**: use ```--no_show``` flag to disable the application display window. By default the display window is enabled.
@@ -151,29 +151,30 @@ In this case, we're using the default image of Admiral Grace Hopper. As you can 
 Next, try it out on your own image by passing the path to your new image. You can provide either absolute or relative path e.g.
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --image=<absolute-or-relative-path-to-your-image>
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --image=<absolute-or-relative-path-to-your-image>
 ```
 
 If you add the new image (e.g, my_image.png) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --image=examples/data/my_image.png
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --image=examples/data/my_image.png
 ```
 
 To see more options for various backends (Intel<sup>®</sup> hardware), invoke:
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --help
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --help
 ```
 
 Next, try it out on your own video file by passing the path to your input video. You can provide either absolute or relative path  e.g.
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
+
 If you add the new video (e.g, examples/data/people-detection.mp4) to the existing `<path-to-openvino_tensorflow-repository>/examples/data` directory in the openvino_tensorflow repository, it will look like this:
 
 ```bash
-$ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/people-detection.mp4
+$ python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --input=examples/data/people-detection.mp4
 ```
 
 For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.

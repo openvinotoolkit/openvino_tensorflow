@@ -94,7 +94,7 @@
       export OPENVINO_TF_BACKEND=CPU
       cd $(WORK_DIR)
       pip3 install -r examples/requirements.txt
-      python3 examples/TF_1_x/object_detection_sample.py --no_show
+      python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --no_show
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF1"     
@@ -107,7 +107,7 @@
       chmod +x convert_yolov4.sh
       ./convert_yolov4.sh
       cd $(WORK_DIR)
-      python3 examples/object_detection_sample.py --no_show
+      python3 examples/use_cases/renaming_images_with_detected_objects.py --no_show
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF2"
@@ -119,7 +119,7 @@
    #    ./convert_yolov4.sh
    #    cd $(WORK_DIR)
    #    pip3 install -r examples/requirements.txt
-   #    python3 examples/TF_1_x/object_detection_sample.py --no_show --backend MYRIAD
+   #    python3 examples/TF_1_x/use_cases/renaming_images_with_detected_objects.py --no_show --backend MYRIAD
    #   condition: always()
    #   workingDirectory: $(WORK_DIR) 
    #   displayName: "python MYRIAD OD Inference Example TF1"
@@ -131,7 +131,7 @@
       chmod +x convert_yolov4.sh
       ./convert_yolov4.sh
       cd $(WORK_DIR)
-      python3 examples/object_detection_sample.py --no_show --backend MYRIAD
+      python3 examples/use_cases/renaming_images_with_detected_objects.py --no_show --backend MYRIAD
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF2"

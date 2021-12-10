@@ -139,7 +139,7 @@ convert_yolov4.bat
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/object_detection_sample.py
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py
 ```
 **注意**：
 *使用```--no_show``` 标志禁用应用程序显示窗口。 默认情况下，显示窗口是启用的。、
@@ -157,31 +157,31 @@ $ python3 examples/object_detection_sample.py
 接下来，通过将路径传递给您的新输入，在您自己的图像上进行尝试。 您可以提供绝对或相对路径，例如：
 
 ```bash
-$ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py --input=<absolute-or-relative-path-to-your-image>
 ```
 
 如果您将新图像（如 my\_image.png）添加到 openvino\_tensorflow 存储库的现有 `<path-to-openvino_tensorflow-repository>/examples/data` 目录，将会是这样：
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
-$ python3 examples/object_detection_sample.py --input=examples/data/my_image.png
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py --input=examples/data/my_image.png
 ```
 
 如要查看各种后端（Intel<sup>®</sup> 硬件)的更多选项，请调用：
 ```bash
-$ python3 examples/object_detection_sample.py --help
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py --help
 ```
 
 
 接下来，通过将路径传递到您的输入视频，在您自己的视频文件上进行尝试。 您可以提供绝对或相对路径，例如
 
 ```bash
-$ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-video-file>
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py --input=<absolute-or-relative-path-to-your-video-file>
 ```
 如果您将新视频（例如，examples/data/people-detection.mp4）添加到 openvino_tensorflow 存储库中现有的 `<path-to-openvino_tensorflow-repository>/examples/data` 目录，它将如下所示：
 
 ```bash
-$ python3 examples/object_detection_sample.py --input=examples/data/people-detection.mp4
+$ python3 examples/use_cases/renaming_images_with_detected_objects.py --input=examples/data/people-detection.mp4
 ```
 
 使用相机作为输入使用```--input=0```。 这里的“0”指的是 /dev/video0 中的摄像头。 如果相机连接到不同的端口，请适当更改。
