@@ -564,7 +564,7 @@ def main():
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
-                "\\", "\\\\"),
+                "\\", "/"),
         ]
     else:
         openvino_tf_cmake_flags = [
