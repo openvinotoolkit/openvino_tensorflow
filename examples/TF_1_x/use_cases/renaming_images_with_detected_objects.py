@@ -35,8 +35,6 @@ import cv2
 import imghdr
 import sys
 from PIL import Image, ImageFont, ImageDraw
-
-#sys.path.append(sys.path.append(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(sys.path.append( sys.path.append(os.path.join(os.path.dirname(__file__), "../..") )))
 from common.utils import draw_boxes, get_colors, get_anchors
 from common.post_process import yolo3_postprocess_np
