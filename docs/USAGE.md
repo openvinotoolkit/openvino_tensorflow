@@ -71,6 +71,10 @@ or
 
 ## Environment Variables
 
+**OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS**
+
+This variable is enabled by default, and it freezes variables from TensorFlow's ReadVariableOp as constants during the graph translation phase. Highly recommended to keep it enabled to ensure optimal inference latencies on eagerly executed models. Disable it when model weights are modified after loading the model for inference.
+
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
 After clusters are formed, some of the clusters may still fall back to native TensorFlow (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
