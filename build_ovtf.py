@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2021.4.2')
+        default='master')
 
     parser.add_argument(
         '--python_executable',
@@ -198,7 +198,7 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
+            "master", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
     ]):
         raise AssertionError(
             "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
@@ -533,7 +533,9 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-        if (arguments.openvino_version == "2021.4.2"):
+        if (arguments.openvino_version == "master"):
+            openvino_release_tag = "master"
+        elif (arguments.openvino_version == "2021.4.2"):
             openvino_release_tag = "2021.4.2"
         elif (arguments.openvino_version == "2021.4.1"):
             openvino_release_tag = "2021.4.1"

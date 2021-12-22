@@ -65,12 +65,12 @@ if (APPLE)
 endif()
 
 if(WIN32)
-  get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
+  # get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
 	get_target_property(tensorflow_cc_lib_value tensorflow_cc_lib IMPORTED_LOCATION)
 	target_link_libraries(
 		${APP_NAME}
 		openvino_tensorflow
-		${ngraph_lib_value}
+		# ${ngraph_lib_value}
 		${TensorFlow_FRAMEWORK_LIBRARY}
 		${tensorflow_cc_lib_value}
 		absl_synchronization
@@ -80,7 +80,7 @@ else()
   target_link_libraries(
       ${APP_NAME}
       openvino_tensorflow
-      ngraph_lib
+      # ngraph_lib
       pthread
       ${TensorFlow_FRAMEWORK_LIBRARY}
       tensorflow_cc_lib

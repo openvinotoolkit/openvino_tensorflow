@@ -16,6 +16,8 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/slice_plan.hpp"
+#include "openvino/frontend/input_model.hpp"
+#include "openvino/frontend/tensorflow/frontend.hpp"
 
 #include "api.h"
 #include "logging/ovtf_log.h"
@@ -96,7 +98,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
                              const ng::Output<ng::Node> ng_node) {
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
-  node->add_provenance_tag(op_name);
+  // node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
@@ -4030,6 +4032,25 @@ Status Builder::TranslateGraph(
     result->set_needs_default_layout(true);
   }
   OVTF_VLOG(5) << "Done with translations";
+  return Status::OK();
+}
+
+Status Builder::CreateGraphIterator(
+    const std::vector<TensorShape>& inputs,
+    const std::vector<const Tensor*>& static_input_map,
+    const GraphDef* tf_graph, const string name,
+    std::shared_ptr<OVTFGraphIterator>& graph_iterator,
+    std::shared_ptr<ngraph::Function>& ng_function,
+    ngraph::ResultVector& ng_func_result_list,
+    const std::vector<Tensor>& tf_input_tensors) {
+  ov::frontend::tensorflow::GraphIterator::Ptr giter =
+      std::make_shared<OVTFGraphIterator>(tf_graph);
+
+  ov::Any gany(giter);
+  ov::frontend::tensorflow::FrontEnd frontend;
+  ov::frontend::InputModel::Ptr input_model = frontend.load(gany);
+  ng_function = frontend.convert(input_model);
+
   return Status::OK();
 }
 

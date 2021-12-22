@@ -852,7 +852,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         ])
     else:
         openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
+            "-DNGRAPH_COMPONENT_PREFIX=runtime/",
             "-DCMAKE_INSTALL_PREFIX=" + install_location
         ])
 

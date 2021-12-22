@@ -13,6 +13,7 @@
 #include "tensorflow/core/graph/graph.h"
 
 #include "ngraph/ngraph.hpp"
+#include "openvino_tensorflow/ovtf_graph_iterator.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -28,6 +29,15 @@ class Builder {
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
       const string name, std::shared_ptr<ngraph::Function>& ng_function,
+      ngraph::ResultVector& ng_func_result_list,
+      const std::vector<Tensor>& tf_input_tensors);
+
+  static Status CreateGraphIterator(
+      const std::vector<TensorShape>& inputs,
+      const std::vector<const Tensor*>& static_input_map,
+      const GraphDef* tf_graph, const string name,
+      std::shared_ptr<OVTFGraphIterator>& graph_iterator,
+      std::shared_ptr<ngraph::Function>& ng_function,
       ngraph::ResultVector& ng_func_result_list,
       const std::vector<Tensor>& tf_input_tensors);
 
