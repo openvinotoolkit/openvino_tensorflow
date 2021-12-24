@@ -116,7 +116,6 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.list_backends.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_backend.argtypes = [ctypes.c_char_p]
-    openvino_tensorflow_lib.set_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.get_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.freeBackend.argtypes = []
@@ -162,8 +161,7 @@ if ovtf_classic_loaded:
         return backend_list
 
     def set_backend(backend):
-        if not openvino_tensorflow_lib.set_backend(backend.encode("utf-8")):
-            raise Exception("Backend " + backend + " unavailable.")
+        openvino_tensorflow_lib.set_backend(backend.encode("utf-8"))
 
     def get_backend():
         result = ctypes.c_char_p()

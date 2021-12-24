@@ -65,7 +65,7 @@ void EXPORT_SYMBOL freeBackendsList() {
   }
 }
 
-bool set_backend(const char* backend) { return SetBackend(string(backend)); }
+void set_backend(const char* backend) { SetBackend(string(backend)); }
 
 extern bool get_backend(char** backend) {
   string b = GetBackend();
@@ -116,8 +116,11 @@ bool IsEnabled() { return _is_enabled; }
 
 vector<string> ListBackends() { return BackendManager::GetSupportedBackends(); }
 
-bool SetBackend(const string& type) {
-  return (BackendManager::SetBackend(type) == Status::OK());
+void SetBackend(const string& type) {
+  Status exec_status = BackendManager::SetBackend(type);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
 }
 
 string GetBackend() {
