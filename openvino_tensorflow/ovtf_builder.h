@@ -15,6 +15,11 @@
 #include "ngraph/ngraph.hpp"
 #include "openvino_tensorflow/ovtf_graph_iterator.h"
 
+#include "openvino/opsets/opset8.hpp"
+#include "openvino/frontend/tensorflow/extension/conversion.hpp"
+// TODO: modify this header file path, when conversion extension is moved to ovtf
+// #include "openvino/frontend/utils.hpp"
+
 namespace tensorflow {
 namespace openvino_tensorflow {
 

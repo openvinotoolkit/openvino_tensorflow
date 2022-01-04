@@ -547,11 +547,11 @@ def main():
             openvino_release_tag = "2021.2"
 
         # Download OpenVINO
-        download_repo(
-            "openvino",
-            "https://github.com/openvinotoolkit/openvino",
-            openvino_release_tag,
-            submodule_update=True)
+        # download_repo(
+        #     "openvino",
+        #     "https://github.com/openvinotoolkit/openvino",
+        #     openvino_release_tag,
+        #     submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
@@ -569,6 +569,22 @@ def main():
             "cp", "-r", "openvino/bin/intel64/lib/libov_tensorflow_frontend.so",
             "artifacts/openvino/runtime/lib/intel64/"
         ])
+        # TODO Copy conversion extension library and header files,
+        # remove it once handled in the module's cmakelist inside OV
+        command_executor([
+          "cp",
+          "openvino/src/frontends/tf_conversion_extensions/src/conversion_extensions.hpp",
+          "artifacts/openvino/runtime/include/openvino/frontend/"
+        ])
+        command_executor([
+          "cp",
+          "openvino/src/frontends/tf_conversion_extensions/src/ngraph_conversions.hpp",
+          "artifacts/openvino/runtime/include/openvino/frontend/"
+        ])
+        command_executor([
+            "cp", "-r", "openvino/bin/intel64/lib/libtf_conversion_extensions.so",
+            "artifacts/openvino/runtime/lib/intel64/"
+        ])        
 
     # Next build CMAKE options for the bridge
     atom_flags = ""

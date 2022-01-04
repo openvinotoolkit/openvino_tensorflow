@@ -9,6 +9,10 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
 
+# TODO: remove it later when conversion extensions is moved to ovtf
+include_directories(${TensorFlow_INCLUDE_DIR}/include/tensorflow/core/framework)
+# include_directories("/home/chandrakant/codes/test_repo/openvino_tensorflow/build_cmake/openvino/build_cmake/src/frontends/tf_conversion_extensions")
+
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")

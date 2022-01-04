@@ -4047,9 +4047,58 @@ Status Builder::CreateGraphIterator(
       std::make_shared<OVTFGraphIterator>(tf_graph);
 
   ov::Any gany(giter);
-  ov::frontend::tensorflow::FrontEnd frontend;
-  ov::frontend::InputModel::Ptr input_model = frontend.load(gany);
-  ng_function = frontend.convert(input_model);
+  ov::frontend::FrontEnd::Ptr frontend_ptr = std::make_shared<ov::frontend::tensorflow::FrontEnd>();
+  // ov::frontend::tensorflow::FrontEnd frontend;
+
+  // _Arg implementation
+  std::vector<ngraph::PartialShape> indexed_shape;
+  indexed_shape.reserve(inputs.size());
+  for(size_t i = 0; i < inputs.size(); ++i)
+  {
+      ng::Shape ng_shape;
+      TF_RETURN_IF_ERROR(
+              util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
+      indexed_shape.push_back(ng_shape);
+  }
+  // Add the OV extension lib
+  static bool once = true;
+  if (once){
+      std::string lib_path = "/home/chandrakant/codes/test_repo/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
+      frontend_ptr->add_extension(lib_path);
+      
+      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
+                [&indexed_shape] 
+                    (const ov::frontend::tensorflow::NodeContext& node) -> ov::OutputVector 
+                    {
+                        auto element_type = node.get_attribute<ngraph::element::Type>("T");
+                        auto index = node.get_attribute<int64_t>("index");
+                        auto shape = indexed_shape.at(index);
+                        
+                        auto res = std::make_shared<ov::opset8::Parameter>(element_type, shape);
+                        res->get_rt_info().insert({"index", ov::Any(index)});
+                        return {res}; 
+                    }));
+      
+      // _Retval implementation
+      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Retval", 
+              [&indexed_shape] 
+                  (const ov::frontend::tensorflow::NodeContext& node) -> ov::OutputVector 
+                  {
+                    if (node.get_input_size() != 1) {
+                        FRONT_END_GENERAL_CHECK(false, "_Retval has " + to_string(node.get_input_size()) + " inputs, should have 1");
+                    }
+
+                    auto index = node.get_attribute<int64_t>("index");
+                    auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+                    res->get_rt_info().insert({"index", ov::Any(index)});
+                    // ov::frontend::tensorflow::set_node_name(node.get_name(), res);
+                    return res->outputs();
+                  }));
+    once = false;
+  }
+
+  ov::frontend::InputModel::Ptr input_model = frontend_ptr->load(gany);
+  ng_function = frontend_ptr->convert(input_model);
 
   return Status::OK();
 }

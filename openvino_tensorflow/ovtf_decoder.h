@@ -29,9 +29,12 @@ class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
   explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def)
       : m_node_def(node_def) {}
 
-  ov::Any get_attribute(const std::string& name,
-                        const std::type_info& type_info) const override;
-
+  // Master branch has this function defintion
+  // but Ivan branch has the other definition
+  // ov::Any get_attribute(const std::string& name,
+  //                       const std::type_info& type_info) const override;
+  ov::Any get_attribute(const std::string& name) const override;                        
+  ov::Any get_native_attribute(const std::string& name) const override;
   size_t get_input_size() const override;
 
   void get_input_node(const size_t input_port_idx, std::string& producer_name,
