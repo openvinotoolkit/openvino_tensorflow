@@ -212,7 +212,7 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 6;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
