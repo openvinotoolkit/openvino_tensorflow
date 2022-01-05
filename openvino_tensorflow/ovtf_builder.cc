@@ -4068,7 +4068,7 @@ Status Builder::CreateGraphIterator(
       
       frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
                 [&indexed_shape] 
-                    (const ov::frontend::tensorflow::NodeContext& node) -> ov::OutputVector 
+                    (const ov::frontend::NodeContext& node) -> ov::OutputVector 
                     {
                         auto element_type = node.get_attribute<ngraph::element::Type>("T");
                         auto index = node.get_attribute<int64_t>("index");
@@ -4082,7 +4082,7 @@ Status Builder::CreateGraphIterator(
       // _Retval implementation
       frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Retval", 
               [&indexed_shape] 
-                  (const ov::frontend::tensorflow::NodeContext& node) -> ov::OutputVector 
+                  (const ov::frontend::NodeContext& node) -> ov::OutputVector 
                   {
                     if (node.get_input_size() != 1) {
                         FRONT_END_GENERAL_CHECK(false, "_Retval has " + to_string(node.get_input_size()) + " inputs, should have 1");
@@ -4091,7 +4091,6 @@ Status Builder::CreateGraphIterator(
                     auto index = node.get_attribute<int64_t>("index");
                     auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
                     res->get_rt_info().insert({"index", ov::Any(index)});
-                    // ov::frontend::tensorflow::set_node_name(node.get_name(), res);
                     return res->outputs();
                   }));
     once = false;
