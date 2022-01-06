@@ -40,7 +40,7 @@ class Builder {
   static Status CreateGraphIterator(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map,
-      const GraphDef* tf_graph, const string name,
+      const GraphDef* tf_graph, const Graph* input_graph, const string name,
       std::shared_ptr<OVTFGraphIterator>& graph_iterator,
       std::shared_ptr<ngraph::Function>& ng_function,
       ngraph::ResultVector& ng_func_result_list,

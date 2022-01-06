@@ -587,7 +587,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     const GraphDef* graph_def =
         NGraphClusterManager::GetClusterGraph(m_cluster_id);
     TF_RETURN_IF_ERROR(Builder::CreateGraphIterator(
-        input_shapes, static_input_map, graph_def, m_name, graph_iterator,
+        input_shapes, static_input_map, graph_def, &m_graph, m_name, graph_iterator,
         ng_function, ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 

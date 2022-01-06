@@ -16,6 +16,8 @@
 #include "openvino/frontend/tensorflow/graph_iterator.hpp"
 #include "openvino_tensorflow/ovtf_decoder.h"
 
+#include "tensorflow/core/graph/graph.h"
+
 using namespace std;
 
 namespace tensorflow {
@@ -46,6 +48,21 @@ class OVTFGraphIterator : public ov::frontend::tensorflow::GraphIterator {
   std::shared_ptr<ov::frontend::tensorflow::DecoderBase> get_decoder()
       const override {
     return std::make_shared<OVTFDecoder>(m_nodes[node_index]);
+  }
+
+  void sort_nodes(std::vector<std::string> &ordered_names) {
+    int ordered_idx = 0;
+    for (int i=0; i<ordered_names.size(); i++) {
+      for (int j=ordered_idx; j<m_nodes.size(); j++) {
+        if (ordered_names[i] == m_nodes[j]->name()) {
+          const ::tensorflow::NodeDef *current = m_nodes[ordered_idx];
+          m_nodes[ordered_idx] = m_nodes[j];
+          m_nodes[j] = current;
+          ordered_idx++;
+          break;
+        }
+      }
+    }
   }
 
  private:
