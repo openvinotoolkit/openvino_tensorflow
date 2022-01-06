@@ -566,7 +566,7 @@ def main():
             "artifacts/openvino/runtime/include/openvino/frontend/"
         ])
         command_executor([
-            "cp", "-r", "openvino/bin/intel64/lib/libov_tensorflow_frontend.so",
+            "cp", "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
             "artifacts/openvino/runtime/lib/intel64/"
         ])
         # TODO Copy conversion extension library and header files,
@@ -582,7 +582,7 @@ def main():
           "artifacts/openvino/runtime/include/openvino/frontend/"
         ])
         command_executor([
-            "cp", "-r", "openvino/bin/intel64/lib/libtf_conversion_extensions.so",
+            "cp", "openvino/bin/intel64/Release/lib/libtf_conversion_extensions.so",
             "artifacts/openvino/runtime/lib/intel64/"
         ])        
 
