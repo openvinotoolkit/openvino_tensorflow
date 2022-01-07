@@ -4077,7 +4077,8 @@ Status Builder::CreateGraphIterator(
   // Add the OV extension lib
   static bool once = true;
   if (once){
-      std::string lib_path = "/home/chandrakant/codes/test_repo/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
+      //std::string lib_path = "/home/chandrakant/codes/test_repo/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
+      std::string lib_path = "/home/mcavus/Workspace/ngraph/fe_pr5/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
       frontend_ptr->add_extension(lib_path);
       
       frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
@@ -4112,6 +4113,11 @@ Status Builder::CreateGraphIterator(
 
   ov::frontend::InputModel::Ptr input_model = frontend_ptr->load(gany);
   ng_function = frontend_ptr->convert(input_model);
+
+  ng_func_result_list.resize(ng_function->get_results().size());
+  for (int i=0; i<ng_function->get_results().size(); i++) {
+    ng_func_result_list[i] = ng_function->get_results()[i];
+  }
 
   return Status::OK();
 }
