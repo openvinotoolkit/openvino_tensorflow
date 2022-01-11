@@ -1,0 +1,28 @@
+diff --git a/src/frontends/tensorflow/src/utils.hpp b/src/frontends/tensorflow/src/utils.hpp
+index be6d33578..8feb2d988 100644
+--- a/src/frontends/tensorflow/src/utils.hpp
++++ b/src/frontends/tensorflow/src/utils.hpp
+@@ -99,7 +99,9 @@ void values_from_const_node(const NodeContext& node, ov::Shape* const_tensor_sha
+     TENSORFLOW_OP_VALIDATION(node, node.get_op_type() == "Const", "Node is expected to be Constant.");
+     const auto* decoder = node.get_decoder();
+     auto dt = decoder->get_native_attribute("dtype").as<::tensorflow::DataType>();
+-    auto tensor_proto = decoder->get_native_attribute("value").as<::tensorflow::TensorProto>();
++    // auto tensor_proto = decoder->get_native_attribute("value").as<::tensorflow::TensorProto>();
++    ov::Any any = decoder->get_native_attribute("value");
++    auto tensor_proto = any.as<::tensorflow::TensorProto>();
+     const ::tensorflow::TensorShapeProto& shape = tensor_proto.tensor_shape();
+     ov::PartialShape pshape;
+     tf_shape_to_ov_shape(shape, &pshape);
+diff --git a/src/frontends/tf_conversion_extensions/src/op/fused_conv_2d.cpp b/src/frontends/tf_conversion_extensions/src/op/fused_conv_2d.cpp
+index 3253c5ee1..f7e5aa02c 100644
+--- a/src/frontends/tf_conversion_extensions/src/op/fused_conv_2d.cpp
++++ b/src/frontends/tf_conversion_extensions/src/op/fused_conv_2d.cpp
+@@ -15,7 +15,7 @@ namespace tensorflow {
+ namespace op {
+ 
+ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
+-    auto num_args = node.get_attribute<int>("num_args");
++    auto num_args = node.get_attribute<int64_t>("num_args");
+     auto fused_ops = node.get_attribute<std::vector<string>>("fused_ops");
+ 
+     auto tf_data_format = node.get_attribute<std::string>("data_format");

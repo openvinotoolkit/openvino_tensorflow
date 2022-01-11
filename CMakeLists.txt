@@ -186,7 +186,7 @@ message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
-if (${OPENVINO_VERSION} MATCHES "master")
+if (${OPENVINO_VERSION} MATCHES "itikhono/fe_extensions/conversion_fused_ops")
   add_definitions(-DOPENVINO_2021_4_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "2021.4.2")
   add_definitions(-DOPENVINO_2021_4_2=1)
@@ -223,6 +223,13 @@ set_target_properties(
     tensorflow_frontend_lib
     PROPERTIES IMPORTED_LOCATION
     ${NGRAPH_INSTALL_DIR}/${LIB}/libov_tensorflow_frontend.so
+)
+
+add_library(ov_runtime_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    ov_runtime_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${NGRAPH_INSTALL_DIR}/${LIB}/libov_runtime.so
 )
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")

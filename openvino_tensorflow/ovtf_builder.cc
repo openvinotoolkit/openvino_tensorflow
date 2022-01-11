@@ -4044,25 +4044,15 @@ Status Builder::CreateGraphIterator(
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
     const std::vector<Tensor>& tf_input_tensors) {
-  // vector<Node*> ordered;
-  // GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
-  //ov::frontend::tensorflow::GraphIterator::Ptr giter =
-  //    std::make_shared<OVTFGraphIterator>(tf_graph);
   auto gd = std::make_shared<::tensorflow::GraphDef>();
   input_graph->ToGraphDef(gd.get());
   std::shared_ptr<OVTFGraphIterator> giter =
       std::make_shared<OVTFGraphIterator>(gd.get());
-    // std::vector<std::string> ordered_names(ordered.size());
-  // for (int i=0; i<ordered.size(); i++) {
-  //   ordered_names[i] = ordered[i]->name();
-  // }
-  // giter->sort_nodes(ordered_names);
 
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
   ov::frontend::FrontEnd::Ptr frontend_ptr = std::make_shared<ov::frontend::tensorflow::FrontEnd>();
-  // ov::frontend::tensorflow::FrontEnd frontend;
 
   // _Arg implementation
   std::vector<ngraph::PartialShape> indexed_shape;
@@ -4077,8 +4067,15 @@ Status Builder::CreateGraphIterator(
   // Add the OV extension lib
   static bool once = true;
   if (once){
-      //std::string lib_path = "/home/chandrakant/codes/test_repo/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
-      std::string lib_path = "/home/mcavus/Workspace/ngraph/fe_pr5/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
+      //TODO: Temporary fix for lib path, replace it with proper path
+      #ifdef TF_EXTENSION_LIB_DIR
+        #define lib_dir TF_EXTENSION_LIB_DIR
+      #else
+        #define lib_dir "NA"
+      #endif
+      // std::string lib_dir = "@TF_EXTENSION_LIB_DIR@";
+      std::string lib_name = "/libtf_conversion_extensions.so";
+      std::string lib_path = lib_dir + lib_name;
       frontend_ptr->add_extension(lib_path);
       
       frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 

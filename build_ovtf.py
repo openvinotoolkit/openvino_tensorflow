@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='master')
+        default='itikhono/fe_extensions/conversion_fused_ops')
 
     parser.add_argument(
         '--python_executable',
@@ -198,7 +198,7 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "master", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
+            "itikhono/fe_extensions/conversion_fused_ops", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
     ]):
         raise AssertionError(
             "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
@@ -533,8 +533,8 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-        if (arguments.openvino_version == "master"):
-            openvino_release_tag = "master"
+        if (arguments.openvino_version == "itikhono/fe_extensions/conversion_fused_ops"):
+            openvino_release_tag = "itikhono/fe_extensions/conversion_fused_ops"
         elif (arguments.openvino_version == "2021.4.2"):
             openvino_release_tag = "2021.4.2"
         elif (arguments.openvino_version == "2021.4.1"):
@@ -547,11 +547,11 @@ def main():
             openvino_release_tag = "2021.2"
 
         # Download OpenVINO
-        # download_repo(
-        #     "openvino",
-        #     "https://github.com/openvinotoolkit/openvino",
-        #     openvino_release_tag,
-        #     submodule_update=True)
+        download_repo(
+            "openvino",
+            "https://github.com/itikhono/openvino.git",
+            openvino_release_tag,
+            submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
@@ -565,26 +565,19 @@ def main():
             "openvino/src/frontends/tensorflow/include/openvino/frontend/tensorflow",
             "artifacts/openvino/runtime/include/openvino/frontend/"
         ])
+        print ("Copying protobuf headers")
+        pb_headers_path = "openvino/build_cmake/src/frontends/tensorflow/"
+        pb_headers = [os.path.join(pb_headers_path, f) for f in os.listdir(pb_headers_path) if f.endswith('.pb.h')]
+        for f in pb_headers:
+          command_executor([
+              "cp", f,
+              "artifacts/openvino/runtime/include/openvino/frontend/tensorflow/"
+          ])
+
         command_executor([
             "cp", "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
             "artifacts/openvino/runtime/lib/intel64/"
         ])
-        # TODO Copy conversion extension library and header files,
-        # remove it once handled in the module's cmakelist inside OV
-        command_executor([
-          "cp",
-          "openvino/src/frontends/tf_conversion_extensions/src/conversion_extensions.hpp",
-          "artifacts/openvino/runtime/include/openvino/frontend/"
-        ])
-        command_executor([
-          "cp",
-          "openvino/src/frontends/tf_conversion_extensions/src/ngraph_conversions.hpp",
-          "artifacts/openvino/runtime/include/openvino/frontend/"
-        ])
-        command_executor([
-            "cp", "openvino/bin/intel64/Release/lib/libtf_conversion_extensions.so",
-            "artifacts/openvino/runtime/lib/intel64/"
-        ])        
 
     # Next build CMAKE options for the bridge
     atom_flags = ""
