@@ -42,11 +42,11 @@ __all__ = [
 ]
 
 if system() == 'Darwin':
-    ext = 'dylib'
+    ext = '.dylib'
 elif system() == 'Windows':
-    ext = 'dll'
+    ext = '.dll'
 else:
-    ext = 'so'
+    ext = '.so'
 
 TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
@@ -78,11 +78,6 @@ try:
 except TypeError:
     pass
 
-# print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
-#                                                        TF_GIT_VERSION))
-# print("Openvino_Tensorflow built with: {0} ({1})".format(TF_VERSION_NEEDED,
-#                                                    TF_GIT_VERSION_BUILT_WITH))
-
 # We need to revisit this later. We can automate that using cmake configure
 # command.
 TF_INSTALLED_VER = TF_VERSION.split('.')
@@ -95,9 +90,9 @@ if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
    ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
     libpath = os.path.dirname(__file__)
     if system() == 'Windows':
-        full_lib_path = os.path.join(libpath, 'openvino_tensorflow.' + ext)
+        full_lib_path = os.path.join(libpath, 'openvino_tensorflow' + ext)
     else:
-      full_lib_path = os.path.join(libpath, 'libopenvino_tensorflow.' + ext)
+      full_lib_path = os.path.join(libpath, 'libopenvino_tensorflow' + ext)
     _ = load_library.load_op_library(full_lib_path)
     openvino_tensorflow_lib = ctypes.cdll.LoadLibrary(full_lib_path)
 else:
@@ -137,6 +132,19 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.freeClusterInfo.restype = ctypes.c_void_p
     openvino_tensorflow_lib.freeErrMsg.argtypes = []
     openvino_tensorflow_lib.freeErrMsg.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.load_tf_conversion_extensions.argtypes = [ctypes.c_char_p]
+    
+    def load_tf_conversion_extensions():
+        import importlib
+        lib_dir = os.path.dirname(importlib.util.find_spec("openvino_tensorflow").origin)
+        if system() == "Windows":
+            tf_conversion_extensions_lib_name = "${TF_CONVERSION_EXTENSIONS_LIB_NAME}" + ext
+        else:
+            tf_conversion_extensions_lib_name = "lib" + "${TF_CONVERSION_EXTENSIONS_LIB_NAME}" + ext
+        tf_conversion_extensions_so_path = os.path.join(lib_dir, tf_conversion_extensions_lib_name)
+        openvino_tensorflow_lib.load_tf_conversion_extensions(tf_conversion_extensions_so_path.encode("utf-8"))
+    
+    load_tf_conversion_extensions()
 
     def enable():
         openvino_tensorflow_lib.enable()

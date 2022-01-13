@@ -4036,6 +4036,14 @@ Status Builder::TranslateGraph(
   return Status::OK();
 }
 
+// Initialize the lib path as empty string
+std::string Builder::m_tf_conversion_extensions_lib_path = "";
+
+void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path){
+  m_tf_conversion_extensions_lib_path = tf_conversion_extensions_so_path;
+}
+ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr = std::make_shared<ov::frontend::tensorflow::FrontEnd>();
+
 Status Builder::CreateGraphIterator(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
@@ -4052,7 +4060,6 @@ Status Builder::CreateGraphIterator(
 
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
-  ov::frontend::FrontEnd::Ptr frontend_ptr = std::make_shared<ov::frontend::tensorflow::FrontEnd>();
 
   // _Arg implementation
   std::vector<ngraph::PartialShape> indexed_shape;
@@ -4064,52 +4071,68 @@ Status Builder::CreateGraphIterator(
               util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
       indexed_shape.push_back(ng_shape);
   }
+
   // Add the OV extension lib
   static bool once = true;
   if (once){
-      //TODO: Temporary fix for lib path, replace it with proper path
-      #ifdef TF_EXTENSION_LIB_DIR
-        #define lib_dir TF_EXTENSION_LIB_DIR
+      #ifdef _WIN32
+        #define EXT ".dll"
+      #elif  __APPLE__
+        #define EXT ".dylib"
       #else
-        #define lib_dir "NA"
+        #define EXT ".so"
       #endif
-      // std::string lib_dir = "@TF_EXTENSION_LIB_DIR@";
-      std::string lib_name = "/libtf_conversion_extensions.so";
-      std::string lib_path = lib_dir + lib_name;
-      frontend_ptr->add_extension(lib_path);
-      
-      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
-                [&indexed_shape] 
-                    (const ov::frontend::NodeContext& node) -> ov::OutputVector 
-                    {
-                        auto element_type = node.get_attribute<ngraph::element::Type>("T");
-                        auto index = node.get_attribute<int64_t>("index");
-                        auto shape = indexed_shape.at(index);
-                        
-                        auto res = std::make_shared<ov::opset8::Parameter>(element_type, shape);
-                        res->get_rt_info().insert({"index", ov::Any(index)});
-                        return {res}; 
-                    }));
-      
-      // _Retval implementation
-      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Retval", 
-              [&indexed_shape] 
-                  (const ov::frontend::NodeContext& node) -> ov::OutputVector 
-                  {
-                    if (node.get_input_size() != 1) {
-                        FRONT_END_GENERAL_CHECK(false, "_Retval has " + to_string(node.get_input_size()) + " inputs, should have 1");
-                    }
 
-                    auto index = node.get_attribute<int64_t>("index");
-                    auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
-                    res->get_rt_info().insert({"index", ov::Any(index)});
-                    return res->outputs();
-                  }));
-    once = false;
+      // This would set the conversion extension path for c++ library
+      if (m_tf_conversion_extensions_lib_path.empty()){
+        std::string lib_path;
+        #ifdef OVTF_INSTALL_LIB_DIR 
+          lib_path =  OVTF_INSTALL_LIB_DIR;
+        #endif
+        #ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME 
+          #ifdef _WIN32
+            lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+          #else
+            lib_path = lib_path + "/" + "lib" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+          #endif
+        #endif        
+        // TODO: Add check if the lib_path exists, otherwise throw error
+        SetLibPath(lib_path);
+      }
+      m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);
+      once = false;
   }
 
-  ov::frontend::InputModel::Ptr input_model = frontend_ptr->load(gany);
-  ng_function = frontend_ptr->convert(input_model);
+  m_frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
+            [&indexed_shape] 
+                (const ov::frontend::NodeContext& node) -> ov::OutputVector 
+                {
+                    auto element_type = node.get_attribute<ngraph::element::Type>("T");
+                    auto index = node.get_attribute<int64_t>("index");
+                    auto shape = indexed_shape.at(index);
+                    
+                    auto res = std::make_shared<ov::opset8::Parameter>(element_type, shape);
+                    res->get_rt_info().insert({"index", ov::Any(index)});
+                    return {res}; 
+                }));
+  
+  // _Retval implementation
+  m_frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Retval", 
+          [&indexed_shape] 
+              (const ov::frontend::NodeContext& node) -> ov::OutputVector 
+              {
+                if (node.get_input_size() != 1) {
+                    FRONT_END_GENERAL_CHECK(false, "_Retval has " + to_string(node.get_input_size()) + " inputs, should have 1");
+                }
+
+                auto index = node.get_attribute<int64_t>("index");
+                auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+                res->get_rt_info().insert({"index", ov::Any(index)});
+                return res->outputs();
+              }));
+
+  ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+  ng_function = m_frontend_ptr->convert(input_model);
 
   ng_func_result_list.resize(ng_function->get_results().size());
   for (int i=0; i<ng_function->get_results().size(); i++) {

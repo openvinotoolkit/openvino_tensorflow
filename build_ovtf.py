@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='itikhono/fe_extensions/conversion_fused_ops')
+        default='itikhono/fe_extensions/conversion')
 
     parser.add_argument(
         '--python_executable',
@@ -198,7 +198,7 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "itikhono/fe_extensions/conversion_fused_ops", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
+            "itikhono/fe_extensions/conversion", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
     ]):
         raise AssertionError(
             "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
@@ -533,8 +533,8 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-        if (arguments.openvino_version == "itikhono/fe_extensions/conversion_fused_ops"):
-            openvino_release_tag = "itikhono/fe_extensions/conversion_fused_ops"
+        if (arguments.openvino_version == "itikhono/fe_extensions/conversion"):
+            openvino_release_tag = "itikhono/fe_extensions/conversion"
         elif (arguments.openvino_version == "2021.4.2"):
             openvino_release_tag = "2021.4.2"
         elif (arguments.openvino_version == "2021.4.1"):
@@ -565,14 +565,6 @@ def main():
             "openvino/src/frontends/tensorflow/include/openvino/frontend/tensorflow",
             "artifacts/openvino/runtime/include/openvino/frontend/"
         ])
-        print ("Copying protobuf headers")
-        pb_headers_path = "openvino/build_cmake/src/frontends/tensorflow/"
-        pb_headers = [os.path.join(pb_headers_path, f) for f in os.listdir(pb_headers_path) if f.endswith('.pb.h')]
-        for f in pb_headers:
-          command_executor([
-              "cp", f,
-              "artifacts/openvino/runtime/include/openvino/frontend/tensorflow/"
-          ])
 
         command_executor([
             "cp", "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",

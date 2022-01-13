@@ -85,6 +85,13 @@ class Builder {
   // 3. Prints a log if OPENVINO_TF_LOG_PLACEMENT=1
   static void SetTracingInfo(const std::string& op_name,
                              const ngraph::Output<ngraph::Node> ng_node);
+  
+  static void SetLibPath(const std::string&);
+
+  private:
+  // tf_conversion_extensions module lib path, to load the library using Frontend
+  static std::string m_tf_conversion_extensions_lib_path;
+  static ov::frontend::FrontEnd::Ptr m_frontend_ptr;
 };
 
 }  // namespace openvino_tensorflow

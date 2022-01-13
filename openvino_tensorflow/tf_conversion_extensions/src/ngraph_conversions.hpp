@@ -6,15 +6,12 @@
 
 #include <string>
 
-#include "openvino/frontend/tensorflow/graph.pb.h"
 #include "openvino/opsets/opset8.hpp"
-#include "openvino/frontend/tensorflow/types.pb.h"
 
 namespace ov {
 namespace frontend {
 namespace tensorflow {
 
-using ::tensorflow::DataType;
 
 template <size_t a, size_t b, size_t c, size_t d>
 void Transpose(ov::Output<ov::Node>& node) {

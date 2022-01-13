@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-set(TARGET_NAME "tf_conversion_extensions")
+set(TARGET_NAME tf_conversion_extensions)
 
 file(GLOB_RECURSE LIBRARY_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE LIBRARY_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp)
@@ -26,3 +26,5 @@ target_include_directories(${TARGET_NAME}
             ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(${TARGET_NAME} tensorflow_frontend_lib ov_runtime_lib)
+
+install(CODE "set(TF_CONVERSION_EXTENSIONS_LIB_NAME \"${TARGET_NAME}\")")

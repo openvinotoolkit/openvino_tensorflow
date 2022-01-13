@@ -9,6 +9,8 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
 
+set(TF_CONVERSION_EXTENSIONS_MODULE_NAME "tf_conversion_extensions")
+add_compile_definitions(TF_CONVERSION_EXTENSIONS_MODULE_NAME="${TF_CONVERSION_EXTENSIONS_MODULE_NAME}")
 add_subdirectory(tf_conversion_extensions)
 
 # For some reason the following is needed for ABI compatibility with TF.
@@ -116,8 +118,8 @@ else()
 	set(OVTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
-# TODO: temporary addition for tf_conversion_extension, remove it later
-add_compile_definitions(TF_EXTENSION_LIB_DIR="${OVTF_INSTALL_LIB_DIR}")
+# OVTF install dir required for importing TF Conversion Extensions library
+add_compile_definitions(OVTF_INSTALL_LIB_DIR="${OVTF_INSTALL_LIB_DIR}")
 
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
@@ -145,10 +147,13 @@ install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 # Install OpenVINO libraries
 if (APPLE)
   set(OCM_LIB libocm.dylib)
+  set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dylib")
 elseif(WIN32)
   set(OCM_LIB ocm.dll)
+  set(TF_CONVERSION_EXTENSIONS_LIB "${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dll")
 else()
   set(OCM_LIB libocm.so)
+  set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.so")
 endif()
 
 if(WIN32)
@@ -159,7 +164,7 @@ else()
   set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/)
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-  install(FILES ${CMAKE_INSTALL_PREFIX}/../openvino_tensorflow/tf_conversion_extensions/libtf_conversion_extensions.so DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
