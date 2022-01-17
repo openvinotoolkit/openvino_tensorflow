@@ -67,7 +67,6 @@ class NGraphEncapsulateOp : public OpKernel {
   std::list<std::string> m_lru;
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
   ngraph::ResultVector ng_result_list;
-  std::vector<ngraph::Shape> ng_output_shapes;
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
@@ -316,6 +315,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       ng_result_list.size(), nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
+  auto ng_output_shapes = ng_exec->GetOutputShapes();
   int j = 0;
 #if defined(OPENVINO_2021_2)
   if (device != "MYRIAD" && device != "HDDL") {
@@ -447,7 +447,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       ctx->set_output(i, tf_tensor);
     }
   } else {
-    auto out_shape_check = [this](int i) {
+    auto out_shape_check = [ng_output_shapes](int i) {
       if (ng_output_shapes[i].size() > 0) {
         auto out_shape_list = ng_output_shapes[i];
         for (auto dim : out_shape_list) {
@@ -580,13 +580,13 @@ Status NGraphEncapsulateOp::GetExecutable(
     util::MemoryProfile(vm0, rss0);
 
     ng_result_list.clear();
-    ng_output_shapes.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraph(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
         ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
+    std::vector<ngraph::Shape> ng_output_shapes;
     ng_output_shapes.resize(ng_result_list.size());
     for (int i = 0; i < ng_result_list.size(); i++) {
       if (ng_result_list[i]->is_dynamic()) {
@@ -619,6 +619,8 @@ Status NGraphEncapsulateOp::GetExecutable(
     }
 
     m_ng_exec_map[signature] = ng_exec;
+    ng_exec->SetOutputShapes(ng_output_shapes);
+
     m_lru.push_front(signature);
 
     // Memory after
