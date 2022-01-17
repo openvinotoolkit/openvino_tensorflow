@@ -43,13 +43,11 @@ class Executable {
     }
   }
 
-  void SetOutputShapes(vector<ngraph::Shape> ng_output_shapes){
-      m_ng_output_shapes = ng_output_shapes;
+  void SetOutputShapes(vector<ngraph::Shape> ng_output_shapes) {
+    m_ng_output_shapes = ng_output_shapes;
   }
 
-  const vector<ngraph::Shape> GetOutputShapes() {
-      return m_ng_output_shapes;
-  }
+  const vector<ngraph::Shape> GetOutputShapes() { return m_ng_output_shapes; }
 
   void ExportIR(const string& output_dir);
 
