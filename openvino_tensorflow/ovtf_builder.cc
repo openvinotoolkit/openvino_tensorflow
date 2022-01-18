@@ -4131,8 +4131,12 @@ Status Builder::CreateGraphIterator(
                 return res->outputs();
               }));
 
-  ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
-  ng_function = m_frontend_ptr->convert(input_model);
+  try {
+      ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+      ng_function = m_frontend_ptr->convert(input_model);
+  } catch (...) {
+      return errors::Internal("Frontend convertion error");
+  }
 
   ng_func_result_list.resize(ng_function->get_results().size());
   for (int i=0; i<ng_function->get_results().size(); i++) {
