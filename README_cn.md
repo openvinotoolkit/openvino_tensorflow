@@ -85,7 +85,7 @@
 
 如欲了解 **OpenVINO™ integration with TensorFlow** 的具体功能，请查看[示例](./examples)目录中的演示。
 
-示例教程也托管在 [Intel<sup>®</sup> DevCloud for the Edge](https://software.intel.com/content/www/us/en/develop/tools/devcloud/edge/build/ ovtfoverview.html）。 演示应用程序是使用 Jupyter Notebooks 实现的。 您可以在Intel<sup>®</sup> DevCloud 节点上执行它们，比较 **OpenVINO™ integration with TensorFlow** 原生 TensorFlow 和 OpenVINO™ 不同实现方式的性能结果。
+示例教程也托管在 [Intel<sup>®</sup> DevCloud for the Edge](https://www.intel.com/content/www/us/en/developer/tools/devcloud/edge/build/ovtfoverview.html）。 演示应用程序是使用 Jupyter Notebooks 实现的。 您可以在Intel<sup>®</sup> DevCloud 节点上执行它们，比较 **OpenVINO™ integration with TensorFlow** 原生 TensorFlow 和 OpenVINO™ 不同实现方式的性能结果。
 
 ## 许可
 **OpenVINO™ integration with TensorFlow** 依照 [Apache 许可版本 2.0](LICENSE)。通过贡献项目，您同意其中包含的许可和版权条款，并根据这些条款发布您的贡献。
