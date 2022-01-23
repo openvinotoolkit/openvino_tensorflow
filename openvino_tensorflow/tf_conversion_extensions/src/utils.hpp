@@ -31,34 +31,31 @@ namespace tensorflow {
 
 void set_out_name(const std::string& out_name, const Output<Node>& output);
 
-void set_node_name(const std::string& node_name, const std::shared_ptr<Node>& node);
+void set_node_name(const std::string& node_name,
+                   const std::shared_ptr<Node>& node);
 
-static bool vec_str_cmp(const std::vector<std::string>& a, const std::vector<std::string>& b) {
-    return a == b;
+static bool vec_str_cmp(const std::vector<std::string>& a,
+                        const std::vector<std::string>& b) {
+  return a == b;
 }
 
 template <typename T>
 void make_padding(const std::string& tf_padding_type,
                   const ov::Shape& ng_image_shape,
                   const ov::Shape& ng_kernel_shape,
-                  const ov::Strides& ng_strides,
-                  const ov::Shape& ng_dilations,
-                  T& ng_padding_below,
-                  T& ng_padding_above) {
-    if (tf_padding_type == "SAME") {
-        ov::Shape img_shape = {0, 0};
-        img_shape.insert(img_shape.end(), ng_image_shape.begin(), ng_image_shape.end());
-        ov::infer_auto_padding(img_shape,
-                               ng_kernel_shape,
-                               ng_strides,
-                               ng_dilations,
-                               ov::op::PadType::SAME_UPPER,
-                               ng_padding_above,
-                               ng_padding_below);
-    } else if (tf_padding_type == "VALID") {
-        ng_padding_below.assign(ng_image_shape.size(), 0);
-        ng_padding_above.assign(ng_image_shape.size(), 0);
-    }
+                  const ov::Strides& ng_strides, const ov::Shape& ng_dilations,
+                  T& ng_padding_below, T& ng_padding_above) {
+  if (tf_padding_type == "SAME") {
+    ov::Shape img_shape = {0, 0};
+    img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                     ng_image_shape.end());
+    ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides, ng_dilations,
+                           ov::op::PadType::SAME_UPPER, ng_padding_above,
+                           ng_padding_below);
+  } else if (tf_padding_type == "VALID") {
+    ng_padding_below.assign(ng_image_shape.size(), 0);
+    ng_padding_above.assign(ng_image_shape.size(), 0);
+  }
 }
 }  // namespace tensorflow
 }  // namespace frontend

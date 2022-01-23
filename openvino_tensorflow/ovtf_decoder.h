@@ -33,7 +33,7 @@ class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
   // but Ivan branch has the other definition
   // ov::Any get_attribute(const std::string& name,
   //                       const std::type_info& type_info) const override;
-  ov::Any get_attribute(const std::string& name) const override;                        
+  ov::Any get_attribute(const std::string& name) const override;
   ov::Any get_native_attribute(const std::string& name) const override;
   size_t get_input_size() const override;
 

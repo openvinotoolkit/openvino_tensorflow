@@ -15,9 +15,10 @@
 #include "ngraph/ngraph.hpp"
 #include "openvino_tensorflow/ovtf_graph_iterator.h"
 
-#include "openvino/opsets/opset8.hpp"
 #include "openvino/frontend/tensorflow/extension/conversion.hpp"
-// TODO: modify this header file path, when conversion extension is moved to ovtf
+#include "openvino/opsets/opset8.hpp"
+// TODO: modify this header file path, when conversion extension is moved to
+// ovtf
 // #include "openvino/frontend/utils.hpp"
 
 namespace tensorflow {
@@ -85,11 +86,12 @@ class Builder {
   // 3. Prints a log if OPENVINO_TF_LOG_PLACEMENT=1
   static void SetTracingInfo(const std::string& op_name,
                              const ngraph::Output<ngraph::Node> ng_node);
-  
+
   static void SetLibPath(const std::string&);
 
-  private:
-  // tf_conversion_extensions module lib path, to load the library using Frontend
+ private:
+  // tf_conversion_extensions module lib path, to load the library using
+  // Frontend
   static std::string m_tf_conversion_extensions_lib_path;
   static ov::frontend::FrontEnd::Ptr m_frontend_ptr;
 };

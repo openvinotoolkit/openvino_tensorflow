@@ -108,7 +108,8 @@ bool export_ir(const char* output_dir, char** cluster_info, char** err_msg) {
   return true;
 }
 
-void load_tf_conversion_extensions(const char* tf_conversion_extensions_so_path){
+void load_tf_conversion_extensions(
+    const char* tf_conversion_extensions_so_path) {
   LoadTFConversionExtensions(tf_conversion_extensions_so_path);
 }
 }
@@ -187,7 +188,8 @@ bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
   return true;
 }
 
-void LoadTFConversionExtensions(const string& tf_conversion_extensions_so_path){
+void LoadTFConversionExtensions(
+    const string& tf_conversion_extensions_so_path) {
   Builder::SetLibPath(tf_conversion_extensions_so_path);
 }
 }  // namespace api
