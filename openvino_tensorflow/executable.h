@@ -47,6 +47,12 @@ class Executable {
     m_const_inputs = const_inputs;
   }
 
+  void SetOutputShapes(vector<ngraph::Shape> ng_output_shapes) {
+    m_ng_output_shapes = ng_output_shapes;
+  }
+
+  const vector<ngraph::Shape> GetOutputShapes() { return m_ng_output_shapes; }
+
   void ExportIR(const string& output_dir);
 
  private:
@@ -61,6 +67,7 @@ class Executable {
   vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;
   vector<int> m_const_inputs;
+  vector<ngraph::Shape> m_ng_output_shapes;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
   shared_ptr<ngraph::Function> m_trivial_fn;
