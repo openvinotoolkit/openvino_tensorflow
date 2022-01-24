@@ -4040,6 +4040,7 @@ Status Builder::TranslateGraph(
 std::string Builder::m_tf_conversion_extensions_lib_path = "";
 
 void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path) {
+  // TODO: Add check if the lib_path exists, otherwise throw error
   m_tf_conversion_extensions_lib_path = tf_conversion_extensions_so_path;
 }
 ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
@@ -4061,7 +4062,6 @@ Status Builder::CreateGraphIterator(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  // _Arg implementation
   std::vector<ngraph::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
@@ -4102,6 +4102,7 @@ Status Builder::CreateGraphIterator(
     once = false;
   }
 
+  // _Arg implementation
   m_frontend_ptr->add_extension(
       std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
           "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
@@ -4137,7 +4138,7 @@ Status Builder::CreateGraphIterator(
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
     ng_function = m_frontend_ptr->convert(input_model);
   } catch (...) {
-    return errors::Internal("Frontend convertion error");
+    return errors::Internal("Frontend conversion error");
   }
 
   ng_func_result_list.resize(ng_function->get_results().size());

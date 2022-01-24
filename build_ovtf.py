@@ -198,8 +198,7 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "master", "itikhono/fe_extensions/conversion", "2021.4.2", "2021.4.1",
-            "2021.4", "2021.3", "2021.2"
+            "master", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
     ]):
         raise AssertionError(
             "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
@@ -558,20 +557,20 @@ def main():
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
-        # # TODO Copy tensorflow_frontend.so and the header files for now,
-        # # remove it once, it is handled in OV cmakelist
-        # # cwd is "build_cmake/"
-        # command_executor([
-        #     "cp", "-r",
-        #     "openvino/src/frontends/tensorflow/include/openvino/frontend/tensorflow",
-        #     "artifacts/openvino/runtime/include/openvino/frontend/"
-        # ])
+        # TODO Copy tensorflow_frontend.so and the header files for now,
+        # remove it once, it is handled in OV cmakelist
+        # cwd is "build_cmake/"
+        command_executor([
+            "cp", "-r",
+            "openvino/src/frontends/tensorflow/include/openvino/frontend/tensorflow",
+            "artifacts/openvino/runtime/include/openvino/frontend/"
+        ])
 
-        # command_executor([
-        #     "cp",
-        #     "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
-        #     "artifacts/openvino/runtime/lib/intel64/"
-        # ])
+        command_executor([
+            "cp",
+            "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
+            "artifacts/openvino/runtime/lib/intel64/"
+        ])
 
     # Next build CMAKE options for the bridge
     atom_flags = ""

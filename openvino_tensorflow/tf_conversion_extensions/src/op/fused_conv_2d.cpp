@@ -67,10 +67,24 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
   if (vec_str_cmp(fused_ops, {"BiasAdd"}) ||
       vec_str_cmp(fused_ops, {"BiasAdd", "Relu"}) ||
-      vec_str_cmp(fused_ops, {"BiasAdd", "Relu6"})) {
-    if (num_args != 1) {
-      FRONT_END_GENERAL_CHECK(false,
-                              "FusedConv2DBiasAdd has incompatible num_args");
+      vec_str_cmp(fused_ops, {"BiasAdd", "Relu6"}) ||
+      vec_str_cmp(fused_ops, {"BiasAdd", "LeakyRelu"}) ||
+      vec_str_cmp(fused_ops, {"BiasAdd", "Elu"}) ||
+      vec_str_cmp(fused_ops, {"BiasAdd", "Add"}) ||
+      vec_str_cmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
+      vec_str_cmp(fused_ops, {"BiasAdd", "Add", "LeakyRelu"})) {
+    if (vec_str_cmp(fused_ops, {"BiasAdd", "Add"}) ||
+        vec_str_cmp(fused_ops, {"BiasAdd", "Add", "Relu"}) ||
+        vec_str_cmp(fused_ops, {"BiasAdd", "Add", "LeakyRelu"})) {
+      if (num_args != 2) {
+        FRONT_END_GENERAL_CHECK(
+            false, "FusedConv2DBiasAdd Add has incompatible num_args");
+      }
+    } else {
+      if (num_args != 1) {
+        FRONT_END_GENERAL_CHECK(false,
+                                "FusedConv2DBiasAdd has incompatible num_args");
+      }
     }
 
     auto ng_input = node.get_input(0), ng_filter = node.get_input(1),
@@ -102,13 +116,54 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
       auto ng_relu6 = make_shared<Clamp>(ng_add, 0, 6)->output(0);
       convert_nchw_to_nhwc(is_nhwc, ng_relu6);
       return {ng_relu6};
+    } else if (vec_str_cmp(fused_ops, {"BiasAdd", "LeakyRelu"})) {
+      auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
+      auto ng_leakyrelu_alpha =
+          make_shared<Constant>(element::f32, Shape{}, tf_leakyrelu_alpha);
+      auto ng_alphax = make_shared<Multiply>(ng_leakyrelu_alpha, ng_add);
+      auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_add)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      return {ng_lrelu};
+    } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Elu"})) {
+      float tf_elu_alpha = 1.0;
+      tf_elu_alpha = node.get_attribute<float>("leakyrelu_alpha");
+      auto ng_elu = make_shared<Elu>(ng_add, tf_elu_alpha)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_elu);
+      return {ng_elu};
+    } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add"})) {
+      auto ng_input2 = node.get_input(3);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      auto ng_out = make_shared<Add>(ng_add, ng_input2)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_out);
+      return {ng_out};
+    } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
+      auto ng_input2 = node.get_input(3);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      auto ng_add2 = make_shared<Add>(ng_add, ng_input2)->output(0);
+      auto ng_relu = make_shared<Relu>(ng_add2)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu);
+      return {ng_relu};
+    } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add", "LeakyRelu"})) {
+      auto ng_input2 = node.get_input(3);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      auto ng_add2 = make_shared<Add>(ng_add, ng_input2)->output(0);
+      auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
+      auto ng_leakyrelu_alpha =
+          make_shared<Constant>(element::f32, Shape{}, tf_leakyrelu_alpha)
+              ->output(0);
+      auto ng_alphax =
+          make_shared<Multiply>(ng_leakyrelu_alpha, ng_add2)->output(0);
+      auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_add2)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      return {ng_lrelu};
     } else {
       convert_nchw_to_nhwc(is_nhwc, ng_add);
       return {ng_add};
     }
   } else if (vec_str_cmp(fused_ops, {"FusedBatchNorm"}) ||
              vec_str_cmp(fused_ops, {"FusedBatchNorm", "Relu"}) ||
-             vec_str_cmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
+             vec_str_cmp(fused_ops, {"FusedBatchNorm", "Relu6"}) ||
+             vec_str_cmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
     if (num_args != 4) {
       FRONT_END_GENERAL_CHECK(
           false, "FusedConv2D with FusedBatchNorm has incompatible num_args");
@@ -134,6 +189,16 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
       auto ng_relu6 = make_shared<Clamp>(ng_batch_norm, 0, 6)->output(0);
       convert_nchw_to_nhwc(is_nhwc, ng_relu6);
       return {ng_relu6};
+    } else if (vec_str_cmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
+      auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
+      auto ng_leakyrelu_alpha =
+          make_shared<Constant>(element::f32, Shape{}, tf_leakyrelu_alpha)
+              ->output(0);
+      auto ng_alphax =
+          make_shared<Multiply>(ng_leakyrelu_alpha, ng_batch_norm)->output(0);
+      auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_batch_norm)->output(0);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      return {ng_lrelu};
     } else {
       convert_nchw_to_nhwc(is_nhwc, ng_batch_norm);
       return {ng_batch_norm};

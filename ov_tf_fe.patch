@@ -1,5 +1,5 @@
 diff --git a/src/frontends/tensorflow/src/utils.hpp b/src/frontends/tensorflow/src/utils.hpp
-index 676bf9b9a..3997fd290 100644
+index a224e81df..0a3b60e1b 100644
 --- a/src/frontends/tensorflow/src/utils.hpp
 +++ b/src/frontends/tensorflow/src/utils.hpp
 @@ -93,7 +93,9 @@ void values_from_const_node(const NodeContext& node, ov::Shape* const_tensor_sha
