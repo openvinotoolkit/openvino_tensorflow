@@ -566,11 +566,18 @@ def main():
             "artifacts/openvino/runtime/include/openvino/frontend/"
         ])
 
-        command_executor([
-            "cp",
-            "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
-            "artifacts/openvino/runtime/lib/intel64/"
-        ])
+        if (os.path.isdir("openvino/bin/intel64/Release")):
+            command_executor([
+                "cp",
+                "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
+                "artifacts/openvino/runtime/lib/intel64/"
+            ])
+        else:
+            command_executor([
+                "cp",
+                "openvino/bin/intel64/lib/libov_tensorflow_frontend.so",
+                "artifacts/openvino/runtime/lib/intel64/"
+            ])
 
     # Next build CMAKE options for the bridge
     atom_flags = ""
