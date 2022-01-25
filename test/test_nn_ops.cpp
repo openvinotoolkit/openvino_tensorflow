@@ -117,7 +117,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
   op_attr_nchw = op_attr_nchw.DataFormat("NCHW");
-  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>) dilations;
+  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   auto input_data_NCHW = ops::Const(ngraph_scope, input_size_NCHW);
 
@@ -238,7 +238,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
   op_attr_nchw = op_attr_nchw.DataFormat("NCHW");
-  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>) dilations;
+  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   auto input_data_NCHW = ops::Const(ngraph_scope, input_size_NCHW);
 
@@ -359,7 +359,7 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
 
   // changet the dilation attribute
   ops::Conv2DBackpropInput::Attrs op_attr;
-  op_attr.dilations_ = (gtl::ArraySlice<int>) dilations;
+  op_attr.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   for (auto map_iterator : out_delta_size_map) {
     Scope root = Scope::NewRootScope();
@@ -420,7 +420,7 @@ TEST(NNOps, Conv3DNDHWCSame) {
   // Dilation rates > 1 not supported by TF on CPU
   ops::Conv3D::Attrs op_attr_ndhwc;
   op_attr_ndhwc = op_attr_ndhwc.DataFormat("NDHWC");
-  op_attr_ndhwc.dilations_ = (gtl::ArraySlice<int>) dilations;
+  op_attr_ndhwc.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   Scope root = Scope::NewRootScope();
   string padding_type = "SAME";
