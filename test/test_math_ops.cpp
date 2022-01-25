@@ -1615,10 +1615,10 @@ TEST(MathOps, SqueezeWithAttributes) {
     AssignInputValuesRandom<float>(input, -50, 50);
 
     auto attr = ops::Squeeze::Attrs();
-    attr.axis_ = (gtl::ArraySlice<int>) squeeze_dim;
+    attr.axis_ = (gtl::ArraySlice<int>)squeeze_dim;
 
     auto R = ops::Squeeze(root, input, attr);
-  
+
     std::vector<Output> sess_run_fetchoutputs = {R};
     OpExecuter opexecuter(root, "Squeeze", sess_run_fetchoutputs);
 

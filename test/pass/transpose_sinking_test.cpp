@@ -610,7 +610,7 @@ TEST(TransposeSinking, MultiOutputConV) {
     // Dilation rates > 1 not supported by TF on CPU
     ops::Conv2D::Attrs op_attr_nhwc;
     op_attr_nhwc = op_attr_nhwc.DataFormat("NHWC");
-    op_attr_nhwc.dilations_ = (gtl::ArraySlice<int>) dilations;
+    op_attr_nhwc.dilations_ = (gtl::ArraySlice<int>)dilations;
 
     string padding_type = "SAME";
 
