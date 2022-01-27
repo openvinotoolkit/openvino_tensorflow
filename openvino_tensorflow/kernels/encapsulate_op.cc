@@ -190,10 +190,10 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   }
 
   // Get the optional attributes
-  std::unordered_map<std::string, std::string> additional_attribute_map;
-  auto node_def = ctx->def();
-  OP_REQUIRES_OK(
-      ctx, ParseNodeAttributes(node_def.attr(), &additional_attribute_map));
+  // std::unordered_map<std::string, std::string> additional_attribute_map;
+  // auto node_def = ctx->def();
+  // OP_REQUIRES_OK(
+  //     ctx, ParseNodeAttributes(node_def.attr(), &additional_attribute_map));
 }
 
 NGraphEncapsulateOp::~NGraphEncapsulateOp() {
