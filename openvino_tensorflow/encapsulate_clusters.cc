@@ -281,6 +281,17 @@ Status Encapsulator::AnalysisPass() {
       if (src->type_string() == "ReadVariableOp") {
         SetAttrValue(
             true, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      }
+
+      if (src->type_string() == "Const") {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_const_input"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_const_input"]));
       }
 
       arg_index_count[dst_cluster_idx]++;

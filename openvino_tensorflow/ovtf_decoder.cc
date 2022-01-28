@@ -153,6 +153,7 @@ ov::Any OVTFDecoder::get_attribute(const std::string& name) const {
     }
 
     case ::tensorflow::AttrValue::ValueCase::kTensor:
+      return attrs[0].tensor();
     case ::tensorflow::AttrValue::ValueCase::kPlaceholder:
     case ::tensorflow::AttrValue::ValueCase::kFunc:
     default:
@@ -196,7 +197,9 @@ void OVTFDecoder::get_input_node(size_t input_port_idx,
   producer_output_port_index = 0;
 }
 
-const std::string& OVTFDecoder::get_op_type() const { return m_node_def->op(); }
+const std::string& OVTFDecoder::get_op_type() const {
+    return m_node_def->op();
+}
 
 const std::string& OVTFDecoder::get_op_name() const {
   return m_node_def->name();
