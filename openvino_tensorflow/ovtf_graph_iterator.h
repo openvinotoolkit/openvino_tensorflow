@@ -50,12 +50,12 @@ class OVTFGraphIterator : public ov::frontend::tensorflow::GraphIterator {
     return std::make_shared<OVTFDecoder>(m_nodes[node_index]);
   }
 
-  void sort_nodes(std::vector<std::string> &ordered_names) {
+  void sort_nodes(std::vector<std::string>& ordered_names) {
     int ordered_idx = 0;
-    for (int i=0; i<ordered_names.size(); i++) {
-      for (int j=ordered_idx; j<m_nodes.size(); j++) {
+    for (int i = 0; i < ordered_names.size(); i++) {
+      for (int j = ordered_idx; j < m_nodes.size(); j++) {
         if (ordered_names[i] == m_nodes[j]->name()) {
-          const ::tensorflow::NodeDef *current = m_nodes[ordered_idx];
+          const ::tensorflow::NodeDef* current = m_nodes[ordered_idx];
           m_nodes[ordered_idx] = m_nodes[j];
           m_nodes[j] = current;
           ordered_idx++;

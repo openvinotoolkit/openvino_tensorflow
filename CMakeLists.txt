@@ -225,6 +225,13 @@ set_target_properties(
     ${NGRAPH_INSTALL_DIR}/${LIB}/libov_tensorflow_frontend.so
 )
 
+add_library(ov_runtime_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    ov_runtime_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${NGRAPH_INSTALL_DIR}/${LIB}/libov_runtime.so
+)
+
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
 INCLUDE_DIRECTORIES("${BASEPATH}")
 

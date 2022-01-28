@@ -4036,6 +4036,16 @@ Status Builder::TranslateGraph(
   return Status::OK();
 }
 
+// Initialize the lib path as empty string
+std::string Builder::m_tf_conversion_extensions_lib_path = "";
+
+void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path) {
+  // TODO: Add check if the lib_path exists, otherwise throw error
+  m_tf_conversion_extensions_lib_path = tf_conversion_extensions_so_path;
+}
+ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
+    std::make_shared<ov::frontend::tensorflow::FrontEnd>();
+
 Status Builder::CreateGraphIterator(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
@@ -4044,75 +4054,231 @@ Status Builder::CreateGraphIterator(
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
     const std::vector<Tensor>& tf_input_tensors) {
+
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
-  //ov::frontend::tensorflow::GraphIterator::Ptr giter =
-  //    std::make_shared<OVTFGraphIterator>(tf_graph);
-  std::shared_ptr<OVTFGraphIterator> giter =
-      std::make_shared<OVTFGraphIterator>(tf_graph);
-  std::vector<std::string> ordered_names(ordered.size());
-  for (int i=0; i<ordered.size(); i++) {
-    ordered_names[i] = ordered[i]->name();
+  //
+  // Split ops into params, retvals, and all others.
+  //
+  vector<const Node*> tf_params;
+  vector<const Node*> tf_ret_vals;
+  vector<const Node*> tf_ops;
+
+  for (const auto n : ordered) {
+    if (n->IsSink() || n->IsSource()) {
+      continue;
+    }
+
+    if (n->IsControlFlow()) {
+      return errors::Unimplemented(
+          "Encountered a control flow op in the openvino_tensorflow: ",
+          n->DebugString());
+    }
+
+    if (n->IsArg()) {
+      tf_params.push_back(n);
+      bool const_input = false;
+      try {
+        GetNodeAttr(n->attrs(), "_const_input", &const_input);
+      } catch (const std::exception&) {
+        OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
+      }
+      if (const_input) {
+        DataType dtype;
+        if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
+          return errors::InvalidArgument("No data type defined for _Arg");
+        }
+        int index;
+        if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
+          return errors::InvalidArgument("No index defined for _Arg");
+        }
+        const Tensor tensor = tf_input_tensors[index];
+        n->AddAttr("_const_value", tensor);
+        n->AddAttr("_const_dtype", dtype);
+      }
+    } else if (n->IsRetval()) {
+      tf_ret_vals.push_back(n);
+    } else {
+      tf_ops.push_back(n);
+    }
   }
-  giter->sort_nodes(ordered_names);
+
+  auto gd = std::make_shared<::tensorflow::GraphDef>();
+  input_graph->ToGraphDef(gd.get());
+  std::shared_ptr<OVTFGraphIterator> giter =
+      std::make_shared<OVTFGraphIterator>(gd.get());
 
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
-  ov::frontend::FrontEnd::Ptr frontend_ptr = std::make_shared<ov::frontend::tensorflow::FrontEnd>();
-  // ov::frontend::tensorflow::FrontEnd frontend;
 
-  // _Arg implementation
   std::vector<ngraph::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
-  for(size_t i = 0; i < inputs.size(); ++i)
-  {
-      ng::Shape ng_shape;
-      TF_RETURN_IF_ERROR(
-              util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
-      indexed_shape.push_back(ng_shape);
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    ng::Shape ng_shape;
+    TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
+    indexed_shape.push_back(ng_shape);
   }
+
   // Add the OV extension lib
   static bool once = true;
-  if (once){
-      std::string lib_path = "/home/mcavus/Workspace/ngraph/fe_pr5/openvino_tensorflow/build_cmake/artifacts/openvino/runtime/lib/intel64/libtf_conversion_extensions.so";
-      frontend_ptr->add_extension(lib_path);
-      
-      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Arg", 
-                [&indexed_shape] 
-                    (const ov::frontend::NodeContext& node) -> ov::OutputVector 
-                    {
-                        auto element_type = node.get_attribute<ngraph::element::Type>("T");
-                        auto index = node.get_attribute<int64_t>("index");
-                        auto shape = indexed_shape.at(index);
-                        
-                        auto res = std::make_shared<ov::opset8::Parameter>(element_type, shape);
-                        res->get_rt_info().insert({"index", ov::Any(index)});
-                        return {res}; 
-                    }));
-      
-      // _Retval implementation
-      frontend_ptr->add_extension( std::make_shared<ov::frontend::tensorflow::ConversionExtension>("_Retval", 
-              [&indexed_shape] 
-                  (const ov::frontend::NodeContext& node) -> ov::OutputVector 
-                  {
-                    if (node.get_input_size() != 1) {
-                        FRONT_END_GENERAL_CHECK(false, "_Retval has " + to_string(node.get_input_size()) + " inputs, should have 1");
-                    }
+  if (once) {
+#ifdef _WIN32
+#define EXT ".dll"
+#elif __APPLE__
+#define EXT ".dylib"
+#else
+#define EXT ".so"
+#endif
 
-                    auto index = node.get_attribute<int64_t>("index");
-                    auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
-                    res->get_rt_info().insert({"index", ov::Any(index)});
-                    return res->outputs();
-                  }));
+    // This would set the conversion extension path for c++ library
+    if (m_tf_conversion_extensions_lib_path.empty()) {
+      std::string lib_path;
+#ifdef OVTF_INSTALL_LIB_DIR
+      lib_path = OVTF_INSTALL_LIB_DIR;
+#endif
+#ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME
+#ifdef _WIN32
+      lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#else
+      lib_path =
+          lib_path + "/" + "lib" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#endif
+#endif
+      // TODO: Add check if the lib_path exists, otherwise throw error
+      SetLibPath(lib_path);
+    }
+    m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);
     once = false;
   }
 
-  ov::frontend::InputModel::Ptr input_model = frontend_ptr->load(gany);
-  ng_function = frontend_ptr->convert(input_model);
+  // _Arg implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
+                      -> ov::OutputVector {
+            ov::Output<ov::Node> res;
+            auto element_type = node.get_attribute<ngraph::element::Type>("T");
+            auto index = node.get_attribute<int64_t>("index");
+            auto shape = indexed_shape.at(index);
+            auto is_const_input = node.get_attribute<bool>("_const_input");
+            if (is_const_input) {
+              ov::Any any_proto = node.get_attribute<::tensorflow::TensorProto>("_const_value");
+              auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
+              ov::Any any_type = node.get_attribute<ngraph::element::Type>("_const_dtype");
+              auto dt = any_type.as<ngraph::element::Type>();
+              switch (dt) {
+                case ngraph::element::Type_t::f32:
+                  {
+                  vector<float> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<float>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::f64:
+                  {
+                  vector<double> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<double>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::u8:
+                  {
+                  vector<uint8> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::i8:
+                  {
+                  vector<int8> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int8>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::i32:
+                  {
+                  vector<int32> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int32>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::u64:
+                  {
+                  vector<uint64> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<uint64>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::i64:
+                  {
+                  vector<int64> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int64>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                case ngraph::element::Type_t::boolean:
+                  {
+                  vector<bool> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<bool>(tensor_proto, dt, &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  break;
+                  }
+                default:
+                  THROW_IE_EXCEPTION << "Unkown const input type";
+              }
+              
+            } else {
+
+              res =
+                  std::make_shared<ov::opset8::Parameter>(element_type, shape);
+            }
+            res.get_rt_info().insert({"index", ov::Any(index)});
+            return {res};
+          }));
+
+  // _Retval implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Retval", [&indexed_shape](const ov::frontend::NodeContext& node)
+                         -> ov::OutputVector {
+            if (node.get_input_size() != 1) {
+              FRONT_END_GENERAL_CHECK(
+                  false, "_Retval has " + to_string(node.get_input_size()) +
+                             " inputs, should have 1");
+            }
+
+            auto index = node.get_attribute<int64_t>("index");
+            auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+            res->get_rt_info().insert({"index", ov::Any(index)});
+            return res->outputs();
+          }));
+
+  try {
+    ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+    ng_function = m_frontend_ptr->convert(input_model);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Frontend conversion error: "+string(exp.what()));
+  } catch (...) {
+    return errors::Internal("Frontend conversion error");
+  }
+
+  ng_func_result_list.resize(ng_function->get_results().size());
+  for (int i = 0; i < ng_function->get_results().size(); i++) {
+    ng_func_result_list[i] = ng_function->get_results()[i];
+  }
 
   return Status::OK();
 }
+
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
