@@ -112,11 +112,12 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
   vector<int64> filter_size_HWIO = {3, 3, 2, 2};
   vector<int64> output_del_size_same_NCHW = {1, 2, 4, 3};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
+  std::vector<int> dilations = {1, 1, 3, 2};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
   op_attr_nchw = op_attr_nchw.DataFormat("NCHW");
-  op_attr_nchw = op_attr_nchw.Dilations({1, 1, 3, 2});
+  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   auto input_data_NCHW = ops::Const(ngraph_scope, input_size_NCHW);
 
@@ -232,11 +233,12 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
   vector<int64> filter_size_HWIO = {3, 3, 2, 2};
   vector<int64> output_del_size_same_NCHW = {1, 2, 1, 1};
   std::vector<int> stride_NCHW = {1, 1, 2, 2};
+  std::vector<int> dilations = {1, 1, 3, 2};
 
   Scope ngraph_scope = Scope::NewRootScope();
   ops::Conv2DBackpropInput::Attrs op_attr_nchw;
   op_attr_nchw = op_attr_nchw.DataFormat("NCHW");
-  op_attr_nchw = op_attr_nchw.Dilations({1, 1, 3, 2});
+  op_attr_nchw.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   auto input_data_NCHW = ops::Const(ngraph_scope, input_size_NCHW);
 
@@ -329,6 +331,7 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
   vector<int64> output_del_size_valid = {1, 1, 1, 2};
   vector<int64> output_del_size_same = {1, 4, 3, 2};
   std::vector<int> stride = {1, 2, 2, 1};
+  std::vector<int> dilations = {1, 3, 2, 1};
 
   // TF GPU results gathered running with same values of parameters
   std::map<std::string, std::vector<float>> tf_output_map = {
@@ -356,7 +359,7 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
 
   // changet the dilation attribute
   ops::Conv2DBackpropInput::Attrs op_attr;
-  op_attr = op_attr.Dilations({1, 3, 2, 1});
+  op_attr.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   for (auto map_iterator : out_delta_size_map) {
     Scope root = Scope::NewRootScope();
@@ -412,11 +415,12 @@ TEST(NNOps, Conv3DNDHWCSame) {
   vector<int64> filter_size_DHWIO = {3, 3, 3, 10, 2};
 
   std::vector<int> stride = {1, 2, 2, 2, 1};
+  std::vector<int> dilations = {1, 1, 1, 1, 1};
 
   // Dilation rates > 1 not supported by TF on CPU
   ops::Conv3D::Attrs op_attr_ndhwc;
   op_attr_ndhwc = op_attr_ndhwc.DataFormat("NDHWC");
-  op_attr_ndhwc = op_attr_ndhwc.Dilations({1, 1, 1, 1, 1});
+  op_attr_ndhwc.dilations_ = (gtl::ArraySlice<int>)dilations;
 
   Scope root = Scope::NewRootScope();
   string padding_type = "SAME";

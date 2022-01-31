@@ -605,10 +605,12 @@ TEST(TransposeSinking, MultiOutputConV) {
     vector<int64> filter_size_HWIO = {1, 1, 1, 2};
 
     std::vector<int> stride = {1, 1, 1, 1};
+    std::vector<int> dilations = {1, 1, 1, 1};
+
     // Dilation rates > 1 not supported by TF on CPU
     ops::Conv2D::Attrs op_attr_nhwc;
     op_attr_nhwc = op_attr_nhwc.DataFormat("NHWC");
-    op_attr_nhwc = op_attr_nhwc.Dilations({1, 1, 1, 1});
+    op_attr_nhwc.dilations_ = (gtl::ArraySlice<int>)dilations;
 
     string padding_type = "SAME";
 
