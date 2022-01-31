@@ -1595,15 +1595,15 @@ TEST(MathOps, SqueezeNoAttributes) {
 // Test op: SqueezeWithAttributes
 TEST(MathOps, SqueezeWithAttributes) {
   // construct a map to store input shape and squeeze dimension attributes
-  map<vector<int64>, gtl::ArraySlice<int>> shape_attributes_map;
+  map<vector<int64>, std::vector<int>> shape_attributes_map;
   shape_attributes_map.insert(
-      pair<vector<int64>, gtl::ArraySlice<int>>({1, 10, 2, 3}, {0}));
+      pair<vector<int64>, std::vector<int>>({1, 10, 2, 3}, {0}));
   shape_attributes_map.insert(
-      pair<vector<int64>, gtl::ArraySlice<int>>({10, 1, 5, 1}, {-1, -3}));
+      pair<vector<int64>, std::vector<int>>({10, 1, 5, 1}, {-1, -3}));
   shape_attributes_map.insert(
-      pair<vector<int64>, gtl::ArraySlice<int>>({1, 1, 1, 1}, {-1, -2}));
+      pair<vector<int64>, std::vector<int>>({1, 1, 1, 1}, {-1, -2}));
   shape_attributes_map.insert(
-      pair<vector<int64>, gtl::ArraySlice<int>>({1, 1, 1, 1}, {0, 1, -2, -3}));
+      pair<vector<int64>, std::vector<int>>({1, 1, 1, 1}, {0, 1, -2, -3}));
 
   for (auto itr : shape_attributes_map) {
     Scope root = Scope::NewRootScope();
@@ -1614,10 +1614,10 @@ TEST(MathOps, SqueezeWithAttributes) {
     Tensor input(DT_FLOAT, TensorShape(input_shape));
     AssignInputValuesRandom<float>(input, -50, 50);
 
-    auto attrs = ops::Squeeze::Attrs();
-    attrs.axis_ = squeeze_dim;
+    auto attr = ops::Squeeze::Attrs();
+    attr.axis_ = (gtl::ArraySlice<int>)squeeze_dim;
 
-    auto R = ops::Squeeze(root, input, attrs);
+    auto R = ops::Squeeze(root, input, attr);
 
     std::vector<Output> sess_run_fetchoutputs = {R};
     OpExecuter opexecuter(root, "Squeeze", sess_run_fetchoutputs);
