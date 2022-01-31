@@ -42,14 +42,8 @@ class TestScatterNdUpdate(NgraphTest, test.TestCase):
 
         out = tf.scatter_nd(indices, updates, shape)
 
-        assert np.isclose(
-            self.with_ngraph(lambda sess: sess.run(
-                out,
-                feed_dict={
-                    indices: test_indices,
-                    updates: test_updates,
-                    shape: test_shape
-                })), np.array([expected])).all()
+        if not np.isclose(self.with_ngraph(lambda sess: sess.run(out, feed_dict={indices: test_indices, updates: test_updates, shape: test_shape})), np.array([expected])).all():
+            raise AssertionError
 
     def test_scatter_basic_2(self):
 
@@ -73,11 +67,5 @@ class TestScatterNdUpdate(NgraphTest, test.TestCase):
 
         out = tf.scatter_nd(indices, updates, shape)
 
-        assert np.isclose(
-            self.with_ngraph(lambda sess: sess.run(
-                out,
-                feed_dict={
-                    indices: test_indices,
-                    updates: test_updates,
-                    shape: test_shape
-                })), np.array([expected])).all()
+        if not np.isclose(self.with_ngraph(lambda sess: sess.run(out, feed_dict={indices: test_indices, updates: test_updates, shape: test_shape})), np.array([expected])).all():
+                    raise AssertionError

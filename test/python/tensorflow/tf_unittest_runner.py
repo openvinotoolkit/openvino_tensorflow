@@ -20,7 +20,8 @@ import shlex
 try:
     import xmlrunner
 except:
-    os.system("pip install unittest-xml-reporting")
+    process = subprocess.Popen(shlex.split("pip install unittest-xml-reporting"))
+    so, se = process.communicate()    
     import xmlrunner
 """
 tf_unittest_runner is primarily used to run tensorflow python 
