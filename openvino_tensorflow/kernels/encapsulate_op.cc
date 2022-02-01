@@ -509,8 +509,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
-<<<<<<< HEAD
-=======
       // TODO: Zero-copy is depreciated temporarily because of memory allocation
       // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
@@ -558,51 +556,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         for (auto dim : ng_shape) {
           tf_shape.AddDim(dim);
         }
-
->>>>>>> bb10eec8 (Removed rebase conflicts with TFFE branch)
-      // TODO: Zero-copy is depreciated temporarily because of memory allocation
-      // alignment
-      // mismatch related to EIGEN_MAX_ALIGN_BYTES.
-      Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
-
-      auto size = ng_output->get_byte_size();
-      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
-
-#if TF_VERSION < 2
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t**)DMAHelper::base(output_tensor));
-#else
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t*)(output_tensor->data()));
-#endif
-    }
-  } else {
-    for (int i = 0; i < results.size(); i++) {
-      auto ng_output = ng_func_outputs[i];
-
-      auto ng_shape = ng_output->get_shape();
-      if (results[i]->is_dynamic()) {
-        ng_shape = ng_output->get_shape();
-      }
-      ov::element::Type expected_elem_type;
-      auto ng_element = results[i];
-      ov::Any any = ng_element->get_rt_info()["index"];
-      int64_t output_index = any.as<int64_t>();
-      auto ng_element_type = ng_element->get_element_type();
-      OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
-                              ctx->expected_output_dtype(output_index),
-                              &expected_elem_type));
-      OP_REQUIRES(
-          ctx, ng_element_type == expected_elem_type,
-          errors::Internal("Element type inferred by nGraph does not match "
-                           "the element type expected by TensorFlow"));
-      TensorShape tf_shape;
-      for (auto dim : ng_shape) {
-        tf_shape.AddDim(dim);
-      }
 
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(
