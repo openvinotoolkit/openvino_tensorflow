@@ -70,7 +70,10 @@ if(WIN32)
 	target_link_libraries(
 		${APP_NAME}
 		openvino_tensorflow
+<<<<<<< HEAD
 		# ${ngraph_lib_value}
+=======
+>>>>>>> 23b9b7fe (Updates to build with OV 2.0 master branch (#252))
 		${TensorFlow_FRAMEWORK_LIBRARY}
 		${tensorflow_cc_lib_value}
 		absl_synchronization
@@ -80,7 +83,10 @@ else()
   target_link_libraries(
       ${APP_NAME}
       openvino_tensorflow
+<<<<<<< HEAD
       # ngraph_lib
+=======
+>>>>>>> 23b9b7fe (Updates to build with OV 2.0 master branch (#252))
       pthread
       ${TensorFlow_FRAMEWORK_LIBRARY}
       tensorflow_cc_lib
