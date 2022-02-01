@@ -148,7 +148,7 @@ if ovtf_classic_loaded:
 
     def disable():
         openvino_tensorflow_lib.disable()
-        if ("CUDA_VISIBLE_DEVICES" is in os.environ):
+        if ("CUDA_VISIBLE_DEVICES" in os.environ):
             del os.environ["CUDA_VISIBLE_DEVICES"]
 
     def is_enabled():
