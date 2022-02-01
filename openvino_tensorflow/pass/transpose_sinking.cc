@@ -232,7 +232,7 @@ static void materialize_shapes(
     auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
         arg_transpose->input_value(1).get_node_shared_ptr());
     if (arg_transpose_order->get_axis_vector_val() !=
-        get_default_order(arg.get_shape())) {
+        ngraph::get_default_order(arg.get_shape())) {
       // Insert if arg needs to be transposed.
       insert_transpose(n, arg_transpose, i);
     }
