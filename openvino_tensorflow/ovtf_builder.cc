@@ -821,8 +821,9 @@ static Status TranslateBatchNDAndSpaceNDOp(
       ng::op::PadMode::CONSTANT);
   // block_shape, crops_begin and crops_end inputs must have same element type
   ng::element::Type crops_dtype = crops.get_element_type();
-  auto block_shape = ConstructNgNode<opset::Convert>(op->name(), block_shape_native, crops_dtype);
-  
+  auto block_shape = ConstructNgNode<opset::Convert>(
+      op->name(), block_shape_native, crops_dtype);
+
   auto target_axis =
       make_shared<opset::Constant>(ng::element::i64, ng::Shape{}, 1);
   // split into two 1-D vectors crops_begin and crops_end along axis 1

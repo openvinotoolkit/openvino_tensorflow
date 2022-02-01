@@ -198,7 +198,8 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "master", "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
+            "master", "2022.1", "2021.4.2", "2021.4.1", "2021.4", "2021.3",
+            "2021.2"
     ]):
         raise AssertionError(
             "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
@@ -535,6 +536,8 @@ def main():
         )
         if (arguments.openvino_version == "master"):
             openvino_release_tag = "master"
+        elif (arguments.openvino_version == "2022.1"):
+            openvino_release_tag = "2022.1"
         elif (arguments.openvino_version == "2021.4.2"):
             openvino_release_tag = "2021.4.2"
         elif (arguments.openvino_version == "2021.4.1"):
