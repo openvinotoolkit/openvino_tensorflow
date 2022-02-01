@@ -137,7 +137,6 @@ endif()
 target_link_libraries(
     gtest_ovtf
     openvino_tensorflow
-    ngraph_lib
     libgtest
     pthread
     ${TensorFlow_FRAMEWORK_LIBRARY}

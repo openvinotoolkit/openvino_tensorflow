@@ -96,7 +96,6 @@ void Builder::SetTracingInfo(const std::string& op_name,
                              const ng::Output<ng::Node> ng_node) {
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
-  node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
@@ -811,7 +810,7 @@ static Status TranslateBatchNDAndSpaceNDOp(
 
   // Padding needs to be done for block_shape as done for crops above but with
   // value=1
-  auto block_shape = ConstructNgNode<opset::Pad>(
+  auto block_shape_native = ConstructNgNode<opset::Pad>(
       op->name(), ng_block_shape,
       make_shared<opset::Constant>(ng_block_shape.get_element_type(),
                                    ng::Shape{1}, std::vector<int>{1}),
@@ -820,6 +819,10 @@ static Status TranslateBatchNDAndSpaceNDOp(
       make_shared<opset::Constant>(ng_block_shape.get_element_type(),
                                    ng::Shape{}, 1),
       ng::op::PadMode::CONSTANT);
+  // block_shape, crops_begin and crops_end inputs must have same element type
+  ng::element::Type crops_dtype = crops.get_element_type();
+  auto block_shape = ConstructNgNode<opset::Convert>(
+      op->name(), block_shape_native, crops_dtype);
 
   auto target_axis =
       make_shared<opset::Constant>(ng::element::i64, ng::Shape{}, 1);

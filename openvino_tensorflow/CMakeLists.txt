@@ -60,12 +60,10 @@ endif()
 add_library(${LIB_NAME} SHARED ${SRC})
 
 if(WIN32)
-  get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
   target_link_libraries(
             ${LIB_NAME}
             ovtf_logger
             ${TensorFlow_FRAMEWORK_LIBRARY}
-            ${ngraph_lib_value}
             absl_algorithm
             absl_container
             absl_strings
@@ -77,7 +75,6 @@ else()
           ${LIB_NAME}
           ovtf_logger
           ${TensorFlow_FRAMEWORK_LIBRARY}
-          ngraph_lib
           absl_algorithm
           absl_container
           absl_strings
@@ -117,24 +114,6 @@ message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 # First install the libopenvino_tensorflow.so and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
-# Next install all the other prerequisites
-if(OS_VERSION STREQUAL "\"centos\"")
-	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib64/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
-else()
-  if(WIN32)
-    file(GLOB NGRAPH_LIB_FILES "${NGRAPH_INSTALL_DIR}/lib/*")
-    foreach(LIB_FILE ${NGRAPH_LIB_FILES})
-      get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
-      get_filename_component(lib_file_name ${LIB_FILE} NAME)
-      if(NOT(${lib_file_name} MATCHES "onnx.*"))
-        install(FILES ${lib_file_real_path} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-      endif()
-    endforeach()
-  else()
-    install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
-  endif()
-endif()
-
 # Install OpenVINO libraries
 if (APPLE)
   set(OCM_LIB libocm.dylib)
@@ -145,12 +124,12 @@ else()
 endif()
 
 if(WIN32)
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
-  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
+  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release/)
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/external/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
-  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
+  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/)
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
