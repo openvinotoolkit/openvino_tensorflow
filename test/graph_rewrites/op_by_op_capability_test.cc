@@ -50,9 +50,9 @@ TEST(OpByOpCapability, Backend) {
   auto backend = BackendManager::GetBackend();
   ASSERT_NE(backend, nullptr);
 
-  auto constant = ngraph::op::Constant::create(ngraph::element::f32,
-                                               ngraph::Shape{}, {2.0f});
-  std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>
+  auto constant = ngraph::op::Constant::create(ov::element::f32,
+                                               ov::Shape{}, {2.0f});
+  std::map<std::string, std::set<std::shared_ptr<ov::Node>>>
       TFtoNgraphOpMap{
           {"Const", {constant}},
           {"Add", {std::make_shared<opset::Add>()}},

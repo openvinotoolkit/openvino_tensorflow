@@ -32,13 +32,13 @@ class Backend {
     ReleaseGlobalContext();
   }
 
-  shared_ptr<Executable> Compile(shared_ptr<ngraph::Function> func,
+  shared_ptr<Executable> Compile(shared_ptr<ov::Model> func,
                                  bool enable_performance_data = false);
 
   static GlobalContext& GetGlobalContext();
   static void ReleaseGlobalContext();
   std::string GetDeviceType();
-  bool IsSupported(const ngraph::Node& node) const;
+  bool IsSupported(const ov::Node& node) const;
 
  private:
   string m_device;

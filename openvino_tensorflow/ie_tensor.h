@@ -19,8 +19,6 @@ class IETensor : public ov::Tensor {
  public:
   IETensor(const ov::element::Type& element_type,
            const ov::Shape& shape);
-  //IETensor(const ov::element::Type& element_type,
-  //         const ov::PartialShape& shape);
   IETensor(const ov::element::Type& element_type,
            const ov::Shape& shape, void* memory_pointer);
   ~IETensor();
