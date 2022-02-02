@@ -127,17 +127,17 @@ Executable::Executable(shared_ptr<Function> func, string device,
   }
 
   OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";
-  m_network = InferenceEngine::CNNNetwork(func);
+  //m_network = InferenceEngine::CNNNetwork(func);
 
   std::map<string, string> options;
 
-  if (util::DumpAllGraphs()) {
-    auto& name = m_function->get_friendly_name();
-    m_network.serialize(name + ".xml", name + ".bin");
-    util::DumpNGGraph(func, name + "_executable");
-    options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
-        name + "_IE_" + m_device;
-  }
+  //if (util::DumpAllGraphs()) {
+  //  auto& name = m_function->get_friendly_name();
+  //  m_network.serialize(name + ".xml", name + ".bin");
+  //  util::DumpNGGraph(func, name + "_executable");
+  //  options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
+  //      name + "_IE_" + m_device;
+  //}
 
   auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {
     // Since IE has no "result" nodes, we set the blob corresponding to the
@@ -161,27 +161,27 @@ Executable::Executable(shared_ptr<Function> func, string device,
     output_dt_map[output_name] = dtype;
   }
 
-  auto outputInfo = m_network.getOutputsInfo();
-  for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter) {
-    auto out_name = iter->first;
-    auto it = output_dt_map.find(out_name);
+  //auto outputInfo = m_network.getOutputsInfo();
+  //for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter) {
+  //  auto out_name = iter->first;
+  //  auto it = output_dt_map.find(out_name);
 
-    if (it == output_dt_map.end()) {
-      THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name
-                         << " doesn't exist";
-    }
-    auto precision = IE_Utils::toPrecision(it->second);
-    if (m_device_type == "GPU_FP16") {
-      precision = InferenceEngine::Precision::FP32;
-    }
-    iter->second->setPrecision(precision);
-  }
+  //  if (it == output_dt_map.end()) {
+  //    THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name
+  //                       << " doesn't exist";
+  //  }
+  //  auto precision = IE_Utils::toPrecision(it->second);
+  //  if (m_device_type == "GPU_FP16") {
+  //    precision = InferenceEngine::Precision::FP32;
+  //  }
+  //  iter->second->setPrecision(precision);
+  //}
 
   OVTF_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
-    m_ie_engine = make_shared<IE_VADM_Engine>(m_network);
+    m_ie_engine = make_shared<IE_VADM_Engine>(m_function);
   } else {
-    m_ie_engine = make_shared<IE_Basic_Engine>(m_network, m_device);
+    m_ie_engine = make_shared<IE_Basic_Engine>(m_function, m_device);
   }
 }
 
@@ -197,16 +197,16 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   // Check if the number of inputs that the CNN network expects is equal to the
   // sum of the
   // inputs specified and the inputs we hoisted, if any.
-  InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
-  if (input_info.size() > (inputs.size() + m_hoisted_params.size())) {
-    throw runtime_error("Function inputs (" + to_string(input_info.size()) +
-                        ") number greater than number of given inputs (" +
-                        to_string(inputs.size() + m_hoisted_params.size()) +
-                        ")");
-  }
+  //InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
+  //if (input_info.size() > (inputs.size() + m_hoisted_params.size())) {
+  //  throw runtime_error("Function inputs (" + to_string(input_info.size()) +
+  //                      ") number greater than number of given inputs (" +
+  //                      to_string(inputs.size() + m_hoisted_params.size()) +
+  //                      ")");
+  //}
 
   //  Prepare input blobs
-  auto func = m_ie_engine->get_func();
+  auto func = m_ie_engine->get_model();
   auto parameters = func->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
   std::vector<std::string> input_names(inputs.size());
@@ -217,10 +217,10 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
       continue;
     }
     auto input_name = parameters[j++]->get_friendly_name();
-    if (input_info.find(input_name) == input_info.end()) {
-      OVTF_VLOG(1) << "Skipping unused input " << input_name;
-      continue;
-    }
+    //if (input_info.find(input_name) == input_info.end()) {
+    //  OVTF_VLOG(1) << "Skipping unused input " << input_name;
+    //  continue;
+    //}
     ie_inputs[i] = nullptr;
     ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
     input_names[i] = input_name;
@@ -231,18 +231,18 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   std::vector<std::string> param_names(m_hoisted_params.size());
   for (const auto& it : m_hoisted_params) {
     auto input_name = it.first;
-    if (input_info.find(input_name) == input_info.end()) {
-      OVTF_VLOG(1) << "Skipping unused hoisted param " << input_name;
-      continue;
-    }
+    //if (input_info.find(input_name) == input_info.end()) {
+    //  OVTF_VLOG(1) << "Skipping unused hoisted param " << input_name;
+    //  continue;
+    //}
     ie_hoisted_params[j] = nullptr;
     ie_hoisted_params[j] = static_pointer_cast<IETensor>(it.second);
     param_names[j++] = input_name;
   }
 
-  InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
-  if (outputs.size() == 0 && output_info.size() > 0) {
-    outputs.resize(output_info.size(), nullptr);
+  //InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
+  if (outputs.size() == 0 && m_function->outputs().size() > 0) {
+    outputs.resize(m_function->outputs().size(), nullptr);
   }
 
   auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {

@@ -35,6 +35,7 @@ IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
   InferenceEngine::MemoryBlob::Ptr ie_blob;
   IE_Utils::CreateBlob(desc, precision, memory_pointer, size, ie_blob);
   m_blob = ie_blob;
+  m_data_ptr = memory_pointer;
 }
 
 IETensor::IETensor(const element::Type& element_type, const Shape& shape)
@@ -84,13 +85,14 @@ void IETensor::read(void* dst, size_t bytes) const {
   copy(output_ptr, output_ptr + bytes, dst_ptr);
 }
 
-const void* IETensor::get_data_ptr() const {
-  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob == nullptr) {
-    THROW_IE_EXCEPTION << "blob is nullptr";
-  }
-  auto lm = blob->rwmap();
-  return lm.as<void*>();
+void* IETensor::get_data_ptr() const {
+  //auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
+  //if (blob == nullptr) {
+  //  THROW_IE_EXCEPTION << "blob is nullptr";
+  //}
+  //auto lm = blob->rwmap();
+  //return lm.as<void*>();
+  return m_data_ptr;
 }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
