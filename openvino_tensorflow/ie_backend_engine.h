@@ -41,13 +41,13 @@ class IE_Backend_Engine {
   void disable_multi_req_execution();
 
   // Returns the NGraph Function from the CNNNetwork
-  std::shared_ptr<ngraph::Function> get_func();
+  std::shared_ptr<ov::Model> get_func();
 
   virtual const std::vector<size_t> get_output_shape(const int i) = 0;
 
  protected:
   InferenceEngine::CNNNetwork m_network;
-  std::shared_ptr<ngraph::Function> m_func;
+  std::shared_ptr<ov::Model> m_func;
   std::vector<InferenceEngine::InferRequest> m_infer_reqs;
   std::string m_device;
   bool m_multi_req_execution;

@@ -66,7 +66,7 @@ class NGraphExecTest : public ::testing::Test {
   // Translates the TFGraph into NGFunction assumes no static inputs
   Status TranslateTFGraphNoStatic(const vector<TensorShape>& tf_input_shapes,
                                   const Graph& input_graph,
-                                  shared_ptr<ngraph::Function>& ng_function) {
+                                  shared_ptr<ov::Model>& ng_function) {
     // Translate the Graph: Create ng_function
     std::vector<const Tensor*> static_input_map(tf_input_shapes.size(),
                                                 nullptr);

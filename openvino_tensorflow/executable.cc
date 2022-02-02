@@ -89,8 +89,8 @@ Executable::Executable(shared_ptr<Function> func, string device,
       // FIXME: IE cannot handle input parameters with i64/u6 precision
       // at the moment
       if (node->get_input_size() == 0 && ngraph::op::is_constant(node) &&
-          !(node->get_element_type() == ngraph::element::i64 ||
-            node->get_element_type() == ngraph::element::u64)) {
+          !(node->get_element_type() == ov::element::i64 ||
+            node->get_element_type() == ov::element::u64)) {
         auto constant = ngraph::as_type_ptr<opset::Constant>(node);
         auto element_type = constant->get_element_type();
         auto shape = constant->get_shape();
@@ -139,7 +139,7 @@ Executable::Executable(shared_ptr<Function> func, string device,
         name + "_IE_" + m_device;
   }
 
-  auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {
+  auto get_output_name = [](std::shared_ptr<ov::Node> node) {
     // Since IE has no "result" nodes, we set the blob corresponding to the
     // parent of this result node
     auto parent = node->input_value(0).get_node_shared_ptr();
@@ -245,7 +245,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
     outputs.resize(output_info.size(), nullptr);
   }
 
-  auto get_output_name = [](std::shared_ptr<ngraph::Node> node) {
+  auto get_output_name = [](std::shared_ptr<ov::Node> node) {
     // Since IE has no "result" nodes, we set the blob corresponding to the
     // parent of this result node
     auto parent = node->input_value(0).get_node_shared_ptr();

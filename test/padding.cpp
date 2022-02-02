@@ -17,8 +17,8 @@ namespace testing {
 TEST(padding, valid) {
   ngraph::CoordinateDiff ng_padding_below;
   ngraph::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(string("VALID"), ngraph::Shape{4, 5},
-                       ngraph::Shape{2, 3}, ngraph::Strides{1, 1},
+  Builder::MakePadding(string("VALID"), ov::Shape{4, 5},
+                       ov::Shape{2, 3}, ngraph::Strides{1, 1},
                        ngraph::Strides{0, 0}, ng_padding_below,
                        ng_padding_above);
   ASSERT_EQ(ng_padding_below[0], 0);
@@ -30,7 +30,7 @@ TEST(padding, valid) {
 TEST(padding, divisible) {
   ngraph::CoordinateDiff ng_padding_below;
   ngraph::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(string("SAME"), ngraph::Shape{8, 9}, ngraph::Shape{2, 3},
+  Builder::MakePadding(string("SAME"), ov::Shape{8, 9}, ov::Shape{2, 3},
                        ngraph::Strides{1, 1}, ngraph::Strides{1, 1},
                        ng_padding_below, ng_padding_above);
   ASSERT_EQ(ng_padding_below[0], 0);
@@ -42,8 +42,8 @@ TEST(padding, divisible) {
 TEST(padding, indivisible) {
   ngraph::CoordinateDiff ng_padding_below;
   ngraph::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(string("SAME"), ngraph::Shape{10, 10},
-                       ngraph::Shape{4, 4}, ngraph::Strides{3, 3},
+  Builder::MakePadding(string("SAME"), ov::Shape{10, 10},
+                       ov::Shape{4, 4}, ngraph::Strides{3, 3},
                        ngraph::Strides{1, 1}, ng_padding_below,
                        ng_padding_above);
   ASSERT_EQ(ng_padding_below[0], 1);

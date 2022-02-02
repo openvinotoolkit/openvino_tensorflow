@@ -91,7 +91,7 @@ void IE_Backend_Engine::disable_multi_req_execution() {
   m_multi_req_execution = false;
 }
 
-std::shared_ptr<ngraph::Function> IE_Backend_Engine::get_func() {
+std::shared_ptr<ov::Model> IE_Backend_Engine::get_func() {
   return m_func;
 }
 }  // namespace openvino_tensorflow

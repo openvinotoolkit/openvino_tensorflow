@@ -17,12 +17,12 @@ namespace openvino_tensorflow {
 
 class IETensor : public ngraph::runtime::Tensor {
  public:
-  IETensor(const ngraph::element::Type& element_type,
-           const ngraph::Shape& shape);
-  IETensor(const ngraph::element::Type& element_type,
+  IETensor(const ov::element::Type& element_type,
+           const ov::Shape& shape);
+  IETensor(const ov::element::Type& element_type,
            const ngraph::PartialShape& shape);
-  IETensor(const ngraph::element::Type& element_type,
-           const ngraph::Shape& shape, void* memory_pointer);
+  IETensor(const ov::element::Type& element_type,
+           const ov::Shape& shape, void* memory_pointer);
   IETensor(InferenceEngine::Blob::Ptr blob);
   ~IETensor() override;
 

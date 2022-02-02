@@ -70,21 +70,21 @@ TEST(TransposeSinking, PassProperty) {
 TEST(TransposeSinking, EdgeSplitting) {
   // checks if Transpose is pushed through opset::Abs, but stopped by
   // ReduceSum
-  ngraph::Shape shape_nhwc{16, 28, 28, 1};
-  ngraph::Shape shape_nchw{16, 1, 28, 28};
+  ov::Shape shape_nhwc{16, 28, 28, 1};
+  ov::Shape shape_nchw{16, 1, 28, 28};
 
-  auto a = make_shared<opset::Parameter>(ngraph::element::i32, shape_nhwc);
+  auto a = make_shared<opset::Parameter>(ov::element::i32, shape_nhwc);
   auto ng_order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose = make_shared<opset::Transpose>(a, ng_order);
   auto absn = make_shared<opset::Abs>(transpose);
   auto absn2 = make_shared<opset::Abs>(absn);
 
   auto axes = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{4}, vector<int64_t>{0, 1, 2, 3});
+      ov::element::i64, ov::Shape{4}, vector<int64_t>{0, 1, 2, 3});
   auto sum = make_shared<opset::ReduceSum>(transpose, axes, true);
 
-  auto func = make_shared<ngraph::Function>(ngraph::OutputVector{absn2, sum},
+  auto func = make_shared<ov::Model>(ov::OutputVector{absn2, sum},
                                             ngraph::ParameterVector{a});
   size_t before_count = count_ops_of_type<opset::Transpose>(func);
 
@@ -117,32 +117,32 @@ TEST(TransposeSinking, EdgeSplitting) {
 //            |
 //          Result
 TEST(TransposeSinking, PoolAdd1) {
-  ngraph::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
+  ov::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
 
-  auto input_type = ngraph::element::f32;
-  auto output_type = ngraph::element::f32;
+  auto input_type = ov::element::f32;
+  auto output_type = ov::element::f32;
 
   auto X = make_shared<opset::Parameter>(input_type, input_shape);  // NHWC
 
   auto ng_order1 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose1 =
       make_shared<opset::Transpose>(X, ng_order1);  // NCHW (1,1,3,3)
 
   auto avgpool = make_shared<opset::AvgPool>(
-      transpose1, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
 
   auto ng_order2 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose2 =
       make_shared<opset::Transpose>(avgpool, ng_order2);  // NHWC (1,3,3,1)
 
-  auto const1 = opset::Constant::create(input_type, ngraph::Shape{1, 3, 3, 1},
+  auto const1 = opset::Constant::create(input_type, ov::Shape{1, 3, 3, 1},
                                         {3});  // NHWC (1,3,3,1)
   auto add1 = make_shared<opset::Add>(transpose2, const1);
-  auto func = make_shared<ngraph::Function>(add1, ngraph::ParameterVector{X});
+  auto func = make_shared<ov::Model>(add1, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
   size_t before_count = count_ops_of_type<opset::Transpose>(func);
@@ -155,45 +155,45 @@ TEST(TransposeSinking, PoolAdd1) {
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
-  ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 3, 3, 1}));
+  ASSERT_EQ(new_transpose->get_output_shape(0), (ov::Shape{1, 3, 3, 1}));
 }
 
 TEST(TransposeSinking, PoolAdd2) {
-  ngraph::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
+  ov::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
 
-  auto input_type = ngraph::element::f32;
-  auto output_type = ngraph::element::f32;
+  auto input_type = ov::element::f32;
+  auto output_type = ov::element::f32;
 
   auto X = make_shared<opset::Parameter>(input_type, input_shape);  // NHWC
 
   auto ng_order1 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose1 =
       make_shared<opset::Transpose>(X, ng_order1);  // NCHW (1,1,3,3)
 
   auto avgpool = make_shared<opset::AvgPool>(
-      transpose1, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
 
   auto ng_order2 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose2 =
       make_shared<opset::Transpose>(avgpool, ng_order2);  // NHWC (1,3,3,1)
   auto maxpool = make_shared<opset::MaxPool>(
-      transpose1, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
+      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
       ngraph::op::PadType::VALID);
 
   auto ng_order3 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose3 = make_shared<opset::Transpose>(maxpool, ng_order3);
 
-  auto const1 = opset::Constant::create(input_type, ngraph::Shape{1, 3, 3, 1},
+  auto const1 = opset::Constant::create(input_type, ov::Shape{1, 3, 3, 1},
                                         {3});  // NHWC (1,3,3,1)
   auto add1 = make_shared<opset::Add>(transpose3, const1);
   auto add2 = make_shared<opset::Add>(add1, transpose2);
-  auto func = make_shared<ngraph::Function>(add2, ngraph::ParameterVector{X});
+  auto func = make_shared<ov::Model>(add2, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
   size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 3
@@ -206,39 +206,39 @@ TEST(TransposeSinking, PoolAdd2) {
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
-  ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 3, 3, 1}));
+  ASSERT_EQ(new_transpose->get_output_shape(0), (ov::Shape{1, 3, 3, 1}));
 }
 
 // Different rank constant input to Add1. After TransposeSinking the const
 // would need a Reshape to have the same order as the other input to
 // Add1.
 TEST(TransposeSinking, PoolAdd3) {
-  ngraph::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
+  ov::Shape input_shape{1, 3, 3, 1};  // NHWC (N=1, H=3, W=3, C=1)
 
-  auto input_type = ngraph::element::f32;
-  auto output_type = ngraph::element::f32;
+  auto input_type = ov::element::f32;
+  auto output_type = ov::element::f32;
 
   auto X = make_shared<opset::Parameter>(input_type, input_shape);  // NHWC
 
   auto ng_order1 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose1 =
       make_shared<opset::Transpose>(X, ng_order1);  // NCHW (1,1,3,3)
 
   auto avgpool = make_shared<opset::AvgPool>(
-      transpose1, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
 
   auto ng_order2 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose2 =
       make_shared<opset::Transpose>(avgpool, ng_order2);  // NHWC (1,3,3,1)
 
-  auto const1 = opset::Constant::create(input_type, ngraph::Shape{1},
+  auto const1 = opset::Constant::create(input_type, ov::Shape{1},
                                         {1});  // NHWC (1,3,3,1)
   auto add1 = make_shared<opset::Add>(transpose2, const1);
-  auto func = make_shared<ngraph::Function>(add1, ngraph::ParameterVector{X});
+  auto func = make_shared<ov::Model>(add1, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
   size_t before_count = count_ops_of_type<opset::Transpose>(func);
@@ -250,24 +250,24 @@ TEST(TransposeSinking, PoolAdd3) {
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
-  ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 3, 3, 1}));
+  ASSERT_EQ(new_transpose->get_output_shape(0), (ov::Shape{1, 3, 3, 1}));
 }
 
 TEST(TransposeSinking, Concat) {
   // checks if Transpose is pushed through opset::Concat
-  ngraph::Shape shape_nhwc{16, 28, 28, 1};
-  auto a = make_shared<opset::Parameter>(ngraph::element::i32, shape_nhwc);
-  auto b = make_shared<opset::Parameter>(ngraph::element::i32, shape_nhwc);
+  ov::Shape shape_nhwc{16, 28, 28, 1};
+  auto a = make_shared<opset::Parameter>(ov::element::i32, shape_nhwc);
+  auto b = make_shared<opset::Parameter>(ov::element::i32, shape_nhwc);
   auto to_nchw = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto a_transpose = make_shared<opset::Transpose>(a, to_nchw);
   auto b_transpose = make_shared<opset::Transpose>(b, to_nchw);
   auto concat = make_shared<opset::Concat>(
-      ngraph::OutputVector{a_transpose, b_transpose}, 0);
+      ov::OutputVector{a_transpose, b_transpose}, 0);
   auto to_nhwc = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto c = make_shared<opset::Transpose>(concat, to_nhwc);
-  auto func = make_shared<ngraph::Function>(ngraph::OutputVector{c},
+  auto func = make_shared<ov::Model>(ov::OutputVector{c},
                                             ngraph::ParameterVector{a, b});
 
   ngraph::pass::Manager pass_manager;
@@ -277,36 +277,36 @@ TEST(TransposeSinking, Concat) {
   size_t transpose_count = count_ops_of_type<opset::Transpose>(func);
   ASSERT_EQ(0, transpose_count);
   auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
-  ngraph::Shape expected_shape{32, 28, 28, 1};
+  ov::Shape expected_shape{32, 28, 28, 1};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
 }
 
 TEST(TransposeSinking, Concat_DummyShape) {
   // checks if Transpose is pushed through opset::Concat
-  ngraph::Shape shape1{4, 3, 3, 1};
-  ngraph::Shape shape2{4, 3, 3, 2};
-  ngraph::Shape shape3{4, 3, 3, 3};
-  ngraph::Shape shape4{4, 3, 3, 4};
+  ov::Shape shape1{4, 3, 3, 1};
+  ov::Shape shape2{4, 3, 3, 2};
+  ov::Shape shape3{4, 3, 3, 3};
+  ov::Shape shape4{4, 3, 3, 4};
   auto to_nchw = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto to_nhwc = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
 
-  auto a1 = make_shared<opset::Parameter>(ngraph::element::i32, shape1);
-  auto a2 = make_shared<opset::Parameter>(ngraph::element::i32, shape2);
-  auto a3 = make_shared<opset::Parameter>(ngraph::element::i32, shape3);
-  auto a4 = make_shared<opset::Parameter>(ngraph::element::i32, shape4);
+  auto a1 = make_shared<opset::Parameter>(ov::element::i32, shape1);
+  auto a2 = make_shared<opset::Parameter>(ov::element::i32, shape2);
+  auto a3 = make_shared<opset::Parameter>(ov::element::i32, shape3);
+  auto a4 = make_shared<opset::Parameter>(ov::element::i32, shape4);
   auto a1_transpose = make_shared<opset::Transpose>(a1, to_nchw);
   auto a2_transpose = make_shared<opset::Transpose>(a2, to_nchw);
   auto a3_transpose = make_shared<opset::Transpose>(a3, to_nchw);
   auto a4_transpose = make_shared<opset::Transpose>(a4, to_nchw);
   auto concat =
-      make_shared<opset::Concat>(ngraph::NodeVector{a1_transpose, a2_transpose,
+      make_shared<opset::Concat>(ov::NodeVector{a1_transpose, a2_transpose,
                                                     a3_transpose, a4_transpose},
                                  1);
   auto out = make_shared<opset::Transpose>(concat, to_nchw);
-  auto func = make_shared<ngraph::Function>(
-      ngraph::OutputVector{out}, ngraph::ParameterVector{a1, a2, a3, a4});
+  auto func = make_shared<ov::Model>(
+      ov::OutputVector{out}, ngraph::ParameterVector{a1, a2, a3, a4});
 
   ngraph::pass::Manager pass_manager;
   pass_manager.register_pass<pass::TransposeSinking>();
@@ -315,48 +315,48 @@ TEST(TransposeSinking, Concat_DummyShape) {
   size_t transpose_count = count_ops_of_type<opset::Transpose>(func);  // 1
   ASSERT_EQ(1, transpose_count);
   auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
-  ngraph::Shape expected_shape{4, 3, 10, 3};
+  ov::Shape expected_shape{4, 3, 10, 3};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
 }
 
 // The Transpose should sink through Pad op but stopped by ReduceSum
 TEST(TransposeSinking, Pad) {
-  ngraph::Shape shape_nhwc{100, 8, 8, 1};
+  ov::Shape shape_nhwc{100, 8, 8, 1};
 
-  auto a = make_shared<opset::Parameter>(ngraph::element::f32, shape_nhwc);
+  auto a = make_shared<opset::Parameter>(ov::element::f32, shape_nhwc);
   auto pad_value = opset::Constant::create<float>(
-      ngraph::element::f32, ngraph::Shape{}, std::vector<float>{0.0f});
+      ov::element::f32, ov::Shape{}, std::vector<float>{0.0f});
 
   ngraph::CoordinateDiff pad_end{0, 0, 0, 0};
   ngraph::CoordinateDiff pad_begin{0, 1, 1, 0};
 
   auto a_to_nchw = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto a_transpose = make_shared<opset::Transpose>(a, a_to_nchw);
 
   auto maxpool = make_shared<opset::MaxPool>(
-      a_transpose, ngraph::Strides{2, 2}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
+      a_transpose, ngraph::Strides{2, 2}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
       ngraph::op::PadType::VALID);
 
   auto m_to_nhwc = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto m_transpose = make_shared<opset::Transpose>(maxpool, m_to_nhwc);
 
   shared_ptr<opset::Constant> pads_begin_node, pads_end_node;
   pads_begin_node = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{pad_begin.size()}, pad_begin);
+      ov::element::i64, ov::Shape{pad_begin.size()}, pad_begin);
   pads_end_node = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{pad_end.size()}, pad_end);
+      ov::element::i64, ov::Shape{pad_end.size()}, pad_end);
   auto pad =
       make_shared<opset::Pad>(m_transpose, pads_begin_node, pads_end_node,
                               pad_value, ngraph::op::PadMode::CONSTANT);
 
   auto axes = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{4}, vector<int64_t>{0, 1, 2, 3});
+      ov::element::i64, ov::Shape{4}, vector<int64_t>{0, 1, 2, 3});
   auto sum = make_shared<opset::ReduceSum>(pad, axes, true);
 
-  auto func = make_shared<ngraph::Function>(ngraph::OutputVector{sum},
+  auto func = make_shared<ov::Model>(ov::OutputVector{sum},
                                             ngraph::ParameterVector{a});
 
   ngraph::pass::Manager pass_manager;
@@ -367,7 +367,7 @@ TEST(TransposeSinking, Pad) {
   size_t after_count = count_ops_of_type<opset::Transpose>(func);  // 2
   ASSERT_EQ(after_count, before_count);
   auto result = func->get_results().at(0)->input_value(0).get_node_shared_ptr();
-  ngraph::Shape expected_shape{1, 1, 1, 1};
+  ov::Shape expected_shape{1, 1, 1, 1};
   ASSERT_EQ(result->get_output_shape(0), expected_shape);
   auto out = ngraph::as_type_ptr<opset::ReduceSum>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
@@ -375,12 +375,12 @@ TEST(TransposeSinking, Pad) {
 }
 
 TEST(TransposeSinking, SimpleUnary) {
-  ngraph::Shape shape_nhwc{16, 28, 28, 1};
-  ngraph::Shape shape_nchw{16, 1, 28, 28};
-  auto a = make_shared<opset::Parameter>(ngraph::element::i32, shape_nhwc);
+  ov::Shape shape_nhwc{16, 28, 28, 1};
+  ov::Shape shape_nchw{16, 1, 28, 28};
+  auto a = make_shared<opset::Parameter>(ov::element::i32, shape_nhwc);
 
   auto ng_order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose = make_shared<opset::Transpose>(a, ng_order);
 
   auto a_t = make_shared<opset::Transpose>(a, ng_order);
@@ -388,10 +388,10 @@ TEST(TransposeSinking, SimpleUnary) {
   auto absn2 = make_shared<opset::Abs>(absn);
 
   auto tf_order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto absn2_t = make_shared<opset::Transpose>(absn2, tf_order);
 
-  auto func = make_shared<ngraph::Function>(ngraph::OutputVector{absn2_t},
+  auto func = make_shared<ov::Model>(ov::OutputVector{absn2_t},
                                             ngraph::ParameterVector{a});
   size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 2
 
@@ -426,42 +426,42 @@ TEST(TransposeSinking, SimpleUnary) {
 //            |
 //          Result (NCHW)
 TEST(TransposeSinking, MultiOutput) {
-  ngraph::Shape shape_nhwc{1, 4, 4, 1};
-  ngraph::Shape shape_nchw{1, 1, 4, 6};
+  ov::Shape shape_nhwc{1, 4, 4, 1};
+  ov::Shape shape_nchw{1, 1, 4, 6};
 
-  auto input_type = ngraph::element::f32;
-  auto output_type = ngraph::element::f32;
+  auto input_type = ov::element::f32;
+  auto output_type = ov::element::f32;
 
   auto X = make_shared<opset::Parameter>(input_type, shape_nchw);  // NCHW
 
   auto ng_order1 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose1 =
       make_shared<opset::Transpose>(X, ng_order1);  // NHWC (1, 4, 6, 1)
-  auto ng_split_dim = std::make_shared<opset::Constant>(ngraph::element::u64,
-                                                        ngraph::Shape{}, 2);
+  auto ng_split_dim = std::make_shared<opset::Constant>(ov::element::u64,
+                                                        ov::Shape{}, 2);
 
   auto split =
       make_shared<opset::Split>(transpose1, ng_split_dim, 2);  // (1, 4, 3, 1)
 
   auto ng_order2 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose2 =
       make_shared<opset::Transpose>(split, ng_order2);  // (1, 1, 4, 3) NCHW
 
   auto ng_order3 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose3 =
       make_shared<opset::Transpose>(split, ng_order3);  // (1, 1, 4, 3) NCHW
 
-  auto const1 = opset::Constant::create(input_type, ngraph::Shape{1, 1, 4, 3},
+  auto const1 = opset::Constant::create(input_type, ov::Shape{1, 1, 4, 3},
                                         {3});  // NCHW
   auto add1 = make_shared<opset::Add>(transpose2, const1);
-  auto const2 = opset::Constant::create(input_type, ngraph::Shape{1, 1, 4, 3},
+  auto const2 = opset::Constant::create(input_type, ov::Shape{1, 1, 4, 3},
                                         {3});  // NCHW
   auto add2 = make_shared<opset::Add>(transpose3, const2);
   auto add3 = make_shared<opset::Add>(add1, add2);
-  auto func = make_shared<ngraph::Function>(add3, ngraph::ParameterVector{X});
+  auto func = make_shared<ov::Model>(add3, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
   size_t before_count = count_ops_of_type<opset::Transpose>(func);  // 3
@@ -474,7 +474,7 @@ TEST(TransposeSinking, MultiOutput) {
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
-  ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 1, 4, 3}));
+  ASSERT_EQ(new_transpose->get_output_shape(0), (ov::Shape{1, 1, 4, 3}));
 }
 
 //            X (NHWC)
@@ -506,66 +506,66 @@ TEST(TransposeSinking, MultiOutput) {
 //       |
 //     Result
 TEST(TransposeSinking, AlexnetPattern) {
-  ngraph::Shape shape_nhwc{1, 55, 55, 96};
-  ngraph::Shape shape_nchw{1, 96, 55, 55};
+  ov::Shape shape_nhwc{1, 55, 55, 96};
+  ov::Shape shape_nchw{1, 96, 55, 55};
 
-  auto input_type = ngraph::element::f32;
-  auto output_type = ngraph::element::f32;
+  auto input_type = ov::element::f32;
+  auto output_type = ov::element::f32;
 
   // X
   auto X = make_shared<opset::Parameter>(input_type, shape_nhwc);  // NHWC
 
   // T -> AvgPool0 -> T0
   auto ng_order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose = make_shared<opset::Transpose>(X, ng_order);  // NCHW
   auto avgpool0 = make_shared<opset::AvgPool>(
-      transpose, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
   auto ng_order0 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose0 = make_shared<opset::Transpose>(avgpool0, ng_order0);  // NHWC
 
   // Split
-  auto ng_split_dim = std::make_shared<opset::Constant>(ngraph::element::u64,
-                                                        ngraph::Shape{}, 3);
+  auto ng_split_dim = std::make_shared<opset::Constant>(ov::element::u64,
+                                                        ov::Shape{}, 3);
   auto split = make_shared<opset::Split>(transpose0, ng_split_dim, 2);  // NHWC
 
   // T1 -> AvgPool1 -> T2
   auto ng_order1 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose1 = make_shared<opset::Transpose>(split, ng_order1);  // NCHW
   auto avgpool1 = make_shared<opset::AvgPool>(
-      transpose1, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
   auto ng_order2 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose2 = make_shared<opset::Transpose>(avgpool1, ng_order2);  // NHWC
 
   // T3 -> AvgPool2 -> T4
   auto ng_order3 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 3, 1, 2});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto transpose3 = make_shared<opset::Transpose>(split, ng_order1);  // NCHW
   auto avgpool2 = make_shared<opset::AvgPool>(
-      transpose3, ngraph::Strides{1, 1}, ngraph::Shape{0, 0},
-      ngraph::Shape{0, 0}, ngraph::Shape{1, 1}, true,
+      transpose3, ngraph::Strides{1, 1}, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, true,
       ngraph::op::RoundingType::FLOOR, ngraph::op::PadType::VALID);
   auto ng_order4 = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{4}, ngraph::Shape{0, 2, 3, 1});
+      ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose4 = make_shared<opset::Transpose>(avgpool2, ng_order4);  // NHWC
 
   // Concat
   auto concat = make_shared<opset::Concat>(
-      ngraph::OutputVector{transpose2, transpose4}, 3);  // NHWC
+      ov::OutputVector{transpose2, transpose4}, 3);  // NHWC
 
   // Add
   auto const1 =
-      opset::Constant::create(input_type, ngraph::Shape{96}, {1});  // NCHW
+      opset::Constant::create(input_type, ov::Shape{96}, {1});  // NCHW
   auto add1 = make_shared<opset::Add>(concat, const1);
 
-  auto func = make_shared<ngraph::Function>(add1, ngraph::ParameterVector{X});
+  auto func = make_shared<ov::Model>(add1, ngraph::ParameterVector{X});
 
   ngraph::pass::Manager pass_manager;
   size_t before_count = count_ops_of_type<opset::Transpose>(func);
@@ -578,7 +578,7 @@ TEST(TransposeSinking, AlexnetPattern) {
   auto new_transpose = ngraph::as_type_ptr<opset::Transpose>(
       func->get_results().at(0)->input_value(0).get_node_shared_ptr());
   ASSERT_TRUE(new_transpose);
-  ASSERT_EQ(new_transpose->get_output_shape(0), (ngraph::Shape{1, 55, 55, 96}));
+  ASSERT_EQ(new_transpose->get_output_shape(0), (ov::Shape{1, 55, 55, 96}));
 }
 
 // End to end test for TransposeSinking with multi-output node

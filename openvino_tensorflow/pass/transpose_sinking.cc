@@ -46,7 +46,7 @@ static ngraph::AxisVector permutation_to_default_order(
 }
 
 template <typename T>
-static string describe(shared_ptr<ngraph::Node> node) {
+static string describe(shared_ptr<ov::Node> node) {
   // ensure that it's either a reshape or a transpose
   // TODO: use static_assert
   if (!(std::is_base_of<opset::Reshape, T>::value ||
@@ -68,25 +68,25 @@ static string describe(shared_ptr<ngraph::Node> node) {
 }
 
 static shared_ptr<opset::Transpose> make_transpose(
-    ngraph::Output<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
+    ov::Output<ov::Node> arg, const ngraph::AxisVector& input_order) {
   auto order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{input_order.size()}, input_order);
+      ov::element::u64, ov::Shape{input_order.size()}, input_order);
   auto transpose = make_shared<opset::Transpose>(arg, order);
   OVTF_VLOG(4) << "Make Transpose " << describe<opset::Transpose>(transpose);
   return transpose;
 }
 
 static shared_ptr<opset::Reshape> make_reshape(
-    ngraph::Output<ngraph::Node> arg, const ngraph::AxisVector& input_order) {
+    ov::Output<ov::Node> arg, const ngraph::AxisVector& input_order) {
   auto order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{input_order.size()}, input_order);
+      ov::element::u64, ov::Shape{input_order.size()}, input_order);
   auto transpose = make_shared<opset::Reshape>(arg, order, false);
   OVTF_VLOG(4) << "Make Reshape " << describe<opset::Reshape>(transpose);
   return transpose;
 }
 
 static void write_transposemap(TransposeMap& reorders,
-                               ngraph::Output<ngraph::Node> target,
+                               ov::Output<ov::Node> target,
                                shared_ptr<opset::Transpose> transpose) {
   auto name =
       target.get_node()->get_name() + "." + to_string(target.get_index());
@@ -96,7 +96,7 @@ static void write_transposemap(TransposeMap& reorders,
 }
 
 static shared_ptr<opset::Transpose> read_transposemap(
-    TransposeMap& reorders, ngraph::Output<ngraph::Node> target) {
+    TransposeMap& reorders, ov::Output<ov::Node> target) {
   auto name =
       target.get_node()->get_name() + "." + to_string(target.get_index());
   auto transpose = reorders[name];
@@ -123,8 +123,8 @@ static shared_ptr<opset::Transpose> combine_transposes(
   return combined;
 }
 
-static void insert_transpose(shared_ptr<ngraph::Node> target,
-                             shared_ptr<ngraph::Node> transpose,
+static void insert_transpose(shared_ptr<ov::Node> target,
+                             shared_ptr<ov::Node> transpose,
                              size_t input_index) {
   OVTF_VLOG(4) << "Inserting transpose at input " << target->get_name()
                << " input index " << input_index;
@@ -141,10 +141,10 @@ static void insert_transpose(shared_ptr<ngraph::Node> target,
   target->input(input_index).replace_source_output(new_transpose->output(0));
 }
 
-static void delete_transpose(shared_ptr<ngraph::Node> transpose) {
+static void delete_transpose(shared_ptr<ov::Node> transpose) {
   OVTF_VLOG(4) << "Removing transpose " << transpose->get_name();
   if (!transpose->get_users().empty()) {
-    ngraph::Output<ngraph::Node> output = transpose->output(0);
+    ov::Output<ov::Node> output = transpose->output(0);
     OVTF_VLOG(5) << "output " << output.get_node_shared_ptr()->get_name();
     OVTF_VLOG(5) << "target input size " << output.get_target_inputs().size();
     for (auto input : output.get_target_inputs()) {
@@ -155,18 +155,18 @@ static void delete_transpose(shared_ptr<ngraph::Node> transpose) {
 }
 
 static void mark_transpose_for_deletion(
-    shared_ptr<ngraph::Node> transpose,
-    set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+    shared_ptr<ov::Node> transpose,
+    set<shared_ptr<ov::Node>>& transposes_to_delete) {
   OVTF_VLOG(4) << "Marking transpose " << transpose->get_name()
                << " for deletion";
   transposes_to_delete.insert(transpose);
 }
 
 static shared_ptr<opset::Transpose> create_default_transpose(
-    ngraph::Output<ngraph::Node> n) {
+    ov::Output<ov::Node> n) {
   auto default_order = ngraph::get_default_order(n.get_shape());
   auto order = std::make_shared<opset::Constant>(
-      ngraph::element::u64, ngraph::Shape{default_order.size()}, default_order);
+      ov::element::u64, ov::Shape{default_order.size()}, default_order);
   return make_shared<opset::Transpose>(n, order);
 }
 
@@ -176,9 +176,9 @@ static shared_ptr<opset::Transpose> create_default_transpose(
 // by either inserting a transpose or a reshape, depending on the shape of the
 // "left" argument.
 static void convert_binary_to_default_order(
-    shared_ptr<ngraph::Node> binary, const ngraph::Input<ngraph::Node>& input,
-    ngraph::Output<ngraph::Node> right, TransposeMap& reorders,
-    set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+    shared_ptr<ov::Node> binary, const ngraph::Input<ov::Node>& input,
+    ov::Output<ov::Node> right, TransposeMap& reorders,
+    set<shared_ptr<ov::Node>>& transposes_to_delete) {
   auto left = input.get_source_output();
   auto right_t = read_transposemap(reorders, right);
   auto right_const = ngraph::as_type_ptr<opset::Constant>(
@@ -189,7 +189,7 @@ static void convert_binary_to_default_order(
 
   // if right input is being implicitly broadcasted, insert a reshape
   // instead of a transpose
-  shared_ptr<ngraph::Node> new_node;
+  shared_ptr<ov::Node> new_node;
   auto left_shape = left.get_shape();
   if (left_shape.size() < perm_to_def.size()) {
     left_shape.insert(left_shape.begin(),
@@ -212,8 +212,8 @@ static void convert_binary_to_default_order(
 }
 
 static void materialize_shapes(
-    shared_ptr<ngraph::Node> n, TransposeMap& reorders,
-    set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+    shared_ptr<ov::Node> n, TransposeMap& reorders,
+    set<shared_ptr<ov::Node>>& transposes_to_delete) {
   // For each node, create a default transpose for
   // each of the outputs and store in the map
   for (auto& it : n->outputs()) {
@@ -241,7 +241,7 @@ static void materialize_shapes(
 
 static void sink_transpose(
     shared_ptr<opset::Transpose> transpose, TransposeMap& reorders,
-    set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+    set<shared_ptr<ov::Node>>& transposes_to_delete) {
   OVTF_VLOG(4) << "Sinking Transpose :"
                << describe<opset::Transpose>(transpose);
   auto transpose_in = transpose->input_value(0);
@@ -258,16 +258,16 @@ static void sink_transpose(
 }
 
 static void sink_unary(
-    shared_ptr<ngraph::Node> n, TransposeMap& reorders,
-    set<shared_ptr<ngraph::Node>>& /* transposes_to_delete */) {
+    shared_ptr<ov::Node> n, TransposeMap& reorders,
+    set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
   auto arg_transpose = read_transposemap(reorders, n->input_value(0));
   OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(arg_transpose)
                << " for " << n->get_name();
   write_transposemap(reorders, n, arg_transpose);
 }
 
-static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
-                        set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+static void sink_binary(shared_ptr<ov::Node> binary, TransposeMap& reorders,
+                        set<shared_ptr<ov::Node>>& transposes_to_delete) {
   auto left = binary->input_value(0);
   auto right = binary->input_value(1);
   auto left_t = read_transposemap(reorders, left);
@@ -326,7 +326,7 @@ static void sink_binary(shared_ptr<ngraph::Node> binary, TransposeMap& reorders,
 
 static void sink_pad(
     shared_ptr<opset::Pad> n, TransposeMap& reorders,
-    set<shared_ptr<ngraph::Node>>& /* transposes_to_delete */) {
+    set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
   auto n_in = n->input_value(0);
   auto arg_transpose = read_transposemap(reorders, n_in);
   describe<opset::Transpose>(arg_transpose);
@@ -345,9 +345,9 @@ static void sink_pad(
   auto pad_begin = apply_permutation(n->get_pads_begin(), def_order);
   auto pad_end = apply_permutation(n->get_pads_end(), def_order);
   auto new_begin = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{pad_begin.size()}, pad_begin);
+      ov::element::i64, ov::Shape{pad_begin.size()}, pad_begin);
   auto new_end = make_shared<opset::Constant>(
-      ngraph::element::i64, ngraph::Shape{pad_end.size()}, pad_end);
+      ov::element::i64, ov::Shape{pad_end.size()}, pad_end);
   auto new_pad =
       make_shared<opset::Pad>(dummy_correct_shape, new_begin, new_end,
                               n->input_value(3), n->get_pad_mode());
@@ -363,7 +363,7 @@ static void sink_pad(
 }
 
 static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
-                        set<shared_ptr<ngraph::Node>>& transposes_to_delete) {
+                        set<shared_ptr<ov::Node>>& transposes_to_delete) {
   auto n_in = n->input_value(0);
   auto arg_transpose = read_transposemap(reorders, n_in);
   auto arg_transpose_order = ngraph::as_type_ptr<opset::Constant>(
@@ -378,7 +378,7 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
   auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
       arg_transpose->get_element_type(), input_shape);
 
-  ngraph::NodeVector new_args;
+  ov::NodeVector new_args;
   new_args.push_back(dummy_correct_shape);
 
   for (size_t i = 1; i < n->get_input_size(); i++) {
@@ -427,10 +427,10 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
 // For each op type we support we can either combine
 // two transposes by replacing the existing Transpose,
 // materialize pending transposes if they can't be propagated through op
-bool TransposeSinking::run_on_function(shared_ptr<ngraph::Function> f) {
+bool TransposeSinking::run_on_function(shared_ptr<ov::Model> f) {
   TransposeMap reorders;
-  set<shared_ptr<ngraph::Node>> transposes_to_delete;
-  unordered_map<std::string, ngraph::Shape> orig_result_out_shape;
+  set<shared_ptr<ov::Node>> transposes_to_delete;
+  unordered_map<std::string, ov::Shape> orig_result_out_shape;
 
   if (util::DumpAllGraphs()) {
     util::DumpNGGraph(f, f->get_friendly_name() + "_before_TS");
