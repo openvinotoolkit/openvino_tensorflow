@@ -29,7 +29,7 @@ class IETensor : public ngraph::runtime::Tensor {
   void write(const void* src, size_t bytes) override;
   void read(void* dst, size_t bytes) const override;
 
-  const void* get_data_ptr() const;
+  void* get_data_ptr() const;
   InferenceEngine::Blob::Ptr get_blob() { return m_blob; }
 
  private:
@@ -37,6 +37,7 @@ class IETensor : public ngraph::runtime::Tensor {
   IETensor(IETensor&&) = delete;
   IETensor& operator=(const IETensor&) = delete;
   InferenceEngine::Blob::Ptr m_blob;
+  void *m_data_ptr;
 };
 
 // A simple TensorBuffer implementation that allows us to create Tensors that
