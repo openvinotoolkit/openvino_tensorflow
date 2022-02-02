@@ -1,0 +1,116 @@
+## By default building TensorFlow from source
+## If you do not require that, please see line #50.
+
+ARG BASE_IMAGE="ubuntu:20.04"
+FROM $BASE_IMAGE as base_build
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG VERSION="master"
+
+SHELL ["/bin/bash", "-c"]
+
+## Installing git package and cloning OVTF and
+## Installing packages required for OVTF
+
+RUN apt-get update && apt-get install -y --no-install-recommends git python3.8 python3.8-dev python3.8-venv python3-pip \
+        ca-certificates autoconf automake build-essential libtool unzip git unzip wget zlib1g zlib1g-dev bash-completion \
+        build-essential cmake zip golang-go locate curl clang-format cpio libtinfo-dev jq \
+        lsb-core libusb-1.0-0-dev patchelf libgl1-mesa-glx gcc-7 g++-7 \
+        libsm6 libxext6 libxrender-dev virtualenv && \
+        rm -rf /var/lib/apt/lists/*
+
+## Cloning the OVTF repo
+
+RUN git clone https://github.com/openvinotoolkit/openvino_tensorflow.git && \
+    cd openvino_tensorflow && \
+    git checkout ${VERSION} && \
+    git submodule init && \
+    git submodule update --recursive
+
+WORKDIR "openvino_tensorflow"
+
+## Replacing python3 symbolic link to python3.8
+
+RUN rm -f /usr/bin/python3 && \
+	ln -s /usr/bin/python3.8 /usr/bin/python3
+
+## Updating python pip to latest version and
+## Installing python packages required
+
+RUN python3 -m pip install --no-cache-dir --upgrade pip -r requirements.txt
+
+## Installing CMake 3.18.2
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
+        tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
+        cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
+        cp -r cmake-3.18.4-Linux-x86_64/share/cmake-3.18 /usr/local/share/ && \
+        rm -rf cmake-3.18.4-Linux-x86_64 cmake-3.18.4-Linux-x86_64.tar.gz
+
+## Since we are building tf from source bazelisk is required. 
+## If not required to build TF from source, follow the steps mentioned below:
+## Step 1/2: Comment the following block of code.
+
+# RUN apt-get update && apt-get install -y --no-install-recommends openjdk-8-jdk && \
+#         rm -rf /var/lib/apt/lists/* && \
+#         curl -fsSL https://deb.nodesource.com/setup_12.x | bash - && \
+#         apt-get install -y --no-install-recommends nodejs && \
+#         rm -rf /var/lib/apt/lists/* && \
+#         npm install -g @bazel/bazelisk && \
+#         rm -rf ./setup_12.x
+
+## Building OVTF with tensorflow from source and
+## Removing unnecessary folders from build_cmake to reduce the final image size
+## Step 2/2: remove --build_tf_from_source argument from the following line
+#--build_tf_from_source
+RUN python3 build_ovtf.py && \
+    rm -rf build_cmake/CMakeCache.txt build_cmake/CMakeFiles build_cmake/cmake_install.cmake build_cmake/compile_commands.json build_cmake/examples \
+            build_cmake/install_manifest.txt  build_cmake/logging build_cmake/Makefile build_cmake/ocm build_cmake/openvino build_cmake/openvino_tensorflow \
+            build_cmake/python build_cmake/test build_cmake/third-party build_cmake/tools \
+            build_cmake/tensorflow build_cmake/openvino
+
+## Verifying if the installation is successful
+
+RUN source build_cmake/venv-tf-py3/bin/activate && \
+	python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
+	import openvino_tensorflow; print(openvino_tensorflow.__version__)"
+
+## Running UTs
+
+ENV OPENVINO_TF_BACKEND=CPU
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/build_cmake/artifacts/lib/
+
+## Python Tests and
+## TF Python Tests
+## C++ Tests
+
+RUN source build_cmake/venv-tf-py3/bin/activate && \
+	PYTHONPATH=$(pwd):$(pwd)/tools:$(pwd)/examples python3 test/ci/azure/test_runner.py \
+	--artifacts build_cmake/artifacts --test_python && \
+    source build_cmake/venv-tf-py3/bin/activate && \
+    PYTHONPATH=$(pwd) python3 test/ci/azure/test_runner.py \
+	--artifacts build_cmake/artifacts --test_tf_python && \
+    source build_cmake/venv-tf-py3/bin/activate && \
+	PYTHONPATH=$(pwd) python3 test/ci/azure/test_runner.py \
+	--artifacts build_cmake/artifacts/ --test_cpp
+
+## Installing jupyter and other necessary libraries to run the colab samples
+
+RUN source build_cmake/venv-tf-py3/bin/activate && \
+        python3 -m pip install --no-cache-dir --upgrade jupyter tensorflow_hub pillow \
+        matplotlib numpy scipy opencv-python
+
+## Changing directory to example notebook directories
+
+WORKDIR "/openvino_tensorflow/examples/notebooks/"
+
+## Creating a shell script file which will be executed at the end to activate the environment and run jupyter notebook and
+## Granting execution permission to shell script
+
+RUN echo -e "source /openvino_tensorflow/build_cmake/venv-tf-py3/bin/activate && jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root" | \
+        tee .run-jupyter.sh && chmod +x .run-jupyter.sh
+
+## .run-jupyter.sh file will be executed when the container starts
+
+CMD ["/bin/bash", ".run-jupyter.sh"]
