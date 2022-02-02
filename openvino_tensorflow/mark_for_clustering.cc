@@ -88,7 +88,7 @@ static SetAttributesFunction SetStaticInputs(
 // Check if op is supported by backend using is_supported API
 Status IsSupportedByBackend(
     const Node* node, const shared_ptr<Backend> op_backend,
-    const std::map<std::string, std::set<shared_ptr<ngraph::Node>>>&
+    const std::map<std::string, std::set<shared_ptr<ov::Node>>>&
         TFtoNgraphOpMap,
     bool& is_supported) {
   is_supported = true;
@@ -170,17 +170,17 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   return set_attributes_map;
 }
 
-const std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>&
+const std::map<std::string, std::set<std::shared_ptr<ov::Node>>>&
 GetTFToNgOpMap() {
   // Constant Op does not have default Constructor
   // in ngraph, so passing a dummy node
   auto constant =
-      opset::Constant::create(ngraph::element::f32, ngraph::Shape{}, {2.0f});
+      opset::Constant::create(ov::element::f32, ov::Shape{}, {2.0f});
   // Map:: TF ops to NG Ops to track if all the Ngraph ops
   // are supported by backend
   // Update this Map if a new TF Op translation is
   // implemented or a new Ngraph Op has been added
-  static std::map<std::string, std::set<shared_ptr<ngraph::Node>>>
+  static std::map<std::string, std::set<shared_ptr<ov::Node>>>
       TFtoNgraphOpMap{
           {"Abs", {std::make_shared<opset::Abs>()}},
           {"Acos", {std::make_shared<opset::Acos>()}},

@@ -98,55 +98,55 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
 }
 
 Status TFDataTypeToNGraphElementType(DataType tf_dt,
-                                     ngraph::element::Type* ng_et) {
+                                     ov::element::Type* ng_et) {
   switch (tf_dt) {
     case DataType::DT_FLOAT:
-      *ng_et = ngraph::element::f32;
+      *ng_et = ov::element::f32;
       break;
     case DataType::DT_DOUBLE:
-      *ng_et = ngraph::element::f64;
+      *ng_et = ov::element::f64;
       break;
     case DataType::DT_INT32:
-      *ng_et = ngraph::element::i32;
+      *ng_et = ov::element::i32;
       break;
     case DataType::DT_UINT8:
-      *ng_et = ngraph::element::u8;
+      *ng_et = ov::element::u8;
       break;
     case DataType::DT_INT8:
-      *ng_et = ngraph::element::i8;
+      *ng_et = ov::element::i8;
       break;
     case DataType::DT_UINT16:
-      *ng_et = ngraph::element::u16;
+      *ng_et = ov::element::u16;
       break;
     case DataType::DT_INT64:
-      *ng_et = ngraph::element::i64;
+      *ng_et = ov::element::i64;
       break;
     case DataType::DT_UINT32:
-      *ng_et = ngraph::element::u32;
+      *ng_et = ov::element::u32;
       break;
     case DataType::DT_UINT64:
-      *ng_et = ngraph::element::u64;
+      *ng_et = ov::element::u64;
       break;
     case DataType::DT_BOOL:
-      *ng_et = ngraph::element::boolean;
+      *ng_et = ov::element::boolean;
       break;
     case DataType::DT_QINT8:
-      *ng_et = ngraph::element::i8;
+      *ng_et = ov::element::i8;
       break;
     case DataType::DT_QUINT8:
-      *ng_et = ngraph::element::u8;
+      *ng_et = ov::element::u8;
       break;
     case DataType::DT_QINT32:
-      *ng_et = ngraph::element::i32;
+      *ng_et = ov::element::i32;
       break;
     case DataType::DT_BFLOAT16:
-      *ng_et = ngraph::element::bf16;
+      *ng_et = ov::element::bf16;
       break;
     case DataType::DT_HALF:
-      *ng_et = ngraph::element::f16;
+      *ng_et = ov::element::f16;
       break;
     case DataType::DT_INT16:
-      *ng_et = ngraph::element::i16;
+      *ng_et = ov::element::i16;
       break;
     default:
       return errors::Unimplemented("Unsupported TensorFlow data type: ",
@@ -156,7 +156,7 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt,
 }
 
 Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
-                                  ngraph::Shape* ng_shape) {
+                                  ov::Shape* ng_shape) {
   for (int i = 0; i < tf_shape.dims(); i++) {
     if (tf_shape.dim_size(i) < 0) {
       return errors::InvalidArgument(
@@ -164,7 +164,7 @@ Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
     }
   }
 
-  *ng_shape = ngraph::Shape(tf_shape.dims());
+  *ng_shape = ov::Shape(tf_shape.dims());
   for (int i = 0; i < tf_shape.dims(); i++) {
     (*ng_shape)[i] = tf_shape.dim_size(i);
   }
@@ -246,7 +246,7 @@ void DumpTFGraph(tensorflow::Graph* graph, int idx, std::string filename) {
   GraphToPbTextFile(graph, ss.str() + ".pbtxt");
 }
 
-void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
+void DumpNGGraph(std::shared_ptr<ov::Model> function,
                  const string filename) {
   if (!DumpAllGraphs()) {
     return;
