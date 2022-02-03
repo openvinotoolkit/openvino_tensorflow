@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-//#include <ie_core.hpp>
 #include "openvino/openvino.hpp"
 
 #include "openvino_tensorflow/ie_backend_engine.h"

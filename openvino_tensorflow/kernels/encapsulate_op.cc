@@ -261,7 +261,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                << m_cluster_id;
 
   Timer create_or_lookup_tensors;
-  vector<shared_ptr<ngraph::runtime::Tensor>> ng_inputs;
+  vector<shared_ptr<ov::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
   {
     // Allocate tensors for input arguments.
@@ -285,11 +285,11 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
       auto backend = BackendManager::GetBackend();
 #if TF_VERSION < 2
-      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+      std::shared_ptr<ov::Tensor> ng_tensor =
           make_shared<IETensor>(ng_element_type, ng_shape,
                                 (void*)DMAHelper::base(&tf_input_tensors[i]));
 #else
-      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+      std::shared_ptr<ov::Tensor> ng_tensor =
           make_shared<IETensor>(ng_element_type, ng_shape,
                                 tf_input_tensors[i].data());
 #endif
@@ -309,9 +309,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
   std::string precision = dev_type.substr(dev_type.find("_") + 1);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(
+  std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(
       results.size(), nullptr);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(
+  std::vector<shared_ptr<ov::Tensor>> ng_outputs(
       ng_result_list.size(), nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
@@ -506,14 +506,16 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         Tensor* output_tensor = nullptr;
         OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-        auto size = ng_output->get_size_in_bytes();
+        auto size = ng_output->get_byte_size();
         auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
-        auto blob = ie_tensor->get_blob();
+        //auto blob = ie_tensor->get_blob();
 
 #if TF_VERSION < 2
-        ng_output->read((void*)DMAHelper::base(output_tensor), size);
+        //ng_output->read((void*)DMAHelper::base(output_tensor), size);
+        std::copy((uint8_t*)(ng_output->data()), ((uint8_t*)(ng_output->data())) + size, (uint8_t**)DMAHelper::base(output_tensor));
 #else
-        ng_output->read(output_tensor->data(), size);
+        //ng_output->read(output_tensor->data(), size);
+        std::copy((uint8_t*)(ng_output->data()), ((uint8_t*)(ng_output->data())) + size, (uint8_t*)(output_tensor->data()));
 #endif
       }
     }
