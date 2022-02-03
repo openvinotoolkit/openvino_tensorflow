@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
 *****************************************************************************/
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
-#include "ngraph/pass/convert_fp32_to_fp16.hpp"
-
-#include <ie_plugin_config.hpp>
+#include "openvino/opsets/opset.hpp"
+#include "openvino/pass/convert_fp32_to_fp16.hpp"
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
@@ -20,7 +17,6 @@
 #include "openvino_tensorflow/ovtf_utils.h"
 
 using namespace std;
-using namespace ngraph;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -32,7 +28,7 @@ Executable::Executable(shared_ptr<Function> func, string device,
       m_trivial_fn{nullptr},
       m_function(func) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ngraph::get_opset7();
+  const auto& opset = ov::get_opset7();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
       OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
@@ -43,7 +39,7 @@ Executable::Executable(shared_ptr<Function> func, string device,
 
   OVTF_VLOG(2) << "Checking for unused parameters";
   auto parameters = func->get_parameters();
-  ngraph::ParameterVector used_parameters;
+  ov::ParameterVector used_parameters;
   for (int i = 0; i < parameters.size(); ++i) {
     OVTF_VLOG(3) << parameters[i];
     if (parameters[i]->get_users().size() == 0) {
@@ -68,8 +64,8 @@ Executable::Executable(shared_ptr<Function> func, string device,
     auto parent = result->input_value(0).get_node_shared_ptr();
     auto pshape = result->get_output_partial_shape(0);
     auto shape = pshape.is_static() ? pshape.to_shape() : Shape{};
-    trivial_fn &= ngraph::is_type<opset::Parameter>(parent) ||
-                  ngraph::is_type<opset::Constant>(parent) ||
+    trivial_fn &= ov::is_type<opset::Parameter>(parent) ||
+                  ov::is_type<opset::Constant>(parent) ||
                   count(shape.begin(), shape.end(), 0);
   }
 
@@ -88,15 +84,15 @@ Executable::Executable(shared_ptr<Function> func, string device,
       // Only try to convert constant nodes at the edge to parameters
       // FIXME: IE cannot handle input parameters with i64/u6 precision
       // at the moment
-      if (node->get_input_size() == 0 && ngraph::op::is_constant(node) &&
+      if (node->get_input_size() == 0 && ov::op::util::is_constant(node) &&
           !(node->get_element_type() == ov::element::i64 ||
             node->get_element_type() == ov::element::u64)) {
-        auto constant = ngraph::as_type_ptr<opset::Constant>(node);
+        auto constant = ov::as_type_ptr<opset::Constant>(node);
         auto element_type = constant->get_element_type();
         auto shape = constant->get_shape();
         auto param = std::make_shared<opset::Parameter>(element_type, shape);
         param->set_friendly_name(node->get_friendly_name());
-        ngraph::replace_node(node, param);
+        ov::replace_node(node, param);
         // nGraph doesn't provide a way to set a parameter to an existing
         // function, so we clone the function here...
         func =
@@ -122,12 +118,11 @@ Executable::Executable(shared_ptr<Function> func, string device,
   m_function = func;
 
   if (m_device_type == "GPU_FP16") {
-    ngraph::pass::ConvertFP32ToFP16().run_on_function(func);
+    ov::pass::ConvertFP32ToFP16().run_on_function(func);
     func->validate_nodes_and_infer_types();
   }
 
   OVTF_VLOG(2) << "Creating IE CNN network using nGraph function";
-  //m_network = InferenceEngine::CNNNetwork(func);
 
   std::map<string, string> options;
 
@@ -185,8 +180,8 @@ Executable::Executable(shared_ptr<Function> func, string device,
   }
 }
 
-bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
-                      vector<shared_ptr<runtime::Tensor>>& outputs,
+bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
+                      vector<shared_ptr<ov::Tensor>>& outputs,
                       bool multi_req_execution) {
   if (m_trivial_fn) {
     OVTF_VLOG(2) << "Calling trivial IE function with inputs=" << inputs.size()
@@ -194,20 +189,20 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
     return CallTrivial(inputs, outputs);
   }
 
-  // Check if the number of inputs that the CNN network expects is equal to the
+  auto model = m_ie_engine->get_model();
+
+  // Check if the number of inputs that the OpenVINO model expects is equal to the
   // sum of the
   // inputs specified and the inputs we hoisted, if any.
-  //InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
-  //if (input_info.size() > (inputs.size() + m_hoisted_params.size())) {
-  //  throw runtime_error("Function inputs (" + to_string(input_info.size()) +
-  //                      ") number greater than number of given inputs (" +
-  //                      to_string(inputs.size() + m_hoisted_params.size()) +
-  //                      ")");
-  //}
+  if (model->inputs().size() > (inputs.size() + m_hoisted_params.size())) {
+    throw runtime_error("Function inputs (" + to_string(model->inputs().size()) +
+                        ") number greater than number of given inputs (" +
+                        to_string(inputs.size() + m_hoisted_params.size()) +
+                        ")");
+  }
 
   //  Prepare input blobs
-  auto func = m_ie_engine->get_model();
-  auto parameters = func->get_parameters();
+  auto parameters = model->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
   std::vector<std::string> input_names(inputs.size());
   int j = 0;
@@ -217,10 +212,10 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
       continue;
     }
     auto input_name = parameters[j++]->get_friendly_name();
-    //if (input_info.find(input_name) == input_info.end()) {
-    //  OVTF_VLOG(1) << "Skipping unused input " << input_name;
-    //  continue;
-    //}
+    if (m_ie_engine->get_input_idx(input_name) < 0) {
+      OVTF_VLOG(1) << "Skipping unused input " << input_name;
+      continue;
+    }
     ie_inputs[i] = nullptr;
     ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
     input_names[i] = input_name;
@@ -231,18 +226,17 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   std::vector<std::string> param_names(m_hoisted_params.size());
   for (const auto& it : m_hoisted_params) {
     auto input_name = it.first;
-    //if (input_info.find(input_name) == input_info.end()) {
-    //  OVTF_VLOG(1) << "Skipping unused hoisted param " << input_name;
-    //  continue;
-    //}
+    if (m_ie_engine->get_input_idx(input_name) < 0) {
+      OVTF_VLOG(1) << "Skipping unused hoisted param " << input_name;
+      continue;
+    }
     ie_hoisted_params[j] = nullptr;
     ie_hoisted_params[j] = static_pointer_cast<IETensor>(it.second);
     param_names[j++] = input_name;
   }
 
-  //InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
-  if (outputs.size() == 0 && m_function->outputs().size() > 0) {
-    outputs.resize(m_function->outputs().size(), nullptr);
+  if (outputs.size() == 0 && model->outputs().size() > 0) {
+    outputs.resize(model->outputs().size(), nullptr);
   }
 
   auto get_output_name = [](std::shared_ptr<ov::Node> node) {
@@ -259,7 +253,7 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   };
 
   //  Prepare output blobs
-  auto results = func->get_results();
+  auto results = model->get_results();
   std::vector<std::shared_ptr<IETensor>> ie_outputs(outputs.size());
   std::vector<std::string> output_names(outputs.size());
   for (int i = 0; i < results.size(); i++) {
@@ -286,8 +280,8 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
   return true;
 }
 
-bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
-                             vector<shared_ptr<runtime::Tensor>>& outputs) {
+bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
+                             vector<shared_ptr<ov::Tensor>>& outputs) {
   // outputs are in the same order as results
   auto results = m_trivial_fn->get_results();
   if (outputs.size() == 0 && results.size() > 0) {
@@ -305,9 +299,9 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
       continue;
     }
     auto parent = results[i]->input_value(0).get_node_shared_ptr();
-    if (ngraph::is_type<opset::Parameter>(parent)) {
+    if (ov::is_type<opset::Parameter>(parent)) {
       OVTF_VLOG(2) << "Calling parameter -> result function...";
-      auto param = ngraph::as_type_ptr<opset::Parameter>(parent);
+      auto param = ov::as_type_ptr<opset::Parameter>(parent);
       auto index = m_trivial_fn->get_parameter_index(param);
       if (index < 0) {
         throw runtime_error("Input parameter " + param->get_friendly_name() +
@@ -317,22 +311,26 @@ bool Executable::CallTrivial(const vector<shared_ptr<runtime::Tensor>>& inputs,
         outputs[i] = make_shared<IETensor>(inputs[index]->get_element_type(),
                                            inputs[index]->get_shape());
       }
-      auto size = inputs[index]->get_size_in_bytes();
+      auto size = inputs[index]->get_byte_size();
       unsigned char* buf_ptr = new unsigned char[size];
-      inputs[index]->read(buf_ptr, size);
-      outputs[i]->write(buf_ptr, size);
+      //inputs[index]->read(buf_ptr, size);
+      std::copy((uint8_t*)(inputs[index]->data()), ((uint8_t*)(inputs[index]->data())) + size, buf_ptr);
+      //outputs[i]->write(buf_ptr, size);
+      std::copy((uint8_t*)buf_ptr, ((uint8_t*)buf_ptr) + size, (uint8_t*)(outputs[i]->data()));
       delete[] buf_ptr;
-    } else if (ngraph::is_type<opset::Constant>(parent)) {
+    } else if (ov::is_type<opset::Constant>(parent)) {
       OVTF_VLOG(2) << "Calling constant -> result function...";
-      auto constant = ngraph::as_type_ptr<opset::Constant>(parent);
+      auto constant = ov::as_type_ptr<opset::Constant>(parent);
       if (outputs[i] == nullptr) {
         outputs[i] = make_shared<IETensor>(
             constant->get_element_type(), constant->get_shape(),
             const_cast<void*>(constant->get_data_ptr()));
       } else {
-        outputs[i]->write(constant->get_data_ptr(),
-                          shape_size(constant->get_shape()) *
-                              constant->get_element_type().size());
+        //outputs[i]->write(constant->get_data_ptr(),
+        //                  shape_size(constant->get_shape()) *
+        //                      constant->get_element_type().size());
+        std::copy((uint8_t*)constant->get_data_ptr(), ((uint8_t*)(constant->get_data_ptr())) +
+                (shape_size(constant->get_shape()) * constant->get_element_type().size()), (uint8_t*)(outputs[i]->data()));
       }
     } else {
       throw runtime_error(
