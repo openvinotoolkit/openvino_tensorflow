@@ -24,7 +24,7 @@ namespace openvino_tensorflow {
 // function.
 class Executable {
  public:
-  Executable(shared_ptr<ngraph::Function> func, string device,
+  Executable(shared_ptr<ov::Model> func, string device,
              string device_type);
   ~Executable() {}
   bool Call(const vector<shared_ptr<ov::Tensor>>& inputs,
@@ -43,11 +43,11 @@ class Executable {
     }
   }
 
-  void SetOutputShapes(vector<ngraph::Shape> ng_output_shapes) {
+  void SetOutputShapes(vector<ov::Shape> ng_output_shapes) {
     m_ng_output_shapes = ng_output_shapes;
   }
 
-  const vector<ngraph::Shape> GetOutputShapes() { return m_ng_output_shapes; }
+  const vector<ov::Shape> GetOutputShapes() { return m_ng_output_shapes; }
 
   void ExportIR(const string& output_dir);
 
@@ -62,12 +62,12 @@ class Executable {
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ov::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;
-  vector<ngraph::Shape> m_ng_output_shapes;
+  vector<ov::Shape> m_ng_output_shapes;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
-  shared_ptr<ngraph::Function> m_trivial_fn;
+  shared_ptr<ov::Model> m_trivial_fn;
   // This is the original nGraph function corresponding to this executable
-  shared_ptr<ngraph::Function> m_function;
+  shared_ptr<ov::Model> m_function;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
 };
 }  // namespace openvino_tensorflow
