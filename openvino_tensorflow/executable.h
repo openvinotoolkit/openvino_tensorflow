@@ -66,7 +66,10 @@ class Executable {
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ov::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;
+<<<<<<< HEAD
   vector<int> m_const_inputs;
+=======
+>>>>>>> 41f69abc (OV 2.0 api partial updates (#253))
   vector<ov::Shape> m_ng_output_shapes;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
