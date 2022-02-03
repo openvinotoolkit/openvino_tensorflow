@@ -13,14 +13,10 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-//IE_VADM_Engine::IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network)
-//    : IE_Backend_Engine(ie_network, "HDDL"), m_orig_batch_size(0) {
-//  m_orig_batch_size = ie_network.getBatchSize();
-//}
 IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
     : IE_Backend_Engine(model, "HDDL"), m_orig_batch_size(0) {
-  //m_orig_batch_size = ie_network.getBatchSize();
-  m_orig_batch_size = 1;
+  ov::Dimension batch_dim = ov::get_batch(m_model);
+  m_orig_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
 }
 
 IE_VADM_Engine::~IE_VADM_Engine() {}
