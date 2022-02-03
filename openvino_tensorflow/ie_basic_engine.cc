@@ -34,6 +34,7 @@ void IE_Basic_Engine::infer(
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
 
+  std::cout << "OVTF_LOG - IE_Basic_Engine - A" << std::endl;
   //  Prepare input blobs
   auto parameters = m_model->get_parameters();
   for (int i = 0; i < inputs.size(); i++) {
