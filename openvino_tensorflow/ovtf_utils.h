@@ -42,12 +42,12 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor);
 // errors::Unimplemented if the element type is not supported by nGraph
 // Core. Otherwise returns Status::OK().
 Status TFDataTypeToNGraphElementType(DataType tf_dt,
-                                     ngraph::element::Type* ng_et);
+                                     ov::element::Type* ng_et);
 
 // Converts a TensorFlow TensorShape to an nGraph Shape. Requires that none of
 // the dimension lengths in tf_shape are negative.
 Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
-                                  ngraph::Shape* ng_shape);
+                                  ov::Shape* ng_shape);
 
 // Collect the total memory usage through /proc/self/stat
 void MemoryProfile(long&, long&);
@@ -57,7 +57,7 @@ bool DumpAllGraphs();
 // Dump TF graphs in .pbtxt format
 void DumpTFGraph(tensorflow::Graph* graph, int idx, string filename_prefix);
 // Dump nGraph graphs in .dot format
-void DumpNGGraph(std::shared_ptr<ngraph::Function> function,
+void DumpNGGraph(std::shared_ptr<ov::Model> function,
                  const string filename_prefix);
 
 // Get an environment variable

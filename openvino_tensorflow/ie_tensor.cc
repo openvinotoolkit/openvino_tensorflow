@@ -30,11 +30,6 @@ IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape)
   m_data_ptr = this->data();
 }
 
-//IETensor::IETensor(const ov::element::Type& element_type, const PartialShape& shape)
-//    : ov::Tensor(element_type, shape) {
-//  throw runtime_error("partial shapes not supported.");
-//}
-
 IETensor::~IETensor() {}
 
 void IETensor::write(const void* src, size_t bytes) {
