@@ -6,13 +6,10 @@
 
 #include "backend.h"
 
-#include <ie_core.hpp>
 #include "contexts.h"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "openvino/opsets/opset.hpp"
 
 using namespace std;
-using namespace ngraph;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -24,8 +21,8 @@ Backend::Backend(const string& config) {
   string prec = "";
   if (config.find("_") != string::npos)
     prec = config.substr(config.find("_") + 1);
-  InferenceEngine::Core core;
-  auto devices = core.GetAvailableDevices();
+  ov::Core core;
+  auto devices = core.get_available_devices();
   // TODO: Handle multiple devices
 
   bool dev_found = false;
@@ -69,8 +66,7 @@ Backend::Backend(const string& config) {
   }
 }
 
-shared_ptr<Executable> Backend::Compile(shared_ptr<ov::Model> func,
-                                        bool) {
+shared_ptr<Executable> Backend::Compile(shared_ptr<ov::Model> func, bool) {
   return make_shared<Executable>(func, m_device, m_device_type);
 }
 

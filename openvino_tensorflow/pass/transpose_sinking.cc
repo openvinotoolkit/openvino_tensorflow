@@ -239,9 +239,9 @@ static void materialize_shapes(
   }
 }
 
-static void sink_transpose(
-    shared_ptr<opset::Transpose> transpose, TransposeMap& reorders,
-    set<shared_ptr<ov::Node>>& transposes_to_delete) {
+static void sink_transpose(shared_ptr<opset::Transpose> transpose,
+                           TransposeMap& reorders,
+                           set<shared_ptr<ov::Node>>& transposes_to_delete) {
   OVTF_VLOG(4) << "Sinking Transpose :"
                << describe<opset::Transpose>(transpose);
   auto transpose_in = transpose->input_value(0);
@@ -257,9 +257,8 @@ static void sink_transpose(
   write_transposemap(reorders, new_transpose, new_transpose);
 }
 
-static void sink_unary(
-    shared_ptr<ov::Node> n, TransposeMap& reorders,
-    set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
+static void sink_unary(shared_ptr<ov::Node> n, TransposeMap& reorders,
+                       set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
   auto arg_transpose = read_transposemap(reorders, n->input_value(0));
   OVTF_VLOG(4) << "Propagating " << describe<opset::Transpose>(arg_transpose)
                << " for " << n->get_name();
@@ -324,9 +323,8 @@ static void sink_binary(shared_ptr<ov::Node> binary, TransposeMap& reorders,
   }
 }
 
-static void sink_pad(
-    shared_ptr<opset::Pad> n, TransposeMap& reorders,
-    set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
+static void sink_pad(shared_ptr<opset::Pad> n, TransposeMap& reorders,
+                     set<shared_ptr<ov::Node>>& /* transposes_to_delete */) {
   auto n_in = n->input_value(0);
   auto arg_transpose = read_transposemap(reorders, n_in);
   describe<opset::Transpose>(arg_transpose);

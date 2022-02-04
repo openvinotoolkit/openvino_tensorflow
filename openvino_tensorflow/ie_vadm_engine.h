@@ -20,7 +20,7 @@ namespace openvino_tensorflow {
 
 class IE_VADM_Engine : public IE_Backend_Engine {
  public:
-  //IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network);
+  // IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network);
   IE_VADM_Engine(std::shared_ptr<ov::Model> model);
   ~IE_VADM_Engine();
 

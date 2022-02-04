@@ -289,9 +289,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
           make_shared<IETensor>(ng_element_type, ng_shape,
                                 (void*)DMAHelper::base(&tf_input_tensors[i]));
 #else
-      std::shared_ptr<ov::Tensor> ng_tensor =
-          make_shared<IETensor>(ng_element_type, ng_shape,
-                                tf_input_tensors[i].data());
+      std::shared_ptr<ov::Tensor> ng_tensor = make_shared<IETensor>(
+          ng_element_type, ng_shape, tf_input_tensors[i].data());
 #endif
       ng_inputs.push_back(ng_tensor);
     }
@@ -309,10 +308,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
   std::string precision = dev_type.substr(dev_type.find("_") + 1);
-  std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(
-      results.size(), nullptr);
-  std::vector<shared_ptr<ov::Tensor>> ng_outputs(
-      ng_result_list.size(), nullptr);
+  std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(results.size(), nullptr);
+  std::vector<shared_ptr<ov::Tensor>> ng_outputs(ng_result_list.size(),
+                                                 nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
   auto ng_output_shapes = ng_exec->GetOutputShapes();
@@ -351,8 +349,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // expected
       ov::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
-      if (ng_element_type == ov::element::Type_t::f16 &&
-          precision == "FP16")
+      if (ng_element_type == ov::element::Type_t::f16 && precision == "FP16")
         ng_element_type = ov::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
@@ -508,14 +505,15 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
         auto size = ng_output->get_byte_size();
         auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
-        //auto blob = ie_tensor->get_blob();
 
 #if TF_VERSION < 2
-        //ng_output->read((void*)DMAHelper::base(output_tensor), size);
-        std::copy((uint8_t*)(ng_output->data()), ((uint8_t*)(ng_output->data())) + size, (uint8_t**)DMAHelper::base(output_tensor));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t**)DMAHelper::base(output_tensor));
 #else
-        //ng_output->read(output_tensor->data(), size);
-        std::copy((uint8_t*)(ng_output->data()), ((uint8_t*)(ng_output->data())) + size, (uint8_t*)(output_tensor->data()));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t*)(output_tensor->data()));
 #endif
       }
     }

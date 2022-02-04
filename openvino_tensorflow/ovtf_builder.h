@@ -57,8 +57,8 @@ class Builder {
                           const ov::Shape& ng_image_shape,
                           const ov::Shape& ng_kernel_shape,
                           const ov::Strides& ng_strides,
-                          const ov::Shape& ng_dilations,
-                          T& ng_padding_below, T& ng_padding_above) {
+                          const ov::Shape& ng_dilations, T& ng_padding_below,
+                          T& ng_padding_above) {
     if (tf_padding_type == "SAME") {
       ov::Shape img_shape = {0, 0};
       img_shape.insert(img_shape.end(), ng_image_shape.begin(),
