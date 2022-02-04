@@ -97,8 +97,7 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
   return Status::OK();
 }
 
-Status TFDataTypeToNGraphElementType(DataType tf_dt,
-                                     ov::element::Type* ng_et) {
+Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et) {
   switch (tf_dt) {
     case DataType::DT_FLOAT:
       *ng_et = ov::element::f32;
@@ -246,8 +245,7 @@ void DumpTFGraph(tensorflow::Graph* graph, int idx, std::string filename) {
   GraphToPbTextFile(graph, ss.str() + ".pbtxt");
 }
 
-void DumpNGGraph(std::shared_ptr<ov::Model> function,
-                 const string filename) {
+void DumpNGGraph(std::shared_ptr<ov::Model> function, const string filename) {
   if (!DumpAllGraphs()) {
     return;
   }

@@ -28,8 +28,7 @@ void Transpose(ov::Output<ov::Node>& node) {
                << ngraph::join(reshaped_shape) << " axis-order "
                << ngraph::join(transpose_order);
   auto input_order = std::make_shared<opset::Constant>(
-      ov::element::u64, ov::Shape{transpose_order.size()},
-      transpose_order);
+      ov::element::u64, ov::Shape{transpose_order.size()}, transpose_order);
   node = std::make_shared<opset::Transpose>(node, input_order);
 }
 
@@ -52,8 +51,7 @@ void Transpose3D(ov::Output<ov::Node>& node) {
                << ngraph::join(reshaped_shape) << "axis-order "
                << ngraph::join(transpose_order);
   auto input_order = std::make_shared<opset::Constant>(
-      ov::element::u64, ov::Shape{transpose_order.size()},
-      transpose_order);
+      ov::element::u64, ov::Shape{transpose_order.size()}, transpose_order);
   node = std::make_shared<opset::Transpose>(node, input_order);
 }
 

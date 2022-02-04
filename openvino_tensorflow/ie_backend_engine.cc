@@ -19,7 +19,7 @@ IE_Backend_Engine::IE_Backend_Engine(std::shared_ptr<ov::Model> model,
       m_device(device),
       m_multi_req_execution(false),
       m_network_ready(false) {
-  //if (std::getenv("OPENVINO_TF_DUMP_GRAPHS")) {
+  // if (std::getenv("OPENVINO_TF_DUMP_GRAPHS")) {
   //  auto& name = m_network.getName();
   //  m_network.serialize(name + ".xml", name + ".bin");
   //}
@@ -48,8 +48,8 @@ void IE_Backend_Engine::load_network() {
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
   if (dev_type.find("GPU") != string::npos) dev_type = "GPU";
-  m_compiled_model = Backend::GetGlobalContext().ie_core.compile_model(
-      m_model, dev_type);
+  m_compiled_model =
+      Backend::GetGlobalContext().ie_core.compile_model(m_model, dev_type);
   m_network_ready = true;
 }
 
@@ -77,9 +77,9 @@ void IE_Backend_Engine::complete_async_inference(const int req_id) {
 
 size_t IE_Backend_Engine::get_output_batch_size(size_t inputBatchSize) const {
   ov::Dimension batch_dim = ov::get_batch(m_model);
-  int64_t model_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
-  return model_batch_size *
-         IE_Utils::GetNumRequests(inputBatchSize, m_device);
+  int64_t model_batch_size =
+      (batch_dim.is_static() ? batch_dim.get_length() : 1);
+  return model_batch_size * IE_Utils::GetNumRequests(inputBatchSize, m_device);
   return 1;
 }
 
@@ -92,26 +92,27 @@ void IE_Backend_Engine::disable_multi_req_execution() {
   m_multi_req_execution = false;
 }
 
-std::shared_ptr<ov::Model> IE_Backend_Engine::get_model() {
-  return m_model;
-}
+std::shared_ptr<ov::Model> IE_Backend_Engine::get_model() { return m_model; }
 
 const int IE_Backend_Engine::get_input_idx(const std::string name) const {
-    for (int i=0; i< m_model->inputs().size(); i++) {
-        if (m_model->inputs()[i].get_node()->get_friendly_name() == name) {
-            return i;
-        }
+  for (int i = 0; i < m_model->inputs().size(); i++) {
+    if (m_model->inputs()[i].get_node()->get_friendly_name() == name) {
+      return i;
     }
-    return -1;
+  }
+  return -1;
 }
 
 const int IE_Backend_Engine::get_output_idx(const std::string name) const {
-    for (int i=0; i< m_model->outputs().size(); i++) {
-        if (m_model->outputs()[i].get_node()->get_input_node_shared_ptr(0)->get_friendly_name() == name) {
-            return i;
-        }
+  for (int i = 0; i < m_model->outputs().size(); i++) {
+    if (m_model->outputs()[i]
+            .get_node()
+            ->get_input_node_shared_ptr(0)
+            ->get_friendly_name() == name) {
+      return i;
     }
-    return -1;
+  }
+  return -1;
 }
 
 }  // namespace openvino_tensorflow

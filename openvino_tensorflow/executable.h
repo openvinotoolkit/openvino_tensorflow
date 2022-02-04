@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <ie_core.hpp>
-#include "ngraph/ngraph.hpp"
+#include "openvino/openvino.hpp"
 
 #include "openvino_tensorflow/ie_backend_engine.h"
 
@@ -20,20 +19,17 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-// A Inference Engine executable object produced by compiling an nGraph
-// function.
+// A Inference Engine executable object produced by compiling an
+// OpenVINO Model.
 class Executable {
  public:
-  Executable(shared_ptr<ov::Model> func, string device,
-             string device_type);
+  Executable(shared_ptr<ov::Model> model, string device, string device_type);
   ~Executable() {}
   bool Call(const vector<shared_ptr<ov::Tensor>>& inputs,
             vector<shared_ptr<ov::Tensor>>& outputs,
             bool multi_req_execution = false);
 
-  const ngraph::ResultVector& GetResults() {
-    return m_function->get_results();
-  };
+  const ov::ResultVector& GetResults() { return m_model->get_results(); };
 
   const vector<size_t> GetOutputShape(const int i) {
     if (m_trivial_fn) {
@@ -55,8 +51,6 @@ class Executable {
   bool CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
                    vector<shared_ptr<ov::Tensor>>& outputs);
 
-  InferenceEngine::CNNNetwork m_network;
-  InferenceEngine::InferRequest m_infer_req;
   string m_device;
   string m_device_type;
   // This holds the parameters we insert for functions with no input parameters
@@ -66,8 +60,8 @@ class Executable {
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
   shared_ptr<ov::Model> m_trivial_fn;
-  // This is the original nGraph function corresponding to this executable
-  shared_ptr<ov::Model> m_function;
+  // This is the original OpenVINO model corresponding to this executable
+  shared_ptr<ov::Model> m_model;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
 };
 }  // namespace openvino_tensorflow

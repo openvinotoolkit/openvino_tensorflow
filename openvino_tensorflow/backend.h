@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/ngraph.hpp"
+#include "openvino/openvino.hpp"
 
 #include "contexts.h"
 #include "openvino_tensorflow/cluster_manager.h"

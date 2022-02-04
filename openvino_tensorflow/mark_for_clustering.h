@@ -10,8 +10,6 @@
 
 #include "tensorflow/core/graph/graph.h"
 
-#include "ngraph/ngraph.hpp"
-
 #include "openvino_tensorflow/backend.h"
 
 namespace tensorflow {

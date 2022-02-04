@@ -10,8 +10,8 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
-#include "openvino/pass/constant_folding.hpp"
 #include "openvino/opsets/opset8.hpp"
+#include "openvino/pass/constant_folding.hpp"
 
 #include "api.h"
 #include "logging/ovtf_log.h"
@@ -1379,13 +1379,13 @@ static Status TranslateCropAndResizeOp(
 
   ov::OutputVector ng_crop_outputs(box_ind.size());
   if (box_ind.size() == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(
-                 op->name(), ov::element::f32,
-                 ov::Shape{0, static_cast<unsigned long>(crop_size.at(0)),
-                           static_cast<unsigned long>(crop_size.at(1)),
-                           image_depth},
-                 std::vector<float>({})));
+    SaveNgOp(
+        ng_op_map, op->name(),
+        ConstructNgNode<opset::Constant>(
+            op->name(), ov::element::f32,
+            ov::Shape{0, static_cast<unsigned long>(crop_size.at(0)),
+                      static_cast<unsigned long>(crop_size.at(1)), image_depth},
+            std::vector<float>({})));
   } else {
     for (int i = 0; i < box_ind.size(); i++) {
       int y1, x1, y2, x2;
@@ -1566,8 +1566,8 @@ static Status TranslateDepthwiseConv2dNativeOp(
   // H W I M -> H W I 1 M
   auto filter_shape = ConstructNgNode<opset::Constant>(
       op->name(), ov::element::u64, ov::Shape{5},
-      ov::Shape{ng_filter_shape[0], ng_filter_shape[1], ng_filter_shape[2],
-                1, ng_filter_shape[3]});
+      ov::Shape{ng_filter_shape[0], ng_filter_shape[1], ng_filter_shape[2], 1,
+                ng_filter_shape[3]});
   auto reshaped_filter = ConstructNgNode<opset::Reshape>(op->name(), ng_filter,
                                                          filter_shape, false);
 
@@ -1605,8 +1605,8 @@ static Status TranslateExpandDimsOp(
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
   std::vector<int64> dims;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &dims));
-  auto ng_dims = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{dims.size()}, dims);
+  auto ng_dims = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                  ov::Shape{dims.size()}, dims);
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dims));
   return Status::OK();
@@ -2211,8 +2211,8 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
     // H W I M -> H W I 1 M
     auto filter_shape = ConstructNgNode<opset::Constant>(
         op->name(), ov::element::u64, ov::Shape{5},
-        ov::Shape{ng_filter_shape[0], ng_filter_shape[1],
-                      ng_filter_shape[2], 1, ng_filter_shape[3]});
+        ov::Shape{ng_filter_shape[0], ng_filter_shape[1], ng_filter_shape[2], 1,
+                  ng_filter_shape[3]});
     auto reshaped_filter = ConstructNgNode<opset::Reshape>(
         op->name(), ng_filter, filter_shape, false);
 
@@ -2993,7 +2993,7 @@ static Status TranslateReverseOp(
   ov::op::v1::Reverse::Mode mode = ov::op::v1::Reverse::Mode::INDEX;
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<ov::op::v1::Reverse>(op->name(), ng_input,
-                                                    ng_reversed_axis, mode));
+                                                ng_reversed_axis, mode));
   return Status::OK();
 }
 
@@ -3335,10 +3335,9 @@ static Status TranslateSqueezeOp(const Node* op,
   }
 
   if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(
-                 op->name(), ng_input.get_element_type(), ov::Shape{0},
-                 std::vector<int>({0})));
+    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
+                                        op->name(), ng_input.get_element_type(),
+                                        ov::Shape{0}, std::vector<int>({0})));
   } else {
     auto ng_const = ConstructNgNode<opset::Constant>(
         op->name(), ov::element::i32, ov::Shape{tf_axis.size()}, tf_axis);
@@ -3452,15 +3451,13 @@ static Status TranslateTopKV2Op(
   }
 
   if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(
-                 op->name(), ng_input.get_element_type(), ov::Shape{0},
-                 std::vector<int>({0})));
+    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
+                                        op->name(), ng_input.get_element_type(),
+                                        ov::Shape{0}, std::vector<int>({0})));
 
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Constant>(op->name(), ov::element::i32,
-                                              ov::Shape{0},
-                                              std::vector<int>({0})));
+    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
+                                        op->name(), ov::element::i32,
+                                        ov::Shape{0}, std::vector<int>({0})));
   } else {
     auto ng_result =
         std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
@@ -3536,9 +3533,8 @@ static Status TranslateXdivyOp(
     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_x, ng_y;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_x, ng_y));
-  auto zero =
-      ConstructNgNode<opset::Constant>(op->name(), ng_x.get_element_type(),
-                                       ov::Shape{}, std::vector<int>({0}));
+  auto zero = ConstructNgNode<opset::Constant>(
+      op->name(), ng_x.get_element_type(), ov::Shape{}, std::vector<int>({0}));
   auto x_is_zero = ConstructNgNode<opset::Equal>(op->name(), ng_x, zero);
   auto ng_xdivy = ConstructNgNode<opset::Divide>(op->name(), ng_x, ng_y);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Select>(
@@ -3565,8 +3561,7 @@ static Status TranslateWhereOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_cond));
   auto non_zero = ConstructNgNode<opset::NonZero>(op->name(), ng_cond);
   auto transpose_order = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{2},
-      std::vector<int64_t>({1, 0}));
+      op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64_t>({1, 0}));
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Transpose>(
                                       op->name(), non_zero, transpose_order));
   return Status::OK();
@@ -3672,7 +3667,8 @@ const static std::map<
         {"Mod", TranslateBinaryOp<opset::Mod>},
         {"Neg", TranslateUnaryOp<opset::Negative>},
         {"NotEqual", TranslateBinaryOp<opset::NotEqual>},
-        // Do nothing! NoOps sometimes get placed on OpenVINO Model for bureaucratic
+        // Do nothing! NoOps sometimes get placed on OpenVINO Model for
+        // bureaucratic
         // reasons, but they have no data flow inputs or outputs.
         {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
                     Builder::OpMap&) { return Status::OK(); }},
@@ -4001,7 +3997,7 @@ Status Builder::TranslateGraph(
   //
   try {
     ng_function = make_shared<ov::Model>(ng_func_result_list,
-                                            ng_func_parameter_list, name);
+                                         ng_func_parameter_list, name);
   } catch (const std::exception& exp) {
     return errors::Internal("Failed to create OpenVINO Model for " + name +
                             ": " + string(exp.what()));

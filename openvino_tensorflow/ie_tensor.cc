@@ -21,14 +21,10 @@ namespace openvino_tensorflow {
 
 IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
-    : ov::Tensor(element_type, shape_, memory_pointer) {
-  m_data_ptr = memory_pointer;
-}
+    : ov::Tensor(element_type, shape_, memory_pointer) {}
 
 IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape)
-    : ov::Tensor(element_type, shape) {
-  m_data_ptr = this->data();
-}
+    : ov::Tensor(element_type, shape) {}
 
 //IETensor::IETensor(const ov::element::Type& element_type, const PartialShape& shape)
 //    : ov::Tensor(element_type, shape) {
@@ -43,7 +39,7 @@ void IETensor::write(const void* src, size_t bytes) {
     return;
   }
 
-  copy(src_ptr, src_ptr + bytes, (uint8_t*)m_data_ptr);
+  copy(src_ptr, src_ptr + bytes, (uint8_t*)(this->data()));
 }
 
 void IETensor::read(void* dst, size_t bytes) const {
@@ -52,11 +48,8 @@ void IETensor::read(void* dst, size_t bytes) const {
     return;
   }
 
-  copy((uint8_t*)m_data_ptr, ((uint8_t*)m_data_ptr) + bytes, dst_ptr);
+  copy((uint8_t*)(this->data()), ((uint8_t*)(this->data())) + bytes, dst_ptr);
 }
 
-void* IETensor::get_data_ptr() const {
-  return m_data_ptr;
-}
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

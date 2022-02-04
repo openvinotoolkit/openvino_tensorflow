@@ -31,13 +31,13 @@ class Builder {
       ov::ResultVector& ng_func_result_list,
       const std::vector<Tensor>& tf_input_tensors);
 
-  using OpMap = std::unordered_map<std::string,
-                                   std::vector<ov::Output<ov::Node>>>;
-  using ConstMap = std::map<
-      DataType,
-      std::pair<std::function<Status(const Node*, ov::element::Type,
-                                     ov::Output<ov::Node>&)>,
-                const ov::element::Type>>;
+  using OpMap =
+      std::unordered_map<std::string, std::vector<ov::Output<ov::Node>>>;
+  using ConstMap =
+      std::map<DataType,
+               std::pair<std::function<Status(const Node*, ov::element::Type,
+                                              ov::Output<ov::Node>&)>,
+                         const ov::element::Type>>;
   static const Builder::ConstMap& TF_NGRAPH_CONST_MAP();
 
   template <typename T>
@@ -45,8 +45,8 @@ class Builder {
                           const ov::Shape& ng_image_shape,
                           const ov::Shape& ng_kernel_shape,
                           const ov::Strides& ng_strides,
-                          const ov::Shape& ng_dilations,
-                          T& ng_padding_below, T& ng_padding_above) {
+                          const ov::Shape& ng_dilations, T& ng_padding_below,
+                          T& ng_padding_above) {
     if (tf_padding_type == "SAME") {
       ov::Shape img_shape = {0, 0};
       img_shape.insert(img_shape.end(), ng_image_shape.begin(),
