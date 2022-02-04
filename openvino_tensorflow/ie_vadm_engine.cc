@@ -15,8 +15,32 @@ namespace openvino_tensorflow {
 
 IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
     : IE_Backend_Engine(model, "HDDL"), m_orig_batch_size(0) {
-  ov::Dimension batch_dim = ov::get_batch(m_model);
-  m_orig_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
+  // FIXME: Paremeter layouts should be set based on the
+  // destination op types
+  bool has_batch = false;;
+  for (int i=0; i<m_model->get_parameters().size(); i++) {
+    if (m_model->get_parameters()[i]->get_shape().size() == 5) {
+      m_model->get_parameters()[i]->set_layout("NCDHW");
+      has_batch = true;
+    } else if (m_model->get_parameters()[i]->get_shape().size() == 4) {
+      m_model->get_parameters()[i]->set_layout("NCHW");
+      has_batch = true;
+    } else if (m_model->get_parameters()[i]->get_shape().size() == 3) {
+      m_model->get_parameters()[i]->set_layout("nhw");
+      has_batch = true;
+    } else if (m_model->get_parameters()[i]->get_shape().size() == 2) {
+      m_model->get_parameters()[i]->set_layout("NC");
+      has_batch = true;
+    } else if (m_model->get_parameters()[i]->get_shape().size() == 1) {
+      m_model->get_parameters()[i]->set_layout("C");
+    }
+  }
+  if (has_batch) {
+    ov::Dimension batch_dim = ov::get_batch(m_model);
+    m_orig_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
+  } else {
+    m_orig_batch_size = 0;
+  }
 }
 
 IE_VADM_Engine::~IE_VADM_Engine() {}
@@ -35,7 +59,8 @@ void IE_VADM_Engine::infer(
 
   int multi_req_support = false;
   int tmp_batch = 0;
-  if (m_multi_req_execution && hoisted_params.size() == 0) {
+  if (m_multi_req_execution && m_orig_batch_size > 0
+          && hoisted_params.size() == 0) {
     multi_req_support = true;
     for (int i = 0; i < inputs.size(); i++) {
       if (inputs[i] == nullptr) {
@@ -78,12 +103,6 @@ void IE_VADM_Engine::infer(
   while (m_infer_reqs.size() < num_req) {
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
-  // std::vector<InferenceEngine::MemoryBlob::Ptr> in_blobs(inputs.size() *
-  //                                                       num_req);
-  // std::vector<InferenceEngine::MemoryBlob::Ptr> param_blobs(
-  //    hoisted_params.size());
-  // std::vector<InferenceEngine::MemoryBlob::Ptr> out_blobs(outputs.size() *
-  //                                                        num_req);
   //  Prepare input blobs
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] == nullptr) continue;
@@ -95,7 +114,7 @@ void IE_VADM_Engine::infer(
         throw std::runtime_error("Input parameter with friendly name " +
                                  input_names[i] + " not found in ov::Model");
       }
-      auto tensor = m_infer_reqs[0].get_input_tensor(in_idx);
+      auto tensor = m_infer_reqs[j].get_input_tensor(in_idx);
       size_t input_data_size = tensor.get_byte_size();
       auto data_ptr =
           (uint8_t*)((uint64_t)(input_data_pointer) + input_data_size * j);
@@ -116,7 +135,6 @@ void IE_VADM_Engine::infer(
     std::copy((uint8_t*)(hoisted_params[i]->data()),
               ((uint8_t*)(hoisted_params[i]->data())) + input_data_size,
               (uint8_t*)(tensor.data()));
-    ;
   }
 
   // Start Inference Requests
