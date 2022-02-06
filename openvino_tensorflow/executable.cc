@@ -120,54 +120,29 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   if (m_device_type == "GPU_FP16") {
     ov::pass::ConvertFP32ToFP16().run_on_function(model);
     model->validate_nodes_and_infer_types();
+
+    auto proc = ov::preprocess::PrePostProcessor(model);
+    for (int i=0; i<model->inputs().size(); i++) {
+      if (model->outputs()[i].get_element_type() == ov::element::f16) {
+        proc.input(i).tensor().set_element_type(ov::element::f32);
+        proc.input(i).preprocess().convert_element_type(ov::element::f16);
+      }
+    }
+    for (int i=0; i<model->outputs().size(); i++) {
+      if (model->outputs()[i].get_element_type() == ov::element::f16) {
+        proc.output(i).postprocess().convert_element_type(ov::element::f32);
+      }
+    }
+    model = proc.build();
   }
 
-  std::map<string, string> options;
-
+  //std::map<string, string> options;
   // if (util::DumpAllGraphs()) {
   //  auto& name = m_function->get_friendly_name();
   //  m_network.serialize(name + ".xml", name + ".bin");
   //  util::DumpNGGraph(func, name + "_executable");
   //  options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
   //      name + "_IE_" + m_device;
-  //}
-
-  auto get_output_name = [](std::shared_ptr<ov::Node> node) {
-    // Since IE has no "result" nodes, we set the blob corresponding to the
-    // parent of this result node
-    auto parent = node->input_value(0).get_node_shared_ptr();
-    auto name = parent->get_friendly_name();
-    // if parent has multiple outputs, correctly identify the output feeding
-    // into this result
-    if (parent->outputs().size() > 1) {
-      name += "." + to_string(node->input_value(0).get_index());
-    }
-    return name;
-  };
-
-  std::unordered_map<std::string, ov::element::Type> output_dt_map;
-
-  auto results = model->get_results();
-  for (int i = 0; i < results.size(); i++) {
-    auto output_name = get_output_name(results[i]);
-    auto dtype = results[i]->get_element_type();
-    output_dt_map[output_name] = dtype;
-  }
-
-  // auto outputInfo = m_network.getOutputsInfo();
-  // for (auto iter = outputInfo.begin(); iter != outputInfo.end(); ++iter) {
-  //  auto out_name = iter->first;
-  //  auto it = output_dt_map.find(out_name);
-
-  //  if (it == output_dt_map.end()) {
-  //    THROW_IE_EXCEPTION << "Output Mismatch: Output " << out_name
-  //                       << " doesn't exist";
-  //  }
-  //  auto precision = IE_Utils::toPrecision(it->second);
-  //  if (m_device_type == "GPU_FP16") {
-  //    precision = InferenceEngine::Precision::FP32;
-  //  }
-  //  iter->second->setPrecision(precision);
   //}
 
   OVTF_VLOG(2) << "Creating IE Execution Engine";
