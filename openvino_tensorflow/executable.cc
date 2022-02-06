@@ -6,6 +6,7 @@
 
 #include "openvino/opsets/opset.hpp"
 #include "openvino/pass/convert_fp32_to_fp16.hpp"
+#include "openvino/pass/serialize.hpp"
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/default_opset.h"
@@ -145,14 +146,11 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
     model = proc.build();
   }
 
-  //std::map<string, string> options;
-  // if (util::DumpAllGraphs()) {
-  //  auto& name = m_function->get_friendly_name();
-  //  m_network.serialize(name + ".xml", name + ".bin");
-  //  util::DumpNGGraph(func, name + "_executable");
-  //  options[InferenceEngine::PluginConfigParams::KEY_DUMP_EXEC_GRAPH_AS_DOT] =
-  //      name + "_IE_" + m_device;
-  //}
+  if (util::DumpAllGraphs()) {
+    std::string name = m_model->get_friendly_name();
+    ov::pass::Serialize serializer(name + ".xml", name + ".bin");
+    serializer.run_on_model(m_model);
+  }
 
   OVTF_VLOG(2) << "Creating IE Execution Engine";
   if (m_device == "HDDL") {
