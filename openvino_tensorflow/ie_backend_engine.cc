@@ -19,10 +19,6 @@ IE_Backend_Engine::IE_Backend_Engine(std::shared_ptr<ov::Model> model,
       m_device(device),
       m_multi_req_execution(false),
       m_network_ready(false) {
-  // if (std::getenv("OPENVINO_TF_DUMP_GRAPHS")) {
-  //  auto& name = m_network.getName();
-  //  m_network.serialize(name + ".xml", name + ".bin");
-  //}
 }
 
 IE_Backend_Engine::~IE_Backend_Engine() {}
