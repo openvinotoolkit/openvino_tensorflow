@@ -141,6 +141,7 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
     std::string name = m_model->get_friendly_name();
     ov::pass::Serialize serializer(name + ".xml", name + ".bin");
     serializer.run_on_model(m_model);
+    util::DumpNGGraph(m_model, name + "_executable");
   }
 
   OVTF_VLOG(2) << "Creating IE Execution Engine";
