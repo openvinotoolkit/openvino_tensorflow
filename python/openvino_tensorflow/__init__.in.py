@@ -30,8 +30,10 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import ctypes
 
-
+cuda_visible_devices = ""
 if (os.environ.get("OPENVINO_TF_DISABLE") != "1"):
+    if ("CUDA_VISIBLE_DEVICES" in os.environ):
+        cuda_visible_devices = os.environ["CUDA_VISIBLE_DEVICES"]
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 __all__ = [
@@ -149,7 +151,10 @@ if ovtf_classic_loaded:
     def disable():
         openvino_tensorflow_lib.disable()
         if ("CUDA_VISIBLE_DEVICES" in os.environ):
-            del os.environ["CUDA_VISIBLE_DEVICES"]
+            if (len(cuda_visible_devices) == 0):
+                del os.environ["CUDA_VISIBLE_DEVICES"]
+            else:
+                os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible_devices
 
     def is_enabled():
         return openvino_tensorflow_lib.is_enabled()
