@@ -38,11 +38,10 @@ class Builder {
       ngraph::ResultVector& ng_func_result_list,
       const std::vector<Tensor>& tf_input_tensors);
 
-  static Status CreateGraphIterator(
+  static Status TranslateGraphWithTFFE(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map,
-      const GraphDef* tf_graph, const Graph* input_graph, const string name,
-      std::shared_ptr<OVTFGraphIterator>& graph_iterator,
+      const Graph* input_graph, const string name,
       std::shared_ptr<ngraph::Function>& ng_function,
       ngraph::ResultVector& ng_func_result_list,
       const std::vector<Tensor>& tf_input_tensors);

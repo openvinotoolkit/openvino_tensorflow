@@ -31,7 +31,6 @@
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/mark_for_clustering.h"
 #include "openvino_tensorflow/ovtf_builder.h"
-#include "openvino_tensorflow/ovtf_graph_iterator.h"
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 
@@ -355,6 +354,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));
+      std::cout << "OVTF_LOG - Result - index: " << i << ", name: " << ng_element->get_name()
+          << ", type: " << ng_element->description() << ", friendly_name: " << ng_element->get_friendly_name() << std::endl;
+      std::cout << "OVTF_LOG - expected_elem_type: " << expected_elem_type << std::endl;
+      std::cout << "OVTF_LOG - ng_element_type: " << ng_element_type << std::endl;
       OP_REQUIRES(
           ctx, ng_element_type == expected_elem_type,
           errors::Internal("Element type inferred by nGraph does not match "
@@ -575,7 +578,6 @@ Status NGraphEncapsulateOp::GetExecutable(
 
   // Translate the TensorFlow graph to nGraph.
   std::shared_ptr<ngraph::Function> ng_function;
-  std::shared_ptr<OVTFGraphIterator> graph_iterator;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
     long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
@@ -584,11 +586,9 @@ Status NGraphEncapsulateOp::GetExecutable(
     ng_result_list.clear();
     ng_output_shapes.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-    const GraphDef* graph_def =
-        NGraphClusterManager::GetClusterGraph(m_cluster_id);
-    TF_RETURN_IF_ERROR(Builder::CreateGraphIterator(
-        input_shapes, static_input_map, graph_def, &m_graph, m_name,
-        graph_iterator, ng_function, ng_result_list, tf_input_tensors));
+    TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
+        input_shapes, static_input_map, &m_graph, m_name,
+        ng_function, ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());

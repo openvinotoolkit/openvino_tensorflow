@@ -4046,25 +4046,18 @@ void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path) {
 ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
     std::make_shared<ov::frontend::tensorflow::FrontEnd>();
 
-Status Builder::CreateGraphIterator(
-    const std::vector<TensorShape>& inputs,
-    const std::vector<const Tensor*>& static_input_map,
-    const GraphDef* tf_graph, const Graph* input_graph, const string name,
-    std::shared_ptr<OVTFGraphIterator>& graph_iterator,
-    std::shared_ptr<ngraph::Function>& ng_function,
-    ngraph::ResultVector& ng_func_result_list,
-    const std::vector<Tensor>& tf_input_tensors) {
+Status Builder::TranslateGraphWithTFFE(
+      const std::vector<TensorShape>& inputs,
+      const std::vector<const Tensor*>& static_input_map,
+      const Graph* input_graph, const string name,
+      std::shared_ptr<ngraph::Function>& ng_function,
+      ngraph::ResultVector& ng_func_result_list,
+      const std::vector<Tensor>& tf_input_tensors) {
 
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
-  //
-  // Split ops into params, retvals, and all others.
-  //
-  vector<const Node*> tf_params;
-  vector<const Node*> tf_ret_vals;
-  vector<const Node*> tf_ops;
-
+  // Assign attributes for constant inputs
   for (const auto n : ordered) {
     if (n->IsSink() || n->IsSource()) {
       continue;
@@ -4077,7 +4070,6 @@ Status Builder::CreateGraphIterator(
     }
 
     if (n->IsArg()) {
-      tf_params.push_back(n);
       bool const_input = false;
       try {
         GetNodeAttr(n->attrs(), "_const_input", &const_input);
@@ -4097,17 +4089,11 @@ Status Builder::CreateGraphIterator(
         n->AddAttr("_const_value", tensor);
         n->AddAttr("_const_dtype", dtype);
       }
-    } else if (n->IsRetval()) {
-      tf_ret_vals.push_back(n);
-    } else {
-      tf_ops.push_back(n);
     }
   }
 
-  auto gd = std::make_shared<::tensorflow::GraphDef>();
-  input_graph->ToGraphDef(gd.get());
   std::shared_ptr<OVTFGraphIterator> giter =
-      std::make_shared<OVTFGraphIterator>(gd.get());
+      std::make_shared<OVTFGraphIterator>(ordered);
 
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);

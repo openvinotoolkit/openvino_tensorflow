@@ -27,27 +27,26 @@ namespace openvino_tensorflow {
 // function.
 class OVTFGraphIterator : public ov::frontend::tensorflow::GraphIterator {
  public:
-  OVTFGraphIterator(const ::tensorflow::GraphDef* graph_def)
-      : m_graph_def(graph_def) {
-    m_nodes.resize(m_graph_def->node_size());
+  OVTFGraphIterator(const std::vector<::tensorflow::Node*> nodes) {
+    m_nodes.resize(nodes.size());
     for (size_t i = 0; i < m_nodes.size(); ++i)
-      m_nodes[i] = &m_graph_def->node(i);
+      m_nodes[i] = &(nodes[i]->def());
   }
 
   /// Set iterator to the start position
-  void reset() override { node_index = 0; }
+  void reset() override { m_node_index = 0; }
 
   size_t size() const override { return m_nodes.size(); }
 
   /// Moves to the next node in the graph
-  void next() override { node_index++; }
+  void next() override { m_node_index++; }
 
-  bool is_end() const override { return node_index >= m_nodes.size(); }
+  bool is_end() const override { return m_node_index >= m_nodes.size(); }
 
   /// Return NodeContext for the current node that iterator points to
   std::shared_ptr<ov::frontend::tensorflow::DecoderBase> get_decoder()
       const override {
-    return std::make_shared<OVTFDecoder>(m_nodes[node_index]);
+    return std::make_shared<OVTFDecoder>(m_nodes[m_node_index]);
   }
 
   void sort_nodes(std::vector<std::string>& ordered_names) {
@@ -67,8 +66,7 @@ class OVTFGraphIterator : public ov::frontend::tensorflow::GraphIterator {
 
  private:
   std::vector<const ::tensorflow::NodeDef*> m_nodes;
-  size_t node_index = 0;
-  const ::tensorflow::GraphDef* m_graph_def;
+  size_t m_node_index = 0;
 };
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
