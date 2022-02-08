@@ -564,7 +564,7 @@ def main():
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
-                "\\", "\\\\"),
+                "\\", "/"),
         ]
     else:
         openvino_tf_cmake_flags = [
@@ -717,13 +717,14 @@ def main():
             # if destination link already exists, then delete it
             if (os.path.exists(link_dst)):
                 print("Link %s already exists, deleting it." % link_dst)
-                command_executor(['rm', '-rf', link_dst])
+                command_executor(['rmdir /s /q', link_dst], shell=True)
+            command_executor(['mklink /D', link_dst, link_src], verbose=True, shell=True)
         else:
             link_src = os.path.join(artifacts_location,
                                     "tensorflow/tensorflow/python")
             link_dst = os.path.join(artifacts_location, "tensorflow/python")
 
-        command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
+            command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     if not os.path.exists(artifacts_location):
         raise AssertionError("Path doesn't exist {}".format(artifacts_location))

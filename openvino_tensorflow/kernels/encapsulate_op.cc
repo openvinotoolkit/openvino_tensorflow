@@ -189,6 +189,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     m_input_is_static[index] = is_static;
   }
 
+  // TODO: Unused and thus commented, remove it later
   // Get the optional attributes
   // std::unordered_map<std::string, std::string> additional_attribute_map;
   // auto node_def = ctx->def();

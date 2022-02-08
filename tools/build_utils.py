@@ -47,7 +47,8 @@ def command_executor(cmd,
                      verbose=False,
                      msg=None,
                      stdout=sys.stdout,
-                     stderr=sys.stderr):
+                     stderr=sys.stderr,
+                     shell=False):
     '''
     Executes the command.
     Example:
@@ -61,7 +62,7 @@ def command_executor(cmd,
         print(tag + cmd, file=stdout)
     try:
         process = subprocess.Popen(
-            shlex.split(cmd), stdout=stdout, stderr=stderr)
+            shlex.split(cmd), stdout=stdout, stderr=stderr, shell=shell)
         so, se = process.communicate()
         retcode = process.returncode
         if not retcode == 0:
