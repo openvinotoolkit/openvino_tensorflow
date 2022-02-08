@@ -29,8 +29,7 @@ class OVTFGraphIterator : public ov::frontend::tensorflow::GraphIterator {
  public:
   OVTFGraphIterator(const std::vector<::tensorflow::Node*> nodes) {
     m_nodes.resize(nodes.size());
-    for (size_t i = 0; i < m_nodes.size(); ++i)
-      m_nodes[i] = &(nodes[i]->def());
+    for (size_t i = 0; i < m_nodes.size(); ++i) m_nodes[i] = &(nodes[i]->def());
   }
 
   /// Set iterator to the start position

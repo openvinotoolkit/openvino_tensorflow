@@ -354,10 +354,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));
-      std::cout << "OVTF_LOG - Result - index: " << i << ", name: " << ng_element->get_name()
-          << ", type: " << ng_element->description() << ", friendly_name: " << ng_element->get_friendly_name() << std::endl;
-      std::cout << "OVTF_LOG - expected_elem_type: " << expected_elem_type << std::endl;
-      std::cout << "OVTF_LOG - ng_element_type: " << ng_element_type << std::endl;
+
       OP_REQUIRES(
           ctx, ng_element_type == expected_elem_type,
           errors::Internal("Element type inferred by nGraph does not match "
@@ -587,8 +584,8 @@ Status NGraphEncapsulateOp::GetExecutable(
     ng_output_shapes.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
-        input_shapes, static_input_map, &m_graph, m_name,
-        ng_function, ng_result_list, tf_input_tensors));
+        input_shapes, static_input_map, &m_graph, m_name, ng_function,
+        ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());

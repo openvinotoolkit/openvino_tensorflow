@@ -4047,13 +4047,12 @@ ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
     std::make_shared<ov::frontend::tensorflow::FrontEnd>();
 
 Status Builder::TranslateGraphWithTFFE(
-      const std::vector<TensorShape>& inputs,
-      const std::vector<const Tensor*>& static_input_map,
-      const Graph* input_graph, const string name,
-      std::shared_ptr<ngraph::Function>& ng_function,
-      ngraph::ResultVector& ng_func_result_list,
-      const std::vector<Tensor>& tf_input_tensors) {
-
+    const std::vector<TensorShape>& inputs,
+    const std::vector<const Tensor*>& static_input_map,
+    const Graph* input_graph, const string name,
+    std::shared_ptr<ngraph::Function>& ng_function,
+    ngraph::ResultVector& ng_func_result_list,
+    const std::vector<Tensor>& tf_input_tensors) {
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
@@ -4149,81 +4148,90 @@ Status Builder::TranslateGraphWithTFFE(
             auto shape = indexed_shape.at(index);
             auto is_const_input = node.get_attribute<bool>("_const_input");
             if (is_const_input) {
-              ov::Any any_proto = node.get_attribute<::tensorflow::TensorProto>("_const_value");
+              ov::Any any_proto =
+                  node.get_attribute<::tensorflow::TensorProto>("_const_value");
               auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
-              ov::Any any_type = node.get_attribute<ngraph::element::Type>("_const_dtype");
+              ov::Any any_type =
+                  node.get_attribute<ngraph::element::Type>("_const_dtype");
               auto dt = any_type.as<ngraph::element::Type>();
               switch (dt) {
-                case ngraph::element::Type_t::f32:
-                  {
+                case ngraph::element::Type_t::f32: {
                   vector<float> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<float>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<float>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::f64:
-                  {
+                }
+                case ngraph::element::Type_t::f64: {
                   vector<double> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<double>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<double>(tensor_proto, dt,
+                                                  &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::u8:
-                  {
+                }
+                case ngraph::element::Type_t::u8: {
                   vector<uint8> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::i8:
-                  {
+                }
+                case ngraph::element::Type_t::i8: {
                   vector<int8> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<int8>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<int8>(tensor_proto, dt, &const_shape,
+                                                &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::i32:
-                  {
+                }
+                case ngraph::element::Type_t::i32: {
                   vector<int32> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<int32>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<int32>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::u64:
-                  {
+                }
+                case ngraph::element::Type_t::u64: {
                   vector<uint64> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<uint64>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<uint64>(tensor_proto, dt,
+                                                  &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::i64:
-                  {
+                }
+                case ngraph::element::Type_t::i64: {
                   vector<int64> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<int64>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<int64>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
-                case ngraph::element::Type_t::boolean:
-                  {
+                }
+                case ngraph::element::Type_t::boolean: {
                   vector<bool> const_vec;
                   ov::Shape const_shape;
-                  values_from_tensorproto<bool>(tensor_proto, dt, &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape, const_vec);
+                  values_from_tensorproto<bool>(tensor_proto, dt, &const_shape,
+                                                &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
                   break;
-                  }
+                }
                 default:
                   THROW_IE_EXCEPTION << "Unkown const input type";
               }
-              
-            } else {
 
+            } else {
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
@@ -4252,7 +4260,7 @@ Status Builder::TranslateGraphWithTFFE(
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
     ng_function = m_frontend_ptr->convert(input_model);
   } catch (const std::exception& exp) {
-    return errors::Internal("Frontend conversion error: "+string(exp.what()));
+    return errors::Internal("Frontend conversion error: " + string(exp.what()));
   } catch (...) {
     return errors::Internal("Frontend conversion error");
   }
@@ -4264,7 +4272,6 @@ Status Builder::TranslateGraphWithTFFE(
 
   return Status::OK();
 }
-
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
