@@ -25,6 +25,6 @@ target_include_directories(${TARGET_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}/src
             ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(${TARGET_NAME} tensorflow_frontend_lib ov_runtime_lib)
+target_link_libraries(${TARGET_NAME} tensorflow_frontend_lib openvino_lib)
 
 install(CODE "set(TF_CONVERSION_EXTENSIONS_LIB_NAME \"${TARGET_NAME}\")")

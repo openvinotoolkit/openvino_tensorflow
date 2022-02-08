@@ -569,13 +569,13 @@ def main():
         if (os.path.isdir("openvino/bin/intel64/Release")):
             command_executor([
                 "cp",
-                "openvino/bin/intel64/Release/lib/libov_tensorflow_frontend.so",
+                "openvino/bin/intel64/Release/lib/libopenvino_tensorflow_frontend.so",
                 "artifacts/openvino/runtime/lib/intel64/"
             ])
         else:
             command_executor([
                 "cp",
-                "openvino/bin/intel64/lib/libov_tensorflow_frontend.so",
+                "openvino/bin/intel64/lib/libopenvino_tensorflow_frontend.so",
                 "artifacts/openvino/runtime/lib/intel64/"
             ])
 

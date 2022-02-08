@@ -193,7 +193,7 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
         endif()
     endif()
 else()
-    install(FILES ${IE_LIBS}/libov_tensorflow_frontend.so DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
+    install(FILES ${IE_LIBS}/libopenvino_tensorflow_frontend.so DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
 endif()
 
 # Now create the Python pip package. The following variables are passed to the
