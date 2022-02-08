@@ -71,11 +71,11 @@ class TestConv2DBackpropInput(NgraphTest):
                     filt: filt_values
                 })
 
-        with pytest.raises(Exception) as excinfo:
-            self.with_ngraph(run_test)
-        if not "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message:
-            raise AssertionError
-
         # TF also fails
-        with pytest.raises(Exception) as excinfo1:
+        with pytest.raises(Exception) as excinfo:
             self.without_ngraph(run_test)
+        if not "Current implementation does not yet support strides in the batch and depth dimensions" in excinfo.value.message:
+          with pytest.raises(Exception) as excinfo1:
+              self.with_ngraph(run_test)
+          if not "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo1.value.message:
+              raise AssertionError
