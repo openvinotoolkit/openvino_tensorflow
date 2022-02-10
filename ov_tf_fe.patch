@@ -1,13 +1,26 @@
+diff --git a/src/frontends/tensorflow/src/frontend.cpp b/src/frontends/tensorflow/src/frontend.cpp
+index 1c23436d8..5d9fbeafd 100644
+--- a/src/frontends/tensorflow/src/frontend.cpp
++++ b/src/frontends/tensorflow/src/frontend.cpp
+@@ -108,6 +108,9 @@ void FrontEnd::translate_graph(const ov::frontend::InputModel::Ptr& model,
+         // prepare a list of OV node inputs for each node
+         ov::OutputVector ng_inputs;
+         for (size_t input_port_idx = 0; input_port_idx < operation_decoder->get_input_size(); ++input_port_idx) {
++            if (operation_decoder->get_op_type() == "Const") {
++                break;
++            }
+             std::string producer_name;
+             size_t producer_port_idx;
+             try {
 diff --git a/src/frontends/tensorflow/src/utils.hpp b/src/frontends/tensorflow/src/utils.hpp
-index a224e81df..0a3b60e1b 100644
+index a224e81df..e17c3a8dd 100644
 --- a/src/frontends/tensorflow/src/utils.hpp
 +++ b/src/frontends/tensorflow/src/utils.hpp
-@@ -93,7 +93,9 @@ void values_from_const_node(const NodeContext& node, ov::Shape* const_tensor_sha
+@@ -93,7 +93,8 @@ void values_from_const_node(const NodeContext& node, ov::Shape* const_tensor_sha
      TENSORFLOW_OP_VALIDATION(node, node.get_op_type() == "Const", "Node is expected to be Constant.");
      const auto* decoder = node.get_decoder();
      auto dt = decoder->get_native_attribute("dtype").as<::tensorflow::DataType>();
 -    auto tensor_proto = decoder->get_native_attribute("value").as<::tensorflow::TensorProto>();
-+    // auto tensor_proto = decoder->get_native_attribute("value").as<::tensorflow::TensorProto>();
 +    ov::Any any = decoder->get_native_attribute("value");
 +    auto tensor_proto = any.as<::tensorflow::TensorProto>();
      const ::tensorflow::TensorShapeProto& shape = tensor_proto.tensor_shape();
