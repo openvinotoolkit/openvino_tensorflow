@@ -335,6 +335,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         continue;
       }
 
+      ov::Any any = ng_element->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+
       // Create the TF output tensor
       auto ng_shape = ng_output_shapes[i];
       TensorShape tf_shape;
@@ -342,7 +345,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
       Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
       // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected
@@ -353,7 +356,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         ng_element_type = ngraph::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
-                         ctx->expected_output_dtype(i), &expected_elem_type));
+                         ctx->expected_output_dtype(output_index), &expected_elem_type));
 
       OP_REQUIRES(
           ctx, ng_element_type == expected_elem_type,
