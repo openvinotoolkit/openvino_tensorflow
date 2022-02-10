@@ -718,7 +718,9 @@ def main():
             if (os.path.exists(link_dst)):
                 print("Link %s already exists, deleting it." % link_dst)
                 command_executor(['rmdir /s /q', link_dst], shell=True)
-            command_executor(['mklink /D', link_dst, link_src], verbose=True, shell=True)
+            command_executor(['mklink /D', link_dst, link_src],
+                             verbose=True,
+                             shell=True)
         else:
             link_src = os.path.join(artifacts_location,
                                     "tensorflow/tensorflow/python")
