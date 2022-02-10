@@ -163,6 +163,16 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OVTF_VLOG(5) << "Marking arg " << index << " is_static: " << is_static;
     m_input_is_static[index] = is_static;
   }
+<<<<<<< HEAD
+=======
+
+  // TODO: Unused and thus commented, remove it later
+  // Get the optional attributes
+  // std::unordered_map<std::string, std::string> additional_attribute_map;
+  // auto node_def = ctx->def();
+  // OP_REQUIRES_OK(
+  //     ctx, ParseNodeAttributes(node_def.attr(), &additional_attribute_map));
+>>>>>>> Add support for failing OMZ models (#256)
 }
 
 NGraphEncapsulateOp::~NGraphEncapsulateOp() {
