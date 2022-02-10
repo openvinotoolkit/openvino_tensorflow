@@ -163,6 +163,7 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
         python3 build_ovtf.py --help
 
 ###  2.2. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
+Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
 1. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
 
         python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752"
