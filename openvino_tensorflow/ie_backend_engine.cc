@@ -26,10 +26,11 @@ IE_Backend_Engine::~IE_Backend_Engine() {}
 void IE_Backend_Engine::load_network() {
   if (m_network_ready) return;
 
-  std::map<std::string, std::string> config;
 
   if (m_device == "MYRIAD") {
     // Set MYRIAD configurations
+    ov::AnyMap config;
+
     if (IE_Utils::VPUConfigEnabled()) {
       config["MYRIAD_DETECT_NETWORK_BATCH"] = "NO";
     }
@@ -38,6 +39,7 @@ void IE_Backend_Engine::load_network() {
       config["MYRIAD_HW_INJECT_STAGES"] = "NO";
       config["MYRIAD_COPY_OPTIMIZATION"] = "NO";
     }
+    Backend::GetGlobalContext().ie_core.set_property("MYRIAD", config);
   }
 
   // Load network to the plugin (m_device)
