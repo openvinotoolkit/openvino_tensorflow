@@ -4052,11 +4052,13 @@ Status Builder::TranslateGraphWithTFFE(
     const Graph* input_graph, const string name,
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
-    const std::vector<Tensor>& tf_input_tensors) {
+    const std::vector<Tensor>& tf_input_tensors,
+    std::vector<int>& const_input_map) {
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
   // Assign attributes for constant inputs
+  int64_t input_ctr = 0;
   for (const auto n : ordered) {
     if (n->IsSink() || n->IsSource()) {
       continue;
@@ -4087,7 +4089,9 @@ Status Builder::TranslateGraphWithTFFE(
         const Tensor tensor = tf_input_tensors[index];
         n->AddAttr("_const_value", tensor);
         n->AddAttr("_const_dtype", dtype);
+        const_input_map.push_back(input_ctr);
       }
+      input_ctr++;
     }
   }
 

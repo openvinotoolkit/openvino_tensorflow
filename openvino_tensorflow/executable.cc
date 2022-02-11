@@ -216,6 +216,10 @@ bool Executable::Call(const vector<shared_ptr<runtime::Tensor>>& inputs,
         m_skipped_inputs.end()) {
       continue;
     }
+    if (find(m_const_inputs.begin(), m_const_inputs.end(), i) !=
+        m_const_inputs.end()) {
+      continue;
+    }
     auto input_name = parameters[j++]->get_friendly_name();
     if (input_info.find(input_name) == input_info.end()) {
       OVTF_VLOG(1) << "Skipping unused input " << input_name;

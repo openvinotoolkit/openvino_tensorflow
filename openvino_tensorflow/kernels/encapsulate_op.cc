@@ -583,12 +583,13 @@ Status NGraphEncapsulateOp::GetExecutable(
     long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
     util::MemoryProfile(vm0, rss0);
 
+    std::vector<int> const_inputs;
     ng_result_list.clear();
     ng_output_shapes.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
-        ng_result_list, tf_input_tensors));
+        ng_result_list, tf_input_tensors, const_inputs));
     util::DumpNGGraph(ng_function, m_name);
 
     ng_output_shapes.resize(ng_result_list.size());
@@ -621,6 +622,7 @@ Status NGraphEncapsulateOp::GetExecutable(
       return errors::Internal("Failed to compile function " + m_name + ": ",
                               ex.what());
     }
+    ng_exec->SetConstInputs(const_inputs);
 
     m_ng_exec_map[signature] = ng_exec;
     m_lru.push_front(signature);
