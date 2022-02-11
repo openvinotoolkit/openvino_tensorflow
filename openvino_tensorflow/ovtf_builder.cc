@@ -4077,6 +4077,15 @@ Status Builder::TranslateGraphWithTFFE(
       } catch (const std::exception&) {
         OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
       }
+      if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
+        bool is_variable = false;
+        try {
+          GetNodeAttr(n->attrs(), "_is_variable", &is_variable);
+        } catch (const std::exception&) {
+          OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
+        }
+        const_input |= is_variable;
+      }
       if (const_input) {
         DataType dtype;
         if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
@@ -4273,6 +4282,28 @@ Status Builder::TranslateGraphWithTFFE(
   for (int i = 0; i < ng_function->get_results().size(); i++) {
     ng_func_result_list[i] = ng_function->get_results()[i];
   }
+
+  //
+  // Apply additional passes on the nGraph function here.
+  //
+  {
+    ngraph::pass::Manager passes;
+    if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
+      passes.register_pass<ngraph::pass::ConstantFolding>();
+    }
+    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") != "0") {
+      passes.register_pass<pass::TransposeSinking>();
+    }
+    passes.run_passes(ng_function);
+  }
+  OVTF_VLOG(5) << "Done with passes";
+  //
+  // Request row-major layout on results.
+  //
+  for (auto result : ng_function->get_results()) {
+    result->set_needs_default_layout(true);
+  }
+  OVTF_VLOG(5) << "Done with translations";
 
   return Status::OK();
 }
