@@ -106,6 +106,7 @@ class Builder {
           "Dynamic constant input shapes are not supported in _Arg "
           "conversion.");
     }
+    *const_tensor_shape = pshape.get_shape();
     auto tensor_content = tensor_proto.tensor_content();
     std::vector<char> tensor_values_plain(tensor_content.begin(),
                                           tensor_content.end());
