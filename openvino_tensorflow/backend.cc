@@ -95,7 +95,7 @@ bool Backend::IsSupported(const ngraph::Node& node) const {
   supported_opsets.push_back(ngraph::get_opset8());
   bool op_supported = false;
   for (const auto& opset : supported_opsets) {
-    op_supported = opset.contains_op_type(node.get());
+    op_supported = opset.contains_op_type(&node);
     if (op_supported) break;
   }
   return op_supported;
