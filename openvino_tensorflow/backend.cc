@@ -87,9 +87,18 @@ std::string Backend::GetDeviceType() { return m_device_type; }
 bool Backend::IsSupported(const ngraph::Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
-  // that the selected backend supports all opset7 ops
-  const auto& opset = ngraph::get_opset7();
-  return opset.contains_op_type(&node);
+  // that the selected backend supports all opset7&opset8 ops
+  // TODO: This is a temporary fix until all ops are
+  // supported by opset8.
+  std::vector<OpSet> supported_opsets;
+  supported_opsets.push_back(ngraph::get_opset7());
+  supported_opsets.push_back(ngraph::get_opset8());
+  bool op_supported = false;
+  for (const auto& opset : supported_opsets) {
+    op_supported = opset.contains_op_type(node.get());
+    if (op_supported) break;
+  }
+  return op_supported;
 }
 
 }  // namespace openvino_tensorflow

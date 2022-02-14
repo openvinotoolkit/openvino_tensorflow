@@ -32,12 +32,21 @@ Executable::Executable(shared_ptr<Function> func, string device,
       m_trivial_fn{nullptr},
       m_function(func) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ngraph::get_opset7();
+  // TODO: This is a temporary fix until all ops are
+  // supported by opset8.
+  std::vector<OpSet> supported_opsets;
+  supported_opsets.push_back(ngraph::get_opset7());
+  supported_opsets.push_back(ngraph::get_opset8());
   for (const auto& node : func->get_ops()) {
-    if (!opset.contains_op_type(node.get())) {
+    bool op_supported = false;
+    for (const auto& opset : supported_opsets) {
+      op_supported = opset.contains_op_type(node.get());
+      if (op_supported) break;
+    }
+    if (!op_supported) {
       OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
-                          " not belonging to opset7!");
+                          " not belonging to opset7 or opset8!");
     }
   }
 
