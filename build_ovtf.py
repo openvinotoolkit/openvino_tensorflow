@@ -557,27 +557,6 @@ def main():
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
-        # TODO Copy tensorflow_frontend.so and the header files for now,
-        # remove it once, it is handled in OV cmakelist
-        # cwd is "build_cmake/"
-        command_executor([
-            "cp", "-r",
-            "openvino/src/frontends/tensorflow/include/openvino/frontend/tensorflow",
-            "artifacts/openvino/runtime/include/openvino/frontend/"
-        ])
-
-        if (os.path.isdir("openvino/bin/intel64/Release")):
-            command_executor([
-                "cp",
-                "openvino/bin/intel64/Release/lib/libopenvino_tensorflow_frontend.so",
-                "artifacts/openvino/runtime/lib/intel64/"
-            ])
-        else:
-            command_executor([
-                "cp",
-                "openvino/bin/intel64/lib/libopenvino_tensorflow_frontend.so",
-                "artifacts/openvino/runtime/lib/intel64/"
-            ])
 
     # Next build CMAKE options for the bridge
     atom_flags = ""

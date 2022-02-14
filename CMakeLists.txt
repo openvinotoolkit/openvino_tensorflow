@@ -222,7 +222,7 @@ add_library(tensorflow_frontend_lib SHARED IMPORTED)
 set_target_properties(
     tensorflow_frontend_lib
     PROPERTIES IMPORTED_LOCATION
-    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.so
+    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so
 )
 
 add_library(openvino_lib SHARED IMPORTED)                                                                       
