@@ -128,7 +128,7 @@ COPY --from=ovtf_build /tensorflow_pkg/artifacts/tensorflow/*whl /
 COPY --from=ovtf_build /opt/intel/openvino_tensorflow/build_cmake/artifacts/*whl /
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70;
 
 RUN git clone https://github.com/openvinotoolkit/openvino_tensorflow.git && \
     cd openvino_tensorflow && \
@@ -149,8 +149,8 @@ WORKDIR /openvino_tensorflow/examples/notebooks/
 ## Granting execution permission to shell script
 
 RUN echo -e "jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root" | \
-        tee .run-jupyter.sh && chmod +x .run-jupyter.sh
+        tee /run-jupyter.sh && chmod +x /run-jupyter.sh
 
 ## .run-jupyter.sh file will be executed when the container starts
 
-CMD ["/bin/bash", ".run-jupyter.sh"]
+CMD ["/bin/bash", "/run-jupyter.sh"]
