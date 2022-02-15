@@ -32,12 +32,12 @@ Executable::Executable(shared_ptr<Function> func, string device,
       m_trivial_fn{nullptr},
       m_function(func) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ngraph::get_opset7();
+  const auto& opset = ov::get_opset8();
   for (const auto& node : func->get_ops()) {
     if (!opset.contains_op_type(node.get())) {
       OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
-                          " not belonging to opset7!");
+                          " not belonging to opset8!");
     }
   }
 
