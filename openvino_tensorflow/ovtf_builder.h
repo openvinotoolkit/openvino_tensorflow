@@ -175,10 +175,8 @@ class Builder {
                 "Encountered unknown element type on an empty tensor_proto");
         }
         if (val_size == 0) {
-          THROW_IE_EXCEPTION << "Empty values vector";
-        }
-
-        if (i < val_size) {
+          (*values)[i] =  static_cast<T>(0);
+        }else if (i < val_size) {
           (*values)[i] = val_i;
           val_lastsaved = val_i;
         } else {
