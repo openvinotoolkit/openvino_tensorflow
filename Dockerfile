@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ################################################################################
-FROM tensorflow/build:latest-python3.9 AS tensorflow_build
+FROM tensorflow/build:latest-python3.8 AS tensorflow_build
 ################################################################################
 
 LABEL description="This is the dev image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
@@ -66,16 +66,16 @@ ARG OVTF_BRANCH="master"
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
     git wget build-essential\
-    python3.9 python3.9-venv python3-pip \
+    python3.8 python3.8-venv python3-pip \
     libusb-1.0-0-dev \
     gcc-7 g++-7; \
     rm -rf /var/lib/apt/lists/*
 
-# Set defaults to gxx-7 and python3.9
+# Set defaults to gxx-7 and python3.8
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70; \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 70; \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3.9 70; \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 70;
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70;
 
 ## Installing CMake 3.18.4
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
@@ -115,18 +115,20 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG OVTF_BRANCH="master"
+
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
-    git python3.9 python3.9-venv python3-pip; \
-    libsm6 libxext6 libxrender-dev; \
+    git python3.8 python3.8-venv python3-pip \
+    wget libgtk-3-0 libgl1 libsm6; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=ovtf_build /tensorflow_pkg/artifacts/tensorflow/libtensorflow_cc.so.2 /bazel-bin/tensorflow/
 COPY --from=ovtf_build /tensorflow_pkg/artifacts/tensorflow/*whl /
 COPY --from=ovtf_build /opt/intel/openvino_tensorflow/build_cmake/artifacts/*whl /
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 70; \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 70
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70
 
 RUN git clone https://github.com/openvinotoolkit/openvino_tensorflow.git && \
     cd openvino_tensorflow && \
