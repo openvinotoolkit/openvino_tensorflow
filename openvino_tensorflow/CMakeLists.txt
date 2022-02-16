@@ -126,7 +126,6 @@ message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 # First install the libopenvino_tensorflow.so and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
-<<<<<<< HEAD
 # Next install all the other prerequisites
 # if(OS_VERSION STREQUAL "\"centos\"")
 # 	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib64/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
@@ -145,8 +144,6 @@ install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 #   endif()
 # endif()
 
-=======
->>>>>>> 23b9b7fe (Updates to build with OV 2.0 master branch (#252))
 # Install OpenVINO libraries
 if (APPLE)
   set(OCM_LIB libocm.dylib)

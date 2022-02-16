@@ -13,6 +13,7 @@
 
 #include "openvino/opsets/opset8.hpp"
 #include "openvino/pass/constant_folding.hpp"
+#include "openvino/frontend/tensorflow/extension/conversion.hpp"
 
 #include "api.h"
 #include "logging/ovtf_log.h"
@@ -4103,10 +4104,10 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  std::vector<ngraph::PartialShape> indexed_shape;
+  std::vector<ov::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
-    ng::Shape ng_shape;
+    ov::Shape ng_shape;
     TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
     indexed_shape.push_back(ng_shape);
   }
@@ -4149,7 +4150,7 @@ Status Builder::TranslateGraphWithTFFE(
           "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
                       -> ov::OutputVector {
             ov::Output<ov::Node> res;
-            auto element_type = node.get_attribute<ngraph::element::Type>("T");
+            auto element_type = node.get_attribute<ov::element::Type>("T");
             auto index = node.get_attribute<int64_t>("index");
             auto shape = indexed_shape.at(index);
             auto is_const_input = node.get_attribute<bool>("_const_input");
@@ -4158,10 +4159,10 @@ Status Builder::TranslateGraphWithTFFE(
                   node.get_attribute<::tensorflow::TensorProto>("_const_value");
               auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
               ov::Any any_type =
-                  node.get_attribute<ngraph::element::Type>("_const_dtype");
-              auto dt = any_type.as<ngraph::element::Type>();
+                  node.get_attribute<ov::element::Type>("_const_dtype");
+              auto dt = any_type.as<ov::element::Type>();
               switch (dt) {
-                case ngraph::element::Type_t::f32: {
+                case ov::element::Type_t::f32: {
                   vector<float> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<float>(tensor_proto, dt, &const_shape,
@@ -4170,7 +4171,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::f64: {
+                case ov::element::Type_t::f64: {
                   vector<double> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<double>(tensor_proto, dt,
@@ -4179,7 +4180,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::u8: {
+                case ov::element::Type_t::u8: {
                   vector<uint8> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape,
@@ -4188,7 +4189,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::i8: {
+                case ov::element::Type_t::i8: {
                   vector<int8> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<int8>(tensor_proto, dt, &const_shape,
@@ -4197,7 +4198,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::i32: {
+                case ov::element::Type_t::i32: {
                   vector<int32> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<int32>(tensor_proto, dt, &const_shape,
@@ -4206,7 +4207,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::u64: {
+                case ov::element::Type_t::u64: {
                   vector<uint64> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<uint64>(tensor_proto, dt,
@@ -4215,7 +4216,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::i64: {
+                case ov::element::Type_t::i64: {
                   vector<int64> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<int64>(tensor_proto, dt, &const_shape,
@@ -4224,7 +4225,7 @@ Status Builder::TranslateGraphWithTFFE(
                                                                const_vec);
                   break;
                 }
-                case ngraph::element::Type_t::boolean: {
+                case ov::element::Type_t::boolean: {
                   vector<bool> const_vec;
                   ov::Shape const_shape;
                   values_from_tensorproto<bool>(tensor_proto, dt, &const_shape,
@@ -4280,9 +4281,9 @@ Status Builder::TranslateGraphWithTFFE(
   // Apply additional passes on the nGraph function here.
   //
   {
-    ngraph::pass::Manager passes;
+    ov::pass::Manager passes;
     if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
-      passes.register_pass<ngraph::pass::ConstantFolding>();
+      passes.register_pass<ov::pass::ConstantFolding>();
     }
     if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") != "0") {
       passes.register_pass<pass::TransposeSinking>();

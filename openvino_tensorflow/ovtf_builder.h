@@ -13,6 +13,7 @@
 #include "tensorflow/core/graph/graph.h"
 
 #include "openvino/core/validation_util.hpp"
+#include "openvino/frontend/tensorflow/frontend.hpp"
 
 #include "openvino_tensorflow/ovtf_graph_iterator.h"
 
