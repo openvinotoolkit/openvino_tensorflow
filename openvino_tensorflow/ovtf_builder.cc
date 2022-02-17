@@ -4046,13 +4046,11 @@ Status Builder::TranslateGraphWithTFFE(
     const Graph* input_graph, const string name,
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
-    const std::vector<Tensor>& tf_input_tensors,
-    std::vector<int>& const_input_map) {
+    const std::vector<Tensor>& tf_input_tensors) {
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
   // Assign attributes for constant inputs
-  int64_t input_ctr = 0;
   for (const auto n : ordered) {
     if (n->IsSink() || n->IsSource()) {
       continue;
@@ -4065,9 +4063,9 @@ Status Builder::TranslateGraphWithTFFE(
     }
 
     if (n->IsArg()) {
-      bool const_input = false;
+      bool static_input = false;
       try {
-        GetNodeAttr(n->attrs(), "_const_input", &const_input);
+        GetNodeAttr(n->attrs(), "_static_input", &static_input);
       } catch (const std::exception&) {
         OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
       }
@@ -4078,9 +4076,9 @@ Status Builder::TranslateGraphWithTFFE(
         } catch (const std::exception&) {
           OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
         }
-        const_input |= is_variable;
+        static_input |= is_variable;
       }
-      if (const_input) {
+      if (static_input) {
         DataType dtype;
         if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
           return errors::InvalidArgument("No data type defined for _Arg");
@@ -4090,11 +4088,9 @@ Status Builder::TranslateGraphWithTFFE(
           return errors::InvalidArgument("No index defined for _Arg");
         }
         const Tensor tensor = tf_input_tensors[index];
-        n->AddAttr("_const_value", tensor);
-        n->AddAttr("_const_dtype", dtype);
-        const_input_map.push_back(input_ctr);
+        n->AddAttr("_static_value", tensor);
+        n->AddAttr("_static_dtype", dtype);
       }
-      input_ctr++;
     }
   }
 
@@ -4153,13 +4149,13 @@ Status Builder::TranslateGraphWithTFFE(
             auto element_type = node.get_attribute<ov::element::Type>("T");
             auto index = node.get_attribute<int64_t>("index");
             auto shape = indexed_shape.at(index);
-            auto is_const_input = node.get_attribute<bool>("_const_input");
-            if (is_const_input) {
+            auto is_static_input = node.get_attribute<bool>("_static_input");
+            if (is_static_input) {
               ov::Any any_proto =
-                  node.get_attribute<::tensorflow::TensorProto>("_const_value");
+                  node.get_attribute<::tensorflow::TensorProto>("_static_value");
               auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
               ov::Any any_type =
-                  node.get_attribute<ov::element::Type>("_const_dtype");
+                  node.get_attribute<ov::element::Type>("_static_dtype");
               auto dt = any_type.as<ov::element::Type>();
               switch (dt) {
                 case ov::element::Type_t::f32: {
@@ -4242,7 +4238,7 @@ Status Builder::TranslateGraphWithTFFE(
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
-            res.get_rt_info().insert({"index", ov::Any(index)});
+            res.get_node_shared_ptr()->get_rt_info().insert({"index", ov::Any(index)});
             return {res};
           }));
 
@@ -4271,6 +4267,8 @@ Status Builder::TranslateGraphWithTFFE(
   } catch (...) {
     return errors::Internal("Frontend conversion error");
   }
+
+  ng_function->set_friendly_name(name);
 
   ng_func_result_list.resize(ng_function->get_results().size());
   for (int i = 0; i < ng_function->get_results().size(); i++) {

@@ -39,10 +39,6 @@ class Executable {
     }
   }
 
-  void SetConstInputs(const vector<int>& const_inputs) {
-    m_const_inputs = const_inputs;
-  }
-
   void SetOutputShapes(vector<ov::Shape> ng_output_shapes) {
     m_ng_output_shapes = ng_output_shapes;
   }
@@ -60,7 +56,6 @@ class Executable {
   // This holds the parameters we insert for functions with no input parameters
   vector<pair<string, shared_ptr<ov::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;
-  vector<int> m_const_inputs;
   vector<ov::Shape> m_ng_output_shapes;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
