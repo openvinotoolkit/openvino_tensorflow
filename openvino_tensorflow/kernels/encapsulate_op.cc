@@ -262,6 +262,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   Timer create_or_lookup_tensors;
   vector<shared_ptr<ov::Tensor>> ng_inputs;
+  ng_inputs.resize(tf_input_tensors.size());
   int ng_input_tensor_size_in_bytes = 0;
   {
     // Allocate tensors for input arguments.
@@ -292,7 +293,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       std::shared_ptr<ov::Tensor> ng_tensor = make_shared<IETensor>(
           ng_element_type, ng_shape, tf_input_tensors[i].data());
 #endif
-      ng_inputs.push_back(ng_tensor);
+      // ng_inputs.push_back(ng_tensor);
+      ng_inputs[i] = ng_tensor;
     }
   }
 

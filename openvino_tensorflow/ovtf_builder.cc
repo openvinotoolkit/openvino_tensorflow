@@ -4100,7 +4100,7 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  std::vector<ov::PartialShape> indexed_shape;
+  std::vector<ov::Shape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
     ov::Shape ng_shape;
