@@ -4150,6 +4150,7 @@ Status Builder::TranslateGraphWithTFFE(
             auto index = node.get_attribute<int64_t>("index");
             auto shape = indexed_shape.at(index);
             auto is_static_input = node.get_attribute<bool>("_static_input");
+            auto prov_tag = node.get_attribute<std::string>("_prov_tag");
             if (is_static_input) {
               ov::Any any_proto =
                   node.get_attribute<::tensorflow::TensorProto>("_static_value");
@@ -4239,6 +4240,7 @@ Status Builder::TranslateGraphWithTFFE(
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
             res.get_node_shared_ptr()->get_rt_info().insert({"index", ov::Any(index)});
+            res.get_node_shared_ptr()->get_rt_info().insert({"_prov_tag", ov::Any(prov_tag)});
             return {res};
           }));
 

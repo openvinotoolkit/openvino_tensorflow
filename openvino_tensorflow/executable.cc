@@ -199,7 +199,6 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
       OVTF_VLOG(1) << "Skipping unused input " << input_name;
       continue;
     }
-    ie_inputs[input_index] = nullptr;
     ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
     input_names[input_index] = input_name;
   }
@@ -326,10 +325,11 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
 }
 
 void Executable::ExportIR(const string& output_dir) {
-  // if (!m_function || !m_ie_engine) return;
-  // auto& name = m_function->get_friendly_name();
-  // m_network.serialize(output_dir + "/" + name + ".xml",
-  //                    output_dir + "/" + name + ".bin");
+  if (!m_model || !m_ie_engine) return;
+  std::string name = m_model->get_friendly_name();
+  ov::pass::Serialize serializer(output_dir + "/" + name + ".xml",
+                                 output_dir + "/" + name + ".bin");
+  serializer.run_on_model(m_model);
 }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
