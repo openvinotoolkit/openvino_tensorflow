@@ -4067,7 +4067,7 @@ Status Builder::TranslateGraphWithTFFE(
       try {
         GetNodeAttr(n->attrs(), "_static_input", &static_input);
       } catch (const std::exception&) {
-        OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
+        OVTF_VLOG(1) << "Parameter " << n->name() << " is not a static input to any node";
       }
       if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
         bool is_variable = false;
