@@ -4046,6 +4046,7 @@ Status Builder::TranslateGraphWithTFFE(
     const Graph* input_graph, const string name,
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
+    ngraph::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
@@ -4100,7 +4101,7 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  std::vector<ov::PartialShape> indexed_shape;
+  std::vector<ov::Shape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
     ov::Shape ng_shape;
@@ -4270,11 +4271,57 @@ Status Builder::TranslateGraphWithTFFE(
     return errors::Internal("Frontend conversion error");
   }
 
-  ng_function->set_friendly_name(name);
+  // ng_function->set_friendly_name(name);
+  // Get the parameter nodes with non zero dim values or valid dim values
+  auto ng_parameter_list = ng_function->get_parameters();
+  ov::ParameterVector ng_func_parameter_list;
 
-  ng_func_result_list.resize(ng_function->get_results().size());
-  for (int i = 0; i < ng_function->get_results().size(); i++) {
-    ng_func_result_list[i] = ng_function->get_results()[i];
+  auto param_dim_check = [ng_parameter_list](int i) {
+    auto param_shape_list = ng_parameter_list[i]->get_shape();
+    for (auto dim : param_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+  
+  for (int i = 0; i < ng_parameter_list.size(); i++) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+      ng_func_parameter_list.push_back(ng_parameter_list[i]);
+    }
+  }
+
+  // Get the result nodes with valid dim values
+  auto ng_result_list = ng_function->get_results();
+  auto result_dim_check = [ng_result_list](int i) {
+    auto res_shape_list = ng_result_list[i]->get_shape();
+    for (auto dim : res_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
+  for (int i = 0; i < ng_result_list.size(); i++) {
+    if (ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
+      ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
+    }
+  }
+  // ng_func_result_list.resize(ng_function->get_results().size());
+  // for (int i = 0; i < ng_function->get_results().size(); i++) {
+  //   ng_func_result_list[i] = ng_function->get_results()[i];
+  // }
+  //
+
+  // Refine the OpenVINO Model based on refined params and retvals
+  //
+  try {
+    ng_function = make_shared<ov::Model>(ng_func_result_list,
+                                         ng_func_parameter_list, name);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Failed to create OpenVINO Model for " + name +
+                            ": " + string(exp.what()));
   }
 
   //

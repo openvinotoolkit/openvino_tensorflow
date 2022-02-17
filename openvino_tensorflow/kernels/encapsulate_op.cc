@@ -67,6 +67,7 @@ class NGraphEncapsulateOp : public OpKernel {
   std::list<std::string> m_lru;
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
   ngraph::ResultVector ng_result_list;
+  ngraph::ResultVector zero_dim_outputs;
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
@@ -262,6 +263,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   Timer create_or_lookup_tensors;
   vector<shared_ptr<ov::Tensor>> ng_inputs;
+  ng_inputs.resize(tf_input_tensors.size());
   int ng_input_tensor_size_in_bytes = 0;
   {
     // Allocate tensors for input arguments.
@@ -292,7 +294,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       std::shared_ptr<ov::Tensor> ng_tensor = make_shared<IETensor>(
           ng_element_type, ng_shape, tf_input_tensors[i].data());
 #endif
-      ng_inputs.push_back(ng_tensor);
+      // ng_inputs.push_back(ng_tensor);
+      ng_inputs[i] = ng_tensor;
     }
   }
 
@@ -382,6 +385,20 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         output_mappings[i] = j;
         ng_func_outputs[j++] = ng_outputs[i];
       }
+    }
+    for (auto i = 0; i < zero_dim_outputs.size(); i++) {
+      auto ng_element = zero_dim_outputs[i];
+      ov::Any any = ng_element->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+
+      // Create the TF output tensor
+      auto ng_shape = ng_element->get_shape();
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
   OVTF_VLOG(4)
@@ -584,10 +601,11 @@ Status NGraphEncapsulateOp::GetExecutable(
     util::MemoryProfile(vm0, rss0);
 
     ng_result_list.clear();
+    zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
-        ng_result_list, tf_input_tensors));
+        ng_result_list, zero_dim_outputs, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
     std::vector<ov::Shape> ng_output_shapes;
