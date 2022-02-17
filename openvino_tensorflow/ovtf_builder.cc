@@ -4046,6 +4046,7 @@ Status Builder::TranslateGraphWithTFFE(
     const Graph* input_graph, const string name,
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& ng_func_result_list,
+    ngraph::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
@@ -4303,6 +4304,8 @@ Status Builder::TranslateGraphWithTFFE(
     if (ng_result_list[i]->is_dynamic() ||
         !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
       ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
   // ng_func_result_list.resize(ng_function->get_results().size());
