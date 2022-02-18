@@ -15,7 +15,7 @@ Launch the Jupyter server with
 
 To get iGPU,and MYRIAD support
 
-	$ docker run -it -p 8888:8888 openvino_tensorflow/ubuntu20_runtime:1.1.0 -v /dev:/dev --network=host --privileged
+	$ docker run -it -p 8888:8888 -v /dev:/dev --network=host --privileged openvino_tensorflow/ubuntu20_runtime:1.1.0
 
 Launches a Jupyter server by default. Change runtime target to /bin/bash for container shell
 
@@ -23,7 +23,7 @@ Launches a Jupyter server by default. Change runtime target to /bin/bash for con
 
 If execution fails on iGPU for 10th and 11th Generation Intel devices, provide docker build arg INTEL_OPENCL as 20.35.17767 
 
-	$ docker build -t openvino_tensorflow/ubuntu20_runtime:1.1.0 --build-arg INTEL_OPENCV=20.35.17767 - < docker/ubuntu20/openvino_tensorflow_runtime.dockerfile
+	$ docker build -t openvino_tensorflow/ubuntu20_runtime:1.1.0 --build-arg INTEL_OPENCV=20.35.17767 - < ubuntu20/openvino_tensorflow_cgv_runtime_1.1.0.dockerfile
 
 ---
 \* Other names and brands may be claimed as the property of others.
