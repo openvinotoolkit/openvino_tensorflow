@@ -5,6 +5,7 @@
 FROM ubuntu:20.04 AS base
 ################################################################################
 
+# Stage 1 uses OpenVINO release package to prepare runtime libraries and drivers for GPU, and VPU
 # hadolint ignore=DL3002
 USER root
 WORKDIR /
@@ -129,6 +130,7 @@ RUN /usr/bin/install -c -m 644 libusb-1.0.pc '/usr/local/lib/pkgconfig' && \
     cp ${INTEL_OPENVINO_DIR}/deployment_tools/inference_engine/external/97-myriad-usbboot.rules /etc/udev/rules.d/ && \
     ldconfig
 
+# OpenVINO-TensorFlow is cloned for notebooks
 WORKDIR /opt/intel/
 RUN git clone https://github.com/openvinotoolkit/openvino_tensorflow.git && \
     cd openvino_tensorflow && \
