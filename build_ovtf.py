@@ -198,7 +198,7 @@ def main():
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
     if (arguments.openvino_version not in [
-            "master", "2022.1", "2021.4.2", "2021.4.1", "2021.4", "2021.3",
+            "master", "2022.1.0-6682-121d59aa80a", "2022.1", "2021.4.2", "2021.4.1", "2021.4", "2021.3",
             "2021.2"
     ]):
         raise AssertionError(
@@ -210,7 +210,7 @@ def main():
             raise AssertionError("Path doesn't exist {0}".format(
                 arguments.use_openvino_from_location))
         ver_file = arguments.use_openvino_from_location + \
-                      '/deployment_tools/inference_engine/version.txt'
+                      '/runtime/version.txt'
         if not os.path.exists(ver_file):
             raise AssertionError("Path doesn't exist {0}".format(ver_file))
         with open(ver_file) as f:
@@ -536,6 +536,8 @@ def main():
         )
         if (arguments.openvino_version == "master"):
             openvino_release_tag = "master"
+        elif (arguments.openvino_version == "2022.1.0-6682-121d59aa80a"):
+            openvino_release_tag = "2022.1.0-6682-121d59aa80a"
         elif (arguments.openvino_version == "2022.1"):
             openvino_release_tag = "2022.1"
         elif (arguments.openvino_version == "2021.4.2"):

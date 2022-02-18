@@ -190,6 +190,8 @@ message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 #TODO: Change the tag when OV_2022.1 branch is released
 if (${OPENVINO_VERSION} MATCHES "master")
   add_definitions(-DOPENVINO_2021_4_2=1)
+elseif (${OPENVINO_VERSION} MATCHES "2022.1.0-6682-121d59aa80a")
+  add_definitions(-DOPENVINO_2021_4_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.1")
   add_definitions(-DOPENVINO_2022_1=1)
 elseif (${OPENVINO_VERSION} MATCHES "2021.4.2")
