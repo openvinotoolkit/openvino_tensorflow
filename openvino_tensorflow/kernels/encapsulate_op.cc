@@ -66,7 +66,6 @@ class NGraphEncapsulateOp : public OpKernel {
   std::vector<bool> m_input_is_static;
   std::list<std::string> m_lru;
   std::unordered_map<std::string, std::shared_ptr<Executable>> m_ng_exec_map;
-  ngraph::ResultVector ng_result_list;
   ngraph::ResultVector zero_dim_outputs;
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
@@ -294,7 +293,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       std::shared_ptr<ov::Tensor> ng_tensor = make_shared<IETensor>(
           ng_element_type, ng_shape, tf_input_tensors[i].data());
 #endif
-      // ng_inputs.push_back(ng_tensor);
       ng_inputs[i] = ng_tensor;
     }
   }
@@ -312,19 +310,18 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto dev_type = backend->GetDeviceType();
   std::string precision = dev_type.substr(dev_type.find("_") + 1);
   std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(results.size(), nullptr);
-  std::vector<shared_ptr<ov::Tensor>> ng_outputs(ng_result_list.size(),
+  std::vector<shared_ptr<ov::Tensor>> ng_outputs(results.size(),
                                                  nullptr);
   std::vector<int> dyn_shape_tensors;
-  std::vector<int> output_mappings(ng_result_list.size(), -1);
-  auto ng_output_shapes = ng_exec->GetOutputShapes();
+  std::vector<int> output_mappings(results.size(), -1);
   int j = 0;
 #if defined(OPENVINO_2021_2)
   if (device != "MYRIAD" && device != "HDDL") {
 #else
   if (device != "HDDL") {
 #endif
-    for (auto i = 0; i < ng_result_list.size(); i++) {
-      auto ng_element = ng_result_list[i];
+    for (auto i = 0; i < results.size(); i++) {
+      auto ng_element = results[i];
       if (ng_element->get_output_partial_shape(0).is_dynamic()) {
         OVTF_VLOG(4)
             << "NGraphEncapsulateOp::Compute skipping output allocation for "
@@ -340,7 +337,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       int64_t output_index = any.as<int64_t>();
 
       // Create the TF output tensor
-      auto ng_shape = ng_output_shapes[i];
+      auto ng_shape = ng_element->get_shape();
       TensorShape tf_shape;
       for (auto dim : ng_shape) {
         tf_shape.AddDim(dim);
@@ -458,56 +455,31 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
+      ov::Any any = results[i]->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+
       // Zero-copy IE tensor to TF
       IETensorBuffer* tf_buffer =
           new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-      Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
-      ctx->set_output(i, tf_tensor);
+      Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape, tf_buffer);
+      ctx->set_output(output_index, tf_tensor);
     }
   } else {
-    auto out_shape_check = [ng_output_shapes](int i) {
-      if (ng_output_shapes[i].size() > 0) {
-        auto out_shape_list = ng_output_shapes[i];
-        for (auto dim : out_shape_list) {
-          if (dim == 0) return true;
-        }
-      }
-      return false;
-    };
-    int j = 0;
-    for (int i = 0; i < ng_result_list.size(); i++) {
-      if (out_shape_check(i)) {
-        auto ng_shape = ng_output_shapes[i];
-        ov::element::Type expected_elem_type;
-        auto ng_element = ng_result_list[i];
-        auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(i), &expected_elem_type));
-        OP_REQUIRES(
-            ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
-                             "the element type expected by TensorFlow"));
-        TensorShape tf_shape;
-        for (auto dim : ng_shape) {
-          tf_shape.AddDim(dim);
-        }
+    for (int i = 0; i < results.size(); i++) {
+        auto ng_output = ng_func_outputs[i];
 
-        Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
-      } else {
-        auto ng_output = ng_func_outputs[j++];
-
-        auto ng_shape = ng_output_shapes[i];
-        if (ng_result_list[i]->is_dynamic()) {
+        auto ng_shape = ng_output->get_shape();
+        if (results[i]->is_dynamic()) {
           ng_shape = ng_output->get_shape();
         }
         ov::element::Type expected_elem_type;
-        auto ng_element = ng_result_list[i];
+        auto ng_element = results[i];
+        ov::Any any = ng_element->get_rt_info()["index"];
+        int64_t output_index = any.as<int64_t>();
         auto ng_element_type = ng_element->get_element_type();
         OP_REQUIRES_OK(ctx,
                        util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(i), &expected_elem_type));
+                           ctx->expected_output_dtype(output_index), &expected_elem_type));
         OP_REQUIRES(
             ctx, ng_element_type == expected_elem_type,
             errors::Internal("Element type inferred by nGraph does not match "
@@ -518,7 +490,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         }
 
         Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+        OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
         auto size = ng_output->get_byte_size();
         auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
@@ -532,7 +504,20 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                   ((uint8_t*)(ng_output->data())) + size,
                   (uint8_t*)(output_tensor->data()));
 #endif
+    }
+    for (auto i = 0; i < zero_dim_outputs.size(); i++) {
+      auto ng_element = zero_dim_outputs[i];
+      ov::Any any = ng_element->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+
+      // Create the TF output tensor
+      auto ng_shape = ng_element->get_shape();
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
       }
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
 
@@ -600,23 +585,12 @@ Status NGraphEncapsulateOp::GetExecutable(
     long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
     util::MemoryProfile(vm0, rss0);
 
-    ng_result_list.clear();
     zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
     TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
-        ng_result_list, zero_dim_outputs, tf_input_tensors));
+        zero_dim_outputs, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
-
-    std::vector<ov::Shape> ng_output_shapes;
-    ng_output_shapes.resize(ng_result_list.size());
-    for (int i = 0; i < ng_result_list.size(); i++) {
-      if (ng_result_list[i]->is_dynamic()) {
-        ng_output_shapes[i] = ov::Shape{};
-      } else {
-        ng_output_shapes[i] = ng_result_list[i]->get_shape();
-      }
-    }
 
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;
@@ -641,7 +615,6 @@ Status NGraphEncapsulateOp::GetExecutable(
     }
 
     m_ng_exec_map[signature] = ng_exec;
-    ng_exec->SetOutputShapes(ng_output_shapes);
 
     m_lru.push_front(signature);
 

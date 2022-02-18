@@ -4045,7 +4045,6 @@ Status Builder::TranslateGraphWithTFFE(
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
     std::shared_ptr<ngraph::Function>& ng_function,
-    ngraph::ResultVector& ng_func_result_list,
     ngraph::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   vector<Node*> ordered;
@@ -4271,7 +4270,6 @@ Status Builder::TranslateGraphWithTFFE(
     return errors::Internal("Frontend conversion error");
   }
 
-  // ng_function->set_friendly_name(name);
   // Get the parameter nodes with non zero dim values or valid dim values
   auto ng_parameter_list = ng_function->get_parameters();
   ov::ParameterVector ng_func_parameter_list;
@@ -4300,6 +4298,7 @@ Status Builder::TranslateGraphWithTFFE(
     return false;
   };
 
+  ov::ResultVector ng_func_result_list;
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (ng_result_list[i]->is_dynamic() ||
         !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
@@ -4308,11 +4307,6 @@ Status Builder::TranslateGraphWithTFFE(
       zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
-  // ng_func_result_list.resize(ng_function->get_results().size());
-  // for (int i = 0; i < ng_function->get_results().size(); i++) {
-  //   ng_func_result_list[i] = ng_function->get_results()[i];
-  // }
-  //
 
   // Refine the OpenVINO Model based on refined params and retvals
   //

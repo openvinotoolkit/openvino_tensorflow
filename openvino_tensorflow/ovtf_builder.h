@@ -40,7 +40,6 @@ class Builder {
       const std::vector<const Tensor*>& static_input_map,
       const Graph* input_graph, const string name,
       std::shared_ptr<ngraph::Function>& ng_function,
-      ngraph::ResultVector& ng_func_result_list,
       ngraph::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 
