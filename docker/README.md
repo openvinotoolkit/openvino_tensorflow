@@ -2,8 +2,8 @@
 # Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
 
 
-We provide Dockerfiles for Ubuntu* 20.04 and Ubuntu* 18.04 which can be used to build runtime Docker* images for OpenVINO™ integration with TensorFlow on CPU, GPU, and VPU.
-They contain all required runtime python packages, and shared libraries to support execution of a TensorFlow Python app. By default, it hosts a Jupyter server with an Image Classification and an Object Detection sample that demonstrate the performance benefits of using OpenVINO™ integration with TensorFlow on the CPU.
+We provide Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04 which can be used to build runtime Docker* images for OpenVINO™ integration with TensorFlow on CPU, GPU, and VPU.
+They contain all required runtime python packages, and shared libraries to support execution of a TensorFlow Python app with the OpenVINO™ backend. By default, it hosts a Jupyter server with an Image Classification and an Object Detection sample that demonstrate the performance benefits of using OpenVINO™ integration with TensorFlow on the CPU.
 
 Build the docker image
 
