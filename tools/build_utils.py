@@ -856,13 +856,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
             "-DCMAKE_INSTALL_PREFIX=" + install_location
         ])
 
-    if platform.system() == 'Linux':
-        openvino_cmake_flags.extend([
-            "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
-            + target_arch + atom_flags
-        ])
-    else:
-        openvino_cmake_flags.extend(
+    openvino_cmake_flags.extend(
             ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
 
     if debug_enabled:
