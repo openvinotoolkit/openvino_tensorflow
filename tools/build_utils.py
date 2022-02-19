@@ -319,7 +319,7 @@ def build_tensorflow(tf_version,
     os.environ["TF_NEED_TENSORRT"] = "0"
     os.environ["TF_DOWNLOAD_CLANG"] = "0"
     os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
-    os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch + " -Wno-sign-compare"
+    os.environ["CC_OPT_FLAGS"] = "-Wno-sign-compare"
     if (target_arch == "silvermont"):
         os.environ[
             "CC_OPT_FLAGS"] = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
