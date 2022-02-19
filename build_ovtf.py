@@ -568,8 +568,7 @@ def main():
         ]
     else:
         openvino_tf_cmake_flags = [
-            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
-            "-DCMAKE_CXX_FLAGS=-march=" + target_arch + atom_flags,
+            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location
         ]
 
     openvino_artifacts_dir = ""
