@@ -103,10 +103,7 @@ const int IE_Backend_Engine::get_input_idx(const std::string name) const {
 
 const int IE_Backend_Engine::get_output_idx(const std::string name) const {
   for (int i = 0; i < m_model->outputs().size(); i++) {
-    if (m_model->outputs()[i]
-            .get_node()
-            ->get_input_node_shared_ptr(0)
-            ->get_friendly_name() == name) {
+    if (m_model->outputs()[i].get_node()->get_friendly_name() == name) {
       return i;
     }
   }
