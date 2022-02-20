@@ -138,16 +138,16 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; 
 
 ENV INTEL_OPENVINO_DIR /opt/intel/openvino
 
-COPY --from=ovtf_build /opt/intel/openvino_tensorflow/ /opt/intel/openvino_tensorflow/
+COPY --from=ovtf_build /opt/intel/openvino_tensorflow/ /home/openvino/openvino_tensorflow/
 
-WORKDIR /opt/intel/openvino_tensorflow/
+WORKDIR /home/openvino/openvino_tensorflow/
 
 RUN python3 -m pip install --upgrade pip; \
     python3 -m pip install --no-cache-dir build_artifacts/openvino_tensorflow*whl build_artifacts/tensorflow/tensorflow*whl; \
     python3 -m pip install --no-cache-dir -r examples/requirements.txt; \
     python3 -m pip install --upgrade numpy jupyter;
 
-WORKDIR /opt/intel/openvino_tensorflow/examples/notebooks/
+WORKDIR /home/openvino/openvino_tensorflow/examples/notebooks/
 
 ## Creating a shell script file which will be executed at the end to activate the environment and run jupyter notebook and
 ## Granting execution permission to shell script
