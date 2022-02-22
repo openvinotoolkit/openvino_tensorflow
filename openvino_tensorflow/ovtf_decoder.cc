@@ -205,13 +205,13 @@ const std::string& OVTFDecoder::get_op_name() const {
 
 vector<::tensorflow::AttrValue> OVTFDecoder::decode_attribute_helper(
     const string& name) const {
-    auto attr_map = m_node_def->attr();
-    if (attr_map.contains(name)) {
-        auto value = m_node_def->attr().at(name);
-        return {value};
-    } else {
-        return {};
-    }
+  auto attr_map = m_node_def->attr();
+  if (attr_map.contains(name)) {
+    auto value = m_node_def->attr().at(name);
+    return {value};
+  } else {
+    return {};
+  }
 }
 
 }  // namespace openvino_tensorflow

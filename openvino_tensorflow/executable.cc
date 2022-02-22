@@ -132,13 +132,13 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
     model->validate_nodes_and_infer_types();
 
     auto proc = ov::preprocess::PrePostProcessor(model);
-    for (int i=0; i<model->inputs().size(); i++) {
+    for (int i = 0; i < model->inputs().size(); i++) {
       if (model->outputs()[i].get_element_type() == ov::element::f16) {
         proc.input(i).tensor().set_element_type(ov::element::f32);
         proc.input(i).preprocess().convert_element_type(ov::element::f16);
       }
     }
-    for (int i=0; i<model->outputs().size(); i++) {
+    for (int i = 0; i < model->outputs().size(); i++) {
       if (model->outputs()[i].get_element_type() == ov::element::f16) {
         proc.output(i).postprocess().convert_element_type(ov::element::f32);
       }
@@ -222,19 +222,6 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
     outputs.resize(model->outputs().size(), nullptr);
   }
 
-  auto get_output_name = [](std::shared_ptr<ov::Node> node) {
-    // Since IE has no "result" nodes, we set the blob corresponding to the
-    // parent of this result node
-    auto parent = node->input_value(0).get_node_shared_ptr();
-    auto name = parent->get_friendly_name();
-    // if parent has multiple outputs, correctly identify the output feeding
-    // into this result
-    if (parent->outputs().size() > 1) {
-      name += "." + to_string(node->input_value(0).get_index());
-    }
-    return name;
-  };
-
   //  Prepare output blobs
   auto results = model->get_results();
   std::vector<std::shared_ptr<IETensor>> ie_outputs(outputs.size());
@@ -243,7 +230,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
     if (outputs[i] != nullptr) {
       ie_outputs[i] = static_pointer_cast<IETensor>(outputs[i]);
     }
-    output_names[i] = get_output_name(results[i]);
+    output_names[i] = results[i]->get_friendly_name();
   }
 
   if (multi_req_execution) {

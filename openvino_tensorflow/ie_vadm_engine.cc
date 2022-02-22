@@ -18,7 +18,7 @@ IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
   // TODO: Paremeter layouts should be set based on the
   // destination op types
   m_has_batch = false;
-  for (int i=0; i<m_model->get_parameters().size(); i++) {
+  for (int i = 0; i < m_model->get_parameters().size(); i++) {
     if (m_model->get_parameters()[i]->get_shape().size() == 5) {
       m_model->get_parameters()[i]->set_layout("NCDHW");
       m_has_batch = true;
@@ -41,7 +41,7 @@ IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
     }
   }
   if (m_has_batch) {
-    for (int i=0; i<m_model->get_results().size(); i++) {
+    for (int i = 0; i < m_model->get_results().size(); i++) {
       if (m_model->get_results()[i]->get_shape().size() < 2) {
         m_has_batch = false;
         break;

@@ -17,7 +17,6 @@
 
 #include "openvino_tensorflow/ovtf_graph_iterator.h"
 
-
 namespace tensorflow {
 namespace openvino_tensorflow {
 
@@ -43,13 +42,13 @@ class Builder {
       ngraph::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 
-  using OpMap = std::unordered_map<std::string,
-                                   std::vector<ov::Output<ov::Node>>>;
-  using ConstMap = std::map<
-      DataType,
-      std::pair<std::function<Status(const Node*, ov::element::Type,
-                                     ov::Output<ov::Node>&)>,
-                const ov::element::Type>>;
+  using OpMap =
+      std::unordered_map<std::string, std::vector<ov::Output<ov::Node>>>;
+  using ConstMap =
+      std::map<DataType,
+               std::pair<std::function<Status(const Node*, ov::element::Type,
+                                              ov::Output<ov::Node>&)>,
+                         const ov::element::Type>>;
   static const Builder::ConstMap& TF_NGRAPH_CONST_MAP();
 
   template <typename T>
@@ -171,8 +170,8 @@ class Builder {
                 "Encountered unknown element type on an empty tensor_proto");
         }
         if (val_size == 0) {
-          (*values)[i] =  static_cast<T>(0);
-        }else if (i < val_size) {
+          (*values)[i] = static_cast<T>(0);
+        } else if (i < val_size) {
           (*values)[i] = val_i;
           val_lastsaved = val_i;
         } else {

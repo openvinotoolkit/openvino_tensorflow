@@ -11,9 +11,9 @@
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "openvino/frontend/tensorflow/extension/conversion.hpp"
 #include "openvino/opsets/opset8.hpp"
 #include "openvino/pass/constant_folding.hpp"
-#include "openvino/frontend/tensorflow/extension/conversion.hpp"
 
 #include "api.h"
 #include "logging/ovtf_log.h"
@@ -4067,7 +4067,8 @@ Status Builder::TranslateGraphWithTFFE(
       try {
         GetNodeAttr(n->attrs(), "_static_input", &static_input);
       } catch (const std::exception&) {
-        OVTF_VLOG(1) << "Parameter " << n->name() << " is not a static input to any node";
+        OVTF_VLOG(1) << "Parameter " << n->name()
+                     << " is not a static input to any node";
       }
       if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
         bool is_variable = false;
@@ -4152,8 +4153,8 @@ Status Builder::TranslateGraphWithTFFE(
             auto is_static_input = node.get_attribute<bool>("_static_input");
             auto prov_tag = node.get_attribute<std::string>("_prov_tag");
             if (is_static_input) {
-              ov::Any any_proto =
-                  node.get_attribute<::tensorflow::TensorProto>("_static_value");
+              ov::Any any_proto = node.get_attribute<::tensorflow::TensorProto>(
+                  "_static_value");
               auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
               ov::Any any_type =
                   node.get_attribute<ov::element::Type>("_static_dtype");
@@ -4239,8 +4240,10 @@ Status Builder::TranslateGraphWithTFFE(
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
-            res.get_node_shared_ptr()->get_rt_info().insert({"index", ov::Any(index)});
-            res.get_node_shared_ptr()->get_rt_info().insert({"_prov_tag", ov::Any(prov_tag)});
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"index", ov::Any(index)});
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"_prov_tag", ov::Any(prov_tag)});
             return {res};
           }));
 
@@ -4281,7 +4284,7 @@ Status Builder::TranslateGraphWithTFFE(
     }
     return false;
   };
-  
+
   for (int i = 0; i < ng_parameter_list.size(); i++) {
     if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);

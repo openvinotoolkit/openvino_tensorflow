@@ -310,8 +310,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto dev_type = backend->GetDeviceType();
   std::string precision = dev_type.substr(dev_type.find("_") + 1);
   std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(results.size(), nullptr);
-  std::vector<shared_ptr<ov::Tensor>> ng_outputs(results.size(),
-                                                 nullptr);
+  std::vector<shared_ptr<ov::Tensor>> ng_outputs(results.size(), nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(results.size(), -1);
   int j = 0;
@@ -343,7 +342,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
       Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
       // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected
@@ -351,9 +351,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       auto ng_element_type = ng_element->get_element_type();
       if (ng_element_type == ov::element::Type_t::f16 && precision == "FP16")
         ng_element_type = ov::element::Type_t::f32;
-      OP_REQUIRES_OK(ctx,
-                     util::TFDataTypeToNGraphElementType(
-                         ctx->expected_output_dtype(output_index), &expected_elem_type));
+      OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
+                              ctx->expected_output_dtype(output_index),
+                              &expected_elem_type));
 
       OP_REQUIRES(
           ctx, ng_element_type == expected_elem_type,
@@ -395,7 +395,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
       Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
   OVTF_VLOG(4)
@@ -461,48 +462,50 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // Zero-copy IE tensor to TF
       IETensorBuffer* tf_buffer =
           new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-      Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape, tf_buffer);
+      Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape,
+                       tf_buffer);
       ctx->set_output(output_index, tf_tensor);
     }
   } else {
     for (int i = 0; i < results.size(); i++) {
-        auto ng_output = ng_func_outputs[i];
+      auto ng_output = ng_func_outputs[i];
 
-        auto ng_shape = ng_output->get_shape();
-        if (results[i]->is_dynamic()) {
-          ng_shape = ng_output->get_shape();
-        }
-        ov::element::Type expected_elem_type;
-        auto ng_element = results[i];
-        ov::Any any = ng_element->get_rt_info()["index"];
-        int64_t output_index = any.as<int64_t>();
-        auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(output_index), &expected_elem_type));
-        OP_REQUIRES(
-            ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
-                             "the element type expected by TensorFlow"));
-        TensorShape tf_shape;
-        for (auto dim : ng_shape) {
-          tf_shape.AddDim(dim);
-        }
+      auto ng_shape = ng_output->get_shape();
+      if (results[i]->is_dynamic()) {
+        ng_shape = ng_output->get_shape();
+      }
+      ov::element::Type expected_elem_type;
+      auto ng_element = results[i];
+      ov::Any any = ng_element->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+      auto ng_element_type = ng_element->get_element_type();
+      OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
+                              ctx->expected_output_dtype(output_index),
+                              &expected_elem_type));
+      OP_REQUIRES(
+          ctx, ng_element_type == expected_elem_type,
+          errors::Internal("Element type inferred by nGraph does not match "
+                           "the element type expected by TensorFlow"));
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
 
-        Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
-        auto size = ng_output->get_byte_size();
-        auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+      auto size = ng_output->get_byte_size();
+      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
 
 #if TF_VERSION < 2
-        std::copy((uint8_t*)(ng_output->data()),
-                  ((uint8_t*)(ng_output->data())) + size,
-                  (uint8_t**)DMAHelper::base(output_tensor));
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t**)DMAHelper::base(output_tensor));
 #else
-        std::copy((uint8_t*)(ng_output->data()),
-                  ((uint8_t*)(ng_output->data())) + size,
-                  (uint8_t*)(output_tensor->data()));
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t*)(output_tensor->data()));
 #endif
     }
     for (auto i = 0; i < zero_dim_outputs.size(); i++) {
@@ -517,7 +520,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
       Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
 
