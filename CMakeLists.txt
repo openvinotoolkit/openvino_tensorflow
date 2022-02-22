@@ -188,7 +188,7 @@ message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 
 #TODO: Change the tag when OV_2022.1 branch is released
-if (${OPENVINO_VERSION} MATCHES "master")
+if (${OPENVINO_VERSION} MATCHES "tf_fe/protobuf_revert")
   add_definitions(-DOPENVINO_2021_4_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.1.0-6682-121d59aa80a")
   add_definitions(-DOPENVINO_2021_4_2=1)
