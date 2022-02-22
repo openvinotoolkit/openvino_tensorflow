@@ -140,6 +140,8 @@ ENV INTEL_OPENVINO_DIR /opt/intel/openvino
 
 COPY --from=ovtf_build /opt/intel/openvino_tensorflow/ /home/openvino/openvino_tensorflow/
 
+RUN chown openvino -R /home/openvino
+
 WORKDIR /home/openvino/openvino_tensorflow/
 
 RUN python3 -m pip install --upgrade pip; \
