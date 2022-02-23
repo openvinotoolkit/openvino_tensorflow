@@ -8,6 +8,7 @@
 
 #include <ostream>
 #include <vector>
+#include <mutex>
 
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
@@ -188,6 +189,7 @@ class Builder {
   // Frontend
   static std::string m_tf_conversion_extensions_lib_path;
   static ov::frontend::FrontEnd::Ptr m_frontend_ptr;
+  static std::mutex m_translate_lock_;
 };
 
 }  // namespace openvino_tensorflow
