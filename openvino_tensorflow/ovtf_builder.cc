@@ -4030,6 +4030,8 @@ Status Builder::TranslateGraph(
   return Status::OK();
 }
 
+std::mutex Builder::m_translate_lock_;
+
 // Initialize the lib path as empty string
 std::string Builder::m_tf_conversion_extensions_lib_path = "";
 
@@ -4047,6 +4049,7 @@ Status Builder::TranslateGraphWithTFFE(
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
+  std::lock_guard<std::mutex> lock(m_translate_lock_);
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
