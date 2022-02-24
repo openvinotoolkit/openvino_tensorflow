@@ -26,7 +26,8 @@ IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape_,
 IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape)
     : ov::Tensor(element_type, shape) {}
 
-//IETensor::IETensor(const ov::element::Type& element_type, const PartialShape& shape)
+// IETensor::IETensor(const ov::element::Type& element_type, const PartialShape&
+// shape)
 //    : ov::Tensor(element_type, shape) {
 //  throw runtime_error("partial shapes not supported.");
 //}

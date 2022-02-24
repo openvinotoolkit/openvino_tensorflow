@@ -17,8 +17,9 @@ IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
     : IE_Backend_Engine(model, "HDDL"), m_orig_batch_size(0) {
   // FIXME: Paremeter layouts should be set based on the
   // destination op types
-  bool has_batch = false;;
-  for (int i=0; i<m_model->get_parameters().size(); i++) {
+  bool has_batch = false;
+  ;
+  for (int i = 0; i < m_model->get_parameters().size(); i++) {
     if (m_model->get_parameters()[i]->get_shape().size() == 5) {
       m_model->get_parameters()[i]->set_layout("NCDHW");
       has_batch = true;
@@ -59,8 +60,8 @@ void IE_VADM_Engine::infer(
 
   int multi_req_support = false;
   int tmp_batch = 0;
-  if (m_multi_req_execution && m_orig_batch_size > 0
-          && hoisted_params.size() == 0) {
+  if (m_multi_req_execution && m_orig_batch_size > 0 &&
+      hoisted_params.size() == 0) {
     multi_req_support = true;
     for (int i = 0; i < inputs.size(); i++) {
       if (inputs[i] == nullptr) {

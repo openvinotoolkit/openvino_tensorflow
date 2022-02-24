@@ -18,14 +18,12 @@ IE_Backend_Engine::IE_Backend_Engine(std::shared_ptr<ov::Model> model,
     : m_model(model),
       m_device(device),
       m_multi_req_execution(false),
-      m_network_ready(false) {
-}
+      m_network_ready(false) {}
 
 IE_Backend_Engine::~IE_Backend_Engine() {}
 
 void IE_Backend_Engine::load_network() {
   if (m_network_ready) return;
-
 
   if (m_device == "MYRIAD") {
     // Set MYRIAD configurations

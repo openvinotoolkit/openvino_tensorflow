@@ -159,11 +159,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
-    //disable TopKV2 as of now as it impacts performance for TF_HUB object detection models
+    // disable TopKV2 as of now as it impacts performance for TF_HUB object
+    // detection models
     disabled_ops_set.insert("TopKV2");
-    for (auto itr = disabled_ops_set.begin(); itr!=disabled_ops_set.end(); itr++) {
-        OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
-    } 
+    for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
+         itr++) {
+      OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
+    }
 
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void*> nodes_list = FC.MarkSupportedNodes();
