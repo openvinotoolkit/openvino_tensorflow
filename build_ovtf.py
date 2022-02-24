@@ -210,7 +210,7 @@ def main():
             raise AssertionError("Path doesn't exist {0}".format(
                 arguments.use_openvino_from_location))
         ver_file = arguments.use_openvino_from_location + \
-                      '/deployment_tools/inference_engine/version.txt'
+                      '/runtime/version.txt'
         if not os.path.exists(ver_file):
             raise AssertionError("Path doesn't exist {0}".format(ver_file))
         with open(ver_file) as f:
@@ -586,8 +586,10 @@ def main():
         openvino_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     if (platform.system() == 'Windows'):
-        openvino_tf_cmake_flags.extend(
-            ["-DOPENVINO_ARTIFACTS_DIR='" + openvino_artifacts_dir + "'"])
+        openvino_tf_cmake_flags.extend([
+            "-DOPENVINO_ARTIFACTS_DIR='" + openvino_artifacts_dir.replace(
+                "\\", "/") + "'"
+        ])
     else:
         openvino_tf_cmake_flags.extend(
             ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])

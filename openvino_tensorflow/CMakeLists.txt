@@ -125,7 +125,7 @@ endif()
 
 if(WIN32)
   set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release/)
-  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/external/tbb/bin/)
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
   set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/)
