@@ -1,14 +1,13 @@
 diff --git a/src/frontends/tensorflow/src/frontend.cpp b/src/frontends/tensorflow/src/frontend.cpp
-index f63037414..9f242b53a 100644
+index 06944d27e..752572cac 100644
 --- a/src/frontends/tensorflow/src/frontend.cpp
 +++ b/src/frontends/tensorflow/src/frontend.cpp
-@@ -108,6 +108,9 @@ void FrontEnd::translate_graph(const ov::frontend::InputModel::Ptr& model,
-         // prepare a list of OV node inputs for each node
-         ov::OutputVector ng_inputs;
-         for (size_t input_port_idx = 0; input_port_idx < operation_decoder->get_input_size(); ++input_port_idx) {
-+            if (operation_decoder->get_op_type() == "Const") {
-+                break;
-+            }
-             std::string producer_name;
-             size_t producer_port_idx;
-             try {
+@@ -183,7 +183,7 @@ void FrontEnd::translate_graph(const ov::frontend::InputModel::Ptr& model,
+                 results.push_back(result);
+             } else {
+                 auto param = std::dynamic_pointer_cast<ov::opset8::Parameter>(output.get_node_shared_ptr());
+-                if (param && operation_decoder->get_op_type() != "Identity") {
++                if (param && operation_decoder->get_op_type() != "Identity" & operation_decoder->get_op_type() != "FusedBatchNormV3") {
+                     params.push_back(param);
+                 }
+                 ng_op_map[operation_name].push_back(output);
