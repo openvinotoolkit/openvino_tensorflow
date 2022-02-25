@@ -15,7 +15,7 @@ RUN git clone https://github.com/tensorflow/tensorflow/ /tensorflow/
 
 WORKDIR /tensorflow/
 
-RUN git checkout v2.7.0
+RUN git checkout v2.8.0
 
 COPY abi_flag.patch /tensorflow/
 

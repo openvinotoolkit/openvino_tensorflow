@@ -51,8 +51,8 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.7.0"
-    ovtf_version = "v1.1.0"
+    tf_version = "v2.8.0"
+    ovtf_version = "v2.0.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -333,7 +333,7 @@ def main():
         if (platform.system() == 'Windows'):
             tf_whl = os.path.abspath(
                 arguments.use_tensorflow_from_location +
-                "\\\\tensorflow\\\\tensorflow-2.7.0-cp39-cp39-win_amd64.whl")
+                "\\\\tensorflow\\\\tensorflow-2.8.0-cp39-cp39-win_amd64.whl")
             command_executor([
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
@@ -393,7 +393,7 @@ def main():
                     if tags.interpreter == "cp39":
                         command_executor([
                             "pip", "install", "--force-reinstall",
-                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl"
+                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow-2.8.0-cp39-cp39-win_amd64.whl"
                         ])
                     else:
                         raise AssertionError(
@@ -408,17 +408,17 @@ def main():
                 if tags.interpreter == "cp37":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp37-cp37m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp38-cp38-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp39":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp39-cp39-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 # ABI 1 TF required latest numpy
                 command_executor(

@@ -132,7 +132,7 @@
         Microsoft Build Tools 2019
 
 3. 安装 [CMake](https://cmake.org/download/), 支持版本 >=3.14.0 且 =<3.20.1,
-4. [下载并安装 OpenVINO™ Toolkit 2021.4.2 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
+4. [下载并安装 OpenVINO™ Toolkit 2022.1 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
 
@@ -145,7 +145,7 @@
 
 1. 从 PyPi 中获取兼容的预构建 TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。
 
-        python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
+        python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1
 
 2. 从 Github 发布版本中获取兼容的预构建 TensorFlow ABI1 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
@@ -194,10 +194,10 @@
 
 它会生成以下输出：
 
-        TensorFlow version:  2.7.0
-        OpenVINO integration with TensorFlow version: b'1.1.0'
-        OpenVINO version used for this build: b'2021.4.2'
-        TensorFlow version used for this build: v2.7.0
+        TensorFlow version:  2.8.0
+        OpenVINO integration with TensorFlow version: b'2.0.0'
+        OpenVINO version used for this build: b'2022.1'
+        TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 1
 
 
@@ -226,15 +226,15 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
 
 - 用 CXX11\_ABI=0 构建指定版本的TensorFlow。
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=0
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=0
 
 - 用 CXX11\_ABI=1 构建指定版本的TensorFlow。
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=1
 
-- 为使用所需的 TensorFlow 版本（如 v2.7.0）来构建
+- 为使用所需的 TensorFlow 版本（如 v2.8.0）来构建
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0
 
 ### <a name='TFWindows'></a> 针对Windows
 - 完成设置步骤: https://www.tensorflow.org/install/source_windows#setup_for_windows
@@ -242,7 +242,7 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
   
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v2.7.0
+        git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
         git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_7_0_build.patch
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
@@ -256,7 +256,7 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
         bazel-bin\tensorflow\tools\pip_package\build_pip_package C:/tmp/tensorflow_pkg
 
         # copy this PIP package to working directory (tensorflow source code directory)
-        cp C:/tmp/tensorflow_pkg/tensorflow-2.7.0-cp39-cp39-win_amd64.whl .\
+        cp C:/tmp/tensorflow_pkg/tensorflow-2.8.0-cp39-cp39-win_amd64.whl .\
   
 - 构建 CC 库
   
