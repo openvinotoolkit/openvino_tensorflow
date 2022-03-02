@@ -837,25 +837,22 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     if (target_arch == "silvermont"):
         atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
     openvino_cmake_flags = [
-        "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
+        "-DENABLE_V7_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
         "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
-        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DENABLE_INTEL_MYRIAD=ON", "-DENABLE_INTEL_GNA=OFF",
+        "-DENABLE_CPPLINT=OFF",
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DENABLE_OV_PADDLE_FRONTEND=OFF", "-DENABLE_OV_ONNX_FRONTEND=OFF",
-        "-DENABLE_OV_TF_FRONTEND=OFF"
+        "-DENABLE_OV_IR_FRONTEND=ON", "-DENABLE_OV_TF_FRONTEND=OFF"
     ]
 
     if (platform.system() == 'Windows'):
         openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools\\ngraph\\",
             "-DCMAKE_INSTALL_PREFIX=" + install_location.replace("\\", "\\\\"),
             "-G \"Visual Studio 16 2019\"", "-A x64"
         ])
     else:
         openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
             "-DCMAKE_INSTALL_PREFIX=" + install_location
         ])
 
