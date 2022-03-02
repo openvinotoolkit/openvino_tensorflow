@@ -78,10 +78,27 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 RUN apt-get update; \
+    dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt; \
     apt-get install -y --no-install-recommends \
     git wget libsm6; \
     rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update; \
+    sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
+    apt-get update && \
+    dpkg --get-selections | grep -v deinstall | awk '{print $1}' > all_packages.txt && \
+    grep -v -f base_packages.txt all_packages.txt | while read line; do \
+    package=$(echo $line); \
+    name=(${package//:/ }); \
+    grep -l GPL /usr/share/doc/${name[0]}/copyright; \
+    exit_status=$?; \
+    if [ $exit_status -eq 0 ]; then \
+    apt-get source -q --download-only $package;  \
+    fi \
+    done && \
+    echo "Download source for $(ls | wc -l) third-party packages: $(du -sh)"; \
+    rm -rf /var/lib/apt/lists/*;
+    
 ENV INTEL_OPENVINO_DIR /opt/intel/openvino
 
 COPY --from=ovtf_build /opt/intel/openvino_tensorflow/ /home/openvino/openvino_tensorflow/
