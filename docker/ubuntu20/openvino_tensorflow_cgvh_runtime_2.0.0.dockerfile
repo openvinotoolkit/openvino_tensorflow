@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ################################################################################
-FROM openvino/ubuntu20_dev:2022.1.0 AS ovtf_build
+FROM openvino/ubuntu20_dev:2022.1 AS ovtf_build
 ################################################################################
 
 # Stage 1 builds OpenVINO™ integration with TensorFlow from source, prepares wheel for use by the final image
@@ -63,7 +63,7 @@ RUN mkdir build_artifacts && \
 CMD ["/bin/bash"]
 
 ################################################################################
-FROM openvino/ubuntu20_runtime:2022.1.0 AS ovtf_runtime
+FROM openvino/ubuntu20_runtime:2022.1 AS ovtf_runtime
 ################################################################################
 
 LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
