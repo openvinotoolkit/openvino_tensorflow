@@ -5,6 +5,7 @@
  *******************************************************************************/
 
 #include <iostream>
+#include <memory>
 
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
@@ -15,9 +16,9 @@ using namespace InferenceEngine;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-IE_Basic_Engine::IE_Basic_Engine(InferenceEngine::CNNNetwork ie_network,
+IE_Basic_Engine::IE_Basic_Engine(std::shared_ptr<ov::Model> model,
                                  std::string device)
-    : IE_Backend_Engine(ie_network, device) {}
+    : IE_Backend_Engine(model, device) {}
 
 IE_Basic_Engine::~IE_Basic_Engine() {}
 
@@ -30,59 +31,96 @@ void IE_Basic_Engine::infer(
     std::vector<std::string>& param_names) {
   load_network();
   if (m_infer_reqs.empty()) {
-    m_infer_reqs.push_back(m_exe_network.CreateInferRequest());
+    m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
 
   //  Prepare input blobs
-  auto func = m_network.getFunction();
-  auto parameters = func->get_parameters();
+  auto parameters = m_model->get_parameters();
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr) {
 #if defined(OPENVINO_2021_2)
-      if (m_device != "MYRIAD" && m_device != "HDDL")
-        m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
-      else {
-        auto input_blob = m_infer_reqs[0].GetBlob(input_names[i]);
-        MemoryBlob::Ptr minput = as<MemoryBlob>(input_blob);
-        auto minputHolder = minput->wmap();
-
-        auto inputBlobData = minputHolder.as<uint8_t*>();
-        size_t input_data_size = input_blob->byteSize();
-        inputs[i]->read((void*)inputBlobData, input_data_size);
+      if (m_device != "MYRIAD" && m_device != "HDDL") {
+        OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
+                     << input_names[i] << ")";
+        const int in_idx = get_input_idx(input_names[i]);
+        if (in_idx < 0) {
+          throw std::runtime_error("Input parameter with friendly name " +
+                                   input_names[i] + " not found in ov::Model");
+        }
+        m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
+      } else {
+        OVTF_VLOG(4) << "IE_Basic_Engine::infer() get_input_tensor() ("
+                     << input_names[i] << ")";
+        const int in_idx = get_input_idx(input_names[i]);
+        if (in_idx < 0) {
+          throw std::runtime_error("Input parameter with friendly name " +
+                                   input_names[i] + " not found in ov::Model");
+        }
+        auto tensor = m_infer_reqs[0].get_input_tensor(in_idx);
+        size_t input_data_size = tensor.get_byte_size();
+        std::copy((uint8_t*)(inputs[i]->data()),
+                  ((uint8_t*)(inputs[i]->data())) + input_data_size,
+                  (uint8_t*)(tensor.data()));
       }
 #else
-      m_infer_reqs[0].SetBlob(input_names[i], inputs[i]->get_blob());
+      OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
+                   << input_names[i] << ")";
+      const int in_idx = get_input_idx(input_names[i]);
+      if (in_idx < 0) {
+        throw std::runtime_error("Input with friendly name " + input_names[i] +
+                                 " not found in ov::Model");
+      }
+      m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
 #endif
     }
   }
 
   for (int i = 0; i < hoisted_params.size(); i++) {
-    if (hoisted_params[i] != nullptr)
-      m_infer_reqs[0].SetBlob(param_names[i], hoisted_params[i]->get_blob());
-  }
-
-  //  Prepare output blobs
-  auto results = func->get_results();
-  for (int i = 0; i < results.size(); i++) {
-    if (outputs[i] != nullptr) {
-      OVTF_VLOG(4) << "Executable::call() SetBlob()";
-      m_infer_reqs[0].SetBlob(output_names[i], outputs[i]->get_blob());
+    if (hoisted_params[i] != nullptr) {
+      OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
+                   << param_names[i] << ")";
+      const int param_idx = get_input_idx(param_names[i]);
+      if (param_idx < 0) {
+        throw std::runtime_error("Hoisted parameter with friendly name " +
+                                 param_names[i] + " not found in ov::Model");
+      }
+      m_infer_reqs[0].set_input_tensor(param_idx, *(hoisted_params[i]));
     }
   }
 
-  m_infer_reqs[0].Infer();
+  //  Prepare output blobs
+  auto results = m_model->get_results();
+  for (int i = 0; i < results.size(); i++) {
+    if (outputs[i] != nullptr) {
+      OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_output_tensor() ("
+                   << output_names[i] << ")";
+      const int out_idx = get_output_idx(output_names[i]);
+      if (out_idx < 0) {
+        throw std::runtime_error("Output with friendly name " +
+                                 output_names[i] + " not found in ov::Model");
+      }
+      m_infer_reqs[0].set_output_tensor(out_idx, *(outputs[i]));
+    }
+  }
+
+  m_infer_reqs[0].infer();
 
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] == nullptr) {
-      OVTF_VLOG(4) << "Executable::call() GetBlob()";
-      auto blob = m_infer_reqs[0].GetBlob(output_names[i]);
-      outputs[i] = std::make_shared<IETensor>(blob);
+      OVTF_VLOG(4) << "IE_Basic_Engine::infer() get_output_tensor() ("
+                   << output_names[i] << ")";
+      const int out_idx = get_output_idx(output_names[i]);
+      if (out_idx < 0) {
+        throw std::runtime_error("Output with friendly name " +
+                                 output_names[i] + " not found in ov::Model");
+      }
+      auto tensor = m_infer_reqs[0].get_output_tensor(out_idx);
+      outputs[i] = std::make_shared<IETensor>(
+          tensor.get_element_type(), tensor.get_shape(), tensor.data());
     }
   }
   OVTF_VLOG(4) << "Inference Successful";
-
-  // return true;
 }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

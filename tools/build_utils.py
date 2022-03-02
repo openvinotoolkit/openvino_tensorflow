@@ -842,7 +842,9 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
         "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
         "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
+        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DENABLE_OV_PADDLE_FRONTEND=OFF", "-DENABLE_OV_ONNX_FRONTEND=OFF",
+        "-DENABLE_OV_TF_FRONTEND=OFF"
     ]
 
     if (platform.system() == 'Windows'):

@@ -66,7 +66,7 @@ class NGraphExecTest : public ::testing::Test {
   // Translates the TFGraph into NGFunction assumes no static inputs
   Status TranslateTFGraphNoStatic(const vector<TensorShape>& tf_input_shapes,
                                   const Graph& input_graph,
-                                  shared_ptr<ngraph::Function>& ng_function) {
+                                  shared_ptr<ov::Model>& ng_function) {
     // Translate the Graph: Create ng_function
     std::vector<const Tensor*> static_input_map(tf_input_shapes.size(),
                                                 nullptr);
@@ -129,7 +129,7 @@ class NGraphExecTest : public ::testing::Test {
 
   void expect_const_count_ngfunc(const Graph& g, int expected) {
     std::vector<TensorShape> tf_input_shapes;
-    shared_ptr<ng::Function> func;
+    shared_ptr<ov::Model> func;
     ASSERT_OK(TranslateTFGraphNoStatic(tf_input_shapes, g, func));
     int numconst = 0;
     for (const auto& node : func->get_ops()) {
@@ -154,7 +154,7 @@ TEST_F(NGraphExecTest, Axpy) {
   input_shapes.push_back(x.shape());
   input_shapes.push_back(y.shape());
 
-  shared_ptr<ng::Function> ng_function;
+  shared_ptr<ov::Model> ng_function;
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
   // Create the nGraph backend
@@ -162,26 +162,26 @@ TEST_F(NGraphExecTest, Axpy) {
   ASSERT_NE(backend, nullptr);
 
   // Allocate tensors for arguments a, b, c
-  ng::Shape ng_shape_x(x.shape().dims());
+  ov::Shape ng_shape_x(x.shape().dims());
   for (int i = 0; i < x.shape().dims(); ++i) {
     ng_shape_x[i] = x.shape().dim_size(i);
   }
 
-  ng::Shape ng_shape_y(y.shape().dims());
+  ov::Shape ng_shape_y(y.shape().dims());
   for (int i = 0; i < y.shape().dims(); ++i) {
     ng_shape_y[i] = y.shape().dim_size(i);
   }
 
-  auto t_x = make_shared<IETensor>(ng::element::f32, ng_shape_x);
+  auto t_x = make_shared<IETensor>(ov::element::f32, ng_shape_x);
   float v_x[2][3] = {{1, 1, 1}, {1, 1, 1}};
   t_x->write(&v_x, sizeof(v_x));
 
-  auto t_y = make_shared<IETensor>(ng::element::f32, ng_shape_y);
+  auto t_y = make_shared<IETensor>(ov::element::f32, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
   // Execute the nGraph function.
   auto exec = backend->Compile(ng_function);
-  vector<shared_ptr<ng::runtime::Tensor>> outputs;
+  vector<shared_ptr<ov::Tensor>> outputs;
   exec->Call({t_x, t_y}, outputs);
 
   for (size_t i = 0; i < ng_function->get_output_size(); i++) {
@@ -209,7 +209,7 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   input_shapes.push_back(x.shape());
   input_shapes.push_back(y.shape());
 
-  shared_ptr<ng::Function> ng_function;
+  shared_ptr<ov::Model> ng_function;
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
   // Create the nGraph backend
@@ -217,26 +217,26 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   ASSERT_NE(backend, nullptr);
 
   // Allocate tensors for arguments a, b, c
-  ng::Shape ng_shape_x(x.shape().dims());
+  ov::Shape ng_shape_x(x.shape().dims());
   for (int i = 0; i < x.shape().dims(); ++i) {
     ng_shape_x[i] = x.shape().dim_size(i);
   }
 
-  ng::Shape ng_shape_y(y.shape().dims());
+  ov::Shape ng_shape_y(y.shape().dims());
   for (int i = 0; i < y.shape().dims(); ++i) {
     ng_shape_y[i] = y.shape().dim_size(i);
   }
 
-  auto t_x = make_shared<IETensor>(ng::element::i8, ng_shape_x);
+  auto t_x = make_shared<IETensor>(ov::element::i8, ng_shape_x);
   int8 v_x[2][2] = {{1, 1}, {1, 1}};
   t_x->write(&v_x, sizeof(v_x));
 
-  auto t_y = make_shared<IETensor>(ng::element::i8, ng_shape_y);
+  auto t_y = make_shared<IETensor>(ov::element::i8, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
   // Execute the nGraph function.
   auto exec = backend->Compile(ng_function);
-  vector<shared_ptr<ng::runtime::Tensor>> outputs;
+  vector<shared_ptr<ov::Tensor>> outputs;
   exec->Call({t_x, t_y}, outputs);
 
   for (size_t i = 0; i < ng_function->get_output_size(); i++) {

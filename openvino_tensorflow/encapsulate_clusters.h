@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/ngraph.hpp"
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {

@@ -147,6 +147,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 #elif defined(OPENVINO_2021_4_2)
     // ocm checks are same as 2021.4 for this minor version update
     ov_version = "2021.4";
+#elif defined(OPENVINO_2022_1)
+    // TODO: once OCM upgraded change it to the right version
+    ov_version = "2021.4";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
@@ -159,11 +162,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
-    //disable TopKV2 as of now as it impacts performance for TF_HUB object detection models
+    // disable TopKV2 as of now as it impacts performance for TF_HUB object
+    // detection models
     disabled_ops_set.insert("TopKV2");
-    for (auto itr = disabled_ops_set.begin(); itr!=disabled_ops_set.end(); itr++) {
-        OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
-    } 
+    for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
+         itr++) {
+      OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
+    }
 
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void*> nodes_list = FC.MarkSupportedNodes();

@@ -7,13 +7,13 @@
 #ifndef CONTEXTS_H
 #define CONTEXTS_H
 
-#include <inference_engine.hpp>
+#include "openvino/openvino.hpp"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
 struct GlobalContext {
-  InferenceEngine::Core ie_core;
+  ov::Core ie_core;
 };
 
 }  // namespace openvino_tensorflow

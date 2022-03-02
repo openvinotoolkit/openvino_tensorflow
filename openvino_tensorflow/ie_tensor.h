@@ -9,34 +9,25 @@
 #include "tensorflow/core/framework/allocation_description.pb.h"
 #include "tensorflow/core/framework/tensor.h"
 
-#include <ie_core.hpp>
-#include "ngraph/ngraph.hpp"
+#include "openvino/openvino.hpp"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-class IETensor : public ngraph::runtime::Tensor {
+class IETensor : public ov::Tensor {
  public:
-  IETensor(const ngraph::element::Type& element_type,
-           const ngraph::Shape& shape);
-  IETensor(const ngraph::element::Type& element_type,
-           const ngraph::PartialShape& shape);
-  IETensor(const ngraph::element::Type& element_type,
-           const ngraph::Shape& shape, void* memory_pointer);
-  IETensor(InferenceEngine::Blob::Ptr blob);
-  ~IETensor() override;
+  IETensor(const ov::element::Type& element_type, const ov::Shape& shape);
+  IETensor(const ov::element::Type& element_type, const ov::Shape& shape,
+           void* memory_pointer);
+  ~IETensor();
 
-  void write(const void* src, size_t bytes) override;
-  void read(void* dst, size_t bytes) const override;
-
-  const void* get_data_ptr() const;
-  InferenceEngine::Blob::Ptr get_blob() { return m_blob; }
+  void write(const void* src, size_t bytes);
+  void read(void* dst, size_t bytes) const;
 
  private:
   IETensor(const IETensor&) = delete;
   IETensor(IETensor&&) = delete;
   IETensor& operator=(const IETensor&) = delete;
-  InferenceEngine::Blob::Ptr m_blob;
 };
 
 // A simple TensorBuffer implementation that allows us to create Tensors that
@@ -44,8 +35,8 @@ class IETensor : public ngraph::runtime::Tensor {
 class IETensorBuffer : public TensorBuffer {
  public:
   IETensorBuffer(std::shared_ptr<IETensor> tensor)
-      : TensorBuffer(const_cast<void*>(tensor->get_data_ptr())),
-        size_(tensor->get_size_in_bytes()),
+      : TensorBuffer(const_cast<void*>(tensor->data())),
+        size_(tensor->get_byte_size()),
         tensor_(tensor) {}
 
   size_t size() const override { return size_; }

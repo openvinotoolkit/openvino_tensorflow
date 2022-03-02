@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <ie_core.hpp>
-#include "ngraph/ngraph.hpp"
+#include "openvino/openvino.hpp"
 
 #include "openvino_tensorflow/ie_backend_engine.h"
 
@@ -20,20 +19,17 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-// A Inference Engine executable object produced by compiling an nGraph
-// function.
+// A Inference Engine executable object produced by compiling an
+// OpenVINO Model.
 class Executable {
  public:
-  Executable(shared_ptr<ngraph::Function> func, string device,
-             string device_type);
+  Executable(shared_ptr<ov::Model> model, string device, string device_type);
   ~Executable() {}
-  bool Call(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
-            vector<shared_ptr<ngraph::runtime::Tensor>>& outputs,
+  bool Call(const vector<shared_ptr<ov::Tensor>>& inputs,
+            vector<shared_ptr<ov::Tensor>>& outputs,
             bool multi_req_execution = false);
 
-  const ngraph::ResultVector& GetResults() {
-    return m_function->get_results();
-  };
+  const ov::ResultVector& GetResults() { return m_model->get_results(); };
 
   const vector<size_t> GetOutputShape(const int i) {
     if (m_trivial_fn) {
@@ -43,31 +39,29 @@ class Executable {
     }
   }
 
-  void SetOutputShapes(vector<ngraph::Shape> ng_output_shapes) {
+  void SetOutputShapes(vector<ov::Shape> ng_output_shapes) {
     m_ng_output_shapes = ng_output_shapes;
   }
 
-  const vector<ngraph::Shape> GetOutputShapes() { return m_ng_output_shapes; }
+  const vector<ov::Shape> GetOutputShapes() { return m_ng_output_shapes; }
 
   void ExportIR(const string& output_dir);
 
  private:
-  bool CallTrivial(const vector<shared_ptr<ngraph::runtime::Tensor>>& inputs,
-                   vector<shared_ptr<ngraph::runtime::Tensor>>& outputs);
+  bool CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
+                   vector<shared_ptr<ov::Tensor>>& outputs);
 
-  InferenceEngine::CNNNetwork m_network;
-  InferenceEngine::InferRequest m_infer_req;
   string m_device;
   string m_device_type;
   // This holds the parameters we insert for functions with no input parameters
-  vector<pair<string, shared_ptr<ngraph::runtime::Tensor>>> m_hoisted_params;
+  vector<pair<string, shared_ptr<ov::Tensor>>> m_hoisted_params;
   vector<int> m_skipped_inputs;
-  vector<ngraph::Shape> m_ng_output_shapes;
+  vector<ov::Shape> m_ng_output_shapes;
   // This keeps track of whether the original function was trivial: either a
   // constant function, an identity function or a zero function
-  shared_ptr<ngraph::Function> m_trivial_fn;
-  // This is the original nGraph function corresponding to this executable
-  shared_ptr<ngraph::Function> m_function;
+  shared_ptr<ov::Model> m_trivial_fn;
+  // This is the original OpenVINO model corresponding to this executable
+  shared_ptr<ov::Model> m_model;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
 };
 }  // namespace openvino_tensorflow

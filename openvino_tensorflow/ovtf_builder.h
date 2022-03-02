@@ -12,7 +12,7 @@
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
 
-#include "ngraph/ngraph.hpp"
+#include "openvino/core/validation_util.hpp"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -22,38 +22,38 @@ class Builder {
   static Status TranslateGraph(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
-      const string name, std::shared_ptr<ngraph::Function>& ng_function);
+      const string name, std::shared_ptr<ov::Model>& ng_function);
 
   static Status TranslateGraph(
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
-      const string name, std::shared_ptr<ngraph::Function>& ng_function,
-      ngraph::ResultVector& ng_func_result_list,
+      const string name, std::shared_ptr<ov::Model>& ng_function,
+      ov::ResultVector& ng_func_result_list,
       const std::vector<Tensor>& tf_input_tensors);
 
-  using OpMap = std::unordered_map<std::string,
-                                   std::vector<ngraph::Output<ngraph::Node>>>;
-  using ConstMap = std::map<
-      DataType,
-      std::pair<std::function<Status(const Node*, ngraph::element::Type,
-                                     ngraph::Output<ngraph::Node>&)>,
-                const ngraph::element::Type>>;
+  using OpMap =
+      std::unordered_map<std::string, std::vector<ov::Output<ov::Node>>>;
+  using ConstMap =
+      std::map<DataType,
+               std::pair<std::function<Status(const Node*, ov::element::Type,
+                                              ov::Output<ov::Node>&)>,
+                         const ov::element::Type>>;
   static const Builder::ConstMap& TF_NGRAPH_CONST_MAP();
 
   template <typename T>
   static void MakePadding(const std::string& tf_padding_type,
-                          const ngraph::Shape& ng_image_shape,
-                          const ngraph::Shape& ng_kernel_shape,
-                          const ngraph::Strides& ng_strides,
-                          const ngraph::Shape& ng_dilations,
-                          T& ng_padding_below, T& ng_padding_above) {
+                          const ov::Shape& ng_image_shape,
+                          const ov::Shape& ng_kernel_shape,
+                          const ov::Strides& ng_strides,
+                          const ov::Shape& ng_dilations, T& ng_padding_below,
+                          T& ng_padding_above) {
     if (tf_padding_type == "SAME") {
-      ngraph::Shape img_shape = {0, 0};
+      ov::Shape img_shape = {0, 0};
       img_shape.insert(img_shape.end(), ng_image_shape.begin(),
                        ng_image_shape.end());
-      ngraph::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
-                                 ng_dilations, ngraph::op::PadType::SAME_UPPER,
-                                 ng_padding_above, ng_padding_below);
+      ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                             ng_dilations, ov::op::PadType::SAME_UPPER,
+                             ng_padding_above, ng_padding_below);
     } else if (tf_padding_type == "VALID") {
       ng_padding_below.assign(ng_image_shape.size(), 0);
       ng_padding_above.assign(ng_image_shape.size(), 0);
@@ -69,7 +69,7 @@ class Builder {
   // 2. Attaches friendly names.
   // 3. Prints a log if OPENVINO_TF_LOG_PLACEMENT=1
   static void SetTracingInfo(const std::string& op_name,
-                             const ngraph::Output<ngraph::Node> ng_node);
+                             const ov::Output<ov::Node> ng_node);
 };
 
 }  // namespace openvino_tensorflow
