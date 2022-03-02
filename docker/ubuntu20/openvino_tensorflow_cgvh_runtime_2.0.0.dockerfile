@@ -71,7 +71,7 @@ LABEL vendor="Intel Corporation"
 
 USER root
 
-ARG tf_package_url="https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
+ARG tf_package_url="https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -83,6 +83,7 @@ RUN apt-get update; \
     git wget libsm6; \
     rm -rf /var/lib/apt/lists/*
 
+# Download sources for GPL/LGPL packages
 RUN apt-get update; \
     sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
     apt-get update && \
