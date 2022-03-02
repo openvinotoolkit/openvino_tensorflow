@@ -43,6 +43,7 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -53,6 +54,7 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts build_cmake/artifacts --test_tf_python
@@ -99,6 +101,7 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=CPU
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -139,6 +142,7 @@
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=CPU
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
@@ -149,6 +153,7 @@
    - script: |
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
