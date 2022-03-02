@@ -13,23 +13,6 @@ diff --git a/WORKSPACE b/WORKSPACE
 index 18af812a..faf81201 100644
 --- a/WORKSPACE
 +++ b/WORKSPACE
-@@ -12,11 +12,12 @@ workspace(name = "tf_serving")
- #    and update the 'sha256' arg with the result.
- # 3. Request the new archive to be mirrored on mirror.bazel.build for more
- #    reliable downloads.
--load("//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
--tensorflow_http_archive(
-+#load("//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
-+local_repository(
-     name = "org_tensorflow",
--    sha256 = "ff0df77ec72676d3260502dd19f34518ecd65bb9ead4f7dfdf8bd11cff8640e3",
--    git_commit = "c256c071bb26e1e13b4666d1b3e229e110bc914a",
-+    path = "/tensorflow_build/tensorflow"
-+    #sha256 = "ff0df77ec72676d3260502dd19f34518ecd65bb9ead4f7dfdf8bd11cff8640e3",
-+    #git_commit = "c256c071bb26e1e13b4666d1b3e229e110bc914a",
- )
-
- # Import all of TensorFlow Serving's external dependencies.
 @@ -52,3 +53,10 @@ load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_
  rules_proto_dependencies()
  rules_proto_toolchains()
@@ -37,7 +20,7 @@ index 18af812a..faf81201 100644
 +# External dependency to openvino tensorflow
 +new_local_repository(
 +        name="openvino_tensorflow",
-+        path="/openvino_tensorflow/build_cmake/artifacts/lib",
++        path="/usr/local/lib/python3.8/dist-packages/openvino_tensorflow",
 +        build_file="BUILD.ovtf"
 +)
 +
