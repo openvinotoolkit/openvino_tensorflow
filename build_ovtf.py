@@ -562,20 +562,21 @@ def main():
                        artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the bridge
-    atom_flags = ""
-    if (target_arch == "silvermont"):
-        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
-
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
-                "\\", "/"),
+                "\\", "/")
         ]
     else:
         openvino_tf_cmake_flags = [
-            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
-            "-DCMAKE_CXX_FLAGS=-march=" + target_arch + atom_flags,
+            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location
         ]
+
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+        openvino_tf_cmake_flags.extend(
+            ["-DCMAKE_CXX_FLAGS= -march=" + atom_flags])
 
     openvino_artifacts_dir = ""
     if arguments.use_openvino_from_location == '':
