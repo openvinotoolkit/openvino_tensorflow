@@ -10,7 +10,6 @@
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    OV_LOCATION: /opt/intel/openvino_2022.1.0.610/
     TF_LOCATION: /Users/intel/ci_setup/tf_2_8_0_abi1
     
  steps:
@@ -30,7 +29,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=${OV_LOCATION} --openvino_version=2022.1 --cxx11_abi_version=1 --disable_packaging_openvino_libs
+      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --openvino_version=2022.1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
@@ -44,7 +43,6 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -55,7 +53,6 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts build_cmake/artifacts --test_tf_python
@@ -67,8 +64,6 @@
       export OPENVINO_TF_BACKEND="MYRIAD"
       export NGRAPH_TF_UTEST_RTOL=0.0001
       pip3 install keras
-      
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -80,8 +75,6 @@
       export OPENVINO_TF_BACKEND="MYRIAD"
       export NGRAPH_TF_UTEST_RTOL=0.0001
       pip3 install keras
-      
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/python/tensorflow/tf_unittest_runner.py \
       --tensorflow_path build_cmake/artifacts//tensorflow/python \
@@ -91,7 +84,7 @@
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
+      
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
       chmod +x convert_yolov4.sh
@@ -106,7 +99,6 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -119,7 +111,7 @@
      displayName: "python CPU OD Inference Example TF2"
 
    # - script: |
-   source ${OV_LOCATION}/setupvars.sh
+   
    source build_cmake/venv-tf-py3/bin/activate
    #    cd  examples/TF_1_x/
    #    chmod +x convert_yolov4.sh
@@ -132,7 +124,7 @@
    #   displayName: "python MYRIAD OD Inference Example TF1"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
+      
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -148,7 +140,6 @@
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=CPU
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
@@ -159,7 +150,6 @@
    - script: |
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
