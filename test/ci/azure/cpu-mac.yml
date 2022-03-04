@@ -119,7 +119,7 @@
      displayName: "python CPU OD Inference Example TF2"
 
    # - script: |
-   source ${OV_LOCATION}/setupvars.sh#    
+   source ${OV_LOCATION}/setupvars.sh
    source build_cmake/venv-tf-py3/bin/activate
    #    cd  examples/TF_1_x/
    #    chmod +x convert_yolov4.sh
