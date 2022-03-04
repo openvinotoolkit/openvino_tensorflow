@@ -1,0 +1,125 @@
+FROM ubuntu:20.04
+
+# To make it easier for build and release pipelines to run apt-get,
+# configure apt to not require confirmation (assume the -y argument by default)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
+ARG DEBIAN_FRONTEND=noninteractive
+ARG BUILD_DEPENDENCIES="ca-certificates \
+                        autoconf \
+                        automake \
+                        build-essential \
+                        libtool \
+                        unzip \
+                        python3-pip virtualenv \
+                        python3-dev \
+                        git \
+                        unzip wget \
+                        sudo \
+                        zlib1g zlib1g-dev bash-completion \
+                        build-essential cmake \
+                        zip golang-go \
+                        locate curl \
+                        clang-format \
+                        cpio \
+                        libtinfo-dev \
+                        jq \
+                        lsb-core \
+                        python3.8 \
+                        gcc-7 \
+                        g++-7 \
+                        python3.8"
+
+add-apt-repository ppa:deadsnakes/ppa
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} && \
+    rm -rf /var/lib/apt/lists/*
+
+# Changing symbolic link for GCC-7
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 --slave /usr/bin/g++ g++ /usr/bin/g++-7 --slave /usr/bin/gcov gcov /usr/bin/gcov-7
+
+# The "locate" command uses a prepopulated index.  If this index is not built,
+# then "locate" will find absolutely nothing.  In Tensorflow's configure,
+# this manifests itself as a silent failure of the configure script to run to
+# completion.  Therefore, updatedb MUST BE RUN to provide an index for "locate".
+RUN updatedb
+
+# The pip-upgrade for pip, setuptools, and virtualenv is to avoid a nasty
+# bug in setuptools: "_NamespacePath object has no attribute sort"
+# We include pytest so the Docker image can be used for daily validation
+RUN pip3 install --upgrade pip
+RUN pip3 install setuptools
+RUN pip3 install virtualenv
+RUN pip3 install --upgrade pytest
+RUN pip3 install psutil
+RUN pip3 install wheel==0.36.2
+RUN pip3 install keras
+
+#Cmake
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.tar.gz && \
+    tar -xzvf cmake-3.14.0-Linux-x86_64.tar.gz && \
+    cp cmake-3.14.0-Linux-x86_64/bin/* /usr/local/bin/ && \
+    cp -r cmake-3.14.0-Linux-x86_64/share/cmake-3.14 /usr/local/share/
+
+# We include openjdk-8-jdk
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+
+#Get BAZEL using BAZELISK
+RUN curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g @bazel/bazelisk
+
+#Get OpenVINO from Download link and install
+RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18319/l_openvino_toolkit_p_2021.4.752.tgz -P /tmp
+RUN tar -xvf /tmp/l_openvino_toolkit_p_2021.4.752.tgz -C /tmp
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.752 && sudo sed -i 's/decline/accept/g' silent.cfg
+RUN cd /tmp/l_openvino_toolkit_p_2021.4.752 && sudo ./install.sh -s silent.cfg
+
+#Install OpenVINO Dependencies
+RUN cd /opt/intel/openvino_2021.4.752/install_dependencies && sudo -E ./install_openvino_dependencies.sh -y
+
+
+#for libusb
+WORKDIR /opt
+RUN curl -L https://github.com/libusb/libusb/archive/v1.0.22.zip --output v1.0.22.zip && \
+    unzip v1.0.22.zip && rm -rf v1.0.22.zip
+WORKDIR /opt/libusb-1.0.22
+RUN ./bootstrap.sh && \
+    ./configure --disable-udev --enable-shared && \
+    make -j4
+WORKDIR /opt/libusb-1.0.22/libusb
+RUN /bin/mkdir -p '/usr/local/lib' && \
+    /bin/bash ../libtool   --mode=install /usr/bin/install -c libusb-1.0.la '/usr/local/lib' && \
+    /bin/mkdir -p '/usr/local/include/libusb-1.0' && \
+    /usr/bin/install -c -m 644 libusb.h '/usr/local/include/libusb-1.0'
+
+#Base Image ends here
+RUN bazel version
+RUN git clone  https://github.com/openvinotoolkit/openvino_tensorflow.git /opt/intel/openvino_tensorflow
+RUN cd /opt/intel/openvino_tensorflow && git submodule init
+RUN cd /opt/intel/openvino_tensorflow && git submodule update --recursive
+RUN cd /home && mkdir iotgecsp
+RUN cd /home/iotgecsp/ && mkdir ci_setup
+RUN cd /home/iotgecsp/ci_setup && mkdir tf_2_7_0
+RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/iotgecsp/ci_setup/tf_2_7_0 --cxx11_abi_version=1 --tf_version=v2.8.0
+
+
+RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG TARGETARCH=amd64
+ARG AGENT_VERSION=2.185.1
+
+WORKDIR /home/iotgecsp/basm/azu/
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz; \
+    else \
+      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-${TARGETARCH}-${AGENT_VERSION}.tar.gz; \
+    fi; \
+    curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
+
+COPY ./start.sh .
+RUN chmod +x start.sh
+
+ENTRYPOINT [ "./start.sh" ]
