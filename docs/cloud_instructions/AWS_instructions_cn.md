@@ -56,7 +56,6 @@ OpenVINO integration with TensorFlow version: b'2.0.0'
 OpenVINO version used for this build: b'2022.1.0'
 TensorFlow version used for this build: v2.8.0
 CXX11_ABI flag used for this build: 0
-```
 
 - 克隆 repo 以运行示例
 ```bash
