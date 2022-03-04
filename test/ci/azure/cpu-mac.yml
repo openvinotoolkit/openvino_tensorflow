@@ -112,7 +112,6 @@
 
    # - script: |
    
-   source build_cmake/venv-tf-py3/bin/activate
    #    cd  examples/TF_1_x/
    #    chmod +x convert_yolov4.sh
    #    ./convert_yolov4.sh
