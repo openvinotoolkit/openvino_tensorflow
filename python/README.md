@@ -14,7 +14,7 @@
 
 - Ubuntu 18.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
 - Python* 3.7, 3.8 or 3.9
-- TensorFlow* v2.7.0
+- TensorFlow* v2.8.0
 
 <sup>1</sup>Windows release is in preview mode and supports only Python3.9 
 
@@ -25,7 +25,7 @@ This package supports:
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
         pip3 install -U pip
-        pip3 install tensorflow==2.7.0
+        pip3 install tensorflow==2.8.0
         pip3 install -U openvino-tensorflow
 
 To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
@@ -45,10 +45,10 @@ To check if **OpenVINO™ integration with TensorFlow** is properly installed, r
 
 This should produce an output like:
 
-        TensorFlow version:  2.7.0
-        OpenVINO integration with TensorFlow version: b'1.1.0'
-        OpenVINO version used for this build: b'2021.4.2'
-        TensorFlow version used for this build: v2.7.0
+        TensorFlow version:  2.8.0
+        OpenVINO integration with TensorFlow version: b'2.0.0'
+        OpenVINO version used for this build: b'2022.1'
+        TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 
 ## Usage

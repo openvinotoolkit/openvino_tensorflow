@@ -25,20 +25,20 @@ This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en
 
 - Ubuntu 18.04, 20.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
 - Python* 3.7, 3.8 or 3.9
-- TensorFlow* v2.7.0
+- TensorFlow* v2.8.0
 
 <sup>1</sup>Windows package is released in Beta preview mode and currently supports only Python3.9 
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
-The **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.2. The users do not have to install OpenVINO™ separately. This package supports:
+The **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1. The users do not have to install OpenVINO™ separately. This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
 
         pip3 install -U pip
-        pip3 install tensorflow==2.7.0
+        pip3 install tensorflow==2.8.0
         pip3 install -U openvino-tensorflow
 
 For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
@@ -62,10 +62,10 @@ To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
 This should produce an output like:
 
-        TensorFlow version:  2.7.0
-        OpenVINO integration with TensorFlow version: b'1.1.0'
-        OpenVINO version used for this build: b'2021.4.2'
-        TensorFlow version used for this build: v2.7.0
+        TensorFlow version:  2.8.0
+        OpenVINO integration with TensorFlow version: b'2.0.0'
+        OpenVINO version used for this build: b'2022.1'
+        TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 
 By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware on which inferencing is done.

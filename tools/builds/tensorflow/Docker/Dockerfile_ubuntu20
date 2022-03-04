@@ -102,7 +102,7 @@ RUN cd /opt/intel/openvino_tensorflow && git submodule update --recursive
 RUN cd /home && mkdir iotgecsp
 RUN cd /home/iotgecsp/ && mkdir ci_setup
 RUN cd /home/iotgecsp/ci_setup && mkdir tf_2_7_0
-RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/iotgecsp/ci_setup/tf_2_7_0 --cxx11_abi_version=1 --tf_version=v2.7.0
+RUN cd /opt/intel/openvino_tensorflow && python3 build_tf.py --output_dir=/home/iotgecsp/ci_setup/tf_2_7_0 --cxx11_abi_version=1 --tf_version=v2.8.0
 
 
 RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \

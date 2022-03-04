@@ -130,7 +130,7 @@ Notes:
         Microsoft Build Tools 2019
 
 3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0 and =<3.20.1,
-4. [Download and Install OpenVINO™ Toolkit 2021.4.2 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
+4. [Download and Install OpenVINO™ Toolkit 2022.1 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
 
@@ -143,7 +143,7 @@ To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with Tenso
 
 1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. This is the recommended build option for most of the use cases.
 
-        python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
+        python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1
 
 2. Pulls compatible TensorFlow ABI1 package from Github release assets. Uses OpenVINO™ binary from specified location.
 
@@ -193,10 +193,10 @@ Verify that `openvino-tensorflow` is installed correctly:
 
 This should produce an output like:
 
-        TensorFlow version:  2.7.0
-        OpenVINO integration with TensorFlow version: b'1.1.0'
-        OpenVINO version used for this build: b'2021.4.2'
-        TensorFlow version used for this build: v2.7.0
+        TensorFlow version:  2.8.0
+        OpenVINO integration with TensorFlow version: b'2.0.0'
+        OpenVINO version used for this build: b'2022.1'
+        TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 1
 
 
@@ -225,11 +225,11 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
 - Builds TensorFlow with CXX11_ABI=0 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=0 
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=0 
 
 - Builds TensorFlow with CXX11_ABI=1 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=1
 
 ### <a name='TFWindows'></a> For Windows
 - Complete the setup steps: https://www.tensorflow.org/install/source_windows#setup_for_windows
@@ -237,7 +237,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
   
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v2.7.0
+        git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
         git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_7_0_build.patch
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
@@ -251,7 +251,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
         bazel-bin\tensorflow\tools\pip_package\build_pip_package C:/tmp/tensorflow_pkg
 
         # copy this PIP package to working directory (tensorflow source code directory)
-        cp C:/tmp/tensorflow_pkg/tensorflow-2.7.0-cp39-cp39-win_amd64.whl .\
+        cp C:/tmp/tensorflow_pkg/tensorflow-2.8.0-cp39-cp39-win_amd64.whl .\
   
 - Build CC libraries
   

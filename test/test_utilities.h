@@ -73,9 +73,8 @@ void PrintTensorAllValues(
 template <typename T>
 static T GetScalarFromTensor(const std::shared_ptr<ov::Tensor>& t,
                              size_t element_offset = 0) {
-  T result;
-  t->read(&result, sizeof(T));
-  return result;
+  T* result = t->data<T>();
+  return *result;
 }
 
 // Prints the tensor to the given output stream

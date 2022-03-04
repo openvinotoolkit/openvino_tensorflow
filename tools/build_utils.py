@@ -320,7 +320,7 @@ def build_tensorflow(tf_version,
     os.environ["TF_NEED_TENSORRT"] = "0"
     os.environ["TF_DOWNLOAD_CLANG"] = "0"
     os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
-    os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch + " -Wno-sign-compare"
+    os.environ["CC_OPT_FLAGS"] = " -Wno-sign-compare"
     if (target_arch == "silvermont"):
         os.environ[
             "CC_OPT_FLAGS"] = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
@@ -833,40 +833,33 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     print("INSTALL location: " + artifacts_location)
 
     # Now build OpenVINO
-    atom_flags = ""
-    if (target_arch == "silvermont"):
-        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+    # TODO: Enable other options once 80842 ticket is resolved
     openvino_cmake_flags = [
-        "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
-        "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
-        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
-        "-DENABLE_OV_PADDLE_FRONTEND=OFF", "-DENABLE_OV_ONNX_FRONTEND=OFF",
-        "-DENABLE_OV_TF_FRONTEND=OFF"
+        # "-DENABLE_TESTS=OFF",
+        "-DENABLE_SAMPLES=OFF",
+        # "-DENABLE_FUNCTIONAL_TESTS=OFF",
+        # "-DENABLE_INTEL_GNA=OFF",
+        # "-DENABLE_OV_PADDLE_FRONTEND=OFF",
+        # "-DENABLE_OV_ONNX_FRONTEND=OFF",
+        # "-DENABLE_OV_IR_FRONTEND=ON",
+        # "-DENABLE_OV_TF_FRONTEND=OFF",
+        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
+        # "-DENABLE_OPENCV=OFF"  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
     ]
 
     if (platform.system() == 'Windows'):
         openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools\\ngraph\\",
             "-DCMAKE_INSTALL_PREFIX=" + install_location.replace("\\", "\\\\"),
             "-G \"Visual Studio 16 2019\"", "-A x64"
         ])
     else:
-        openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
-            "-DCMAKE_INSTALL_PREFIX=" + install_location
-        ])
-
-    if platform.system() == 'Linux':
-        openvino_cmake_flags.extend([
-            "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
-            + target_arch + atom_flags
-        ])
-    else:
         openvino_cmake_flags.extend(
-            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
+            ["-DCMAKE_INSTALL_PREFIX=" + install_location])
+
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+        openvino_cmake_flags.extend(["-DCMAKE_CXX_FLAGS= -march=" + atom_flags])
 
     if debug_enabled:
         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
