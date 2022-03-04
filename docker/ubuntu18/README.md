@@ -2,13 +2,9 @@
 
 Build serving docker images:
 
-1. Build the development docker image. This dockerfile uses the OpenVINO Integration with Tensorflow Runtime image as base and builds tensorflow model server while installing any required dependencies.
+1. Build the runtime docker image. This dockerfile uses the OpenVINO Integration with Tensorflow Runtime image as base, builds, and installs tensorflow model server binary.
 
-    	$ docker build -t openvino_tensorflow/tensorflow-serving-devel -f Dockerfile.devel .
-
-2. Build the runtime docker image.This dockerfile uses the OpenVINO Integration with Tensorflow Runtime image as base, tensorflow model server binary from the development image) 
-
-		$ docker build -t openvino_tensorflow/tensorflow-serving -f Dockerfile .
+		$ docker build -t openvino_tensorflow/tensorflow-serving -f openvino_tensorflow_cgvh_runtime_2.0.0-serving.dockerfile .
 
 Here is an example to serve Resnet50 model using OpenVINO Integration with Tensorflow with the client script included in TF-Serving repository.
 
@@ -18,7 +14,7 @@ Here is an example to serve Resnet50 model using OpenVINO Integration with Tenso
 	
 	To run on default CPU backend:
 
-		$ docker run -t --rm -p 8501:8501 -v <path to Resnet50 model>:/models/resnet MODEL_NAME=resnet openvino_tensorflow/tensorflow-serving &
+		$ docker run -t --rm -p 8501:8501 -v <path to Resnet50 model>:/models/resnet -e MODEL_NAME=resnet openvino_tensorflow/tensorflow-serving &
 
 	To run on iGPU:
 

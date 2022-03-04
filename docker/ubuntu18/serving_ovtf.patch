@@ -20,7 +20,7 @@ index 18af812a..faf81201 100644
 +# External dependency to openvino tensorflow
 +new_local_repository(
 +        name="openvino_tensorflow",
-+        path="/usr/local/lib/python3.8/dist-packages/openvino_tensorflow",
++        path="/usr/local/lib/openvino_tensorflow",
 +        build_file="BUILD.ovtf"
 +)
 +
