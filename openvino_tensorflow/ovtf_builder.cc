@@ -4049,7 +4049,7 @@ Status Builder::TranslateGraphWithTFFE(
     std::shared_ptr<ngraph::Function>& ng_function,
     ngraph::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
-  std::lock_guard<std::mutex> lock(m_translate_lock_);
+  //std::lock_guard<std::mutex> lock(m_translate_lock_);
   vector<Node*> ordered;
   GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
 
@@ -4269,7 +4269,9 @@ Status Builder::TranslateGraphWithTFFE(
 
   try {
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+    std::cout << "OVTF_LOG - Conversion starts - name: " << name << std::endl;
     ng_function = m_frontend_ptr->convert(input_model);
+    std::cout << "OVTF_LOG - Convertion ends - name: " << name << std::endl;
   } catch (const std::exception& exp) {
     return errors::Internal("Frontend conversion error: " + string(exp.what()));
   } catch (...) {
