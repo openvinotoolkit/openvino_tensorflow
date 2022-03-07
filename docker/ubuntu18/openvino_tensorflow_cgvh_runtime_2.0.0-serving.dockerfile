@@ -86,10 +86,13 @@ COPY serving_ovtf.patch /
 RUN patch -p1 < /serving_ovtf.patch
 
 # Build, and install TensorFlow Serving
-ARG TF_SERVING_BUILD_OPTIONS="--config=release --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=1"
+ARG TF_SERVING_BUILD_OPTIONS="--config=release"
 RUN echo "Building with build options: ${TF_SERVING_BUILD_OPTIONS}"
 ARG TF_SERVING_BAZEL_OPTIONS=""
 RUN echo "Building with Bazel options: ${TF_SERVING_BAZEL_OPTIONS}"
+
+# Replace ABI flag in .bazelrc
+RUN awk '{sub(/D_GLIBCXX_USE_CXX11_ABI=0/,"D_GLIBCXX_USE_CXX11_ABI=1")}1' .bazelrc > .temprc && mv .temprc .bazelrc
 
 RUN bazel build --color=yes --curses=yes \
     ${TF_SERVING_BAZEL_OPTIONS} \
@@ -144,7 +147,7 @@ ENV MODEL_NAME=model
 # while also passing in arguments from the docker command line
 RUN printf '#!/bin/bash \n\
 source /opt/intel/openvino/setupvars.sh \n\
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.8/dist-packages/openvino_tensorflow \n\
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.8/dist-packages/openvino_tensorflow:/usr/local/lib/python3.8/dist-packages/tensorflow/ \n\
 tensorflow_model_server --port=8500 --rest_api_port=8501 \
 --model_name=${MODEL_NAME} --model_base_path=${MODEL_BASE_PATH}/${MODEL_NAME} \
 "$@"' > /usr/bin/tf_serving_entrypoint.sh \
