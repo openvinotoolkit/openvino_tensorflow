@@ -197,12 +197,9 @@ def main():
         raise AssertionError(
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
-    if (arguments.openvino_version not in [
-            "master", "2022.1"
-    ]):
+    if (arguments.openvino_version not in ["master", "2022.1"]):
         raise AssertionError(
-            "Only 2022.1 OpenVINO version and master branch are supported"
-        )
+            "Only 2022.1 OpenVINO version and master branch are supported")
 
     if arguments.use_openvino_from_location != '':
         if not os.path.isdir(arguments.use_openvino_from_location):
@@ -660,7 +657,8 @@ def main():
         raise AssertionError(
             "Cannot locate openvino-tensorflow whl in the artifacts location")
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
-        raise Exception("Cannot locate openvino-tensorflow whl in the artifacts location")
+        raise Exception(
+            "Cannot locate openvino-tensorflow whl in the artifacts location")
 
     print("SUCCESSFULLY generated wheel: %s" % ov_tf_whl)
     print("PWD: " + os.getcwd())

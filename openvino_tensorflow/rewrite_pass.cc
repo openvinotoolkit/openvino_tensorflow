@@ -104,7 +104,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 
-    // If openvino-tensorflow is disabled via python disable() api or OPENVINO_TF_DISABLE
+    // If openvino-tensorflow is disabled via python disable() api or
+    // OPENVINO_TF_DISABLE
     // is set
     // we will not do anything; all subsequent
     // passes become a no-op.
@@ -116,8 +117,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
     if (ovtf_not_enabled || already_processed) {
       OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                          (already_processed ? "graph is already preprocessed"
-                                             : "openvino-tensorflow is disabled");
+                          (already_processed
+                               ? "graph is already preprocessed"
+                               : "openvino-tensorflow is disabled");
       NGraphClusterManager::EvictAllClusters();
       NGraphClusterManager::EvictMRUClusters();
       return Status::OK();

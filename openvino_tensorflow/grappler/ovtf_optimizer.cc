@@ -58,7 +58,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If openvino-tensorflow is disabled via python disable api or OPENVINO_TF_DISABLE is
+  // If openvino-tensorflow is disabled via python disable api or
+  // OPENVINO_TF_DISABLE is
   // set
   // we will not do anything; all subsequent passes become a no-op.
   bool ovtf_not_enabled =
