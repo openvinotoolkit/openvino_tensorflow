@@ -4,10 +4,10 @@
 ARG TF_VERSION="2.8.0"
 
 ################################################################################
-FROM openvino/ubuntu18_dev:2022.1 AS build_ovtf
+FROM openvino/ubuntu20_dev:2022.1 AS build_ovtf
 ################################################################################
 
-LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
+LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root
@@ -66,7 +66,7 @@ CMD ["/bin/bash"]
 FROM tensorflow/serving:${TF_VERSION}-devel as build_serving
 #######################################################################################
 
-LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
+LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root
@@ -106,10 +106,10 @@ RUN bazel clean --expunge --color=yes && \
     rm -rf /root/.cache
 
 ################################################################################
-FROM openvino/openvino_tensorflow/ubuntu18_runtime:2.0.0 AS runtime_serving
+FROM openvino/openvino_tensorflow/ubuntu20_runtime:2.0.0 AS runtime_serving
 ################################################################################
 
-LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
+LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root
