@@ -138,7 +138,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
 #if defined(OPENVINO_2022_1)
     // TODO: once OCM upgraded change it to the right version
-    ov_version = "2021.4";
+    ov_version = "2022.1";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,

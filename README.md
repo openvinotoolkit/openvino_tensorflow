@@ -27,7 +27,7 @@ This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en
 - Python* 3.7, 3.8 or 3.9
 - TensorFlow* v2.8.0
 
-<sup>1</sup>Windows package is released in Beta preview mode and currently supports only Python3.9 
+<sup>1</sup>Windows package supports only Python3.9 
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
@@ -79,7 +79,6 @@ To determine what processing units are available on your system for inference, u
     openvino_tensorflow.list_backends()
 For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
 
-[Note: If a CUDA capable device is present in the system then set the environment variable CUDA_VISIBLE_DEVICES to -1]  
 
 ## Examples
 
