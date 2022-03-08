@@ -52,7 +52,7 @@ def main():
     # Check to make sure that there is TensorFlow installed and will work
     # TODO
 
-    # Install nGraph Bridge
+    # Install openvino-tensorflow
     ovtf_wheel_files = glob.glob(
         os.path.join(
             os.path.abspath(arguments.artifacts_dir),

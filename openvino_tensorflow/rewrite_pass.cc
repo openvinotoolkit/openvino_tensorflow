@@ -104,7 +104,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 
-    // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE
+    // If openvino-tensorflow is disabled via python disable() api or
+    // OPENVINO_TF_DISABLE
     // is set
     // we will not do anything; all subsequent
     // passes become a no-op.
@@ -112,12 +113,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
     bool already_processed = util::IsAlreadyProcessed(graph);
     if (!already_processed && ovtf_not_enabled) {
-      OVTF_VLOG(0) << "NGraph is available but disabled.";
+      OVTF_VLOG(0) << "openvino-tensorflow is available but disabled.";
     }
     if (ovtf_not_enabled || already_processed) {
       OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                          (already_processed ? "graph is already preprocessed"
-                                             : "ngraph is disabled");
+                          (already_processed
+                               ? "graph is already preprocessed"
+                               : "openvino-tensorflow is disabled");
       NGraphClusterManager::EvictAllClusters();
       NGraphClusterManager::EvictMRUClusters();
       return Status::OK();
@@ -135,21 +137,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     BackendManager::GetBackendName(device);
     const char* device_id(device.c_str());
     std::string ov_version;
-#if defined(OPENVINO_2021_2)
-    ov_version = "2021.2";
-#elif defined(OPENVINO_2021_3)
-    ov_version = "2021.3";
-#elif defined(OPENVINO_2021_4)
-    ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_1)
-    // ocm checks are same as 2021.4 for this minor version update
-    ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_2)
-    // ocm checks are same as 2021.4 for this minor version update
-    ov_version = "2021.4";
-#elif defined(OPENVINO_2022_1)
+
+#if defined(OPENVINO_2022_1)
     // TODO: once OCM upgraded change it to the right version
-    ov_version = "2021.4";
+    ov_version = "2022.1";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,

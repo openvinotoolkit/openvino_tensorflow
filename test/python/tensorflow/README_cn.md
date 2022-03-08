@@ -86,4 +86,4 @@ Tf\_unittest\_runner 主要用于使用 nGraph 运行 tensorflow python 单元�
 注：math\_ops\_test 仅用于举例，可以是任何可用的 tensorflow 测试模块。
 
  - 可以在文本文件中列出带运行的测试，并将文件名传递给参数 `--run_tests_from_file` 以供运行。
- - 如要在运行测试时验证 ngraph 上的算子分布，可设置 OPENVINO_TF_LOG_PLACEMENT=1
+ - 如要在运行测试时验证 OpenVINO™ 上的算子分布，可设置 OPENVINO_TF_LOG_PLACEMENT=1

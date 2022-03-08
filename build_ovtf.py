@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='master')
+        default='2022.1')
 
     parser.add_argument(
         '--python_executable',
@@ -197,13 +197,9 @@ def main():
         raise AssertionError(
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
-    if (arguments.openvino_version not in [
-            "master", "2022.1", "2021.4.2", "2021.4.1", "2021.4", "2021.3",
-            "2021.2"
-    ]):
+    if (arguments.openvino_version not in ["master", "2022.1"]):
         raise AssertionError(
-            "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
-        )
+            "Only 2022.1 OpenVINO version and master branch are supported")
 
     if arguments.use_openvino_from_location != '':
         if not os.path.isdir(arguments.use_openvino_from_location):
@@ -537,17 +533,8 @@ def main():
         if (arguments.openvino_version == "master"):
             openvino_release_tag = "master"
         elif (arguments.openvino_version == "2022.1"):
-            openvino_release_tag = "2022.1"
-        elif (arguments.openvino_version == "2021.4.2"):
-            openvino_release_tag = "2021.4.2"
-        elif (arguments.openvino_version == "2021.4.1"):
-            openvino_release_tag = "2021.4.1"
-        elif (arguments.openvino_version == "2021.4"):
-            openvino_release_tag = "2021.4"
-        elif (arguments.openvino_version == "2021.3"):
-            openvino_release_tag = "2021.3"
-        elif (arguments.openvino_version == "2021.2"):
-            openvino_release_tag = "2021.2"
+            #TODO: repleace it with 2022.1 when the tag is created on OV branch
+            openvino_release_tag = "releases/2022/1"
 
         # Download OpenVINO
         download_repo(
@@ -561,7 +548,7 @@ def main():
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
-    # Next build CMAKE options for the bridge
+    # Next build CMAKE options for the openvino-tensorflow
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
@@ -658,7 +645,7 @@ def main():
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
 
-    # Now build the bridge
+    # Now build openvino-tensorflow
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                   openvino_tf_src_dir, venv_dir,
                                   openvino_tf_cmake_flags, verbosity)
@@ -668,9 +655,10 @@ def main():
         raise AssertionError("Path not found {}".format(artifacts_location))
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise AssertionError(
-            "Cannot locate nGraph whl in the artifacts location")
+            "Cannot locate openvino-tensorflow whl in the artifacts location")
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
-        raise Exception("Cannot locate nGraph whl in the artifacts location")
+        raise Exception(
+            "Cannot locate openvino-tensorflow whl in the artifacts location")
 
     print("SUCCESSFULLY generated wheel: %s" % ov_tf_whl)
     print("PWD: " + os.getcwd())

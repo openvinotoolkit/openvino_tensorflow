@@ -72,30 +72,6 @@ class NGraphEncapsulateOp : public OpKernel {
   std::vector<std::string> m_session_output_names;
 };
 
-static Status ParseNodeAttributes(
-    const google::protobuf::Map<string, AttrValue>& additional_attributes,
-    std::unordered_map<std::string, std::string>* additional_attribute_map) {
-  for (auto itx : additional_attributes) {
-    // Find the optional attributes to be sent to the backend.
-    // The optional attributes have '_ovtf_' appended to the start
-    // so we need to get rid of that and only send the remaining string
-    // since the backend will only look for that.
-    // '_ovtf_' is only appended for the bridge.
-    // For e.g. _ovtf_ice_cores --> ice_cores
-    if (itx.first.find("_ovtf_") != std::string::npos) {
-      // TODO: decide what the node attributes should be.
-      // right now _ovtf_ is used for optional attributes
-      auto attr_name = itx.first;
-      auto attr_value = itx.second.s();
-      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strnlen("_ovtf_", 6))
-                   << " Value: " << attr_value;
-      additional_attribute_map->insert(
-          {attr_name.substr(strnlen("_ovtf_", 6)), attr_value});
-    }
-  }
-  return Status::OK();
-}
-
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
   OVTF_VLOG(1) << "Create Executor " << name();
@@ -187,13 +163,6 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OVTF_VLOG(5) << "Marking arg " << index << " is_static: " << is_static;
     m_input_is_static[index] = is_static;
   }
-
-  // TODO: Unused and thus commented, remove it later
-  // Get the optional attributes
-  // std::unordered_map<std::string, std::string> additional_attribute_map;
-  // auto node_def = ctx->def();
-  // OP_REQUIRES_OK(
-  //     ctx, ParseNodeAttributes(node_def.attr(), &additional_attribute_map));
 }
 
 NGraphEncapsulateOp::~NGraphEncapsulateOp() {
