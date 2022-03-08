@@ -48,7 +48,6 @@
      displayName: "Code format check"
     
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
@@ -59,7 +58,6 @@
      displayName: "CPU tf_ov C++ Tests"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       cd test/ci/azure/      
@@ -70,7 +68,6 @@
      displayName: "CPU C++ Inference Example"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
@@ -80,7 +77,6 @@
      displayName: "CPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
@@ -90,7 +86,6 @@
      displayName: "CPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
@@ -101,7 +96,6 @@
      displayName: "GPU tf_ov C++ Tests"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
       cd test/ci/azure/      
@@ -113,7 +107,6 @@
      
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
@@ -139,7 +132,6 @@
      displayName: "GPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(WORK_DIR)/build_cmake/artifacts/lib/
@@ -150,7 +142,6 @@
      displayName: "MYRIAD tf_ov C++ Tests"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
@@ -162,7 +153,6 @@
      displayName: "MYRIAD C++ Inference Example"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
@@ -173,7 +163,6 @@
      displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
      
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       export NGRAPH_TF_UTEST_RTOL=0.0001
@@ -184,7 +173,6 @@
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
       chmod +x convert_yolov4.sh
@@ -198,7 +186,6 @@
      displayName: "python CPU OD Inference Example TF1"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       cd  examples/
@@ -212,7 +199,6 @@
      displayName: "python CPU OD Inference Example TF2"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
       cd $(WORK_DIR)
@@ -222,7 +208,6 @@
      displayName: "python GPU OD Inference Example TF1"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=GPU
       cd $(WORK_DIR)
@@ -232,7 +217,6 @@
      displayName: "python GPU OD Inference Example TF2"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       cd $(WORK_DIR)
@@ -242,7 +226,6 @@
      displayName: "python MYRIAD OD Inference Example TF1"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=MYRIAD
       cd $(WORK_DIR)
@@ -252,7 +235,6 @@
      displayName: "python MYRIAD OD Inference Example TF2"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
@@ -263,7 +245,6 @@
      displayName: "python CPU Classification Inference Example TF1"
    
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
       export OPENVINO_TF_BACKEND=GPU
@@ -273,7 +254,6 @@
      displayName: "python GPU Classification Inference Example TF1"
 
    - script: |
-      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
       export OPENVINO_TF_BACKEND=MYRIAD
