@@ -844,7 +844,8 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         # "-DENABLE_OV_IR_FRONTEND=ON",
         # "-DENABLE_OV_TF_FRONTEND=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
-        # "-DENABLE_OPENCV=OFF"  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
+        # "-DENABLE_OPENCV=OFF",  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
     ]
 
     if (platform.system() == 'Windows'):
