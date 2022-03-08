@@ -13,4 +13,5 @@ cpu_codegen/
 .*.swp
 .nfs*
 build_cmake
+build_*/
 test/**/dump.sh
