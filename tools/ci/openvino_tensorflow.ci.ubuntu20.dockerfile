@@ -52,7 +52,7 @@ CMD ["/bin/bash"]
 FROM openvino/ubuntu20_dev:2022.1 AS ovtf_build
 ################################################################################
 
-LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
+LABEL description="This is the dev image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root
