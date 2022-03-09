@@ -153,7 +153,7 @@ else()
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
 
-# [TODO] Add AUTO, HETERO, and TF FE libs to this list when support is added
+# Add AUTO, HETERO, and TF FE libs to this list when support is added
 set (IE_LIBS 
     "${IE_LIBS}" 
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
