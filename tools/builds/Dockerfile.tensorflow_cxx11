@@ -1,0 +1,43 @@
+# Copyright (C) 2019-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Defaults to py3.8, can be changed with --build-arg PY_VERSION
+ARG PY_VERSION="python3.8"
+
+################################################################################
+FROM tensorflow/build:latest-${PY_VERSION}
+################################################################################
+
+# Defaults to v2.8.0, can be changed with --build-arg TF_TAG
+ARG TF_TAG="v2.8.0"
+
+ADD rename_wheel.sh /usertools/
+
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+RUN mkdir -p /tf/tensorflow /tf/pkg/
+
+WORKDIR /tf/tensorflow/
+
+RUN git clone https://github.com/tensorflow/tensorflow /tf/tensorflow/; \
+    git checkout ${TF_TAG}
+
+# Build pip wheel
+# ubuntu18.04-gcc7_manylinux2010-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain is the release toolchain for CPU as well
+# https://github.com/tensorflow/tensorflow/blob/07606166fdec2b21d645322b5465d13809bf06de/.bazelrc#L442
+ARG CROSSTOOL_TOP="@ubuntu18.04-gcc7_manylinux2010-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain"
+
+RUN bazel --bazelrc=/usertools/cpu.bazelrc build \
+    --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=1" \
+    --crosstool_top=${CROSSTOOL_TOP} \
+    --config=sigbuild_local_cache //tensorflow/tools/pip_package:build_pip_package
+
+RUN ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pkg/ --cpu; \
+    /usertools/rename_and_verify_wheels.sh
+
+# rename wheel to tensorflow_abi1
+RUN source /usertools/rename_wheel.sh && \
+    whl_rename /tf/pkg/*whl tensorflow_abi1 && \
+    rm /tf/pkg/tensorflow_cpu*;
+
+CMD ["/bin/bash"]
