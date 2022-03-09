@@ -30,7 +30,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=${OV_LOCATION} --openvino_version=2022.1 --cxx11_abi_version=1
+      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=${OV_LOCATION} --openvino_version=2022.1 --cxx11_abi_version=1 --disable_packaging_openvino_libs
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
@@ -44,6 +44,7 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -54,6 +55,7 @@
    - script: |
       export OPENVINO_TF_BACKEND=CPU
       pip3 install keras
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts build_cmake/artifacts --test_tf_python
@@ -100,6 +102,7 @@
 
    - script: |
       export OPENVINO_TF_BACKEND=CPU
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
       pip3 install -r requirements.txt
@@ -140,6 +143,7 @@
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
       export OPENVINO_TF_BACKEND=CPU
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
@@ -150,6 +154,7 @@
    - script: |
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
+      source ${OV_LOCATION}/setupvars.sh
       source build_cmake/venv-tf-py3/bin/activate
       pip3 install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
