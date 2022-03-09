@@ -97,8 +97,7 @@ TF_NEEDED_VER = TF_VERSION_NEEDED.split('.')
 ovtf_classic_loaded = True
 openvino_tensorflow_lib = None
 if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
-   (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
-   ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
+   (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]):
     libpath = os.path.dirname(__file__)
     if system() == 'Windows':
         full_lib_path = os.path.join(libpath, 'openvino_tensorflow.' + ext)
@@ -258,5 +257,5 @@ if ovtf_classic_loaded:
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
-    "TensorFlow version used for this build: " + "v" + TF_VERSION + "\n" \
+    "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"
