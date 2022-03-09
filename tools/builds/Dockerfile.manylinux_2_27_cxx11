@@ -4,7 +4,7 @@
 ARG OV_TAG="2022.1"
 
 ################################################################################
-FROM nncv-harbor.inn.intel.com/openvino/ubuntu18_dev:${OV_VERSION} AS ovtf_build
+FROM nncv-harbor.inn.intel.com/openvino/ubuntu18_dev:${OV_TAG}
 ################################################################################
 
 LABEL description="This is the Ubuntu based dockerfile that builds CXX11 Python 3.x wheels \
@@ -22,8 +22,12 @@ ARG OVTF_BRANCH="releases/2.0.0"
 ADD rename_wheel.sh /
 
 RUN apt-get update; \
+    apt install -y --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa; \
     apt-get install -y --no-install-recommends \
     git \
+    zip \
+    unzip \
     build-essential \
     ccache \
     python3.7-venv \
@@ -31,8 +35,9 @@ RUN apt-get update; \
     python3.9-venv; \
     rm -rf /var/lib/apt/lists/*;
 
-RUN add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
+RUN apt-get update; \
+    apt install -y --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa; \
     apt-get install -y --no-install-recommends \
         python3.6-dev python3.7-dev python3.8-dev python3.9-dev && \
         curl https://bootstrap.pypa.io/get-pip.py | python3.7 - --no-cache-dir pip==22.0.4 && \
