@@ -111,10 +111,10 @@ endif()
 
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
-# First install the openvino_tensorflow lib and headers
+# Install the openvino_tensorflow lib
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
-# Install OCM and OpenVINO libraries
+# Install OCM and set a variable with required OpenVINO libraries path,
 if (APPLE)
   set(OCM_LIB libocm.dylib)
   set(LIB_PREFIX "lib")
@@ -153,6 +153,7 @@ else()
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
 
+# Update this list for any new OpenVINO component/feature addition in future
 set (IE_LIBS 
     "${IE_LIBS}" 
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
@@ -162,6 +163,7 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/plugins.xml" 
     )
 
+# Install Openvino and TBB libraries
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
  install(FILES ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
