@@ -35,9 +35,21 @@ RUN bazel --bazelrc=/usertools/cpu.bazelrc build \
 RUN ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pkg/ --cpu; \
     /usertools/rename_and_verify_wheels.sh
 
+RUN bazel --bazelrc=/usertools/cpu.bazelrc build \
+    --crosstool_top=${CROSSTOOL_TOP} \
+    --config=sigbuild_local_cache //tensorflow:libtensorflow_cc.so.2 //tensorflow/core/kernels:ops_testutil;
+
+RUN mkdir -p /tf/pkg/artifacts/tensorflow/; \
+    cp -L /tf/tensorflow/bazel-bin/tensorflow/{libtensorflow_cc.so.2,libtensorflow_framework.so.2} /tf/pkg/artifacts/tensorflow/; \
+    git clone /tf/tensorflow/ /tf/pkg/tensorflow/ --branch ${TF_TAG}; \
+    cp --parents bazel-bin/tensorflow/libtensorflow_cc.so.2 /tf/pkg/tensorflow/; \
+    cp --parents bazel-bin/tensorflow/core/kernels/{libtfkernel_sobol_op.so,libops_testutil.so} /tf/pkg/tensorflow/; \
+    mv /tf/pkg/*whl /tf/pkg/artifacts/tensorflow/; \
+    rm /tf/pkg/audit.txt /tf/pkg/profile.json
+
 # rename wheel to tensorflow_abi1
 RUN source /usertools/rename_wheel.sh && \
-    whl_rename /tf/pkg/*whl tensorflow_abi1 && \
-    rm /tf/pkg/tensorflow_cpu*;
+    whl_rename /tf/pkg/artifacts/tensorflow/*whl tensorflow_abi1 && \
+    rm /tf/pkg/artifacts/tensorflow/tensorflow_cpu*;
 
 CMD ["/bin/bash"]
