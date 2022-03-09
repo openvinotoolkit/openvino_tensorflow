@@ -155,7 +155,10 @@ endif()
 set (IE_LIBS 
     "${IE_LIBS}" 
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
+<<<<<<< HEAD
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
+=======
+>>>>>>> 99470be7 (Update cmakelist to filter OV libs for OVTF wheel (#272))
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
