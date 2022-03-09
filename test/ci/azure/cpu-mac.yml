@@ -6,11 +6,12 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  name: 'mac'
+  name: 'macOS'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    TF_LOCATION: /Users/intel/ci_setup/tf_2_8_0_abi1
+    TF_LOCATION: /Users/intel/ci_setup/tf_2_8_0_abi1/
+    OV_LOCATION: /Users/intel/ci_setup/openvino_2022.1_abi1/
     
  steps:
  
@@ -23,26 +24,26 @@
      path: openvino_tensorflow
  
    - script: |
-      pip3 install -r requirements.txt
+      python3 -m pip install -r requirements.txt
      displayName: "Setup" 
     
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --cxx11_abi_version=1
+      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=${OV_LOCATION} --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
    - script: |
       source build_cmake/venv-tf-py3/bin/activate
-      pip3 install -U build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
+      python3 -m pip install -U build_cmake/artifacts/tensorflow/tensorflow-*.whl
+      python3 -m pip install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      pip3 install keras
+      python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -52,7 +53,7 @@
      
    - script: |
       export OPENVINO_TF_BACKEND=CPU
-      pip3 install keras
+      python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
         --artifacts build_cmake/artifacts --test_tf_python
@@ -63,7 +64,7 @@
    - script: |
       export OPENVINO_TF_BACKEND="MYRIAD"
       export NGRAPH_TF_UTEST_RTOL=0.0001
-      pip3 install keras
+      python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
       --artifacts build_cmake/artifacts --test_python
@@ -74,7 +75,7 @@
    - script: |
       export OPENVINO_TF_BACKEND="MYRIAD"
       export NGRAPH_TF_UTEST_RTOL=0.0001
-      pip3 install keras
+      python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
       PYTHONPATH=`pwd` python3 test/python/tensorflow/tf_unittest_runner.py \
       --tensorflow_path build_cmake/artifacts//tensorflow/python \
@@ -91,7 +92,7 @@
       ./convert_yolov4.sh
       export OPENVINO_TF_BACKEND=CPU
       cd $(WORK_DIR)
-      pip3 install -r examples/requirements.txt
+      python3 -m pip install -r examples/requirements.txt
       python3 examples/TF_1_x/object_detection_sample.py --no_show
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -101,7 +102,7 @@
       export OPENVINO_TF_BACKEND=CPU
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
-      pip3 install -r requirements.txt
+      python3 -m pip install -r requirements.txt
       chmod +x convert_yolov4.sh
       ./convert_yolov4.sh
       cd $(WORK_DIR)
@@ -126,7 +127,7 @@
       
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/
-      pip3 install -r requirements.txt
+      python3 -m pip install -r requirements.txt
       chmod +x convert_yolov4.sh
       ./convert_yolov4.sh
       cd $(WORK_DIR)
@@ -137,10 +138,10 @@
      
    - script: |
       cd  $(WORK_DIR)
-      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
+      export TFHUB_CACHE_DIR=$HOME/.cache/tfhub_modules
       export OPENVINO_TF_BACKEND=CPU
       source build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r examples/requirements.txt
+      python3 -m pip install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
      condition: always()
      workingDirectory: $(WORK_DIR) 
@@ -148,9 +149,9 @@
    
    - script: |
       cd  $(WORK_DIR)
-      curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
+      export TFHUB_CACHE_DIR=$HOME/.cache/tfhub_modules
       source build_cmake/venv-tf-py3/bin/activate
-      pip3 install -r examples/requirements.txt
+      python3 -m pip install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
      condition: always()
      workingDirectory: $(WORK_DIR) 
