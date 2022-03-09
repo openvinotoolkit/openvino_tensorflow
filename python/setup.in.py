@@ -9,7 +9,6 @@ from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
 from wheel.vendored.packaging.tags import sys_tags
 import os
-import sys
 
 # https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
 class BinaryBdistWheel(bdist_wheel):
@@ -20,8 +19,9 @@ class BinaryBdistWheel(bdist_wheel):
 
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
-        if system() == 'Linux':
-           plat = 'manylinux2014_x86_64'
+        # Get the right platform tag by querying the linker version
+        glibc_major, glibc_minor = os.popen("ldd --version | head -1").read().split()[-1].split(".")
+        plat = 'manylinux_%s_%s_x86_64'%(glibc_major, glibc_minor)
         tags = next(sys_tags())
         return (tags.interpreter, tags.abi, plat)
 

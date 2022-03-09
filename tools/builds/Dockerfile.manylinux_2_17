@@ -1,5 +1,6 @@
 # Copyright (C) 2019-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 FROM quay.io/pypa/manylinux2014_x86_64 AS base
 
 LABEL Description="This is the manylinux2014 based dockerfile that builds Python 3.x whl packages \
@@ -72,7 +73,6 @@ RUN scl enable devtoolset-7 bash
 RUN for py_ver in cp37-cp37m cp38-cp38 cp39-cp39; do \
         PYBIN=/opt/python/${py_ver}/bin; \
         "${PYBIN}/pip" install psutil virtualenv; \
-        git apply tools/builds/manylinux2014.patch; \
         sed -i "s#\"python3\", \"-m\", \"venv\"#\"$PYBIN/python\", \"-m\", \"venv\"#g" tools/build_utils.py; \
         "${PYBIN}/python" build_ovtf.py --python_executable="${PYBIN}/python" --cxx11_abi_version=0; \
         cp build_cmake/artifacts/*.whl /whl/abi0/; \
