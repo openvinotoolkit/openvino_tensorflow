@@ -9,8 +9,8 @@
   name: 'Ubuntu20'
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    OV_LOCATION: /opt/intel/openvino_2022.1.0.620/
-    TF_LOCATION: /home/iotgecsp/ci_setup/tf_2_8_0_abi1
+    OV_LOCATION: /opt/intel/openvino/
+    TF_LOCATION: /home/openvino/tensorflow_pkg/
     
  steps:
  
