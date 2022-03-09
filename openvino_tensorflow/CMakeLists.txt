@@ -111,29 +111,51 @@ endif()
 
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
-# First install the libopenvino_tensorflow.so and headers
+# First install the openvino_tensorflow lib and headers
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
-# Install OpenVINO libraries
+# Install OCM and OpenVINO libraries
 if (APPLE)
   set(OCM_LIB libocm.dylib)
+  set(LIB_PREFIX "lib")
+  set(PLUGIN_LIB_EXT "dylib")
+  SET(OV_LIB_EXT "so")
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/Release)
+  set (IE_LIBS "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" )
+  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 elseif(WIN32)
   set(OCM_LIB ocm.dll)
-else()
-  set(OCM_LIB libocm.so)
-endif()
-
-if(WIN32)
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release/)
+  set(LIB_PREFIX "")
+  set(PLUGIN_LIB_EXT "dll")
+  SET(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release)
+  set (IE_LIBS "${IE_LIBS_PATH}/pcie-ma2x8x.elf" )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/)
+  set(OCM_LIB libocm.so)
+  set(LIB_PREFIX "lib")
+  set(PLUGIN_LIB_EXT "so")
+  set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64)
+  set (IE_LIBS "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
+
+set (IE_LIBS 
+    "${IE_LIBS}" 
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
+    "${IE_LIBS_PATH}/plugins.xml" 
+    "${IE_LIBS_PATH}/cache.json"
+    )
+
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
- install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
+ install(FILES ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
     if(USE_OPENVINO_FROM_LOCATION)
       if(WIN32)
