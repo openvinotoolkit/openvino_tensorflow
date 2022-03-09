@@ -36,6 +36,7 @@ RUN ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pkg/ --cpu; \
     /usertools/rename_and_verify_wheels.sh
 
 RUN bazel --bazelrc=/usertools/cpu.bazelrc build \
+    --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=1" \
     --crosstool_top=${CROSSTOOL_TOP} \
     --config=sigbuild_local_cache //tensorflow:libtensorflow_cc.so.2 //tensorflow/core/kernels:ops_testutil;
 
