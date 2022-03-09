@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  name: 'mac'
+  name: 'macOS'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
