@@ -19,14 +19,15 @@ class BinaryBdistWheel(bdist_wheel):
 
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
-        # Get the right platform tag by querying the linker version
-        glibc_major, glibc_minor = os.popen("ldd --version | head -1").read().split()[-1].split(".")
-        # OVTF is built against GLIBC 2.17 with ABI-0 for compatibility with TensorFlow wheels
-        # See https://github.com/mayeut/pep600_compliance/blob/master/pep600_compliance/tools/manylinux-policy.json
-        if glibc_major == "2" and glibc_minor == "17":
-            plat = 'manylinux_2_17_x86_64.manylinux2014_x86_64'
-        else: # For manylinux2014 and above, no alias is required
-            plat = 'manylinux_%s_%s_x86_64'%(glibc_major, glibc_minor)
+        if system() == 'Linux':
+            # Get the right platform tag by querying the linker version
+            glibc_major, glibc_minor = os.popen("ldd --version | head -1").read().split()[-1].split(".")
+            # OVTF is built against GLIBC 2.17 with ABI-0 for compatibility with TensorFlow wheels
+            # See https://github.com/mayeut/pep600_compliance/blob/master/pep600_compliance/tools/manylinux-policy.json
+            if glibc_major == "2" and glibc_minor == "17":
+                plat = 'manylinux_2_17_x86_64.manylinux2014_x86_64'
+            else: # For manylinux2014 and above, no alias is required
+                plat = 'manylinux_%s_%s_x86_64'%(glibc_major, glibc_minor)
         tags = next(sys_tags())
         return (tags.interpreter, tags.abi, plat)
 
