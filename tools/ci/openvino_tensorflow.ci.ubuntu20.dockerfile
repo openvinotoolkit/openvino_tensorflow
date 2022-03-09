@@ -85,7 +85,4 @@ RUN curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
 COPY ./start.sh .
 RUN chmod +x start.sh
 
-RUN chown openvino -R /home/openvino
-USER openvino
-
 ENTRYPOINT [ "./start.sh" ]
