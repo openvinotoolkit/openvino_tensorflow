@@ -6,10 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  name: 'Docker'
-  demands:
-    - agent.name -equals ubuntu20agent
-    
+  name: 'Ubuntu20'
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     OV_LOCATION: /opt/intel/openvino_2022.1.0.620/
