@@ -33,7 +33,7 @@ extern EXPORT_SYMBOL bool is_enabled();
 
 extern EXPORT_SYMBOL size_t backends_len();
 extern EXPORT_SYMBOL bool list_backends(char** backends);
-extern EXPORT_SYMBOL bool set_backend(const char* backend);
+extern EXPORT_SYMBOL void set_backend(const char* backend);
 extern EXPORT_SYMBOL bool is_supported_backend(const char* backend);
 extern EXPORT_SYMBOL bool get_backend(char** backend);
 
@@ -57,7 +57,7 @@ extern bool IsEnabled();
 
 // TODO: why is this not const?
 extern EXPORT_SYMBOL vector<string> ListBackends();
-extern EXPORT_SYMBOL bool SetBackend(const string& type);
+extern EXPORT_SYMBOL void SetBackend(const string& type);
 extern string GetBackend();
 
 extern void StartLoggingPlacement();
