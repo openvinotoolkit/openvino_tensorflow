@@ -70,7 +70,8 @@ RUN apt-get update; \
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70;
 
-RUN pip3 install --no-cache-dir setuptools>=54.1.2 psutil>=5.8.0 wheel==0.36.2
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install --no-cache-dir setuptools psutil wheel==0.36.2
 
 COPY --from=tensorflow_build /tf/pkg/ /home/openvino/tensorflow_pkg/
 
@@ -82,8 +83,8 @@ ENV AGENT_VERSION=2.200.2
 
 WORKDIR /home/openvino/ci_setup/
 
-RUN AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-${TARGETARCH}-${AGENT_VERSION}.tar.gz; \
-    curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
+ENV AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz
+RUN curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
 
 COPY ./start.sh .
 RUN chmod +x start.sh
