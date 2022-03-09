@@ -116,7 +116,6 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.list_backends.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.list_backends.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_backend.argtypes = [ctypes.c_char_p]
-    openvino_tensorflow_lib.set_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.get_backend.argtypes = [ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.get_backend.restype = ctypes.c_bool
     openvino_tensorflow_lib.freeBackend.argtypes = []
