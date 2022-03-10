@@ -35,7 +35,7 @@ extern EXPORT_SYMBOL bool is_enabled();
 
 extern EXPORT_SYMBOL size_t backends_len();
 extern EXPORT_SYMBOL bool list_backends(char** backends);
-extern EXPORT_SYMBOL void set_backend(const char* backend);
+extern EXPORT_SYMBOL bool set_backend(const char* backend);
 extern EXPORT_SYMBOL bool is_supported_backend(const char* backend);
 extern EXPORT_SYMBOL bool get_backend(char** backend);
 
