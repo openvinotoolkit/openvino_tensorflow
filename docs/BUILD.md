@@ -10,9 +10,10 @@
 	* 2.2. [Build Instructions for Windows](#BuildInstructionsWindows)
 	* 2.3. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
 	* 2.4. [Build Verification](#BuildVerification)
- 3. [OpenVINO™](#OpenVINO)
- 4. [TensorFlow](#TensorFlow)
- 5. [Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
+ 3. [Backwards Compatibility with TensorFlow](#BackwardsCompatibilitywithTensorFlow)
+ 4. [OpenVINO™](#OpenVINO)
+ 5. [TensorFlow](#TensorFlow)
+ 
 
 <!-- markdown-toc-config
 	numbering=true
@@ -208,10 +209,17 @@ Test the installation:
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
   
-##  3. <a name='OpenVINO'></a>OpenVINO™
+##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>Backwards Compatibility with TensorFlow on Linux
+**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build the source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions v2.4.4, v2.5.3, v2.6.3, v2.7.1, and v2.8.0). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). 
+
+Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box (example: PyPi openvino-tensorflow 2.0.0 which depends on TF 2.8.0 does not work with PyPi TensorFlow 2.6.0).
+
+Please note that PyPi openvino-tensorflow 2.0.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow built against TF 2.8.0 will work with PATCH versions like TF 2.8.1, and 2.8.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
+
+##  4. <a name='OpenVINO'></a>OpenVINO™
 
 OpenVINO™ can be built from source independently using `build_ov.py`
-##  4. <a name='TensorFlow'></a>TensorFlow
+##  5. <a name='TensorFlow'></a>TensorFlow
 
 ### <a name='LinuxAndmacOS'></a>For Linux and macOS
 

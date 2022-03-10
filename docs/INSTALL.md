@@ -54,6 +54,8 @@
         pip3 install -U pip
         pip3 install tensorflow==2.8.0
         pip3 install openvino-tensorflow==2.0.0
+
+The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow wheel for TF 2.8.0 would work with any future PATCH versions like TF 2.8.1, and 2.8.2.
 <br/> 
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside TensorFlow released on Github (Works on Windows)
