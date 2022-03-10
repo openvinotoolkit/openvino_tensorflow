@@ -64,10 +64,10 @@ First, clone the `openvino_tensorflow` repository:
       $ pip3 install -r requirements.txt
       ```  
 
-2. Install CMake, supported version >=3.14.0 and =<3.20.0, 
+2. Install CMake, supported version >=3.14.0 
         
       ```bash
-      # to install CMake 3.18.2
+      # to install CMake 3.18.4
       $ wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
       $ tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
       $ cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
@@ -129,7 +129,7 @@ Notes:
         Microsoft Visual C++ 2019 Redistributable  
         Microsoft Build Tools 2019
 
-3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0 and =<3.20.1,
+3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0
 4. [Download and Install OpenVINO™ Toolkit 2022.1 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
@@ -144,18 +144,20 @@ To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with Tenso
 1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. This is the recommended build option for most of the use cases.
 
         python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1
+  
+- To use the master branch of OpenVINO™, pass "master" as value to "openvino_version" argument. **OpenVINO™ integration with TensorFlow** build script will take the latest commit from OpenVINO™ master branch, however all the openvino-tensorflow APIs and functionalities would still remain same as they were for OpenVINO™ version 2022.1. 
 
 2. Pulls compatible TensorFlow ABI1 package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2022.1/ --cxx11_abi_version=1
 
 3. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TensorFlow from source everytime.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --openvino_version=2022.1
 
 4. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Uses OpenVINO™ binary from specified location. **This is only compatible with ABI1 built TensorFlow**.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2022.1/ --cxx11_abi_version=1
 
 
 Select the `help` option of `build_ovtf.py` script to learn more about various build options.
@@ -166,11 +168,11 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
 Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
 1. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752"
+        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" 
 
-2. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#TFWindows). Uses OpenVINO™ binary from specified location.
+2. To use prebuilt TensorFlow from the given location [refer the TensorFlow build instructions](#TFWindows). It uses OpenVINO™ binary from specified location. Use this build option to run C++ examples and to integrate openvino-tensorflow in TensorFlow C++ inference applications.
 
-        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 
 ###  2.3. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
 In order to build **OpenVINO™ integration with TensorFlow** to use with the Intel Atom® processor, we recommend building TensorFlow from source, by using the following command:
@@ -197,7 +199,7 @@ This should produce an output like:
         OpenVINO integration with TensorFlow version: b'2.0.0'
         OpenVINO version used for this build: b'2022.1'
         TensorFlow version used for this build: v2.8.0
-        CXX11_ABI flag used for this build: 1
+        CXX11_ABI flag used for this build: 0
 
 
 Test the installation:
@@ -239,7 +241,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
         cd tensorflow
         git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
-        git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_7_0_build.patch
+        git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
 
 - Configure the Build: https://www.tensorflow.org/install/source_windows#configure_the_build      
@@ -256,11 +258,3 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 - Build CC libraries
   
         bazel build --config=opt tensorflow:tensorflow_cc.lib
-##  5. <a name='BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels'></a>Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels
-
-To build wheel files compatible with manylinux2014, use the following commands. The build artifacts will be available in your container's /whl/ folder.
-
-```bash
-cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.1.0 . -f Dockerfile.manylinux2014
-```
