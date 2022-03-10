@@ -65,7 +65,14 @@ void EXPORT_SYMBOL freeBackendsList() {
   }
 }
 
-void set_backend(const char* backend) { SetBackend(string(backend)); }
+bool set_backend(const char* backend) {
+  auto status = BackendManager::SetBackend(string(backend));
+  if (status != Status::OK()) {
+    std::cerr << status.error_message() << std::endl;
+    return false;
+  }
+  return true;
+}
 
 extern bool get_backend(char** backend) {
   string b = GetBackend();
