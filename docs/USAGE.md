@@ -6,9 +6,11 @@ This document describes available Python APIs for **OpenVINO™ integration with
 
 ## APIs for essential functionality
 
-To add the **OpenVINO™ integration with TensorFlow** package to your TensorFlow python application, import the package using this line of code:
+To add the environment variable package to your TensorFlow python application, import the package using this line of code:
 
     import openvino_tensorflow
+
+[Note: This would set **CUDA_VISIBLE_DEVICES** environment variable to -1. Its previous state is restored when **OpenVINO™ integration with TensorFlow** is disabled.]
 
 By default, CPU backend is enabled. You can set a different backend by using the following API:
 
@@ -16,11 +18,20 @@ By default, CPU backend is enabled. You can set a different backend by using the
 
 Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 
+
 ## Additional APIs
 
 To determine available backends on your system, use the following API:
 
     openvino_tensorflow.list_backends()
+
+To disable **OpenVINO™ integration with TensorFlow**, use the following API:
+
+    openvino_tensorflow.disable()
+
+To enable **OpenVINO™ integration with TensorFlow**, use the following API:
+
+    openvino_tensorflow.enable()
 
 To check if the **OpenVINO™ integration with TensorFlow** is enabled, use the following API:
 

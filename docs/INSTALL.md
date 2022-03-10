@@ -53,14 +53,14 @@
 
         pip3 install -U pip
         pip3 install tensorflow==2.8.0
-        pip3 install -U openvino-tensorflow
+        pip3 install openvino-tensorflow==2.0.0
 <br/> 
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside TensorFlow released on Github (Works on Windows)
 
         pip3.9 install -U pip
         pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow-2.8.0-cp39-cp39-win_amd64.whl
-        pip3.9 install -U openvino-tensorflow
+        pip3.9 install openvino-tensorflow==2.0.0
 <br/> 
 
 ##  1.3. <a name='InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit'></a>Install **OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit (Works on Linux)

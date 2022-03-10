@@ -41,9 +41,9 @@ chmod 400 the *.pem key.
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install --upgrade pip
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.8.0
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install tensorflow==2.8.0
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U openvino-tensorflow
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install openvino-tensorflow==2.0.0
   
 ```
 -	验证安装 
