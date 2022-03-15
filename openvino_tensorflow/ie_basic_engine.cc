@@ -109,7 +109,7 @@ void IE_Basic_Engine::infer(
   if (m_out_idx.size() == 0) {
     m_out_idx.resize(results.size());
     for (int i = 0; i < results.size(); i++) {
-        m_out_idx[i] = get_output_idx(output_names[i]);
+      m_out_idx[i] = get_output_idx(output_names[i]);
     }
   }
   for (int i = 0; i < results.size(); i++) {
