@@ -55,6 +55,9 @@ class IE_Backend_Engine {
   std::string m_device;
   bool m_multi_req_execution;
   bool m_network_ready;
+  std::vector<int> m_in_idx;
+  std::vector<int> m_out_idx;
+  std::vector<int> m_param_idx;
 
   virtual void start_async_inference(const int req_id);
   virtual void complete_async_inference(const int req_id);
