@@ -36,13 +36,21 @@ void IE_Basic_Engine::infer(
 
   //  Prepare input blobs
   auto parameters = m_model->get_parameters();
+  if (m_in_idx.size() == 0) {
+    m_in_idx.resize(inputs.size());
+    for (int i = 0; i < inputs.size(); i++) {
+      if (inputs[i] != nullptr) {
+        m_in_idx[i] = get_input_idx(input_names[i]);
+      }
+    }
+  }
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr) {
 #if defined(OPENVINO_2021_2)
       if (m_device != "MYRIAD" && m_device != "HDDL") {
         OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                      << input_names[i] << ")";
-        const int in_idx = get_input_idx(input_names[i]);
+        const int in_idx = m_in_idx[i];
         if (in_idx < 0) {
           throw std::runtime_error("Input parameter with friendly name " +
                                    input_names[i] + " not found in ov::Model");
@@ -51,7 +59,7 @@ void IE_Basic_Engine::infer(
       } else {
         OVTF_VLOG(4) << "IE_Basic_Engine::infer() get_input_tensor() ("
                      << input_names[i] << ")";
-        const int in_idx = get_input_idx(input_names[i]);
+        const int in_idx = m_in_idx[i];
         if (in_idx < 0) {
           throw std::runtime_error("Input parameter with friendly name " +
                                    input_names[i] + " not found in ov::Model");
@@ -65,7 +73,7 @@ void IE_Basic_Engine::infer(
 #else
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                    << input_names[i] << ")";
-      const int in_idx = get_input_idx(input_names[i]);
+      const int in_idx = m_in_idx[i];
       if (in_idx < 0) {
         throw std::runtime_error("Input with friendly name " + input_names[i] +
                                  " not found in ov::Model");
@@ -75,11 +83,19 @@ void IE_Basic_Engine::infer(
     }
   }
 
+  if (m_param_idx.size() == 0) {
+    m_param_idx.resize(hoisted_params.size());
+    for (int i = 0; i < hoisted_params.size(); i++) {
+      if (hoisted_params[i] != nullptr) {
+        m_param_idx[i] = get_input_idx(param_names[i]);
+      }
+    }
+  }
   for (int i = 0; i < hoisted_params.size(); i++) {
     if (hoisted_params[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                    << param_names[i] << ")";
-      const int param_idx = get_input_idx(param_names[i]);
+      const int param_idx = m_param_idx[i];
       if (param_idx < 0) {
         throw std::runtime_error("Hoisted parameter with friendly name " +
                                  param_names[i] + " not found in ov::Model");
@@ -90,11 +106,17 @@ void IE_Basic_Engine::infer(
 
   //  Prepare output blobs
   auto results = m_model->get_results();
+  if (m_out_idx.size() == 0) {
+    m_out_idx.resize(results.size());
+    for (int i = 0; i < results.size(); i++) {
+        m_out_idx[i] = get_output_idx(output_names[i]);
+    }
+  }
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_output_tensor() ("
                    << output_names[i] << ")";
-      const int out_idx = get_output_idx(output_names[i]);
+      const int out_idx = m_out_idx[i];
       if (out_idx < 0) {
         throw std::runtime_error("Output with friendly name " +
                                  output_names[i] + " not found in ov::Model");
@@ -110,7 +132,7 @@ void IE_Basic_Engine::infer(
     if (outputs[i] == nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() get_output_tensor() ("
                    << output_names[i] << ")";
-      const int out_idx = get_output_idx(output_names[i]);
+      const int out_idx = m_out_idx[i];
       if (out_idx < 0) {
         throw std::runtime_error("Output with friendly name " +
                                  output_names[i] + " not found in ov::Model");
