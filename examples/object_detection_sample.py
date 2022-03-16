@@ -38,8 +38,9 @@ from common.pre_process import preprocess_image_yolov3 as preprocess_image
 from common.post_process import yolo3_postprocess_np
 
 # Enable these variables for runtime inference optimizations
-os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = 1
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = 1
+os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
+
 
 def load_coco_names(file_name):
     names = {}
