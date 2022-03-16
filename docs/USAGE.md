@@ -6,7 +6,7 @@ This document describes available Python APIs for **OpenVINO™ integration with
 
 ## APIs for essential functionality
 
-To add the environment variable package to your TensorFlow python application, import the package using this line of code:
+To add the **OpenVINO™ integration with TensorFlow** package to your TensorFlow python application, import the package using this line of code:
 
     import openvino_tensorflow
 

@@ -88,6 +88,12 @@ To see what you can do with **OpenVINO™ integration with TensorFlow**, explore
 Dockerfiles for Ubuntu* 18.04, Ubuntu* 20.04, and TensorFlow* Serving are provided which can be used to build runtime Docker* images for **OpenVINO™ integration with TensorFlow** on CPU, GPU, VPU, and VAD-M. 
 For more details see [docker readme](docker/README.md).
 
+### Prebuilt Images
+
+- [Ubuntu 18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
+- [Ubuntu 20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
+- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvino_tensorflow)
+
 ## Try it on Intel<sup>®</sup> DevCloud
 Sample tutorials are also hosted on [Intel<sup>®</sup> DevCloud](https://www.intel.com/content/www/us/en/developer/tools/devcloud/edge/build/ovtfoverview.html). The demo applications are implemented using Jupyter Notebooks. You can interactively execute them on Intel<sup>®</sup> DevCloud nodes, compare the results of **OpenVINO™ integration with TensorFlow**, native TensorFlow and OpenVINO™. 
 
