@@ -43,11 +43,15 @@ Launch the Jupyter server with **VAD-M** access:
 		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
-Run image with runtime target /bin/bash for container shell
+Run image with runtime target /bin/bash for container shell with **all** device access
 
-	docker run -it --rm \
+	docker run -itu root:root --rm \
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
+		   --device /dev/dri:/dev/dri \
+		   --mount type=bind,source=/var/tmp,destination=/var/tmp \
+		   --device /dev/ion:/dev/ion \
+		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0 /bin/bash
 
 If execution fails on iGPU for 10th and 11th Generation Intel devices, provide docker build arg INTEL_OPENCL as 20.35.17767 
@@ -62,7 +66,7 @@ Build serving docker images:
 
 		docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0-serving -f ubuntu20/openvino_tensorflow_cgvh_runtime_2.0.0-serving.dockerfile .
 
-Here is an example to serve Resnet50 model using OpenVINO™ Integration with Tensorflow with the client script included in TF-Serving repository.
+Here is an example to serve Resnet50 model using OpenVINO™ Integration with Tensorflow and a client script that performs inference on the model using the REST API.
 
 1. Download [Resnet50 model](#https://storage.googleapis.com/tfhub-modules/google/imagenet/resnet_v2_50/classification/5.tar.gz) from TF Hub and untar its contents into the folder `resnet_v2_50_classifiation/5` 
 
