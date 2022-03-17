@@ -249,7 +249,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
         cd tensorflow
         git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
-        git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch
+        git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch --ignore-whitespace
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
 
 - Configure the Build: https://www.tensorflow.org/install/source_windows#configure_the_build      

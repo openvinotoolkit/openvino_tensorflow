@@ -1,5 +1,4 @@
 [English](./TROUBLESHOOTING.md) | 中文简体
-
 # 模型故障排除提示
 如果模型无法在 **OpenVINO™ Integration with TensorFlow** 上运行，或者您遇到性能/准确性问题，请按照以下步骤调试问题。
 
@@ -40,7 +39,7 @@ OVTF_SUMMARY: Op_deassigned:  Gather -> 549, Reshape -> 197, Cast -> 183, Const 
 
     OPENVINO_TF_VLOG_LEVEL=1
 
-这将在 **OpenVINO™ integration with TensorFlow** 上执行的每个集群打印一些详细信息，如下所示：
+这将为 **OpenVINO™ integration with TensorFlow** 上执行的每个集群打印一些详细信息，如下所示：
     OPENVINO_TF_MEM_PROFILE:  OP_ID: 0 Step_ID: 8 Cluster: ovtf_cluster_0 Input Tensors created: 0 MB Total process memory: 1 GB
     OPENVINO_TF_TIMING_PROFILE: OP_ID: 0 Step_ID: 8 Cluster: ovtf_cluster_0 Time-Compute: 10 Function-Create-or-Lookup: 0 Create-and-copy-tensors: 0 Execute: 10
 
@@ -50,7 +49,7 @@ OVTF_SUMMARY: Op_deassigned:  Gather -> 549, Reshape -> 197, Cast -> 183, Const 
 
     OPENVINO_TF_DUMP_GRAPHS=1
 
-这将在聚类的每个步骤中以“pbtxt”格式序列化 TensorFlow 图。
+这将在聚类化的每个步骤中以“pbtxt”格式序列化 TensorFlow 图。
 
 - unmarked_<graph_id>.pbtxt: 这是 **OpenVINO™ Integration with TensorFlow** optimization pass 的初始图。
 - marked_<graph_id>.pbtxt: 这是标记了支持的节点后的图表。
@@ -68,8 +67,8 @@ OpenVINO™ 中间表示 (IR) 文件（“ovtf_cluster_<cluster_id>.xml”和“
 
 
 
-## 3. 禁用Ops
-禁用导致问题的节点。 如果您能够确定导致问题的运算符类型，则可以尝试禁用该特定类型的运算符。 您可以设置环境变量“OPENVINO_TF_DISABLED_OPS”以禁用导致问题的运算符（请参见下面的示例）。
+## 3. 禁用算子
+禁用导致问题的节点。 如果您能够确定导致问题的算子类型，则可以尝试禁用该特定类型的算子。 您可以设置环境变量“OPENVINO_TF_DISABLED_OPS”以禁用导致问题的算子（请参见下面的示例）。
 
     OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
 

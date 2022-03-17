@@ -1,6 +1,6 @@
 [English](./MODELS.md) | 简体中文
 
-本文列出了所有经过验证的 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们支持越来越多的算子和模型，该列表将会持续更新。
+本文列出了所有经过验证的 **OpenVINO™ integration with TensorFlow** 支持的模型。随着我们对模型的优化并启用越来越多的算子，该列表将会持续更新，性能也会不断提高升。提升性能取决于多种因素， 例如模型架构、英特尔<sup>®</sup>平台（如Xeon<sup>®</sup>或Core<sup>TM</sup>）、后端设备（如CPU、GPU或VPU）等等。 
 
 ## TensorFlow-Slim 图像分类库
 
@@ -101,8 +101,8 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 | [efficientdet​/lite0​/feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite0/feature-vector/1)| CPU, iGPU, MYRIAD |
 | [efficientdet_d1 ](https://tfhub.dev/tensorflow/efficientdet/d1/1?tf-hub-format=compressed)  | iGPU, MYRIAD |
 | [efficientdet_d2](https://tfhub.dev/tensorflow/efficientdet/d2/1?tf-hub-format=compressed)  | iGPU, MYRIAD |
-| [efficientdet_d6](https://tfhub.dev/tensorflow/efficientdet/d6/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
-| [efficientdet_lite1_detection](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1?tf-hub-format=compressed)  | CPU, MYRIAD |
+| [efficientdet_d6](https://tfhub.dev/tensorflow/efficientdet/d6/1?tf-hub-format=compressed)  | CPU, MYRIAD |
+| [efficientdet_lite1_detection](https://tfhub.dev/tensorflow/efficientdet/lite1/detection/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite1_feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite1/feature-vector/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite2_feature-vector](https://tfhub.dev/tensorflow/efficientdet/lite2/feature-vector/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [efficientdet_lite3_detection](https://tfhub.dev/tensorflow/efficientdet/lite3/detection/1?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
@@ -427,7 +427,7 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 
 仅针对其中一些模型提供了预训练的冻结模型文件。 其余的，请参考提供的链接。 
 
-## 量化支持 (Preview)
+## 量化支持（预览）
 
  **OpenVINO™ integration with TensorFlow** 现在支持使用量化感知训练 (QAT) 工具量化的 INT8 模型，例如 OpenVINO™ [神经网络压缩框架 (NNCF)](https://github.com/openvinotoolkit/nncf) 和 [TensorFlow 模型优化工具包 (TFMOT)](https://www.tensorflow.org/model_optimization)。 此支持目前处于预览状态，性能优化正在进行中。 
  
@@ -435,4 +435,4 @@ TensorFlow-Slim 模型链接仅包含预训练checkpoint文件。您可以参考
 
 通过在运行推理之前将环境变量“OPENVINO_TF_CONSTANT_FOLDING”设置为 1，一些量化模型可以获得更优的性能。 
 
- [注意：NNCF 和 **OpenVINO™ integration with TensorFlow** 支持的最新 TensorFlow 版本可能不同。 建议用户创建一个单独的虚拟环境来使用 NNCF 量化模型，以避免任何 TensorFlow 版本不兼容问题。 然后可以在兼容 **OpenVINO™ integration with TensorFlow** 的环境中运行量化模型。 NNCF兼容TensorFlow 2.4.2， **OpenVINO™ integration with TensorFlow** 兼容 TensorFlow 2.7.0，已经过验证。]
+ [注意：NNCF 和 **OpenVINO™ integration with TensorFlow** 支持的最新 TensorFlow 版本可能不同。 建议用户创建一个单独的虚拟环境来使用 NNCF 量化模型，以避免任何 TensorFlow 版本不兼容问题。 然后可以在兼容 **OpenVINO™ integration with TensorFlow** 的环境中运行量化模型。 NNCF兼容TensorFlow 2.4.2版本， **OpenVINO™ integration with TensorFlow** 兼容 TensorFlow 2.8.0，已经过验证。]

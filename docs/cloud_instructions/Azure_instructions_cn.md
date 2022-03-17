@@ -1,6 +1,6 @@
 [English](./Azure_instructions.md) | 简体中文
 
-# 通过 **OpenVINO™ integration with TensorFlow** 在 Azure 上加速 TensorFlow 模型
+# 使用 **OpenVINO™ integration with TensorFlow** 在 Azure 上加速 TensorFlow 模型的指令
 
 -	创建虚拟机 – 选择 Ubuntu Server 20.10 – Gen2 镜像
 
@@ -94,7 +94,7 @@ azureuser@tf-u27:~/openvino_tensorflow-master$ python3 examples/classification_s
 
 2021-03-16 18:49:47.219153: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
 
-Available Backends:  
+可用后端：
 CPU  
 Inference time in ms: 8.149624  
 military uniform 0.8343049  
