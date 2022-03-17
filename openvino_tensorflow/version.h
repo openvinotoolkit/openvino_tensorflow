@@ -12,7 +12,9 @@
 #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 #else
-#define EXPORT_SYMBOL
+#ifndef EXPORT_SYMBOL
+#define EXPORT_SYMBOL __attribute__((visibility("default")))
+#endif
 #endif
 
 namespace tensorflow {

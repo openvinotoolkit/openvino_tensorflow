@@ -42,11 +42,6 @@ namespace openvino_tensorflow {
 // OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
 
-// For sorting the clusters for MYRIAD
-static bool cmp(pair<int, std::set<Node*>>& a, pair<int, std::set<Node*>>& b) {
-  return a.second.size() > b.second.size();
-}
-
 unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
 
