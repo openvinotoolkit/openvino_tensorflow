@@ -43,6 +43,10 @@ import cv2
 
 from common.utils import get_input_mode
 
+# Enable these variables for runtime inference optimizations
+os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
+
 
 def preprocess_image(frame,
                      input_height=299,
