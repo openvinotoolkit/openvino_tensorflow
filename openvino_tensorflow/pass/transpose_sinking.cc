@@ -29,11 +29,11 @@ using TransposeMap = unordered_map<string, shared_ptr<opset::Transpose>>;
 
 template <class T>
 static T apply_permutation(const T& input, ngraph::AxisVector order) {
-    T output(input.size());
-    for (size_t i = 0; i < order.size(); i++) {
-        output[i] = input.at(order.at(i));
-    }
-    return output;
+  T output(input.size());
+  for (size_t i = 0; i < order.size(); i++) {
+    output[i] = input.at(order.at(i));
+  }
+  return output;
 }
 
 static ngraph::AxisVector permutation_to_default_order(
@@ -114,8 +114,7 @@ static shared_ptr<opset::Transpose> combine_transposes(
       t2->input_value(1).get_node_shared_ptr());
   auto perm_t1 =
       apply_permutation(default_order, t1_const->get_axis_vector_val());
-  auto perm_t2 =
-      apply_permutation(perm_t1, t2_const->get_axis_vector_val());
+  auto perm_t2 = apply_permutation(perm_t1, t2_const->get_axis_vector_val());
   auto combined = make_transpose(t2->input_value(0), perm_t2);
   OVTF_VLOG(4) << "Combining " << describe<opset::Transpose>(t1) << " and "
                << describe<opset::Transpose>(t2) << " into "
@@ -335,8 +334,7 @@ static void sink_pad(shared_ptr<opset::Pad> n, TransposeMap& reorders,
   // we are going to create a label of the right input shape,
   // so a new pad will have the right shape
   auto def_order = permutation_to_default_order(order);
-  auto input_shape =
-      apply_permutation(arg_transpose->get_shape(), def_order);
+  auto input_shape = apply_permutation(arg_transpose->get_shape(), def_order);
   auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
       arg_transpose->get_element_type(), input_shape);
 
@@ -371,8 +369,7 @@ static void sink_concat(shared_ptr<opset::Concat> n, TransposeMap& reorders,
   // we are going to create a label of the right input shape,
   // so a new concat will have the right shape
   auto def_order = permutation_to_default_order(order);
-  auto input_shape =
-      apply_permutation(arg_transpose->get_shape(), def_order);
+  auto input_shape = apply_permutation(arg_transpose->get_shape(), def_order);
   auto dummy_correct_shape = make_shared<ngraph::pattern::op::Label>(
       arg_transpose->get_element_type(), input_shape);
 
