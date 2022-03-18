@@ -108,7 +108,6 @@ Here is an example to serve Resnet50 model using OpenVINO™ Integration with Te
 			   --mount type=bind,source=/var/tmp,destination=/var/tmp \
 			   --device /dev/ion:/dev/ion \
 			   -v <path to resnet_v2_50_classifiation>:/models/resnet \
-			   -e OPENVINO_TF_BACKEND=VAD-M \
 			   -e MODEL_NAME=resnet \
 			   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0-serving
 
