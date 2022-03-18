@@ -36,6 +36,6 @@ Backend manager 创建一个后端，用于执行 CNNNetwork。我们实施了�
 
 基础 后端用于英特尔<sup>®</sup> CPU、英特尔<sup>®</sup> 集成 GPU 和英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)。后端创建推理请求并在对指定的输入数据运行推理。
 
-VAD-M 后端用于支持 8 颗英特尔 Movidius™ MyriadX VPU 的英特尔<sup>®</sup> 视觉加速器设计（称作 VAD-M 或 HDDL）。我们支持在 VAD-M 后端执行批量推理。用户提供批量输入后，将会创建多个推理请求，且推理在 VAD-M 中所有的可用 VPU 中并行运行。
+VAD-M 后端用于支持 8 颗英特尔 Movidius™ MyriadX VPU 的英特尔<sup>®</sup> 视觉加速器设计（称作 VAD-M 或 HDDL）。我们支持在 VAD-M 后端批量并行执行推理。用户提供批量输入后，将会创建多个推理请求，且推理在 VAD-M 中所有的可用 VPU 中并行运行。
 
-后端管理器支持动态回退，这意味着如果相应的 CNNNetwork 在 OpenVINO™ 执行失败时，则回退到原生 TensorFlow 运行时去执行。
+后端管理器支持动态回退，这意味着如果相应的 CNNNetwork 在 OpenVINO™ 运行时执行失败时，则回退到原生 TensorFlow 运行时去执行。

@@ -38,9 +38,9 @@ $ sudo apt-get update
 
 $ sudo apt install python3-pip 
 
-$ sudo pip3 install -U tensorflow==2.8.0
+$ sudo pip3 install tensorflow==2.8.0
 
-$ sudo pip3 install -U openvino-tensorflow
+$ sudo pip3 install openvino-tensorflow==2.0.0
 ```
 
 - Verify the installation 

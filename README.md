@@ -39,7 +39,7 @@ The **OpenVINO™ integration with TensorFlow** package comes with pre-built lib
 
         pip3 install -U pip
         pip3 install tensorflow==2.8.0
-        pip3 install -U openvino-tensorflow
+        pip3 install openvino-tensorflow==2.0.0
 
 For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
@@ -53,7 +53,7 @@ For more details on installation please refer to [INSTALL.md](docs/INSTALL.md), 
 
 Once you've installed **OpenVINO™ integration with TensorFlow**, you can use TensorFlow* to run inference using a trained model.
 
-For the best results, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`.
+For further performance improvements, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`.
 
 To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 
@@ -83,6 +83,16 @@ For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
 ## Examples
 
 To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](./examples) directory.  
+
+## Docker Support
+Dockerfiles for Ubuntu* 18.04, Ubuntu* 20.04, and TensorFlow* Serving are provided which can be used to build runtime Docker* images for **OpenVINO™ integration with TensorFlow** on CPU, GPU, VPU, and VAD-M. 
+For more details see [docker readme](docker/README.md).
+
+### Prebuilt Images
+
+- [Ubuntu 18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
+- [Ubuntu 20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
+- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvino_tensorflow)
 
 ## Try it on Intel<sup>®</sup> DevCloud
 Sample tutorials are also hosted on [Intel<sup>®</sup> DevCloud](https://www.intel.com/content/www/us/en/developer/tools/devcloud/edge/build/ovtfoverview.html). The demo applications are implemented using Jupyter Notebooks. You can interactively execute them on Intel<sup>®</sup> DevCloud nodes, compare the results of **OpenVINO™ integration with TensorFlow**, native TensorFlow and OpenVINO™. 

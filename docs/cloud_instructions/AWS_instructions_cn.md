@@ -1,5 +1,5 @@
 [English](./AWS_instructions.md) | 中文简体
-# 使用 **OpenVINO™ integration with TensorFlow** 在 AWS 上加速 TensorFlow 模型
+# 使用 **OpenVINO™ integration with TensorFlow** 在 AWS 上加速 TensorFlow 模型的指令
 
 -	启动 Deep Learning AMI EC2 实例 Ubuntu 18.04 版本 41.0
 
@@ -41,9 +41,9 @@ chmod 400 the *.pem key.
 
   (myenv) ubuntu@ip-10-0-0-123:~$ pip install --upgrade pip
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U tensorflow==2.8.0
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install tensorflow==2.8.0
 
-  (myenv) ubuntu@ip-10-0-0-123:~$ pip install -U openvino-tensorflow
+  (myenv) ubuntu@ip-10-0-0-123:~$ pip install openvino-tensorflow==2.0.0
   
 ```
 -	验证安装 

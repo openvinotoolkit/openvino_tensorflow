@@ -84,11 +84,6 @@ try:
 except TypeError:
     pass
 
-# print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
-#                                                        TF_GIT_VERSION))
-# print("Openvino_Tensorflow built with: {0} ({1})".format(TF_VERSION_NEEDED,
-#                                                    TF_GIT_VERSION_BUILT_WITH))
-
 # We need to revisit this later. We can automate that using cmake configure
 # command.
 TF_INSTALLED_VER = TF_VERSION.split('.')
