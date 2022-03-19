@@ -3792,6 +3792,8 @@ Status Builder::TranslateGraph(
   ov::ParameterVector ng_parameter_list(tf_params.size());
   ov::ParameterVector ng_func_parameter_list;
   ng_func_parameter_list.reserve(tf_params.size());
+  const char* convert_var_const =
+      std::getenv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS");
 
   for (auto parm : tf_params) {
     DataType dtype;
@@ -3825,8 +3827,7 @@ Status Builder::TranslateGraph(
     };
 
     bool is_variable = false;
-    if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0" &&
-        !tf_input_tensors.empty()) {
+    if (convert_var_const != nullptr && !tf_input_tensors.empty()) {
       try {
         GetNodeAttr(parm->attrs(), "_is_variable", &is_variable);
       } catch (const std::exception&) {
