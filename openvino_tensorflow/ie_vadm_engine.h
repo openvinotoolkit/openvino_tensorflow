@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include <ie_core.hpp>
+#include "openvino/openvino.hpp"
 
 #include "openvino_tensorflow/ie_backend_engine.h"
 
@@ -20,7 +20,8 @@ namespace openvino_tensorflow {
 
 class IE_VADM_Engine : public IE_Backend_Engine {
  public:
-  IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network);
+  // IE_VADM_Engine(InferenceEngine::CNNNetwork ie_network);
+  IE_VADM_Engine(std::shared_ptr<ov::Model> model);
   ~IE_VADM_Engine();
 
   // Executes the inference
@@ -32,7 +33,7 @@ class IE_VADM_Engine : public IE_Backend_Engine {
                      std::vector<std::string>& param_names);
 
   virtual const std::vector<size_t> get_output_shape(const int i) {
-    std::vector<size_t> shape = m_func->get_results()[i]->get_shape();
+    std::vector<size_t> shape = m_model->get_results()[i]->get_shape();
     if (m_multi_req_execution && shape.size() > 1) {
       shape[0] = m_orig_batch_size;
     }

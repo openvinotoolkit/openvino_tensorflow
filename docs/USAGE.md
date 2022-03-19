@@ -10,17 +10,28 @@ To add the **OpenVINO™ integration with TensorFlow** package to your TensorFlo
 
     import openvino_tensorflow
 
+[Note: This would set **CUDA_VISIBLE_DEVICES** environment variable to -1. Its previous state is restored when **OpenVINO™ integration with TensorFlow** is disabled.]
+
 By default, CPU backend is enabled. You can set a different backend by using the following API:
 
     openvino_tensorflow.set_backend('<backend_name>')
 
 Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 
+
 ## Additional APIs
 
 To determine available backends on your system, use the following API:
 
     openvino_tensorflow.list_backends()
+
+To disable **OpenVINO™ integration with TensorFlow**, use the following API:
+
+    openvino_tensorflow.disable()
+
+To enable **OpenVINO™ integration with TensorFlow**, use the following API:
+
+    openvino_tensorflow.enable()
 
 To check if the **OpenVINO™ integration with TensorFlow** is enabled, use the following API:
 
@@ -73,7 +84,7 @@ or
 
 **OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS**
 
-This variable is enabled by default, and it freezes variables from TensorFlow's ReadVariableOp as constants during the graph translation phase. Highly recommended to keep it enabled to ensure optimal inference latencies on eagerly executed models. Disable it when model weights are modified after loading the model for inference.
+This variable is disabled by default, and it freezes variables from TensorFlow's ReadVariableOp as constants during the graph translation phase. Highly recommended to enable it to ensure optimal inference latencies on eagerly executed models. Disable it when model weights are modified after loading the model for inference.
 
 **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
 After clusters are formed, some of the clusters may still fall back to native TensorFlow (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.

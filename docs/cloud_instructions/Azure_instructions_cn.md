@@ -1,6 +1,6 @@
 [English](./Azure_instructions.md) | 简体中文
 
-# 通过 **OpenVINO™ integration with TensorFlow** 在 Azure 上加速 TensorFlow 模型
+# 使用 **OpenVINO™ integration with TensorFlow** 在 Azure 上加速 TensorFlow 模型的指令
 
 -	创建虚拟机 – 选择 Ubuntu Server 20.10 – Gen2 镜像
 
@@ -40,18 +40,18 @@ $ sudo apt-get update
 
 $ sudo apt install python3-pip 
 
-$ sudo pip3 install -U tensorflow==2.7.0
+$ sudo pip3 install tensorflow==2.8.0
 
-$ sudo pip3 install -U openvino-tensorflow
+$ sudo pip3 install openvino-tensorflow==2.0.0
 ```
 
 - 验证安装
 ```bash
 azureuser@tf-u26:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)" 
-TensorFlow version:  2.7.0
-OpenVINO integration with TensorFlow version: b'1.1.0'
-OpenVINO version used for this build: b'2021.4.2'
-TensorFlow version used for this build: v2.7.0
+TensorFlow version:  2.8.0
+OpenVINO integration with TensorFlow version: b'2.0.0'
+OpenVINO version used for this build: b'2022.1'
+TensorFlow version used for this build: v2.8.0
 CXX11_ABI flag used for this build: 0
 ```
 
@@ -94,7 +94,7 @@ azureuser@tf-u27:~/openvino_tensorflow-master$ python3 examples/classification_s
 
 2021-03-16 18:49:47.219153: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
 
-Available Backends:  
+可用后端：
 CPU  
 Inference time in ms: 8.149624  
 military uniform 0.8343049  

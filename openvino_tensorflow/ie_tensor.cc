@@ -8,49 +8,29 @@
 #include <memory>
 #include <utility>
 
-#include "ngraph/ngraph.hpp"
-
 #include "ie_layouts.h"
 #include "ie_precision.hpp"
 #include "ie_tensor.h"
 #include "ie_utils.h"
 
-using namespace ngraph;
 using namespace std;
+using namespace ov;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-IETensor::IETensor(const element::Type& element_type, const Shape& shape_,
+IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape_,
                    void* memory_pointer)
-    : runtime::Tensor(
-          make_shared<descriptor::Tensor>(element_type, shape_, "")) {
-  InferenceEngine::SizeVector shape = shape_;
-  InferenceEngine::Precision precision = IE_Utils::toPrecision(element_type);
-  InferenceEngine::Layout layout =
-      InferenceEngine::TensorDesc::getLayoutByDims(shape);
+    : ov::Tensor(element_type, shape_, memory_pointer) {}
 
-  auto desc = InferenceEngine::TensorDesc(precision, shape, layout);
-  auto size = shape_size(shape_) * element_type.size();
-  InferenceEngine::MemoryBlob::Ptr ie_blob;
-  IE_Utils::CreateBlob(desc, precision, memory_pointer, size, ie_blob);
-  m_blob = ie_blob;
-}
+IETensor::IETensor(const ov::element::Type& element_type, const Shape& shape)
+    : ov::Tensor(element_type, shape) {}
 
-IETensor::IETensor(const element::Type& element_type, const Shape& shape)
-    : IETensor(element_type, shape, nullptr) {}
-
-IETensor::IETensor(const element::Type& element_type, const PartialShape& shape)
-    : runtime::Tensor(
-          make_shared<descriptor::Tensor>(element_type, shape, "")) {
-  throw runtime_error("partial shapes not supported.");
-}
-
-IETensor::IETensor(InferenceEngine::Blob::Ptr blob)
-    : runtime::Tensor(make_shared<descriptor::Tensor>(
-          IE_Utils::fromPrecision(blob->getTensorDesc().getPrecision()),
-          Shape(blob->getTensorDesc().getDims()), "")),
-      m_blob(blob) {}
+// IETensor::IETensor(const ov::element::Type& element_type, const PartialShape&
+// shape)
+//    : ov::Tensor(element_type, shape) {
+//  throw runtime_error("partial shapes not supported.");
+//}
 
 IETensor::~IETensor() {}
 
@@ -60,13 +40,7 @@ void IETensor::write(const void* src, size_t bytes) {
     return;
   }
 
-  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob == nullptr) {
-    THROW_IE_EXCEPTION << "blob is nullptr";
-  }
-  auto lm = blob->wmap();
-  uint8_t* output_ptr = lm.as<uint8_t*>();
-  copy(src_ptr, src_ptr + bytes, output_ptr);
+  copy(src_ptr, src_ptr + bytes, (uint8_t*)(this->data()));
 }
 
 void IETensor::read(void* dst, size_t bytes) const {
@@ -75,22 +49,8 @@ void IETensor::read(void* dst, size_t bytes) const {
     return;
   }
 
-  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob == nullptr) {
-    THROW_IE_EXCEPTION << "blob is nullptr";
-  }
-  auto lm = blob->rmap();
-  uint8_t* output_ptr = lm.as<uint8_t*>();
-  copy(output_ptr, output_ptr + bytes, dst_ptr);
+  copy((uint8_t*)(this->data()), ((uint8_t*)(this->data())) + bytes, dst_ptr);
 }
 
-const void* IETensor::get_data_ptr() const {
-  auto blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(m_blob);
-  if (blob == nullptr) {
-    THROW_IE_EXCEPTION << "blob is nullptr";
-  }
-  auto lm = blob->rwmap();
-  return lm.as<void*>();
-}
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

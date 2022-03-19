@@ -30,6 +30,12 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import ctypes
 
+cuda_visible_devices = ""
+if (os.environ.get("OPENVINO_TF_DISABLE") != "1"):
+    if ("CUDA_VISIBLE_DEVICES" in os.environ):
+        cuda_visible_devices = os.environ["CUDA_VISIBLE_DEVICES"]
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 __all__ = [
     'enable', 'disable', 'is_enabled', 'list_backends',
     'set_backend', 'get_backend',
@@ -78,11 +84,6 @@ try:
 except TypeError:
     pass
 
-# print("TensorFlow version installed: {0} ({1})".format(TF_VERSION,
-#                                                        TF_GIT_VERSION))
-# print("Openvino_Tensorflow built with: {0} ({1})".format(TF_VERSION_NEEDED,
-#                                                    TF_GIT_VERSION_BUILT_WITH))
-
 # We need to revisit this later. We can automate that using cmake configure
 # command.
 TF_INSTALLED_VER = TF_VERSION.split('.')
@@ -91,8 +92,7 @@ TF_NEEDED_VER = TF_VERSION_NEEDED.split('.')
 ovtf_classic_loaded = True
 openvino_tensorflow_lib = None
 if (TF_INSTALLED_VER[0] == TF_NEEDED_VER[0]) and \
-   (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]) and \
-   ((TF_INSTALLED_VER[2].split('-'))[0] == (TF_NEEDED_VER[2].split('-'))[0]):
+   (TF_INSTALLED_VER[1] == TF_NEEDED_VER[1]):
     libpath = os.path.dirname(__file__)
     if system() == 'Windows':
         full_lib_path = os.path.join(libpath, 'openvino_tensorflow.' + ext)
@@ -140,9 +140,15 @@ if ovtf_classic_loaded:
 
     def enable():
         openvino_tensorflow_lib.enable()
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
     def disable():
         openvino_tensorflow_lib.disable()
+        if ("CUDA_VISIBLE_DEVICES" in os.environ):
+            if (len(cuda_visible_devices) == 0):
+                del os.environ["CUDA_VISIBLE_DEVICES"]
+            else:
+                os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible_devices
 
     def is_enabled():
         return openvino_tensorflow_lib.is_enabled()
@@ -163,7 +169,7 @@ if ovtf_classic_loaded:
 
     def set_backend(backend):
         if not openvino_tensorflow_lib.set_backend(backend.encode("utf-8")):
-            raise Exception("Backend " + backend + " unavailable.")
+          raise Exception("Backend " + backend + " unavailable.")
 
     def get_backend():
         result = ctypes.c_char_p()
@@ -246,5 +252,5 @@ if ovtf_classic_loaded:
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
-    "TensorFlow version used for this build: " + "v" + TF_VERSION + "\n" \
+    "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"

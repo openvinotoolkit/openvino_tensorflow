@@ -103,8 +103,8 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 
 // Returns the supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
-  InferenceEngine::Core core;
-  auto devices = core.GetAvailableDevices();
+  ov::Core core;
+  auto devices = core.get_available_devices();
   auto pos = find(devices.begin(), devices.end(), "HDDL");
   if (pos != devices.end()) {
     devices.erase(pos);

@@ -1,6 +1,6 @@
 [English](./README.md) | 简体中文
 
-# 英特尔<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ 和 Python 集成示例
+# 英特尔<sup>®</sup> OpenVINO<sup>TM</sup> integration with TensorFlow - C++ 和 Python 示例
 
 这些示例演示了如何使用 **Intel<sup>®</sup> </sup>OpenVINO<sup>TM</sup> integration with Tensorflow** 识别和检测在图像和视频中的对象。
 
@@ -66,14 +66,14 @@ comic book 0.007978318
 ```
 **注意**：使用 ```--no_show``` 标志禁用应用程序显示窗口。 默认情况下，显示窗口是启用的。
 
-在此示例中，我们使用 Admiral Grace Hopper 的默认图像。如您所见，网络准确发现她穿着军装，得到了 0.8 的高分。
+在此示例中，我们使用 Admiral Grace Hopper 的图像。如您所见，网络准确发现她穿着军装，得到了 0.79 的高分。
 
 下一步，通过将路径传递给新输入来尝试一下。 您可以提供图像或视频或图像目录的绝对或相对路径。
 例如：
 ```bash
 $ python3 examples/classification_sample.py --input=<absolute-or-relative-path-to-your-input>
 ```
-如果您将新图像或视频（如 my\_image.png）添加到 openvino\_tensorflow 仓库现有的 `<path-to-openvino_tensorflow-repository>/examples/data`  目录，将会是这样：
+如果您将新图像或视频（如my_image.png或people-detection.mp4)添加到 openvino\_tensorflow 仓库现有的 `<path-to-openvino_tensorflow-repository>/examples/data`  目录，将会是这样：
 
 ```bash
 $ python3 examples/classification_sample.py --input=examples/data/my_image.png
@@ -92,7 +92,7 @@ $ python3 examples/classification_sample.py --help
 
 <br/> 
 
-## 对象检测的Python实现
+## 对象检测实例的Python实现
 
 在此示例中，我们假设您已经：
 
@@ -160,7 +160,7 @@ $ python3 examples/object_detection_sample.py
 $ python3 examples/object_detection_sample.py --input=<absolute-or-relative-path-to-your-image>
 ```
 
-如果您将新图像（如 my\_image.png）添加到 openvino\_tensorflow 存储库的现有 `<path-to-openvino_tensorflow-repository>/examples/data` 目录，将会是这样：
+如果您将新图像（如 my_image.png）添加到 openvino\_tensorflow 存储库的现有 `<path-to-openvino_tensorflow-repository>/examples/data` 目录，将会是这样：
 
 ```bash
 $ cd <path-to-openvino_tensorflow-repository>
@@ -192,9 +192,9 @@ $ python3 examples/object_detection_sample.py --input=examples/data/people-detec
 
 ## 分类实例的C++实现
 
-运行 C++ 示例时，我们需要通过源代码构建 TensorFlow 框架，因为示例依赖 TensorFlow 库。
+运行 C++ 示例时，我们需要通过从源代码构建 TensorFlow 框架，因为示例依赖 TensorFlow 库。
 
-在从源代码开始构建之前，您必须确保已安装 [**prerequisites**](../docs/BUILD.md#1-prerequisites)。
+在从源代码开始构建之前，您必须确保已安装 [**先决条件**](../docs/BUILD.md#1-prerequisites)。
 
 本演示中使用的 TensorFlow 模型由于其大小而未打包在存储库中。 因此将模型下载到“openvino_tensorflow 的克隆存储库”中的“<path-to-openvino_tensorflow-repository>/examples/data”目录并提取文件：
 ### Linux and macOS
@@ -213,7 +213,7 @@ $ python3 build_ovtf.py --use_tensorflow_from_location <path-to-tensorflow-dir>
 ```
 关于详细的构建说明，请参阅 [**BUILD.md**](../docs/BUILD.md#build-from-source)。
 
-现在，classification\_sample 的二进制可执行文件已构建完成。更新 LD\_LIBRARY\_PATH 并运行示例：
+现在，classification_sample 的二进制可执行文件已构建完成。更新 LD_LIBRARY_PATH 并运行示例：
 
 ```bash
 $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/lib:<path-to-openvino_tensorflow-repository>/build_cmake/artifacts/tensorflow
@@ -259,7 +259,7 @@ bulletproof vest (466): 0.00535091
 $ ./build_cmake/examples/classification_sample/infer_image --image=<absolute-or-relative-path-to-your-image>
 ```
 
-如果您将新图像（如： my\_image.png）添加到 openvino\_tensorflow 仓库的现有`<path-to-openvino_tensorflow-repository>/examples/data` 目录，将会是这样：
+如果您将新图像（如： my_image.png）添加到 openvino_tensorflow 仓库的现有`<path-to-openvino_tensorflow-repository>/examples/data` 目录，将会是这样：
 
 ```bash
 $ ./build_cmake/examples/classification_sample/infer_image --image=examples/data/my_image.png
@@ -270,3 +270,7 @@ $ ./build_cmake/examples/classification_sample/infer_image --image=examples/data
 ```bash
 $ ./build_cmake/examples/classification_sample/infer_image --help
 ```
+
+<br/>
+
+**注意**: 在以上示例中，首先执行热身运行，然后在后续运行中测量推理时间。首个运行的执行时间一般比后面运行的时间长，因为首次运行包含很多一次图表转化和优化步骤。

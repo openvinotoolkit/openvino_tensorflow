@@ -1,6 +1,6 @@
 # Manifest to specify included & excluded tests
 # Comment lines start with #
-# This manifest is consumed by nGraph-Bridge PyTest framework via .../test/python/conftest.py
+# This manifest is consumed by openvino-tensorflow PyTest framework via .../test/python/conftest.py
 
 # Read comments in tests_common.txt for allowed regex/patterns
 

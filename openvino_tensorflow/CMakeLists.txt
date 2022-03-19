@@ -60,12 +60,10 @@ endif()
 add_library(${LIB_NAME} SHARED ${SRC})
 
 if(WIN32)
-  get_target_property(ngraph_lib_value ngraph_lib IMPORTED_LOCATION)
   target_link_libraries(
             ${LIB_NAME}
             ovtf_logger
             ${TensorFlow_FRAMEWORK_LIBRARY}
-            ${ngraph_lib_value}
             absl_algorithm
             absl_container
             absl_strings
@@ -77,7 +75,6 @@ else()
           ${LIB_NAME}
           ovtf_logger
           ${TensorFlow_FRAMEWORK_LIBRARY}
-          ngraph_lib
           absl_algorithm
           absl_container
           absl_strings
@@ -114,47 +111,63 @@ endif()
 
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
-# First install the libopenvino_tensorflow.so and headers
+# Install the openvino_tensorflow lib
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
-# Next install all the other prerequisites
-if(OS_VERSION STREQUAL "\"centos\"")
-	install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib64/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
-else()
-  if(WIN32)
-    file(GLOB NGRAPH_LIB_FILES "${NGRAPH_INSTALL_DIR}/lib/*")
-    foreach(LIB_FILE ${NGRAPH_LIB_FILES})
-      get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
-      get_filename_component(lib_file_name ${LIB_FILE} NAME)
-      if(NOT(${lib_file_name} MATCHES "onnx.*"))
-        install(FILES ${lib_file_real_path} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-      endif()
-    endforeach()
-  else()
-    install(DIRECTORY ${NGRAPH_INSTALL_DIR}/lib/ DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
-  endif()
-endif()
-
-# Install OpenVINO libraries
+# Install OCM and set a variable with required OpenVINO libraries path,
 if (APPLE)
   set(OCM_LIB libocm.dylib)
+  set(LIB_PREFIX "lib")
+  set(PLUGIN_LIB_EXT "so")
+  SET(OV_LIB_EXT "dylib")
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/Release)
+  set (IE_LIBS 
+      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
+      )
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
+  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 elseif(WIN32)
   set(OCM_LIB ocm.dll)
-else()
-  set(OCM_LIB libocm.so)
-endif()
-
-if(WIN32)
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/bin/intel64/Release/)
-  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/bin/)
+  set(LIB_PREFIX "")
+  set(PLUGIN_LIB_EXT "dll")
+  SET(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release)
+  set (IE_LIBS 
+      "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
+      "${IE_LIBS_PATH}/cache.json"
+      "${IE_LIBS_PATH}/pcie-ma2x8x.elf"
+     )
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
-  set(IE_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/lib/intel64/)
-  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/lib/)
+  set(OCM_LIB libocm.so)
+  set(LIB_PREFIX "lib")
+  set(PLUGIN_LIB_EXT "so")
+  set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64)
+  set (IE_LIBS 
+      "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
+      "${IE_LIBS_PATH}/cache.json"
+      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
+     )
+  set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
+
+# Update this list for any new OpenVINO component/feature addition in future
+set (IE_LIBS 
+    "${IE_LIBS}" 
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
+    "${IE_LIBS_PATH}/plugins.xml" 
+    )
+
+# Install Openvino and TBB libraries
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
- install(DIRECTORY ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
+ install(FILES ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
     if(USE_OPENVINO_FROM_LOCATION)
       if(WIN32)

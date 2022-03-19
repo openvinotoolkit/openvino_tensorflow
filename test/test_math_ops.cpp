@@ -469,7 +469,7 @@ TEST_F(MathOpsSumFixture, LimitedSet1) {
 
 TEST_F(MathOpsSumFixture, FullSet) {
   vector<vector<int64>> shapes = {{2, 3},         {2, 2, 3},    {6, 2},
-                                  {2, 4, 3},      {4, 3, 2, 1}, {1, 2, 3, 4},
+                                  {2, 3, 4},      {4, 3, 2, 1}, {1, 2, 3, 4},
                                   {3, 1, 2, 4, 1}};
   vector<bool> v_keep_dims = {true, false};
   for (auto shape : shapes) {

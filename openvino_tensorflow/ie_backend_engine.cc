@@ -13,28 +13,22 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-IE_Backend_Engine::IE_Backend_Engine(InferenceEngine::CNNNetwork ie_network,
+IE_Backend_Engine::IE_Backend_Engine(std::shared_ptr<ov::Model> model,
                                      std::string device)
-    : m_network(ie_network),
-      m_func(ie_network.getFunction()),
+    : m_model(model),
       m_device(device),
       m_multi_req_execution(false),
-      m_network_ready(false) {
-  if (std::getenv("OPENVINO_TF_DUMP_GRAPHS")) {
-    auto& name = m_network.getName();
-    m_network.serialize(name + ".xml", name + ".bin");
-  }
-}
+      m_network_ready(false) {}
 
 IE_Backend_Engine::~IE_Backend_Engine() {}
 
 void IE_Backend_Engine::load_network() {
   if (m_network_ready) return;
 
-  std::map<std::string, std::string> config;
-
   if (m_device == "MYRIAD") {
     // Set MYRIAD configurations
+    ov::AnyMap config;
+
     if (IE_Utils::VPUConfigEnabled()) {
       config["MYRIAD_DETECT_NETWORK_BATCH"] = "NO";
     }
@@ -43,21 +37,22 @@ void IE_Backend_Engine::load_network() {
       config["MYRIAD_HW_INJECT_STAGES"] = "NO";
       config["MYRIAD_COPY_OPTIMIZATION"] = "NO";
     }
+    Backend::GetGlobalContext().ie_core.set_property("MYRIAD", config);
   }
 
   // Load network to the plugin (m_device)
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
   if (dev_type.find("GPU") != string::npos) dev_type = "GPU";
-  m_exe_network = Backend::GetGlobalContext().ie_core.LoadNetwork(
-      m_network, dev_type, config);
+  m_compiled_model =
+      Backend::GetGlobalContext().ie_core.compile_model(m_model, dev_type);
   m_network_ready = true;
 }
 
 void IE_Backend_Engine::start_async_inference(const int req_id) {
   // Start Async inference
   try {
-    m_infer_reqs[req_id].StartAsync();
+    m_infer_reqs[req_id].start_async();
   } catch (InferenceEngine::details::InferenceEngineException e) {
     THROW_IE_EXCEPTION << "Couldn't start Inference: ";
   } catch (...) {
@@ -68,8 +63,7 @@ void IE_Backend_Engine::start_async_inference(const int req_id) {
 void IE_Backend_Engine::complete_async_inference(const int req_id) {
   // Wait for Async inference completion
   try {
-    m_infer_reqs[req_id].Wait(
-        InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
+    m_infer_reqs[req_id].wait();
   } catch (InferenceEngine::details::InferenceEngineException e) {
     THROW_IE_EXCEPTION << " Exception with completing Inference: ";
   } catch (...) {
@@ -78,8 +72,11 @@ void IE_Backend_Engine::complete_async_inference(const int req_id) {
 }
 
 size_t IE_Backend_Engine::get_output_batch_size(size_t inputBatchSize) const {
-  return m_network.getBatchSize() *
-         IE_Utils::GetNumRequests(inputBatchSize, m_device);
+  ov::Dimension batch_dim = ov::get_batch(m_model);
+  int64_t model_batch_size =
+      (batch_dim.is_static() ? batch_dim.get_length() : 1);
+  return model_batch_size * IE_Utils::GetNumRequests(inputBatchSize, m_device);
+  return 1;
 }
 
 // Enables multi request execution if the execution engine supprts
@@ -91,8 +88,25 @@ void IE_Backend_Engine::disable_multi_req_execution() {
   m_multi_req_execution = false;
 }
 
-std::shared_ptr<ngraph::Function> IE_Backend_Engine::get_func() {
-  return m_func;
+std::shared_ptr<ov::Model> IE_Backend_Engine::get_model() { return m_model; }
+
+const int IE_Backend_Engine::get_input_idx(const std::string name) const {
+  for (int i = 0; i < m_model->inputs().size(); i++) {
+    if (m_model->inputs()[i].get_node()->get_friendly_name() == name) {
+      return i;
+    }
+  }
+  return -1;
 }
+
+const int IE_Backend_Engine::get_output_idx(const std::string name) const {
+  for (int i = 0; i < m_model->outputs().size(); i++) {
+    if (m_model->outputs()[i].get_node()->get_friendly_name() == name) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

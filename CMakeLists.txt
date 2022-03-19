@@ -121,11 +121,11 @@ find_package(TensorFlow REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
-    message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
+    message( STATUS "OpenVINO™ integration with TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
-    message( STATUS "nGraph-TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
+    message( STATUS "OpenVINO™ integration with TensorFlow using CXX11 ABI:  ${OPENVINO_TF_CXX11_ABI}" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")    
 endif()
 
@@ -151,15 +151,15 @@ option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FAL
 option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
 option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
 
-set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/share)
+set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(InferenceEngine REQUIRED)
 
-set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/cmake)
+set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(ngraph QUIET)
 
 include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
-    set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/inference_engine/external/tbb/cmake)
+    set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/cmake)
     find_package(TBB COMPONENTS tbb tbbmalloc)
 endif()
 
@@ -186,16 +186,13 @@ message(STATUS "UNIT_TEST_ENABLE:           ${UNIT_TEST_ENABLE}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
-if (${OPENVINO_VERSION} MATCHES "2021.4.2")
-  add_definitions(-DOPENVINO_2021_4_2=1)
-elseif (${OPENVINO_VERSION} MATCHES "2021.4.1")
-  add_definitions(-DOPENVINO_2021_4_1=1)
-elseif (${OPENVINO_VERSION} MATCHES "2021.4")
-  add_definitions(-DOPENVINO_2021_4=1)
-elseif (${OPENVINO_VERSION} MATCHES "2021.3")
-  add_definitions(-DOPENVINO_2021_3=1)
-elseif (${OPENVINO_VERSION} MATCHES "2021.2")
-  add_definitions(-DOPENVINO_2021_2=1)
+
+#TODO: Change the tag when OV_2022.1 branch is released
+if (${OPENVINO_VERSION} MATCHES "master")
+  # master works with checks of latest release
+  add_definitions(-DOPENVINO_2022_1=1)
+elseif (${OPENVINO_VERSION} MATCHES "2022.1")
+  add_definitions(-DOPENVINO_2022_1=1)
 else()
   message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
 endif()
@@ -207,21 +204,14 @@ endif()
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 else()
-    set(LIB "lib")
+    set(LIB "lib/intel64")
 endif()
 
 if(ngraph_FOUND)
-    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/deployment_tools/ngraph/)
+    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime)
 else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
-set(NGRAPH_IMPORTED_LOCATION ${NGRAPH_INSTALL_DIR}/${LIB}/${LIBNGRAPH})
-add_library(ngraph_lib SHARED IMPORTED)
-set_target_properties(
-    ngraph_lib
-    PROPERTIES IMPORTED_LOCATION
-    ${NGRAPH_IMPORTED_LOCATION}
-)
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
 INCLUDE_DIRECTORIES("${BASEPATH}")
