@@ -244,7 +244,7 @@ if __name__ == "__main__":
             if image_id == 0:
                 results = sess.run(output_operation.outputs[0],
                                    {input_operation.outputs[0]: t})
-            
+
             start = time.time()
             results = sess.run(output_operation.outputs[0],
                                {input_operation.outputs[0]: t})
@@ -254,27 +254,29 @@ if __name__ == "__main__":
             results = np.squeeze(results)
             top_k = results.argsort()[-5:][::-1]
             if label_file:
-              for i in top_k:
-                  print(labels[i], results[i])
+                for i in top_k:
+                    print(labels[i], results[i])
             else:
-                print("No label file provided. Cannot print classification results")
-            
+                print(
+                    "No label file provided. Cannot print classification results"
+                )
+
             if not args.no_show:
                 cv2.putText(frame,
-                    'Inference Running on : {0}'.format(backend_name),
-                    (30, 50), font, font_size, color, font_thickness)
+                            'Inference Running on : {0}'.format(backend_name),
+                            (30, 50), font, font_size, color, font_thickness)
 
                 cv2.putText(
                     frame, 'FPS : {0} | Inference Time : {1}ms'.format(
                         int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                     font_size, color, font_thickness)
-                
+
                 if label_file:
                     c = 130
                     for i in top_k:
                         cv2.putText(frame, '{0} : {1}'.format(
-                            labels[i], results[i]), (30, c), font, font_size, color,
-                                    font_thickness)
+                            labels[i], results[i]), (30, c), font, font_size,
+                                    color, font_thickness)
                         c += 30
                 cv2.imshow("results", frame)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
