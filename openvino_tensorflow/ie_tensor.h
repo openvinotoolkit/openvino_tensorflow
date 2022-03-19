@@ -39,26 +39,5 @@ class IETensor : public ngraph::runtime::Tensor {
   InferenceEngine::Blob::Ptr m_blob;
 };
 
-// A simple TensorBuffer implementation that allows us to create Tensors that
-// take ownership of pre-allocated memory.
-class IETensorBuffer : public TensorBuffer {
- public:
-  IETensorBuffer(std::shared_ptr<IETensor> tensor)
-      : TensorBuffer(const_cast<void*>(tensor->get_data_ptr())),
-        size_(tensor->get_size_in_bytes()),
-        tensor_(tensor) {}
-
-  size_t size() const override { return size_; }
-
-  TensorBuffer* root_buffer() override { return this; }
-
-  void FillAllocationDescription(AllocationDescription* proto) const override {
-    proto->set_allocated_bytes(size_);
-  }
-
- private:
-  size_t size_;
-  std::shared_ptr<IETensor> tensor_;
-};
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

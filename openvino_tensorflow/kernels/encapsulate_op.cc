@@ -440,11 +440,24 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
-      // Zero-copy IE tensor to TF
-      IETensorBuffer* tf_buffer =
-          new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-      Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
-      ctx->set_output(i, tf_tensor);
+      // TODO: Zero-copy is depreciated temporarily because of memory allocation
+      // alignment
+      // mismatch related to EIGEN_MAX_ALIGN_BYTES.
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+
+      auto size = ng_output->get_byte_size();
+      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+
+#if TF_VERSION < 2
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t**)DMAHelper::base(output_tensor));
+#else
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t*)(output_tensor->data()));
+#endif
     }
   } else {
     auto out_shape_check = [ng_output_shapes](int i) {
