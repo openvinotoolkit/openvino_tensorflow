@@ -149,18 +149,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   BackendManager::GetBackendName(device);
   const char* device_id(device.c_str());
   std::string ov_version;
-#if defined(OPENVINO_2021_2)
-  ov_version = "2021.2";
-#elif defined(OPENVINO_2021_3)
-  ov_version = "2021.3";
-#elif defined(OPENVINO_2021_4)
-  ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_1)
-  // ocm checks are same as 2021.4 for this minor version update
-  ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_2)
-  // ocm checks are same as 2021.4 for this minor version update
-  ov_version = "2021.4";
+#if defined(OPENVINO_2022_1)
+  ov_version = "2022.1";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);

@@ -285,11 +285,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   std::vector<int> output_mappings(ng_result_list.size(), -1);
   auto ng_output_shapes = ng_exec->GetOutputShapes();
   int j = 0;
-#if defined(OPENVINO_2021_2)
-  if (device != "MYRIAD" && device != "HDDL") {
-#else
   if (device != "HDDL") {
-#endif
     for (auto i = 0; i < ng_result_list.size(); i++) {
       auto ng_element = ng_result_list[i];
       if (ng_element->get_output_partial_shape(0).is_dynamic()) {
@@ -390,11 +386,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     time_execute_function = execute_function.ElapsedInMS();
   }
 
-#if defined(OPENVINO_2021_2)
-  if (device != "MYRIAD" && device != "HDDL") {
-#else
   if (device != "HDDL") {
-#endif
     for (auto i : dyn_shape_tensors) {
       OP_REQUIRES(ctx, output_mappings[i] != -1,
                   errors::Internal("Mapping error while "

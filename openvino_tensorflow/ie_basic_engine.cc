@@ -46,31 +46,6 @@ void IE_Basic_Engine::infer(
   }
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr) {
-#if defined(OPENVINO_2021_2)
-      if (m_device != "MYRIAD" && m_device != "HDDL") {
-        OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
-                     << input_names[i] << ")";
-        const int in_idx = m_in_idx[i];
-        if (in_idx < 0) {
-          throw std::runtime_error("Input parameter with friendly name " +
-                                   input_names[i] + " not found in ov::Model");
-        }
-        m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
-      } else {
-        OVTF_VLOG(4) << "IE_Basic_Engine::infer() get_input_tensor() ("
-                     << input_names[i] << ")";
-        const int in_idx = m_in_idx[i];
-        if (in_idx < 0) {
-          throw std::runtime_error("Input parameter with friendly name " +
-                                   input_names[i] + " not found in ov::Model");
-        }
-        auto tensor = m_infer_reqs[0].get_input_tensor(in_idx);
-        size_t input_data_size = tensor.get_byte_size();
-        std::copy((uint8_t*)(inputs[i]->data()),
-                  ((uint8_t*)(inputs[i]->data())) + input_data_size,
-                  (uint8_t*)(tensor.data()));
-      }
-#else
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                    << input_names[i] << ")";
       const int in_idx = m_in_idx[i];
@@ -79,7 +54,6 @@ void IE_Basic_Engine::infer(
                                  " not found in ov::Model");
       }
       m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
-#endif
     }
   }
 
