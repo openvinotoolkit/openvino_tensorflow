@@ -407,7 +407,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
-      // TODO: Zero-copy is depreciated temporarily because of memory allocation alignment
+      // TODO: Zero-copy is depreciated temporarily because of memory allocation
+      // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
@@ -424,308 +425,313 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                 ((uint8_t*)(ng_output->data())) + size,
                 (uint8_t*)(output_tensor->data()));
 #endif
-  } else {
-    auto out_shape_check = [ng_output_shapes](int i) {
-      if (ng_output_shapes[i].size() > 0) {
-        auto out_shape_list = ng_output_shapes[i];
-        for (auto dim : out_shape_list) {
-          if (dim == 0) return true;
+    }
+    else {
+      auto out_shape_check = [ng_output_shapes](int i) {
+        if (ng_output_shapes[i].size() > 0) {
+          auto out_shape_list = ng_output_shapes[i];
+          for (auto dim : out_shape_list) {
+            if (dim == 0) return true;
+          }
         }
-      }
-      return false;
-    };
-    int j = 0;
-    for (int i = 0; i < ng_result_list.size(); i++) {
-      if (out_shape_check(i)) {
-        auto ng_shape = ng_output_shapes[i];
-        ov::element::Type expected_elem_type;
-        auto ng_element = ng_result_list[i];
-        auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(i), &expected_elem_type));
-        OP_REQUIRES(
-            ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
-                             "the element type expected by TensorFlow"));
-        TensorShape tf_shape;
-        for (auto dim : ng_shape) {
-          tf_shape.AddDim(dim);
-        }
+        return false;
+      };
+      int j = 0;
+      for (int i = 0; i < ng_result_list.size(); i++) {
+        if (out_shape_check(i)) {
+          auto ng_shape = ng_output_shapes[i];
+          ov::element::Type expected_elem_type;
+          auto ng_element = ng_result_list[i];
+          auto ng_element_type = ng_element->get_element_type();
+          OP_REQUIRES_OK(
+              ctx, util::TFDataTypeToNGraphElementType(
+                       ctx->expected_output_dtype(i), &expected_elem_type));
+          OP_REQUIRES(
+              ctx, ng_element_type == expected_elem_type,
+              errors::Internal("Element type inferred by nGraph does not match "
+                               "the element type expected by TensorFlow"));
+          TensorShape tf_shape;
+          for (auto dim : ng_shape) {
+            tf_shape.AddDim(dim);
+          }
 
-        Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
-      } else {
-        auto ng_output = ng_func_outputs[j++];
+          Tensor* output_tensor = nullptr;
+          OP_REQUIRES_OK(ctx,
+                         ctx->allocate_output(i, tf_shape, &output_tensor));
+        } else {
+          auto ng_output = ng_func_outputs[j++];
 
-        auto ng_shape = ng_output_shapes[i];
-        if (ng_result_list[i]->is_dynamic()) {
-          ng_shape = ng_output->get_shape();
-        }
-        ov::element::Type expected_elem_type;
-        auto ng_element = ng_result_list[i];
-        auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(i), &expected_elem_type));
-        OP_REQUIRES(
-            ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
-                             "the element type expected by TensorFlow"));
-        TensorShape tf_shape;
-        for (auto dim : ng_shape) {
-          tf_shape.AddDim(dim);
-        }
+          auto ng_shape = ng_output_shapes[i];
+          if (ng_result_list[i]->is_dynamic()) {
+            ng_shape = ng_output->get_shape();
+          }
+          ov::element::Type expected_elem_type;
+          auto ng_element = ng_result_list[i];
+          auto ng_element_type = ng_element->get_element_type();
+          OP_REQUIRES_OK(
+              ctx, util::TFDataTypeToNGraphElementType(
+                       ctx->expected_output_dtype(i), &expected_elem_type));
+          OP_REQUIRES(
+              ctx, ng_element_type == expected_elem_type,
+              errors::Internal("Element type inferred by nGraph does not match "
+                               "the element type expected by TensorFlow"));
+          TensorShape tf_shape;
+          for (auto dim : ng_shape) {
+            tf_shape.AddDim(dim);
+          }
 
-        Tensor* output_tensor = nullptr;
-        OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+          Tensor* output_tensor = nullptr;
+          OP_REQUIRES_OK(ctx,
+                         ctx->allocate_output(i, tf_shape, &output_tensor));
 
-        auto size = ng_output->get_byte_size();
-        auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+          auto size = ng_output->get_byte_size();
+          auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
 
 #if TF_VERSION < 2
-        std::copy((uint8_t*)(ng_output->data()),
-                  ((uint8_t*)(ng_output->data())) + size,
-                  (uint8_t**)DMAHelper::base(output_tensor));
+          std::copy((uint8_t*)(ng_output->data()),
+                    ((uint8_t*)(ng_output->data())) + size,
+                    (uint8_t**)DMAHelper::base(output_tensor));
 #else
-        std::copy((uint8_t*)(ng_output->data()),
-                  ((uint8_t*)(ng_output->data())) + size,
-                  (uint8_t*)(output_tensor->data()));
+          std::copy((uint8_t*)(ng_output->data()),
+                    ((uint8_t*)(ng_output->data())) + size,
+                    (uint8_t*)(output_tensor->data()));
 #endif
+        }
       }
     }
-  }
 
-  long vm = 0, rss = 0;
-  util::MemoryProfile(vm, rss);
-  OVTF_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
-               << " Step_ID: " << step_id << " Cluster: " << name()
-               << " Input Tensors created: "
-               << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
-               << " Total process memory: " << rss / (1024 * 1024) << " GB";
+    long vm = 0, rss = 0;
+    util::MemoryProfile(vm, rss);
+    OVTF_VLOG(1) << "OPENVINO_TF_MEM_PROFILE:  OP_ID: " << m_cluster_id
+                 << " Step_ID: " << step_id << " Cluster: " << name()
+                 << " Input Tensors created: "
+                 << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
+                 << " Total process memory: " << rss / (1024 * 1024) << " GB";
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
-               << m_cluster_id;
+    OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
+                 << m_cluster_id;
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
-               << m_cluster_id;
-  OVTF_VLOG(1) << "OPENVINO_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
-               << " Step_ID: " << step_id << " Cluster: " << name()
-               << " Time-Compute: " << compute_time.ElapsedInMS()
-               << " Function-Create-or-Lookup: " << time_func_create_or_lookup
-               << " Create-and-copy-tensors: " << time_create_or_lookup_tensors
-               << " Execute: " << time_execute_function;
-}  // end compute
+    OVTF_VLOG(4)
+        << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
+        << m_cluster_id;
+    OVTF_VLOG(1) << "OPENVINO_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
+                 << " Step_ID: " << step_id << " Cluster: " << name()
+                 << " Time-Compute: " << compute_time.ElapsedInMS()
+                 << " Function-Create-or-Lookup: " << time_func_create_or_lookup
+                 << " Create-and-copy-tensors: "
+                 << time_create_or_lookup_tensors
+                 << " Execute: " << time_execute_function;
+  }  // end compute
 
-// Computes signature and gets executable
-Status NGraphEncapsulateOp::GetExecutable(
-    const std::vector<Tensor>& tf_input_tensors,
-    std::shared_ptr<Executable>& ng_exec) {
-  auto backend = BackendManager::GetBackend();
+  // Computes signature and gets executable
+  Status NGraphEncapsulateOp::GetExecutable(
+      const std::vector<Tensor>& tf_input_tensors,
+      std::shared_ptr<Executable>& ng_exec) {
+    auto backend = BackendManager::GetBackend();
 
-  // Compute Signature
-  std::vector<const Tensor*> static_input_map;
-  std::vector<TensorShape> input_shapes;
-  std::stringstream signature_ss;
-  for (int i = 0; i < tf_input_tensors.size(); i++) {
-    const Tensor& input_tensor = tf_input_tensors[i];
-    input_shapes.push_back(input_tensor.shape());
-    for (const auto& x : input_tensor.shape()) {
-      signature_ss << x.size << ",";
-    }
-    signature_ss << ";";
-  }
-  signature_ss << "/";
-
-  static_input_map.resize(tf_input_tensors.size());
-  for (int i = 0; i < tf_input_tensors.size(); i++) {
-    if (m_input_is_static[i]) {
-      static_input_map[i] = &tf_input_tensors[i];
-      TF_RETURN_IF_ERROR(
-          util::TensorToStream(signature_ss, tf_input_tensors[i]));
+    // Compute Signature
+    std::vector<const Tensor*> static_input_map;
+    std::vector<TensorShape> input_shapes;
+    std::stringstream signature_ss;
+    for (int i = 0; i < tf_input_tensors.size(); i++) {
+      const Tensor& input_tensor = tf_input_tensors[i];
+      input_shapes.push_back(input_tensor.shape());
+      for (const auto& x : input_tensor.shape()) {
+        signature_ss << x.size << ",";
+      }
       signature_ss << ";";
     }
-  }
+    signature_ss << "/";
 
-  string signature = signature_ss.str();
-  OVTF_VLOG(5) << "Computed signature: " << signature;
-  auto it = m_ng_exec_map.find(signature);
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
-               << m_cluster_id;
-
-  // Translate the TensorFlow graph to nGraph.
-  std::shared_ptr<ov::Model> ng_function;
-  if (it == m_ng_exec_map.end()) {
-    // Measure the current total memory usage
-    long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
-    util::MemoryProfile(vm0, rss0);
-
-    ng_result_list.clear();
-    OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-    TF_RETURN_IF_ERROR(Builder::TranslateGraph(
-        input_shapes, static_input_map, &m_graph, m_name, ng_function,
-        ng_result_list, tf_input_tensors));
-    util::DumpNGGraph(ng_function, m_name);
-
-    std::vector<ov::Shape> ng_output_shapes;
-    ng_output_shapes.resize(ng_result_list.size());
-    for (int i = 0; i < ng_result_list.size(); i++) {
-      if (ng_result_list[i]->is_dynamic()) {
-        ng_output_shapes[i] = ov::Shape{};
-      } else {
-        ng_output_shapes[i] = ng_result_list[i]->get_shape();
+    static_input_map.resize(tf_input_tensors.size());
+    for (int i = 0; i < tf_input_tensors.size(); i++) {
+      if (m_input_is_static[i]) {
+        static_input_map[i] = &tf_input_tensors[i];
+        TF_RETURN_IF_ERROR(
+            util::TensorToStream(signature_ss, tf_input_tensors[i]));
+        signature_ss << ";";
       }
     }
 
-    // Evict the cache if the number of elements exceeds the limit
-    std::shared_ptr<Executable> evicted_ng_exec;
-    const char* cache_depth_specified =
-        std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
-    if (cache_depth_specified != nullptr) {
-      m_function_cache_depth_in_items =
-          (int)strtol(cache_depth_specified, NULL, 10);
-    }
-    if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
-      evicted_ng_exec = m_ng_exec_map[m_lru.back()];
-      m_ng_exec_map.erase(m_lru.back());
+    string signature = signature_ss.str();
+    OVTF_VLOG(5) << "Computed signature: " << signature;
+    auto it = m_ng_exec_map.find(signature);
+    OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
+                 << m_cluster_id;
 
-      m_lru.pop_back();
-    }  // cache eviction if cache size greater than cache depth
+    // Translate the TensorFlow graph to nGraph.
+    std::shared_ptr<ov::Model> ng_function;
+    if (it == m_ng_exec_map.end()) {
+      // Measure the current total memory usage
+      long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
+      util::MemoryProfile(vm0, rss0);
 
-    try {
-      ng_exec = backend->Compile(ng_function);
-    } catch (const std::exception& ex) {
-      return errors::Internal("Failed to compile function " + m_name + ": ",
-                              ex.what());
-    }
+      ng_result_list.clear();
+      OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
+      TF_RETURN_IF_ERROR(Builder::TranslateGraph(
+          input_shapes, static_input_map, &m_graph, m_name, ng_function,
+          ng_result_list, tf_input_tensors));
+      util::DumpNGGraph(ng_function, m_name);
 
-    m_ng_exec_map[signature] = ng_exec;
-    ng_exec->SetOutputShapes(ng_output_shapes);
+      std::vector<ov::Shape> ng_output_shapes;
+      ng_output_shapes.resize(ng_result_list.size());
+      for (int i = 0; i < ng_result_list.size(); i++) {
+        if (ng_result_list[i]->is_dynamic()) {
+          ng_output_shapes[i] = ov::Shape{};
+        } else {
+          ng_output_shapes[i] = ng_result_list[i]->get_shape();
+        }
+      }
 
-    m_lru.push_front(signature);
+      // Evict the cache if the number of elements exceeds the limit
+      std::shared_ptr<Executable> evicted_ng_exec;
+      const char* cache_depth_specified =
+          std::getenv("OPENVINO_TF_FUNCTION_CACHE_ITEM_DEPTH");
+      if (cache_depth_specified != nullptr) {
+        m_function_cache_depth_in_items =
+            (int)strtol(cache_depth_specified, NULL, 10);
+      }
+      if (m_ng_exec_map.size() >= m_function_cache_depth_in_items) {
+        evicted_ng_exec = m_ng_exec_map[m_lru.back()];
+        m_ng_exec_map.erase(m_lru.back());
 
-    // Memory after
-    util::MemoryProfile(vm, rss);
-    auto delta_vm_mem = vm - vm0;
-    auto delta_res_mem = rss - rss0;
-    OVTF_VLOG(1) << "OPENVINO_TF_CACHE_PROFILE: OP_ID: " << m_cluster_id
-                 << " Cache length: " << m_ng_exec_map.size()
-                 << " Cluster: " << m_name << " Delta VM: " << delta_vm_mem
-                 << " Delta RSS: " << delta_res_mem
-                 << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
-                 << " VM: " << vm / (1024 * 1024) << " GB" << endl;
-  }  // end of input signature not found in m_ng_exec_map
-  else {
-    // Found the input signature in m_ng_exec_map, use the cached executable
-    // Update the m_lru
-    if (signature != m_lru.front()) {
-      m_lru.remove(signature);
+        m_lru.pop_back();
+      }  // cache eviction if cache size greater than cache depth
+
+      try {
+        ng_exec = backend->Compile(ng_function);
+      } catch (const std::exception& ex) {
+        return errors::Internal("Failed to compile function " + m_name + ": ",
+                                ex.what());
+      }
+
+      m_ng_exec_map[signature] = ng_exec;
+      ng_exec->SetOutputShapes(ng_output_shapes);
+
       m_lru.push_front(signature);
+
+      // Memory after
+      util::MemoryProfile(vm, rss);
+      auto delta_vm_mem = vm - vm0;
+      auto delta_res_mem = rss - rss0;
+      OVTF_VLOG(1) << "OPENVINO_TF_CACHE_PROFILE: OP_ID: " << m_cluster_id
+                   << " Cache length: " << m_ng_exec_map.size()
+                   << " Cluster: " << m_name << " Delta VM: " << delta_vm_mem
+                   << " Delta RSS: " << delta_res_mem
+                   << " KB Total RSS: " << rss / (1024 * 1024) << " GB "
+                   << " VM: " << vm / (1024 * 1024) << " GB" << endl;
+    }  // end of input signature not found in m_ng_exec_map
+    else {
+      // Found the input signature in m_ng_exec_map, use the cached executable
+      // Update the m_lru
+      if (signature != m_lru.front()) {
+        m_lru.remove(signature);
+        m_lru.push_front(signature);
+      }
+      ng_exec = it->second;
     }
-    ng_exec = it->second;
-  }
-  return Status::OK();
-}
-
-Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
-  OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
-    NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
-    GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
-    SessionOptions options;
-    std::shared_ptr<tensorflow::Session> session(
-        tensorflow::NewSession(options));
-    Status session_create_status = session->Create(*graph_def);
-    if (!session_create_status.ok()) {
-      return session_create_status;
-    }
-    m_session = session;
-
-    vector<Node*> ordered;
-    GetReversePostOrder(m_graph, &ordered, NodeComparatorName());
-
-    vector<const Node*> tf_params;
-    vector<const Node*> tf_ret_vals;
-
-    for (const auto n : ordered) {
-      if (n->IsSink() || n->IsSource()) {
-        continue;
-      }
-
-      if (n->IsControlFlow()) {
-        return errors::Unimplemented(
-            "Encountered a control flow op in the openvino_tensorflow: ",
-            n->DebugString());
-      }
-
-      if (n->IsArg()) {
-        tf_params.push_back(n);
-      } else if (n->IsRetval()) {
-        tf_ret_vals.push_back(n);
-      }
-    }
-    m_session_input_names.resize(tf_params.size());
-    for (auto parm : tf_params) {
-      DataType dtype;
-      if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
-        return errors::InvalidArgument("No data type defined for _Arg");
-      }
-      int index;
-      if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
-        return errors::InvalidArgument("No index defined for _Arg");
-      }
-      m_session_input_names[index] = parm->name();
-    }
-    m_session_output_names.resize(tf_ret_vals.size());
-    for (auto n : tf_ret_vals) {
-      if (n->num_inputs() != 1) {
-        return errors::InvalidArgument("_Retval has ", n->num_inputs(),
-                                       " inputs, should have 1");
-      }
-      int index;
-      if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
-        return errors::InvalidArgument("No index defined for _Retval");
-      }
-      std::vector<const Edge*> output_edges;
-      TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
-      m_session_output_names[index] =
-          output_edges[0]->src()->name() + ":" +
-          std::to_string(output_edges[0]->src_output());
-    }
+    return Status::OK();
   }
 
-  std::vector<std::pair<string, Tensor>> input_tensor_list(
-      m_session_input_names.size());
-  for (int i = 0; i < m_session_input_names.size(); i++) {
-    input_tensor_list[i] = {m_session_input_names[i], ctx->input(i)};
-  }
-  std::vector<Tensor> outputs;
-  tensorflow::RunOptions run_options;
-  run_options.set_inter_op_thread_pool(-1);
-  tensorflow::RunMetadata run_metadata;
-  Status run_status =
-      m_session->Run(run_options, input_tensor_list, m_session_output_names, {},
-                     &outputs, &run_metadata);
-  if (run_status != Status::OK()) {
-    return errors::Internal("Failed to run TF session for " + name());
-  }
-  for (int i = 0; i < outputs.size(); i++) {
-    Tensor* output_tensor = ctx->mutable_output(i);
-    if (output_tensor == nullptr) {
-      ctx->set_output(i, outputs[i]);
-    } else {
+  Status NGraphEncapsulateOp::Fallback(OpKernelContext * ctx) {
+    OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
+    if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
+      NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
+      GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
+      SessionOptions options;
+      std::shared_ptr<tensorflow::Session> session(
+          tensorflow::NewSession(options));
+      Status session_create_status = session->Create(*graph_def);
+      if (!session_create_status.ok()) {
+        return session_create_status;
+      }
+      m_session = session;
+
+      vector<Node*> ordered;
+      GetReversePostOrder(m_graph, &ordered, NodeComparatorName());
+
+      vector<const Node*> tf_params;
+      vector<const Node*> tf_ret_vals;
+
+      for (const auto n : ordered) {
+        if (n->IsSink() || n->IsSource()) {
+          continue;
+        }
+
+        if (n->IsControlFlow()) {
+          return errors::Unimplemented(
+              "Encountered a control flow op in the openvino_tensorflow: ",
+              n->DebugString());
+        }
+
+        if (n->IsArg()) {
+          tf_params.push_back(n);
+        } else if (n->IsRetval()) {
+          tf_ret_vals.push_back(n);
+        }
+      }
+      m_session_input_names.resize(tf_params.size());
+      for (auto parm : tf_params) {
+        DataType dtype;
+        if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
+          return errors::InvalidArgument("No data type defined for _Arg");
+        }
+        int index;
+        if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
+          return errors::InvalidArgument("No index defined for _Arg");
+        }
+        m_session_input_names[index] = parm->name();
+      }
+      m_session_output_names.resize(tf_ret_vals.size());
+      for (auto n : tf_ret_vals) {
+        if (n->num_inputs() != 1) {
+          return errors::InvalidArgument("_Retval has ", n->num_inputs(),
+                                         " inputs, should have 1");
+        }
+        int index;
+        if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
+          return errors::InvalidArgument("No index defined for _Retval");
+        }
+        std::vector<const Edge*> output_edges;
+        TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
+        m_session_output_names[index] =
+            output_edges[0]->src()->name() + ":" +
+            std::to_string(output_edges[0]->src_output());
+      }
+    }
+
+    std::vector<std::pair<string, Tensor>> input_tensor_list(
+        m_session_input_names.size());
+    for (int i = 0; i < m_session_input_names.size(); i++) {
+      input_tensor_list[i] = {m_session_input_names[i], ctx->input(i)};
+    }
+    std::vector<Tensor> outputs;
+    tensorflow::RunOptions run_options;
+    run_options.set_inter_op_thread_pool(-1);
+    tensorflow::RunMetadata run_metadata;
+    Status run_status =
+        m_session->Run(run_options, input_tensor_list, m_session_output_names,
+                       {}, &outputs, &run_metadata);
+    if (run_status != Status::OK()) {
+      return errors::Internal("Failed to run TF session for " + name());
+    }
+    for (int i = 0; i < outputs.size(); i++) {
+      Tensor* output_tensor = ctx->mutable_output(i);
+      if (output_tensor == nullptr) {
+        ctx->set_output(i, outputs[i]);
+      } else {
 #if TF_VERSION < 2
-      std::memcpy((void*)(DMAHelper::base(output_tensor)),
-                  (void*)(DMAHelper::base(&(outputs[i]))),
-                  outputs[i].AllocatedBytes());
+        std::memcpy((void*)(DMAHelper::base(output_tensor)),
+                    (void*)(DMAHelper::base(&(outputs[i]))),
+                    outputs[i].AllocatedBytes());
 #else
-      std::memcpy((void*)(output_tensor->data()), (void*)(outputs[i].data()),
-                  outputs[i].AllocatedBytes());
+        std::memcpy((void*)(output_tensor->data()), (void*)(outputs[i].data()),
+                    outputs[i].AllocatedBytes());
 #endif
+      }
     }
+    return Status::OK();
   }
-  return Status::OK();
-}
 
 }  // namespace openvino_tensorflow
 
