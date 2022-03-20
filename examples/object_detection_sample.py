@@ -268,4 +268,4 @@ if __name__ == "__main__":
             os.path.abspath(result_dir)))
     if cap:
         cap.release()
-    cv2.destroyAllWindows()
+        cv2.destroyAllWindows()

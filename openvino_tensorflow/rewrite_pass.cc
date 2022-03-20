@@ -139,7 +139,6 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     std::string ov_version;
 
 #if defined(OPENVINO_2022_1)
-    // TODO: once OCM upgraded change it to the right version
     ov_version = "2022.1";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
