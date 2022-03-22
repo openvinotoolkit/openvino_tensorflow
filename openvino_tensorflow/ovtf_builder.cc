@@ -93,6 +93,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
                              const ov::Output<ov::Node> ng_node) {
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
+  // node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
