@@ -40,7 +40,7 @@ class IE_Backend_Engine {
   // Disables multi request execution
   void disable_multi_req_execution();
 
-  // Returns the OpenVINO Model from the CNNNetwork
+  // Returns the OpenVINO Model
   std::shared_ptr<ov::Model> get_model();
 
   virtual const std::vector<size_t> get_output_shape(const int i) = 0;
