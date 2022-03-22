@@ -255,7 +255,9 @@ void DumpNGGraph(std::shared_ptr<ov::Model> function, const string filename) {
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_IO", "1");
+  NGRAPH_SUPPRESS_DEPRECATED_START
   ngraph::plot_graph(function, filename + ".dot");
+  NGRAPH_SUPPRESS_DEPRECATED_END
 }
 
 bool DumpAllGraphs() { return GetEnv("OPENVINO_TF_DUMP_GRAPHS") == "1"; }

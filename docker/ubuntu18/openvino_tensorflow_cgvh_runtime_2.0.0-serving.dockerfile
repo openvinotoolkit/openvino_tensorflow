@@ -106,7 +106,7 @@ RUN bazel clean --expunge --color=yes && \
     rm -rf /root/.cache
 
 ################################################################################
-FROM openvino/openvino_tensorflow/ubuntu18_runtime:2.0.0 AS runtime_serving
+FROM openvino/openvino_tensorflow_ubuntu18_runtime:2.0.0 AS runtime_serving
 ################################################################################
 
 LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"

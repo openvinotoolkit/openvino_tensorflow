@@ -1429,7 +1429,7 @@ static Status TranslateCropAndResizeOp(
       opset::Interpolate::InterpolateAttrs interpolate_attrs;
       // always corner aligned
       interpolate_attrs.coordinate_transformation_mode =
-          opset::Interpolate::CoordinateTransformMode::align_corners;
+          opset::Interpolate::CoordinateTransformMode::ALIGN_CORNERS;
 
       // TODO: handle the case when extrapolation value is greatger than 1.0
       // arguments for resizing
@@ -1446,9 +1446,9 @@ static Status TranslateCropAndResizeOp(
           op->name(), ov::element::i32, ov::Shape{2}, std::vector<int>({2, 3}));
 
       if (tf_resize_method == "bilinear") {
-        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::LINEAR;
       } else {  // nearest
-        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+        interpolate_attrs.mode = opset::Interpolate::InterpolateMode::NEAREST;
       }
 
       Transpose<0, 3, 1, 2>(ng_crop);
@@ -2915,14 +2915,14 @@ static Status TranslateResizeBilinearOp(
   // Get Interpolate attributes
   using InterpolateV4Attrs = opset::Interpolate::InterpolateAttrs;
   InterpolateV4Attrs interpolate_attrs;
-  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::linear;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::LINEAR;
   interpolate_attrs.shape_calculation_mode =
-      opset::Interpolate::ShapeCalcMode::sizes;
+      opset::Interpolate::ShapeCalcMode::SIZES;
   bool align_corners = false;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
   if (align_corners)
     interpolate_attrs.coordinate_transformation_mode =
-        opset::Interpolate::CoordinateTransformMode::align_corners;
+        opset::Interpolate::CoordinateTransformMode::ALIGN_CORNERS;
 
   auto input_shape = ng_inp.get_shape();
   std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
@@ -2952,17 +2952,17 @@ static Status TranslateResizeNearestNeighborOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_inp, ng_inp_sizes));
 
   opset::Interpolate::InterpolateAttrs interpolate_attrs;
-  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::nearest;
+  interpolate_attrs.mode = opset::Interpolate::InterpolateMode::NEAREST;
   interpolate_attrs.shape_calculation_mode =
-      opset::Interpolate::ShapeCalcMode::sizes;
+      opset::Interpolate::ShapeCalcMode::SIZES;
   bool align_corners = false;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "align_corners", &align_corners));
   if (align_corners) {
     interpolate_attrs.coordinate_transformation_mode =
-        opset::Interpolate::CoordinateTransformMode::align_corners;
+        opset::Interpolate::CoordinateTransformMode::ALIGN_CORNERS;
   }
   interpolate_attrs.nearest_mode =
-      opset::Interpolate::NearestMode::round_prefer_floor;
+      opset::Interpolate::NearestMode::ROUND_PREFER_FLOOR;
 
   auto input_shape = ng_inp.get_shape();
   std::vector<uint64_t> spatial_shape = {input_shape[1], input_shape[2]};
@@ -4025,10 +4025,11 @@ Status Builder::TranslateGraph(
   //
   // Request row-major layout on results.
   //
+  NGRAPH_SUPPRESS_DEPRECATED_START
   for (auto result : ng_function->get_results()) {
     result->set_needs_default_layout(true);
   }
-  OVTF_VLOG(5) << "Done with translations";
+  NGRAPH_SUPPRESS_DEPRECATED_END
   return Status::OK();
 }
 

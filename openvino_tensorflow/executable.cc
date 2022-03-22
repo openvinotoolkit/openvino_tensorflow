@@ -119,7 +119,7 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   m_model = model;
 
   if (m_device_type == "GPU_FP16") {
-    ov::pass::ConvertFP32ToFP16().run_on_function(model);
+    ov::pass::ConvertFP32ToFP16().run_on_model(model);
     model->validate_nodes_and_infer_types();
 
     auto proc = ov::preprocess::PrePostProcessor(model);

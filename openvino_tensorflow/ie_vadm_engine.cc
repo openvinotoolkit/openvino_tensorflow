@@ -116,7 +116,6 @@ void IE_VADM_Engine::infer(
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] == nullptr) continue;
     const void* input_data_pointer = inputs[i]->data();
-    size_t size = inputs[i]->get_byte_size();
     for (int j = 0; j < num_req; j++) {
       const int in_idx = m_in_idx[i];
       if (in_idx < 0) {
@@ -186,7 +185,6 @@ void IE_VADM_Engine::infer(
       } else {
         out_shape[0] = m_orig_batch_size;
         size_t req_size = tensor.get_byte_size();
-        size_t out_size = req_size * num_req;
         outputs[i] =
             std::make_shared<IETensor>(tensor.get_element_type(), out_shape);
         uint8_t* out_ptr = (uint8_t*)(outputs[i]->data());

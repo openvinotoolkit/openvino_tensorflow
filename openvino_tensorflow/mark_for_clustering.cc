@@ -44,17 +44,6 @@ namespace openvino_tensorflow {
 //
 // FIXME(amprocte): stubbed out for now because NGRAPH device is gone.
 //
-static Status NGraphPlacementRequested(Node*, bool& placement_ok) {
-  placement_ok = true;
-  return Status::OK();
-}
-
-static Status CheckIfOutputNode(const Node* node,
-                                const std::set<string> skip_these_nodes,
-                                bool& skip_it) {
-  skip_it = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
-  return Status::OK();
-}
 
 // Marks the input indices in "inputs" as static
 static inline void SetStaticInputs(Node* n, std::vector<int32> inputs) {

@@ -17,7 +17,9 @@
 #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 #else
+#ifndef EXPORT_SYMBOL
 #define EXPORT_SYMBOL __attribute__((visibility("default")))
+#endif
 #endif
 
 using namespace std;
