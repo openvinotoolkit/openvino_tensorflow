@@ -524,33 +524,29 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 #endif
     }
   } else {
-    auto out_shape_check = [ng_output_shapes](int i) {
-      if (ng_output_shapes[i].size() > 0) {
-        auto out_shape_list = ng_output_shapes[i];
-        for (auto dim : out_shape_list) {
-          if (dim == 0) return true;
-        }
+    for (int i = 0; i < results.size(); i++) {
+      auto ng_output = ng_func_outputs[i];
+
+      auto ng_shape = ng_output->get_shape();
+      if (results[i]->is_dynamic()) {
+        ng_shape = ng_output->get_shape();
       }
-      return false;
-    };
-    int j = 0;
-    for (int i = 0; i < ng_result_list.size(); i++) {
-      if (out_shape_check(i)) {
-        auto ng_shape = ng_output_shapes[i];
-        ov::element::Type expected_elem_type;
-        auto ng_element = ng_result_list[i];
-        auto ng_element_type = ng_element->get_element_type();
-        OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
-                           ctx->expected_output_dtype(i), &expected_elem_type));
-        OP_REQUIRES(
-            ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
-                             "the element type expected by TensorFlow"));
-        TensorShape tf_shape;
-        for (auto dim : ng_shape) {
-          tf_shape.AddDim(dim);
-        }
+      ov::element::Type expected_elem_type;
+      auto ng_element = results[i];
+      ov::Any any = ng_element->get_rt_info()["index"];
+      int64_t output_index = any.as<int64_t>();
+      auto ng_element_type = ng_element->get_element_type();
+      OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
+                              ctx->expected_output_dtype(output_index),
+                              &expected_elem_type));
+      OP_REQUIRES(
+          ctx, ng_element_type == expected_elem_type,
+          errors::Internal("Element type inferred by nGraph does not match "
+                           "the element type expected by TensorFlow"));
+      TensorShape tf_shape;
+      for (auto dim : ng_shape) {
+        tf_shape.AddDim(dim);
+      }
 
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(
