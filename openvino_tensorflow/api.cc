@@ -13,6 +13,7 @@
 
 #include "api.h"
 #include "backend_manager.h"
+#include "ovtf_builder.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -113,6 +114,11 @@ bool export_ir(const char* output_dir, char** cluster_info, char** err_msg) {
   *cluster_info = clusterInfo;
   return true;
 }
+
+void load_tf_conversion_extensions(
+    const char* tf_conversion_extensions_so_path) {
+  LoadTFConversionExtensions(tf_conversion_extensions_so_path);
+}
 }
 
 // note that TensorFlow always uses camel case for the C++ API, but not for
@@ -192,6 +198,10 @@ bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
   return true;
 }
 
+void LoadTFConversionExtensions(
+    const string& tf_conversion_extensions_so_path) {
+  Builder::SetLibPath(tf_conversion_extensions_so_path);
+}
 }  // namespace api
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -51,6 +51,8 @@ extern EXPORT_SYMBOL void disable_dynamic_fallback();
 
 extern EXPORT_SYMBOL bool export_ir(const char* output_dir, char** cluster_info,
                                     char** err_msg);
+extern EXPORT_SYMBOL void load_tf_conversion_extensions(
+    const char* tf_conversion_extensions_so_path);
 }
 
 extern void Enable();
@@ -75,6 +77,8 @@ extern void DisableDynamicFallback();
 
 extern bool ExportIR(const string& output_dir, string& cluster_info,
                      string& err_msg);
+extern void LoadTFConversionExtensions(
+    const string& tf_conversion_extensions_so_path);
 }  // namespace api
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

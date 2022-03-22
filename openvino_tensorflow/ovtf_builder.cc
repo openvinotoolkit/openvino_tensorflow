@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#include <memory>
 #include "tensorflow/core/framework/tensor.pb.h"
 #include "tensorflow/core/framework/tensor_shape.pb.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "openvino/frontend/tensorflow/extension/conversion.hpp"
 #include "openvino/opsets/opset8.hpp"
 #include "openvino/pass/constant_folding.hpp"
 
@@ -91,6 +93,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
                              const ov::Output<ov::Node> ng_node) {
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
+  // node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
@@ -4039,6 +4042,325 @@ Status Builder::TranslateGraph(
     result->set_needs_default_layout(true);
   }
   NGRAPH_SUPPRESS_DEPRECATED_END
+  return Status::OK();
+}
+
+std::mutex Builder::m_translate_lock_;
+
+// Initialize the lib path as empty string
+std::string Builder::m_tf_conversion_extensions_lib_path = "";
+
+void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path) {
+  // TODO: Add check if the lib_path exists, otherwise throw error
+  m_tf_conversion_extensions_lib_path = tf_conversion_extensions_so_path;
+}
+ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
+    std::make_shared<ov::frontend::tensorflow::FrontEnd>();
+
+Status Builder::TranslateGraphWithTFFE(
+    const std::vector<TensorShape>& inputs,
+    const std::vector<const Tensor*>& static_input_map,
+    const Graph* input_graph, const string name,
+    std::shared_ptr<ngraph::Function>& ng_function,
+    ngraph::ResultVector& zero_dim_outputs,
+    const std::vector<Tensor>& tf_input_tensors) {
+  std::lock_guard<std::mutex> lock(m_translate_lock_);
+  vector<Node*> ordered;
+  GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
+
+  // Assign attributes for constant inputs
+  for (const auto n : ordered) {
+    if (n->IsSink() || n->IsSource()) {
+      continue;
+    }
+
+    if (n->IsControlFlow()) {
+      return errors::Unimplemented(
+          "Encountered a control flow op in the openvino_tensorflow: ",
+          n->DebugString());
+    }
+
+    if (n->IsArg()) {
+      bool static_input = false;
+      try {
+        GetNodeAttr(n->attrs(), "_static_input", &static_input);
+      } catch (const std::exception&) {
+        OVTF_VLOG(1) << "Parameter " << n->name()
+                     << " is not a static input to any node";
+      }
+      if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
+        bool is_variable = false;
+        try {
+          GetNodeAttr(n->attrs(), "_is_variable", &is_variable);
+        } catch (const std::exception&) {
+          OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
+        }
+        static_input |= is_variable;
+      }
+      if (static_input) {
+        DataType dtype;
+        if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
+          return errors::InvalidArgument("No data type defined for _Arg");
+        }
+        int index;
+        if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
+          return errors::InvalidArgument("No index defined for _Arg");
+        }
+        const Tensor tensor = tf_input_tensors[index];
+        n->AddAttr("_static_value", tensor);
+        n->AddAttr("_static_dtype", dtype);
+      }
+    }
+  }
+
+  std::shared_ptr<OVTFGraphIterator> giter =
+      std::make_shared<OVTFGraphIterator>(ordered);
+
+  ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
+  ov::Any gany(gi_ptr);
+
+  std::vector<ov::Shape> indexed_shape;
+  indexed_shape.reserve(inputs.size());
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    ov::Shape ng_shape;
+    TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
+    indexed_shape.push_back(ng_shape);
+  }
+
+  // Add the OV extension lib
+  static bool once = true;
+  if (once) {
+#ifdef _WIN32
+#define EXT ".dll"
+#elif __APPLE__
+#define EXT ".dylib"
+#else
+#define EXT ".so"
+#endif
+
+    // This would set the conversion extension path for c++ library
+    if (m_tf_conversion_extensions_lib_path.empty()) {
+      std::string lib_path;
+#ifdef OVTF_INSTALL_LIB_DIR
+      lib_path = OVTF_INSTALL_LIB_DIR;
+#endif
+#ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME
+#ifdef _WIN32
+      lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#else
+      lib_path =
+          lib_path + "/" + "lib" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#endif
+#endif
+      // TODO: Add check if the lib_path exists, otherwise throw error
+      SetLibPath(lib_path);
+    }
+    m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);
+    once = false;
+  }
+
+  // _Arg implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
+                      -> ov::OutputVector {
+            ov::Output<ov::Node> res;
+            auto element_type = node.get_attribute<ov::element::Type>("T");
+            auto index = node.get_attribute<int64_t>("index");
+            auto shape = indexed_shape.at(index);
+            auto is_static_input = node.get_attribute<bool>("_static_input");
+            auto prov_tag = node.get_attribute<std::string>("_prov_tag");
+            if (is_static_input) {
+              ov::Any any_proto = node.get_attribute<::tensorflow::TensorProto>(
+                  "_static_value");
+              auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
+              ov::Any any_type =
+                  node.get_attribute<ov::element::Type>("_static_dtype");
+              auto dt = any_type.as<ov::element::Type>();
+              switch (dt) {
+                case ov::element::Type_t::f32: {
+                  vector<float> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<float>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::f64: {
+                  vector<double> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<double>(tensor_proto, dt,
+                                                  &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::u8: {
+                  vector<uint8> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::i8: {
+                  vector<int8> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int8>(tensor_proto, dt, &const_shape,
+                                                &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::i32: {
+                  vector<int32> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int32>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::u64: {
+                  vector<uint64> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<uint64>(tensor_proto, dt,
+                                                  &const_shape, &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::i64: {
+                  vector<int64> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<int64>(tensor_proto, dt, &const_shape,
+                                                 &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                case ov::element::Type_t::boolean: {
+                  vector<bool> const_vec;
+                  ov::Shape const_shape;
+                  values_from_tensorproto<bool>(tensor_proto, dt, &const_shape,
+                                                &const_vec);
+                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
+                                                               const_vec);
+                  break;
+                }
+                default:
+                  THROW_IE_EXCEPTION << "Unkown const input type";
+              }
+
+            } else {
+              res =
+                  std::make_shared<ov::opset8::Parameter>(element_type, shape);
+            }
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"index", ov::Any(index)});
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"_prov_tag", ov::Any(prov_tag)});
+            return {res};
+          }));
+
+  // _Retval implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Retval", [&indexed_shape](const ov::frontend::NodeContext& node)
+                         -> ov::OutputVector {
+            if (node.get_input_size() != 1) {
+              FRONT_END_GENERAL_CHECK(
+                  false, "_Retval has " + to_string(node.get_input_size()) +
+                             " inputs, should have 1");
+            }
+
+            auto index = node.get_attribute<int64_t>("index");
+            auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+            res->get_rt_info().insert({"index", ov::Any(index)});
+            return res->outputs();
+          }));
+
+  try {
+    ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+    ng_function = m_frontend_ptr->convert(input_model);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Frontend conversion error: " + string(exp.what()));
+  } catch (...) {
+    return errors::Internal("Frontend conversion error");
+  }
+
+  // Get the parameter nodes with non zero dim values or valid dim values
+  auto ng_parameter_list = ng_function->get_parameters();
+  ov::ParameterVector ng_func_parameter_list;
+
+  auto param_dim_check = [ng_parameter_list](int i) {
+    auto param_shape_list = ng_parameter_list[i]->get_shape();
+    for (auto dim : param_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
+  for (int i = 0; i < ng_parameter_list.size(); i++) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+      ng_func_parameter_list.push_back(ng_parameter_list[i]);
+    }
+  }
+
+  // Get the result nodes with valid dim values
+  auto ng_result_list = ng_function->get_results();
+  auto result_dim_check = [ng_result_list](int i) {
+    auto res_shape_list = ng_result_list[i]->get_shape();
+    for (auto dim : res_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
+  ov::ResultVector ng_func_result_list;
+  for (int i = 0; i < ng_result_list.size(); i++) {
+    if (ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
+      ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
+    }
+  }
+
+  // Refine the OpenVINO Model based on refined params and retvals
+  //
+  try {
+    ng_function = make_shared<ov::Model>(ng_func_result_list,
+                                         ng_func_parameter_list, name);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Failed to create OpenVINO Model for " + name +
+                            ": " + string(exp.what()));
+  }
+
+  //
+  // Apply additional passes on the nGraph function here.
+  //
+  {
+    ov::pass::Manager passes;
+    if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
+      passes.register_pass<ov::pass::ConstantFolding>();
+    }
+    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") != "0") {
+      passes.register_pass<pass::TransposeSinking>();
+    }
+    passes.run_passes(ng_function);
+  }
+  OVTF_VLOG(5) << "Done with passes";
+  //
+  // Request row-major layout on results.
+  //
+  for (auto result : ng_function->get_results()) {
+    result->set_needs_default_layout(true);
+  }
+  OVTF_VLOG(5) << "Done with translations";
+
   return Status::OK();
 }
 
