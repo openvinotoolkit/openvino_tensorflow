@@ -252,11 +252,14 @@ def setup_venv(venv_dir,tf_version):
         "opencv-python==4.5.2.54",
     ]
     command_executor(package_list)
+    # TF >=2.4 and <= 2.6 requires numpy~=1.19.2
+    if (int(tf_version.split(".")[1]) > 3 & int(tf_version.split(".")[1]) < 7):
+        command_executor(["pip", "install", "h5py"])
+        command_executor(["pip", "install", "numpy~=1.19.2"])
     # TF on windows needs a higher version of numpy
     if (platform.system == "Windows"):
         command_executor(["pip", "install", "numpy>=1.21.2"])
-    if (int(tf_version.split(".")[1]) > 3 & int(tf_version.split(".")[1]) < 7):
-        command_executor(["pip", "install", "numpy~=1.19.2"])
+    
     # Print the current packages
     command_executor(["pip", "list"])
 
