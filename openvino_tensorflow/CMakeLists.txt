@@ -9,6 +9,10 @@ include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 include_directories(${NGRAPH_INSTALL_DIR}/include)
 include_directories(${ABSL_INCLUDE_DIR})
 
+set(TF_CONVERSION_EXTENSIONS_MODULE_NAME "tf_conversion_extensions")
+add_compile_definitions(TF_CONVERSION_EXTENSIONS_MODULE_NAME="${TF_CONVERSION_EXTENSIONS_MODULE_NAME}")
+add_subdirectory(tf_conversion_extensions)
+
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
@@ -43,6 +47,7 @@ set(SRC
    ie_backend_engine.cc
    ie_basic_engine.cc
    ie_vadm_engine.cc
+   ovtf_decoder.cc
 )
 
 message(STATUS "OPENVINO_TF_USE_GRAPPLER_OPTIMIZER: ${OPENVINO_TF_USE_GRAPPLER_OPTIMIZER}")
@@ -79,6 +84,7 @@ else()
           absl_container
           absl_strings
           ${InferenceEngine_LIBRARIES}
+          tensorflow_frontend_lib
           ocm
       )
 endif()
@@ -109,6 +115,9 @@ else()
 	set(OVTF_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
+# OVTF install dir required for importing TF Conversion Extensions library
+add_compile_definitions(OVTF_INSTALL_LIB_DIR="${OVTF_INSTALL_LIB_DIR}")
+
 message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 
 # Install the openvino_tensorflow lib
@@ -117,6 +126,7 @@ install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 # Install OCM and set a variable with required OpenVINO libraries path,
 if (APPLE)
   set(OCM_LIB libocm.dylib)
+  set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dylib")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
   SET(OV_LIB_EXT "dylib")
@@ -126,8 +136,10 @@ if (APPLE)
       )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 elseif(WIN32)
   set(OCM_LIB ocm.dll)
+  set(TF_CONVERSION_EXTENSIONS_LIB "${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dll")
   set(LIB_PREFIX "")
   set(PLUGIN_LIB_EXT "dll")
   SET(OV_LIB_EXT ${PLUGIN_LIB_EXT})
@@ -139,8 +151,10 @@ elseif(WIN32)
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
   set(OCM_LIB libocm.so)
+  set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.so")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
   set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
@@ -152,6 +166,7 @@ else()
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 endif()
 
 # Update this list for any new OpenVINO component/feature addition in future
@@ -159,6 +174,7 @@ set (IE_LIBS
     "${IE_LIBS}" 
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 

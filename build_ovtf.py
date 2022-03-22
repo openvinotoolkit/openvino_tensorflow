@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2022.1')
+        default='tf_fe/protobuf_revert')
 
     parser.add_argument(
         '--python_executable',
@@ -197,7 +197,7 @@ def main():
         raise AssertionError(
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
-    if (arguments.openvino_version not in ["master", "2022.1"]):
+    if (arguments.openvino_version not in ["master", "tf_fe/protobuf_revert", "2022.1"]):
         raise AssertionError(
             "Only 2022.1 OpenVINO version and master branch are supported")
 
@@ -532,6 +532,8 @@ def main():
         )
         if (arguments.openvino_version == "master"):
             openvino_release_tag = "master"
+        elif (arguments.openvino_version == "tf_fe/protobuf_revert"):
+            openvino_release_tag = "tf_fe/protobuf_revert"
         elif (arguments.openvino_version == "2022.1"):
             #TODO: repleace it with 2022.1 when the tag is created on OV branch
             openvino_release_tag = "releases/2022/1"
@@ -539,7 +541,7 @@ def main():
         # Download OpenVINO
         download_repo(
             "openvino",
-            "https://github.com/openvinotoolkit/openvino.git",
+            "https://github.com/mvafin/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")

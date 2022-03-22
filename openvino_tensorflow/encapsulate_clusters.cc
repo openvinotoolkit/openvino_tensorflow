@@ -281,6 +281,29 @@ Status Encapsulator::AnalysisPass() {
       if (src->type_string() == "ReadVariableOp") {
         SetAttrValue(
             true, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      }
+
+      vector<int> static_input_indexes;
+      try {
+        GetNodeAttr(dst->attrs(), "_ovtf_static_inputs", &static_input_indexes);
+      } catch (const std::exception&) {
+        OVTF_VLOG(1) << "Node " << dst->name()
+                     << " does not have static inputs";
+      }
+      if (std::find(static_input_indexes.begin(), static_input_indexes.end(),
+                    edge->dst_input()) != static_input_indexes.end()) {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
+      } else if (src->type_string() == "Const") {
+        // TODO: This check might be redundant
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
       }
 
       arg_index_count[dst_cluster_idx]++;

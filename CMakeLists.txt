@@ -191,6 +191,8 @@ message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 if (${OPENVINO_VERSION} MATCHES "master")
   # master works with checks of latest release
   add_definitions(-DOPENVINO_2022_1=1)
+elseif (${OPENVINO_VERSION} MATCHES "tf_fe/protobuf_revert")
+  add_definitions(-DOPENVINO_2022_1=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.1")
   add_definitions(-DOPENVINO_2022_1=1)
 else()
@@ -212,6 +214,20 @@ if(ngraph_FOUND)
 else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
+
+add_library(tensorflow_frontend_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    tensorflow_frontend_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so
+)
+
+add_library(openvino_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    openvino_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.so
+)
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
 INCLUDE_DIRECTORIES("${BASEPATH}")
