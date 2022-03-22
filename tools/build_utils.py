@@ -218,7 +218,7 @@ def load_venv(venv_dir):
     return venv_dir
 
 
-def setup_venv(venv_dir):
+def setup_venv(venv_dir,tf_version):
     load_venv(venv_dir)
 
     print("PIP location")
@@ -255,7 +255,8 @@ def setup_venv(venv_dir):
     # TF on windows needs a higher version of numpy
     if (platform.system == "Windows"):
         command_executor(["pip", "install", "numpy>=1.21.2"])
-
+    if (int(tf_version.split(".")[1]) > 3 & int(tf_version.split(".")[1]) < 7):
+        command_executor(["pip", "install", "numpy~=1.19.2"])
     # Print the current packages
     command_executor(["pip", "list"])
 
