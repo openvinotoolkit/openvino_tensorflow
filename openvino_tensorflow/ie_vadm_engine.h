@@ -34,7 +34,7 @@ class IE_VADM_Engine : public IE_Backend_Engine {
 
   virtual const std::vector<size_t> get_output_shape(const int i) {
     std::vector<size_t> shape = m_model->get_results()[i]->get_shape();
-    if (m_multi_req_execution && shape.size() > 1) {
+    if (m_multi_req_execution && m_orig_batch_size > 0 && shape.size() > 1) {
       shape[0] = m_orig_batch_size;
     }
     return shape;
@@ -42,6 +42,7 @@ class IE_VADM_Engine : public IE_Backend_Engine {
 
  private:
   int m_orig_batch_size;
+  bool m_has_batch;
 };
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -31,7 +31,12 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   OVTF_VLOG(2) << "Checking for unsupported ops";
   const auto& opset = ov::get_opset8();
   for (const auto& node : model->get_ops()) {
-    if (!opset.contains_op_type(node.get())) {
+    bool op_supported = false;
+    for (const auto& opset : supported_opsets) {
+      op_supported = opset.contains_op_type(node.get());
+      if (op_supported) break;
+    }
+    if (!op_supported) {
       OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
                           " not belonging to opset8!");
@@ -178,25 +183,26 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   auto parameters = model->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
   std::vector<std::string> input_names(inputs.size());
-  int j = 0;
-  for (int i = 0; i < inputs.size(); i++) {
+  for (int i = 0; i < parameters.size(); i++) {
+    ov::Any any = parameters[i]->get_rt_info()["index"];
+    int64_t input_index = any.as<int64_t>();
     if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
         m_skipped_inputs.end()) {
       continue;
     }
-    auto input_name = parameters[j++]->get_friendly_name();
+    auto input_name = parameters[i]->get_friendly_name();
     if (m_ie_engine->get_input_idx(input_name) < 0) {
       OVTF_VLOG(1) << "Skipping unused input " << input_name;
       continue;
     }
-    ie_inputs[i] = nullptr;
-    ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
-    input_names[i] = input_name;
+    ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
+    input_names[input_index] = input_name;
   }
 
   std::vector<std::shared_ptr<IETensor>> ie_hoisted_params(
       m_hoisted_params.size());
   std::vector<std::string> param_names(m_hoisted_params.size());
+  int j = 0;
   for (const auto& it : m_hoisted_params) {
     auto input_name = it.first;
     if (m_ie_engine->get_input_idx(input_name) < 0) {
@@ -273,10 +279,8 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
       }
       auto size = inputs[index]->get_byte_size();
       unsigned char* buf_ptr = new unsigned char[size];
-      // inputs[index]->read(buf_ptr, size);
       std::copy((uint8_t*)(inputs[index]->data()),
                 ((uint8_t*)(inputs[index]->data())) + size, buf_ptr);
-      // outputs[i]->write(buf_ptr, size);
       std::copy((uint8_t*)buf_ptr, ((uint8_t*)buf_ptr) + size,
                 (uint8_t*)(outputs[i]->data()));
       delete[] buf_ptr;
@@ -288,9 +292,6 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
             constant->get_element_type(), constant->get_shape(),
             const_cast<void*>(constant->get_data_ptr()));
       } else {
-        // outputs[i]->write(constant->get_data_ptr(),
-        //                  shape_size(constant->get_shape()) *
-        //                      constant->get_element_type().size());
         std::copy((uint8_t*)constant->get_data_ptr(),
                   ((uint8_t*)(constant->get_data_ptr())) +
                       (shape_size(constant->get_shape()) *
@@ -307,10 +308,11 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
 }
 
 void Executable::ExportIR(const string& output_dir) {
-  // if (!m_function || !m_ie_engine) return;
-  // auto& name = m_function->get_friendly_name();
-  // m_network.serialize(output_dir + "/" + name + ".xml",
-  //                    output_dir + "/" + name + ".bin");
+  if (!m_model || !m_ie_engine) return;
+  std::string name = m_model->get_friendly_name();
+  ov::pass::Serialize serializer(output_dir + "/" + name + ".xml",
+                                 output_dir + "/" + name + ".bin");
+  serializer.run_on_model(m_model);
 }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
