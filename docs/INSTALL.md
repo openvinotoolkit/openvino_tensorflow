@@ -61,7 +61,7 @@ The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>Install **OpenVINO™ integration with TensorFlow** alongside TensorFlow released on Github (Works on Windows)
 
         pip3.9 install -U pip
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow-2.8.0-cp39-cp39-win_amd64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow-2.8.0-cp39-cp39-win_amd64.whl
         pip3.9 install openvino-tensorflow==2.0.0
 <br/> 
 
@@ -74,15 +74,15 @@ The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of 
 
 2. Install `TensorFlow` based on your Python version. You can build [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md#tensorflow) with -D_GLIBCXX_USE_CXX11_ABI=1  or follow the insructions below to use the appropriate package:
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp38-cp38m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
         or
 
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp39-cp39m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
 3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2022.1 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
@@ -92,14 +92,14 @@ The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of 
 
 5. Install `openvino-tensorflow`. Based on your Python version, choose the appropriate package below:
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp37-cp37m-linux_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp37-cp37m-manylinux_2_27_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp38-cp38-linux_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp38-cp38-manylinux_2_27_x86_64.whl
 
         or
 
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp39-cp39-linux_x86_64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp39-cp39-manylinux_2_27_x86_64.whl
 
 

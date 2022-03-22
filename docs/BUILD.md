@@ -138,15 +138,15 @@ Notes:
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 
 ###  2.1. <a name='BuildInstructionsLinuxAndmacOS'></a>Build Instructions for **Linux and macOS**
-Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs.
-
-To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with TensorFlow C++ libraries (using the option --use_tensorflow_from_location). For VAD-M support, build with OpenVINO™ binary (using the option --use_openvino_from_location).
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with prebuilt TensorFlow C++ libraries. For VAD-M support, build with OpenVINO™ binary.
 
 1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. This is the recommended build option for most of the use cases.
 
         python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1
   
-- To use the master branch of OpenVINO™, pass "master" as value to "openvino_version" argument. **OpenVINO™ integration with TensorFlow** build script will take the latest commit from OpenVINO™ master branch, however all the openvino-tensorflow APIs and functionalities would still remain same as they were for OpenVINO™ version 2022.1. 
+- Support for OpenVINO™ versions older than 2022.1 has been deprecated from the current release (version 2.0.0) of **OpenVINO™ integration with TensorFlow**. Checkout the respective release branch of **OpenVINO™ integration with TensorFlow** to use previous versions of OpenVINO™ with it
+- To use the master branch of OpenVINO™, pass "master" as value to "openvino_version" argument. **OpenVINO™ integration with TensorFlow** build script will take the latest commit from OpenVINO™ master branch, however all the openvino-tensorflow APIs and functionalities would still remain same as they were for OpenVINO™ version 2022.1 
+
 
 2. Pulls compatible TensorFlow ABI1 package from Github release assets. Uses OpenVINO™ binary from specified location.
 
@@ -167,9 +167,9 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
 
 ###  2.2. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
 Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
-1. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
+1. Pulls prebuilt TensorFlow 2.8.0 python package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" 
+        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" 
 
 2. To use prebuilt TensorFlow from the given location [refer the TensorFlow build instructions](#TFWindows). It uses OpenVINO™ binary from specified location. Use this build option to run C++ examples and to integrate openvino-tensorflow in TensorFlow C++ inference applications.
 
@@ -210,9 +210,7 @@ Test the installation:
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
   
 ##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>Backwards Compatibility with TensorFlow on Linux
-**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build the source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions v2.4.4, v2.5.3, v2.6.3, v2.7.1, and v2.8.0). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). 
-
-Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box (example: PyPi openvino-tensorflow 2.0.0 which depends on TF 2.8.0 does not work with PyPi TensorFlow 2.6.0).
+**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions v2.4.4, v2.5.3, v2.6.3, v2.7.1, and v2.8.0). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box (example: PyPi openvino-tensorflow 2.0.0 which depends on TF 2.8.0 does not work with PyPi TensorFlow 2.6.0).
 
 Please note that PyPi openvino-tensorflow 2.0.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow built against TF 2.8.0 will work with PATCH versions like TF 2.8.1, and 2.8.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
 

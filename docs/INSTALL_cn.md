@@ -61,7 +61,7 @@ The openvino-tensorflow PyPi 包兼容TensorFlow PATCH版本。例如，针对TF
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>**OpenVINO™ integration with TensorFlow**与 TensorFlow Github版本一起安装 (Windows可用)
 
         pip3.9 install -U pip
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow-2.8.0-cp39-cp39-win_amd64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow-2.8.0-cp39-cp39-win_amd64.whl
         pip3.9 install openvino-tensorflow==2.0.0
 <br/> 
 
@@ -74,15 +74,15 @@ The openvino-tensorflow PyPi 包兼容TensorFlow PATCH版本。例如，针对TF
 
 2. 根据您的 Python 版本安装 `TensorFlow`，您可以使用 -D_GLIBCXX_USE_CXX11_ABI=1 构建 [TensorFlow from source](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD_cn.md#tensorflow) 或按照以下说明使用适当的包：
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp38-cp38m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
         or
 
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0.dev20220224/tensorflow_abi1-2.8.0-cp39-cp39m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
 3. 从([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html))下载并安装英特尔® OpenVINO™ Toolkit 2022.1 发行版及其依赖项。
 
@@ -92,12 +92,12 @@ The openvino-tensorflow PyPi 包兼容TensorFlow PATCH版本。例如，针对TF
 
 5. 安装“openvino-tensorflow”，根据您的 Python 版本，在下面选择合适的包：
 
-        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp37-cp37m-linux_x86_64.whl
+        pip3.7 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp37-cp37m-manylinux_2_27_x86_64.whl
 
         or
 
-        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp38-cp38-linux_x86_64.whl
+        pip3.8 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp38-cp38-manylinux_2_27_x86_64.whl
 
         or
 
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/openvino_tensorflow_abi1-1.1.0-cp39-cp39-linux_x86_64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/openvino_tensorflow_abi1-2.0.0-cp39-cp39-manylinux_2_27_x86_64.whl
