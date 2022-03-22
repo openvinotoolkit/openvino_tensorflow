@@ -4017,6 +4017,14 @@ Status Builder::TranslateGraph(
     passes.run_passes(ng_function);
   }
   OVTF_VLOG(5) << "Done with passes";
+  //
+  // Request row-major layout on results.
+  //
+  NGRAPH_SUPPRESS_DEPRECATED_START
+  for (auto result : ng_function->get_results()) {
+    result->set_needs_default_layout(true);
+  }
+  NGRAPH_SUPPRESS_DEPRECATED_END
   return Status::OK();
 }
 
