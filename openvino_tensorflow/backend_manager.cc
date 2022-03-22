@@ -83,7 +83,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 
   if (env != nullptr) {
     strncpy((char*)backendName, env, sizeof(backendName));
-    backendName[6] = '\0'; // null terminate to remove warnings
+    backendName[6] = '\0';  // null terminate to remove warnings
     backend_name = std::string(backendName);
   }
 
