@@ -251,14 +251,17 @@ def setup_venv(venv_dir,tf_version):
         "yapf==0.26.0",
         "opencv-python==4.5.2.54",
     ]
-    command_executor(package_list)
-    # TF >=2.4 and <= 2.6 requires numpy~=1.19.2
-    if ((int(tf_version.split(".")[1]) > 3) & (int(tf_version.split(".")[1]) < 7)):
-        command_executor(["pip", "install", "h5py"])
-        command_executor(["pip", "install", "numpy~=1.19.2"])
+    command_executor(package_list)    
     # TF on windows needs a higher version of numpy
     if (platform.system == "Windows"):
         command_executor(["pip", "install", "numpy>=1.21.2"])
+    else:
+        # TF >=2.4 and <= 2.6 requires numpy~=1.19.2
+        tf_maj_version=tf_version.split(".")[0]
+        tf_min_version=int(tf_version.split(".")[1])
+        if ((tf_maj_version=="v2") and (3<tf_min_version<7)):
+          command_executor(["pip", "install", "h5py"])
+          command_executor(["pip", "install", "numpy~=1.19.2"])
     
     # Print the current packages
     command_executor(["pip", "list"])
