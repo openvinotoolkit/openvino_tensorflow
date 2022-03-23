@@ -533,8 +533,7 @@ def main():
         if (arguments.openvino_version == "master"):
             openvino_release_tag = "master"
         elif (arguments.openvino_version == "2022.1"):
-            #TODO: repleace it with 2022.1 when the tag is created on OV branch
-            openvino_release_tag = "releases/2022/1"
+            openvino_release_tag = "2022.1"
 
         # Download OpenVINO
         download_repo(
