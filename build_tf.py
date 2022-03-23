@@ -63,7 +63,7 @@ def main():
 
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
-    setup_venv(venv_dir)
+    setup_venv(venv_dir, arguments.tf_version)
     if not os.path.exists(arguments.output_dir):
         raise AssertionError("Directory doesn't exist {0}".format(
             arguments.output_dir))
