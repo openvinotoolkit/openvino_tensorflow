@@ -3794,9 +3794,16 @@ Status Builder::TranslateGraph(
   ng_func_parameter_list.reserve(tf_params.size());
   // Variables to constant conversion is disabled by default
   bool convert_var_const = false;
-  if (!(std::getenv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") == nullptr)) {
-    OVTF_VLOG(1) << "OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS is Enabled ";
-    convert_var_const = true;
+  const char* convert_var_const_env =
+      std::getenv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS");
+
+  if (!(convert_var_const_env == nullptr)) {
+    // Array should have either "0" or "1"
+    char env_value = convert_var_const_env[0];
+    if (env_value == '1') {
+      OVTF_VLOG(1) << "OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS is Enabled ";
+      convert_var_const = true;
+    }
   }
 
   for (auto parm : tf_params) {
@@ -3848,7 +3855,6 @@ Status Builder::TranslateGraph(
       if (is_variable) {
         ov::Output<ov::Node> ng_const_input;
         const Tensor input_tensor = tf_input_tensors[index];
-        OVTF_VLOG(1) << "Converting " << parm->name() << " to constant";
         switch (dtype) {
           case DT_FLOAT:
             MakeConstOpForParam<float>(input_tensor, prov_tag, ng_et, ng_shape,

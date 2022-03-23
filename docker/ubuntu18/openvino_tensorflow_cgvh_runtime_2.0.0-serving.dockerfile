@@ -4,7 +4,7 @@
 ARG TF_VERSION="2.8.0"
 
 ################################################################################
-FROM openvino/ubuntu18_dev:2022.1 AS build_ovtf
+FROM openvino/ubuntu18_dev:2022.1.0 AS build_ovtf
 ################################################################################
 
 LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"

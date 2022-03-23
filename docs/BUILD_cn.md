@@ -158,7 +158,7 @@
 
 4. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#LinuxAndmacOS)）。使用指定位置的 OpenVINO™ 二进制文件。** 它仅兼容 ABI1 构建的 TensorFlow **。
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2022.1/ --cxx11_abi_version=1
 
 选择 `build_ovtf.py` 脚本的 `help` 选项，了解更多关于各种构建选项的信息。
 
@@ -168,7 +168,7 @@
 将 "Command Prompt"或"x64 Native Tools Command Prompt for VS 2019"作为管理员使用，并从源代码采用以下构建选项：
 1. 从 Github 发布版本中获取兼容的预构建 TensorFlow 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" 
+        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" 
 
 2.  使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#TFWindows)）。使用指定位置的OpenVINO™ 二进制文件。使用此构建选项运行C++示例，并将openvino-tensorflow集成至TensorFlow C++推理应用中。
 
@@ -250,7 +250,7 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
         cd tensorflow
         git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
-        git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_7_0_build.patch
+        git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
 
 - 配置构建环境: https://www.tensorflow.org/install/source_windows#configure_the_build      

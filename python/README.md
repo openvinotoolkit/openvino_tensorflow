@@ -18,7 +18,7 @@
 
 <sup>1</sup>Windows release supports only Python3.9 
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2021.4.2 meaning you do not have to install OpenVINO™ separately.
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1 meaning you do not have to install OpenVINO™ separately.
 This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
@@ -81,7 +81,7 @@ For more details see [docker readme](https://github.com/openvinotoolkit/openvino
 
 - [Ubuntu18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
 - [Ubuntu20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
-- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvino_tensorflow)
+- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvinotensorflow)
 
 ## Try it on Intel<sup>®</sup> DevCloud
 Sample tutorials are also hosted on [Intel<sup>®</sup> DevCloud](https://software.intel.com/content/www/us/en/develop/tools/devcloud/edge/build/ovtfoverview.html). The demo applications are implemented using Jupyter Notebooks. You can interactively execute them on Intel<sup>®</sup> DevCloud nodes, compare the results of **OpenVINO™ integration with TensorFlow**, native TensorFlow and OpenVINO™. 
