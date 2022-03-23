@@ -298,7 +298,7 @@ def main():
     load_venv(venv_dir)
 
     # Setup the virtual env
-    setup_venv(venv_dir,tf_version)
+    setup_venv(venv_dir, tf_version)
 
     target_arch = 'native'
     if (arguments.target_arch):
