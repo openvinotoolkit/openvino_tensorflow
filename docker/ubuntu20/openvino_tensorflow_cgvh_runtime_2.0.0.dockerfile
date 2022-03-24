@@ -17,7 +17,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ARG TF_VERSION="v2.8.0"
-ARG OPENVINO_VERSION="2022.1"
+ARG OPENVINO_VERSION="2022.1.0"
 ARG OVTF_BRANCH="releases/2.0.0"
 
 RUN apt-get update; \

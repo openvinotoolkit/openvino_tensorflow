@@ -187,11 +187,10 @@ message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 
-#TODO: Change the tag when OV_2022.1 branch is released
 if (${OPENVINO_VERSION} MATCHES "master")
   # master works with checks of latest release
   add_definitions(-DOPENVINO_2022_1=1)
-elseif (${OPENVINO_VERSION} MATCHES "2022.1")
+elseif (${OPENVINO_VERSION} MATCHES "2022.1.0")
   add_definitions(-DOPENVINO_2022_1=1)
 else()
   message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")

@@ -31,7 +31,7 @@
 
 请参阅我们的[交互式安装表](https://openvinotoolkit.github.io/openvino_tensorflow/)，查看安装选项菜单。该表格将帮助您配置安装过程。
 
-**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.1 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
+**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.1.0 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
 - 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
@@ -64,7 +64,7 @@
 
         TensorFlow version:  2.8.0
         OpenVINO integration with TensorFlow version: b'2.0.0'
-        OpenVINO version used for this build: b'2022.1'
+        OpenVINO version used for this build: b'2022.1.0'
         TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 

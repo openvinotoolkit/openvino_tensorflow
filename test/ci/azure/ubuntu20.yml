@@ -29,7 +29,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=$(OV_LOCATION) --openvino_version=2022.1 --cxx11_abi_version=1
+      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=$(OV_LOCATION) --openvino_version=2022.1.0 --cxx11_abi_version=1
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
      
