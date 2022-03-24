@@ -31,7 +31,7 @@
 
 请参阅我们的[交互式安装表](https://openvinotoolkit.github.io/openvino_tensorflow/)，查看安装选项菜单。该表格将帮助您配置安装过程。
 
-**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.1 的预构建库，用户无需单独安装 OpenVINO™。该安装包支持：
+**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.1 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
 - 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
@@ -86,8 +86,14 @@
 如欲了解 **OpenVINO™ integration with TensorFlow** 的具体功能，请查看[示例](./examples)目录中的演示。
 
 ## Docker支持
-提供Ubuntu* 18.04、Ubuntu* 20.04和TensorFlow* Serving的Dockerfiles，可用来构建用于CPU、GPU、VPU和VAD-M上**OpenVINO™ integration with TensorFlow**的Docker*运行时镜像。
+提供针对Ubuntu* 18.04、Ubuntu* 20.04和TensorFlow* Serving的Dockerfiles，可用来构建用于CPU、GPU、VPU和VAD-M上**OpenVINO™ integration with TensorFlow**的运行时Docker*镜像。
 更多详情，请参阅[docker readme](docker/README_cn.md)。
+
+### 预构建镜像
+
+- [Ubuntu 18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
+- [Ubuntu 20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
+- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvino_tensorflow)
 
 ## 在Intel<sup>®</sup> DevCloud上尝试
 示例教程也托管在[Intel<sup>®</sup> DevCloud](https://www.intel.com/content/www/us/en/developer/tools/devcloud/edge/build/ovtfoverview.html)。 演示应用程序是使用 Jupyter Notebooks实现的。 您可以在Intel<sup>®</sup> DevCloud节点上执行它们，比较 **OpenVINO™ integration with TensorFlow**、原生TensorFlow和OpenVINO™的性能结果。 
