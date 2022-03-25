@@ -10,14 +10,14 @@
   Since TensorFlow packages available in [PyPi](https://pypi.org) are built with CXX11_ABI=0 and OpenVINO™ release packages are built with CXX11_ABI=1, binary releases of these packages **cannot be installed together**.
 
   - [**OpenVINO™ integration with TensorFlow** PyPi release alongside PyPi TensorFlow](#InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow)
-  * Includes pre-built libraries of OpenVINO™ version 2022.1. The users do not have to install OpenVINO™ separately 
+  * Includes pre-built libraries of OpenVINO™ version 2022.1.0. The users do not have to install OpenVINO™ separately 
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
   * Build with CXX11_ABI=0  
 
   <br/>  
 
   - [**OpenVINO™ integration with TensorFlow** package released in Github alongside the Intel® Distribution of OpenVINO™ Toolkit](#InstallOpenVINOintegrationwithTensorFlowalongsidetheIntelDistributionofOpenVINOToolkit)
-  * Compatible with OpenVINO™ version 2022.1
+  * Compatible with OpenVINO™ version 2022.1.0
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs),    and Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M)
   * Build with CXX11_ABI=1
   * Needs a custom TensorFlow ABI1 package, which is available in Github release  
@@ -27,7 +27,7 @@
 ## macOS
 
   - [**OpenVINO™ integration with TensorFlow** PyPi release alongside PyPi TensorFlow](#InstallOpenVINOintegrationwithTensorFlowalongsidePyPiTensorFlow)
-  * Includes pre-built libraries of OpenVINO™ version 2022.1. The users do not have to install OpenVINO™ separately 
+  * Includes pre-built libraries of OpenVINO™ version 2022.1.0. The users do not have to install OpenVINO™ separately 
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
 
 <br/>  
@@ -35,7 +35,7 @@
 ## Windows
 
   - [**OpenVINO™ integration with TensorFlow** PyPi release alongside TensorFlow released in Github](#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
-  * Includes pre-built libraries of OpenVINO™ version 2022.1. The users do not have to install OpenVINO™ separately 
+  * Includes pre-built libraries of OpenVINO™ version 2022.1.0. The users do not have to install OpenVINO™ separately 
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
   * TensorFlow wheel for Windows from PyPi does't have all the API symbols enabled which are required for **OpenVINO™ integration with TensorFlow**. User needs to install the  TensorFlow wheel from the assets of the Github release page.
   
@@ -84,7 +84,7 @@ The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of 
 
         pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl
 
-3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2022.1 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
+3. Download & install Intel® Distribution of OpenVINO™ Toolkit 2022.1.0 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
 
 4. Initialize the OpenVINO™ environment by running the `setupvars.sh` located in <code>\<openvino\_install\_directory\>\/bin</code> using the command below:
 

@@ -10,7 +10,7 @@
  2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
  	* 2.1. [针对Linux和macOS的构建指令](#BuildInstructionsLinuxAndmacOS)
 	* 2.2. [针对Windows的构建指令](#BuildInstructionsWindows)
-	* 2.3. [Atom平台构建指令](#BuildInstructionsforIntelAtomProcessor)
+	* 2.3. [Intel Atom® 处理器平台构建指令](#BuildInstructionsforIntelAtomProcessor)
 	* 2.4. [构建验证](#BuildVerification)	
  3. [与TensorFlow的后端兼容性](#BackwardsCompatibilitywithTensorFlow)
  4. [OpenVINO™](#OpenVINO)
@@ -117,7 +117,7 @@
       ```
 
 注意:
-         在 macOS 版本 11.2.3 和 CMake 版本 3.21.1 上开发和测试
+         在 macOS 11.2.3 版本和 CMake 3.21.1版本上开发和测试
          用户可以安装 Python 3.7、3.8 或 3.9。
 
 ###  1.3. <a name='Windows'></a>Windows
@@ -132,7 +132,7 @@
         Microsoft Build Tools 2019
 
 3. 安装 [CMake](https://cmake.org/download/), 支持版本 >=3.14.0
-4. [下载并安装 OpenVINO™ Toolkit 2022.1 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
+4. [下载并安装 OpenVINO™ Toolkit 2022.1.0 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
 
@@ -141,24 +141,25 @@
 ###  2.1. <a name='BuildInstructionsLinuxAndmacOS'></a>针对**Linux和macOS**的构建指令
 根据需求使用以下构建选项之一, **OpenVINO™ integration with TensorFlow** 使用 PyPI TensorFlow 构建，仅支持 Python API。 
 
-使用 C++ API 需要使用 TensorFlow C++ 库构建**OpenVINO™ integration with TensorFlow**(使用 --use_tensorflow_from_location 选项)。要使用VAD-M，请使用OpenVINO™ 库进行构建(使用 --use_openvino_from_location选项)。
+使用 C++ API 需要使用预构建 TensorFlow C++ 库构建**OpenVINO™ integration with TensorFlow**。要使用VAD-M，请使用OpenVINO™ 库进行构建。
 
-1. 从 PyPi 中获取兼容的TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。
+1. 从 PyPi 中获取兼容的TensorFlow 包，从源代码克隆和构建 OpenVINO™。 参数是可选的。 如果未提供任何参数，则将使用 build_ovtf.py 中指定的默认版本。该版本是针对大多数使用案例推荐的构建选项。
 
-        python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1
-- 使用OpenVINO™主分支，需将"master"作为值传递至"openvino_version"参数。 **OpenVINO™ integration with TensorFlow** 构建脚本将拉取OpenVINO™主分支的最新提交，但所有openvino-tensorflow API和功能仍将同OpenVINO™版本2022.1。
+        python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1.0
+- 当前**OpenVINO™ integration with TensorFlow**发布版本（2.0.0版本）不支持2022.1.0以前的OpenVINO™版本。如需使用OpenVINO™过去版本，需查看支持该版本的**OpenVINO™ integration with TensorFlow**相应分支发布版本。
+- 使用OpenVINO™主分支，需将"master"作为值传递至"openvino_version"参数。 **OpenVINO™ integration with TensorFlow** 构建脚本将拉取OpenVINO™主分支的最新提交，但所有openvino-tensorflow API和功能仍将同OpenVINO™ 2022.1.0版本。
 
 2. 从 Github 发布版本中获取兼容的TensorFlow ABI1 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2022.1/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2022.1.0/ --cxx11_abi_version=1
 
-3. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#LinuxAndmacOS)）。通过源代码构建 OpenVINO™。如需频繁构建 **OpenVINO™ integration with TensorFlow**，可以使用该方法，无需每次通过源代码构建TensorFlow。
+3. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#LinuxAndmacOS)）。通过源代码获取并构建 OpenVINO™。如需频繁构建 **OpenVINO™ integration with TensorFlow**，可以使用该方法，无需每次通过源代码构建TensorFlow。
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --openvino_version=2022.1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --openvino_version=2022.1.0
 
 4. 使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#LinuxAndmacOS)）。使用指定位置的 OpenVINO™ 二进制文件。** 它仅兼容 ABI1 构建的 TensorFlow **。
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2022.1/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2022.1.0/ --cxx11_abi_version=1
 
 选择 `build_ovtf.py` 脚本的 `help` 选项，了解更多关于各种构建选项的信息。
 
@@ -166,15 +167,15 @@
 
 ###  2.2. <a name='BuildInstructionsWindows'></a>针对 **Windows**的构建指令
 将 "Command Prompt"或"x64 Native Tools Command Prompt for VS 2019"作为管理员使用，并从源代码采用以下构建选项：
-1. 从 Github 发布版本中获取兼容的预构建 TensorFlow 包。 使用来自指定位置的 OpenVINO™ 二进制文件。
+1. 从 Github 发布版本中获取预构建 TensorFlow 2.8.0 python包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" 
+        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" 
 
 2.  使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#TFWindows)）。使用指定位置的OpenVINO™ 二进制文件。使用此构建选项运行C++示例，并将openvino-tensorflow集成至TensorFlow C++推理应用中。
 
-        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 
-###  2.3. <a name='BuildInstructionsforIntelAtomProcessor'></a>Intel Atom® 处理器的构建指令
+###  2.3. <a name='BuildInstructionsforIntelAtomProcessor'></a>Intel 凌动® 处理器的构建指令
 为了构建 **OpenVINO™ integration with TensorFlow** 与英特尔凌动® 处理器一起使用，我们建议使用以下命令从源代码构建 TensorFlow：
 
         python3 build_ovtf.py --build_tf_from_source --cxx11_abi_version=1 --target_arch silvermont
@@ -197,7 +198,7 @@
 
         TensorFlow version:  2.8.0
         OpenVINO integration with TensorFlow version: b'2.0.0'
-        OpenVINO version used for this build: b'2022.1'
+        OpenVINO version used for this build: b'2022.1.0'
         TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 
@@ -232,11 +233,11 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
   
         python3 build_tf.py -h
 
-- 用 CXX11\_ABI=0 构建指定版本的TensorFlow。
+- 用 CXX11_ABI=0 构建指定版本的TensorFlow。
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=0
 
-- 用 CXX11\_ABI=1 构建指定版本的TensorFlow。
+- 用 CXX11_ABI=1 构建指定版本的TensorFlow。
   
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=1
 
@@ -250,7 +251,7 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
         cd tensorflow
         git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
-        git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch
+        git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch --ignore-whitespace
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
 
 - 配置构建环境: https://www.tensorflow.org/install/source_windows#configure_the_build      

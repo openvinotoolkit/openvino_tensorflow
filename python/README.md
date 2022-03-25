@@ -18,7 +18,7 @@
 
 <sup>1</sup>Windows release supports only Python3.9 
 
-This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1 meaning you do not have to install OpenVINO™ separately.
+This **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1.0 meaning you do not have to install OpenVINO™ separately.
 This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
@@ -47,7 +47,7 @@ This should produce an output like:
 
         TensorFlow version:  2.8.0
         OpenVINO integration with TensorFlow version: b'2.0.0'
-        OpenVINO version used for this build: b'2022.1'
+        OpenVINO version used for this build: b'2022.1.0'
         TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 

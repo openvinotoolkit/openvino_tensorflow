@@ -228,7 +228,7 @@ uncompress it and  copy it to <path-to-openvino_tensorflow-repository>\examples\
 - Run the following commands to build openvino_tensorflow with samples
 ```bash
 cd <path-to-openvino_tensorflow-repository>
-python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 ```
 
 - Now, a binary executable for classification_sample is built. Update the PATH and run the sample:

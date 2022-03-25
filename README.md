@@ -31,7 +31,7 @@ This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en
 
 Check our [Interactive Installation Table](https://openvinotoolkit.github.io/openvino_tensorflow/) for a menu of installation options. The table will help you configure the installation process.
 
-The **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1. The users do not have to install OpenVINO™ separately. This package supports:
+The **OpenVINO™ integration with TensorFlow** package comes with pre-built libraries of OpenVINO™ version 2022.1.0. The users do not have to install OpenVINO™ separately. This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
@@ -64,7 +64,7 @@ This should produce an output like:
 
         TensorFlow version:  2.8.0
         OpenVINO integration with TensorFlow version: b'2.0.0'
-        OpenVINO version used for this build: b'2022.1'
+        OpenVINO version used for this build: b'2022.1.0'
         TensorFlow version used for this build: v2.8.0
         CXX11_ABI flag used for this build: 0
 
