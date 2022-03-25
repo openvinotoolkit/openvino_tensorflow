@@ -93,7 +93,7 @@
 
 - [Ubuntu 18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
 - [Ubuntu 20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
-- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvino_tensorflow)
+- [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvinotensorflow)
 
 ## 在Intel<sup>®</sup> DevCloud上尝试
 示例教程也托管在[Intel<sup>®</sup> DevCloud](https://www.intel.com/content/www/us/en/developer/tools/devcloud/edge/build/ovtfoverview.html)。 演示应用程序是使用 Jupyter Notebooks实现的。 您可以在Intel<sup>®</sup> DevCloud节点上执行它们，比较 **OpenVINO™ integration with TensorFlow**、原生TensorFlow和OpenVINO™的性能结果。 
