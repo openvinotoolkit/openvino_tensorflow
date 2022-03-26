@@ -133,7 +133,7 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
 
     auto proc = ov::preprocess::PrePostProcessor(model);
     for (int i = 0; i < model->inputs().size(); i++) {
-      if (model->outputs()[i].get_element_type() == ov::element::f16) {
+      if (model->inputs()[i].get_element_type() == ov::element::f16) {
         proc.input(i).tensor().set_element_type(ov::element::f32);
         proc.input(i).preprocess().convert_element_type(ov::element::f16);
       }
