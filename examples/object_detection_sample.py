@@ -187,7 +187,7 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         if not os.path.isdir(input_file):
             raise AssertionError("Path doesn't exist {0}".format(input_file))
-        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        images = [os.path.join(input_file, fname) for fname in os.listdir(input_file) if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp' ))]
         result_dir = os.path.join(input_file, '../detections')
         if not os.path.exists(result_dir):
             os.mkdir(result_dir)
