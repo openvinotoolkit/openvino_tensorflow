@@ -29,6 +29,10 @@ from __future__ import print_function
 
 import argparse
 import os
+# Enable these variables for runtime inference optimizations
+os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
+os.environ[
+    "TF_ENABLE_ONEDNN_OPTS"] = "1"  # This needs to be set before importing TF
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
@@ -38,10 +42,6 @@ import time
 import cv2
 
 from common.utils import get_input_mode
-
-# Enable these variables for runtime inference optimizations
-os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
 
 
 def preprocess_image(frame,
@@ -169,7 +169,12 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         if not os.path.isdir(input_file):
             raise AssertionError("Path doesn't exist {0}".format(input_file))
-        images = [os.path.join(input_file, fname) for fname in os.listdir(input_file) if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp' ))]
+        images = [
+            os.path.join(input_file, fname)
+            for fname in os.listdir(input_file)
+            if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff',
+                                       '.bmp'))
+        ]
     else:
         raise Exception(
             "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."

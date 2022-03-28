@@ -26,6 +26,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+# Enable these variables for runtime inference optimizations
+os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
+os.environ[
+    "TF_ENABLE_ONEDNN_OPTS"] = "1"  # This needs to be set before importing TF
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -36,10 +40,6 @@ from PIL import Image
 from common.utils import get_input_mode, get_colors, draw_boxes, get_anchors, rename_file
 from common.pre_process import preprocess_image_yolov3 as preprocess_image
 from common.post_process import yolo3_postprocess_np
-
-# Enable these variables for runtime inference optimizations
-os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "1"
 
 
 def load_coco_names(file_name):
@@ -187,7 +187,12 @@ if __name__ == "__main__":
     elif input_mode == 'directory':
         if not os.path.isdir(input_file):
             raise AssertionError("Path doesn't exist {0}".format(input_file))
-        images = [os.path.join(input_file, fname) for fname in os.listdir(input_file) if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp' ))]
+        images = [
+            os.path.join(input_file, fname)
+            for fname in os.listdir(input_file)
+            if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff',
+                                       '.bmp'))
+        ]
         result_dir = os.path.join(input_file, '../detections')
         if not os.path.exists(result_dir):
             os.mkdir(result_dir)
