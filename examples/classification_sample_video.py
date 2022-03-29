@@ -113,8 +113,7 @@ if __name__ == "__main__":
         "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--disable_ovtf",
-        help=
-        "Optional. Disable openvino_tensorflow pass and run on stock TF.",
+        help="Optional. Disable openvino_tensorflow pass and run on stock TF.",
         action='store_true')
     args = parser.parse_args()
 
