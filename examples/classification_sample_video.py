@@ -114,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--disable_ovtf",
         help=
-        "Optional. Disable openvino_tensorflow pass and fallback to stock TF.",
+        "Optional. Disable openvino_tensorflow pass and run on stock TF.",
         action='store_true')
     args = parser.parse_args()
 

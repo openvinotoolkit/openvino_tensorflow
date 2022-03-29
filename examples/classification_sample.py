@@ -109,7 +109,7 @@ if __name__ == "__main__":
         "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable ovtf and fallback to stock TF.",
+        help="Optional. Disable openvino_tensorflow pass and run on stock TF.",
         action='store_true')
     args = parser.parse_args()
 
