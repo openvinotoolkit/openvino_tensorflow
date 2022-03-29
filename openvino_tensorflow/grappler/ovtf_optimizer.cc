@@ -154,7 +154,10 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // 1. Mark for clustering then, if requested, dump the graphs.
   // OCM call for marking supported nodes
   std::string device;
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
   const char* device_id(device.c_str());
   std::string ov_version;
 #if defined(OPENVINO_2022_1)

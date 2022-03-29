@@ -24,11 +24,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
   OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
-  if (bname == "HDDL") {
-    return errors::Internal("Failed to set backend: ",
-                            bname + " backend not available");
-  }
-  if (bname == "VAD-M") bname = "HDDL";
 
   auto status = CreateBackend(backend, bname);
   if (!status.ok() || backend == nullptr) {
@@ -86,6 +81,12 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
     backendName[6] = '\0';  // null terminate to remove warnings
     backend_name = std::string(backendName);
   }
+
+  if (backend_name == "HDDL") {
+    return errors::Internal("Failed to Create backend: ",
+                            backend_name + " backend not available");
+  }
+  if (backend_name == "VAD-M") backend_name = "HDDL";
 
   try {
     backend = make_shared<Backend>(backend_name);

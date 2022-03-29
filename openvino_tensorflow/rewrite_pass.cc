@@ -142,7 +142,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // OCM call for marking supported nodes
     std::string device;
-    BackendManager::GetBackendName(device);
+    Status exec_status = BackendManager::GetBackendName(device);
+    if (exec_status != Status::OK()) {
+      throw runtime_error(exec_status.error_message());
+    }
     const char* device_id(device.c_str());
     std::string ov_version;
 

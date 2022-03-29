@@ -2859,7 +2859,10 @@ static Status TranslateRelu6Op(const Node* op,
   auto ng_input_shape = ng_input.get_shape();
   std::string device;
   // Enable transpose before and after only for CPU device
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
   if (device == "CPU") {
     if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
   }
