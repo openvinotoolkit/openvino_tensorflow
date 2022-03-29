@@ -84,27 +84,33 @@ if __name__ == "__main__":
     backend_name = "CPU"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="Optional. graph/model to be executed")
-    parser.add_argument("--input_layer", help="Optional. name of input layer")
-    parser.add_argument("--output_layer", help="Optional. name of output layer")
     parser.add_argument(
-        "--labels", help="Optional. name of file containing labels")
-    parser.add_argument("--image", help="Optional. image to be processed")
+        "--graph", help="Optional. Path to graph/model to be executed.")
+    parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--input_height", type=int, help="Optional. input height")
-    parser.add_argument("--input_width", type=int, help="Optional. input width")
-    parser.add_argument("--input_mean", type=int, help="Optioanl. input mean")
-    parser.add_argument("--input_std", type=int, help="Optional. input std")
+        "--output_layer", help="Optional. Name of output layer.")
+    parser.add_argument(
+        "--labels", help="Optional. Path to labels mapping file.")
+    parser.add_argument(
+        "--image", help="Optional. Input image to be processed. ")
+    parser.add_argument(
+        "--input_height",
+        type=int,
+        help="Optional. Specify input height value. ")
+    parser.add_argument(
+        "--input_width", type=int, help="Optional. Specify input width value.")
+    parser.add_argument(
+        "--input_mean", type=int, help="Optioanl. Specify input mean value.")
+    parser.add_argument(
+        "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
         help="Optional. Specify the target device to infer on;"
-        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+        "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable ovtf and fallback"
-        "to stock TF",
+        help="Optional. Disable ovtf and fallback to stock TF.",
         action='store_true')
-
     args = parser.parse_args()
 
     if args.graph:

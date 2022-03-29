@@ -47,27 +47,6 @@ def load_graph(model_file):
     return graph
 
 
-def letter_box_image(image_path, input_height, input_width,
-                     fill_value) -> np.ndarray:
-    image = Image.open(image_path)
-    height_ratio = float(input_height) / image.size[1]
-    width_ratio = float(input_width) / image.size[0]
-    fit_ratio = min(width_ratio, height_ratio)
-    fit_height = int(image.size[1] * fit_ratio)
-    fit_width = int(image.size[0] * fit_ratio)
-    fit_image = np.asarray(
-        image.resize((fit_width, fit_height), resample=Image.BILINEAR))
-
-    fill_value = np.full(fit_image.shape[2], fill_value, fit_image.dtype)
-    to_return = np.tile(fill_value, (input_height, input_width, 1))
-    pad_top = int(0.5 * (input_height - fit_height))
-    pad_left = int(0.5 * (input_width - fit_width))
-    to_return[pad_top:pad_top + fit_height, pad_left:pad_left +
-              fit_width] = fit_image
-
-    return to_return, image
-
-
 def load_coco_names(file_name):
     names = {}
     assert os.path.exists(file_name), "could not find label file path"
@@ -207,38 +186,43 @@ if __name__ == "__main__":
     font_thickness = 2
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="Optional. graph/model to be executed")
-    parser.add_argument("--input_layer", help="Optional. name of input layer")
-    parser.add_argument("--output_layer", help="Optional. name of output layer")
     parser.add_argument(
-        "--labels", help="Optional. name of file containing labels")
+        "--graph", help="Optional. Path to graph/model to be executed.")
+    parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--input",
-        help="input (0 - for camera / absolute video file path) to be processed"
-    )
+        "--output_layer", help="Optional. Name of output layer.")
     parser.add_argument(
-        "--input_height", type=int, help="Optional. input height")
-    parser.add_argument("--input_width", type=int, help="Optional. input width")
-    parser.add_argument("--input_mean", type=int, help="Optional. input mean")
-    parser.add_argument("--input_std", type=int, help="Optional. input std")
+        "--labels", help="Optional. Path to labels mapping file.")
+    parser.add_argument(
+        "--input", help="Optional. An input video file to be processed.")
+    parser.add_argument(
+        "--input_height",
+        type=int,
+        help="Optional. Specify input height value.")
+    parser.add_argument(
+        "--input_width", type=int, help="Optional. Specify input width value.")
+    parser.add_argument(
+        "--input_mean", type=int, help="Optional. Specify input mean value.")
+    parser.add_argument(
+        "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
-        help="Optional. Specify the target device to infer on;"
-        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+        help="Optional. Specify the target device to infer on; "
+        "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
         "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--conf_threshold",
         type=float,
-        help="Optional. confidence threshold. Default is 0.6")
+        help="Optional. Specify confidence threshold. Default is 0.6.")
     parser.add_argument(
         "--iou_threshold",
         type=float,
-        help="Optional. iou threshold. Default is 0.5")
+        help="Optional. Specify iou threshold. Default is 0.5.")
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable ovtf and fallback"
-        "to stock TF",
+        help="Optional."
+        "Disable openvino_tensorflow pass and fallback to stock TF.",
         action='store_true')
     args = parser.parse_args()
     if args.graph:
@@ -293,6 +277,7 @@ if __name__ == "__main__":
         ovtf.disable()
 
     # open capturing device
+    assert os.path.exists(input_file), "Could not find input video file path"
     cap = cv2.VideoCapture(input_file)
 
     # Initialize session and run

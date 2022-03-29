@@ -71,7 +71,7 @@ def letter_box_image(image_path, input_height, input_width,
 def load_coco_names(label_file):
     names = {}
     assert os.path.exists(label_file), "could not find label file path"
-    with open(file_name) as f:
+    with open(label_file) as f:
         for id, name in enumerate(f):
             names[id] = name
     return names
@@ -196,38 +196,45 @@ if __name__ == "__main__":
     iou_threshold = 0.5
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="Optional. graph/model to be executed")
-    parser.add_argument("--input_layer", help="Optional. name of input layer")
-    parser.add_argument("--output_layer", help="Optional. name of output layer")
     parser.add_argument(
-        "--labels", help="Optional. name of file containing labels")
-    parser.add_argument("--image", help="Optional. image to be processed")
+        "--graph", help="Optional. Path to graph/model to be executed.")
+    parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--input_height", type=int, help="Optional. input height")
-    parser.add_argument("--input_width", type=int, help="Optional. input width")
-    parser.add_argument("--input_mean", type=int, help="Optional. input mean")
-    parser.add_argument("--input_std", type=int, help="Optional. input std")
+        "--output_layer", help="Optional. Name of output layer.")
+    parser.add_argument(
+        "--labels", help="Optional. Path to labels mapping file.")
+    parser.add_argument(
+        "--image", help="Optional. Input image to be processed.")
+    parser.add_argument(
+        "--input_height",
+        type=int,
+        help="Optional. Specify input height value.")
+    parser.add_argument(
+        "--input_width", type=int, help="Optional. Specify input width value.")
+    parser.add_argument(
+        "--input_mean", type=int, help="Optional. Specify input mean value.")
+    parser.add_argument(
+        "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
         help="Optional. Specify the target device to infer on;"
-        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+        "CPU, GPU, MYRIAD, or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
         "--output_dir",
-        help=
-        "Optional. Directory that stores the output image with bounding boxes."
-        " Default is directory from where this sample is launched.")
+        help="Optional. Directory that stores the output"
+        " image with bounding boxes. Default is directory from where this sample is launched."
+    )
     parser.add_argument(
         "--conf_threshold",
         type=float,
-        help="Optional. confidence threshold. Default is 0.6")
+        help="Optional. Specify confidence threshold. Default is 0.6.")
     parser.add_argument(
         "--iou_threshold",
         type=float,
-        help="Optional. iou threshold. Default is 0.5")
+        help="Optional. Specify iou threshold. Default is 0.5.")
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable ovtf and fallback"
-        "to stock TF",
+        help="Optional. Disable ovtf and fallback to stock TF",
         action='store_true')
     args = parser.parse_args()
     if args.graph:

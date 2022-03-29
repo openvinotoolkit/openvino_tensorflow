@@ -86,30 +86,35 @@ if __name__ == "__main__":
     font_thickness = 2
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="Optional. graph/model to be executed")
-    parser.add_argument("--input_layer", help="Optional. name of input layer")
-    parser.add_argument("--output_layer", help="Optional. name of output layer")
     parser.add_argument(
-        "--labels", help="Optional. name of file containing labels")
+        "--graph", help="Optional. Path to graph/model to be executed.")
+    parser.add_argument("--input_layer", help="Optional. Name of input layer.")
     parser.add_argument(
-        "--input",
-        help="input (0 - for camera / absolute video file path) to be processed"
-    )
+        "--output_layer", help="Optional. Name of output layer.")
     parser.add_argument(
-        "--input_height", type=int, help="Optional. input height")
-    parser.add_argument("--input_width", type=int, help="Optional. input width")
-    parser.add_argument("--input_mean", type=int, help="Optional. input mean")
-    parser.add_argument("--input_std", type=int, help="Optional. input std")
+        "--labels", help="Optional. Path to labels mapping file.")
+    parser.add_argument(
+        "--input", help="Optional. An input video file to process.")
+    parser.add_argument(
+        "--input_height",
+        type=int,
+        help="Optional. Specify input height value.")
+    parser.add_argument(
+        "--input_width", type=int, help="Optional. Specify input width value.")
+    parser.add_argument(
+        "--input_mean", type=int, help="Optional. Specify input mean value.")
+    parser.add_argument(
+        "--input_std", type=int, help="Optional. Specify input std value.")
     parser.add_argument(
         "--backend",
-        help="Optional. Specify the target device to infer on;"
-        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+        help="Optional. Specify the target device to infer on; "
+        "CPU, GPU, MYRIAD or VAD-M is acceptable. Default value is CPU.")
     parser.add_argument(
         "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--disable_ovtf",
-        help="Optional. Disable ovtf and fallback"
-        "to stock TF",
+        help=
+        "Optional. Disable openvino_tensorflow pass and fallback to stock TF.",
         action='store_true')
     args = parser.parse_args()
 
@@ -160,7 +165,9 @@ if __name__ == "__main__":
     #Load the labels
     if label_file:
         labels = load_labels(label_file)
+
     # Read input video file
+    assert os.path.exists(input_file), "Could not find input video file path"
     cap = cv2.VideoCapture(input_file)
 
     # Initialize session and run
