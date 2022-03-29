@@ -109,8 +109,16 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    bool ovtf_not_enabled =
-        (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
+    bool ovtf_not_enabled = false;
+    const char* opnevino_tf_disable_env = std::getenv("OPENVINO_TF_DISABLE");
+    if (!(opnevino_tf_disable_env == nullptr)) {
+      // // disable openvino-tensorflow if env variable is "1"
+      char env_value = opnevino_tf_disable_env[0];
+      if (env_value == '1') {
+        ovtf_not_enabled = true;
+      }
+    }
+    ovtf_not_enabled = (!api::IsEnabled() || ovtf_not_enabled);
     bool already_processed = util::IsAlreadyProcessed(graph);
     if (!already_processed && ovtf_not_enabled) {
       OVTF_VLOG(0) << "openvino-tensorflow is available but disabled.";
