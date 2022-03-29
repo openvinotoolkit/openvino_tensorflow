@@ -32,7 +32,7 @@ import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
 import time
-from subprocess import check_output, call
+import cv2
 
 
 def load_graph(model_file):
@@ -47,37 +47,24 @@ def load_graph(model_file):
     return graph
 
 
-def read_tensor_from_image_file(file_name,
+def read_tensor_from_image_file(image_file,
                                 input_height=299,
                                 input_width=299,
                                 input_mean=0,
                                 input_std=255):
-    input_name = "file_reader"
-    output_name = "normalized"
-    file_reader = tf.io.read_file(file_name, input_name)
-    if file_name.endswith(".png"):
-        image_reader = tf.image.decode_png(
-            file_reader, channels=3, name="png_reader")
-    elif file_name.endswith(".gif"):
-        image_reader = tf.squeeze(
-            tf.image.decode_gif(file_reader, name="gif_reader"))
-    elif file_name.endswith(".bmp"):
-        image_reader = tf.image.decode_bmp(file_reader, name="bmp_reader")
-    else:
-        image_reader = tf.image.decode_jpeg(
-            file_reader, channels=3, name="jpeg_reader")
-    float_caster = tf.cast(image_reader, tf.float32)
-    dims_expander = tf.expand_dims(float_caster, 0)
-    resized = tf.compat.v1.image.resize_bilinear(dims_expander,
-                                                 [input_height, input_width])
-    normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    result = normalized.eval()
-
+    assert os.path.exists(image_file), "Could not find image file path"
+    image = cv2.imread(image_file)
+    resized = cv2.resize(image, (input_height, input_width))
+    img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+    resized_image = img.astype(np.float32)
+    normalized_image = (resized_image - input_mean) / input_std
+    result = np.expand_dims(normalized_image, 0)
     return result
 
 
 def load_labels(label_file):
     label = []
+    assert os.path.exists(label_file), "Could not find label file path"
     proto_as_ascii_lines = tf.io.gfile.GFile(label_file).readlines()
     for l in proto_as_ascii_lines:
         label.append(l.rstrip())
@@ -97,16 +84,27 @@ if __name__ == "__main__":
     backend_name = "CPU"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="graph/model to be executed")
-    parser.add_argument("--input_layer", help="name of input layer")
-    parser.add_argument("--output_layer", help="name of output layer")
-    parser.add_argument("--labels", help="name of file containing labels")
-    parser.add_argument("--image", help="image to be processed")
-    parser.add_argument("--input_height", type=int, help="input height")
-    parser.add_argument("--input_width", type=int, help="input width")
-    parser.add_argument("--input_mean", type=int, help="input mean")
-    parser.add_argument("--input_std", type=int, help="input std")
-    parser.add_argument("--backend", help="backend option. Default is CPU")
+    parser.add_argument("--graph", help="Optional. graph/model to be executed")
+    parser.add_argument("--input_layer", help="Optional. name of input layer")
+    parser.add_argument("--output_layer", help="Optional. name of output layer")
+    parser.add_argument(
+        "--labels", help="Optional. name of file containing labels")
+    parser.add_argument("--image", help="Optional. image to be processed")
+    parser.add_argument(
+        "--input_height", type=int, help="Optional. input height")
+    parser.add_argument("--input_width", type=int, help="Optional. input width")
+    parser.add_argument("--input_mean", type=int, help="Optioanl. input mean")
+    parser.add_argument("--input_std", type=int, help="Optional. input std")
+    parser.add_argument(
+        "--backend",
+        help="Optional. Specify the target device to infer on;"
+        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+    parser.add_argument(
+        "--disable_ovtf",
+        help="Optional. Disable ovtf and fallback"
+        "to stock TF",
+        action='store_true')
+
     args = parser.parse_args()
 
     if args.graph:
@@ -143,12 +141,15 @@ if __name__ == "__main__":
     input_operation = graph.get_operation_by_name(input_name)
     output_operation = graph.get_operation_by_name(output_name)
 
-    #Print list of available backends
-    print('Available Backends:')
-    backends_list = ovtf.list_backends()
-    for backend in backends_list:
-        print(backend)
-    ovtf.set_backend(backend_name)
+    if not args.disable_ovtf:
+        #Print list of available backends
+        print('Available Backends:')
+        backends_list = ovtf.list_backends()
+        for backend in backends_list:
+            print(backend)
+        ovtf.set_backend(backend_name)
+    else:
+        ovtf.disable()
 
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         results = sess.run(output_operation.outputs[0],
                            {input_operation.outputs[0]: t})
         elapsed = time.time() - start
-        print('Inference time in ms: %f' % (elapsed * 1000))
+        print('Inference time in ms: %.2f' % (elapsed * 1000))
     results = np.squeeze(results)
 
     # print labels

@@ -70,7 +70,7 @@ def letter_box_image(image_path, input_height, input_width,
 
 def load_coco_names(file_name):
     names = {}
-    assert os.path.exists(file_name), "path doesn't exist {0}".format(file_name)
+    assert os.path.exists(file_name), "could not find label file path"
     with open(file_name) as f:
         for coco_id, name in enumerate(f):
             names[coco_id] = name
@@ -116,7 +116,7 @@ def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
                 box[:2],
                 '{} {:.2f}%'.format(cls_names[cls], score * 100),
                 fill=color)
-
+            print('{},{:.2f}'.format(cls_names[cls].rstrip(), score * 100))
     # converting PIL image back to OpenCV format
     im_np = np.asarray(img)
     im_np = cv2.cvtColor(im_np, cv2.COLOR_RGB2BGR)
@@ -207,30 +207,39 @@ if __name__ == "__main__":
     font_thickness = 2
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="graph/model to be executed")
-    parser.add_argument("--input_layer", help="name of input layer")
-    parser.add_argument("--output_layer", help="name of output layer")
-    parser.add_argument("--labels", help="name of file containing labels")
+    parser.add_argument("--graph", help="Optional. graph/model to be executed")
+    parser.add_argument("--input_layer", help="Optional. name of input layer")
+    parser.add_argument("--output_layer", help="Optional. name of output layer")
+    parser.add_argument(
+        "--labels", help="Optional. name of file containing labels")
     parser.add_argument(
         "--input",
         help="input (0 - for camera / absolute video file path) to be processed"
     )
-    parser.add_argument("--input_height", type=int, help="input height")
-    parser.add_argument("--input_width", type=int, help="input width")
-    parser.add_argument("--input_mean", type=int, help="input mean")
-    parser.add_argument("--input_std", type=int, help="input std")
-    parser.add_argument("--backend", help="name of backend. Default is CPU")
     parser.add_argument(
-        "--output_dir",
-        help="Directory that stores updated image."
-        " Default is directory from where this sample is launched.")
+        "--input_height", type=int, help="Optional. input height")
+    parser.add_argument("--input_width", type=int, help="Optional. input width")
+    parser.add_argument("--input_mean", type=int, help="Optional. input mean")
+    parser.add_argument("--input_std", type=int, help="Optional. input std")
+    parser.add_argument(
+        "--backend",
+        help="Optional. Specify the target device to infer on;"
+        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
+    parser.add_argument(
+        "--no_show", help="Optional. Don't show output.", action='store_true')
     parser.add_argument(
         "--conf_threshold",
         type=float,
-        help="confidence threshold. Default is 0.6")
+        help="Optional. confidence threshold. Default is 0.6")
     parser.add_argument(
-        "--iou_threshold", type=float, help="iou threshold. Default is 0.5")
-
+        "--iou_threshold",
+        type=float,
+        help="Optional. iou threshold. Default is 0.5")
+    parser.add_argument(
+        "--disable_ovtf",
+        help="Optional. Disable ovtf and fallback"
+        "to stock TF",
+        action='store_true')
     args = parser.parse_args()
     if args.graph:
         model_file = args.graph
@@ -258,8 +267,6 @@ if __name__ == "__main__":
         input_std = args.input_std
     if args.backend:
         backend_name = args.backend
-    if args.output_dir:
-        output_dir = args.output_dir
     if args.conf_threshold:
         conf_threshold = args.conf_threshold
     if args.iou_threshold:
@@ -275,12 +282,15 @@ if __name__ == "__main__":
     input_operation = graph.get_operation_by_name(input_name)
     output_operation = graph.get_operation_by_name(output_name)
 
-    # Print list of available backends
-    print('Available Backends:')
-    backends_list = ovtf.list_backends()
-    for backend in backends_list:
-        print(backend)
-    ovtf.set_backend(backend_name)
+    if not args.disable_ovtf:
+        # Print list of available backends
+        print('Available Backends:')
+        backends_list = ovtf.list_backends()
+        for backend in backends_list:
+            print(backend)
+        ovtf.set_backend(backend_name)
+    else:
+        ovtf.disable()
 
     # open capturing device
     cap = cv2.VideoCapture(input_file)
@@ -294,6 +304,7 @@ if __name__ == "__main__":
                 # pre-processing steps
                 img = frame
                 img_resized = cv2.resize(frame, (input_height, input_width))
+
                 # Run
                 frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
                 start = time.time()
@@ -302,7 +313,7 @@ if __name__ == "__main__":
                     {input_operation.outputs[0]: [img_resized]})
                 elapsed = time.time() - start
                 fps = 1 / elapsed
-
+                print('Inference time in ms: %.2f' % (elapsed * 1000))
                 # post-processing - apply non max suppression, draw boxes and save updated image
                 filtered_boxes = non_max_suppression(
                     detected_boxes, conf_threshold, iou_threshold)
@@ -323,10 +334,12 @@ if __name__ == "__main__":
                     img_bbox, 'FPS : {0} | Inference Time : {1}ms'.format(
                         int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                     font_size, color, font_thickness)
-                cv2.imshow("detections", img_bbox)
-                if cv2.waitKey(1) & 0XFF == ord('q'):
-                    break
+                if not args.no_show:
+                    cv2.imshow("detections", img_bbox)
+                    if cv2.waitKey(1) & 0XFF == ord('q'):
+                        break
             else:
-                print("Completed")
+                break
+    sess.close()
     cap.release()
     cv2.destroyAllWindows()

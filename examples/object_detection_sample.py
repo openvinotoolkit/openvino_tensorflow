@@ -48,6 +48,7 @@ def load_graph(model_file):
 
 def letter_box_image(image_path, input_height, input_width,
                      fill_value) -> np.ndarray:
+    assert os.path.exists(image_path), "Could not find image path"
     image = Image.open(image_path)
     height_ratio = float(input_height) / image.size[1]
     width_ratio = float(input_width) / image.size[0]
@@ -67,9 +68,9 @@ def letter_box_image(image_path, input_height, input_width,
     return to_return, image
 
 
-def load_coco_names(file_name):
+def load_coco_names(label_file):
     names = {}
-    assert os.path.exists(file_name), "path doesn't exist {0}".format(file_name)
+    assert os.path.exists(label_file), "could not find label file path"
     with open(file_name) as f:
         for id, name in enumerate(f):
             names[id] = name
@@ -195,27 +196,39 @@ if __name__ == "__main__":
     iou_threshold = 0.5
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="graph/model to be executed")
-    parser.add_argument("--input_layer", help="name of input layer")
-    parser.add_argument("--output_layer", help="name of output layer")
-    parser.add_argument("--labels", help="name of file containing labels")
-    parser.add_argument("--image", help="image to be processed")
-    parser.add_argument("--input_height", type=int, help="input height")
-    parser.add_argument("--input_width", type=int, help="input width")
-    parser.add_argument("--input_mean", type=int, help="input mean")
-    parser.add_argument("--input_std", type=int, help="input std")
-    parser.add_argument("--backend", help="name of backend. Default is CPU")
+    parser.add_argument("--graph", help="Optional. graph/model to be executed")
+    parser.add_argument("--input_layer", help="Optional. name of input layer")
+    parser.add_argument("--output_layer", help="Optional. name of output layer")
+    parser.add_argument(
+        "--labels", help="Optional. name of file containing labels")
+    parser.add_argument("--image", help="Optional. image to be processed")
+    parser.add_argument(
+        "--input_height", type=int, help="Optional. input height")
+    parser.add_argument("--input_width", type=int, help="Optional. input width")
+    parser.add_argument("--input_mean", type=int, help="Optional. input mean")
+    parser.add_argument("--input_std", type=int, help="Optional. input std")
+    parser.add_argument(
+        "--backend",
+        help="Optional. Specify the target device to infer on;"
+        "CPU, GPU, or MYRIAD is acceptable. Default value is CPU")
     parser.add_argument(
         "--output_dir",
-        help="Directory that stores updated image."
+        help=
+        "Optional. Directory that stores the output image with bounding boxes."
         " Default is directory from where this sample is launched.")
     parser.add_argument(
         "--conf_threshold",
         type=float,
-        help="confidence threshold. Default is 0.6")
+        help="Optional. confidence threshold. Default is 0.6")
     parser.add_argument(
-        "--iou_threshold", type=float, help="iou threshold. Default is 0.5")
-
+        "--iou_threshold",
+        type=float,
+        help="Optional. iou threshold. Default is 0.5")
+    parser.add_argument(
+        "--disable_ovtf",
+        help="Optional. Disable ovtf and fallback"
+        "to stock TF",
+        action='store_true')
     args = parser.parse_args()
     if args.graph:
         model_file = args.graph
@@ -265,12 +278,15 @@ if __name__ == "__main__":
     input_operation = graph.get_operation_by_name(input_name)
     output_operation = graph.get_operation_by_name(output_name)
 
-    #Print list of available backends
-    print('Available Backends:')
-    backends_list = ovtf.list_backends()
-    for backend in backends_list:
-        print(backend)
-    ovtf.set_backend(backend_name)
+    if not args.disable_ovtf:
+        #Print list of available backends
+        print('Available Backends:')
+        backends_list = ovtf.list_backends()
+        for backend in backends_list:
+            print(backend)
+        ovtf.set_backend(backend_name)
+    else:
+        ovtf.disable()
 
     # Initialize session and run
     config = tf.compat.v1.ConfigProto()
@@ -284,7 +300,7 @@ if __name__ == "__main__":
         detected_boxes = sess.run(output_operation.outputs[0],
                                   {input_operation.outputs[0]: [img_resized]})
         elapsed = time.time() - start
-        print('Inference time in ms: %f' % (elapsed * 1000))
+        print('Inference time in ms: %.2f' % (elapsed * 1000))
 
     # apply non max suppresion, draw boxes and save updated image
     filtered_boxes = non_max_suppression(detected_boxes, conf_threshold,
