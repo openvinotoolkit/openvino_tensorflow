@@ -21,7 +21,6 @@
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
 		   --device /dev/dri:/dev/dri \
-		   -e OPENVINO_TF_BACKEND=GPU \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
 
@@ -31,7 +30,6 @@
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
 		   -v /dev/bus/usb:/dev/bus/usb \
-		   -e OPENVINO_TF_BACKEND=MYRIAD \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
 启动可访问**VAD-M**的Jupyter服务器：
@@ -51,7 +49,6 @@
 		   --device-cgroup-rule='c 189:* rmw' \
 		   --device /dev/dri:/dev/dri \
 		   --mount type=bind,source=/var/tmp,destination=/var/tmp \
-		   --device /dev/ion:/dev/ion \
 		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0 /bin/bash
 
@@ -111,6 +108,7 @@
 			   --mount type=bind,source=/var/tmp,destination=/var/tmp \
 			   --device /dev/ion:/dev/ion \
 			   -v <path to resnet_v2_50_classifiation>:/models/resnet \
+			   -e OPENVINO_TF_BACKEND=VAD-M \
 			   -e MODEL_NAME=resnet \
 			   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0-serving
 
