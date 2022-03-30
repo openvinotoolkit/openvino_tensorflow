@@ -21,7 +21,6 @@ Launch the Jupyter server with **iGPU** access:
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
 		   --device /dev/dri:/dev/dri \
-		   -e OPENVINO_TF_BACKEND=GPU \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
 Launch the Jupyter server with **MYRIAD** access:
@@ -30,7 +29,6 @@ Launch the Jupyter server with **MYRIAD** access:
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
 		   -v /dev/bus/usb:/dev/bus/usb \
-		   -e OPENVINO_TF_BACKEND=MYRIAD \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
 Launch the Jupyter server with **VAD-M** access:
@@ -43,14 +41,13 @@ Launch the Jupyter server with **VAD-M** access:
 		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0
 
-Run image with runtime target /bin/bash for container shell with **all** device access
+Run image with runtime target /bin/bash for container shell with CPU, iGPU, and MYRIAD device access
 
 	docker run -itu root:root --rm \
 		   -p 8888:8888 \
 		   --device-cgroup-rule='c 189:* rmw' \
 		   --device /dev/dri:/dev/dri \
 		   --mount type=bind,source=/var/tmp,destination=/var/tmp \
-		   --device /dev/ion:/dev/ion \
 		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0 /bin/bash
 
@@ -111,6 +108,7 @@ Here is an example to serve Resnet50 model using OpenVINO™ Integration with Te
 			   --mount type=bind,source=/var/tmp,destination=/var/tmp \
 			   --device /dev/ion:/dev/ion \
 			   -v <path to resnet_v2_50_classifiation>:/models/resnet \
+			   -e OPENVINO_TF_BACKEND=VAD-M \
 			   -e MODEL_NAME=resnet \
 			   openvino/openvino_tensorflow_ubuntu20_runtime:2.0.0-serving
 

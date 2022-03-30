@@ -112,7 +112,14 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
     command_executor(cmake_cmd, verbose=True)
 
     import psutil
-    num_cores = str(psutil.cpu_count(logical=True))
+    num_cores = int(psutil.cpu_count(logical=True))
+    # get system's total RAM size in GB
+    sys_ram = int(psutil.virtual_memory().total / (1024**3))
+    # limiting num of cores to the max GBs of system RAM
+    if (num_cores > sys_ram):
+        num_cores = sys_ram
+    num_cores = str(num_cores)
+
     if (platform.system() == 'Windows'):
         # TODO: Enable Debug config for windows
         cmd = [
@@ -673,7 +680,14 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     command_executor(cmake_cmd)
 
     import psutil
-    num_cores = str(psutil.cpu_count(logical=True))
+    num_cores = int(psutil.cpu_count(logical=True))
+    # get system's total RAM size in GB
+    sys_ram = int(psutil.virtual_memory().total / (1024**3))
+    # limiting num of cores to the max GBs of system RAM
+    if (num_cores > sys_ram):
+        num_cores = sys_ram
+    num_cores = str(num_cores)
+
     if (platform.system() == 'Windows'):
         make_cmd = [
             "cmake", "--build", ".", "--config Release", "-j" + num_cores,

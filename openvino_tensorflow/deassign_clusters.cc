@@ -188,7 +188,10 @@ Status DeassignClusters(Graph* graph) {
   }
 
   string device;
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
 
   std::vector<int> alive_clusters;
   int max_cluster_size = 0;
