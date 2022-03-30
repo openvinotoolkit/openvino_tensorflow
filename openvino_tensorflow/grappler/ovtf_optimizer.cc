@@ -63,10 +63,10 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // set
   // we will not do anything; all subsequent passes become a no-op.
   bool ovtf_not_enabled = false;
-  const char* opnevino_tf_disable_env = std::getenv("OPENVINO_TF_DISABLE");
-  if (!(opnevino_tf_disable_env == nullptr)) {
+  const char* openvino_tf_disable_env = std::getenv("OPENVINO_TF_DISABLE");
+  if (!(openvino_tf_disable_env == nullptr)) {
     // // disable openvino-tensorflow if env variable is "1"
-    char env_value = opnevino_tf_disable_env[0];
+    char env_value = openvino_tf_disable_env[0];
     if (env_value == '1') {
       ovtf_not_enabled = true;
     }
