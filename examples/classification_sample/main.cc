@@ -18,7 +18,7 @@ limitations under the License.
 // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/main.cc
 //-----------------------------------------------------------------------------
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
