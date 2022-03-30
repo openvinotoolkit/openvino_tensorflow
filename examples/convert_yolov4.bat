@@ -1,5 +1,5 @@
 @REM ==============================================================================
-@REM Copyright (C) 2021 Intel Corporation
+@REM Copyright (C) 2021-2022 Intel Corporation
 @REM SPDX-License-Identifier: Apache-2.0
 @REM ==============================================================================
 
