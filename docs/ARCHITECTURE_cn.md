@@ -25,7 +25,7 @@ Graph partitioner 检查 OCM 标记的节点，并对其进行进一步分析。
 
 #### TensorFlow Importer
 
-TensorFlow importer 通过用于 OpenVINO™ 工具套件的最新[算子集](https://docs.OpenVINOtoolkit.org/latest/openvino_docs_ops_opset.html)将集群中的 TensorFlow 算子解析为 OpenVINO™ nGraph 算子。[nGraph 函数](https://docs.openvinotoolkit.org/latest/openvino_docs_nGraph_DG_build_function.html)专门用于各个集群。该函数创建后，将被封装到 OpenVINO™ CNNNetwork 中，该网络包含将在 OpenVINO™ 后端执行的集群的中间表示。
+TensorFlow importer 通过用于 OpenVINO™ 工具套件的最新[算子集](https://docs.OpenVINOtoolkit.org/latest/openvino_docs_ops_opset.html)将集群中的 TensorFlow 算子解析为 OpenVINO™ nGraph 算子。nGraph 函数 专门用于各个集群。该函数创建后，将被封装到 OpenVINO™ CNNNetwork 中，该网络包含将在 OpenVINO™ 后端执行的集群的中间表示。
 
 #### Backend Manager
 
