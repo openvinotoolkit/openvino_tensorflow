@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -65,7 +65,14 @@ void EXPORT_SYMBOL freeBackendsList() {
   }
 }
 
-bool set_backend(const char* backend) { return SetBackend(string(backend)); }
+bool set_backend(const char* backend) {
+  auto status = BackendManager::SetBackend(string(backend));
+  if (status != Status::OK()) {
+    std::cerr << status.error_message() << std::endl;
+    return false;
+  }
+  return true;
+}
 
 extern bool get_backend(char** backend) {
   string b = GetBackend();
@@ -116,8 +123,11 @@ bool IsEnabled() { return _is_enabled; }
 
 vector<string> ListBackends() { return BackendManager::GetSupportedBackends(); }
 
-bool SetBackend(const string& type) {
-  return (BackendManager::SetBackend(type) == Status::OK());
+void SetBackend(const string& type) {
+  Status exec_status = BackendManager::SetBackend(type);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
 }
 
 string GetBackend() {

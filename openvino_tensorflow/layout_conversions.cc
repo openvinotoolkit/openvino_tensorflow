@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -10,7 +10,7 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 void NHWCtoNCHW(const string& op_name, bool is_nhwc,
-                ngraph::Output<ngraph::Node>& node) {
+                ov::Output<ov::Node>& node) {
   if (is_nhwc) {
     auto rank = node.get_shape().size();
     if (rank == 4) {
@@ -23,7 +23,7 @@ void NHWCtoNCHW(const string& op_name, bool is_nhwc,
 }
 
 void NCHWtoNHWC(const string& op_name, bool is_nhwc,
-                ngraph::Output<ngraph::Node>& node) {
+                ov::Output<ov::Node>& node) {
   if (is_nhwc) {
     auto rank = node.get_shape().size();
     if (rank == 4) {

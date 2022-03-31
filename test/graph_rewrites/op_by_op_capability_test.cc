@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -50,16 +50,15 @@ TEST(OpByOpCapability, Backend) {
   auto backend = BackendManager::GetBackend();
   ASSERT_NE(backend, nullptr);
 
-  auto constant = ngraph::op::Constant::create(ngraph::element::f32,
-                                               ngraph::Shape{}, {2.0f});
-  std::map<std::string, std::set<std::shared_ptr<ngraph::Node>>>
-      TFtoNgraphOpMap{
-          {"Const", {constant}},
-          {"Add", {std::make_shared<opset::Add>()}},
-          {"Mul",
-           {std::make_shared<opset::Multiply>(),
-            std::make_shared<opset::Subtract>()}},
-      };
+  auto constant =
+      ngraph::op::Constant::create(ov::element::f32, ov::Shape{}, {2.0f});
+  std::map<std::string, std::set<std::shared_ptr<ov::Node>>> TFtoNgraphOpMap{
+      {"Const", {constant}},
+      {"Add", {std::make_shared<opset::Add>()}},
+      {"Mul",
+       {std::make_shared<opset::Multiply>(),
+        std::make_shared<opset::Subtract>()}},
+  };
 
   for (auto node : graph.op_nodes()) {
     ASSERT_OK(

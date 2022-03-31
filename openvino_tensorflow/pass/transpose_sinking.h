@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
 *****************************************************************************/
@@ -19,7 +19,7 @@ class TransposeSinking : public ngraph::pass::FunctionPass {
   TransposeSinking() {
     set_property(ngraph::pass::PassProperty::REQUIRE_STATIC_SHAPE, true);
   }
-  bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+  bool run_on_function(std::shared_ptr<ov::Model> function) override;
 };
 
 }  // namespace pass

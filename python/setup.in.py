@@ -1,5 +1,5 @@
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
  
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -9,7 +9,6 @@ from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
 from wheel.vendored.packaging.tags import sys_tags
 import os
-import sys
 
 # https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
 class BinaryBdistWheel(bdist_wheel):
@@ -21,7 +20,14 @@ class BinaryBdistWheel(bdist_wheel):
     def get_tag(self):
         _, _, plat = bdist_wheel.get_tag(self)
         if system() == 'Linux':
-           plat = 'manylinux2014_x86_64'
+            # Get the right platform tag by querying the linker version
+            glibc_major, glibc_minor = os.popen("ldd --version | head -1").read().split()[-1].split(".")
+            # OVTF is built against GLIBC 2.17 with ABI-0 for compatibility with TensorFlow wheels
+            # See https://github.com/mayeut/pep600_compliance/blob/master/pep600_compliance/tools/manylinux-policy.json
+            if glibc_major == "2" and glibc_minor == "17":
+                plat = 'manylinux_2_17_x86_64.manylinux2014_x86_64'
+            else: # For manylinux2014 and above, no alias is required
+                plat = 'manylinux_%s_%s_x86_64'%(glibc_major, glibc_minor)
         tags = next(sys_tags())
         return (tags.interpreter, tags.abi, plat)
 
@@ -49,7 +55,7 @@ package_data_dict['openvino_tensorflow'] = ng_data_list
 
 setup(
     name='openvino_tensorflow',
-    version='1.1.0',
+    version='2.0.0',
     description='OpenVINO™ integration with TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",

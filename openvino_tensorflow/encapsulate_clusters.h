@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/ngraph.hpp"
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {

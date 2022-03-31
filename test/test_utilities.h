@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -71,11 +71,10 @@ void PrintTensorAllValues(
 
 // Get a scalar value from a tensor, optionally at an element offset
 template <typename T>
-static T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
+static T GetScalarFromTensor(const std::shared_ptr<ov::Tensor>& t,
                              size_t element_offset = 0) {
-  T result;
-  t->read(&result, sizeof(T));
-  return result;
+  T* result = t->data<T>();
+  return *result;
 }
 
 // Prints the tensor to the given output stream
@@ -83,9 +82,9 @@ static T GetScalarFromTensor(const std::shared_ptr<ngraph::runtime::Tensor>& t,
 // so that users do not have to specify the template arg T
 template <typename T>
 std::ostream& DumpNGTensor(std::ostream& s, const string& name,
-                           const std::shared_ptr<ngraph::runtime::Tensor>& t) {
-  // std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
-  const ngraph::Shape& shape = t->get_shape();
+                           const std::shared_ptr<ov::Tensor>& t) {
+  // std::shared_ptr<ov::Tensor> t{get_tensor()};
+  const ov::Shape& shape = t->get_shape();
   s << "Tensor<" << name << ": ";
   auto type = t->get_element_type();
   bool T_is_integral = std::is_integral<T>::value;
@@ -218,7 +217,7 @@ Status LoadGraph(const string& graph_file_name,
 Status LoadGraphFromPbTxt(const string& pb_file, Graph* input_graph);
 
 template <typename T>
-size_t count_ops_of_type(std::shared_ptr<ng::Function> f) {
+size_t count_ops_of_type(std::shared_ptr<ov::Model> f) {
   size_t count = 0;
   for (auto op : f->get_ops()) {
     if (ng::is_type<T>(op)) {

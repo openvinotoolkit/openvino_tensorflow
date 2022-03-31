@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include <ie_core.hpp>
+#include "openvino/openvino.hpp"
 
 #include "openvino_tensorflow/ie_tensor.h"
 
@@ -20,7 +20,7 @@ namespace openvino_tensorflow {
 
 class IE_Backend_Engine {
  public:
-  IE_Backend_Engine(InferenceEngine::CNNNetwork ie_network, std::string device);
+  IE_Backend_Engine(std::shared_ptr<ov::Model> model, std::string device);
   ~IE_Backend_Engine();
 
   // Executes the inference
@@ -40,19 +40,24 @@ class IE_Backend_Engine {
   // Disables multi request execution
   void disable_multi_req_execution();
 
-  // Returns the NGraph Function from the CNNNetwork
-  std::shared_ptr<ngraph::Function> get_func();
+  // Returns the OpenVINO Model from the CNNNetwork
+  std::shared_ptr<ov::Model> get_model();
 
   virtual const std::vector<size_t> get_output_shape(const int i) = 0;
 
+  const int get_input_idx(const std::string name) const;
+  const int get_output_idx(const std::string name) const;
+
  protected:
-  InferenceEngine::CNNNetwork m_network;
-  std::shared_ptr<ngraph::Function> m_func;
-  std::vector<InferenceEngine::InferRequest> m_infer_reqs;
+  std::shared_ptr<ov::Model> m_model;
+  ov::CompiledModel m_compiled_model;
+  std::vector<ov::InferRequest> m_infer_reqs;
   std::string m_device;
   bool m_multi_req_execution;
-  InferenceEngine::ExecutableNetwork m_exe_network;
   bool m_network_ready;
+  std::vector<int> m_in_idx;
+  std::vector<int> m_out_idx;
+  std::vector<int> m_param_idx;
 
   virtual void start_async_inference(const int req_id);
   virtual void complete_async_inference(const int req_id);

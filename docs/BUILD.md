@@ -10,9 +10,10 @@
 	* 2.2. [Build Instructions for Windows](#BuildInstructionsWindows)
 	* 2.3. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
 	* 2.4. [Build Verification](#BuildVerification)
- 3. [OpenVINO™](#OpenVINO)
- 4. [TensorFlow](#TensorFlow)
- 5. [Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels](#BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels)
+ 3. [Backwards Compatibility with TensorFlow](#BackwardsCompatibilitywithTensorFlow)
+ 4. [OpenVINO™](#OpenVINO)
+ 5. [TensorFlow](#TensorFlow)
+ 
 
 <!-- markdown-toc-config
 	numbering=true
@@ -64,10 +65,10 @@ First, clone the `openvino_tensorflow` repository:
       $ pip3 install -r requirements.txt
       ```  
 
-2. Install CMake, supported version >=3.14.0 and =<3.20.0, 
+2. Install CMake, supported version >=3.14.0 
         
       ```bash
-      # to install CMake 3.18.2
+      # to install CMake 3.18.4
       $ wget https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.tar.gz && \
       $ tar -xzvf cmake-3.18.4-Linux-x86_64.tar.gz && \
       $ cp cmake-3.18.4-Linux-x86_64/bin/* /usr/local/bin/ && \
@@ -129,33 +130,35 @@ Notes:
         Microsoft Visual C++ 2019 Redistributable  
         Microsoft Build Tools 2019
 
-3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0 and =<3.20.1,
-4. [Download and Install OpenVINO™ Toolkit 2021.4.2 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
+3. Install [CMake](https://cmake.org/download/), supported version >=3.14.0
+4. [Download and Install OpenVINO™ Toolkit 2022.1.0 LTS for Windows](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit-download.html)
 
 <br>
 
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 
 ###  2.1. <a name='BuildInstructionsLinuxAndmacOS'></a>Build Instructions for **Linux and macOS**
-Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs.
-
-To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with TensorFlow C++ libraries (using the option --use_tensorflow_from_location). For VAD-M support, build with OpenVINO™ binary (using the option --use_openvino_from_location).
+Use one of the following build options based on the requirements. **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with prebuilt TensorFlow C++ libraries. For VAD-M support, build with OpenVINO™ binary.
 
 1. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. The arguments are optional. If any argument is not provided, then the default versions as specified in build_ovtf.py will be used. This is the recommended build option for most of the use cases.
 
-        python3 build_ovtf.py --tf_version=v2.7.0 --openvino_version=2021.4.2
+        python3 build_ovtf.py --tf_version=v2.8.0 --openvino_version=2022.1.0
+  
+- Support for OpenVINO™ versions older than 2022.1.0 has been deprecated from the current release (version 2.0.0) of **OpenVINO™ integration with TensorFlow**. Checkout the respective release branch of **OpenVINO™ integration with TensorFlow** to use previous versions of OpenVINO™ with it
+- To use the master branch of OpenVINO™, pass "master" as value to "openvino_version" argument. **OpenVINO™ integration with TensorFlow** build script will take the latest commit from OpenVINO™ master branch, however all the openvino-tensorflow APIs and functionalities would still remain same as they were for OpenVINO™ version 2022.1.0 
+
 
 2. Pulls compatible TensorFlow ABI1 package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_openvino_from_location=/opt/intel/openvino_2022.1.0/ --cxx11_abi_version=1
 
 3. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Pulls and builds OpenVINO™ from source. Use this if you need to build **OpenVINO™ integration with TensorFlow** frequently without building TensorFlow from source everytime.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --openvino_version=2022.1.0
 
 4. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#LinuxAndmacOS)). Uses OpenVINO™ binary from specified location. **This is only compatible with ABI1 built TensorFlow**.
 
-        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2021.4.752/ --cxx11_abi_version=1
+        python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --use_openvino_from_location=/opt/intel/openvino_2022.1.0/ --cxx11_abi_version=1
 
 
 Select the `help` option of `build_ovtf.py` script to learn more about various build options.
@@ -163,13 +166,14 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
         python3 build_ovtf.py --help
 
 ###  2.2. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
-1. Pulls compatible prebuilt TensorFlow package from Github release assets. Uses OpenVINO™ binary from specified location.
+Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
+1. Pulls prebuilt TensorFlow 2.8.0 python package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752"
+        python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" 
 
-2. Uses prebuilt TensorFlow from the given location ([refer the TensorFlow build instructions](#TFWindows). Uses OpenVINO™ binary from specified location.
+2. To use prebuilt TensorFlow from the given location [refer the TensorFlow build instructions](#TFWindows). It uses OpenVINO™ binary from specified location. Use this build option to run C++ examples and to integrate openvino-tensorflow in TensorFlow C++ inference applications.
 
-        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2021.4.752" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+        python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 
 ###  2.3. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
 In order to build **OpenVINO™ integration with TensorFlow** to use with the Intel Atom® processor, we recommend building TensorFlow from source, by using the following command:
@@ -192,11 +196,11 @@ Verify that `openvino-tensorflow` is installed correctly:
 
 This should produce an output like:
 
-        TensorFlow version:  2.7.0
-        OpenVINO integration with TensorFlow version: b'1.1.0'
-        OpenVINO version used for this build: b'2021.4.2'
-        TensorFlow version used for this build: v2.7.0
-        CXX11_ABI flag used for this build: 1
+        TensorFlow version:  2.8.0
+        OpenVINO integration with TensorFlow version: b'2.0.0'
+        OpenVINO version used for this build: b'2022.1.0'
+        TensorFlow version used for this build: v2.8.0
+        CXX11_ABI flag used for this build: 0
 
 
 Test the installation:
@@ -205,10 +209,15 @@ Test the installation:
 
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
   
-##  3. <a name='OpenVINO'></a>OpenVINO™
+##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>Backwards Compatibility with TensorFlow on Linux
+**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions v2.4.4, v2.5.3, v2.6.3, v2.7.1, and v2.8.0). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box (example: PyPi openvino-tensorflow 2.0.0 which depends on TF 2.8.0 does not work with PyPi TensorFlow 2.6.0).
+
+Please note that PyPi openvino-tensorflow 2.0.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow built against TF 2.8.0 will work with PATCH versions like TF 2.8.1, and 2.8.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
+
+##  4. <a name='OpenVINO'></a>OpenVINO™
 
 OpenVINO™ can be built from source independently using `build_ov.py`
-##  4. <a name='TensorFlow'></a>TensorFlow
+##  5. <a name='TensorFlow'></a>TensorFlow
 
 ### <a name='LinuxAndmacOS'></a>For Linux and macOS
 
@@ -224,11 +233,11 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
 - Builds TensorFlow with CXX11_ABI=0 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=0 
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=0 
 
 - Builds TensorFlow with CXX11_ABI=1 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.7.0 --cxx11_abi_version=1
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.8.0 --cxx11_abi_version=1
 
 ### <a name='TFWindows'></a> For Windows
 - Complete the setup steps: https://www.tensorflow.org/install/source_windows#setup_for_windows
@@ -236,9 +245,9 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
   
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v2.7.0
+        git checkout v2.8.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
-        git apply patch \path\to\openvino_tensorflow\repo\tools\builds\tf_2_7_0_build.patch
+        git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_2_8_0_build.patch --ignore-whitespace
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
 
 - Configure the Build: https://www.tensorflow.org/install/source_windows#configure_the_build      
@@ -250,16 +259,8 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
         bazel-bin\tensorflow\tools\pip_package\build_pip_package C:/tmp/tensorflow_pkg
 
         # copy this PIP package to working directory (tensorflow source code directory)
-        cp C:/tmp/tensorflow_pkg/tensorflow-2.7.0-cp39-cp39-win_amd64.whl .\
+        cp C:/tmp/tensorflow_pkg/tensorflow-2.8.0-cp39-cp39-win_amd64.whl .\
   
 - Build CC libraries
   
         bazel build --config=opt tensorflow:tensorflow_cc.lib
-##  5. <a name='BuildManyLinux2014compatibleOpenVINOintegrationwithTensorFlowwheels'></a>Build ManyLinux2014 compatible **OpenVINO™ integration with TensorFlow** wheels
-
-To build wheel files compatible with manylinux2014, use the following commands. The build artifacts will be available in your container's /whl/ folder.
-
-```bash
-cd tools/builds/
-docker build --no-cache -t openvino_tensorflow/pip --build-arg OVTF_BRANCH=releases/v1.1.0 . -f Dockerfile.manylinux2014
-```

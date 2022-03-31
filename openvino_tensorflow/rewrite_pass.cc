@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -104,20 +104,30 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // If requested, dump unmarked graphs.
     util::DumpTFGraph(graph, idx, "unmarked");
 
-    // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE
+    // If openvino-tensorflow is disabled via python disable() api or
+    // OPENVINO_TF_DISABLE
     // is set
     // we will not do anything; all subsequent
     // passes become a no-op.
-    bool ovtf_not_enabled =
-        (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
+    bool ovtf_not_enabled = false;
+    const char* openvino_tf_disable_env = std::getenv("OPENVINO_TF_DISABLE");
+    if (!(openvino_tf_disable_env == nullptr)) {
+      // // disable openvino-tensorflow if env variable is "1"
+      char env_value = openvino_tf_disable_env[0];
+      if (env_value == '1') {
+        ovtf_not_enabled = true;
+      }
+    }
+    ovtf_not_enabled = (!api::IsEnabled() || ovtf_not_enabled);
     bool already_processed = util::IsAlreadyProcessed(graph);
     if (!already_processed && ovtf_not_enabled) {
-      OVTF_VLOG(0) << "NGraph is available but disabled.";
+      OVTF_VLOG(0) << "openvino-tensorflow is available but disabled.";
     }
     if (ovtf_not_enabled || already_processed) {
       OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
-                          (already_processed ? "graph is already preprocessed"
-                                             : "ngraph is disabled");
+                          (already_processed
+                               ? "graph is already preprocessed"
+                               : "openvino-tensorflow is disabled");
       NGraphClusterManager::EvictAllClusters();
       NGraphClusterManager::EvictMRUClusters();
       return Status::OK();
@@ -132,21 +142,15 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // OCM call for marking supported nodes
     std::string device;
-    BackendManager::GetBackendName(device);
+    Status exec_status = BackendManager::GetBackendName(device);
+    if (exec_status != Status::OK()) {
+      throw runtime_error(exec_status.error_message());
+    }
     const char* device_id(device.c_str());
     std::string ov_version;
-#if defined(OPENVINO_2021_2)
-    ov_version = "2021.2";
-#elif defined(OPENVINO_2021_3)
-    ov_version = "2021.3";
-#elif defined(OPENVINO_2021_4)
-    ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_1)
-    // ocm checks are same as 2021.4 for this minor version update
-    ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_2)
-    // ocm checks are same as 2021.4 for this minor version update
-    ov_version = "2021.4";
+
+#if defined(OPENVINO_2022_1)
+    ov_version = "2022.1.0";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
@@ -158,6 +162,15 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         disabled_ops_set.insert(batched_disabled_ops[i]);
       }
     }
+
+    // disable TopKV2 as of now as it impacts performance for TF_HUB object
+    // detection models
+    disabled_ops_set.insert("TopKV2");
+    for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
+         itr++) {
+      OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
+    }
+
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 

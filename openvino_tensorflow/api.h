@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -17,7 +17,9 @@
 #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 #else
+#ifndef EXPORT_SYMBOL
 #define EXPORT_SYMBOL __attribute__((visibility("default")))
+#endif
 #endif
 
 using namespace std;
@@ -57,7 +59,7 @@ extern bool IsEnabled();
 
 // TODO: why is this not const?
 extern EXPORT_SYMBOL vector<string> ListBackends();
-extern EXPORT_SYMBOL bool SetBackend(const string& type);
+extern EXPORT_SYMBOL void SetBackend(const string& type);
 extern string GetBackend();
 
 extern void StartLoggingPlacement();

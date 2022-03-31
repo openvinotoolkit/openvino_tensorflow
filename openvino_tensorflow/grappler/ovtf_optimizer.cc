@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -58,11 +58,20 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // runs of this pass.
   int idx = FreshIndex();
 
-  // If ngraph is disabled via openvino_tensorflow api or OPENVINO_TF_DISABLE is
+  // If openvino-tensorflow is disabled via python disable api or
+  // OPENVINO_TF_DISABLE is
   // set
   // we will not do anything; all subsequent passes become a no-op.
-  bool ovtf_not_enabled =
-      (!api::IsEnabled()) || (std::getenv("OPENVINO_TF_DISABLE") != nullptr);
+  bool ovtf_not_enabled = false;
+  const char* openvino_tf_disable_env = std::getenv("OPENVINO_TF_DISABLE");
+  if (!(openvino_tf_disable_env == nullptr)) {
+    // // disable openvino-tensorflow if env variable is "1"
+    char env_value = openvino_tf_disable_env[0];
+    if (env_value == '1') {
+      ovtf_not_enabled = true;
+    }
+  }
+  ovtf_not_enabled = (!api::IsEnabled() || ovtf_not_enabled);
   bool already_processed = util::IsAlreadyProcessed(&graph);
   if (!already_processed && ovtf_not_enabled) {
     OVTF_VLOG(0) << "openvino_tensorflow is available but disabled.";
@@ -145,21 +154,14 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // 1. Mark for clustering then, if requested, dump the graphs.
   // OCM call for marking supported nodes
   std::string device;
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
   const char* device_id(device.c_str());
   std::string ov_version;
-#if defined(OPENVINO_2021_2)
-  ov_version = "2021.2";
-#elif defined(OPENVINO_2021_3)
-  ov_version = "2021.3";
-#elif defined(OPENVINO_2021_4)
-  ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_1)
-  // ocm checks are same as 2021.4 for this minor version update
-  ov_version = "2021.4";
-#elif defined(OPENVINO_2021_4_2)
-  // ocm checks are same as 2021.4 for this minor version update
-  ov_version = "2021.4";
+#if defined(OPENVINO_2022_1)
+  ov_version = "2022.1";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);

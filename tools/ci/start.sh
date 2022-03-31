@@ -1,7 +1,4 @@
 #!/bin/bash
-/opt/intel/openvino_2021.4.752/install_dependencies/install_NEO_OCL_driver.sh -y
-/opt/intel/openvino_2021.4.752/install_dependencies/install_NCS_udev_rules.sh
- 
 set -e
 
 if [ -z "$AZP_URL" ]; then
@@ -15,7 +12,7 @@ if [ -z "$AZP_TOKEN_FILE" ]; then
     exit 1
   fi
 
-  AZP_TOKEN_FILE=/home/iotgecsp/basm/azu/.token
+  AZP_TOKEN_FILE=/home/openvino/ci_setup/.token
   echo -n $AZP_TOKEN > "$AZP_TOKEN_FILE"
 fi
 

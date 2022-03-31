@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -24,11 +24,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
   OVTF_VLOG(2) << "BackendManager::SetBackend(" << backend_name << ")";
   shared_ptr<Backend> backend;
   string bname(backend_name);
-  if (bname == "HDDL") {
-    return errors::Internal("Failed to set backend: ",
-                            bname + " backend not available");
-  }
-  if (bname == "VAD-M") bname = "HDDL";
 
   auto status = CreateBackend(backend, bname);
   if (!status.ok() || backend == nullptr) {
@@ -78,13 +73,20 @@ Status BackendManager::GetBackendName(string& backend_name) {
 Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
                                      string& backend_name) {
   const char* env = std::getenv("OPENVINO_TF_BACKEND");
-  // Checkmarx fix. Array of max length MYRIAD.
-  char backendName[6];
+  // Array should be of max length MYRIAD.
+  char backendName[7];
 
   if (env != nullptr) {
     strncpy((char*)backendName, env, sizeof(backendName));
+    backendName[6] = '\0';  // null terminate to remove warnings
     backend_name = std::string(backendName);
   }
+
+  if (backend_name == "HDDL") {
+    return errors::Internal("Failed to Create backend: ",
+                            backend_name + " backend not available");
+  }
+  if (backend_name == "VAD-M") backend_name = "HDDL";
 
   try {
     backend = make_shared<Backend>(backend_name);
@@ -103,8 +105,8 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
 
 // Returns the supported backend names
 vector<string> BackendManager::GetSupportedBackends() {
-  InferenceEngine::Core core;
-  auto devices = core.GetAvailableDevices();
+  ov::Core core;
+  auto devices = core.get_available_devices();
   auto pos = find(devices.begin(), devices.end(), "HDDL");
   if (pos != devices.end()) {
     devices.erase(pos);

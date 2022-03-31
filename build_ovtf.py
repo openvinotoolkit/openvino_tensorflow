@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -51,8 +51,8 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.7.0"
-    ovtf_version = "v1.1.0"
+    tf_version = "v2.8.0"
+    ovtf_version = "v2.0.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -145,7 +145,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='2021.4.2')
+        default='2022.1.0')
 
     parser.add_argument(
         '--python_executable',
@@ -197,19 +197,16 @@ def main():
         raise AssertionError(
             "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
             "cannot be used together.")
-    if (arguments.openvino_version not in [
-            "2021.4.2", "2021.4.1", "2021.4", "2021.3", "2021.2"
-    ]):
+    if (arguments.openvino_version not in ["master", "2022.1.0"]):
         raise AssertionError(
-            "Only 2021.2, 2021.3, 2021.4, 2021.4.1, and 2021.4.2 OpenVINO versions are supported"
-        )
+            "Only 2022.1.0 OpenVINO version and master branch are supported")
 
     if arguments.use_openvino_from_location != '':
         if not os.path.isdir(arguments.use_openvino_from_location):
             raise AssertionError("Path doesn't exist {0}".format(
                 arguments.use_openvino_from_location))
         ver_file = arguments.use_openvino_from_location + \
-                      '/deployment_tools/inference_engine/version.txt'
+                      '/runtime/version.txt'
         if not os.path.exists(ver_file):
             raise AssertionError("Path doesn't exist {0}".format(ver_file))
         with open(ver_file) as f:
@@ -301,7 +298,7 @@ def main():
     load_venv(venv_dir)
 
     # Setup the virtual env
-    setup_venv(venv_dir)
+    setup_venv(venv_dir, tf_version)
 
     target_arch = 'native'
     if (arguments.target_arch):
@@ -332,7 +329,7 @@ def main():
         if (platform.system() == 'Windows'):
             tf_whl = os.path.abspath(
                 arguments.use_tensorflow_from_location +
-                "\\\\tensorflow\\\\tensorflow-2.7.0-cp39-cp39-win_amd64.whl")
+                "\\\\tensorflow\\\\tensorflow-2.8.0-cp39-cp39-win_amd64.whl")
             command_executor([
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
@@ -392,7 +389,7 @@ def main():
                     if tags.interpreter == "cp39":
                         command_executor([
                             "pip", "install", "--force-reinstall",
-                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow-2.7.0-cp39-cp39-win_amd64.whl"
+                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow-2.8.0-cp39-cp39-win_amd64.whl"
                         ])
                     else:
                         raise AssertionError(
@@ -407,17 +404,17 @@ def main():
                 if tags.interpreter == "cp37":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp37-cp37m-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp38":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp38-cp38-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 if tags.interpreter == "cp39":
                     command_executor([
                         "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v1.1.0/tensorflow_abi1-2.7.0-cp39-cp39-manylinux2010_x86_64.whl"
+                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
                     ])
                 # ABI 1 TF required latest numpy
                 command_executor(
@@ -533,21 +530,15 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-        if (arguments.openvino_version == "2021.4.2"):
-            openvino_release_tag = "2021.4.2"
-        elif (arguments.openvino_version == "2021.4.1"):
-            openvino_release_tag = "2021.4.1"
-        elif (arguments.openvino_version == "2021.4"):
-            openvino_release_tag = "2021.4"
-        elif (arguments.openvino_version == "2021.3"):
-            openvino_release_tag = "2021.3"
-        elif (arguments.openvino_version == "2021.2"):
-            openvino_release_tag = "2021.2"
+        if (arguments.openvino_version == "master"):
+            openvino_release_tag = "master"
+        elif (arguments.openvino_version == "2022.1.0"):
+            openvino_release_tag = "2022.1.0"
 
         # Download OpenVINO
         download_repo(
             "openvino",
-            "https://github.com/openvinotoolkit/openvino",
+            "https://github.com/openvinotoolkit/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
@@ -556,21 +547,22 @@ def main():
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
-    # Next build CMAKE options for the bridge
-    atom_flags = ""
-    if (target_arch == "silvermont"):
-        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
-
+    # Next build CMAKE options for the openvino-tensorflow
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags = [
             "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location.replace(
-                "\\", "\\\\"),
+                "\\", "/")
         ]
     else:
         openvino_tf_cmake_flags = [
-            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location,
-            "-DCMAKE_CXX_FLAGS=-march=" + target_arch + atom_flags,
+            "-DOPENVINO_TF_INSTALL_PREFIX=" + artifacts_location
         ]
+
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+        openvino_tf_cmake_flags.extend(
+            ["-DCMAKE_CXX_FLAGS= -march=" + atom_flags])
 
     openvino_artifacts_dir = ""
     if arguments.use_openvino_from_location == '':
@@ -581,8 +573,10 @@ def main():
         openvino_tf_cmake_flags.extend(["-DUSE_OPENVINO_FROM_LOCATION=TRUE"])
     print("openvino_artifacts_dir: ", openvino_artifacts_dir)
     if (platform.system() == 'Windows'):
-        openvino_tf_cmake_flags.extend(
-            ["-DOPENVINO_ARTIFACTS_DIR='" + openvino_artifacts_dir + "'"])
+        openvino_tf_cmake_flags.extend([
+            "-DOPENVINO_ARTIFACTS_DIR='" + openvino_artifacts_dir.replace(
+                "\\", "/") + "'"
+        ])
     else:
         openvino_tf_cmake_flags.extend(
             ["-DOPENVINO_ARTIFACTS_DIR=" + openvino_artifacts_dir])
@@ -650,7 +644,7 @@ def main():
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
 
-    # Now build the bridge
+    # Now build openvino-tensorflow
     ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
                                   openvino_tf_src_dir, venv_dir,
                                   openvino_tf_cmake_flags, verbosity)
@@ -660,9 +654,10 @@ def main():
         raise AssertionError("Path not found {}".format(artifacts_location))
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
         raise AssertionError(
-            "Cannot locate nGraph whl in the artifacts location")
+            "Cannot locate openvino-tensorflow whl in the artifacts location")
     if not os.path.isfile(os.path.join(artifacts_location, ov_tf_whl)):
-        raise Exception("Cannot locate nGraph whl in the artifacts location")
+        raise Exception(
+            "Cannot locate openvino-tensorflow whl in the artifacts location")
 
     print("SUCCESSFULLY generated wheel: %s" % ov_tf_whl)
     print("PWD: " + os.getcwd())
@@ -717,13 +712,16 @@ def main():
             # if destination link already exists, then delete it
             if (os.path.exists(link_dst)):
                 print("Link %s already exists, deleting it." % link_dst)
-                command_executor(['rm', '-rf', link_dst])
+                command_executor(['rmdir /s /q', link_dst], shell=True)
+            command_executor(['mklink /D', link_dst, link_src],
+                             verbose=True,
+                             shell=True)
         else:
             link_src = os.path.join(artifacts_location,
                                     "tensorflow/tensorflow/python")
             link_dst = os.path.join(artifacts_location, "tensorflow/python")
 
-        command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
+            command_executor(['ln', '-sf', link_src, link_dst], verbose=True)
 
     if not os.path.exists(artifacts_location):
         raise AssertionError("Path doesn't exist {}".format(artifacts_location))

@@ -1,18 +1,15 @@
 /*****************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
 /*****************************************************************************/
 
 #include "backend.h"
 
-#include <ie_core.hpp>
 #include "contexts.h"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "openvino/opsets/opset.hpp"
 
 using namespace std;
-using namespace ngraph;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -24,8 +21,8 @@ Backend::Backend(const string& config) {
   string prec = "";
   if (config.find("_") != string::npos)
     prec = config.substr(config.find("_") + 1);
-  InferenceEngine::Core core;
-  auto devices = core.GetAvailableDevices();
+  ov::Core core;
+  auto devices = core.get_available_devices();
   // TODO: Handle multiple devices
 
   bool dev_found = false;
@@ -69,8 +66,7 @@ Backend::Backend(const string& config) {
   }
 }
 
-shared_ptr<Executable> Backend::Compile(shared_ptr<ngraph::Function> func,
-                                        bool) {
+shared_ptr<Executable> Backend::Compile(shared_ptr<ov::Model> func, bool) {
   return make_shared<Executable>(func, m_device, m_device_type);
 }
 
@@ -84,11 +80,11 @@ void Backend::ReleaseGlobalContext() { g_global_context.reset(); }
 
 std::string Backend::GetDeviceType() { return m_device_type; }
 
-bool Backend::IsSupported(const ngraph::Node& node) const {
+bool Backend::IsSupported(const ov::Node& node) const {
   // TODO: check if the given backend/device supports the op. Right now we're
   // assuming
   // that the selected backend supports all opset7 ops
-  const auto& opset = ngraph::get_opset7();
+  const auto& opset = ov::get_opset7();
   return opset.contains_op_type(&node);
 }
 

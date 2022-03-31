@@ -14,7 +14,7 @@
 # ==============================================================================
 
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
 
@@ -208,16 +208,22 @@ if __name__ == "__main__":
     elif input_mode == 'image':
         images = [input_file]
     elif input_mode == 'directory':
-        images = [os.path.join(input_file, i) for i in os.listdir(input_file)]
+        if not os.path.isdir(input_file):
+            raise AssertionError("Path doesn't exist {0}".format(input_file))
+        images = [
+            os.path.join(input_file, fname)
+            for fname in os.listdir(input_file)
+            if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff',
+                                       '.bmp'))
+        ]
     else:
         raise Exception(
             "Invalid input. Path to an image or video or directory of images. Use 0 for using camera as input."
         )
     images_len = len(images)
     # Initialize session and run
-    config = tf.compat.v1.ConfigProto()
     image_id = -1
-    with tf.compat.v1.Session(graph=graph, config=config) as sess:
+    with tf.compat.v1.Session(graph=graph) as sess:
         while True:
             image_id += 1
             if input_mode in ['camera', 'video']:
@@ -245,7 +251,7 @@ if __name__ == "__main__":
             if image_id == 0:
                 results = sess.run(output_operation.outputs[0],
                                    {input_operation.outputs[0]: t})
-            # run
+
             start = time.time()
             results = sess.run(output_operation.outputs[0],
                                {input_operation.outputs[0]: t})
@@ -253,31 +259,35 @@ if __name__ == "__main__":
             fps = 1 / elapsed
             print('Inference time in ms: %.2f' % (elapsed * 1000))
             results = np.squeeze(results)
+            top_k = results.argsort()[-5:][::-1]
             if label_file:
-                cv2.putText(frame,
-                            'Inference Running on : {0}'.format(backend_name),
-                            (30, 50), font, font_size, color, font_thickness)
-                cv2.putText(
-                    frame, 'FPS : {0} | Inference Time : {1}ms'.format(
-                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
-                    font_size, color, font_thickness)
-                top_k = results.argsort()[-5:][::-1]
-                c = 130
                 for i in top_k:
-                    cv2.putText(frame, '{0} : {1}'.format(
-                        labels[i], results[i]), (30, c), font, font_size, color,
-                                font_thickness)
                     print(labels[i], results[i])
-                    c += 30
             else:
                 print(
                     "No label file provided. Cannot print classification results"
                 )
+
             if not args.no_show:
+                cv2.putText(frame,
+                            'Inference Running on : {0}'.format(backend_name),
+                            (30, 50), font, font_size, color, font_thickness)
+
+                cv2.putText(
+                    frame, 'FPS : {0} | Inference Time : {1}ms'.format(
+                        int(fps), round((elapsed * 1000), 2)), (30, 80), font,
+                    font_size, color, font_thickness)
+
+                if label_file:
+                    c = 130
+                    for i in top_k:
+                        cv2.putText(frame, '{0} : {1}'.format(
+                            labels[i], results[i]), (30, c), font, font_size,
+                                    color, font_thickness)
+                        c += 30
                 cv2.imshow("results", frame)
                 if cv2.waitKey(1) & 0XFF == ord('q'):
                     break
-    sess.close()
     if cap:
         cap.release()
         cv2.destroyAllWindows()

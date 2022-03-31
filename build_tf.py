@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.7.0")
+        default="v2.8.0")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -63,7 +63,7 @@ def main():
 
     install_virtual_env(venv_dir)
     load_venv(venv_dir)
-    setup_venv(venv_dir)
+    setup_venv(venv_dir, arguments.tf_version)
     if not os.path.exists(arguments.output_dir):
         raise AssertionError("Directory doesn't exist {0}".format(
             arguments.output_dir))

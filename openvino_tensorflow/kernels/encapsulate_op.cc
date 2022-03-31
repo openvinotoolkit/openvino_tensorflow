@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -71,30 +71,6 @@ class NGraphEncapsulateOp : public OpKernel {
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
 };
-
-static Status ParseNodeAttributes(
-    const google::protobuf::Map<string, AttrValue>& additional_attributes,
-    std::unordered_map<std::string, std::string>* additional_attribute_map) {
-  for (auto itx : additional_attributes) {
-    // Find the optional attributes to be sent to the backend.
-    // The optional attributes have '_ovtf_' appended to the start
-    // so we need to get rid of that and only send the remaining string
-    // since the backend will only look for that.
-    // '_ovtf_' is only appended for the bridge.
-    // For e.g. _ovtf_ice_cores --> ice_cores
-    if (itx.first.find("_ovtf_") != std::string::npos) {
-      // TODO: decide what the node attributes should be.
-      // right now _ovtf_ is used for optional attributes
-      auto attr_name = itx.first;
-      auto attr_value = itx.second.s();
-      OVTF_VLOG(4) << "Attribute: " << attr_name.substr(strnlen("_ovtf_", 6))
-                   << " Value: " << attr_value;
-      additional_attribute_map->insert(
-          {attr_name.substr(strnlen("_ovtf_", 6)), attr_value});
-    }
-  }
-  return Status::OK();
-}
 
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
@@ -187,12 +163,6 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OVTF_VLOG(5) << "Marking arg " << index << " is_static: " << is_static;
     m_input_is_static[index] = is_static;
   }
-
-  // Get the optional attributes
-  std::unordered_map<std::string, std::string> additional_attribute_map;
-  auto node_def = ctx->def();
-  OP_REQUIRES_OK(
-      ctx, ParseNodeAttributes(node_def.attr(), &additional_attribute_map));
 }
 
 NGraphEncapsulateOp::~NGraphEncapsulateOp() {
@@ -261,12 +231,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                << m_cluster_id;
 
   Timer create_or_lookup_tensors;
-  vector<shared_ptr<ngraph::runtime::Tensor>> ng_inputs;
+  vector<shared_ptr<ov::Tensor>> ng_inputs;
   int ng_input_tensor_size_in_bytes = 0;
   {
     // Allocate tensors for input arguments.
     for (int i = 0; i < tf_input_tensors.size(); i++) {
-      ngraph::Shape ng_shape(tf_input_tensors[i].shape().dims());
+      ov::Shape ng_shape(tf_input_tensors[i].shape().dims());
       for (int j = 0; j < tf_input_tensors[i].shape().dims(); ++j) {
         ng_shape[j] = tf_input_tensors[i].shape().dim_size(j);
       }
@@ -279,19 +249,18 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         return false;
       };
       if (check_ng_shape()) continue;
-      ngraph::element::Type ng_element_type;
+      ov::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
 
       auto backend = BackendManager::GetBackend();
 #if TF_VERSION < 2
-      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
+      std::shared_ptr<ov::Tensor> ng_tensor =
           make_shared<IETensor>(ng_element_type, ng_shape,
                                 (void*)DMAHelper::base(&tf_input_tensors[i]));
 #else
-      std::shared_ptr<ngraph::runtime::Tensor> ng_tensor =
-          make_shared<IETensor>(ng_element_type, ng_shape,
-                                tf_input_tensors[i].data());
+      std::shared_ptr<ov::Tensor> ng_tensor = make_shared<IETensor>(
+          ng_element_type, ng_shape, tf_input_tensors[i].data());
 #endif
       ng_inputs.push_back(ng_tensor);
     }
@@ -305,23 +274,21 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
   auto results = ng_exec->GetResults();
   std::string device;
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
   auto backend = BackendManager::GetBackend();
   auto dev_type = backend->GetDeviceType();
   std::string precision = dev_type.substr(dev_type.find("_") + 1);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_func_outputs(
-      results.size(), nullptr);
-  std::vector<shared_ptr<ngraph::runtime::Tensor>> ng_outputs(
-      ng_result_list.size(), nullptr);
+  std::vector<shared_ptr<ov::Tensor>> ng_func_outputs(results.size(), nullptr);
+  std::vector<shared_ptr<ov::Tensor>> ng_outputs(ng_result_list.size(),
+                                                 nullptr);
   std::vector<int> dyn_shape_tensors;
   std::vector<int> output_mappings(ng_result_list.size(), -1);
   auto ng_output_shapes = ng_exec->GetOutputShapes();
   int j = 0;
-#if defined(OPENVINO_2021_2)
-  if (device != "MYRIAD" && device != "HDDL") {
-#else
   if (device != "HDDL") {
-#endif
     for (auto i = 0; i < ng_result_list.size(); i++) {
       auto ng_element = ng_result_list[i];
       if (ng_element->get_output_partial_shape(0).is_dynamic()) {
@@ -346,11 +313,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
       // Make sure the nGraph-inferred element type agrees with what TensorFlow
       // expected
-      ngraph::element::Type expected_elem_type;
+      ov::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
-      if (ng_element_type == ngraph::element::Type_t::f16 &&
-          precision == "FP16")
-        ng_element_type = ngraph::element::Type_t::f32;
+      if (ng_element_type == ov::element::Type_t::f16 && precision == "FP16")
+        ng_element_type = ov::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
                      util::TFDataTypeToNGraphElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));
@@ -423,11 +389,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     time_execute_function = execute_function.ElapsedInMS();
   }
 
-#if defined(OPENVINO_2021_2)
-  if (device != "MYRIAD" && device != "HDDL") {
-#else
   if (device != "HDDL") {
-#endif
     for (auto i : dyn_shape_tensors) {
       OP_REQUIRES(ctx, output_mappings[i] != -1,
                   errors::Internal("Mapping error while "
@@ -440,11 +402,24 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
-      // Zero-copy IE tensor to TF
-      IETensorBuffer* tf_buffer =
-          new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-      Tensor tf_tensor(ctx->expected_output_dtype(i), tf_shape, tf_buffer);
-      ctx->set_output(i, tf_tensor);
+      // TODO: Zero-copy is depreciated temporarily because of memory allocation
+      // alignment
+      // mismatch related to EIGEN_MAX_ALIGN_BYTES.
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+
+      auto size = ng_output->get_byte_size();
+      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+
+#if TF_VERSION < 2
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t**)DMAHelper::base(output_tensor));
+#else
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t*)(output_tensor->data()));
+#endif
     }
   } else {
     auto out_shape_check = [ng_output_shapes](int i) {
@@ -460,7 +435,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     for (int i = 0; i < ng_result_list.size(); i++) {
       if (out_shape_check(i)) {
         auto ng_shape = ng_output_shapes[i];
-        ngraph::element::Type expected_elem_type;
+        ov::element::Type expected_elem_type;
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
         OP_REQUIRES_OK(ctx,
@@ -484,7 +459,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         if (ng_result_list[i]->is_dynamic()) {
           ng_shape = ng_output->get_shape();
         }
-        ngraph::element::Type expected_elem_type;
+        ov::element::Type expected_elem_type;
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
         OP_REQUIRES_OK(ctx,
@@ -502,14 +477,17 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         Tensor* output_tensor = nullptr;
         OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-        auto size = ng_output->get_size_in_bytes();
+        auto size = ng_output->get_byte_size();
         auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
-        auto blob = ie_tensor->get_blob();
 
 #if TF_VERSION < 2
-        ng_output->read((void*)DMAHelper::base(output_tensor), size);
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t**)DMAHelper::base(output_tensor));
 #else
-        ng_output->read(output_tensor->data(), size);
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t*)(output_tensor->data()));
 #endif
       }
     }
@@ -573,7 +551,7 @@ Status NGraphEncapsulateOp::GetExecutable(
                << m_cluster_id;
 
   // Translate the TensorFlow graph to nGraph.
-  std::shared_ptr<ngraph::Function> ng_function;
+  std::shared_ptr<ov::Model> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
     long vm = 0, rss = 0, vm0 = 0, rss0 = 0;
@@ -586,11 +564,11 @@ Status NGraphEncapsulateOp::GetExecutable(
         ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
 
-    std::vector<ngraph::Shape> ng_output_shapes;
+    std::vector<ov::Shape> ng_output_shapes;
     ng_output_shapes.resize(ng_result_list.size());
     for (int i = 0; i < ng_result_list.size(); i++) {
       if (ng_result_list[i]->is_dynamic()) {
-        ng_output_shapes[i] = ngraph::Shape{};
+        ng_output_shapes[i] = ov::Shape{};
       } else {
         ng_output_shapes[i] = ng_result_list[i]->get_shape();
       }

@@ -18,7 +18,7 @@ limitations under the License.
 // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/label_image/main.cc
 //-----------------------------------------------------------------------------
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -176,11 +176,7 @@ int main(int argc, char** argv) {
   PrintVersion();
 
   // Enable differnt backends(CPU/GPU/MYRIAD/HDDL) to run the network.
-  if (!tensorflow::openvino_tensorflow::api::SetBackend(backend_name)) {
-    std::cout << "Error: Device is not available " << backend_name << "\n"
-              << usage;
-    return -1;
-  }
+  tensorflow::openvino_tensorflow::api::SetBackend(backend_name);
 
   // First we load and initialize the model.
   std::unique_ptr<tensorflow::Session> session;

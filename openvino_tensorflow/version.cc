@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -14,8 +14,8 @@
 // OpenVINO™ integration with TensorFlow uses semantic versioning: see
 // http://semver.org/
 
-#define OV_TF_MAJOR_VERSION 1
-#define OV_TF_MINOR_VERSION 1
+#define OV_TF_MAJOR_VERSION 2
+#define OV_TF_MINOR_VERSION 0
 #define OV_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers

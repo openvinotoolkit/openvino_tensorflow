@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -28,7 +28,7 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 namespace testing {
 
-// This test can only be run when nGraph-bridge is built with grappler
+// This test can only be run when openvino-tensorflow is built with grappler
 // When running with other modes, grappler's ovtf-optimizer is not
 // run, none of the nodes are encapsulated, no attributes are attached
 // etc.,etc.

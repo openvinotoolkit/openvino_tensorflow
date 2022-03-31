@@ -230,7 +230,71 @@ Please follow the instructions on [Keras Applications](https://keras.io/api/appl
 | [Wiki-words-500](https://tfhub.dev/google/Wiki-words-500/2?tf-hub-format=compressed)  | CPU, iGPU, MYRIAD |
 | [Wiki-words-500-with-normalization](https://tfhub.dev/google/Wiki-words-500-with-normalization/2)| CPU, iGPU, MYRIAD |
 | [yamnet](https://tfhub.dev/google/yamnet/1)| CPU, iGPU, MYRIAD |
-
+| [albert_base](https://tfhub.dev/google/albert_base/3)| CPU, GPU, MYRIAD |
+| [albert_en_large](https://tfhub.dev/tensorflow/albert_en_large/3)| CPU, GPU, MYRIAD  |
+| [albert_large](https://tfhub.dev/google/albert_large/3)|  CPU, GPU, MYRIAD  |
+| []()| |
+| [albert_xlarge](https://tfhub.dev/google/albert_xlarge/3)| CPU, GPU, MYRIAD   |
+| [albert_xxlarge](https://tfhub.dev/google/albert_xxlarge/3)|  CPU, GPU, MYRIAD  |
+| [bert_cased_L-12_H-768_A-12](https://tfhub.dev/google/bert_cased_L-12_H-768_A-12/1)|  CPU, GPU, MYRIAD  |
+| [bert_cased_L-24_H-1024_A-16](https://tfhub.dev/google/bert_cased_L-24_H-1024_A-16/1)|  CPU, GPU, MYRIAD  |
+| [bert_chinese_L-12_H-768_A-12](https://tfhub.dev/google/bert_cased_L-24_H-1024_A-16/1)| CPU, GPU, MYRIAD   |
+| [bert_uncased_L-12_H-768_A-12](https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1)|  CPU, GPU, MYRIAD  |
+| [bert_uncased_L-24_H-1024_A-16](https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1)| CPU, GPU, MYRIAD   |
+| [bigbigan-resnet50](https://tfhub.dev/deepmind/bigbigan-resnet50/1)|  CPU, GPU, MYRIAD  |
+| [biggan-128](https://tfhub.dev/deepmind/biggan-128/2)|  CPU, GPU, MYRIAD  |
+| [biggan-256](https://tfhub.dev/deepmind/biggan-256/2)|  CPU, GPU, MYRIAD  |
+| [biggan-512](https://tfhub.dev/deepmind/biggan-512/2)|  CPU, GPU, MYRIAD  |
+| [biggan-deep-128](https://tfhub.dev/deepmind/biggan-deep-128/1)| CPU, GPU, MYRIAD   |
+| [biggan-deep-256](https://tfhub.dev/deepmind/biggan-deep-256/1)| CPU, GPU, MYRIAD   |
+| [biggan-deep-512](https://tfhub.dev/deepmind/biggan-deep-512/1)|  CPU, GPU, MYRIAD  |
+| [bit_m-r152x4_imagenet21k_classification](https://tfhub.dev/google/bit/m-r152x4/imagenet21k_classification/1)| MYRIAD|
+| [bit_m-r50x1_imagenet21k_classification](https://tfhub.dev/google/bit/m-r50x1/imagenet21k_classification/1)|  CPU, GPU, MYRIAD  |
+| [centernet_hourglass_1024x1024_kpts](https://tfhub.dev/tensorflow/centernet/hourglass_1024x1024_kpts/1)|  CPU, GPU, MYRIAD  |
+| [efficientnet_b1_feature-vector]('https://tfhub.dev/google/efficientnet/b1/feature-vector/1)|  CPU, GPU, MYRIAD  |
+| [efficientnet_b5_feature-vector]('https://tfhub.dev/google/efficientnet/b5/feature-vector/1)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite0_feature-vector](https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite1_classification](https://tfhub.dev/tensorflow/efficientnet/lite1/classification/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite1_feature-vector](https://tfhub.dev/tensorflow/efficientnet/lite1/feature-vector/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite2_classification](https://tfhub.dev/tensorflow/efficientnet/lite2/classification/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite2_feature-vector](https://tfhub.dev/tensorflow/efficientnet/lite2/feature-vector/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite3_classification](https://tfhub.dev/tensorflow/efficientnet/lite3/classification/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite3_feature-vector](https://tfhub.dev/tensorflow/efficientnet/lite3/feature-vector/2)|  CPU, GPU, MYRIAD  |
+| [efficientnet_lite4_feature-vector](https://tfhub.dev/tensorflow/efficientnet/lite4/feature-vector/1)| CPU, GPU, MYRIAD   |
+| [enformer](https://tfhub.dev/deepmind/enformer/1)|  CPU, GPU, MYRIAD  |
+| [experts_bert_wiki_books_sst2](https://tfhub.dev/google/experts/bert/wiki_books/sst2/1)| CPU, GPU, MYRIAD   |
+| [faster_rcnn_openimages_v4_inception_resnet_v2](https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1)|  CPU, GPU, MYRIAD  |
+| [faster_rcnn_resnet152_v1_640x640](https://tfhub.dev/tensorflow/faster_rcnn/resnet152_v1_640x640/1)|  CPU, GPU, MYRIAD  |
+| [faster_rcnn_resnet50_v1_1024x1024](https://tfhub.dev/tensorflow/faster_rcnn/resnet50_v1_1024x1024/1)|  CPU, GPU, MYRIAD  |
+| [ganeval-cifar10-convnet](https://tfhub.dev/deepmind/ganeval-cifar10-convnet/1)|  CPU, GPU, MYRIAD  |
+| [imagenet_efficientnet_v2_imagenet1k_b0_feature_vector](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet1k_b0/feature_vector/2)|  CPU, GPU, MYRIAD  |
+| [imagenet_efficientnet_v2_imagenet1k_s_feature_vector](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet21k_ft1k_xl/feature_vector/2)|  CPU, GPU, MYRIAD  |
+| [imagenet_efficientnet_v2_imagenet21k_b0_feature_vector](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet21k_b0/feature_vector/2)|  CPU, GPU, MYRIAD  |
+| [imagenet_efficientnet_v2_imagenet21k_s_feature_vector](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet21k_s/feature_vector/2)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v1_025_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v1_025_224/feature_vector/5)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v1_075_160_feature_vector](tfhub.dev/google/imagenet/mobilenet_v1_075_160/feature_vector/1)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v2_050_192_classification](https://tfhub.dev/google/imagenet/mobilenet_v1_025_224/feature_vector/5)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v3_large_075_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_large_075_224/feature_vector/5)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v3_large_100_224_classification](https://tfhub.dev/google/imagenet/mobilenet_v3_large_100_224/classification/5)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v3_small_075_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_small_075_224/feature_vector/5)|  CPU, GPU, MYRIAD  |
+| [imagenet_mobilenet_v3_small_100_224_feature_vector](https://tfhub.dev/google/imagenet/mobilenet_v3_small_100_224/feature_vector/2)|  CPU, GPU, MYRIAD  |
+| [imagenet_nasnet_mobile_classification](https://tfhub.dev/google/imagenet/nasnet_mobile/classification/1)|  CPU, GPU, MYRIAD  |
+| [imagenet_resnet_v1_50_feature_vector](https://tfhub.dev/google/imagenet/resnet_v1_50/feature_vector/1)+A27|  CPU, GPU, MYRIAD  |
+| [mil-nce_s3d](https://tfhub.dev/deepmind/mil-nce/s3d/1)| |
+| [mobilebert_uncased_L-24_H-128_B-512_A-4_F-4_OPT_squadv1](https://tfhub.dev/google/mobilebert/uncased_L-24_H-128_B-512_A-4_F-4_OPT/squadv1/1)|  CPU, GPU, MYRIAD  |
+| [movinet_a2_base_kinetics-600_classification](https://tfhub.dev/tensorflow/movinet/a2/base/kinetics-600/classification/3)|  CPU, GPU, MYRIAD  |
+| [progan-128](https://tfhub.dev/google/progan-128/1)|  CPU, GPU, MYRIAD  |
+| [random-nnlm-en-dim128](https://tfhub.dev/google/random-nnlm-en-dim128/1)|  CPU, GPU, MYRIAD  |
+| [retinanet_resnet152_v1_fpn_1024x1024](https://tfhub.dev/tensorflow/retinanet/resnet152_v1_fpn_1024x1024/1)|  CPU, GPU, MYRIAD  |
+| [seefood_segmenter_mobile_food_segmenter_V1_1](https://tfhub.dev/google/seefood/segmenter/mobile_food_segmenter_V1/1)|  CPU, GPU, MYRIAD  |
+| [small_bert_bert_en_uncased_L-4_H-768_A-12](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-768_A-12/2)|  CPU, GPU, MYRIAD  |
+| [small_bert_bert_en_uncased_L-6_H-256_A-4](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-6_H-256_A-4/2)|  CPU, GPU, MYRIAD  |
+| [small_bert_bert_en_uncased_L-6_H-512_A-8](https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-6_H-512_A-8/2)|  CPU, GPU, MYRIAD  |
+| [tfgan_eval_inception](https://tfhub.dev/tensorflow/tfgan/eval/inception/1)|  CPU, GPU, MYRIAD  |
+| [tweening_conv3d_bair]('https://tfhub.dev/google/tweening_conv3d_bair/1)|  CPU, GPU, MYRIAD  |
+| [universal-sentence-encoder-cmlm_en-base](https://tfhub.dev/google/universal-sentence-encoder-cmlm/en-base/1)|  CPU, GPU, MYRIAD  |
+| [vision_classifier_imet_attributes_V1](https://tfhub.dev/metmuseum/vision/classifier/imet_attributes_V1/1)|  CPU, GPU, MYRIAD  |
+| [wiki40b-lm-es](https://tfhub.dev/google/wiki40b-lm-es/1)|  CPU, GPU, MYRIAD  |
 
 
 ## Other Models
@@ -369,4 +433,4 @@ Some examples of NNCF usage to produce quantized models can be found [here](http
 
 Some quantized models are shown to provide more optimized performance by setting the environment variable 'OPENVINO_TF_CONSTANT_FOLDING' to 1 before running inference.
  
-[Note: The latest supported TensorFlow versions for NNCF and **OpenVINO™ integration with TensorFlow** may be different. It is advised that the users create a separate virtual environment for quantizing the models with NNCF to avoid any TensorFlow version incompatability issues. The quantized models can then be run in the environment that is compatible with **OpenVINO™ integration with TensorFlow**. NNCF compatible with TensorFlow version 2.4.2 is validated with **OpenVINO™ integration with TensorFlow** compatible with TensorFlow version 2.7.0.] 
+[Note: The latest supported TensorFlow versions for NNCF and **OpenVINO™ integration with TensorFlow** may be different. It is advised that the users create a separate virtual environment for quantizing the models with NNCF to avoid any TensorFlow version incompatability issues. The quantized models can then be run in the environment that is compatible with **OpenVINO™ integration with TensorFlow**. NNCF compatible with TensorFlow version 2.4.2 is validated with **OpenVINO™ integration with TensorFlow** compatible with TensorFlow version 2.8.0.] 

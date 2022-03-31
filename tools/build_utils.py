@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -47,7 +47,8 @@ def command_executor(cmd,
                      verbose=False,
                      msg=None,
                      stdout=sys.stdout,
-                     stderr=sys.stderr):
+                     stderr=sys.stderr,
+                     shell=False):
     '''
     Executes the command.
     Example:
@@ -61,7 +62,7 @@ def command_executor(cmd,
         print(tag + cmd, file=stdout)
     try:
         process = subprocess.Popen(
-            shlex.split(cmd), stdout=stdout, stderr=stderr)
+            shlex.split(cmd), stdout=stdout, stderr=stderr, shell=shell)
         so, se = process.communicate()
         retcode = process.returncode
         if not retcode == 0:
@@ -111,7 +112,14 @@ def cmake_build(build_dir, src_location, cmake_flags, verbose):
     command_executor(cmake_cmd, verbose=True)
 
     import psutil
-    num_cores = str(psutil.cpu_count(logical=True))
+    num_cores = int(psutil.cpu_count(logical=True))
+    # get system's total RAM size in GB
+    sys_ram = int(psutil.virtual_memory().total / (1024**3))
+    # limiting num of cores to the max GBs of system RAM
+    if (num_cores > sys_ram):
+        num_cores = sys_ram
+    num_cores = str(num_cores)
+
     if (platform.system() == 'Windows'):
         # TODO: Enable Debug config for windows
         cmd = [
@@ -217,7 +225,7 @@ def load_venv(venv_dir):
     return venv_dir
 
 
-def setup_venv(venv_dir):
+def setup_venv(venv_dir, tf_version):
     load_venv(venv_dir)
 
     print("PIP location")
@@ -254,6 +262,13 @@ def setup_venv(venv_dir):
     # TF on windows needs a higher version of numpy
     if (platform.system == "Windows"):
         command_executor(["pip", "install", "numpy>=1.21.2"])
+    else:
+        # TF >=2.4 and <= 2.6 requires numpy~=1.19.2
+        tf_maj_version = tf_version.split(".")[0]
+        tf_min_version = int(tf_version.split(".")[1])
+        if ((tf_maj_version == "v2") and (3 < tf_min_version < 7)):
+            command_executor(["pip", "install", "h5py"])
+            command_executor(["pip", "install", "numpy~=1.19.2"])
 
     # Print the current packages
     command_executor(["pip", "list"])
@@ -319,7 +334,7 @@ def build_tensorflow(tf_version,
     os.environ["TF_NEED_TENSORRT"] = "0"
     os.environ["TF_DOWNLOAD_CLANG"] = "0"
     os.environ["TF_SET_ANDROID_WORKSPACE"] = "0"
-    os.environ["CC_OPT_FLAGS"] = "-march=" + target_arch + " -Wno-sign-compare"
+    os.environ["CC_OPT_FLAGS"] = " -Wno-sign-compare"
     if (target_arch == "silvermont"):
         os.environ[
             "CC_OPT_FLAGS"] = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
@@ -665,7 +680,14 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     command_executor(cmake_cmd)
 
     import psutil
-    num_cores = str(psutil.cpu_count(logical=True))
+    num_cores = int(psutil.cpu_count(logical=True))
+    # get system's total RAM size in GB
+    sys_ram = int(psutil.virtual_memory().total / (1024**3))
+    # limiting num of cores to the max GBs of system RAM
+    if (num_cores > sys_ram):
+        num_cores = sys_ram
+    num_cores = str(num_cores)
+
     if (platform.system() == 'Windows'):
         make_cmd = [
             "cmake", "--build", ".", "--config Release", "-j" + num_cores,
@@ -832,38 +854,34 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     print("INSTALL location: " + artifacts_location)
 
     # Now build OpenVINO
-    atom_flags = ""
-    if (target_arch == "silvermont"):
-        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+    # TODO: Enable other options once 80842 ticket is resolved
     openvino_cmake_flags = [
-        "-DENABLE_V10_SERIALIZE=ON", "-DENABLE_TESTS=OFF",
-        "-DENABLE_SAMPLES=OFF", "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        "-DENABLE_VPU=ON", "-DENABLE_GNA=OFF",
-        "-DNGRAPH_ONNX_IMPORT_ENABLE=OFF", "-DNGRAPH_TEST_UTIL_ENABLE=OFF",
-        "-DNGRAPH_USE_CXX_ABI=" + cxx_abi, "-DENABLE_CPPLINT=OFF",
-        "-DENABLE_SPEECH_DEMO=FALSE", "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
+        # "-DENABLE_TESTS=OFF",
+        "-DENABLE_SAMPLES=OFF",
+        # "-DENABLE_FUNCTIONAL_TESTS=OFF",
+        # "-DENABLE_INTEL_GNA=OFF",
+        # "-DENABLE_OV_PADDLE_FRONTEND=OFF",
+        # "-DENABLE_OV_ONNX_FRONTEND=OFF",
+        # "-DENABLE_OV_IR_FRONTEND=ON",
+        # "-DENABLE_OV_TF_FRONTEND=OFF",
+        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
+        # "-DENABLE_OPENCV=OFF",  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
     ]
 
     if (platform.system() == 'Windows'):
         openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools\\ngraph\\",
             "-DCMAKE_INSTALL_PREFIX=" + install_location.replace("\\", "\\\\"),
             "-G \"Visual Studio 16 2019\"", "-A x64"
         ])
     else:
-        openvino_cmake_flags.extend([
-            "-DNGRAPH_COMPONENT_PREFIX=deployment_tools/ngraph/",
-            "-DCMAKE_INSTALL_PREFIX=" + install_location
-        ])
-
-    if platform.system() == 'Linux':
-        openvino_cmake_flags.extend([
-            "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi + " -march="
-            + target_arch + atom_flags
-        ])
-    else:
         openvino_cmake_flags.extend(
-            ["-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi])
+            ["-DCMAKE_INSTALL_PREFIX=" + install_location])
+
+    atom_flags = ""
+    if (target_arch == "silvermont"):
+        atom_flags = " -mcx16 -mssse3 -msse4.1 -msse4.2 -mpopcnt -mno-avx"
+        openvino_cmake_flags.extend(["-DCMAKE_CXX_FLAGS= -march=" + atom_flags])
 
     if debug_enabled:
         openvino_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])

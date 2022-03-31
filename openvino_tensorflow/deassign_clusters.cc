@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -41,11 +41,6 @@ namespace openvino_tensorflow {
 // For unit testing purposes, this pass can be bypassed by setting
 // OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS=1.
 //
-
-// For sorting the clusters for MYRIAD
-static bool cmp(pair<int, std::set<Node*>>& a, pair<int, std::set<Node*>>& b) {
-  return a.second.size() > b.second.size();
-}
 
 unordered_map<string, int> deassigned_histogram;
 int num_nodes_marked_before_deassign = 0;
@@ -193,7 +188,10 @@ Status DeassignClusters(Graph* graph) {
   }
 
   string device;
-  BackendManager::GetBackendName(device);
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
 
   std::vector<int> alive_clusters;
   int max_cluster_size = 0;
@@ -212,7 +210,7 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 6;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {

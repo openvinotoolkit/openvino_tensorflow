@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright (C) 2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
  
 # SPDX-License-Identifier: Apache-2.0
 # ******************************************************************************
@@ -137,7 +137,6 @@ endif()
 target_link_libraries(
     gtest_ovtf
     openvino_tensorflow
-    ngraph_lib
     libgtest
     pthread
     ${TensorFlow_FRAMEWORK_LIBRARY}
