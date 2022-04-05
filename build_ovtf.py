@@ -538,7 +538,7 @@ def main():
         # Download OpenVINO
         download_repo(
             "openvino",
-            "https://github.com/mvafin/openvino.git",
+            "https://github.com/openvinotoolkit/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
