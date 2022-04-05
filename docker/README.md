@@ -119,9 +119,9 @@ Here is an example to serve Resnet50 model using OpenVINO™ Integration with Te
 
 # Prebuilt Images
 
-### [Ubuntu18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
-### [Ubuntu20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
-### Azure Marketplace (Link would be live soon)
+### [Ubuntu 18 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu18_runtime)
+### [Ubuntu 20 runtime image on Docker* Hub](https://hub.docker.com/r/openvino/openvino_tensorflow_ubuntu20_runtime)
+### [Azure* Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/intel_corporation.openvinotensorflow)
 
 ---
 \* Other names and brands may be claimed as the property of others.
