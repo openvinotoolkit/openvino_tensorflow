@@ -179,6 +179,7 @@ def setup_venv(venv_dir):
         "keras_preprocessing>=1.1.1,<1.2",
         "--no-deps",
         "yapf==0.26.0",
+        "opencv-python==4.5.2.54",
     ]
     command_executor(package_list)
 
