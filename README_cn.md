@@ -39,7 +39,7 @@
 
         pip3 install -U pip
         pip3 install tensorflow==2.7.0
-        pip3 install -U openvino-tensorflow
+        pip3 install -U openvino-tensorflow==1.1.0
 
 关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
