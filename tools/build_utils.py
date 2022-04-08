@@ -581,9 +581,8 @@ def download_github_release_asset(version, asset_name):
 def apply_patch(patch_file, level=1):
     # IF patching TensorFlow unittests is done through an automation system,
     # please ensure the latest `libdvdnav-dev` or `libdvdnav-devel` is installed.
-    patch_command = ['patch','-P', str(level), '-N', '-i', patch_file]
-    cmd = subprocess.Popen(
-        patch_command, stdout=subprocess.PIPE)
+    patch_command = ['patch', '-P', str(level), '-N', '-i', patch_file]
+    cmd = subprocess.Popen(patch_command, stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in

@@ -179,8 +179,7 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
 
     print("Patching TensorFlow using: %s" % patch_file)
     patch_command = ['patch', '-N', '-i', patch_file]
-    cmd = subprocess.Popen(
-        patch_command, stdout=subprocess.PIPE)
+    cmd = subprocess.Popen(patch_command, stdout=subprocess.PIPE)
     printed_lines = cmd.communicate()
     # Check if the patch is being applied for the first time, in which case
     # cmd.returncode will be 0 or if the patch has already been applied, in
