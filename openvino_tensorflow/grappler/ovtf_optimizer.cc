@@ -203,18 +203,30 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   return Status::OK();
 }
 
-void OVTFOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
-                             const tensorflow::grappler::GrapplerItem& item,
-                             const GraphDef& optimize_output, double result) {
-  // no-op
-}
-
 int OVTFOptimizer::FreshIndex() {
   mutex_lock l(s_serial_counter_mutex);
   return s_serial_counter++;
 }
+  
+class VerboseCustomGraphOptimizerRegistrar
+    : public grappler::CustomGraphOptimizerRegistrar {
+ public:
+  VerboseCustomGraphOptimizerRegistrar(
+      const grappler::CustomGraphOptimizerRegistry::Creator& cr,
+      const string& name)
+      : grappler::CustomGraphOptimizerRegistrar(cr, name) {
+    VLOG(1) << "Constructing a CustomOptimizationPass registration object for "
+            << name;
+  }
+};
 
-REGISTER_GRAPH_OPTIMIZER_AS(OVTFOptimizer, "ovtf-optimizer");
+static VerboseCustomGraphOptimizerRegistrar OVTFOptimizationPass_Registrar(
+    []() {
+      VLOG(1)
+          << "Instantiating CustomOptimizationPass object ovtf-optimizer";
+      return new OVTFOptimizer;
+    },
+    ("ovtf-optimizer"));
 
 }  // end namespace openvino_tensorflow
 }  // end namespace tensorflow
