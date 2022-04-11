@@ -53,7 +53,7 @@ Linux环境下的**OpenVINO™ integration with TensorFlow** 以两种不同的�
 
         pip3 install -U pip
         pip3 install tensorflow==2.7.0
-        pip3 install -U openvino-tensorflow
+        pip3 install openvino-tensorflow==1.1.0
 <br/> 
 
 ##  1.2. <a name='InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow'></a>**OpenVINO™ integration with TensorFlow** PyPi 与 TensorFlow Github版本一起安装 (Windows可用)

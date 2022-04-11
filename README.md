@@ -39,7 +39,7 @@ The **OpenVINO™ integration with TensorFlow** package comes with pre-built lib
 
         pip3 install -U pip
         pip3 install tensorflow==2.7.0
-        pip3 install -U openvino-tensorflow
+        pip3 install openvino-tensorflow==1.1.0
 
 For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
 
