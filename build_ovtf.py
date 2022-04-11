@@ -8,7 +8,7 @@
 from tools.build_utils import *
 
 # grappler related defaults
-builder_version = 0.50
+builder_version = 2.0
 flag_string_map = {True: 'YES', False: 'NO'}
 
 
