@@ -49,9 +49,14 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
-  opts.expect_device_spec = true;
-  Graph graph(OpRegistry::Global());
-  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
+  opts.expect_device_spec = false;
+
+  grappler::GrapplerItem grappler_item(item);
+  GraphDef& graph_def = grappler_item.graph;  
+  FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
+  Graph graph(flib);
+  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
+  OVTF_VLOG(5) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -134,7 +139,6 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
-  std::set<string>& skip_these_nodes = nodes_to_preserve;
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -161,8 +165,9 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   const char* device_id(device.c_str());
   std::string ov_version;
 #if defined(OPENVINO_2022_1)
-  ov_version = "2022.1";
+  ov_version = "2022.1.0";
 #endif
+
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());

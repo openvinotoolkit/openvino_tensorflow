@@ -25,6 +25,15 @@ from tensorflow.python.framework import ops
 from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.framework import load_library
 
+from tensorflow.core.protobuf import config_pb2
+from tensorflow.core.protobuf import meta_graph_pb2
+from tensorflow.python.grappler import tf_optimizer
+from tensorflow.python.saved_model import load
+from tensorflow.python.saved_model import save
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.framework import convert_to_constants
+from tensorflow.python.training import saver
+
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -248,6 +257,31 @@ if ovtf_classic_loaded:
         openvino_tensorflow_lib.freeClusterInfo()
 
         return cluster_string
+    
+    def optimize_graph_with_openvino_v2(saved_model_dir=None):
+        rewriter_config = rewriter_config_pb2.RewriterConfig()
+        rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
+        ovtf_optimizer = rewriter_config.custom_optimizers.add()
+        ovtf_optimizer.name = "ovtf-optimizer"
+
+        saved_model = load.load(saved_model_dir)
+        func = saved_model.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        frozen_func = convert_to_constants.convert_variables_to_constants_v2(func)
+        meta_graph_def = saver.export_meta_graph(
+        graph_def=frozen_func.graph.as_graph_def(), graph=frozen_func.graph)
+
+        # Add a collection 'train_op' so that Grappler knows the outputs.
+        fetch_collection = meta_graph_pb2.CollectionDef()
+        for array in frozen_func.inputs + frozen_func.outputs:
+            fetch_collection.node_list.value.append(array.name)
+        meta_graph_def.collection_def["train_op"].CopyFrom(
+            fetch_collection)
+
+        grappler_session_config = config_pb2.ConfigProto()
+        grappler_session_config.graph_options.rewrite_options.MergeFrom(rewriter_config)
+
+        return tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
+
 
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \

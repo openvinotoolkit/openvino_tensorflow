@@ -144,6 +144,8 @@ if __name__ == "__main__":
     else:
         model = tf.saved_model.load(model_file)
 
+    ovtf.optimize_graph_with_openvino_v2(model_file)
+
     if not args.disable_ovtf:
         #Print list of available backends
         print('Available Backends:')
