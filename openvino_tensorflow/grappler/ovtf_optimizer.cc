@@ -15,6 +15,8 @@
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.h"
 #include "tensorflow/core/grappler/utils.h"
 #include "tensorflow/core/platform/protobuf.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
+#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
 
 #include "openvino_tensorflow/api.h"
 #include "openvino_tensorflow/backend_manager.h"
@@ -57,6 +59,20 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   Graph graph(flib);
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
   OVTF_VLOG(5) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+
+  std::unordered_map<std::string, tensorflow::DeviceProperties> dmap;
+  tensorflow::grappler::VirtualCluster vc(dmap);
+  std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
+  std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
+  std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
+      &vc, std::move(node_estimator), std::move(node_manager),
+      /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
+  tensorflow::Status init_status = estimator->Initialize(item);
+  if (!init_status.ok()) return init_status;
+
+  tensorflow::RunMetadata run_metadata;
+  grappler::Costs costs;
+  estimator->PredictCosts(item.graph, &run_metadata, &costs);
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
