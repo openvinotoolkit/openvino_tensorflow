@@ -67,12 +67,12 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
       &vc, std::move(node_estimator), std::move(node_manager),
       /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
-  tensorflow::Status init_status = estimator->Initialize(item);
+  tensorflow::Status init_status = estimator->Initialize(grappler_item);
   if (!init_status.ok()) return init_status;
 
   tensorflow::RunMetadata run_metadata;
   grappler::Costs costs;
-  estimator->PredictCosts(item.graph, &run_metadata, &costs);
+  estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
