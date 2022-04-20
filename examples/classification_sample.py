@@ -144,8 +144,6 @@ if __name__ == "__main__":
     else:
         model = tf.saved_model.load(model_file)
 
-    ovtf.optimize_graph_with_openvino_v2(model_file)
-
     if not args.disable_ovtf:
         #Print list of available backends
         print('Available Backends:')
@@ -204,6 +202,8 @@ if __name__ == "__main__":
         t = tf.convert_to_tensor(
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
+
+        model = ovtf.optimize_graph_with_openvino_v2(model_file, t)
 
         # Warmup
         if image_id == 0:
