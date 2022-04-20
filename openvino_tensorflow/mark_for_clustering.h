@@ -15,11 +15,6 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-Status IsSupportedByBackend(
-    const Node* node, std::shared_ptr<Backend> op_backend,
-    const std::map<std::string, std::set<std::shared_ptr<ov::Node>>>&
-        TFtoNgraphOpMap,
-    bool& is_supported);
 bool NodeIsMarkedForClustering(const Node* node);
 
 // Returns the static input indexes in vector static_input_indexes

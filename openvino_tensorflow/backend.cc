@@ -7,7 +7,6 @@
 #include "backend.h"
 
 #include "contexts.h"
-#include "openvino/opsets/opset.hpp"
 
 using namespace std;
 
@@ -79,14 +78,6 @@ GlobalContext& Backend::GetGlobalContext() {
 void Backend::ReleaseGlobalContext() { g_global_context.reset(); }
 
 std::string Backend::GetDeviceType() { return m_device_type; }
-
-bool Backend::IsSupported(const ov::Node& node) const {
-  // TODO: check if the given backend/device supports the op. Right now we're
-  // assuming
-  // that the selected backend supports all opset7 ops
-  const auto& opset = ov::get_opset7();
-  return opset.contains_op_type(&node);
-}
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

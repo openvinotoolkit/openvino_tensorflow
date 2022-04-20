@@ -38,7 +38,6 @@ class Backend {
   static GlobalContext& GetGlobalContext();
   static void ReleaseGlobalContext();
   std::string GetDeviceType();
-  bool IsSupported(const ov::Node& node) const;
 
  private:
   string m_device;
