@@ -60,19 +60,20 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
   OVTF_VLOG(5) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
-  std::unordered_map<std::string, tensorflow::DeviceProperties> dmap;
-  tensorflow::grappler::VirtualCluster vc(dmap);
   std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
   std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
   std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
-      &vc, std::move(node_estimator), std::move(node_manager),
+      cluster, std::move(node_estimator), std::move(node_manager),
       /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
+  OVTF_VLOG(0) << "openvino-tensorflow is using analytical cost estimator.";
   tensorflow::Status init_status = estimator->Initialize(grappler_item);
+  OVTF_VLOG(0) << "openvino-tensorflow is initializing estimator.";
   if (!init_status.ok()) return init_status;
 
   tensorflow::RunMetadata run_metadata;
   grappler::Costs costs;
   estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
+  OVTF_VLOG(0) << "openvino-tensorflow is predicting costs.";
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
