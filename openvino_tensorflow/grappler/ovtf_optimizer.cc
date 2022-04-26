@@ -58,22 +58,22 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
   Graph graph(flib);
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
-  OVTF_VLOG(5) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
   std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
   std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
   std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
       cluster, std::move(node_estimator), std::move(node_manager),
       /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
-  OVTF_VLOG(0) << "openvino-tensorflow is using analytical cost estimator.";
+  OVTF_VLOG(1) << "openvino-tensorflow is using analytical cost estimator.";
   tensorflow::Status init_status = estimator->Initialize(grappler_item);
-  OVTF_VLOG(0) << "openvino-tensorflow is initializing estimator.";
+  OVTF_VLOG(1) << "openvino-tensorflow is initializing estimator.";
   if (!init_status.ok()) return init_status;
 
   tensorflow::RunMetadata run_metadata;
   grappler::Costs costs;
   estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
-  OVTF_VLOG(0) << "openvino-tensorflow is predicting costs.";
+  OVTF_VLOG(1) << "openvino-tensorflow is predicting costs.";
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -116,6 +116,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Feed Nodes
   for (size_t i = 0; i < item.feed.size(); i++) {
     nodes_to_preserve.insert(item.feed[i].first);
+    OVTF_VLOG(1) << "Feed node: " << item.feed[i].first;
   }
 
   // Keep Ops
@@ -156,6 +157,11 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
+  OVTF_VLOG(1) << "These nodes are preserved from being marked for clustering";
+  for (auto itr = nodes_to_preserve.begin(); 
+       itr != nodes_to_preserve.end(); itr++) {
+         OVTF_VLOG(1) << *itr;
+       }
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -188,7 +194,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());
-  std::vector<void*> nodes_list = FC.MarkSupportedNodes();
+  std::vector<void*> nodes_list = FC.MarkSupportedNodes(nodes_to_preserve);
 
   // cast back the nodes in the TF format and mark the nodes for clustering
   // (moved out from MarkForClustering function)

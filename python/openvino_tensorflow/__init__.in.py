@@ -276,22 +276,23 @@ if ovtf_classic_loaded:
         saved_model = load.load(saved_model_dir, saved_model_tag)
 
         # form a concrete function with input tensor in it so grappler can do shape inference
-        # [TODO] Handle dict type inputs
+        # [TODO] Handle dict type multi inputs
         func = tf.function(saved_model.signatures[saved_model_signature_key])
         func = func.get_concrete_function(input_tensors)
-
         print ("Obtained ConcreteFunction")
 
         # Converting var2consts for larger models like SSD MobileNetV2 takes a long time
         frozen_func = convert_to_constants.convert_variables_to_constants_v2(func)
-        frozen_func = func
         print ("Converted Variables to Constants")
+
         meta_graph_def = saver.export_meta_graph(graph_def=frozen_func.graph.as_graph_def(), graph=frozen_func.graph)
         print ("MetaGraph exported")
 
         fetch_collection = meta_graph_pb2.CollectionDef()
-        for array in frozen_func.inputs + frozen_func.outputs:
+        for array in frozen_func.outputs:
             fetch_collection.node_list.value.append(array.name)
+        
+        # Grappler determines fetch ops from collection 'train_op'.
         meta_graph_def.collection_def[ops.GraphKeys.TRAIN_OP].CopyFrom(
             fetch_collection)
 
@@ -302,6 +303,7 @@ if ovtf_classic_loaded:
         print ("Starting OVTF Graph Optimization")
         optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
         print ("OVTF Graph Optimization is over. Time taken: ", time.time() - t_start)
+        
         # Swap original function with optimized function in TF's context
         for f in optimized_graph_def.library.function:
             while context.context().has_function(f.signature.name):
