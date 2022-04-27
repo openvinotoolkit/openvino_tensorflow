@@ -263,8 +263,9 @@ Status DeassignClusters(Graph* graph) {
               (it->type_string() != "NonMaxSuppressionV2" &&
                it->type_string() != "Reshape")) {
             if (it->type_string() == "ZerosLike" ||
-                it->type_string() == "Size" || it->type_string() == "Conv2D"){// ||
-                // it->type_string() == "Unpack") {
+                it->type_string() == "Size" ||
+                it->type_string() == "Conv2D") {  // ||
+              // it->type_string() == "Unpack") {
               invalid_dyn_op = true;
               break;
             } else if (visited_node_check.find(it) ==
