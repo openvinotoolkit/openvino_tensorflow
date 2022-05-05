@@ -75,7 +75,7 @@ class TestCTCGreedyDecoder(NgraphTest):
                 ng_decoded_log_probs, tf_decoded_log_probs, atol=1e-5):
             raise AssertionError
 
-    def test_one_invalid(self):
+    def test_all_but_one_invalid(self):
         inputs = np.array([
             [
                 [0.1, 0.3, 0.6],  # t=0
