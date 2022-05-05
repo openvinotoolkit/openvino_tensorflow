@@ -180,9 +180,11 @@ TEST(TransposeSinking, PoolAdd2) {
       ov::element::u64, ov::Shape{4}, ov::Shape{0, 2, 3, 1});
   auto transpose2 =
       make_shared<opset::Transpose>(avgpool, ng_order2);  // NHWC (1,3,3,1)
+  // dilation parameter added after opset8 upgrade
+  ov::Shape ng_dilations(2, 1);
   auto maxpool = make_shared<opset::MaxPool>(
-      transpose1, ngraph::Strides{1, 1}, ov::Shape{0, 0}, ov::Shape{0, 0},
-      ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
+      transpose1, ngraph::Strides{1, 1}, ng_dilations, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
       ngraph::op::PadType::VALID);
 
   auto ng_order3 = std::make_shared<opset::Constant>(
@@ -332,10 +334,11 @@ TEST(TransposeSinking, Pad) {
   auto a_to_nchw = std::make_shared<opset::Constant>(
       ov::element::u64, ov::Shape{4}, ov::Shape{0, 3, 1, 2});
   auto a_transpose = make_shared<opset::Transpose>(a, a_to_nchw);
-
+  // dilation parameter added after opset8 upgrade
+  ov::Shape ng_dilations(2, 1);
   auto maxpool = make_shared<opset::MaxPool>(
-      a_transpose, ngraph::Strides{2, 2}, ov::Shape{0, 0}, ov::Shape{0, 0},
-      ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
+      a_transpose, ngraph::Strides{2, 2}, ng_dilations, ov::Shape{0, 0},
+      ov::Shape{0, 0}, ov::Shape{1, 1}, ngraph::op::RoundingType::FLOOR,
       ngraph::op::PadType::VALID);
 
   auto m_to_nhwc = std::make_shared<opset::Constant>(

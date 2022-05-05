@@ -2490,8 +2490,8 @@ static Status TranslateMaxPoolOp(const Node* op,
   ov::Shape ng_padding_above(padding_above.begin(), padding_above.end());
 
   auto ng_maxpool = ConstructNgNode<opset::MaxPool>(
-      op->name(), ng_input, ng_strides, ng_padding_below, ng_padding_above,
-      ng_kernel_shape, ov::op::RoundingType::FLOOR);
+      op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
+      ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR);
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_maxpool);
 
@@ -2686,7 +2686,7 @@ static Status TranslateOneHotOp(
         "OneHot Op: depth of one hot dimension must be scalar ", depth.size());
   }
 
-  auto const_depth = ConstructNgNode<ov::opset8::Constant>(
+  auto const_depth = ConstructNgNode<opset::Constant>(
       op->name(), ov::element::i64, ov::Shape{}, depth);
 
   int one_hot_axis;

@@ -74,32 +74,6 @@ static SetAttributesFunction SetStaticInputs(
   return cf;
 };
 
-// Check if op is supported by backend using is_supported API
-Status IsSupportedByBackend(
-    const Node* node, const shared_ptr<Backend> op_backend,
-    const std::map<std::string, std::set<shared_ptr<ov::Node>>>&
-        TFtoNgraphOpMap,
-    bool& is_supported) {
-  is_supported = true;
-
-  auto ng_op = TFtoNgraphOpMap.find(node->type_string());
-  if (ng_op == TFtoNgraphOpMap.end()) {
-    return errors::Internal("TF Op is not found in the map: ",
-                            node->type_string());
-  }
-
-  // Loop through the ngraph op list to query
-  for (auto it = ng_op->second.begin(); it != ng_op->second.end(); it++) {
-    // Pass ngraph node to check if backend supports this op
-    auto ret = op_backend->IsSupported(**it);
-    if (!ret) {
-      is_supported = false;
-      return Status::OK();
-    }
-  }
-  return Status::OK();
-}
-
 const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   //
   // A map of op types (e.g. "Add") to set_attribute functions. These can be
