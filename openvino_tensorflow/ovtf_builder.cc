@@ -3107,7 +3107,20 @@ static Status TranslateOneHotOp(
     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_features, ng_depth, ng_on, ng_off;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_features, ng_depth, ng_on, ng_off));
+      GetInputNodes(ng_op_map, op, ng_features, ng_unused, ng_on, ng_off));
+
+  auto ng_features_shape = ng_features.get_shape();
+  std::vector<int> depth;
+  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
+
+  // Depth must be scalar
+  if (depth.size() != 1) {
+    return errors::InvalidArgument(
+        "OneHot Op: depth of one hot dimension must be scalar ", depth.size());
+  }
+
+  auto const_depth = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, depth);
 
   int one_hot_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &one_hot_axis));
