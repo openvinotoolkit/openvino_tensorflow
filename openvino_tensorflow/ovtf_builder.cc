@@ -769,6 +769,21 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateBatchMatMulV2Op(const Node* op,
+                                       const std::vector<const Tensor*>&,
+                                       Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_x, ng_y;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_x, ng_y));
+
+  bool adj_x, adj_y;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "adj_x", &adj_x));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "adj_y", &adj_y));
+
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::MatMul>(
+                                      op->name(), ng_x, ng_y, adj_x, adj_y));
+  return Status::OK();
+}
+
 static Status TranslateBatchNDAndSpaceNDOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -1463,6 +1478,144 @@ static Status TranslateCropAndResizeOp(
 
     SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
   }
+  return Status::OK();
+}
+
+static Status TranslateCTCGreedyDecoderOp(const Node* op,
+                                          const std::vector<const Tensor*>&,
+                                          Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_inputs, ng_sequence_length;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_inputs, ng_sequence_length));
+
+  // Undo the transpose done before calling CTCGreedyDecoder such that,
+  // ng_inputs represents a tensor of shape [N, T, C] where N, T and C
+  // represent batch_size, time_steps and num_classes respectively.
+  ov::Shape transpose_order{1, 0, 2};
+  auto input_order = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::u64, ov::Shape{transpose_order.size()},
+      transpose_order);
+  ng_inputs = std::make_shared<opset::Transpose>(ng_inputs, input_order);
+
+  // Create a mask that stores valid time step indices, we need this to
+  // handle samples of varying sequence lengths.
+  ov::Shape ng_inputs_shape = ng_inputs.get_shape();
+  auto batch_size = static_cast<long>(ng_inputs_shape.at(0));
+  auto max_time_steps = static_cast<long>(ng_inputs_shape.at(1));
+
+  auto ng_indicator = ConstructNgNode<opset::Range>(
+      op->name(), ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                   ov::Shape{}, 0),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, max_time_steps),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, 1),
+      ov::element::i64);
+  ng_indicator = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_indicator,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({0})));
+  ng_indicator = ConstructNgNode<opset::Tile>(
+      op->name(), ng_indicator, ConstructNgNode<opset::Constant>(
+                                    op->name(), ov::element::i64, ov::Shape{2},
+                                    std::vector<int64>({batch_size, 1})));
+
+  auto ng_sequence_endpoints = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_sequence_length,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({1})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Tile>(
+      op->name(), ng_sequence_endpoints,
+      ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i64, ov::Shape{2},
+          std::vector<int64>({1, max_time_steps})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Convert>(
+      op->name(), ng_sequence_endpoints, ov::element::i64);
+
+  auto ng_valid_time_steps_mask = ConstructNgNode<opset::Less>(
+      op->name(), ng_indicator, ng_sequence_endpoints);
+  ng_valid_time_steps_mask = ConstructNgNode<opset::Convert>(
+      op->name(), ng_valid_time_steps_mask, ng_inputs.get_element_type());
+
+  // Compute negative log sum probabilities for each sample in the batch by
+  // selecting class index greedily across all valid time steps.
+  auto ng_max_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 2);
+  auto ng_sum_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 1);
+  auto ng_log_probs =
+      ConstructNgNode<opset::ReduceMax>(op->name(), ng_inputs, ng_max_axis, 0);
+
+  ng_log_probs = ConstructNgNode<opset::Multiply>(op->name(), ng_log_probs,
+                                                  ng_valid_time_steps_mask);
+  ng_log_probs = ConstructNgNode<opset::ReduceSum>(op->name(), ng_log_probs,
+                                                   ng_sum_axis, 1);
+  ng_log_probs = ConstructNgNode<opset::Multiply>(
+      op->name(), ng_log_probs,
+      ConstructNgNode<opset::Constant>(op->name(), ng_inputs.get_element_type(),
+                                       ov::Shape{}, -1));
+
+  bool merge_repeated;
+  int blank_index;
+
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "merge_repeated", &merge_repeated));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "blank_index", &blank_index));
+
+  if (blank_index < 0) {
+    int num_classes = static_cast<int>(ng_inputs_shape.at(2));
+    blank_index = num_classes + blank_index;
+  }
+  auto ng_blank_index = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, blank_index);
+
+  auto ng_ctc_outputs = make_shared<opset::CTCGreedyDecoderSeqLen>(
+      ng_inputs, ng_sequence_length, ng_blank_index, merge_repeated,
+      ov::element::i64);
+  auto ng_ctc_decoded_classes = ng_ctc_outputs->output(0);
+
+  auto ng_ignore_value = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, -1);
+  auto ng_decoded_mask = ConstructNgNode<opset::NotEqual>(
+      op->name(), ng_ctc_decoded_classes, ng_ignore_value);
+
+  // CTCGreedyDecoderSeqLen returns dense tensor holding the decoded results.
+  // Compute indices and values that represent the decoded results in sparse
+  // format. Since NonZero is not supported on iGPU currently, we enable
+  // CTCGreedyDecoder only for CPU.
+  auto ng_indices =
+      ConstructNgNode<opset::NonZero>(op->name(), ng_decoded_mask);
+
+  ov::Shape indices_transpose_order{1, 0};
+  auto ng_indices_transpose_order = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::u64, ov::Shape{2}, indices_transpose_order);
+  ng_indices = ConstructNgNode<opset::Transpose>(op->name(), ng_indices,
+                                                 ng_indices_transpose_order);
+  auto ng_values = ConstructNgNode<opset::GatherND>(
+      op->name(), ng_ctc_decoded_classes, ng_indices);
+
+  // Compute the shape of the smallest dense tensor that can contain the sparse
+  // matrix represented by ng_indices and ng_values.
+  auto ng_batch_size = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{1},
+      std::vector<long>({batch_size}));
+  auto ng_ctc_decoded_sequence_lens = ConstructNgNode<opset::Convert>(
+      op->name(), ng_ctc_outputs->output(1), ov::element::i64);
+  auto ng_decoded_max_time_steps = ConstructNgNode<opset::ReduceMax>(
+      op->name(), ng_ctc_decoded_sequence_lens,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, 0),
+      1);
+
+  auto ng_decoded_shape = ConstructNgNode<opset::Concat>(
+      op->name(), ov::OutputVector({ng_batch_size, ng_decoded_max_time_steps}),
+      0);
+
+  SaveNgOp(ng_op_map, op->name(), ng_indices);
+  SaveNgOp(ng_op_map, op->name(), ng_values);
+  SaveNgOp(ng_op_map, op->name(), ng_decoded_shape);
+  SaveNgOp(ng_op_map, op->name(), ng_log_probs);
+
   return Status::OK();
 }
 
@@ -3617,6 +3770,7 @@ const static std::map<
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp<2>},
         {"AvgPool3D", TranslateAvgPoolOp<3>},
+        {"BatchMatMulV2", TranslateBatchMatMulV2Op},
         {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
@@ -3630,6 +3784,7 @@ const static std::map<
         {"Cos", TranslateUnaryOp<opset::Cos>},
         {"Cosh", TranslateUnaryOp<opset::Cosh>},
         {"CropAndResize", TranslateCropAndResizeOp},
+        {"CTCGreedyDecoder", TranslateCTCGreedyDecoderOp},
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
