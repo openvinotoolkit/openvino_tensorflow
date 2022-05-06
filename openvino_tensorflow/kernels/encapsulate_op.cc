@@ -563,7 +563,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
         ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
-
     std::vector<ov::Shape> ng_output_shapes;
     ng_output_shapes.resize(ng_result_list.size());
     for (int i = 0; i < ng_result_list.size(); i++) {
@@ -573,7 +572,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         ng_output_shapes[i] = ng_result_list[i]->get_shape();
       }
     }
-
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;
     const char* cache_depth_specified =

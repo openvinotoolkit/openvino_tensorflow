@@ -2502,6 +2502,84 @@ static Status TranslateMaxPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateNonMaxSuppressionOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_boxes, ng_scores, ng_max_output_size, ng_iou_threshold;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_boxes));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_scores));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, ng_max_output_size));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, ng_iou_threshold));
+  auto ng_axis_boxes = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{1}, std::vector<int64>({0}));
+  auto ng_boxes_unsqueezed =
+      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_boxes, ng_axis_boxes);
+
+  auto ng_axis_scores = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64>({0, 1}));
+  auto ng_scores_unsqueezed =
+      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_scores, ng_axis_scores);
+  
+  const auto& op_type = op->type_string();
+  if (op_type == "NonMaxSuppressionV5") {
+    ov::Output<ov::Node> ng_score_threshold, ng_soft_nms_sigma;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 5, ng_soft_nms_sigma));
+    // todo: pad_to_max_output_size
+    auto ng_nms = make_shared<opset::NonMaxSuppression>(ng_boxes_unsqueezed,
+                                              ng_scores_unsqueezed,
+                                              ng_max_output_size,
+                                              ng_iou_threshold,
+                                              ng_score_threshold,
+                                              ng_soft_nms_sigma,
+                                              opset::NonMaxSuppression::BoxEncodingType::CORNER,
+                                              false,
+                                              ov::element::Type_t::i32);    
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[0]);
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[1]);                                                                                            
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[2]);      
+  } else if (op_type == "NonMaxSuppressionV4") {
+    ov::Output<ov::Node> ng_score_threshold;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    // todo: pad_to_max_output_size
+    auto ng_nms = make_shared<opset::NonMaxSuppression>(ng_boxes_unsqueezed,
+                                              ng_scores_unsqueezed,
+                                              ng_max_output_size,
+                                              ng_iou_threshold,
+                                              ng_score_threshold,
+                                              opset::NonMaxSuppression::BoxEncodingType::CORNER,
+                                              false,
+                                              ov::element::Type_t::i32);    
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[0]);
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[1]);                                                                                            
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[2]);      
+  } else if (op_type == "NonMaxSuppressionV3") {
+    ov::Output<ov::Node> ng_score_threshold;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    auto ng_nms = make_shared<opset::NonMaxSuppression>(ng_boxes_unsqueezed,
+                                              ng_scores_unsqueezed,
+                                              ng_max_output_size,
+                                              ng_iou_threshold,
+                                              ng_score_threshold,
+                                              opset::NonMaxSuppression::BoxEncodingType::CORNER,
+                                              false,
+                                              ov::element::Type_t::i32);    
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[0]);                                                
+  } else if (op_type == "NonMaxSuppressionV2" || op_type == "NonMaxSuppression") {
+    auto ng_nms = make_shared<opset::NonMaxSuppression>(ng_boxes_unsqueezed,
+                                              ng_scores_unsqueezed,
+                                              ng_max_output_size,
+                                              ng_iou_threshold,
+                                              opset::NonMaxSuppression::BoxEncodingType::CORNER,
+                                              false,
+                                              ov::element::Type_t::i32);    
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[0]);                                   
+  } else{
+    throw runtime_error(op_type + " is not supported");
+  }
+
+}
+
 static Status TranslateNonMaxSuppressionV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -2881,7 +2959,6 @@ static Status TranslateReshapeOp(
   ov::Output<ov::Node> ng_input, ng_shape_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_shape_op));
 
-  OVTF_VLOG(3) << "Input shape: " << ngraph::join(ng_input.get_shape());
 
   std::vector<int64> shape;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &shape));
@@ -3660,8 +3737,11 @@ const static std::map<
         {"Maximum", TranslateBinaryOp<opset::Maximum>},
         {"MaxPool", TranslateMaxPoolOp<2>},
         {"MaxPool3D", TranslateMaxPoolOp<3>},
-        {"NonMaxSuppressionV2", TranslateNonMaxSuppressionV2Op},
-        {"NonMaxSuppressionV3", TranslateNonMaxSuppressionV3Op},
+        {"NonMaxSuppression", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV2", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV3", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV4", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV5", TranslateNonMaxSuppressionOp},
         {"Mean", TranslateDirectReduceOp<opset::ReduceMean>},
         {"Min", TranslateDirectReduceOp<opset::ReduceMin>},
         {"Minimum", TranslateBinaryOp<opset::Minimum>},
