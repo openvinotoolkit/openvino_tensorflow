@@ -21,12 +21,8 @@ void Transpose(ov::Output<ov::Node>& node) {
                 "Number of dimensions cannot exceed 4");
   static_assert(a != b && a != c && a != d && b != c && b != d && c != d,
                 "Dimensions indices cannot be equal");
-  auto& s = node.get_shape();
-  ov::Shape reshaped_shape{s[a], s[b], s[c], s[d]};
   ov::Shape transpose_order{a, b, c, d};
-  OVTF_VLOG(3) << "transposing " << ngraph::join(s) << " to "
-               << ngraph::join(reshaped_shape) << " axis-order "
-               << ngraph::join(transpose_order);
+  OVTF_VLOG(3) << "transpose order " << ngraph::join(transpose_order);
   auto input_order = std::make_shared<opset::Constant>(
       ov::element::u64, ov::Shape{transpose_order.size()}, transpose_order);
   node = std::make_shared<opset::Transpose>(node, input_order);
@@ -44,12 +40,8 @@ void Transpose3D(ov::Output<ov::Node>& node) {
   static_assert(a != b && a != c && a != d && a != e && b != c && b != d &&
                     b != e && c != d && c != e && d != e,
                 "Dimensions indices cannot be equal");
-  auto& s = node.get_shape();
-  ov::Shape reshaped_shape{s[a], s[b], s[c], s[d], s[e]};
   ov::Shape transpose_order{a, b, c, d, e};
-  OVTF_VLOG(3) << "transposing " << ngraph::join(s) << " to "
-               << ngraph::join(reshaped_shape) << "axis-order "
-               << ngraph::join(transpose_order);
+  OVTF_VLOG(3) << "transpose order " << ngraph::join(transpose_order);
   auto input_order = std::make_shared<opset::Constant>(
       ov::element::u64, ov::Shape{transpose_order.size()}, transpose_order);
   node = std::make_shared<opset::Transpose>(node, input_order);
