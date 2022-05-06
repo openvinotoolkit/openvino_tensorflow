@@ -25,7 +25,7 @@ void NHWCtoNCHW(const string& op_name, bool is_nhwc,
 void NCHWtoNHWC(const string& op_name, bool is_nhwc,
                 ov::Output<ov::Node>& node) {
   if (is_nhwc) {
-    auto rank = node.get_shape().size();
+    auto rank = node.get_partial_shape().rank().get_length();
     if (rank == 4) {
       Transpose<0, 2, 3, 1>(node);
     } else if (rank == 5) {

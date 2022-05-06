@@ -935,7 +935,7 @@ static Status TranslateConcatV2Op(
     ov::Output<ov::Node> ng_first_arg;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_first_arg));
 
-    concat_axis += int64(ng_first_arg.get_shape().size());
+    concat_axis += int64(ng_first_arg.get_partial_shape().rank().get_length());
   }
 
   ov::OutputVector ng_args;
@@ -2333,7 +2333,7 @@ static Status TranslateL2LossOp(const Node* op,
   auto ng_pow =
       ConstructNgNode<opset::Multiply>(op->name(), ng_input, ng_input);
 
-  size_t input_rank = ng_input.get_shape().size();
+  size_t input_rank = ng_input.get_partial_shape().rank().get_length();
   std::vector<int64> axes;
   for (size_t i = 0; i < input_rank; ++i) {
     axes.push_back(i);
@@ -3337,7 +3337,8 @@ static Status TranslateSqueezeOp(const Node* op,
                                  Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  size_t input_dims = ng_input.get_shape().size();
+  size_t input_dims = ng_input.get_partial_shape().rank().get_length();
+  ;
 
   std::vector<int32> tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "squeeze_dims", &tf_axis));
@@ -3445,7 +3446,8 @@ static Status TranslateTopKV2Op(
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
 
   // axis along which to compute top k indices
-  int64 k_axis = ng_input.get_shape().size() - 1;
+  int64 k_axis = ng_input.get_partial_shape().rank().get_length();
+  -1;
 
   // scalar input tensor specifying how many max/min elts should be computed
   // CPU backend only supports element type i64
@@ -3999,7 +4001,8 @@ Status Builder::TranslateGraph(
   };
 
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+    if (!(ng_parameter_list[i]->get_partial_shape().rank().get_length() > 0 &&
+          param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }
