@@ -1846,7 +1846,6 @@ static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_value, ng_dims;
-  // TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_dims));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_value));
   SaveNgOp(ng_op_map, op->name(),
@@ -2680,7 +2679,8 @@ static Status TranslateNonMaxSuppressionOp(
     ov::Output<ov::Node> ng_score_threshold, ng_soft_nms_sigma;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 5, ng_soft_nms_sigma));
-    // TODO: pad_to_max_output_size
+    // TODO: pad_to_max_output_size and then remove the corresponding constraint
+    // check from OCM
     ng_nms = make_shared<opset::NonMaxSuppression>(
         ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
         ng_iou_threshold, ng_score_threshold, ng_soft_nms_sigma,
@@ -2689,7 +2689,8 @@ static Status TranslateNonMaxSuppressionOp(
   } else if (op_type == "NonMaxSuppressionV4") {
     ov::Output<ov::Node> ng_score_threshold;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
-    // TODO: pad_to_max_output_size
+    // TODO: pad_to_max_output_size and then remove the corresponding constraint
+    // check from OCM
     ng_nms = make_shared<opset::NonMaxSuppression>(
         ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
         ng_iou_threshold, ng_score_threshold,
@@ -3369,6 +3370,29 @@ static Status TranslateSpaceToDepthOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateSparseToDenseOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_indices, ng_dense_shape, ng_values, ng_zeros;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_indices, ng_dense_shape,
+                                   ng_values, ng_zeros));
+  // TODO: Check if validate indices needs any handling on OVTF side
+  // bool validate_indices=true;
+  // TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "validate_indices",
+  // &validate_indices));
+
+  // Broadcast Dense Matrix using input args of sparse tensor input
+  auto ng_dense_tensor =
+      ConstructNgNode<opset::Broadcast>(op->name(), ng_zeros, ng_dense_shape);
+
+  // Scatter the values at the given indices
+  auto ng_scatternd_op = ConstructNgNode<opset::ScatterNDUpdate>(
+      op->name(), ng_dense_tensor, ng_indices, ng_values);
+
+  SaveNgOp(ng_op_map, op->name(), ng_scatternd_op);
+  return Status::OK();
+}
+
 static Status TranslateSplitOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3881,6 +3905,7 @@ const static std::map<
         {"Softplus", TranslateSoftPlusOp},
         {"SpaceToBatchND", TranslateBatchNDAndSpaceNDOp},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
+        {"SparseToDense", TranslateSparseToDenseOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
         {"Sqrt", TranslateUnaryOp<opset::Sqrt>},
