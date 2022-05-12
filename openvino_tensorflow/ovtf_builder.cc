@@ -2778,6 +2778,7 @@ static Status TranslateNonMaxSuppressionOp(
       SaveNgOp(ng_op_map, op->name(), valid_outputs);
     }
   }
+  return Status::OK();
 }
 
 static Status TranslateReduceOp(
@@ -3515,7 +3516,6 @@ static Status TranslateSqueezeOp(const Node* op,
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
   size_t input_dims = ng_input.get_partial_shape().rank().get_length();
-  ;
 
   std::vector<int32> tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "squeeze_dims", &tf_axis));
@@ -3623,8 +3623,7 @@ static Status TranslateTopKV2Op(
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
 
   // axis along which to compute top k indices
-  int64 k_axis = ng_input.get_partial_shape().rank().get_length();
-  -1;
+  int64 k_axis = ng_input.get_partial_shape().rank().get_length() - 1;
 
   // scalar input tensor specifying how many max/min elts should be computed
   // CPU backend only supports element type i64
