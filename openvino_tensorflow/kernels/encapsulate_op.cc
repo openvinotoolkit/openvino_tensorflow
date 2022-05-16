@@ -509,6 +509,57 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         tf_shape.AddDim(dim);
       }
 
+<<<<<<< HEAD
+=======
+      // TODO: Zero-copy is depreciated temporarily because of memory allocation
+      // alignment
+      // mismatch related to EIGEN_MAX_ALIGN_BYTES.
+      Tensor* output_tensor = nullptr;
+      OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
+
+      auto size = ng_output->get_byte_size();
+      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+
+#if TF_VERSION < 2
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t**)DMAHelper::base(output_tensor));
+#else
+      std::copy((uint8_t*)(ng_output->data()),
+                ((uint8_t*)(ng_output->data())) + size,
+                (uint8_t*)(output_tensor->data()));
+#endif
+    }
+  } else {
+    auto out_shape_check = [ng_output_shapes](int i) {
+      if (ng_output_shapes[i].size() > 0) {
+        auto out_shape_list = ng_output_shapes[i];
+        for (auto dim : out_shape_list) {
+          if (dim == 0) return true;
+        }
+      }
+      return false;
+    };
+    int j = 0;
+    for (int i = 0; i < ng_result_list.size(); i++) {
+      if (out_shape_check(i)) {
+        auto ng_shape = ng_output_shapes[i];
+        ov::element::Type expected_elem_type;
+        auto ng_element = ng_result_list[i];
+        auto ng_element_type = ng_element->get_element_type();
+        OP_REQUIRES_OK(ctx,
+                       util::TFDataTypeToNGraphElementType(
+                           ctx->expected_output_dtype(i), &expected_elem_type));
+        OP_REQUIRES(
+            ctx, ng_element_type == expected_elem_type,
+            errors::Internal("Element type inferred by nGraph does not match "
+                             "the element type expected by TensorFlow"));
+        TensorShape tf_shape;
+        for (auto dim : ng_shape) {
+          tf_shape.AddDim(dim);
+        }
+
+>>>>>>> bb10eec8 (Removed rebase conflicts with TFFE branch)
       // TODO: Zero-copy is depreciated temporarily because of memory allocation
       // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
