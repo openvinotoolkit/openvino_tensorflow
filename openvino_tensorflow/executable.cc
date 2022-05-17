@@ -29,7 +29,11 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
       m_trivial_fn{nullptr},
       m_model(model) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ov::get_opset8();
+  // TODO: This is a temporary fix until all ops are
+  // supported by opset8.
+  std::vector<ov::OpSet> supported_opsets;
+  supported_opsets.push_back(ngraph::get_opset7());
+  supported_opsets.push_back(ngraph::get_opset8());
   for (const auto& node : model->get_ops()) {
     bool op_supported = false;
     for (const auto& opset : supported_opsets) {
