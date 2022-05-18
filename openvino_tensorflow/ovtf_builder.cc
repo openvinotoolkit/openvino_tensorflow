@@ -769,9 +769,9 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateBatchMatMulV2Op(const Node* op,
-                                       const std::vector<const Tensor*>&,
-                                       Builder::OpMap& ng_op_map) {
+static Status TranslateBatchMatMulOp(const Node* op,
+                                     const std::vector<const Tensor*>&,
+                                     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_x, ng_y;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_x, ng_y));
 
@@ -3793,7 +3793,8 @@ const static std::map<
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp<2>},
         {"AvgPool3D", TranslateAvgPoolOp<3>},
-        {"BatchMatMulV2", TranslateBatchMatMulV2Op},
+        {"BatchMatMul", TranslateBatchMatMulOp},
+        {"BatchMatMulV2", TranslateBatchMatMulOp},
         {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
