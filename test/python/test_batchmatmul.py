@@ -3,7 +3,7 @@
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
-"""Openvino Tensorflow BatchMatMulV2 operation test
+"""Openvino Tensorflow BatchMatMul operation test
 
 """
 from __future__ import absolute_import
@@ -20,12 +20,12 @@ tf.compat.v1.disable_eager_execution()
 from common import NgraphTest
 
 
-class TestBatchMatmulv2(NgraphTest):
+class TestBatchMatmul(NgraphTest):
 
     def test_matmul(self):
         x = tf.compat.v1.placeholder(tf.float32, shape=(2, 2, 3))
         y = tf.compat.v1.placeholder(tf.float32, shape=(2, 3, 2))
-        out = tf.raw_ops.BatchMatMulV2(x=x, y=y, adj_x=False, adj_y=False)
+        out = tf.raw_ops.BatchMatMul(x=x, y=y, adj_x=False, adj_y=False)
 
         feed_dict = {
             x: np.arange(1, 13).reshape([2, 2, 3]),
