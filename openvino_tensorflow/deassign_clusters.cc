@@ -210,7 +210,7 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 6;
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
@@ -226,7 +226,9 @@ Status DeassignClusters(Graph* graph) {
     OVTF_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
 
     if (non_trivial_count < min_non_trivial_nodes) {
-      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
+      OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                   << " as number of non trivial nodes in it are less than "
+                      "MIN_NONTRIVIAL_NODES threshold";
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
                      << node->type_string() << "]";
@@ -278,7 +280,8 @@ Status DeassignClusters(Graph* graph) {
       }
     }
     if (invalid_dyn_op) {
-      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
+      OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                   << " due to Dynamic to Static Flow";
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
                      << node->type_string() << "]";
