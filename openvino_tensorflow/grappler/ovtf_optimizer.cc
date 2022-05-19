@@ -54,26 +54,26 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   opts.expect_device_spec = false;
 
   grappler::GrapplerItem grappler_item(item);
-  GraphDef& graph_def = grappler_item.graph;  
-  FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
-  Graph graph(flib);
-  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
-  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+  GraphDef& graph_def = grappler_item.graph;
 
   std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
   std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
   std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
       cluster, std::move(node_estimator), std::move(node_manager),
       /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
-  OVTF_VLOG(1) << "openvino-tensorflow is using analytical cost estimator.";
   tensorflow::Status init_status = estimator->Initialize(grappler_item);
-  OVTF_VLOG(1) << "openvino-tensorflow is initializing estimator.";
   if (!init_status.ok()) return init_status;
 
   tensorflow::RunMetadata run_metadata;
   grappler::Costs costs;
   estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
-  OVTF_VLOG(1) << "openvino-tensorflow is predicting costs.";
+  int64_t cluster_cost_in_ms = costs.execution_time.count() / 1e6;
+  OVTF_VLOG(1) << "Full TF Graph costs " << costs.execution_time.count() / 1e6 << " ms"; 
+
+  FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
+  Graph graph(flib);
+  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
+  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -216,7 +216,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   util::DumpTFGraph(&graph, idx, "clustered");
 
   // 3. Deassign trivial clusters then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(DeassignClusters(&graph));
+  TF_RETURN_IF_ERROR(DeassignClusters(&graph, cluster));
   util::DumpTFGraph(&graph, idx, "declustered");
 
   // 4. Encapsulate clusters then, if requested, dump the graphs.

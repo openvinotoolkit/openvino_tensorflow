@@ -279,14 +279,11 @@ if ovtf_classic_loaded:
         # [TODO] Handle dict type multi inputs
         func = tf.function(saved_model.signatures[saved_model_signature_key])
         func = func.get_concrete_function(input_tensors)
-        print ("Obtained ConcreteFunction")
 
         # Converting var2consts for larger models like SSD MobileNetV2 takes a long time
         frozen_func = convert_to_constants.convert_variables_to_constants_v2(func)
-        print ("Converted Variables to Constants")
 
         meta_graph_def = saver.export_meta_graph(graph_def=frozen_func.graph.as_graph_def(), graph=frozen_func.graph)
-        print ("MetaGraph exported")
 
         fetch_collection = meta_graph_pb2.CollectionDef()
         for array in frozen_func.outputs:
@@ -300,9 +297,7 @@ if ovtf_classic_loaded:
         grappler_session_config.graph_options.rewrite_options.MergeFrom(rewriter_config)
 
         t_start = time.time()
-        print ("Starting OVTF Graph Optimization")
         optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
-        print ("OVTF Graph Optimization is over. Time taken: ", time.time() - t_start)
         
         # Swap original function with optimized function in TF's context
         for f in optimized_graph_def.library.function:
@@ -320,10 +315,17 @@ if ovtf_classic_loaded:
 
         optimized_func.graph.structured_input_signature = (
             func.structured_input_signature)
-        
-        return optimized_func
 
+        # Rewrite the signature map using the optimized ConcreteFunction.
+        signatures = {
+            key: value for key, value in saved_model.signatures.items()
+        }
+        signatures["ovtf"] = optimized_func
 
+        # Save the optimized function for later use
+        # Sometimes this is useful when first-inference-latency overhead needs to be avoided
+        save.save(saved_model, saved_model_dir, signatures)
+                
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
