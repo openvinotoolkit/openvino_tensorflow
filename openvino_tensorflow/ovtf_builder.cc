@@ -3736,11 +3736,38 @@ static Status TranslateXdivyOp(
 static Status TranslateSelectOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input1, ng_input2, ng_input3;
+  ov::Output<ov::Node> ng_cond, ng_input1, ng_input2;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_input1, ng_input2, ng_input3));
-  auto ng_select = ConstructNgNode<opset::Select>(op->name(), ng_input1,
-                                                  ng_input2, ng_input3);
+      GetInputNodes(ng_op_map, op, ng_cond, ng_input1, ng_input2));
+  // condition could be of same shape as inputs, or scalar, or it shoud be of
+  // rank 1 and the dimension must match the first dimension of the inputs
+  auto cond_rank = ng_cond.get_partial_shape().rank().get_length();
+  // input1 and input2 are of same shape
+  auto x_rank = ng_input1.get_partial_shape().rank().get_length();
+
+  ov::Output<ov::Node> ng_select;
+  // if condition is of rank 1, the broadcasting of condition to input shape
+  // will not give correct output. Condition needs to reshaped to same rank as
+  // of input with all other dimensions as 1.
+  if (cond_rank == 1) {
+    // Translation will not work with dynamic shape
+    auto cond_shape = ng_cond.get_shape();
+    auto augment_shape = ov::Shape(x_rank, 1);
+    augment_shape.at(0) = ov::shape_size(cond_shape);
+    auto ng_augmented_cond_shape = ConstructNgNode<opset::Constant>(
+        op->name(), ov::element::i64, ov::Shape{augment_shape.size()},
+        augment_shape);
+    auto ng_augmented_cond = ConstructNgNode<opset::Reshape>(
+        op->name(), ng_cond, ng_augmented_cond_shape, false);
+    ng_select = ConstructNgNode<opset::Select>(op->name(), ng_augmented_cond,
+                                               ng_input1, ng_input2);
+  } else {
+    // if condition is scalar, other thank rank 1, or condition and input are of
+    // same shape (internally condition would be broadcasted to same shape as
+    // that of input), in this case select op would work element wise
+    ng_select = ConstructNgNode<opset::Select>(op->name(), ng_cond, ng_input1,
+                                               ng_input2);
+  }
   SaveNgOp(ng_op_map, op->name(), ng_select);
   return Status::OK();
 }
@@ -3891,7 +3918,6 @@ const static std::map<
         {"Rsqrt", TranslateRsqrtOp},
         {"ScatterNd", TranslateScatterNdOp},
         {"Select", TranslateSelectOp},
-        {"SelectV2", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateUnaryOp<opset::Sigmoid>},
         {"Sin", TranslateUnaryOp<opset::Sin>},
