@@ -21,6 +21,7 @@ test*
 [RUN]
 
 test_api.*
+test_batchmatmul.*
 test_batchmatmulv2.*
 test_cast.*
 test_const.*
