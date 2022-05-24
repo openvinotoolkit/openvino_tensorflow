@@ -1712,7 +1712,7 @@ static Status TranslateFusedCTCGreedyDecoder(const Node* op,
       ov::element::i64);
   auto ng_ctc_decoded_classes = ng_ctc_outputs->output(0);
 
-  // save dummpy outputs at index 0, 1 and 2 as we do not require these.
+  // save dummy outputs at index 0, 1 and 2 as we do not require these.
   auto ng_zeros = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
                                                    ov::Shape{}, 0);
   SaveNgOp(ng_op_map, op->name(), ng_zeros);
@@ -4064,10 +4064,10 @@ const static std::map<
         {"ZerosLike", TranslateZerosLikeOp}};
 
 static bool UseFusedCTCGreedyDecoder(const Node* op) {
-  // we support fusing only when CTCGreedyDecoder is followed SparseToDense op
-  // resulting in two edges
+  // we support fusing only when CTCGreedyDecoder is followed by SparseToDense
+  // op resulting in two edges
   // any op consuming the log probabilities from CTCGreedyDecoder will result
-  // in an additional edge, resulting in a total of three edges.
+  // in an additional edge, hence producing a total of three edges.
   if (!(op->out_edges().size() == 2 || op->out_edges().size() == 3)) {
     return false;
   }
