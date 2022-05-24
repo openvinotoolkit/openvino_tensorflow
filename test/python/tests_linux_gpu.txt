@@ -121,6 +121,7 @@ test_conv3d.Conv3DTest.*
 
 # NonZero type NonZero(op::v3) is not supported
 test_ctc_greedy_decoder.*
+test_fused_ctc_greedy_decoder.*
 
 # DT_DOUBLE is not supported on GPU
 test_expand_dims.TestExpandDims.test_expand_dims_float64
