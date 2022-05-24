@@ -1619,6 +1619,115 @@ static Status TranslateCTCGreedyDecoderOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateFusedCTCGreedyDecoder(const Node* op,
+                                             const std::vector<const Tensor*>&,
+                                             Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_inputs, ng_sequence_length;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_inputs, ng_sequence_length));
+
+  // Undo the transpose done before calling CTCGreedyDecoder such that,
+  // ng_inputs represents a tensor of shape [N, T, C] where N, T and C
+  // represent batch_size, time_steps and num_classes respectively.
+  ov::Shape transpose_order{1, 0, 2};
+  auto input_order = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::u64, ov::Shape{transpose_order.size()},
+      transpose_order);
+  ng_inputs = std::make_shared<opset::Transpose>(ng_inputs, input_order);
+
+  // Create a mask that stores valid time step indices, we need this to
+  // handle samples of varying sequence lengths.
+  ov::Shape ng_inputs_shape = ng_inputs.get_shape();
+  auto batch_size = static_cast<long>(ng_inputs_shape.at(0));
+  auto max_time_steps = static_cast<long>(ng_inputs_shape.at(1));
+
+  auto ng_indicator = ConstructNgNode<opset::Range>(
+      op->name(), ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                   ov::Shape{}, 0),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, max_time_steps),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, 1),
+      ov::element::i64);
+  ng_indicator = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_indicator,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({0})));
+  ng_indicator = ConstructNgNode<opset::Tile>(
+      op->name(), ng_indicator, ConstructNgNode<opset::Constant>(
+                                    op->name(), ov::element::i64, ov::Shape{2},
+                                    std::vector<int64>({batch_size, 1})));
+
+  auto ng_sequence_endpoints = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_sequence_length,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({1})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Tile>(
+      op->name(), ng_sequence_endpoints,
+      ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i64, ov::Shape{2},
+          std::vector<int64>({1, max_time_steps})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Convert>(
+      op->name(), ng_sequence_endpoints, ov::element::i64);
+
+  auto ng_valid_time_steps_mask = ConstructNgNode<opset::Less>(
+      op->name(), ng_indicator, ng_sequence_endpoints);
+  ng_valid_time_steps_mask = ConstructNgNode<opset::Convert>(
+      op->name(), ng_valid_time_steps_mask, ng_inputs.get_element_type());
+
+  // Compute negative log sum probabilities for each sample in the batch by
+  // selecting class index greedily across all valid time steps.
+  auto ng_max_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 2);
+  auto ng_sum_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 1);
+  auto ng_log_probs =
+      ConstructNgNode<opset::ReduceMax>(op->name(), ng_inputs, ng_max_axis, 0);
+
+  ng_log_probs = ConstructNgNode<opset::Multiply>(op->name(), ng_log_probs,
+                                                  ng_valid_time_steps_mask);
+  ng_log_probs = ConstructNgNode<opset::ReduceSum>(op->name(), ng_log_probs,
+                                                   ng_sum_axis, 1);
+  ng_log_probs = ConstructNgNode<opset::Multiply>(
+      op->name(), ng_log_probs,
+      ConstructNgNode<opset::Constant>(op->name(), ng_inputs.get_element_type(),
+                                       ov::Shape{}, -1));
+
+  bool merge_repeated;
+  int blank_index;
+
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "merge_repeated", &merge_repeated));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "blank_index", &blank_index));
+
+  if (blank_index < 0) {
+    int num_classes = static_cast<int>(ng_inputs_shape.at(2));
+    blank_index = num_classes + blank_index;
+  }
+  auto ng_blank_index = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, blank_index);
+
+  auto ng_ctc_outputs = make_shared<opset::CTCGreedyDecoderSeqLen>(
+      ng_inputs, ng_sequence_length, ng_blank_index, merge_repeated,
+      ov::element::i64);
+  auto ng_ctc_decoded_classes = ng_ctc_outputs->output(0);
+
+  // save dummy outputs at index 0, 1 and 2 as we do not require these.
+  auto ng_zeros = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                   ov::Shape{}, 0);
+  SaveNgOp(ng_op_map, op->name(), ng_zeros);
+  SaveNgOp(ng_op_map, op->name(), ng_zeros);
+  SaveNgOp(ng_op_map, op->name(), ng_zeros);
+  SaveNgOp(ng_op_map, op->name(), ng_log_probs);
+
+  // save output for SparseToDense, since ops further in the graph require it
+  auto edges =
+      std::vector<const Edge*>(op->out_edges().begin(), op->out_edges().end());
+  SaveNgOp(ng_op_map, edges.at(1)->dst()->name(), ng_ctc_decoded_classes);
+
+  return Status::OK();
+}
+
 static Status TranslateCumsumOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -3851,6 +3960,9 @@ const static std::map<
         {"FusedBatchNorm", TranslateFusedBatchNormOp},
         {"FusedBatchNormV2", TranslateFusedBatchNormOp},
         {"FusedBatchNormV3", TranslateFusedBatchNormOp},
+        // FusedCTCGreedyDecoder combines CTCGreedyDecoder and the following
+        // SparseToDense op
+        {"FusedCTCGreedyDecoder", TranslateFusedCTCGreedyDecoder},
         {"Gather", TranslateGatherOp},
         {"GatherV2", TranslateGatherV2Op},
         {"GatherNd", TranslateGatherNdOp},
@@ -3950,6 +4062,31 @@ const static std::map<
         {"Where", TranslateWhereOp},
         {"Xdivy", TranslateXdivyOp},
         {"ZerosLike", TranslateZerosLikeOp}};
+
+static bool UseFusedCTCGreedyDecoder(const Node* op) {
+  // we support fusing only when CTCGreedyDecoder is followed by SparseToDense
+  // op resulting in two edges
+  // any op consuming the log probabilities from CTCGreedyDecoder will result
+  // in an additional edge, hence producing a total of three edges.
+  if (!(op->out_edges().size() == 2 || op->out_edges().size() == 3)) {
+    return false;
+  }
+  auto edges =
+      std::vector<const Edge*>(op->out_edges().begin(), op->out_edges().end());
+
+  // check port mappings
+  if (edges.at(op->out_edges().size() - 2)->dst()->type_string() ==
+          "SparseToDense" &&
+      edges.at(op->out_edges().size() - 1)->dst()->type_string() ==
+          "SparseToDense" &&
+      edges.at(op->out_edges().size() - 2)->src_output() == 0 &&
+      edges.at(op->out_edges().size() - 2)->dst_input() == 0 &&
+      edges.at(op->out_edges().size() - 1)->src_output() == 1 &&
+      edges.at(op->out_edges().size() - 1)->dst_input() == 2) {
+    return true;
+  }
+  return false;
+}
 
 Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
@@ -4142,33 +4279,54 @@ Status Builder::TranslateGraph(
   // Now create the OpenVINO ops from TensorFlow ops.
   //
   for (auto op : tf_ops) {
-    OVTF_VLOG(2) << "Constructing op " << op->name() << " which is "
-                 << op->type_string();
+    auto op_type = op->type_string();
+
+    if (HasNodeAttr(op->def(), "_ovtf_translated")) {
+      OVTF_VLOG(5) << "Skipping op " << op->name() << " which is " << op_type
+                   << " since it has been processed";
+      continue;
+    }
+
+    OVTF_VLOG(2) << "Constructing op " << op->name() << " which is " << op_type;
+
+    // FusedCTCGreedyDecoder
+    if (op_type == "CTCGreedyDecoder") {
+      if (UseFusedCTCGreedyDecoder(op)) {
+        OVTF_VLOG(5) << "Using Fused translation for CTCGreedyDecoder "
+                     << "and SparseToDense Ops";
+        auto edges = std::vector<const Edge*>(op->out_edges().begin(),
+                                              op->out_edges().end());
+        edges.at(1)->dst()->AddAttr("_ovtf_translated", true);
+        op_type = "FusedCTCGreedyDecoder";
+      } else
+        OVTF_VLOG(5) << "Not using Fused translation for "
+                     << "CTCGreedyDecoder and SparseToDense Ops";
+    }
+    //
 
     const function<Status(const Node*, const std::vector<const Tensor*>&,
                           Builder::OpMap&)>* op_fun;
 
     try {
-      op_fun = &(TRANSLATE_OP_MAP.at(op->type_string()));
+      op_fun = &(TRANSLATE_OP_MAP.at(op_type));
     } catch (const std::out_of_range&) {
       // -----------------------------
       // Catch-all for unsupported ops
       // -----------------------------
       OVTF_VLOG(3) << "No translation handler registered for op: " << op->name()
-                   << " (" << op->type_string() << ")";
+                   << " (" << op_type << ")";
       OVTF_VLOG(3) << op->def().DebugString();
       return errors::InvalidArgument(
           "No translation handler registered for op: ", op->name(), " (",
-          op->type_string(), ")\n", op->def().DebugString());
+          op_type, ")\n", op->def().DebugString());
     }
 
     try {
       TF_RETURN_IF_ERROR((*op_fun)(op, static_input_map, ng_op_map));
     } catch (const std::exception& e) {
       return errors::Internal("Unhandled exception in op handler: ", op->name(),
-                              " (", op->type_string(), ")\n",
-                              op->def().DebugString(), "\n", "what(): ",
-                              e.what());
+                              " (", op_type, ")\n", op->def().DebugString(),
+                              "\n", "what(): ", e.what());
     }
   }
 
