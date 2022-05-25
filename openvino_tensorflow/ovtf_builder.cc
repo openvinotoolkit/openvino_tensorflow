@@ -3634,17 +3634,21 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ng_input.get_element_type(),
-                                        ov::Shape{0}, std::vector<int>({0})));
-  } else {
-    auto ng_const = ConstructNgNode<opset::Constant>(
-        op->name(), ov::element::i32, ov::Shape{tf_axis.size()}, tf_axis);
-
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
+  if (!ng_input.get_partial_shape().is_dynamic()) {
+    // This conditional check is required only if the input shape is known
+    if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
+      SaveNgOp(ng_op_map, op->name(),
+               ConstructNgNode<opset::Constant>(
+                   op->name(), ng_input.get_element_type(), ov::Shape{0},
+                   std::vector<int>({0})));
+      return Status::OK();
+    }
   }
+  auto ng_const = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i32, ov::Shape{tf_axis.size()}, tf_axis);
+
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
   return Status::OK();
 }
 
