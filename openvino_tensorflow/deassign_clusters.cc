@@ -211,7 +211,7 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 4;
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
@@ -265,7 +265,7 @@ Status DeassignClusters(Graph* graph) {
           if (out_cluster == cluster_idx &&
               (it->type_string() != "NonMaxSuppressionV2" &&
                it->type_string() != "Reshape")) {
-            if (it->type_string() == "ZerosLike" ||
+            if (  // it->type_string() == "ZerosLike" ||
                 it->type_string() == "Size" ||
                 it->type_string() == "Conv2D") {  // ||
               // it->type_string() == "Unpack") {
