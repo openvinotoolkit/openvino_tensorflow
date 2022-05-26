@@ -3079,16 +3079,18 @@ static Status TranslateRangeOp(
   ov::element::Type out_type;
   TF_RETURN_IF_ERROR(
       util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
-  ov::Output<ov::Node> start_node, stop_node, step_node;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 0, static_input_map, start_type, start_node));
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 1, static_input_map, stop_type, stop_node));
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 2, static_input_map, step_type, step_node));
-  auto ng_range = ConstructNgNode<opset::Range>(op->name(), start_node,
-                                                stop_node, step_node, out_type);
-
+  // ov::Output<ov::Node> start_node, stop_node, step_node;
+  // TF_RETURN_IF_ERROR(
+  //     GetStaticInputNode(op, 0, static_input_map, start_type, start_node));
+  // TF_RETURN_IF_ERROR(
+  //     GetStaticInputNode(op, 1, static_input_map, stop_type, stop_node));
+  // TF_RETURN_IF_ERROR(
+  //     GetStaticInputNode(op, 2, static_input_map, step_type, step_node));
+  // auto ng_range = ConstructNgNode<opset::Range>(op->name(), start_node,
+  //                                               stop_node, step_node,
+  //                                               out_type);
+  auto ng_range = ConstructNgNode<opset::Range>(op->name(), ng_start, ng_stop,
+                                                ng_step, out_type);
   SaveNgOp(ng_op_map, op->name(), ng_range);
   return Status::OK();
 }
@@ -3754,7 +3756,7 @@ static Status TranslateTopKV2Op(
     sort = "index";
   }
 
-  if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
+  if (ng_k_vec[0] == 0) {
     SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
                                         op->name(), ng_input.get_element_type(),
                                         ov::Shape{0}, std::vector<int>({0})));
@@ -3762,18 +3764,32 @@ static Status TranslateTopKV2Op(
     SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
                                         op->name(), ov::element::i32,
                                         ov::Shape{0}, std::vector<int>({0})));
-  } else {
-    auto ng_result =
-        std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
-
-    ov::Output<ov::Node> ng_values = ng_result->output(0);
-    Builder::SetTracingInfo(op->name(), ng_values);
-    ov::Output<ov::Node> ng_indices = ng_result->output(1);
-    Builder::SetTracingInfo(op->name(), ng_indices);
-
-    SaveNgOp(ng_op_map, op->name(), ng_values);
-    SaveNgOp(ng_op_map, op->name(), ng_indices);
+    return Status::OK();
   }
+
+  if (!ng_input.get_partial_shape().is_dynamic()) {
+    if (ng_input.get_shape()[0] == 0) {
+      SaveNgOp(ng_op_map, op->name(),
+               ConstructNgNode<opset::Constant>(
+                   op->name(), ng_input.get_element_type(), ov::Shape{0},
+                   std::vector<int>({0})));
+
+      SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
+                                          op->name(), ov::element::i32,
+                                          ov::Shape{0}, std::vector<int>({0})));
+      return Status::OK();
+    }
+  }
+  auto ng_result =
+      std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+
+  ov::Output<ov::Node> ng_values = ng_result->output(0);
+  Builder::SetTracingInfo(op->name(), ng_values);
+  ov::Output<ov::Node> ng_indices = ng_result->output(1);
+  Builder::SetTracingInfo(op->name(), ng_indices);
+
+  SaveNgOp(ng_op_map, op->name(), ng_values);
+  SaveNgOp(ng_op_map, op->name(), ng_indices);
 
   return Status::OK();
 }
@@ -3903,11 +3919,20 @@ static Status TranslateZerosLikeOp(const Node* op,
                                    Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-
-  ov::Shape input_shape = ng_input.get_shape();
-  std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
-  auto ng_result = ConstructNgNode<opset::Constant>(
-      op->name(), ng_input.get_element_type(), input_shape, const_values);
+  ov::Output<ov::Node> ng_result;
+  // if input shape is known, this OP can be converted into a constant node
+  if (!ng_input.get_partial_shape().is_dynamic()) {
+    ov::Shape input_shape = ng_input.get_shape();
+    std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
+    ng_result = ConstructNgNode<opset::Constant>(
+        op->name(), ng_input.get_element_type(), input_shape, const_values);
+  } else {
+    // Use Subtract operator with the both inputs as ng_input
+    // TODO: Will need different handling, once DT_STRING is supported for this
+    // OP
+    ng_result =
+        ConstructNgNode<opset::Subtract>(op->name(), ng_input, ng_input);
+  }
   SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
 }
