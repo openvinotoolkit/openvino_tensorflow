@@ -2948,28 +2948,29 @@ static Status TranslateDirectReduceOp(
 static Status TranslateOneHotOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_features, ng_unused, ng_on, ng_off, ng_depth;
+  ov::Output<ov::Node> ng_features, ng_depth, ng_on, ng_off;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_features, ng_unused, ng_on, ng_off));
+      GetInputNodes(ng_op_map, op, ng_features, ng_depth, ng_on, ng_off));
 
-  auto ng_features_shape = ng_features.get_shape();
-  std::vector<int> depth;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
+  // auto ng_features_shape = ng_features.get_shape();
+  // std::vector<int> depth;
+  // TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
 
   // Depth must be scalar
-  if (depth.size() != 1) {
-    return errors::InvalidArgument(
-        "OneHot Op: depth of one hot dimension must be scalar ", depth.size());
-  }
+  // if (depth.size() != 1) {
+  //   return errors::InvalidArgument(
+  //       "OneHot Op: depth of one hot dimension must be scalar ",
+  //       depth.size());
+  // }
 
-  auto const_depth = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{}, depth);
+  // auto const_depth = ConstructNgNode<opset::Constant>(
+  //     op->name(), ov::element::i64, ov::Shape{}, depth);
 
   int one_hot_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &one_hot_axis));
 
   auto ng_onehot = ConstructNgNode<opset::OneHot>(
-      op->name(), ng_features, const_depth, ng_on, ng_off, one_hot_axis);
+      op->name(), ng_features, ng_depth, ng_on, ng_off, one_hot_axis);
   SaveNgOp(ng_op_map, op->name(), ng_onehot);
   return Status::OK();
 }
@@ -3073,9 +3074,9 @@ static Status TranslateRangeOp(
   ov::Output<ov::Node> ng_start, ng_stop, ng_step;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_start, ng_stop, ng_step));
 
-  DataType start_type = op->input_type(0);
-  DataType stop_type = op->input_type(1);
-  DataType step_type = op->input_type(2);
+  // DataType start_type = op->input_type(0);
+  // DataType stop_type = op->input_type(1);
+  // DataType step_type = op->input_type(2);
   ov::element::Type out_type;
   TF_RETURN_IF_ERROR(
       util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
@@ -3134,7 +3135,7 @@ static Status TranslateRelu6Op(const Node* op,
                                Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  auto ng_input_shape = ng_input.get_shape();
+  auto ng_input_rank = ng_input.get_partial_shape().rank().get_length();
   std::string device;
   // Enable transpose before and after only for CPU device
   Status exec_status = BackendManager::GetBackendName(device);
@@ -3142,11 +3143,11 @@ static Status TranslateRelu6Op(const Node* op,
     throw runtime_error(exec_status.error_message());
   }
   if (device == "CPU") {
-    if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
+    if (ng_input_rank == 4) Transpose<0, 3, 1, 2>(ng_input);
   }
   auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
   if (device == "CPU") {
-    if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
+    if (ng_input_rank == 4) Transpose<0, 2, 3, 1>(ng_output);
   }
   SaveNgOp(ng_op_map, op->name(), ng_output);
 

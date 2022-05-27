@@ -105,7 +105,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
     set_attributes_map["CropAndResize"] = SetStaticInputs({1, 2, 3});
     set_attributes_map["ExpandDims"] = SetStaticInputs({1});
-    set_attributes_map["Fill"] = SetStaticInputs({0});
+    // set_attributes_map["Fill"] = SetStaticInputs({0});
     set_attributes_map["GatherV2"] = SetStaticInputs({2});
     set_attributes_map["Max"] = SetStaticInputs({1});
     set_attributes_map["Mean"] = SetStaticInputs({1});
@@ -116,10 +116,10 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     // set_attributes_map["NonMaxSuppressionV3"] = SetStaticInputs({2});
     // set_attributes_map["NonMaxSuppressionV4"] = SetStaticInputs({2});
     // set_attributes_map["NonMaxSuppressionV5"] = SetStaticInputs({2});
-    set_attributes_map["OneHot"] = SetStaticInputs({1});
+    // set_attributes_map["OneHot"] = SetStaticInputs({1});
     set_attributes_map["Pad"] = SetStaticInputs({1});
     set_attributes_map["PadV2"] = SetStaticInputs({1});
-    set_attributes_map["Prod"] = SetStaticInputs({0, 1});
+    set_attributes_map["Prod"] = SetStaticInputs({1});
     set_attributes_map["Reshape"] = SetStaticInputs({1});
     set_attributes_map["ScatterNd"] = SetStaticInputs({2});
     set_attributes_map["Slice"] = SetStaticInputs({1, 2});
