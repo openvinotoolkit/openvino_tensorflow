@@ -796,7 +796,9 @@ static Status TranslateBatchNDAndSpaceNDOp(
   // batch nor innermost),
   // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
   // Hence, pad ng_crops with zeros at both ends
-
+  std::cout << "DEBUG block shape - " << ng_block_shape.get_shape()
+            << std::endl;
+  std::cout << "DEBUG crops shape - " << ng_crops.get_shape() << std::endl;
   std::vector<int> tf_block_shape;
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
@@ -881,9 +883,10 @@ static Status TranslateBiasAddOp(
         "BiasAdd data format is neither NHWC nor NCHW");
   }
 
-  auto ng_input_shape = ng_input.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
-  if (ng_bias_shape.size() != 1) {
+  // auto ng_input_shape = ng_input.get_shape();
+  // auto ng_bias_shape = ng_bias.get_shape();
+  auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+  if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
         "Bias argument to BiasAdd does not have one dimension");
   }
@@ -892,9 +895,11 @@ static Status TranslateBiasAddOp(
   // Reshape the bias to (1, C, 1, ...) if input is channels-first.
   ov::Output<ov::Node> ng_bias_reshaped = ng_bias;
   if (tf_data_format == "NCHW") {
-    auto channel_dim = ng_input_shape[1];
-    std::vector<int64> target_shape(ng_input_shape.size());
-    for (int64_t i = 0; i < ng_input_shape.size(); i++) {
+    auto ng_input_shape = ng_input.get_partial_shape();
+    auto ng_input_rank = ng_input_shape.rank().get_length();
+    auto channel_dim = ng_input_shape[1].get_length();
+    std::vector<int64> target_shape(ng_input_rank);
+    for (int64_t i = 0; i < ng_input_rank; i++) {
       if (i == 1) {
         target_shape[i] = channel_dim;
       } else {
@@ -902,7 +907,8 @@ static Status TranslateBiasAddOp(
       }
     }
     auto target_shape_node = make_shared<opset::Constant>(
-        ov::element::i64, ov::Shape{ng_input_shape.size()}, target_shape);
+        ov::element::i64, ov::Shape{static_cast<unsigned long>(ng_input_rank)},
+        target_shape);
     ng_bias_reshaped = ConstructNgNode<opset::Reshape>(
         op->name(), ng_bias, target_shape_node, false);
   }
@@ -1039,7 +1045,7 @@ static Status TranslateConv2DOp(const Node* op,
   ov::Shape ng_kernel_shape(2);
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  // NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -1055,6 +1061,8 @@ static Status TranslateConv2DOp(const Node* op,
 
   OVTF_VLOG(3) << "ng_kernel_shape: " << ngraph::join(ng_kernel_shape);
 
+  ov::Output<ov::Node> ng_conv;
+  ov::op::PadType pad_type;
   ov::CoordinateDiff ng_padding_below;
   ov::CoordinateDiff ng_padding_above;
   if (tf_padding_type == "EXPLICIT") {
@@ -1074,15 +1082,34 @@ static Status TranslateConv2DOp(const Node* op,
     OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
     OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
     OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
-  } else {
-    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
+    ng_conv = ConstructNgNode<opset::Convolution>(
+        op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "VALID") {
+    ng_padding_below.assign(ng_image_shape.size(), 0);
+    ng_padding_above.assign(ng_image_shape.size(), 0);
+    ng_conv = ConstructNgNode<opset::Convolution>(
+        op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "SAME") {
+    if (ng_input.get_partial_shape().is_static()) {
+      NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+      ov::Shape img_shape = {0, 0};
+      img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                       ng_image_shape.end());
+      ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                             ng_dilations, ov::op::PadType::SAME_UPPER,
+                             ng_padding_above, ng_padding_below);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations);
+    } else {
+      pad_type = ov::op::PadType::SAME_UPPER;
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations, pad_type);
+    }
   }
-
-  ov::Output<ov::Node> ng_conv = ConstructNgNode<opset::Convolution>(
-      op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
-      ng_padding_above, ng_dilations);
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
@@ -2058,9 +2085,9 @@ static Status TranslateFusedMatMulOp(const Node* op,
                                              transpose_a, transpose_b);
 
   auto ng_matmul_shape = ng_matmul.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
-
-  if (ng_bias_shape.size() != 1) {
+  // auto ng_bias_shape = ng_bias.get_shape();
+  auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+  if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
         "Bias argument to BiasAdd does not have one dimension");
   }
@@ -2208,7 +2235,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     ov::Shape ng_kernel_shape(2);
 
     NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-    NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+    // NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
     NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
     NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -2226,13 +2253,36 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     ov::CoordinateDiff ng_padding_below;
     ov::CoordinateDiff ng_padding_above;
-    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
-
+    // Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+    //                      ng_strides, ng_dilations, ng_padding_below,
+    //                      ng_padding_above);
+    std::vector<int32> tf_paddings;
+    ov::op::PadType pad_type;
+    if (tf_padding_type == "EXPLICIT") {
+      TF_RETURN_IF_ERROR(
+          GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+      if (is_nhwc) {
+        ng_padding_below.push_back(tf_paddings[2]);
+        ng_padding_below.push_back(tf_paddings[4]);
+        ng_padding_above.push_back(tf_paddings[3]);
+        ng_padding_above.push_back(tf_paddings[5]);
+      } else {
+        ng_padding_below.push_back(tf_paddings[4]);
+        ng_padding_below.push_back(tf_paddings[6]);
+        ng_padding_above.push_back(tf_paddings[5]);
+        ng_padding_above.push_back(tf_paddings[7]);
+      }
+      OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
+      OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
+      OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
+    } else if (tf_padding_type == "VALID") {
+      pad_type = ov::op::PadType::VALID;
+    } else if (tf_padding_type == "SAME") {
+      pad_type = ov::op::PadType::SAME_UPPER;
+    }
     ng_conv = ConstructNgNode<opset::Convolution>(
         op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
-        ng_padding_below, ng_padding_above, ng_dilations);
+        ng_padding_below, ng_padding_above, ng_dilations, pad_type);
 
     return Status::OK();
   };
@@ -2266,14 +2316,16 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     TF_RETURN_IF_ERROR(CreateNgConv(ng_input, ng_filter, ng_conv));
 
-    auto ng_conv_shape = ng_conv.get_shape();
-    auto ng_bias_shape = ng_bias.get_shape();
-    if (ng_bias_shape.size() != 1) {
+    // auto ng_conv_shape = ng_conv.get_shape();
+    // auto ng_bias_shape = ng_bias.get_shape();
+    auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
+    auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+    if (ng_bias_rank != 1) {
       return errors::InvalidArgument(
           "Bias argument to BiasAdd does not have one dimension");
     }
 
-    std::vector<size_t> reshape_pattern_values(ng_conv_shape.size(), 1U);
+    std::vector<size_t> reshape_pattern_values(ng_conv_rank, 1U);
     reshape_pattern_values[1] = ng_bias.get_shape().front();
     auto reshape_pattern = make_shared<opset::Constant>(
         ov::element::u64, ov::Shape{reshape_pattern_values.size()},
@@ -2504,14 +2556,16 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
 
     TF_RETURN_IF_ERROR(CreateNgDepthwiseConv(ng_input, ng_filter, ng_conv));
 
-    auto ng_conv_shape = ng_conv.get_shape();
-    auto ng_bias_shape = ng_bias.get_shape();
-    if (ng_bias_shape.size() != 1) {
+    // auto ng_conv_shape = ng_conv.get_shape();
+    // auto ng_bias_shape = ng_bias.get_shape();
+    auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
+    auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+    if (ng_bias_rank != 1) {
       return errors::InvalidArgument(
           "Bias argument to BiasAdd does not have one dimension");
     }
 
-    std::vector<size_t> reshape_pattern_values(ng_conv_shape.size(), 1U);
+    std::vector<size_t> reshape_pattern_values(ng_conv_rank, 1U);
     reshape_pattern_values[1] = ng_bias.get_shape().front();
     auto reshape_pattern = make_shared<opset::Constant>(
         ov::element::u64, ov::Shape{reshape_pattern_values.size()},
