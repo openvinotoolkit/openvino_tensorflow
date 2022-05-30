@@ -1045,7 +1045,9 @@ static Status TranslateConv2DOp(const Node* op,
   ov::Shape ng_kernel_shape(2);
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  // NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  if (ng_input.get_partial_shape().is_static()){
+    NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  }
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -1065,6 +1067,7 @@ static Status TranslateConv2DOp(const Node* op,
   ov::op::PadType pad_type;
   ov::CoordinateDiff ng_padding_below;
   ov::CoordinateDiff ng_padding_above;
+
   if (tf_padding_type == "EXPLICIT") {
     TF_RETURN_IF_ERROR(
         GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
@@ -1093,7 +1096,7 @@ static Status TranslateConv2DOp(const Node* op,
         ng_padding_above, ng_dilations);
   } else if (tf_padding_type == "SAME") {
     if (ng_input.get_partial_shape().is_static()) {
-      NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+      OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== "; 
       ov::Shape img_shape = {0, 0};
       img_shape.insert(img_shape.end(), ng_image_shape.begin(),
                        ng_image_shape.end());
@@ -1104,6 +1107,7 @@ static Status TranslateConv2DOp(const Node* op,
           op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
           ng_padding_above, ng_dilations);
     } else {
+      OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
       pad_type = ov::op::PadType::SAME_UPPER;
       ng_conv = ConstructNgNode<opset::Convolution>(
           op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
@@ -2235,7 +2239,9 @@ static Status TranslateFusedConv2DOp(const Node* op,
     ov::Shape ng_kernel_shape(2);
 
     NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-    // NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+    if (ng_input.get_partial_shape().is_static()){
+      NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+    }
     NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
     NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -2275,15 +2281,35 @@ static Status TranslateFusedConv2DOp(const Node* op,
       OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
       OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
       OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations);
     } else if (tf_padding_type == "VALID") {
-      pad_type = ov::op::PadType::VALID;
+      ng_padding_below.assign(ng_image_shape.size(), 0);
+      ng_padding_above.assign(ng_image_shape.size(), 0);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations);
     } else if (tf_padding_type == "SAME") {
-      pad_type = ov::op::PadType::SAME_UPPER;
+      if (ng_input.get_partial_shape().is_static()) {
+        OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
+        ov::Shape img_shape = {0, 0};
+        img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                        ng_image_shape.end());
+        ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                              ng_dilations, ov::op::PadType::SAME_UPPER,
+                              ng_padding_above, ng_padding_below);
+        ng_conv = ConstructNgNode<opset::Convolution>(
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
+            ng_padding_above, ng_dilations);
+      } else {
+        OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
+        pad_type = ov::op::PadType::SAME_UPPER;
+        ng_conv = ConstructNgNode<opset::Convolution>(
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
+            ng_padding_above, ng_dilations, pad_type);
+      }
     }
-    ng_conv = ConstructNgNode<opset::Convolution>(
-        op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
-        ng_padding_below, ng_padding_above, ng_dilations, pad_type);
-
     return Status::OK();
   };
 
