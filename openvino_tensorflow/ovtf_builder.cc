@@ -796,9 +796,6 @@ static Status TranslateBatchNDAndSpaceNDOp(
   // batch nor innermost),
   // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
   // Hence, pad ng_crops with zeros at both ends
-  std::cout << "DEBUG block shape - " << ng_block_shape.get_shape()
-            << std::endl;
-  std::cout << "DEBUG crops shape - " << ng_crops.get_shape() << std::endl;
   std::vector<int> tf_block_shape;
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
@@ -1045,7 +1042,7 @@ static Status TranslateConv2DOp(const Node* op,
   ov::Shape ng_kernel_shape(2);
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  if (ng_input.get_partial_shape().is_static()){
+  if (ng_input.get_partial_shape().is_static()) {
     NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
   }
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
@@ -1096,7 +1093,7 @@ static Status TranslateConv2DOp(const Node* op,
         ng_padding_above, ng_dilations);
   } else if (tf_padding_type == "SAME") {
     if (ng_input.get_partial_shape().is_static()) {
-      OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== "; 
+      OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
       ov::Shape img_shape = {0, 0};
       img_shape.insert(img_shape.end(), ng_image_shape.begin(),
                        ng_image_shape.end());
@@ -2239,7 +2236,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     ov::Shape ng_kernel_shape(2);
 
     NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-    if (ng_input.get_partial_shape().is_static()){
+    if (ng_input.get_partial_shape().is_static()) {
       NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
     }
     NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
@@ -2282,32 +2279,32 @@ static Status TranslateFusedConv2DOp(const Node* op,
       OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
       OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
       ng_conv = ConstructNgNode<opset::Convolution>(
-          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
-          ng_padding_above, ng_dilations);
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+          ng_padding_below, ng_padding_above, ng_dilations);
     } else if (tf_padding_type == "VALID") {
       ng_padding_below.assign(ng_image_shape.size(), 0);
       ng_padding_above.assign(ng_image_shape.size(), 0);
       ng_conv = ConstructNgNode<opset::Convolution>(
-          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
-          ng_padding_above, ng_dilations);
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+          ng_padding_below, ng_padding_above, ng_dilations);
     } else if (tf_padding_type == "SAME") {
       if (ng_input.get_partial_shape().is_static()) {
         OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
         ov::Shape img_shape = {0, 0};
         img_shape.insert(img_shape.end(), ng_image_shape.begin(),
-                        ng_image_shape.end());
+                         ng_image_shape.end());
         ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
-                              ng_dilations, ov::op::PadType::SAME_UPPER,
-                              ng_padding_above, ng_padding_below);
+                               ng_dilations, ov::op::PadType::SAME_UPPER,
+                               ng_padding_above, ng_padding_below);
         ng_conv = ConstructNgNode<opset::Convolution>(
-            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
-            ng_padding_above, ng_dilations);
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+            ng_padding_below, ng_padding_above, ng_dilations);
       } else {
         OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
         pad_type = ov::op::PadType::SAME_UPPER;
         ng_conv = ConstructNgNode<opset::Convolution>(
-            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides, ng_padding_below,
-            ng_padding_above, ng_dilations, pad_type);
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+            ng_padding_below, ng_padding_above, ng_dilations, pad_type);
       }
     }
     return Status::OK();
