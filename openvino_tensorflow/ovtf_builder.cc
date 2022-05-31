@@ -787,9 +787,10 @@ static Status TranslateBatchMatMulOp(const Node* op,
 static Status TranslateBatchNDAndSpaceNDOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input, ng_block_shape, ng_crops;
+  ov::Output<ov::Node> ng_input, ng_block_shape, ng_crops,
+      ng_block_shape_unused, ng_crops_unused;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_input, ng_block_shape, ng_crops));
+      GetInputNodes(ng_op_map, op, ng_input, ng_block_shape_unused, ng_crops));
 
   // ng_crops should be of shape N=[ng_input.get_shape()).size()]
   // But TF's ng_crops input is limited only to the spatial dimensions (neither
@@ -802,6 +803,10 @@ static Status TranslateBatchNDAndSpaceNDOp(
 
   auto N = (int)ng_input.get_partial_shape().rank().get_length();
   auto M = (int)tf_block_shape.size();
+
+  ng_block_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{static_cast<unsigned long>(M)},
+      tf_block_shape);
 
   // return with input if rank < 2 as ngraph's impl doesn't support it
   if (N < 2) {
@@ -961,12 +966,40 @@ static Status TranslateConcatV2Op(
   for (int i = 0; i < op->num_inputs() - 1; i++) {
     ov::Output<ov::Node> ng_arg;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_arg));
-    ng_args.push_back(ng_arg);
+    bool valid_input = true;
+
+    if (ng_arg.get_partial_shape().is_static()) {
+      auto inp_shape = ng_arg.get_shape();
+      for (auto dim : inp_shape) {
+        if (dim == 0) {
+          valid_input = false;
+          break;
+        }
+      }
+    }
+    if (valid_input) {
+      ng_args.push_back(ng_arg);
+    }
   }
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::Concat>(op->name(), ng_args, size_t(concat_axis)));
+  if (ng_args.empty()) {
+    int concat_axis_out_dim_value = 0;
+    ov::Output<ov::Node> ng_arg;
+    ov::Shape inp_shape;
+    for (int i = 0; i < op->num_inputs() - 1; i++) {
+      TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_arg));
+      inp_shape = ng_arg.get_shape();
+      concat_axis_out_dim_value += inp_shape[concat_axis];
+    }
+    inp_shape[concat_axis] = concat_axis_out_dim_value;
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_arg.get_element_type(), inp_shape, 0));
+  } else {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Concat>(op->name(), ng_args,
+                                            size_t(concat_axis)));
+  }
   return Status::OK();
 }
 
@@ -3422,15 +3455,23 @@ static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
   ov::element::Type type;
   TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
 
-  auto ng_input_shape = ng_input.get_shape();
-  int64 result = 1;
-  for (auto dim : ng_input_shape) {
-    result *= dim;
-  }
+  ov::Output<ov::Node> ng_result;
+  if (ng_input.get_partial_shape().is_static()) {
+    auto ng_input_shape = ng_input.get_shape();
+    int64 result = 1;
+    for (auto dim : ng_input_shape) {
+      result *= dim;
 
-  // make a scalar with value equals to result
-  auto ng_result = ConstructNgNode<opset::Constant>(
-      op->name(), type, ov::Shape(0), std::vector<int64>({result}));
+      // make a scalar with value equals to result
+      ng_result = ConstructNgNode<opset::Constant>(
+          op->name(), type, ov::Shape(0), std::vector<int64>({result}));
+    }
+  } else {
+    auto shape_of = ConstructNgNode<opset::ShapeOf>(op->name(), ng_input, type);
+    auto axis = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                 ov::Shape{}, 0);
+    ng_result = ConstructNgNode<opset::ReduceProd>(op->name(), shape_of, axis);
+  }
 
   SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
