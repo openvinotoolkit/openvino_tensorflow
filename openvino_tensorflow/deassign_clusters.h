@@ -9,14 +9,14 @@
 #pragma once
 
 #include "tensorflow/core/graph/graph.h"
-#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 #include "tensorflow/core/grappler/clusters/virtual_cluster.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 
 namespace tensorflow {
 
 namespace openvino_tensorflow {
 
-Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster);
+Status DeassignClusters(Graph* graph);
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

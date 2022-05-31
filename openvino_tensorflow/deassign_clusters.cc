@@ -13,11 +13,11 @@
 #include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/validate.h"
 #include "tensorflow/core/platform/default/logging.h"
 #include "tensorflow/core/platform/protobuf.h"
-#include "tensorflow/core/util/device_name_utils.h"
-#include "tensorflow/core/graph/validate.h"
 #include "tensorflow/core/public/version.h"
+#include "tensorflow/core/util/device_name_utils.h"
 #if (TF_MAJOR_VERSION >= 2) && (TF_MINOR_VERSION > 2)
 #include "tensorflow/core/common_runtime/graph_constructor.h"
 #else
@@ -171,10 +171,11 @@ void AddInput(NodeDef* dst, StringPiece src_name, int src_slot) {
   }
 }
 
-Status PopulateClusterGraphDef(int target_cluster_idx, GraphDef &gdef, Graph *graph,
-  std::map<std::tuple<int, std::string, int>, string> &input_rename_map) {
-  
-  // Borrowing this from encapsulate_clusters, as by the time the cluster graph(GraphDef) is populated
+Status PopulateClusterGraphDef(
+    int target_cluster_idx, GraphDef& gdef, Graph* graph,
+    std::map<std::tuple<int, std::string, int>, string>& input_rename_map) {
+  // Borrowing this from encapsulate_clusters, as by the time the cluster
+  // graph(GraphDef) is populated
   // in encapsulation it's too late.
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
@@ -184,8 +185,7 @@ Status PopulateClusterGraphDef(int target_cluster_idx, GraphDef &gdef, Graph *gr
       continue;
     }
 
-    if (cluster_idx != target_cluster_idx)
-      continue;
+    if (cluster_idx != target_cluster_idx) continue;
 
     // Because the input names may have changed from the original node def,
     // we will need to borrow some code from Graph::ToGraphDefSubRange in
@@ -255,7 +255,7 @@ Status PopulateClusterGraphDef(int target_cluster_idx, GraphDef &gdef, Graph *gr
   return Status::OK();
 }
 
-Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster) {
+Status DeassignClusters(Graph* graph) {
   //
   // When running unit tests, we do not want to see trivial clusters
   // deassigned. This flag (used by the Python tests) makes this possible.
@@ -278,141 +278,126 @@ Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster) {
 
   std::map<int, int> arg_index_count;
   std::map<int, GraphDef> cluster_graph_map;
-  std::map<int, std::vector<std::string>> cluster_fetch_nodes_map;
   std::map<std::tuple<int, std::string, int>, string> input_rename_map;
   // A map from cluster indices to a vector of input data types.
   std::map<int, std::vector<std::tuple<int, int, DataType>>> cluster_input_map;
 
   // edge traversal is required to find out whether src or dst is clustered
-  // once the cluster is known, that fetch nodes of the cluster can be identified properly for 
+  // once the cluster is known, that fetch nodes of the cluster can be
+  // identified properly for
   // grappler_item creation
   for (auto edge : graph->edges()) {
-      // TODO(amprocte): should actually keep of these. During clustering we
-      // will already have identified any intra-cluster control deps. Should
-      // maintain inter-cluster control deps.
-      if (edge->IsControlEdge())
-        continue;
+    // TODO(amprocte): should actually keep of these. During clustering we
+    // will already have identified any intra-cluster control deps. Should
+    // maintain inter-cluster control deps.
+    if (edge->IsControlEdge()) continue;
 
-      Node* src = edge->src();
-      Node* dst = edge->dst();
+    Node* src = edge->src();
+    Node* dst = edge->dst();
 
-      // TODO(amprocte): the following rejects edges involving source/sink. Is
-      // that what we want to do?
-      if (!src->IsOp() || !dst->IsOp()) {
-        continue;
-      }
+    // TODO(amprocte): the following rejects edges involving source/sink. Is
+    // that what we want to do?
+    if (!src->IsOp() || !dst->IsOp()) {
+      continue;
+    }
 
-      int dst_cluster_idx;
-      bool dst_clustered =
-          (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
+    int dst_cluster_idx;
+    bool dst_clustered =
+        (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
 
-      int src_cluster_idx;
-      bool src_clustered =
-          (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
+    int src_cluster_idx;
+    bool src_clustered =
+        (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
 
-      // Ignore edges within a cluster. (Note that this test also works when
-      // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
-      if (dst_cluster_idx == src_cluster_idx) {
-        continue;
-      }
+    // Ignore edges within a cluster. (Note that this test also works when
+    // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
+    if (dst_cluster_idx == src_cluster_idx) {
+      continue;
+    }
 
     DataType dt = dst->input_type(edge->dst_input());
     // If the source node lies within a cluster
-    // src is now one of the output nodes of the cluster as it connects to one of the fanout edges
-    // we collect the fetch nodes here
+    // src is now one of the output nodes of the cluster as it connects to one
+    // of the fanout edges
     if (src_clustered) {
-
       std::stringstream ss_input_to_retval;
       ss_input_to_retval << src->name() << ":" << edge->src_output();
-      cluster_fetch_nodes_map[src_cluster_idx].push_back(ss_input_to_retval.str());
     }
 
     // If the destination node lies within a cluster
     // src here is one of the input nodes of the cluster
-    // we collect feed nodes here to populate GraphDef
     if (dst_clustered) {
-        // [TODO]: What if a cluster belongs to the final dst node?
+      std::stringstream ss;
+      ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
+      std::string new_input_name = ss.str();
 
-        std::stringstream ss;
-        ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
-        std::string new_input_name = ss.str();
+      input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
+                                       edge->src_output())] = new_input_name;
+      string input_prov_tag = src->name();
 
-        input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
-                                        edge->src_output())] = new_input_name;
-        string input_prov_tag = src->name();
+      if (cluster_graph_map.find(dst_cluster_idx) == cluster_graph_map.end())
+        cluster_graph_map[dst_cluster_idx] =
+            *NGraphClusterManager::GetClusterGraph(dst_cluster_idx);
 
+      auto new_input_node_def = cluster_graph_map[dst_cluster_idx].add_node();
 
-        if (cluster_graph_map.find(dst_cluster_idx) == cluster_graph_map.end())
-          cluster_graph_map[dst_cluster_idx] = *NGraphClusterManager::GetClusterGraph(dst_cluster_idx);
+      new_input_node_def->set_name(new_input_name);
+      new_input_node_def->set_op("_Arg");
 
-        auto new_input_node_def =
-            cluster_graph_map[dst_cluster_idx].add_node();
-        
-        new_input_node_def->set_name(new_input_name);
-        new_input_node_def->set_op("_Arg");
+      SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
+      SetAttrValue(arg_index_count[dst_cluster_idx],
+                   &((*(new_input_node_def->mutable_attr()))["index"]));
+      SetAttrValue(input_prov_tag,
+                   &((*(new_input_node_def->mutable_attr()))["_prov_tag"]));
 
-        SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
-        SetAttrValue(arg_index_count[dst_cluster_idx],
-                    &((*(new_input_node_def->mutable_attr()))["index"]));
-        SetAttrValue(input_prov_tag,
-                    &((*(new_input_node_def->mutable_attr()))["_prov_tag"]));
-
-        arg_index_count[dst_cluster_idx]++;
-        cluster_input_map[dst_cluster_idx].push_back(
+      arg_index_count[dst_cluster_idx]++;
+      cluster_input_map[dst_cluster_idx].push_back(
           std::make_tuple(src->id(), edge->src_output(), dt));
     }
-
   }
 
-  int max_cost_cluster_idx = -1;
-  int max_cost = 0;
+  // A map from cluster indices to TF Profiled cumulative costs of nodes in the
+  // cluster
+  std::vector<std::pair<int, int64_t>> cluster_cost_map_in_ms;
 
-  for (auto& m : cluster_fetch_nodes_map) {
+  for (auto& c : cluster_graph_map) {
+    int cluster_idx = c.first;
+    GraphDef graph_def = c.second;
 
-    int cluster_idx = m.first;
-    std::vector<std::string> fetch_nodes = m.second;
-    
-    GraphDef graph_def = cluster_graph_map[cluster_idx];
     PopulateClusterGraphDef(cluster_idx, graph_def, graph, input_rename_map);
 
     GraphConstructorOptions opts;
     opts.allow_internal_ops = true;
-    Graph g(OpRegistry::Global());
-    TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &g)); 
-    
-    // Construct GrapplerItem for cost estimation of identified clusters from the
-    // assign_clusters phase
-    tensorflow::grappler::GrapplerItem grappler_item;
-    grappler_item = grappler_item.WithGraph(std::move(graph_def));
-    grappler_item.fetch = fetch_nodes;
+    opts.expect_device_spec = false;
+    FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
+    Graph g(flib);
+    TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &g));
 
-    // for (auto n: g.nodes()) {
-    //   if (n->type_string() == "Conv2D" || n->type_string() == "_FusedConv2D" || n->type_string() == "_FusedDepthwiseConv2dNative") {
-    //     std::cout << "Cluster " << cluster_idx << " has a Conv node" << std::endl;
-    //     break;
-    //   }
-    // }
-    
-    std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
-    std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
-    std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
-        cluster, std::move(node_estimator), std::move(node_manager),
-        /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
-    tensorflow::Status init_status = estimator->Initialize(grappler_item);
-    if (!init_status.ok()) return init_status;
-
-    tensorflow::RunMetadata run_metadata;
-    grappler::Costs costs;
-    estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
-    int64_t cluster_cost_in_ms = costs.execution_time.count() / 1e6;
-    OVTF_VLOG(1) << "Cluster with ID " << cluster_idx << " costs " << costs.execution_time.count() / 1e6 << " ms"; 
-
-    if (cluster_cost_in_ms > max_cost) {
-      max_cost = cluster_cost_in_ms;
-      max_cost_cluster_idx = cluster_idx;
+    int num_nodes = 0;
+    std::pair<int, int64_t> pair_idx_cost;
+    pair_idx_cost.first = cluster_idx;
+    pair_idx_cost.second = 0;
+    for (auto n : g.nodes()) {
+      int64_t node_cost = 0;
+      if (GetNodeAttr(n->attrs(), "cost", &node_cost) != Status::OK()) continue;
+      pair_idx_cost.second += node_cost;
+      num_nodes++;
     }
+    pair_idx_cost.second /= 1e6;  // ns to ms
+    cluster_cost_map_in_ms.push_back(pair_idx_cost);
 
+    OVTF_VLOG(1) << "Cluster with ID " << cluster_idx
+                 << ", num_nodes: " << num_nodes << ", costs "
+                 << pair_idx_cost.second << " ms";
   }
+
+  // sort clusters based on cost
+  std::sort(cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
+            [](auto& left, auto& right) { return left.second > right.second; });
+
+  // take only top-3 clusters
+  cluster_cost_map_in_ms.erase(cluster_cost_map_in_ms.begin() + 3,
+                               cluster_cost_map_in_ms.end());
 
   std::map<int, std::set<Node*>> cluster_map;
 
@@ -431,16 +416,20 @@ Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster) {
   if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
- 
+
   for (auto& kv : cluster_map) {
     int cluster_idx = kv.first;
     std::set<Node*>& nodes = kv.second;
 
-    if (cluster_idx == max_cost_cluster_idx) {
-      std::cout << "Scheduling cluster " << cluster_idx << " on the OpenVINO backend" << std::endl;
+    if (std::find_if(
+            cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
+            [&cluster_idx](const std::pair<int, int64_t>& pair_idx_cost) {
+              return pair_idx_cost.first == cluster_idx;
+            }) != cluster_cost_map_in_ms.end()) {
+      OVTF_VLOG(1) << "Scheduling cluster " << cluster_idx
+                   << " on the OpenVINO backend";
       continue;
-    }
-    else {
+    } else {
       OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
@@ -455,9 +444,7 @@ Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster) {
       }
       continue;
     }
-
   }
-
 
   std::vector<int> alive_clusters;
   int max_cluster_size = 0;
@@ -529,7 +516,8 @@ Status DeassignClusters(Graph* graph, tensorflow::grappler::Cluster* cluster) {
     //           (it->type_string() != "NonMaxSuppressionV2" &&
     //            it->type_string() != "Reshape")) {
     //         if (it->type_string() == "ZerosLike" ||
-    //             it->type_string() == "Size" || it->type_string() == "Conv2D" ||
+    //             it->type_string() == "Size" || it->type_string() == "Conv2D"
+    //             ||
     //             it->type_string() == "Unpack") {
     //           invalid_dyn_op = true;
     //           break;

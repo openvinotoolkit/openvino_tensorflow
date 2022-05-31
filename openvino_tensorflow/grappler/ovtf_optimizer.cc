@@ -10,17 +10,18 @@
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
 #include "tensorflow/core/grappler/clusters/cluster.h"
+#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 #include "tensorflow/core/grappler/grappler_item.h"
 #include "tensorflow/core/grappler/op_types.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.h"
 #include "tensorflow/core/grappler/utils.h"
 #include "tensorflow/core/platform/protobuf.h"
-#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
-#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
 
 #include "openvino_tensorflow/api.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/grappler/costs/cost_analyzer.h"
 #include "openvino_tensorflow/grappler/ovtf_optimizer.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
@@ -53,27 +54,20 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   opts.allow_internal_ops = true;
   opts.expect_device_spec = false;
 
-  grappler::GrapplerItem grappler_item(item);
-  GraphDef& graph_def = grappler_item.graph;
-
-  std::unique_ptr<grappler::OpLevelCostEstimator> node_estimator = absl::make_unique<grappler::OpLevelCostEstimator>();
-  std::unique_ptr<grappler::ReadyNodeManager> node_manager = grappler::ReadyNodeManagerFactory("FirstReady");
-  std::unique_ptr<grappler::AnalyticalCostEstimator> estimator = absl::make_unique<grappler::AnalyticalCostEstimator>(
-      cluster, std::move(node_estimator), std::move(node_manager),
-      /*use_static_shapes=*/true, /*use_aggressive_shape_inference=*/true);
-  tensorflow::Status init_status = estimator->Initialize(grappler_item);
-  if (!init_status.ok()) return init_status;
-
-  tensorflow::RunMetadata run_metadata;
-  grappler::Costs costs;
-  estimator->PredictCosts(grappler_item.graph, &run_metadata, &costs);
-  int64_t cluster_cost_in_ms = costs.execution_time.count() / 1e6;
-  OVTF_VLOG(1) << "Full TF Graph costs " << costs.execution_time.count() / 1e6 << " ms"; 
-
-  FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
+  FunctionLibraryDefinition flib(OpRegistry::Global(), item.graph.library());
   Graph graph(flib);
-  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &graph));
+  TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
   OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+
+  /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
+  cluster->DisableDetailedStats(false);  // This enables tracing HW performance
+  std::unique_ptr<grappler::CostAnalyzer> analyzer =
+      absl::make_unique<grappler::CostAnalyzer>(item, cluster);
+  TF_RETURN_IF_ERROR(analyzer->GenerateReport(std::cout,
+                                              /*print_analysis=*/false,
+                                              /*verbose=*/false));
+  TF_RETURN_IF_ERROR(analyzer->AnnotateOpCosts(graph));
+  cluster->DisableDetailedStats(true);
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -158,10 +152,10 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
   OVTF_VLOG(1) << "These nodes are preserved from being marked for clustering";
-  for (auto itr = nodes_to_preserve.begin(); 
-       itr != nodes_to_preserve.end(); itr++) {
-         OVTF_VLOG(1) << *itr;
-       }
+  for (auto itr = nodes_to_preserve.begin(); itr != nodes_to_preserve.end();
+       itr++) {
+    OVTF_VLOG(1) << *itr;
+  }
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -216,7 +210,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   util::DumpTFGraph(&graph, idx, "clustered");
 
   // 3. Deassign trivial clusters then, if requested, dump the graphs.
-  TF_RETURN_IF_ERROR(DeassignClusters(&graph, cluster));
+  TF_RETURN_IF_ERROR(DeassignClusters(&graph));
   util::DumpTFGraph(&graph, idx, "declustered");
 
   // 4. Encapsulate clusters then, if requested, dump the graphs.
@@ -235,7 +229,7 @@ int OVTFOptimizer::FreshIndex() {
   mutex_lock l(s_serial_counter_mutex);
   return s_serial_counter++;
 }
-  
+
 class VerboseCustomGraphOptimizerRegistrar
     : public grappler::CustomGraphOptimizerRegistrar {
  public:
@@ -250,8 +244,7 @@ class VerboseCustomGraphOptimizerRegistrar
 
 static VerboseCustomGraphOptimizerRegistrar OVTFOptimizationPass_Registrar(
     []() {
-      VLOG(1)
-          << "Instantiating CustomOptimizationPass object ovtf-optimizer";
+      VLOG(1) << "Instantiating CustomOptimizationPass object ovtf-optimizer";
       return new OVTFOptimizer;
     },
     ("ovtf-optimizer"));

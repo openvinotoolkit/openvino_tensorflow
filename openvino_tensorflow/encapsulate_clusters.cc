@@ -146,6 +146,9 @@ Status Encapsulator::AnalysisPass() {
                    << "'";
       device_name_map[cluster_idx] = node->assigned_device_name();
     }
+
+    // initialize cluster costs
+    cluster_cost_map_in_ms[cluster_idx] = 0;
   }
 
   // Pass 2: Find all nodes that are feeding into/out of each cluster, and
@@ -343,6 +346,11 @@ Status Encapsulator::AnalysisPass() {
       continue;
     }
 
+    int64_t node_cost = 0;
+    if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
+      continue;
+    cluster_cost_map_in_ms[cluster_idx] += node_cost;
+
     // Because the input names may have changed from the original node def,
     // we will need to borrow some code from Graph::ToGraphDefSubRange in
     // tensorflow/core/graph/graph.cc that rewrites the node's input list.
@@ -448,14 +456,18 @@ Status Encapsulator::RewritePass(
           NodeBuilder::NodeOut(graph->FindNodeId(src_node_id), src_output_idx));
     }
 
+    cluster_cost_map_in_ms[cluster_idx] /= 1e6;  // convert cost from ns to ms
+
     Node* n;
-    NodeBuilder nb = NodeBuilder(encap_node_name, "_nGraphEncapsulate")
-                         .Attr("ovtf_cluster", cluster_idx)
-                         .Attr("Targuments", input_types)
-                         .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-                         .Attr("ngraph_graph_id", graph_id)
-                         .Device(device_name_map[cluster_idx])
-                         .Input(inputs);
+    NodeBuilder nb =
+        NodeBuilder(encap_node_name, "_nGraphEncapsulate")
+            .Attr("ovtf_cluster", cluster_idx)
+            .Attr("Targuments", input_types)
+            .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+            .Attr("ngraph_graph_id", graph_id)
+            .Attr("cluster_cost", cluster_cost_map_in_ms[cluster_idx])
+            .Device(device_name_map[cluster_idx])
+            .Input(inputs);
     if (!device_config.empty()) {
       OVTF_VLOG(3) << "Device config is not empty";
       for (auto const& i : device_config) {

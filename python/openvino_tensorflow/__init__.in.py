@@ -263,9 +263,10 @@ if ovtf_classic_loaded:
         return cluster_string
     
     def optimize_graph_with_openvino_v2(saved_model_dir,
-                                        input_tensors,
+                                        input_tensor,
                                         saved_model_signature_key=signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
                                         saved_model_tag=tag_constants.SERVING,
+                                        save_optimized_function_signature=False
                                         ):
         rewriter_config = rewriter_config_pb2.RewriterConfig()
         rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
@@ -277,13 +278,14 @@ if ovtf_classic_loaded:
 
         # form a concrete function with input tensor in it so grappler can do shape inference
         # [TODO] Handle dict type multi inputs
-        func = tf.function(saved_model.signatures[saved_model_signature_key])
-        func = func.get_concrete_function(input_tensors)
-
+        func = tf.function(saved_model, input_signature=[tf.TensorSpec(input_tensor.shape, input_tensor.dtype)])
+        func = func.get_concrete_function()
+        
         # Converting var2consts for larger models like SSD MobileNetV2 takes a long time
-        frozen_func = convert_to_constants.convert_variables_to_constants_v2(func)
-
-        meta_graph_def = saver.export_meta_graph(graph_def=frozen_func.graph.as_graph_def(), graph=frozen_func.graph)
+        frozen_func = convert_to_constants.convert_variables_to_constants_v2(func, lower_control_flow=False,
+                                      aggressive_inlining=True)
+        
+        meta_graph_def = saver.export_meta_graph(graph_def=frozen_func.graph.as_graph_def(add_shapes=True), graph=frozen_func.graph)
 
         fetch_collection = meta_graph_pb2.CollectionDef()
         for array in frozen_func.outputs:
@@ -294,8 +296,8 @@ if ovtf_classic_loaded:
             fetch_collection)
 
         grappler_session_config = config_pb2.ConfigProto()
-        grappler_session_config.graph_options.rewrite_options.MergeFrom(rewriter_config)
-
+        grappler_session_config.graph_options.rewrite_options.CopyFrom(rewriter_config)
+        
         t_start = time.time()
         optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
         
@@ -324,7 +326,11 @@ if ovtf_classic_loaded:
 
         # Save the optimized function for later use
         # Sometimes this is useful when first-inference-latency overhead needs to be avoided
-        save.save(saved_model, saved_model_dir, signatures)
+        if save_optimized_function_signature:
+            save.save(saved_model, saved_model_dir, signatures)
+            return optimized_func
+        else:
+            return optimized_func
                 
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
