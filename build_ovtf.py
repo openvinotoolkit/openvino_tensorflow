@@ -541,17 +541,17 @@ def main():
         elif (arguments.openvino_version == "2022.1.0"):
             openvino_release_tag = "2022.1.0"
 
-        # Download OpenVINO
-        # download_repo(
-        #     "openvino",
-        #     "https://github.com/openvinotoolkit/openvino.git",
-        #     openvino_release_tag,
-        #     submodule_update=True)
+        Download OpenVINO
+        download_repo(
+            "openvino",
+            "https://github.com/openvinotoolkit/openvino.git",
+            openvino_release_tag,
+            submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
-        # build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-        #                artifacts_location, arguments.debug_build, verbosity)
+        build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+                       artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the openvino-tensorflow
     if (platform.system() == 'Windows'):
