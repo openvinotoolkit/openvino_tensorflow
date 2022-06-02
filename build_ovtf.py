@@ -400,11 +400,6 @@ def main():
                         "pip", "install", "--force-reinstall",
                         "tensorflow==" + tf_version
                     ])
-                    #TODO: Remove this once protobuf version error is fixed in TF-2.8
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "protobuf==" + "3.20.1"
-                    ])
             elif arguments.cxx11_abi_version == "1":
                 if tags.interpreter == "cp37":
                     command_executor([
@@ -425,6 +420,12 @@ def main():
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
 
+            command_executor([
+                "pip", 
+                "install",
+                "-U",
+                "protobuf==3.20.1"
+            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -541,16 +542,16 @@ def main():
             openvino_release_tag = "2022.1.0"
 
         # Download OpenVINO
-        download_repo(
-            "openvino",
-            "https://github.com/openvinotoolkit/openvino.git",
-            openvino_release_tag,
-            submodule_update=True)
+        # download_repo(
+        #     "openvino",
+        #     "https://github.com/openvinotoolkit/openvino.git",
+        #     openvino_release_tag,
+        #     submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
-        build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-                       artifacts_location, arguments.debug_build, verbosity)
+        # build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
+        #                artifacts_location, arguments.debug_build, verbosity)
 
     # Next build CMAKE options for the openvino-tensorflow
     if (platform.system() == 'Windows'):
