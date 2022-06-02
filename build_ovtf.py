@@ -541,7 +541,7 @@ def main():
         elif (arguments.openvino_version == "2022.1.0"):
             openvino_release_tag = "2022.1.0"
 
-        Download OpenVINO
+        # Download OpenVINO
         download_repo(
             "openvino",
             "https://github.com/openvinotoolkit/openvino.git",
