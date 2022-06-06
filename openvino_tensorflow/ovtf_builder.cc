@@ -933,6 +933,17 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
   ov::element::Type ng_et;
   TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
 
+  auto ng_input_dtype = ng_input.get_element_type();
+
+  if (ng_et == ov::element::boolean && (ng_input_dtype == ov::element::f32 ||
+                                        ng_input_dtype == ov::element::f64)) {
+    auto zeros = ConstructNgNode<opset::Constant>(op->name(), ng_input_dtype,
+                                                  ov::Shape{}, 0);
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::NotEqual>(op->name(), ng_input, zeros));
+    return Status::OK();
+  }
+
   try {
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::Convert>(op->name(), ng_input, ng_et));
