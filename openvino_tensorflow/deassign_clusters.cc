@@ -395,9 +395,35 @@ Status DeassignClusters(Graph* graph) {
   std::sort(cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
             [](auto& left, auto& right) { return left.second > right.second; });
 
+  // Keep only Top K clusters, based on the value of K set by the following
+  // environment variable
+  int top_k_clusters = 3;
+  if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
+    top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
+  }
+
   // take only top-3 clusters
-  cluster_cost_map_in_ms.erase(cluster_cost_map_in_ms.begin() + 3,
+  cluster_cost_map_in_ms.erase(cluster_cost_map_in_ms.begin() + top_k_clusters,
                                cluster_cost_map_in_ms.end());
+  
+
+  // if (top_k_clusters != -1) {
+  //   // sort the clusters
+  //   std::sort(alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
+  //             [](const auto& x, const auto& y) { return x.second > y.second; });
+  //   int total_clusters = alive_clusters_pairs.size();
+  //   for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
+  //     // clear the cluster
+  //     auto cluster_id_to_clear = alive_clusters_pairs[count].first;
+  //     set<Node*>& nodes = cluster_map[cluster_id_to_clear];
+
+  //     for (auto node : nodes) {
+  //       node->ClearAttr("_ovtf_cluster");
+  //       node->ClearAttr("_ovtf_marked_for_clustering");
+  //       deassigned_histogram[node->type_string()]++;
+  //     }
+  //   }
+  // }
 
   std::map<int, std::set<Node*>> cluster_map;
 
@@ -447,6 +473,7 @@ Status DeassignClusters(Graph* graph) {
   }
 
   std::vector<int> alive_clusters;
+  std::vector<std::pair<int, int>> alive_clusters_pairs;
   int max_cluster_size = 0;
   int max_cluster_idx = -1;
 
@@ -643,29 +670,6 @@ Status DeassignClusters(Graph* graph) {
           node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;
         }
-      }
-    }
-  }
-  // Keep only Top K clusters, based on the value of K set by the following
-  // environment variable
-  int top_k_clusters = -1;
-  if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
-    top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
-  }
-  if (top_k_clusters != -1) {
-    // sort the clusters
-    std::sort(alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
-              [](const auto& x, const auto& y) { return x.second > y.second; });
-    int total_clusters = alive_clusters_pairs.size();
-    for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
-      // clear the cluster
-      auto cluster_id_to_clear = alive_clusters_pairs[count].first;
-      set<Node*>& nodes = cluster_map[cluster_id_to_clear];
-
-      for (auto node : nodes) {
-        node->ClearAttr("_ovtf_cluster");
-        node->ClearAttr("_ovtf_marked_for_clustering");
-        deassigned_histogram[node->type_string()]++;
       }
     }
   }
