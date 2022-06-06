@@ -24,6 +24,7 @@
 #include "tensorflow/core/graph/graph_constructor.h"
 #endif
 #include "tensorflow/core/graph/algorithm.h"
+#include "tensorflow/core/profiler/utils/time_utils.h"
 #include "tensorflow/core/public/session.h"
 
 #include "logging/ovtf_log.h"
@@ -70,12 +71,15 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
+  int64_t m_cluster_cost_in_ms;
+  int64_t m_iter;
 };
 
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
   OVTF_VLOG(1) << "Create Executor " << name();
   m_name = name();
+  m_iter = 0;
 
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
   std::ostringstream oss;
@@ -111,6 +115,9 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     opts.allow_internal_ops = true;
     OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
   }
+
+  OP_REQUIRES_OK(ctx,
+                 ctx->GetAttr<int64_t>("cluster_cost", &m_cluster_cost_in_ms));
 
   //
   // Initialize the "m_input_is_static" vector as follows:
@@ -362,7 +369,26 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
-        ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
+        int64_t infer_duration_in_ms = 0;
+
+        int64_t start_ns = profiler::GetCurrentTimeNanos();
+        ng_exec->Call(ng_inputs, ng_func_outputs, &infer_duration_in_ms,
+                      multi_req_execution);
+        int64_t overall_duration_in_ms =
+            (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+
+        OVTF_VLOG(1) << "Iter: " << m_iter;
+        OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
+                     << m_cluster_cost_in_ms << " ms.";
+        OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
+                     << infer_duration_in_ms
+                     << " ms. Total Cost: " << overall_duration_in_ms;
+
+        // ignore warmup iteration while comparing cluster costs
+        if ((m_iter > 0) && (overall_duration_in_ms > m_cluster_cost_in_ms))
+          throw std::runtime_error(
+              "Falling back to native TF as OVTF runtime is costlier.");
+
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
@@ -492,6 +518,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       }
     }
   }
+  m_iter++;
 
   long vm = 0, rss = 0;
   util::MemoryProfile(vm, rss);

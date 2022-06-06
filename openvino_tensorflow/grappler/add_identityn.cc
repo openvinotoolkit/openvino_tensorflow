@@ -57,7 +57,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         // Rename the skip node
         // Get a new name for the node with the given prefix
         // We will use the 'original-node-name_ngraph' as the prefix
-        string new_name = input_graph->NewName(node->name() + "_ngraph");
+        string new_name = input_graph->NewName(node->name() + "_openvino");
         // TODO: Use (guaranteed) unique name here
         node->set_name(new_name);
         OVTF_VLOG(5) << "OVTF_OPTIMIZER: New name for fetch node "

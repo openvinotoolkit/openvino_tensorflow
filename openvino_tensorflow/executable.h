@@ -27,7 +27,7 @@ class Executable {
   ~Executable() {}
   bool Call(const vector<shared_ptr<ov::Tensor>>& inputs,
             vector<shared_ptr<ov::Tensor>>& outputs,
-            bool multi_req_execution = false);
+            int64_t* infer_duration_in_ms, bool multi_req_execution = false);
 
   const ov::ResultVector& GetResults() { return m_model->get_results(); };
 

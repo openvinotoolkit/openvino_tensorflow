@@ -10,6 +10,8 @@
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
 #include "tensorflow/core/grappler/clusters/cluster.h"
+#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 #include "tensorflow/core/grappler/grappler_item.h"
 #include "tensorflow/core/grappler/op_types.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.h"
@@ -19,6 +21,7 @@
 #include "openvino_tensorflow/api.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/grappler/costs/cost_analyzer.h"
 #include "openvino_tensorflow/grappler/ovtf_optimizer.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
@@ -49,9 +52,21 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
-  opts.expect_device_spec = true;
-  Graph graph(OpRegistry::Global());
+  opts.expect_device_spec = false;
+
+  FunctionLibraryDefinition flib(OpRegistry::Global(), item.graph.library());
+  Graph graph(flib);
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
+  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+
+  /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
+  cluster->DisableDetailedStats(false);  // This enables tracing HW performance
+  std::unique_ptr<grappler::CostAnalyzer> analyzer =
+      absl::make_unique<grappler::CostAnalyzer>(item, cluster);
+  TF_RETURN_IF_ERROR(analyzer->GenerateReport(std::cout,
+                                              /*print_analysis=*/false,
+                                              /*verbose=*/false));
+  TF_RETURN_IF_ERROR(analyzer->AnnotateOpCosts(graph));
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -94,6 +109,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Feed Nodes
   for (size_t i = 0; i < item.feed.size(); i++) {
     nodes_to_preserve.insert(item.feed[i].first);
+    OVTF_VLOG(1) << "Feed node: " << item.feed[i].first;
   }
 
   // Keep Ops
@@ -134,7 +150,11 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
-  std::set<string>& skip_these_nodes = nodes_to_preserve;
+  OVTF_VLOG(1) << "These nodes are preserved from being marked for clustering";
+  for (auto itr = nodes_to_preserve.begin(); itr != nodes_to_preserve.end();
+       itr++) {
+    OVTF_VLOG(1) << *itr;
+  }
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -161,12 +181,13 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   const char* device_id(device.c_str());
   std::string ov_version;
 #if defined(OPENVINO_2022_1)
-  ov_version = "2022.1";
+  ov_version = "2022.1.0";
 #endif
+
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());
-  std::vector<void*> nodes_list = FC.MarkSupportedNodes();
+  std::vector<void*> nodes_list = FC.MarkSupportedNodes(nodes_to_preserve);
 
   // cast back the nodes in the TF format and mark the nodes for clustering
   // (moved out from MarkForClustering function)
@@ -203,18 +224,29 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   return Status::OK();
 }
 
-void OVTFOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
-                             const tensorflow::grappler::GrapplerItem& item,
-                             const GraphDef& optimize_output, double result) {
-  // no-op
-}
-
 int OVTFOptimizer::FreshIndex() {
   mutex_lock l(s_serial_counter_mutex);
   return s_serial_counter++;
 }
 
-REGISTER_GRAPH_OPTIMIZER_AS(OVTFOptimizer, "ovtf-optimizer");
+class VerboseCustomGraphOptimizerRegistrar
+    : public grappler::CustomGraphOptimizerRegistrar {
+ public:
+  VerboseCustomGraphOptimizerRegistrar(
+      const grappler::CustomGraphOptimizerRegistry::Creator& cr,
+      const string& name)
+      : grappler::CustomGraphOptimizerRegistrar(cr, name) {
+    VLOG(1) << "Constructing a CustomOptimizationPass registration object for "
+            << name;
+  }
+};
+
+static VerboseCustomGraphOptimizerRegistrar OVTFOptimizationPass_Registrar(
+    []() {
+      VLOG(1) << "Instantiating CustomOptimizationPass object ovtf-optimizer";
+      return new OVTFOptimizer;
+    },
+    ("ovtf-optimizer"));
 
 }  // end namespace openvino_tensorflow
 }  // end namespace tensorflow

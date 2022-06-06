@@ -31,7 +31,8 @@ class IE_Basic_Engine : public IE_Backend_Engine {
                      std::vector<std::shared_ptr<IETensor>>& outputs,
                      std::vector<std::string>& output_names,
                      std::vector<std::shared_ptr<IETensor>>& hoisted_params,
-                     std::vector<std::string>& param_names);
+                     std::vector<std::string>& param_names,
+                     int64_t* infer_duration_in_ms);
 
   virtual const std::vector<size_t> get_output_shape(const int i) {
     return m_model->get_results()[i]->get_shape();

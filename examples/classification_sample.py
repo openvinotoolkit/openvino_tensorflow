@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     if model_file == "":
         model = hub.load(
-            "https://tfhub.dev/google/imagenet/inception_v3/classification/4")
+            "https://tfhub.dev/google/imagenet/inception_v3/classification/5")
     else:
         model = tf.saved_model.load(model_file)
 
@@ -203,6 +203,8 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
+        model = ovtf.optimize_graph_with_openvino_v2(model_file, t)
+
         # Warmup
         if image_id == 0:
             results = model(t)
@@ -214,7 +216,7 @@ if __name__ == "__main__":
         fps = 1 / elapsed
         print('Inference time in ms: %.2f' % (elapsed * 1000))
 
-        results = tf.nn.softmax(results).numpy()
+        results = tf.nn.softmax(results["logits"]).numpy()
         if label_file:
             cv2.putText(frame,
                         'Inference Running on : {0}'.format(backend_name),

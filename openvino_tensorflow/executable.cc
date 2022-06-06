@@ -154,7 +154,7 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
 
 bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
                       vector<shared_ptr<ov::Tensor>>& outputs,
-                      bool multi_req_execution) {
+                      int64_t* infer_duration_in_ms, bool multi_req_execution) {
   if (m_trivial_fn) {
     OVTF_VLOG(2) << "Calling trivial function with inputs=" << inputs.size()
                  << " outputs=" << outputs.size();
@@ -228,7 +228,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   }
 
   m_ie_engine->infer(ie_inputs, input_names, ie_outputs, output_names,
-                     ie_hoisted_params, param_names);
+                     ie_hoisted_params, param_names, infer_duration_in_ms);
 
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {

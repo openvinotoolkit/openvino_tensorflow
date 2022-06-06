@@ -25,6 +25,19 @@ from tensorflow.python.framework import ops
 from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.framework import load_library
 
+from tensorflow.core.protobuf import config_pb2
+from tensorflow.core.protobuf import meta_graph_pb2
+from tensorflow.python.grappler import tf_optimizer
+from tensorflow.python.saved_model import load
+from tensorflow.python.saved_model import save
+from tensorflow.python.framework import convert_to_constants
+from tensorflow.python.training import saver
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
+from tensorflow.python.util import nest
+from tensorflow.python.eager import context
+from tensorflow.python.eager import wrap_function
+
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -248,7 +261,75 @@ if ovtf_classic_loaded:
         openvino_tensorflow_lib.freeClusterInfo()
 
         return cluster_string
+    
+    def optimize_graph_with_openvino_v2(saved_model_dir,
+                                        input_tensor,
+                                        saved_model_signature_key=signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+                                        saved_model_tag=tag_constants.SERVING,
+                                        save_optimized_function_signature=False
+                                        ):
+        rewriter_config = rewriter_config_pb2.RewriterConfig()
+        rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
+        ovtf_optimizer = rewriter_config.custom_optimizers.add()
+        ovtf_optimizer.name = "ovtf-optimizer"
 
+        # prepare tf function from saved_model
+        saved_model = load.load(saved_model_dir, saved_model_tag)
+
+        # form a concrete function with input tensor in it so grappler can do shape inference
+        # [TODO] Handle dict type multi inputs
+        func = tf.function(saved_model, input_signature=[tf.TensorSpec(input_tensor.shape, input_tensor.dtype)])
+        func = func.get_concrete_function()
+        
+        # Converting var2consts for larger models like SSD MobileNetV2 takes a long time
+        frozen_func = convert_to_constants.convert_variables_to_constants_v2(func, lower_control_flow=False,
+                                      aggressive_inlining=True)
+        
+        meta_graph_def = saver.export_meta_graph(graph_def=frozen_func.graph.as_graph_def(add_shapes=True), graph=frozen_func.graph)
+
+        fetch_collection = meta_graph_pb2.CollectionDef()
+        for array in frozen_func.outputs:
+            fetch_collection.node_list.value.append(array.name)
+        
+        # Grappler determines fetch ops from collection 'train_op'.
+        meta_graph_def.collection_def[ops.GraphKeys.TRAIN_OP].CopyFrom(
+            fetch_collection)
+
+        grappler_session_config = config_pb2.ConfigProto()
+        grappler_session_config.graph_options.rewrite_options.CopyFrom(rewriter_config)
+        optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
+        
+        # Swap original function with optimized function in TF's context
+        for f in optimized_graph_def.library.function:
+            while context.context().has_function(f.signature.name):
+                context.context().remove_function(f.signature.name)
+
+        optimized_func = wrap_function.function_from_graph_def(
+            optimized_graph_def,
+            [tensor.name for tensor in frozen_func.inputs],
+            [tensor.name for tensor in frozen_func.outputs])
+
+        optimized_func.graph.structured_outputs = nest.pack_sequence_as(
+            func.graph.structured_outputs,
+            optimized_func.graph.structured_outputs)
+
+        optimized_func.graph.structured_input_signature = (
+            func.structured_input_signature)
+
+        # Rewrite the signature map using the optimized ConcreteFunction.
+        signatures = {
+            key: value for key, value in saved_model.signatures.items()
+        }
+        signatures["ovtf"] = optimized_func
+
+        # Save the optimized function for later use
+        # Sometimes this is useful when first-inference-latency overhead needs to be avoided
+        if save_optimized_function_signature:
+            save.save(saved_model, saved_model_dir, signatures)
+            return optimized_func
+        else:
+            return optimized_func
+                
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
     "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \

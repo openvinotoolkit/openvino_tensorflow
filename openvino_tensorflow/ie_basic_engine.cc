@@ -10,6 +10,7 @@
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
+#include "tensorflow/core/profiler/utils/time_utils.h"
 
 using namespace InferenceEngine;
 
@@ -28,7 +29,7 @@ void IE_Basic_Engine::infer(
     std::vector<std::shared_ptr<IETensor>>& outputs,
     std::vector<std::string>& output_names,
     std::vector<std::shared_ptr<IETensor>>& hoisted_params,
-    std::vector<std::string>& param_names) {
+    std::vector<std::string>& param_names, int64_t* infer_duration_in_ms) {
   load_network();
   if (m_infer_reqs.empty()) {
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
@@ -99,7 +100,9 @@ void IE_Basic_Engine::infer(
     }
   }
 
+  int64_t start_ns = profiler::GetCurrentTimeNanos();
   m_infer_reqs[0].infer();
+  *infer_duration_in_ms = (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
 
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {
