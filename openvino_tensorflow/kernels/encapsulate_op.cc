@@ -369,18 +369,23 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
+        int64_t infer_duration_in_ms = 0;
+
         int64_t start_ns = profiler::GetCurrentTimeNanos();
-        ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
-        int64_t duration_in_ms =
+        ng_exec->Call(ng_inputs, ng_func_outputs, &infer_duration_in_ms,
+                      multi_req_execution);
+        int64_t overall_duration_in_ms =
             (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
                      << m_cluster_cost_in_ms << " ms.";
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
-                     << duration_in_ms << " ms.";
+                     << infer_duration_in_ms
+                     << " ms. Total Cost: " << overall_duration_in_ms;
 
         // ignore warmup iteration while comparing cluster costs
-        if ((m_iter > 0) && (duration_in_ms > m_cluster_cost_in_ms))
+        if ((m_iter > 0) && (overall_duration_in_ms > m_cluster_cost_in_ms))
           throw std::runtime_error(
               "Falling back to native TF as OVTF runtime is costlier.");
 

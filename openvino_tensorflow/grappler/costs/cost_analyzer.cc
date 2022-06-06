@@ -67,6 +67,7 @@ Status CostAnalyzer::AnnotateOpCosts(tensorflow::Graph& graph) {
 }
 
 void CostAnalyzer::GatherCosts() {
+  OVTF_VLOG(1) << "Starting measuring_cost_estimator";
   CostGraphDef cost_graph_measured;
   PredictCosts(&measure_estimator_, &cost_graph_measured,
                &total_time_measured_);

@@ -297,8 +297,6 @@ if ovtf_classic_loaded:
 
         grappler_session_config = config_pb2.ConfigProto()
         grappler_session_config.graph_options.rewrite_options.CopyFrom(rewriter_config)
-        
-        t_start = time.time()
         optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
         
         # Swap original function with optimized function in TF's context

@@ -67,7 +67,6 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                               /*print_analysis=*/false,
                                               /*verbose=*/false));
   TF_RETURN_IF_ERROR(analyzer->AnnotateOpCosts(graph));
-  cluster->DisableDetailedStats(true);
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
