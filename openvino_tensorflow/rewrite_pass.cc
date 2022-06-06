@@ -164,7 +164,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     FC.SetDisabledOps(disabled_ops_set);
-    std::vector<void*> nodes_list = FC.MarkSupportedNodes();
+    std::vector<void*> nodes_list = FC.MarkSupportedNodes({});
 
     // cast back the nodes in the TF format and mark the nodes for clustering
     // (moved out from MarkForClustering function)

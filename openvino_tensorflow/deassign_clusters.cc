@@ -473,7 +473,7 @@ Status DeassignClusters(Graph* graph) {
   }
 
   std::vector<int> alive_clusters;
-  std::vector<std::pair<int, int>> alive_clusters_pairs;
+  // std::vector<std::pair<int, int>> alive_clusters_pairs;
   int max_cluster_size = 0;
   int max_cluster_idx = -1;
 
@@ -656,7 +656,7 @@ Status DeassignClusters(Graph* graph) {
       max_cluster_size = nodes.size();
     }
     alive_clusters.push_back(cluster_idx);
-    alive_clusters_pairs.push_back(std::make_pair(cluster_idx, nodes.size()));
+    // alive_clusters_pairs.push_back(std::make_pair(cluster_idx, nodes.size()));
   }
 
   if (device == "HDDL" || device == "MYRIAD") {
