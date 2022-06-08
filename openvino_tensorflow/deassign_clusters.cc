@@ -194,6 +194,7 @@ Status DeassignClusters(Graph* graph) {
   }
 
   std::vector<int> alive_clusters;
+  std::vector<std::pair<int, int>> alive_clusters_pairs;
   int max_cluster_size = 0;
   int max_cluster_idx = -1;
 
@@ -210,7 +211,7 @@ Status DeassignClusters(Graph* graph) {
       }
     }
 
-    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 6;
+    int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
@@ -226,7 +227,9 @@ Status DeassignClusters(Graph* graph) {
     OVTF_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
 
     if (non_trivial_count < min_non_trivial_nodes) {
-      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
+      OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                   << " as number of non trivial nodes in it are less than "
+                      "MIN_NONTRIVIAL_NODES threshold";
       for (auto node : nodes) {
         OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
                      << node->type_string() << "]";
@@ -241,91 +244,92 @@ Status DeassignClusters(Graph* graph) {
       continue;
     }
     // Disable dynamic to static
-    std::vector<Node*> dyn_node_check;
-    std::set<Node*> visited_node_check;
-    for (auto node : nodes) {
-      if (node->type_string() == "NonMaxSuppressionV2" ||
-          node->type_string() == "Reshape") {
-        dyn_node_check.push_back(node);
-        visited_node_check.insert(node);
-      }
-    }
-    bool invalid_dyn_op = false;
-    while (dyn_node_check.size() > 0) {
-      Node* node = dyn_node_check.back();
-      dyn_node_check.pop_back();
+    // std::vector<Node*> dyn_node_check;
+    // std::set<Node*> visited_node_check;
+    // for (auto node : nodes) {
+    //   if (node->type_string() == "NonMaxSuppressionV2" ||
+    //       node->type_string() == "Reshape") {
+    //     dyn_node_check.push_back(node);
+    //     visited_node_check.insert(node);
+    //   }
+    // }
+    // bool invalid_dyn_op = false;
+    // while (dyn_node_check.size() > 0) {
+    //   Node* node = dyn_node_check.back();
+    //   dyn_node_check.pop_back();
 
-      for (auto it : node->out_nodes()) {
-        int out_cluster;
-        Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-        if (s == Status::OK()) {
-          if (out_cluster == cluster_idx &&
-              (it->type_string() != "NonMaxSuppressionV2" &&
-               it->type_string() != "Reshape")) {
-            if (it->type_string() == "ZerosLike" ||
-                it->type_string() == "Size" || it->type_string() == "Conv2D" ||
-                it->type_string() == "Unpack") {
-              invalid_dyn_op = true;
-              break;
-            } else if (visited_node_check.find(it) ==
-                       visited_node_check.end()) {
-              dyn_node_check.push_back(it);
-              visited_node_check.insert(it);
-            }
-          }
-        }
-      }
-    }
-    if (invalid_dyn_op) {
-      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
-      for (auto node : nodes) {
-        OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-                     << node->type_string() << "]";
+    //   for (auto it : node->out_nodes()) {
+    //     int out_cluster;
+    //     Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+    //     if (s == Status::OK()) {
+    //       if (out_cluster == cluster_idx &&
+    //           (it->type_string() != "NonMaxSuppressionV2" &&
+    //            it->type_string() != "Reshape")) {
+    //         if (it->type_string() == "Size") {
+    //           invalid_dyn_op = true;
+    //           break;
+    //         } else if (visited_node_check.find(it) ==
+    //                    visited_node_check.end()) {
+    //           dyn_node_check.push_back(it);
+    //           visited_node_check.insert(it);
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+    // if (invalid_dyn_op) {
+    //   OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+    //                << " due to Dynamic to Static Flow";
+    //   for (auto node : nodes) {
+    //     OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
+    //                  << node->type_string() << "]";
 
-        // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ovtf_cluster");
-        // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ovtf_marked_for_clustering");
+    //     // TODO(amprocte): move attr name to a constant
+    //     node->ClearAttr("_ovtf_cluster");
+    //     // TODO(amprocte): move attr name to a constant
+    //     node->ClearAttr("_ovtf_marked_for_clustering");
 
-        deassigned_histogram[node->type_string()]++;
-      }
-      continue;
-    }
+    //     deassigned_histogram[node->type_string()]++;
+    //   }
+    //   continue;
+    // }
 
-    unordered_set<std::string> input_args;
-    vector<string> cluster_inputs;
-    bool omit_cluster = false;
+    // Commenting the condition, not required here anymore, handled the required
+    // part with static input condition
+    // unordered_set<std::string> input_args;
+    // vector<string> cluster_inputs;
+    // bool omit_cluster = false;
 
-    for (auto node : nodes) {
-      for (auto it : node->in_nodes()) {
-        if (!input_args.count(it->name())) {
-          cluster_inputs.push_back(it->name());
-        }
-        input_args.insert(it->name());
-      }
-    }
-    for (auto node : nodes) {
-      if (node->type_string() == "Prod") {
-        for (auto it : node->in_nodes()) {
-          auto inp_name = it->name();
-          auto iter =
-              find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
-          if (iter != cluster_inputs.end()) {
-            omit_cluster = true;
-            break;
-          }
-        }
-      }
-      if (omit_cluster) break;
-    }
-    if (omit_cluster) {
-      for (auto node : nodes) {
-        node->ClearAttr("_ovtf_cluster");
-        node->ClearAttr("_ovtf_marked_for_clustering");
-        deassigned_histogram[node->type_string()]++;
-      }
-      continue;
-    }
+    // for (auto node : nodes) {
+    //   for (auto it : node->in_nodes()) {
+    //     if (!input_args.count(it->name())) {
+    //       cluster_inputs.push_back(it->name());
+    //     }
+    //     input_args.insert(it->name());
+    //   }
+    // }
+    // for (auto node : nodes) {
+    //   if (node->type_string() == "Prod") {
+    //     for (auto it : node->in_nodes()) {
+    //       auto inp_name = it->name();
+    //       auto iter =
+    //           find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
+    //       if (iter != cluster_inputs.end()) {
+    //         omit_cluster = true;
+    //         break;
+    //       }
+    //     }
+    //   }
+    //   if (omit_cluster) break;
+    // }
+    // if (omit_cluster) {
+    //   for (auto node : nodes) {
+    //     node->ClearAttr("_ovtf_cluster");
+    //     node->ClearAttr("_ovtf_marked_for_clustering");
+    //     deassigned_histogram[node->type_string()]++;
+    //   }
+    //   continue;
+    // }
 
     if (device == "HDDL") {
       std::vector<std::string> illegal_input_nodes = {"Unpack"};
@@ -375,6 +379,7 @@ Status DeassignClusters(Graph* graph) {
       max_cluster_size = nodes.size();
     }
     alive_clusters.push_back(cluster_idx);
+    alive_clusters_pairs.push_back(std::make_pair(cluster_idx, nodes.size()));
   }
 
   if (device == "HDDL" || device == "MYRIAD") {
@@ -388,6 +393,29 @@ Status DeassignClusters(Graph* graph) {
           node->ClearAttr("_ovtf_marked_for_clustering");
           deassigned_histogram[node->type_string()]++;
         }
+      }
+    }
+  }
+  // Keep only Top K clusters, based on the value of K set by the following
+  // environment variable
+  int top_k_clusters = -1;
+  if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
+    top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
+  }
+  if (top_k_clusters != -1) {
+    // sort the clusters
+    std::sort(alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
+              [](const auto& x, const auto& y) { return x.second > y.second; });
+    int total_clusters = alive_clusters_pairs.size();
+    for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
+      // clear the cluster
+      auto cluster_id_to_clear = alive_clusters_pairs[count].first;
+      set<Node*>& nodes = cluster_map[cluster_id_to_clear];
+
+      for (auto node : nodes) {
+        node->ClearAttr("_ovtf_cluster");
+        node->ClearAttr("_ovtf_marked_for_clustering");
+        deassigned_histogram[node->type_string()]++;
       }
     }
   }

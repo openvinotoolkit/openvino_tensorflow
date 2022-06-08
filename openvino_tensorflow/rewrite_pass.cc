@@ -155,6 +155,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
                                   options.graph->get());
+
     std::set<std::string> disabled_ops_set = api::GetDisabledOps();
     if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
       std::vector<std::string> batched_disabled_ops = {"Shape"};
@@ -163,9 +164,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
-    // disable TopKV2 as of now as it impacts performance for TF_HUB object
-    // detection models
-    disabled_ops_set.insert("TopKV2");
+    // disable NMSV5 and NMSV4 as of now as it impacts performance TF2 based SSD
+    // models
+    disabled_ops_set.insert("NonMaxSuppressionV5");
+    disabled_ops_set.insert("NonMaxSuppressionV4");
     for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
          itr++) {
       OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;

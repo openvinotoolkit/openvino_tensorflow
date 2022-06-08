@@ -33,6 +33,7 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_timer.h"
 #include "openvino_tensorflow/ovtf_utils.h"
+#include "tensorflow/core/profiler/utils/time_utils.h"
 
 #ifdef _WIN32
 #define EXPAND(x) x
@@ -70,14 +71,22 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
+  static std::map<size_t, bool> s_tf_timing_run_enabled_map;
+  static std::map<size_t, float> s_ovtf_cluster_timings_map;
+  int64_t m_iter;
 };
+
+// Static initializers
+std::map<size_t, bool> NGraphEncapsulateOp::s_tf_timing_run_enabled_map;
+std::map<size_t, float> NGraphEncapsulateOp::s_ovtf_cluster_timings_map;
 
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
   OVTF_VLOG(1) << "Create Executor " << name();
   m_name = name();
-
+  m_iter = 0;
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
+  s_tf_timing_run_enabled_map[m_cluster_id] = false;
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
 
@@ -179,6 +188,24 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
+  m_iter++;
+  if (s_tf_timing_run_enabled_map[m_cluster_id]) {
+    // Measure the timing of cluster through force TF run
+    int64_t start_ns = profiler::GetCurrentTimeNanos();
+    OP_REQUIRES_OK(ctx, Fallback(ctx));
+    int64_t duration_in_ms = (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "Iter: " << m_iter;
+    OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took " << duration_in_ms
+                 << " ms.";
+    // Restore the fallback to false, if TF is taking more time than OVTF for
+    // this cluster
+    if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
+      NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
+    }
+    // Disable timing run for this cluster
+    s_tf_timing_run_enabled_map[m_cluster_id] = false;
+    return;
+  }
 
   if (NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     OP_REQUIRES_OK(ctx, Fallback(ctx));
@@ -362,7 +389,20 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
+        int64_t start_ns = profiler::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
+        int64_t duration_in_ms =
+            (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+        OVTF_VLOG(1) << "Iter: " << m_iter;
+        OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
+                     << duration_in_ms << " ms.";
+        s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
+        // Run warmup TF run, and enable the proper TF timing run for the next
+        // iteration through a separate section at the top pf compute
+        if (NGraphClusterManager::IsClusterFallbackEnabled() && m_iter == 2) {
+          s_tf_timing_run_enabled_map[m_cluster_id] = true;
+          throw std::runtime_error("Falling back to native TF Runtime.");
+        }
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
@@ -563,7 +603,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
         ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
-
     std::vector<ov::Shape> ng_output_shapes;
     ng_output_shapes.resize(ng_result_list.size());
     for (int i = 0; i < ng_result_list.size(); i++) {
@@ -573,7 +612,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         ng_output_shapes[i] = ng_result_list[i]->get_shape();
       }
     }
-
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;
     const char* cache_depth_specified =

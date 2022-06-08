@@ -769,25 +769,44 @@ static Status TranslateAvgPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateBatchMatMulOp(const Node* op,
+                                     const std::vector<const Tensor*>&,
+                                     Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_x, ng_y;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_x, ng_y));
+
+  bool adj_x, adj_y;
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "adj_x", &adj_x));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "adj_y", &adj_y));
+
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::MatMul>(
+                                      op->name(), ng_x, ng_y, adj_x, adj_y));
+  return Status::OK();
+}
+
 static Status TranslateBatchNDAndSpaceNDOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input, ng_block_shape, ng_crops;
+  ov::Output<ov::Node> ng_input, ng_block_shape, ng_crops,
+      ng_block_shape_unused, ng_crops_unused;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_input, ng_block_shape, ng_crops));
+      GetInputNodes(ng_op_map, op, ng_input, ng_block_shape_unused, ng_crops));
 
   // ng_crops should be of shape N=[ng_input.get_shape()).size()]
   // But TF's ng_crops input is limited only to the spatial dimensions (neither
   // batch nor innermost),
   // which would mean ngraph inputs have missing ng_crops[0] and ng_crops[N].
   // Hence, pad ng_crops with zeros at both ends
-
   std::vector<int> tf_block_shape;
   TF_RETURN_IF_ERROR(
       GetStaticInputVector(op, 1, static_input_map, &tf_block_shape));
 
   auto N = (int)ng_input.get_partial_shape().rank().get_length();
   auto M = (int)tf_block_shape.size();
+
+  ng_block_shape = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{static_cast<unsigned long>(M)},
+      tf_block_shape);
 
   // return with input if rank < 2 as ngraph's impl doesn't support it
   if (N < 2) {
@@ -866,9 +885,8 @@ static Status TranslateBiasAddOp(
         "BiasAdd data format is neither NHWC nor NCHW");
   }
 
-  auto ng_input_shape = ng_input.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
-  if (ng_bias_shape.size() != 1) {
+  auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+  if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
         "Bias argument to BiasAdd does not have one dimension");
   }
@@ -877,9 +895,11 @@ static Status TranslateBiasAddOp(
   // Reshape the bias to (1, C, 1, ...) if input is channels-first.
   ov::Output<ov::Node> ng_bias_reshaped = ng_bias;
   if (tf_data_format == "NCHW") {
-    auto channel_dim = ng_input_shape[1];
-    std::vector<int64> target_shape(ng_input_shape.size());
-    for (int64_t i = 0; i < ng_input_shape.size(); i++) {
+    auto ng_input_shape = ng_input.get_partial_shape();
+    auto ng_input_rank = ng_input_shape.rank().get_length();
+    auto channel_dim = ng_input_shape[1].get_length();
+    std::vector<int64> target_shape(ng_input_rank);
+    for (int64_t i = 0; i < ng_input_rank; i++) {
       if (i == 1) {
         target_shape[i] = channel_dim;
       } else {
@@ -887,7 +907,8 @@ static Status TranslateBiasAddOp(
       }
     }
     auto target_shape_node = make_shared<opset::Constant>(
-        ov::element::i64, ov::Shape{ng_input_shape.size()}, target_shape);
+        ov::element::i64, ov::Shape{static_cast<unsigned long>(ng_input_rank)},
+        target_shape);
     ng_bias_reshaped = ConstructNgNode<opset::Reshape>(
         op->name(), ng_bias, target_shape_node, false);
   }
@@ -909,6 +930,17 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
 
   ov::element::Type ng_et;
   TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
+
+  auto ng_input_dtype = ng_input.get_element_type();
+
+  if (ng_et == ov::element::boolean && (ng_input_dtype == ov::element::f32 ||
+                                        ng_input_dtype == ov::element::f64)) {
+    auto zeros = ConstructNgNode<opset::Constant>(op->name(), ng_input_dtype,
+                                                  ov::Shape{}, 0);
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::NotEqual>(op->name(), ng_input, zeros));
+    return Status::OK();
+  }
 
   try {
     SaveNgOp(ng_op_map, op->name(),
@@ -935,20 +967,47 @@ static Status TranslateConcatV2Op(
     ov::Output<ov::Node> ng_first_arg;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_first_arg));
 
-    concat_axis += int64(ng_first_arg.get_shape().size());
+    concat_axis += int64(ng_first_arg.get_partial_shape().rank().get_length());
   }
 
   ov::OutputVector ng_args;
-
   for (int i = 0; i < op->num_inputs() - 1; i++) {
     ov::Output<ov::Node> ng_arg;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_arg));
-    ng_args.push_back(ng_arg);
+    bool valid_input = true;
+
+    if (ng_arg.get_partial_shape().is_static()) {
+      auto inp_shape = ng_arg.get_shape();
+      for (auto dim : inp_shape) {
+        if (dim == 0) {
+          valid_input = false;
+          break;
+        }
+      }
+    }
+    if (valid_input) {
+      ng_args.push_back(ng_arg);
+    }
   }
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::Concat>(op->name(), ng_args, size_t(concat_axis)));
+  if (ng_args.empty()) {
+    int concat_axis_out_dim_value = 0;
+    ov::Output<ov::Node> ng_arg;
+    ov::Shape inp_shape;
+    for (int i = 0; i < op->num_inputs() - 1; i++) {
+      TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_arg));
+      inp_shape = ng_arg.get_shape();
+      concat_axis_out_dim_value += inp_shape[concat_axis];
+    }
+    inp_shape[concat_axis] = concat_axis_out_dim_value;
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Constant>(
+                 op->name(), ng_arg.get_element_type(), inp_shape, 0));
+  } else {
+    SaveNgOp(ng_op_map, op->name(),
+             ConstructNgNode<opset::Concat>(op->name(), ng_args,
+                                            size_t(concat_axis)));
+  }
   return Status::OK();
 }
 
@@ -1024,7 +1083,9 @@ static Status TranslateConv2DOp(const Node* op,
   ov::Shape ng_kernel_shape(2);
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  if (ng_input.get_partial_shape().is_static()) {
+    NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  }
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -1040,8 +1101,11 @@ static Status TranslateConv2DOp(const Node* op,
 
   OVTF_VLOG(3) << "ng_kernel_shape: " << ngraph::join(ng_kernel_shape);
 
+  ov::Output<ov::Node> ng_conv;
+  ov::op::PadType pad_type;
   ov::CoordinateDiff ng_padding_below;
   ov::CoordinateDiff ng_padding_above;
+
   if (tf_padding_type == "EXPLICIT") {
     TF_RETURN_IF_ERROR(
         GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
@@ -1059,15 +1123,35 @@ static Status TranslateConv2DOp(const Node* op,
     OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
     OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
     OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
-  } else {
-    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
+    ng_conv = ConstructNgNode<opset::Convolution>(
+        op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "VALID") {
+    ng_padding_below.assign(ng_image_shape.size(), 0);
+    ng_padding_above.assign(ng_image_shape.size(), 0);
+    ng_conv = ConstructNgNode<opset::Convolution>(
+        op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "SAME") {
+    if (ng_input.get_partial_shape().is_static()) {
+      OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
+      ov::Shape img_shape = {0, 0};
+      img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                       ng_image_shape.end());
+      ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                             ng_dilations, ov::op::PadType::SAME_UPPER,
+                             ng_padding_above, ng_padding_below);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations);
+    } else {
+      OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
+      pad_type = ov::op::PadType::SAME_UPPER;
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
+          ng_padding_above, ng_dilations, pad_type);
+    }
   }
-
-  ov::Output<ov::Node> ng_conv = ConstructNgNode<opset::Convolution>(
-      op->name(), ng_input, ng_filter, ng_strides, ng_padding_below,
-      ng_padding_above, ng_dilations);
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
@@ -1466,6 +1550,144 @@ static Status TranslateCropAndResizeOp(
   return Status::OK();
 }
 
+static Status TranslateCTCGreedyDecoderOp(const Node* op,
+                                          const std::vector<const Tensor*>&,
+                                          Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_inputs, ng_sequence_length;
+  TF_RETURN_IF_ERROR(
+      GetInputNodes(ng_op_map, op, ng_inputs, ng_sequence_length));
+
+  // Undo the transpose done before calling CTCGreedyDecoder such that,
+  // ng_inputs represents a tensor of shape [N, T, C] where N, T and C
+  // represent batch_size, time_steps and num_classes respectively.
+  ov::Shape transpose_order{1, 0, 2};
+  auto input_order = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::u64, ov::Shape{transpose_order.size()},
+      transpose_order);
+  ng_inputs = std::make_shared<opset::Transpose>(ng_inputs, input_order);
+
+  // Create a mask that stores valid time step indices, we need this to
+  // handle samples of varying sequence lengths.
+  ov::Shape ng_inputs_shape = ng_inputs.get_shape();
+  auto batch_size = static_cast<long>(ng_inputs_shape.at(0));
+  auto max_time_steps = static_cast<long>(ng_inputs_shape.at(1));
+
+  auto ng_indicator = ConstructNgNode<opset::Range>(
+      op->name(), ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                   ov::Shape{}, 0),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, max_time_steps),
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, 1),
+      ov::element::i64);
+  ng_indicator = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_indicator,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({0})));
+  ng_indicator = ConstructNgNode<opset::Tile>(
+      op->name(), ng_indicator, ConstructNgNode<opset::Constant>(
+                                    op->name(), ov::element::i64, ov::Shape{2},
+                                    std::vector<int64>({batch_size, 1})));
+
+  auto ng_sequence_endpoints = ConstructNgNode<opset::Unsqueeze>(
+      op->name(), ng_sequence_length,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{1}, std::vector<int64>({1})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Tile>(
+      op->name(), ng_sequence_endpoints,
+      ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i64, ov::Shape{2},
+          std::vector<int64>({1, max_time_steps})));
+  ng_sequence_endpoints = ConstructNgNode<opset::Convert>(
+      op->name(), ng_sequence_endpoints, ov::element::i64);
+
+  auto ng_valid_time_steps_mask = ConstructNgNode<opset::Less>(
+      op->name(), ng_indicator, ng_sequence_endpoints);
+  ng_valid_time_steps_mask = ConstructNgNode<opset::Convert>(
+      op->name(), ng_valid_time_steps_mask, ng_inputs.get_element_type());
+
+  // Compute negative log sum probabilities for each sample in the batch by
+  // selecting class index greedily across all valid time steps.
+  auto ng_max_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 2);
+  auto ng_sum_axis = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, 1);
+  auto ng_log_probs =
+      ConstructNgNode<opset::ReduceMax>(op->name(), ng_inputs, ng_max_axis, 0);
+
+  ng_log_probs = ConstructNgNode<opset::Multiply>(op->name(), ng_log_probs,
+                                                  ng_valid_time_steps_mask);
+  ng_log_probs = ConstructNgNode<opset::ReduceSum>(op->name(), ng_log_probs,
+                                                   ng_sum_axis, 1);
+  ng_log_probs = ConstructNgNode<opset::Multiply>(
+      op->name(), ng_log_probs,
+      ConstructNgNode<opset::Constant>(op->name(), ng_inputs.get_element_type(),
+                                       ov::Shape{}, -1));
+
+  bool merge_repeated;
+  int blank_index;
+
+  TF_RETURN_IF_ERROR(
+      GetNodeAttr(op->attrs(), "merge_repeated", &merge_repeated));
+  TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "blank_index", &blank_index));
+
+  if (blank_index < 0) {
+    int num_classes = static_cast<int>(ng_inputs_shape.at(2));
+    blank_index = num_classes + blank_index;
+  }
+  auto ng_blank_index = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, blank_index);
+
+  auto ng_ctc_outputs = make_shared<opset::CTCGreedyDecoderSeqLen>(
+      ng_inputs, ng_sequence_length, ng_blank_index, merge_repeated,
+      ov::element::i64);
+  auto ng_ctc_decoded_classes = ng_ctc_outputs->output(0);
+
+  auto ng_ignore_value = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{}, -1);
+  auto ng_decoded_mask = ConstructNgNode<opset::NotEqual>(
+      op->name(), ng_ctc_decoded_classes, ng_ignore_value);
+
+  // CTCGreedyDecoderSeqLen returns dense tensor holding the decoded results.
+  // Compute indices and values that represent the decoded results in sparse
+  // format. Since NonZero is not supported on iGPU currently, we enable
+  // CTCGreedyDecoder only for CPU.
+  auto ng_indices =
+      ConstructNgNode<opset::NonZero>(op->name(), ng_decoded_mask);
+
+  ov::Shape indices_transpose_order{1, 0};
+  auto ng_indices_transpose_order = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::u64, ov::Shape{2}, indices_transpose_order);
+  ng_indices = ConstructNgNode<opset::Transpose>(op->name(), ng_indices,
+                                                 ng_indices_transpose_order);
+  auto ng_values = ConstructNgNode<opset::GatherND>(
+      op->name(), ng_ctc_decoded_classes, ng_indices);
+
+  // Compute the shape of the smallest dense tensor that can contain the sparse
+  // matrix represented by ng_indices and ng_values.
+  auto ng_batch_size = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{1},
+      std::vector<long>({batch_size}));
+  auto ng_ctc_decoded_sequence_lens = ConstructNgNode<opset::Convert>(
+      op->name(), ng_ctc_outputs->output(1), ov::element::i64);
+  auto ng_decoded_max_time_steps = ConstructNgNode<opset::ReduceMax>(
+      op->name(), ng_ctc_decoded_sequence_lens,
+      ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                       ov::Shape{}, 0),
+      1);
+
+  auto ng_decoded_shape = ConstructNgNode<opset::Concat>(
+      op->name(), ov::OutputVector({ng_batch_size, ng_decoded_max_time_steps}),
+      0);
+
+  SaveNgOp(ng_op_map, op->name(), ng_indices);
+  SaveNgOp(ng_op_map, op->name(), ng_values);
+  SaveNgOp(ng_op_map, op->name(), ng_decoded_shape);
+  SaveNgOp(ng_op_map, op->name(), ng_log_probs);
+
+  return Status::OK();
+}
+
 static Status TranslateCumsumOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
@@ -1797,9 +2019,9 @@ static Status TranslateFusedMatMulOp(const Node* op,
                                              transpose_a, transpose_b);
 
   auto ng_matmul_shape = ng_matmul.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
+  auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
 
-  if (ng_bias_shape.size() != 1) {
+  if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
         "Bias argument to BiasAdd does not have one dimension");
   }
@@ -1947,7 +2169,9 @@ static Status TranslateFusedConv2DOp(const Node* op,
     ov::Shape ng_kernel_shape(2);
 
     NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-    NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+    if (ng_input.get_partial_shape().is_static()) {
+      NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+    }
     NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
     NHWCtoNCHW(op->name(), is_nhwc, ng_input);
 
@@ -1965,14 +2189,57 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     ov::CoordinateDiff ng_padding_below;
     ov::CoordinateDiff ng_padding_above;
-    Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                         ng_strides, ng_dilations, ng_padding_below,
-                         ng_padding_above);
-
-    ng_conv = ConstructNgNode<opset::Convolution>(
-        op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
-        ng_padding_below, ng_padding_above, ng_dilations);
-
+    // Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+    //                      ng_strides, ng_dilations, ng_padding_below,
+    //                      ng_padding_above);
+    std::vector<int32> tf_paddings;
+    ov::op::PadType pad_type;
+    if (tf_padding_type == "EXPLICIT") {
+      TF_RETURN_IF_ERROR(
+          GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+      if (is_nhwc) {
+        ng_padding_below.push_back(tf_paddings[2]);
+        ng_padding_below.push_back(tf_paddings[4]);
+        ng_padding_above.push_back(tf_paddings[3]);
+        ng_padding_above.push_back(tf_paddings[5]);
+      } else {
+        ng_padding_below.push_back(tf_paddings[4]);
+        ng_padding_below.push_back(tf_paddings[6]);
+        ng_padding_above.push_back(tf_paddings[5]);
+        ng_padding_above.push_back(tf_paddings[7]);
+      }
+      OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
+      OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
+      OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+          ng_padding_below, ng_padding_above, ng_dilations);
+    } else if (tf_padding_type == "VALID") {
+      ng_padding_below.assign(ng_image_shape.size(), 0);
+      ng_padding_above.assign(ng_image_shape.size(), 0);
+      ng_conv = ConstructNgNode<opset::Convolution>(
+          op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+          ng_padding_below, ng_padding_above, ng_dilations);
+    } else if (tf_padding_type == "SAME") {
+      if (ng_input.get_partial_shape().is_static()) {
+        OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
+        ov::Shape img_shape = {0, 0};
+        img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                         ng_image_shape.end());
+        ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                               ng_dilations, ov::op::PadType::SAME_UPPER,
+                               ng_padding_above, ng_padding_below);
+        ng_conv = ConstructNgNode<opset::Convolution>(
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+            ng_padding_below, ng_padding_above, ng_dilations);
+      } else {
+        OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
+        pad_type = ov::op::PadType::SAME_UPPER;
+        ng_conv = ConstructNgNode<opset::Convolution>(
+            op->name() + "_FusedConv2D_Conv", ng_input, ng_filter, ng_strides,
+            ng_padding_below, ng_padding_above, ng_dilations, pad_type);
+      }
+    }
     return Status::OK();
   };
 
@@ -2005,14 +2272,14 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     TF_RETURN_IF_ERROR(CreateNgConv(ng_input, ng_filter, ng_conv));
 
-    auto ng_conv_shape = ng_conv.get_shape();
-    auto ng_bias_shape = ng_bias.get_shape();
-    if (ng_bias_shape.size() != 1) {
+    auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
+    auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+    if (ng_bias_rank != 1) {
       return errors::InvalidArgument(
           "Bias argument to BiasAdd does not have one dimension");
     }
 
-    std::vector<size_t> reshape_pattern_values(ng_conv_shape.size(), 1U);
+    std::vector<size_t> reshape_pattern_values(ng_conv_rank, 1U);
     reshape_pattern_values[1] = ng_bias.get_shape().front();
     auto reshape_pattern = make_shared<opset::Constant>(
         ov::element::u64, ov::Shape{reshape_pattern_values.size()},
@@ -2243,14 +2510,14 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
 
     TF_RETURN_IF_ERROR(CreateNgDepthwiseConv(ng_input, ng_filter, ng_conv));
 
-    auto ng_conv_shape = ng_conv.get_shape();
-    auto ng_bias_shape = ng_bias.get_shape();
-    if (ng_bias_shape.size() != 1) {
+    auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
+    auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+    if (ng_bias_rank != 1) {
       return errors::InvalidArgument(
           "Bias argument to BiasAdd does not have one dimension");
     }
 
-    std::vector<size_t> reshape_pattern_values(ng_conv_shape.size(), 1U);
+    std::vector<size_t> reshape_pattern_values(ng_conv_rank, 1U);
     reshape_pattern_values[1] = ng_bias.get_shape().front();
     auto reshape_pattern = make_shared<opset::Constant>(
         ov::element::u64, ov::Shape{reshape_pattern_values.size()},
@@ -2333,7 +2600,7 @@ static Status TranslateL2LossOp(const Node* op,
   auto ng_pow =
       ConstructNgNode<opset::Multiply>(op->name(), ng_input, ng_input);
 
-  size_t input_rank = ng_input.get_shape().size();
+  size_t input_rank = ng_input.get_partial_shape().rank().get_length();
   std::vector<int64> axes;
   for (size_t i = 0; i < input_rank; ++i) {
     axes.push_back(i);
@@ -2502,115 +2769,130 @@ static Status TranslateMaxPoolOp(const Node* op,
   return Status::OK();
 }
 
-static Status TranslateNonMaxSuppressionV2Op(
+static Status TranslateNonMaxSuppressionOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_boxes, ng_scores, ng_unused, ng_iou_threshold;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_boxes, ng_scores,
-                                   ng_unused, ng_iou_threshold));
-
+  ov::Output<ov::Node> ng_boxes, ng_scores, ng_max_output_size,
+      ng_iou_threshold;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_boxes));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_scores));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, ng_max_output_size));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, ng_iou_threshold));
   auto ng_axis_boxes = ConstructNgNode<opset::Constant>(
       op->name(), ov::element::i64, ov::Shape{1}, std::vector<int64>({0}));
   auto ng_boxes_unsqueezed =
       ConstructNgNode<opset::Unsqueeze>(op->name(), ng_boxes, ng_axis_boxes);
 
   auto ng_axis_scores = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{1}, std::vector<int64>({0}));
-  auto ng_scores_unsqueezed1 =
+      op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64>({0, 1}));
+  auto ng_scores_unsqueezed =
       ConstructNgNode<opset::Unsqueeze>(op->name(), ng_scores, ng_axis_scores);
-  auto ng_scores_unsqueezed2 = ConstructNgNode<opset::Unsqueeze>(
-      op->name(), ng_scores_unsqueezed1, ng_axis_scores);
 
-  std::vector<int> max_output_size;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 2, static_input_map, &max_output_size));
-
-  // max_output_size must be scalar
-  if (max_output_size.size() != 1) {
-    return errors::InvalidArgument(
-        "NonMaxSuppression Op: max_output_size of nms must be scalar ",
-        max_output_size.size());
+  const auto& op_type = op->type_string();
+  std::shared_ptr<opset::NonMaxSuppression> ng_nms;
+  if (op_type == "NonMaxSuppressionV5") {
+    ov::Output<ov::Node> ng_score_threshold, ng_soft_nms_sigma;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 5, ng_soft_nms_sigma));
+    // TODO: pad_to_max_output_size and then remove the corresponding constraint
+    // check from OCM
+    ng_nms = make_shared<opset::NonMaxSuppression>(
+        ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
+        ng_iou_threshold, ng_score_threshold, ng_soft_nms_sigma,
+        opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
+        ov::element::Type_t::i32);
+  } else if (op_type == "NonMaxSuppressionV4") {
+    ov::Output<ov::Node> ng_score_threshold;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    // TODO: pad_to_max_output_size and then remove the corresponding constraint
+    // check from OCM
+    ng_nms = make_shared<opset::NonMaxSuppression>(
+        ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
+        ng_iou_threshold, ng_score_threshold,
+        opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
+        ov::element::Type_t::i32);
+  } else if (op_type == "NonMaxSuppressionV3") {
+    ov::Output<ov::Node> ng_score_threshold;
+    TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 4, ng_score_threshold));
+    ng_nms = make_shared<opset::NonMaxSuppression>(
+        ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
+        ng_iou_threshold, ng_score_threshold,
+        opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
+        ov::element::Type_t::i32);
+  } else if (op_type == "NonMaxSuppressionV2" ||
+             op_type == "NonMaxSuppression") {
+    ng_nms = make_shared<opset::NonMaxSuppression>(
+        ng_boxes_unsqueezed, ng_scores_unsqueezed, ng_max_output_size,
+        ng_iou_threshold, opset::NonMaxSuppression::BoxEncodingType::CORNER,
+        false, ov::element::Type_t::i32);
+  } else {
+    throw runtime_error(op_type + " is not supported");
   }
 
-  auto ng_max_output_size = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{}, max_output_size[0]);
-  OVTF_VLOG(5) << "ng_max_output_size " << max_output_size[0];
-
-  auto ng_nmsv = ConstructNgNode<opset::NonMaxSuppression>(
-      op->name(), ng_boxes_unsqueezed, ng_scores_unsqueezed2,
-      ng_max_output_size, ng_iou_threshold,
-      opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
-      ov::element::Type_t::i32);
-
-  auto begin = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64>({0, 2}));
-  auto end = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{2},
-      std::vector<int64>({max_output_size[0], 3}));
-  auto ng_nmsv_slice = ConstructNgNode<opset::StridedSlice>(
-      op->name(), ng_nmsv, begin, end, std::vector<int64_t>{0, 0},
-      std::vector<int64_t>{0, 0}, std::vector<int64_t>{0, 0},
-      std::vector<int64_t>{0, 1});
-
-  Builder::SetTracingInfo(op->name(), ng_nmsv_slice);
-  SaveNgOp(ng_op_map, op->name(), ng_nmsv_slice);
-  return Status::OK();
-}
-
-static Status TranslateNonMaxSuppressionV3Op(
-    const Node* op, const std::vector<const Tensor*>& static_input_map,
-    Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_boxes, ng_scores, ng_unused, ng_iou_threshold,
-      ng_score_threshold;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_boxes, ng_scores,
-                                   ng_unused, ng_iou_threshold,
-                                   ng_score_threshold));
-
-  auto ng_axis_boxes = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{1}, std::vector<int64>({0}));
-  auto ng_boxes_unsqueezed =
-      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_boxes, ng_axis_boxes);
-
-  auto ng_axis_scores = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{1}, std::vector<int64>({0}));
-  auto ng_scores_unsqueezed1 =
-      ConstructNgNode<opset::Unsqueeze>(op->name(), ng_scores, ng_axis_scores);
-  auto ng_scores_unsqueezed2 = ConstructNgNode<opset::Unsqueeze>(
-      op->name(), ng_scores_unsqueezed1, ng_axis_scores);
-
-  std::vector<int> max_output_size;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 2, static_input_map, &max_output_size));
-
-  // max_output_size must be scalar
-  if (max_output_size.size() != 1) {
-    return errors::InvalidArgument(
-        "NonMaxSuppression Op: max_output_size of nms must be scalar ",
-        max_output_size.size());
+  std::string device;
+  // Correct output variables dimensions for CPU device
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
   }
 
-  auto ng_max_output_size = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{}, max_output_size[0]);
-  OVTF_VLOG(5) << "ng_max_output_size " << max_output_size[0];
+  if (device == "CPU") {
+    // selected_indices output from OV doesn't have same structure as of TF for
+    // CPU device for all the NMS ops
+    auto begin = ConstructNgNode<opset::Constant>(
+        op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64>({0, 2}));
+    auto end = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                ov::Shape{2},
+                                                std::vector<int64>({0, -1}));
+    auto ng_nms_selected_indices = ConstructNgNode<opset::StridedSlice>(
+        op->name(), ng_nms->outputs()[0], begin, end,
+        std::vector<int64_t>{1, 0}, std::vector<int64_t>{1, 0},
+        std::vector<int64_t>{0, 0}, std::vector<int64_t>{0, 1});
 
-  auto ng_nmsv = ConstructNgNode<opset::NonMaxSuppression>(
-      op->name(), ng_boxes_unsqueezed, ng_scores_unsqueezed2,
-      ng_max_output_size, ng_iou_threshold, ng_score_threshold,
-      opset::NonMaxSuppression::BoxEncodingType::CORNER, false,
-      ov::element::Type_t::i32);
+    SaveNgOp(ng_op_map, op->name(), ng_nms_selected_indices);
 
-  auto begin = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64>({0, 2}));
-  auto end = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{2},
-      std::vector<int64>({max_output_size[0], 3}));
-  auto ng_nmsv_slice = ConstructNgNode<opset::StridedSlice>(
-      op->name(), ng_nmsv, begin, end, std::vector<int64_t>{0, 0},
-      std::vector<int64_t>{0, 0}, std::vector<int64_t>{0, 0},
-      std::vector<int64_t>{0, 1});
-
-  Builder::SetTracingInfo(op->name(), ng_nmsv_slice);
-  SaveNgOp(ng_op_map, op->name(), ng_nmsv_slice);
+    // selected_scores and valid_outputs shape from OV is not in sync with
+    // TF output and needs extra transformation
+    if (op_type == "NonMaxSuppressionV5") {
+      // selected_scores needs same transformation as selected_indices
+      auto ng_nms_selected_scores = ConstructNgNode<opset::StridedSlice>(
+          op->name(), ng_nms->outputs()[1], begin, end,
+          std::vector<int64_t>{1, 0}, std::vector<int64_t>{1, 0},
+          std::vector<int64_t>{0, 0}, std::vector<int64_t>{0, 1});
+      // valid_outputs is 1D tensor in case of OV, and 0D tensor in case of TF
+      auto ng_squeeze_axis = ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i32, ov::Shape{}, 0);
+      auto valid_outputs = ConstructNgNode<opset::Squeeze>(
+          op->name(), ng_nms->outputs()[2], ng_squeeze_axis);
+      SaveNgOp(ng_op_map, op->name(), ng_nms_selected_scores);
+      SaveNgOp(ng_op_map, op->name(), valid_outputs);
+    } else if (op_type == "NonMaxSuppressionV4") {
+      auto ng_squeeze_axis = ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i32, ov::Shape{}, 0);
+      auto valid_outputs = ConstructNgNode<opset::Squeeze>(
+          op->name(), ng_nms->outputs()[1], ng_squeeze_axis);
+      SaveNgOp(ng_op_map, op->name(), valid_outputs);
+    }
+  } else {
+    // for GPU and MYRIAD the default output works properly
+    // except for valid_outputs in NMSV5 and NMSV4
+    SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[0]);
+    if (op_type == "NonMaxSuppressionV5") {
+      // valid_outputs is 1D tensor in case of OV, and 0D tensor in case of TF
+      auto ng_squeeze_axis = ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i32, ov::Shape{}, 0);
+      auto valid_outputs = ConstructNgNode<opset::Squeeze>(
+          op->name(), ng_nms->outputs()[2], ng_squeeze_axis);
+      SaveNgOp(ng_op_map, op->name(), ng_nms->outputs()[1]);
+      SaveNgOp(ng_op_map, op->name(), valid_outputs);
+    } else if (op_type == "NonMaxSuppressionV4") {
+      auto ng_squeeze_axis = ConstructNgNode<opset::Constant>(
+          op->name(), ov::element::i32, ov::Shape{}, 0);
+      auto valid_outputs = ConstructNgNode<opset::Squeeze>(
+          op->name(), ng_nms->outputs()[1], ng_squeeze_axis);
+      SaveNgOp(ng_op_map, op->name(), valid_outputs);
+    }
+  }
   return Status::OK();
 }
 
@@ -2797,22 +3079,12 @@ static Status TranslateRangeOp(
   ov::Output<ov::Node> ng_start, ng_stop, ng_step;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_start, ng_stop, ng_step));
 
-  DataType start_type = op->input_type(0);
-  DataType stop_type = op->input_type(1);
-  DataType step_type = op->input_type(2);
   ov::element::Type out_type;
   TF_RETURN_IF_ERROR(
       util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
-  ov::Output<ov::Node> start_node, stop_node, step_node;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 0, static_input_map, start_type, start_node));
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 1, static_input_map, stop_type, stop_node));
-  TF_RETURN_IF_ERROR(
-      GetStaticInputNode(op, 2, static_input_map, step_type, step_node));
-  auto ng_range = ConstructNgNode<opset::Range>(op->name(), start_node,
-                                                stop_node, step_node, out_type);
 
+  auto ng_range = ConstructNgNode<opset::Range>(op->name(), ng_start, ng_stop,
+                                                ng_step, out_type);
   SaveNgOp(ng_op_map, op->name(), ng_range);
   return Status::OK();
 }
@@ -2856,7 +3128,7 @@ static Status TranslateRelu6Op(const Node* op,
                                Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  auto ng_input_shape = ng_input.get_shape();
+  auto ng_input_rank = ng_input.get_partial_shape().rank().get_length();
   std::string device;
   // Enable transpose before and after only for CPU device
   Status exec_status = BackendManager::GetBackendName(device);
@@ -2864,11 +3136,11 @@ static Status TranslateRelu6Op(const Node* op,
     throw runtime_error(exec_status.error_message());
   }
   if (device == "CPU") {
-    if (ng_input_shape.size() == 4) Transpose<0, 3, 1, 2>(ng_input);
+    if (ng_input_rank == 4) Transpose<0, 3, 1, 2>(ng_input);
   }
   auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
   if (device == "CPU") {
-    if (ng_input_shape.size() == 4) Transpose<0, 2, 3, 1>(ng_output);
+    if (ng_input_rank == 4) Transpose<0, 2, 3, 1>(ng_output);
   }
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
@@ -2880,8 +3152,6 @@ static Status TranslateReshapeOp(
     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input, ng_shape_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_shape_op));
-
-  OVTF_VLOG(3) << "Input shape: " << ngraph::join(ng_input.get_shape());
 
   std::vector<int64> shape;
   TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &shape));
@@ -3068,15 +3338,23 @@ static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
   ov::element::Type type;
   TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
 
-  auto ng_input_shape = ng_input.get_shape();
-  int64 result = 1;
-  for (auto dim : ng_input_shape) {
-    result *= dim;
-  }
+  ov::Output<ov::Node> ng_result;
+  if (ng_input.get_partial_shape().is_static()) {
+    auto ng_input_shape = ng_input.get_shape();
+    int64 result = 1;
+    for (auto dim : ng_input_shape) {
+      result *= dim;
 
-  // make a scalar with value equals to result
-  auto ng_result = ConstructNgNode<opset::Constant>(
-      op->name(), type, ov::Shape(0), std::vector<int64>({result}));
+      // make a scalar with value equals to result
+      ng_result = ConstructNgNode<opset::Constant>(
+          op->name(), type, ov::Shape(0), std::vector<int64>({result}));
+    }
+  } else {
+    auto shape_of = ConstructNgNode<opset::ShapeOf>(op->name(), ng_input, type);
+    auto axis = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                 ov::Shape{}, 0);
+    ng_result = ConstructNgNode<opset::ReduceProd>(op->name(), shape_of, axis);
+  }
 
   SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
@@ -3206,6 +3484,29 @@ static Status TranslateSpaceToDepthOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateSparseToDenseOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_indices, ng_dense_shape, ng_values, ng_zeros;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_indices, ng_dense_shape,
+                                   ng_values, ng_zeros));
+  // TODO: Check if validate indices needs any handling on OVTF side
+  // bool validate_indices=true;
+  // TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "validate_indices",
+  // &validate_indices));
+
+  // Broadcast Dense Matrix using input args of sparse tensor input
+  auto ng_dense_tensor =
+      ConstructNgNode<opset::Broadcast>(op->name(), ng_zeros, ng_dense_shape);
+
+  // Scatter the values at the given indices
+  auto ng_scatternd_op = ConstructNgNode<opset::ScatterNDUpdate>(
+      op->name(), ng_dense_tensor, ng_indices, ng_values);
+
+  SaveNgOp(ng_op_map, op->name(), ng_scatternd_op);
+  return Status::OK();
+}
+
 static Status TranslateSplitOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -3327,7 +3628,7 @@ static Status TranslateSqueezeOp(const Node* op,
                                  Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  size_t input_dims = ng_input.get_shape().size();
+  size_t input_dims = ng_input.get_partial_shape().rank().get_length();
 
   std::vector<int32> tf_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "squeeze_dims", &tf_axis));
@@ -3337,17 +3638,21 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ng_input.get_element_type(),
-                                        ov::Shape{0}, std::vector<int>({0})));
-  } else {
-    auto ng_const = ConstructNgNode<opset::Constant>(
-        op->name(), ov::element::i32, ov::Shape{tf_axis.size()}, tf_axis);
-
-    SaveNgOp(ng_op_map, op->name(),
-             ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
+  if (ng_input.get_partial_shape().is_static()) {
+    // This conditional check is required only if the input shape is known
+    if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
+      SaveNgOp(ng_op_map, op->name(),
+               ConstructNgNode<opset::Constant>(
+                   op->name(), ng_input.get_element_type(), ov::Shape{0},
+                   std::vector<int>({0})));
+      return Status::OK();
+    }
   }
+  auto ng_const = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i32, ov::Shape{tf_axis.size()}, tf_axis);
+
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
   return Status::OK();
 }
 
@@ -3429,50 +3734,35 @@ static Status TranslateTileOp(
 static Status TranslateTopKV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
+  ov::Output<ov::Node> ng_input, ng_k;
 
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 2));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_k));
 
+  // ASSER(ng_input.get_partial_shape().rank().is_static(), "Input rank must be
+  // static.");
+  // TENSORFLOW_OP_VALIDATION(node,
+  //                           input.get_partial_shape().rank().get_length() >=
+  //                           1,
+  //                           "Input rank must be greater than 0.");
   // axis along which to compute top k indices
-  int64 k_axis = ng_input.get_shape().size() - 1;
-
-  // scalar input tensor specifying how many max/min elts should be computed
-  // CPU backend only supports element type i64
-  std::vector<int64> ng_k_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &ng_k_vec));
-  auto ng_k = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
-                                               ov::Shape{}, ng_k_vec[0]);
-
-  std::string mode = "max";
-
-  std::string sort = "value";
+  int64_t k_axis = ng_input.get_partial_shape().rank().get_length() - 1;
   bool sorted = true;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "sorted", &sorted));
-  if (!sorted) {
-    sort = "index";
-  }
 
-  if (ng_k_vec[0] == 0 || ng_input.get_shape()[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ng_input.get_element_type(),
-                                        ov::Shape{0}, std::vector<int>({0})));
+  auto ng_result = std::make_shared<opset::TopK>(
+      ng_input, ng_k, k_axis, opset::TopK::Mode::MAX,
+      sorted ? opset::TopK::SortType::SORT_VALUES
+             : opset::TopK::SortType::SORT_INDICES);
 
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ov::element::i32,
-                                        ov::Shape{0}, std::vector<int>({0})));
-  } else {
-    auto ng_result =
-        std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+  ov::Output<ov::Node> ng_values = ng_result->output(0);
+  Builder::SetTracingInfo(op->name(), ng_values);
+  ov::Output<ov::Node> ng_indices = ng_result->output(1);
+  Builder::SetTracingInfo(op->name(), ng_indices);
 
-    ov::Output<ov::Node> ng_values = ng_result->output(0);
-    Builder::SetTracingInfo(op->name(), ng_values);
-    ov::Output<ov::Node> ng_indices = ng_result->output(1);
-    Builder::SetTracingInfo(op->name(), ng_indices);
-
-    SaveNgOp(ng_op_map, op->name(), ng_values);
-    SaveNgOp(ng_op_map, op->name(), ng_indices);
-  }
+  SaveNgOp(ng_op_map, op->name(), ng_values);
+  SaveNgOp(ng_op_map, op->name(), ng_indices);
 
   return Status::OK();
 }
@@ -3548,11 +3838,38 @@ static Status TranslateXdivyOp(
 static Status TranslateSelectOp(const Node* op,
                                 const std::vector<const Tensor*>&,
                                 Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input1, ng_input2, ng_input3;
+  ov::Output<ov::Node> ng_cond, ng_input1, ng_input2;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_input1, ng_input2, ng_input3));
-  auto ng_select = ConstructNgNode<opset::Select>(op->name(), ng_input1,
-                                                  ng_input2, ng_input3);
+      GetInputNodes(ng_op_map, op, ng_cond, ng_input1, ng_input2));
+  // condition could be of same shape as inputs, or scalar, or it shoud be of
+  // rank 1 and the dimension must match the first dimension of the inputs
+  auto cond_rank = ng_cond.get_partial_shape().rank().get_length();
+  // input1 and input2 are of same shape
+  auto x_rank = ng_input1.get_partial_shape().rank().get_length();
+
+  ov::Output<ov::Node> ng_select;
+  // if condition is of rank 1, the broadcasting of condition to input shape
+  // will not give correct output. Condition needs to reshaped to same rank as
+  // of input with all other dimensions as 1.
+  if (cond_rank == 1) {
+    // Translation will not work with dynamic shape
+    auto cond_shape = ng_cond.get_shape();
+    auto augment_shape = ov::Shape(x_rank, 1);
+    augment_shape.at(0) = ov::shape_size(cond_shape);
+    auto ng_augmented_cond_shape = ConstructNgNode<opset::Constant>(
+        op->name(), ov::element::i64, ov::Shape{augment_shape.size()},
+        augment_shape);
+    auto ng_augmented_cond = ConstructNgNode<opset::Reshape>(
+        op->name(), ng_cond, ng_augmented_cond_shape, false);
+    ng_select = ConstructNgNode<opset::Select>(op->name(), ng_augmented_cond,
+                                               ng_input1, ng_input2);
+  } else {
+    // if condition is scalar, other thank rank 1, or condition and input are of
+    // same shape (internally condition would be broadcasted to same shape as
+    // that of input), in this case select op would work element wise
+    ng_select = ConstructNgNode<opset::Select>(op->name(), ng_cond, ng_input1,
+                                               ng_input2);
+  }
   SaveNgOp(ng_op_map, op->name(), ng_select);
   return Status::OK();
 }
@@ -3605,6 +3922,8 @@ const static std::map<
         {"Atanh", TranslateUnaryOp<opset::Atanh>},
         {"AvgPool", TranslateAvgPoolOp<2>},
         {"AvgPool3D", TranslateAvgPoolOp<3>},
+        {"BatchMatMul", TranslateBatchMatMulOp},
+        {"BatchMatMulV2", TranslateBatchMatMulOp},
         {"BatchToSpaceND", TranslateBatchNDAndSpaceNDOp},
         {"BiasAdd", TranslateBiasAddOp},
         {"Cast", TranslateCastOp},
@@ -3618,6 +3937,7 @@ const static std::map<
         {"Cos", TranslateUnaryOp<opset::Cos>},
         {"Cosh", TranslateUnaryOp<opset::Cosh>},
         {"CropAndResize", TranslateCropAndResizeOp},
+        {"CTCGreedyDecoder", TranslateCTCGreedyDecoderOp},
         {"Cumsum", TranslateCumsumOp},
         {"DepthToSpace", TranslateDepthToSpaceOp},
         {"DepthwiseConv2dNative", TranslateDepthwiseConv2dNativeOp},
@@ -3660,8 +3980,11 @@ const static std::map<
         {"Maximum", TranslateBinaryOp<opset::Maximum>},
         {"MaxPool", TranslateMaxPoolOp<2>},
         {"MaxPool3D", TranslateMaxPoolOp<3>},
-        {"NonMaxSuppressionV2", TranslateNonMaxSuppressionV2Op},
-        {"NonMaxSuppressionV3", TranslateNonMaxSuppressionV3Op},
+        {"NonMaxSuppression", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV2", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV3", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV4", TranslateNonMaxSuppressionOp},
+        {"NonMaxSuppressionV5", TranslateNonMaxSuppressionOp},
         {"Mean", TranslateDirectReduceOp<opset::ReduceMean>},
         {"Min", TranslateDirectReduceOp<opset::ReduceMin>},
         {"Minimum", TranslateBinaryOp<opset::Minimum>},
@@ -3698,7 +4021,6 @@ const static std::map<
         {"Rsqrt", TranslateRsqrtOp},
         {"ScatterNd", TranslateScatterNdOp},
         {"Select", TranslateSelectOp},
-        {"SelectV2", TranslateSelectOp},
         {"Shape", TranslateShapeOp},
         {"Sigmoid", TranslateUnaryOp<opset::Sigmoid>},
         {"Sin", TranslateUnaryOp<opset::Sin>},
@@ -3711,6 +4033,7 @@ const static std::map<
         {"Softplus", TranslateSoftPlusOp},
         {"SpaceToBatchND", TranslateBatchNDAndSpaceNDOp},
         {"SpaceToDepth", TranslateSpaceToDepthOp},
+        {"SparseToDense", TranslateSparseToDenseOp},
         {"Split", TranslateSplitOp},
         {"SplitV", TranslateSplitVOp},
         {"Sqrt", TranslateUnaryOp<opset::Sqrt>},
