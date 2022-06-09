@@ -424,6 +424,9 @@ def main():
                 # ABI 1 TF required latest numpy
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
+                command_executor(
+                    ["pip", "install", "--force-reinstall", "protobuf==3.20.1"]
+                )
 
             tf_cxx_abi = get_tf_cxxabi()
 
