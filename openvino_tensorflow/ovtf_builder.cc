@@ -2954,28 +2954,15 @@ static Status TranslateDirectReduceOp(
 static Status TranslateOneHotOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_features, ng_unused, ng_on, ng_off, ng_depth;
+  ov::Output<ov::Node> ng_features, ng_depth, ng_on, ng_off;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_features, ng_unused, ng_on, ng_off));
-
-  auto ng_features_shape = ng_features.get_shape();
-  std::vector<int> depth;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
-
-  // Depth must be scalar
-  if (depth.size() != 1) {
-    return errors::InvalidArgument(
-        "OneHot Op: depth of one hot dimension must be scalar ", depth.size());
-  }
-
-  auto const_depth = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{}, depth);
+      GetInputNodes(ng_op_map, op, ng_features, ng_depth, ng_on, ng_off));
 
   int one_hot_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &one_hot_axis));
 
   auto ng_onehot = ConstructNgNode<opset::OneHot>(
-      op->name(), ng_features, const_depth, ng_on, ng_off, one_hot_axis);
+      op->name(), ng_features, ng_depth, ng_on, ng_off, one_hot_axis);
   SaveNgOp(ng_op_map, op->name(), ng_onehot);
   return Status::OK();
 }
@@ -3153,15 +3140,9 @@ static Status TranslateReshapeOp(
   ov::Output<ov::Node> ng_input, ng_shape_op;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_shape_op));
 
-  std::vector<int64> shape;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &shape));
-
-  OVTF_VLOG(3) << "Requested result shape: " << ngraph::join(shape);
-
-  auto ng_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{shape.size()}, shape);
-  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Reshape>(
-                                      op->name(), ng_input, ng_shape, false));
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::Reshape>(op->name(), ng_input, ng_shape_op,
+                                           false));
   return Status::OK();
 }
 

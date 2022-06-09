@@ -376,6 +376,10 @@ def main():
             tf_version = get_tf_version()
             copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                                  use_intel_tf)
+
+        #TODO: remove it once TF is upgraded to 2.9
+        command_executor(
+            ["pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"])
         if not os.path.exists(cwd):
             raise AssertionError("Path doesn't exist {0}".format(cwd))
         os.chdir(cwd)
