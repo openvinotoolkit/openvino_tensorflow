@@ -96,6 +96,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     OVTF_VLOG(1) << std::string("OVTF Grappler optimizer pass will not run because ") +
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
+    NGraphClusterManager::EvictAllClusters();
     NGraphClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
     return Status::OK();
