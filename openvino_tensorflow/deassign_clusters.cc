@@ -244,56 +244,57 @@ Status DeassignClusters(Graph* graph) {
       continue;
     }
     // Disable dynamic to static
-    // std::vector<Node*> dyn_node_check;
-    // std::set<Node*> visited_node_check;
-    // for (auto node : nodes) {
-    //   if (node->type_string() == "NonMaxSuppressionV2" ||
-    //       node->type_string() == "Reshape") {
-    //     dyn_node_check.push_back(node);
-    //     visited_node_check.insert(node);
-    //   }
-    // }
-    // bool invalid_dyn_op = false;
-    // while (dyn_node_check.size() > 0) {
-    //   Node* node = dyn_node_check.back();
-    //   dyn_node_check.pop_back();
+    if (device == "GPU" || device == "MYRIAD") {
+      OVTF_VLOG(3) << "Checking Dynamic to Static flow for GPU and MYRIAD";
 
-    //   for (auto it : node->out_nodes()) {
-    //     int out_cluster;
-    //     Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-    //     if (s == Status::OK()) {
-    //       if (out_cluster == cluster_idx &&
-    //           (it->type_string() != "NonMaxSuppressionV2" &&
-    //            it->type_string() != "Reshape")) {
-    //         if (it->type_string() == "Size") {
-    //           invalid_dyn_op = true;
-    //           break;
-    //         } else if (visited_node_check.find(it) ==
-    //                    visited_node_check.end()) {
-    //           dyn_node_check.push_back(it);
-    //           visited_node_check.insert(it);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-    // if (invalid_dyn_op) {
-    //   OVTF_VLOG(2) << "Busting cluster " << cluster_idx
-    //                << " due to Dynamic to Static Flow";
-    //   for (auto node : nodes) {
-    //     OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-    //                  << node->type_string() << "]";
+      std::vector<Node*> dyn_node_check;
+      std::set<Node*> visited_node_check;
+      for (auto node : nodes) {
+        if (node->type_string() == "NonMaxSuppressionV2") {
+          dyn_node_check.push_back(node);
+          visited_node_check.insert(node);
+        }
+      }
+      bool invalid_dyn_op = false;
+      while (dyn_node_check.size() > 0) {
+        Node* node = dyn_node_check.back();
+        dyn_node_check.pop_back();
 
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_cluster");
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_marked_for_clustering");
+        for (auto it : node->out_nodes()) {
+          int out_cluster;
+          Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+          if (s == Status::OK()) {
+            if (out_cluster == cluster_idx &&
+                (it->type_string() != "NonMaxSuppressionV2")) {
+              if (it->type_string() == "ZerosLike") {
+                invalid_dyn_op = true;
+                break;
+              } else if (visited_node_check.find(it) ==
+                         visited_node_check.end()) {
+                dyn_node_check.push_back(it);
+                visited_node_check.insert(it);
+              }
+            }
+          }
+        }
+      }
+      if (invalid_dyn_op) {
+        OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                     << " due to Dynamic to Static Flow";
+        for (auto node : nodes) {
+          OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
+                       << node->type_string() << "]";
 
-    //     deassigned_histogram[node->type_string()]++;
-    //   }
-    //   continue;
-    // }
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_cluster");
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_marked_for_clustering");
 
+          deassigned_histogram[node->type_string()]++;
+        }
+        continue;
+      }
+    }
     // Commenting the condition, not required here anymore, handled the required
     // part with static input condition
     // unordered_set<std::string> input_args;
