@@ -395,6 +395,11 @@ def main():
                         raise AssertionError(
                             "Only python39 is supported on Windows")
 
+                elif (int(tf_version[1:].replace(".", "")) <= 280):
+                    command_executor([
+                        "pip", "install", "--force-reinstall",
+                        "tensorflow==" + tf_version, "protobuf<4"
+                    ])
                 else:
                     command_executor([
                         "pip", "install", "--force-reinstall",
