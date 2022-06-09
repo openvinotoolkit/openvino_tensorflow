@@ -51,7 +51,7 @@ void CostAnalyzer::PredictCosts(CostEstimator* cost_estimator,
   }
   *total_time = costs.execution_time.count();
   if (!status.ok()) {
-    LOG(ERROR) << "Could not estimate the cost for item " << item_->id << ": "
+    LOG(WARNING) << "Could not estimate the cost for item " << item_->id << ": "
                << status.error_message();
     return;
   }

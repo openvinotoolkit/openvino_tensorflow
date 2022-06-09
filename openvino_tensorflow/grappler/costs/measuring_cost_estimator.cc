@@ -115,7 +115,7 @@ Status MeasuringCostEstimator::PredictCosts(const GraphDef& optimized_graph,
   measurement_fn(-1);
 
   if (!status.ok()) {
-    LOG(ERROR) << "Failed to run start measurements: "
+    LOG(WARNING) << "Failed to run start measurements: "
                << status.error_message();
     costs->execution_time = Costs::Duration::max();
     return status;
@@ -135,7 +135,7 @@ Status MeasuringCostEstimator::PredictCosts(const GraphDef& optimized_graph,
   }
 
   if (!status.ok()) {
-    LOG(ERROR) << "Failed to measure graph performance: "
+    LOG(WARNING) << "Failed to measure graph performance: "
                << status.error_message();
     costs->execution_time = Costs::Duration::max();
     return status;

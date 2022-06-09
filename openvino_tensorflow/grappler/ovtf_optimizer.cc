@@ -60,7 +60,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
   /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
-  cluster->DisableDetailedStats(false);  // This enables tracing HW performance
+  cluster->DisableDetailedStats(false); // This enables tracing HW performance
+  cluster->SetNumWarmupSteps(1);
   std::unique_ptr<grappler::CostAnalyzer> analyzer =
       absl::make_unique<grappler::CostAnalyzer>(item, cluster);
   TF_RETURN_IF_ERROR(analyzer->GenerateReport(std::cout,
@@ -92,10 +93,9 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     OVTF_VLOG(0) << "openvino_tensorflow is available but disabled.";
   }
   if (ovtf_not_enabled || already_processed) {
-    OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
+    OVTF_VLOG(1) << std::string("OVTF Grappler optimizer pass will not run because ") +
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
-    NGraphClusterManager::EvictAllClusters();
     NGraphClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
     return Status::OK();
@@ -187,7 +187,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
   FC.SetDisabledOps(api::GetDisabledOps());
-  std::vector<void*> nodes_list = FC.MarkSupportedNodes(nodes_to_preserve);
+  FC.SetSkipNodes(nodes_to_preserve);
+  std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
   // cast back the nodes in the TF format and mark the nodes for clustering
   // (moved out from MarkForClustering function)

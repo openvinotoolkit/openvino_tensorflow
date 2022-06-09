@@ -24,6 +24,7 @@ REGISTER_OP("_nGraphEncapsulate")
     .Attr("Tresults: list(type) >= 0")
     .Attr("ovtf_cluster: int")
     .Attr("ngraph_graph_id: int")
+    .Attr("cluster_cost: int")
     .SetIsStateful()
     .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
 

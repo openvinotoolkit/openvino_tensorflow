@@ -343,6 +343,7 @@ Status Encapsulator::AnalysisPass() {
 
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
         Status::OK()) {
+      node->ClearAttr("cost");
       continue;
     }
 
@@ -350,6 +351,7 @@ Status Encapsulator::AnalysisPass() {
     if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
       continue;
     cluster_cost_map_in_ms[cluster_idx] += node_cost;
+    node->ClearAttr("cost");
 
     // Because the input names may have changed from the original node def,
     // we will need to borrow some code from Graph::ToGraphDefSubRange in

@@ -273,6 +273,8 @@ if ovtf_classic_loaded:
         ovtf_optimizer = rewriter_config.custom_optimizers.add()
         ovtf_optimizer.name = "ovtf-optimizer"
 
+        openvino_tensorflow_lib.disable_rewrite_pass()
+
         # prepare tf function from saved_model
         saved_model = load.load(saved_model_dir, saved_model_tag)
 

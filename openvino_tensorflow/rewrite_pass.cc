@@ -61,6 +61,14 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 class NGraphEncapsulationPass : public NGraphRewritePass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
+
+    bool rewrite_pass_enabled = api::IsRewritePassEnabled();
+
+    if (!rewrite_pass_enabled) {
+        OVTF_VLOG(1) << std::string("Rewrite pass is disabled.");
+        return Status::OK();
+    }
+    
     // If we don't get a main graph, log that fact and bail.
     if (options.graph == nullptr) {
       OVTF_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
@@ -164,7 +172,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     }
 
     FC.SetDisabledOps(disabled_ops_set);
-    std::vector<void*> nodes_list = FC.MarkSupportedNodes({});
+    std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
     // cast back the nodes in the TF format and mark the nodes for clustering
     // (moved out from MarkForClustering function)

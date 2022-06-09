@@ -43,18 +43,12 @@ set(SRC
    ie_backend_engine.cc
    ie_basic_engine.cc
    ie_vadm_engine.cc
+   grappler/ovtf_optimizer.cc
+   grappler/add_identityn.cc
+   grappler/costs/measuring_cost_estimator.cc
+   grappler/costs/robust_stats.cc
+   grappler/costs/cost_analyzer.cc
 )
-
-message(STATUS "OPENVINO_TF_USE_GRAPPLER_OPTIMIZER: ${OPENVINO_TF_USE_GRAPPLER_OPTIMIZER}")
-if(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
-    list(REMOVE_ITEM SRC rewrite_pass.cc)
-    list(APPEND SRC grappler/ovtf_optimizer.cc)
-    list(APPEND SRC grappler/add_identityn.cc)
-    list(APPEND SRC grappler/costs/measuring_cost_estimator.cc)
-    list(APPEND SRC grappler/costs/robust_stats.cc)
-    list(APPEND SRC grappler/costs/cost_analyzer.cc)
-    add_definitions(-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
-endif()
 
 if(OPENVINO_BUILD_VERSION)
     add_compile_definitions(OPENVINO_BUILD_VERSION="${OPENVINO_BUILD_VERSION}")

@@ -626,12 +626,6 @@ def main():
                                                         "tensorflow")
             ])
 
-    if (builder_version > 0.50):
-        openvino_tf_cmake_flags.extend([
-            "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
-            flag_string_map[arguments.use_grappler_optimizer]
-        ])
-
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
     if arguments.python_executable != '':
