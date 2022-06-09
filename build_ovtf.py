@@ -334,6 +334,10 @@ def main():
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
             ])
+            #TODO: remove it once TF is upgraded to 2.9
+            command_executor([
+                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
+            ])
             tf_source_loc = os.path.abspath(
                 os.path.join(arguments.use_tensorflow_from_location,
                              "tensorflow"))
@@ -358,6 +362,10 @@ def main():
             # Install the found TF whl file
             command_executor(
                 ["pip", "install", "--force-reinstall", "-U", tf_whl])
+            #TODO: remove it once TF is upgraded to 2.9
+            command_executor([
+                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
+            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -377,9 +385,6 @@ def main():
             copy_tf_to_artifacts(tf_version, tf_in_artifacts, tf_whl_loc,
                                  use_intel_tf)
 
-        #TODO: remove it once TF is upgraded to 2.9
-        command_executor(
-            ["pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"])
         if not os.path.exists(cwd):
             raise AssertionError("Path doesn't exist {0}".format(cwd))
         os.chdir(cwd)

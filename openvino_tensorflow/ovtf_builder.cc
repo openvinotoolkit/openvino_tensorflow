@@ -2739,32 +2739,75 @@ static Status TranslateMaxPoolOp(const Node* op,
   ov::Shape ng_dilations(N, 1);
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
-  NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  if (ng_input.get_partial_shape().is_static()) {
+    NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  }
   NHWCtoHW(is_nhwc, tf_ksize, ng_kernel_shape);
   NHWCtoNCHW(op->name(), is_nhwc, ng_input);
   OVTF_VLOG(3) << "ng_strides: " << ngraph::join(ng_strides);
   OVTF_VLOG(3) << "ng_image_shape: " << ngraph::join(ng_image_shape);
   OVTF_VLOG(3) << "ng_kernel_shape: " << ngraph::join(ng_kernel_shape);
 
-  ov::CoordinateDiff padding_below;
-  ov::CoordinateDiff padding_above;
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, padding_below, padding_above);
+  ov::Output<ov::Node> ng_maxpool;
+  ov::Shape ng_padding_below;
+  ov::Shape ng_padding_above;
+  ov::op::PadType pad_type;
 
-  // TODO: remove this once OpenVINO supports negative padding
-  // (CoordinateDiff) for MaxPool
-  ov::Shape ng_padding_below(padding_below.begin(), padding_below.end());
-  ov::Shape ng_padding_above(padding_above.begin(), padding_above.end());
-
-  auto ng_maxpool = ConstructNgNode<opset::MaxPool>(
-      op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
-      ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR);
+  if (tf_padding_type == "EXPLICIT") {
+    std::vector<int32> tf_paddings;
+    TF_RETURN_IF_ERROR(
+        GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+    if (is_nhwc) {
+      ng_padding_below.push_back(tf_paddings[2]);
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_above.push_back(tf_paddings[3]);
+      ng_padding_above.push_back(tf_paddings[5]);
+    } else {
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_below.push_back(tf_paddings[6]);
+      ng_padding_above.push_back(tf_paddings[5]);
+      ng_padding_above.push_back(tf_paddings[7]);
+    }
+    OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
+    OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
+    OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
+    ng_maxpool = ConstructNgNode<opset::MaxPool>(
+        op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
+        ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR);
+  } else if (tf_padding_type == "VALID") {
+    OVTF_VLOG(3) << " ========== VALID Padding ========== ";
+    ng_padding_below.assign(ng_image_shape.size(), 0);
+    ng_padding_above.assign(ng_image_shape.size(), 0);
+    ng_maxpool = ConstructNgNode<opset::MaxPool>(
+        op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
+        ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR);
+  } else if (tf_padding_type == "SAME") {
+    if (ng_input.get_partial_shape().is_static()) {
+      OVTF_VLOG(3) << "========== SAME Padding - Static Shape ========== ";
+      ov::Shape img_shape = {0, 0};
+      img_shape.insert(img_shape.end(), ng_image_shape.begin(),
+                       ng_image_shape.end());
+      ov::CoordinateDiff padding_below;
+      ov::CoordinateDiff padding_above;
+      ov::infer_auto_padding(img_shape, ng_kernel_shape, ng_strides,
+                             ng_dilations, ov::op::PadType::SAME_UPPER,
+                             padding_above, padding_below);
+      ng_padding_below = ov::Shape(padding_below.begin(), padding_below.end());
+      ng_padding_above = ov::Shape(padding_above.begin(), padding_above.end());
+      ng_maxpool = ConstructNgNode<opset::MaxPool>(
+          op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
+          ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR);
+    } else {
+      OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
+      pad_type = ov::op::PadType::SAME_UPPER;
+      ng_maxpool = ConstructNgNode<opset::MaxPool>(
+          op->name(), ng_input, ng_strides, ng_dilations, ng_padding_below,
+          ng_padding_above, ng_kernel_shape, ov::op::RoundingType::FLOOR,
+          pad_type);
+    }
+  }
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_maxpool);
-
-  OVTF_VLOG(3) << "maxpool outshape: {" << ngraph::join(ng_maxpool.get_shape())
-               << "}";
-
   SaveNgOp(ng_op_map, op->name(), ng_maxpool);
   return Status::OK();
 }
@@ -3361,33 +3404,14 @@ static Status TranslateSliceOp(
   OVTF_VLOG(3) << "Size input for Slice: " << ngraph::join(size_vec);
 
   std::vector<int64> end_vec(begin_vec.size());
-  const auto ng_input_shape = ng_input.get_shape();
-  stringstream err_stream;
-  string err_msg;
   for (size_t i = 0; i < size_vec.size(); i++) {
     if (size_vec[i] != -1) {
       end_vec[i] = begin_vec[i] + size_vec[i];
     } else {
-      // support -1 for size_vec, to the end of the tensor
-      end_vec[i] = ng_input_shape[i];
+      // if size_vec is -1, set the end_vec to INT_MAX, to consider the end
+      // value of this dimension
+      end_vec[i] = INT64_MAX;
     }
-
-    // check for this condition: 0 <= begin[i] <= begin[i] + size[i] <= Di
-    if (0 > begin_vec[i])
-      err_stream << "lower < 0: " << begin_vec[i]
-                 << ". It should have been positive.\n";
-    if (begin_vec[i] > end_vec[i])
-      err_stream << "upper < lower: upper = " << end_vec[i]
-                 << ", lower = " << begin_vec[i] << "\n";
-    if (begin_vec[i] > ng_input_shape[i])
-      err_stream << "dim < upper: dim = " << ng_input_shape[i]
-                 << ", upper = " << end_vec[i] << "\n";
-
-    err_msg = err_stream.str();
-    if (!err_msg.empty())
-      return errors::InvalidArgument("Cannot translate slice op at position ",
-                                     i, " of ", size_vec.size(),
-                                     ". The reasons are:\n", err_msg);
   }
 
   auto begin = ConstructNgNode<opset::Constant>(
@@ -3395,10 +3419,12 @@ static Status TranslateSliceOp(
   auto end = ConstructNgNode<opset::Constant>(
       op->name(), ov::element::i64, ov::Shape{end_vec.size()}, end_vec);
 
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::StridedSlice>(op->name(), ng_input, begin,
-                                                end, std::vector<int64_t>{},
-                                                std::vector<int64_t>{}));
+  auto ng_step = ConstructNgNode<opset::Constant>(
+      op->name(), ov::element::i64, ov::Shape{begin_vec.size()}, 1);
+  auto ng_result =
+      ConstructNgNode<opset::Slice>(op->name(), ng_input, begin, end, ng_step);
+
+  SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
 }
 
