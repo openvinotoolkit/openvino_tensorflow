@@ -60,7 +60,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
 
   /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
-  cluster->DisableDetailedStats(false); // This enables tracing HW performance
+  cluster->DisableDetailedStats(false);  // This enables tracing HW performance
   cluster->SetNumWarmupSteps(1);
   std::unique_ptr<grappler::CostAnalyzer> analyzer =
       absl::make_unique<grappler::CostAnalyzer>(item, cluster);
@@ -93,7 +93,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     OVTF_VLOG(0) << "openvino_tensorflow is available but disabled.";
   }
   if (ovtf_not_enabled || already_processed) {
-    OVTF_VLOG(1) << std::string("OVTF Grappler optimizer pass will not run because ") +
+    OVTF_VLOG(1) << std::string(
+                        "OVTF Grappler optimizer pass will not run because ") +
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();

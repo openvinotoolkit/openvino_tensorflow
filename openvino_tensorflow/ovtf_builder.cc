@@ -885,8 +885,6 @@ static Status TranslateBiasAddOp(
         "BiasAdd data format is neither NHWC nor NCHW");
   }
 
-  // auto ng_input_shape = ng_input.get_shape();
-  // auto ng_bias_shape = ng_bias.get_shape();
   auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
   if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
@@ -973,7 +971,6 @@ static Status TranslateConcatV2Op(
   }
 
   ov::OutputVector ng_args;
-
   for (int i = 0; i < op->num_inputs() - 1; i++) {
     ov::Output<ov::Node> ng_arg;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, i, ng_arg));
@@ -2027,6 +2024,7 @@ static Status TranslateFillOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_value, ng_dims;
+  // TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_dims, ng_value));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_dims));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_value));
   SaveNgOp(ng_op_map, op->name(),
@@ -2130,8 +2128,8 @@ static Status TranslateFusedMatMulOp(const Node* op,
                                              transpose_a, transpose_b);
 
   auto ng_matmul_shape = ng_matmul.get_shape();
-  // auto ng_bias_shape = ng_bias.get_shape();
   auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
+
   if (ng_bias_rank != 1) {
     return errors::InvalidArgument(
         "Bias argument to BiasAdd does not have one dimension");
@@ -2383,8 +2381,6 @@ static Status TranslateFusedConv2DOp(const Node* op,
 
     TF_RETURN_IF_ERROR(CreateNgConv(ng_input, ng_filter, ng_conv));
 
-    // auto ng_conv_shape = ng_conv.get_shape();
-    // auto ng_bias_shape = ng_bias.get_shape();
     auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
     auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
     if (ng_bias_rank != 1) {
@@ -2623,8 +2619,6 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
 
     TF_RETURN_IF_ERROR(CreateNgDepthwiseConv(ng_input, ng_filter, ng_conv));
 
-    // auto ng_conv_shape = ng_conv.get_shape();
-    // auto ng_bias_shape = ng_bias.get_shape();
     auto ng_conv_rank = ng_conv.get_partial_shape().rank().get_length();
     auto ng_bias_rank = ng_bias.get_partial_shape().rank().get_length();
     if (ng_bias_rank != 1) {
@@ -3073,20 +3067,6 @@ static Status TranslateOneHotOp(
   TF_RETURN_IF_ERROR(
       GetInputNodes(ng_op_map, op, ng_features, ng_depth, ng_on, ng_off));
 
-  // auto ng_features_shape = ng_features.get_shape();
-  // std::vector<int> depth;
-  // TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &depth));
-
-  // Depth must be scalar
-  // if (depth.size() != 1) {
-  //   return errors::InvalidArgument(
-  //       "OneHot Op: depth of one hot dimension must be scalar ",
-  //       depth.size());
-  // }
-
-  // auto const_depth = ConstructNgNode<opset::Constant>(
-  //     op->name(), ov::element::i64, ov::Shape{}, depth);
-
   int one_hot_axis;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "axis", &one_hot_axis));
 
@@ -3195,22 +3175,10 @@ static Status TranslateRangeOp(
   ov::Output<ov::Node> ng_start, ng_stop, ng_step;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_start, ng_stop, ng_step));
 
-  // DataType start_type = op->input_type(0);
-  // DataType stop_type = op->input_type(1);
-  // DataType step_type = op->input_type(2);
   ov::element::Type out_type;
   TF_RETURN_IF_ERROR(
       util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
-  // ov::Output<ov::Node> start_node, stop_node, step_node;
-  // TF_RETURN_IF_ERROR(
-  //     GetStaticInputNode(op, 0, static_input_map, start_type, start_node));
-  // TF_RETURN_IF_ERROR(
-  //     GetStaticInputNode(op, 1, static_input_map, stop_type, stop_node));
-  // TF_RETURN_IF_ERROR(
-  //     GetStaticInputNode(op, 2, static_input_map, step_type, step_node));
-  // auto ng_range = ConstructNgNode<opset::Range>(op->name(), start_node,
-  //                                               stop_node, step_node,
-  //                                               out_type);
+
   auto ng_range = ConstructNgNode<opset::Range>(op->name(), ng_start, ng_stop,
                                                 ng_step, out_type);
   SaveNgOp(ng_op_map, op->name(), ng_range);
@@ -3766,7 +3734,7 @@ static Status TranslateSqueezeOp(const Node* op,
     tf_axis[i] = tf_axis[i] < 0 ? (int32)(input_dims) + tf_axis[i] : tf_axis[i];
   }
 
-  if (!ng_input.get_partial_shape().is_dynamic()) {
+  if (ng_input.get_partial_shape().is_static()) {
     // This conditional check is required only if the input shape is known
     if (input_dims > 0 && ng_input.get_shape()[0] == 0) {
       SaveNgOp(ng_op_map, op->name(),
@@ -3862,56 +3830,27 @@ static Status TranslateTileOp(
 static Status TranslateTopKV2Op(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
+  ov::Output<ov::Node> ng_input, ng_k;
 
   TF_RETURN_IF_ERROR(ValidateInputCount(op, 2));
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_k));
 
+  // ASSER(ng_input.get_partial_shape().rank().is_static(), "Input rank must be
+  // static.");
+  // TENSORFLOW_OP_VALIDATION(node,
+  //                           input.get_partial_shape().rank().get_length() >=
+  //                           1,
+  //                           "Input rank must be greater than 0.");
   // axis along which to compute top k indices
-  int64 k_axis = ng_input.get_partial_shape().rank().get_length() - 1;
-
-  // scalar input tensor specifying how many max/min elts should be computed
-  // CPU backend only supports element type i64
-  std::vector<int64> ng_k_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &ng_k_vec));
-  auto ng_k = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
-                                               ov::Shape{}, ng_k_vec[0]);
-
-  std::string mode = "max";
-
-  std::string sort = "value";
+  int64_t k_axis = ng_input.get_partial_shape().rank().get_length() - 1;
   bool sorted = true;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "sorted", &sorted));
-  if (!sorted) {
-    sort = "index";
-  }
 
-  if (ng_k_vec[0] == 0) {
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ng_input.get_element_type(),
-                                        ov::Shape{0}, std::vector<int>({0})));
-
-    SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                        op->name(), ov::element::i32,
-                                        ov::Shape{0}, std::vector<int>({0})));
-    return Status::OK();
-  }
-
-  if (!ng_input.get_partial_shape().is_dynamic()) {
-    if (ng_input.get_shape()[0] == 0) {
-      SaveNgOp(ng_op_map, op->name(),
-               ConstructNgNode<opset::Constant>(
-                   op->name(), ng_input.get_element_type(), ov::Shape{0},
-                   std::vector<int>({0})));
-
-      SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Constant>(
-                                          op->name(), ov::element::i32,
-                                          ov::Shape{0}, std::vector<int>({0})));
-      return Status::OK();
-    }
-  }
-  auto ng_result =
-      std::make_shared<opset::TopK>(ng_input, ng_k, k_axis, mode, sort);
+  auto ng_result = std::make_shared<opset::TopK>(
+      ng_input, ng_k, k_axis, opset::TopK::Mode::MAX,
+      sorted ? opset::TopK::SortType::SORT_VALUES
+             : opset::TopK::SortType::SORT_INDICES);
 
   ov::Output<ov::Node> ng_values = ng_result->output(0);
   Builder::SetTracingInfo(op->name(), ng_values);
@@ -4049,20 +3988,11 @@ static Status TranslateZerosLikeOp(const Node* op,
                                    Builder::OpMap& ng_op_map) {
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
-  ov::Output<ov::Node> ng_result;
-  // if input shape is known, this OP can be converted into a constant node
-  if (!ng_input.get_partial_shape().is_dynamic()) {
-    ov::Shape input_shape = ng_input.get_shape();
-    std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
-    ng_result = ConstructNgNode<opset::Constant>(
-        op->name(), ng_input.get_element_type(), input_shape, const_values);
-  } else {
-    // Use Subtract operator with the both inputs as ng_input
-    // TODO: Will need different handling, once DT_STRING is supported for this
-    // OP
-    ng_result =
-        ConstructNgNode<opset::Subtract>(op->name(), ng_input, ng_input);
-  }
+
+  ov::Shape input_shape = ng_input.get_shape();
+  std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
+  auto ng_result = ConstructNgNode<opset::Constant>(
+      op->name(), ng_input.get_element_type(), input_shape, const_values);
   SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
 }
@@ -4524,8 +4454,7 @@ Status Builder::TranslateGraph(
   };
 
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_partial_shape().rank().get_length() > 0 &&
-          param_dim_check(i))) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }

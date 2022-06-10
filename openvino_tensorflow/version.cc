@@ -52,7 +52,7 @@ int cxx11_abi_flag() {
 }
 
 bool is_grappler_enabled() {
-// grappler is enabled by default
+  // grappler is enabled by default
   return true;
 }
 

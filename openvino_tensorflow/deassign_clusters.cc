@@ -405,12 +405,12 @@ Status DeassignClusters(Graph* graph) {
   // take only top-3 clusters
   cluster_cost_map_in_ms.erase(cluster_cost_map_in_ms.begin() + top_k_clusters,
                                cluster_cost_map_in_ms.end());
-  
 
   // if (top_k_clusters != -1) {
   //   // sort the clusters
   //   std::sort(alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
-  //             [](const auto& x, const auto& y) { return x.second > y.second; });
+  //             [](const auto& x, const auto& y) { return x.second > y.second;
+  //             });
   //   int total_clusters = alive_clusters_pairs.size();
   //   for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
   //     // clear the cluster
@@ -656,7 +656,8 @@ Status DeassignClusters(Graph* graph) {
       max_cluster_size = nodes.size();
     }
     alive_clusters.push_back(cluster_idx);
-    // alive_clusters_pairs.push_back(std::make_pair(cluster_idx, nodes.size()));
+    // alive_clusters_pairs.push_back(std::make_pair(cluster_idx,
+    // nodes.size()));
   }
 
   if (device == "HDDL" || device == "MYRIAD") {
