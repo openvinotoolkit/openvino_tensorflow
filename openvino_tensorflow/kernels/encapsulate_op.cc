@@ -391,17 +391,22 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       try {
         int64_t start_ns = profiler::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
-        int64_t duration_in_ms =
-            (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
-        OVTF_VLOG(1) << "Iter: " << m_iter;
-        OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
-                     << duration_in_ms << " ms.";
-        s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
-        // Run warmup TF run, and enable the proper TF timing run for the next
-        // iteration through a separate section at the top pf compute
-        if (NGraphClusterManager::IsClusterFallbackEnabled() && m_iter == 2) {
-          s_tf_timing_run_enabled_map[m_cluster_id] = true;
-          throw std::runtime_error("Falling back to native TF Runtime.");
+
+        // Compare OV timing with TF timing and decide whether the current
+        // cluster should be ran using OV or not
+        if (device == "CPU") {
+          int64_t duration_in_ms =
+              (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+          OVTF_VLOG(1) << "Iter: " << m_iter;
+          OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
+                       << duration_in_ms << " ms.";
+          s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
+          // Run warmup TF run, and enable the proper TF timing run for the next
+          // iteration through a separate section at the top pf compute
+          if (NGraphClusterManager::IsClusterFallbackEnabled() && m_iter == 2) {
+            s_tf_timing_run_enabled_map[m_cluster_id] = true;
+            throw std::runtime_error("Falling back to native TF Runtime.");
+          }
         }
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +

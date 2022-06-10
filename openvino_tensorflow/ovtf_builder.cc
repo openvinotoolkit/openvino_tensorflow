@@ -2921,6 +2921,18 @@ static Status TranslateMaxPoolOp(const Node* op,
   return Status::OK();
 }
 
+static Status TranslateMklSwishOp(
+    const Node* op, const std::vector<const Tensor*>& static_input_map,
+    Builder::OpMap& ng_op_map) {
+  ov::Output<ov::Node> ng_input;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  auto ng_sigmoid = ConstructNgNode<opset::Sigmoid>(op->name(), ng_input);
+  auto ng_result =
+      ConstructNgNode<opset::Multiply>(op->name(), ng_input, ng_sigmoid);
+  SaveNgOp(ng_op_map, op->name(), ng_result);
+  return Status::OK();
+}
+
 static Status TranslateNonMaxSuppressionOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
@@ -4072,13 +4084,13 @@ const static std::map<
         // FusedCTCGreedyDecoder combines CTCGreedyDecoder and the following
         // SparseToDense op
         {"FusedCTCGreedyDecoder", TranslateFusedCTCGreedyDecoder},
-        {"Gather", TranslateGatherOp},
-        {"GatherV2", TranslateGatherV2Op},
-        {"GatherNd", TranslateGatherNdOp},
         {"_FusedBatchNormEx", TranslateFusedBatchNormOp},
         {"_FusedConv2D", TranslateFusedConv2DOp},
         {"_FusedDepthwiseConv2dNative", TranslateFusedDepthwiseConv2dNativeOp},
         {"_FusedMatMul", TranslateFusedMatMulOp},
+        {"Gather", TranslateGatherOp},
+        {"GatherV2", TranslateGatherV2Op},
+        {"GatherNd", TranslateGatherNdOp},
         {"Greater", TranslateBinaryOp<opset::Greater>},
         {"GreaterEqual", TranslateBinaryOp<opset::GreaterEqual>},
         {"Identity", TranslateIdentityOp},
@@ -4099,6 +4111,7 @@ const static std::map<
         {"Maximum", TranslateBinaryOp<opset::Maximum>},
         {"MaxPool", TranslateMaxPoolOp<2>},
         {"MaxPool3D", TranslateMaxPoolOp<3>},
+        {"_MklSwish", TranslateMklSwishOp},
         {"NonMaxSuppression", TranslateNonMaxSuppressionOp},
         {"NonMaxSuppressionV2", TranslateNonMaxSuppressionOp},
         {"NonMaxSuppressionV3", TranslateNonMaxSuppressionOp},
