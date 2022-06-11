@@ -23,9 +23,6 @@ import openvino_tensorflow
 
 class TestUpdateConfig(NgraphTest):
 
-    @pytest.mark.skipif(
-        not openvino_tensorflow.is_grappler_enabled(),
-        reason='Only for Grappler')
     def test_update_config_adds_optimizer_only_once(self):
 
         # Helper function to count the number of occurances in a config

@@ -24,9 +24,6 @@ from common import NgraphTest
 
 class TestRewriterConfigBackendSetting(NgraphTest):
 
-    @pytest.mark.skipif(
-        not openvino_tensorflow.is_grappler_enabled(),
-        reason='Rewriter config only works for grappler path')
     def test_config_updater_api(self):
         dim1 = 3
         dim2 = 4

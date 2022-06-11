@@ -54,8 +54,7 @@ __all__ = [
     'enable', 'disable', 'is_enabled', 'list_backends',
     'set_backend', 'get_backend',
     'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__', 'cxx11_abi_flag'
-    'is_grappler_enabled', 'update_config',
+    'is_logging_placement', '__version__', 'cxx11_abi_flag', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
     'enable_dynamic_fallback', 'disable_dynamic_fallback',
     'export_ir',
@@ -147,7 +146,6 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.openvino_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
-    openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
     openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
     openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p)]
@@ -209,40 +207,6 @@ if ovtf_classic_loaded:
 
     def cxx11_abi_flag():
         return openvino_tensorflow_lib.cxx11_abi_flag()
-
-    def is_grappler_enabled():
-        return openvino_tensorflow_lib.is_grappler_enabled()
-
-    def update_config(config, backend_name = "CPU", device_id = ""):
-        #updating session config if grappler is enabled
-        if(openvino_tensorflow_lib.is_grappler_enabled()):
-            opt_name = 'ovtf-optimizer'
-            # If the config already has ovtf-optimizer, then do not update it
-            if config.HasField('graph_options'):
-                if config.graph_options.HasField('rewrite_options'):
-                    custom_opts = config.graph_options.rewrite_options.custom_optimizers
-                    for i in range(len(custom_opts)):
-                        if custom_opts[i].name == opt_name:
-                            return config
-            rewriter_options = rewriter_config_pb2.RewriterConfig()
-            rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            rewriter_options.min_graph_nodes=-1
-            ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            ovtf_optimizer.name = opt_name
-            ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-            # For reference, if we want to provide configuration support(backend parameters)
-            # in a python script using the ovtf-optimizer
-            # rewriter_options = rewriter_config_pb2.RewriterConfig()
-            # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            # rewriter_options.min_graph_nodes=-1
-            # ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            # ovtf_optimizer.name = "ovtf-optimizer"
-            # ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            # ovtf_optimizer.parameter_map["max_batch_size"].s = b'64'
-            # ovtf_optimizer.parameter_map["ice_cores"].s = b'12'
-            # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-        return config
 
     def set_disabled_ops(unsupported_ops):
         openvino_tensorflow_lib.set_disabled_ops(unsupported_ops.encode("utf-8"))

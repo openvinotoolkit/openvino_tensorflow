@@ -110,20 +110,18 @@ TEST(TFExec, axpy) {
       ->mutable_rewrite_options()
       ->set_constant_folding(tf::RewriterConfig::OFF);
 
-  if (is_grappler_enabled()) {
-    auto* custom_config = options.config.mutable_graph_options()
-                              ->mutable_rewrite_options()
-                              ->add_custom_optimizers();
+  auto* custom_config = options.config.mutable_graph_options()
+                            ->mutable_rewrite_options()
+                            ->add_custom_optimizers();
 
-    custom_config->set_name("ovtf-optimizer");
-    options.config.mutable_graph_options()
-        ->mutable_rewrite_options()
-        ->set_min_graph_nodes(-1);
+  custom_config->set_name("ovtf-optimizer");
+  options.config.mutable_graph_options()
+      ->mutable_rewrite_options()
+      ->set_min_graph_nodes(-1);
 
-    options.config.mutable_graph_options()
-        ->mutable_rewrite_options()
-        ->set_meta_optimizer_iterations(tf::RewriterConfig::ONE);
-  }
+  options.config.mutable_graph_options()
+      ->mutable_rewrite_options()
+      ->set_meta_optimizer_iterations(tf::RewriterConfig::ONE);
 
   ConfigProto& config = options.config;
   config.set_allow_soft_placement(true);

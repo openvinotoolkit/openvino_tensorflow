@@ -407,7 +407,8 @@ Status Encapsulator::AnalysisPass() {
 
     auto node_def =
         NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
-    OVTF_VLOG(4) << "Adding new node " << node->name() << " in Cluster " << cluster_idx << "'s GraphDef";
+    OVTF_VLOG(4) << "Adding new node " << node->name() << " in Cluster "
+                 << cluster_idx << "'s GraphDef";
     *node_def = original_def;
     for (auto& input : *(node_def->mutable_input())) {
       TensorId tensor_id = ParseTensorName(input);

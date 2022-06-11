@@ -115,11 +115,6 @@ void PrintVersion() {
             << tensorflow::openvino_tensorflow::version() << std::endl;
   std::cout << "CXX11_ABI Used: "
             << tensorflow::openvino_tensorflow::cxx11_abi_flag() << std::endl;
-  std::cout << "Grappler Enabled? "
-            << (tensorflow::openvino_tensorflow::is_grappler_enabled()
-                    ? std::string("Yes")
-                    : std::string("No"))
-            << std::endl;
   PrintAvailableBackends();
 }
 

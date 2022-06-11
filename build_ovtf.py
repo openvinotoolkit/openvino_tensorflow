@@ -7,10 +7,6 @@
 
 from tools.build_utils import *
 
-# grappler related defaults
-builder_version = 2.0
-flag_string_map = {True: 'YES', False: 'NO'}
-
 
 def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                   disable_cpp_api):
@@ -91,12 +87,6 @@ def main():
         "Note: in this case C++ API, unit tests and examples will be built for "
         + "OpenVINO integration with TensorFlow",
         action="store_true")
-
-    if (builder_version > 0.50):
-        parser.add_argument(
-            '--use_grappler_optimizer',
-            help="Use Grappler optimizer instead of the optimization passes\n",
-            action="store_true")
 
     parser.add_argument(
         '--artifacts_dir',
@@ -425,8 +415,7 @@ def main():
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
                 command_executor(
-                    ["pip", "install", "--force-reinstall", "protobuf==3.20.1"]
-                )
+                    ["pip", "install", "--force-reinstall", "protobuf==3.20.1"])
 
             tf_cxx_abi = get_tf_cxxabi()
 
@@ -735,13 +724,6 @@ def main():
     else:
         install_openvino_tf(tf_version, venv_dir,
                             os.path.join(artifacts_location, ov_tf_whl))
-
-    if builder_version > 0.50 and arguments.use_grappler_optimizer:
-        import tensorflow as tf
-        import openvino_tensorflow
-        if not openvino_tensorflow.is_grappler_enabled():
-            raise Exception(
-                "Build failed: 'use_grappler_optimizer' specified but not used")
 
     print('\033[1;32mBuild successful\033[0m')
     os.chdir(pwd)
