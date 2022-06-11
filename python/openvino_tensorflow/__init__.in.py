@@ -274,6 +274,8 @@ if ovtf_classic_loaded:
 
         if not os.path.exists(frozen_model_file):
             raise AssertionError("Could not find model path")
+        
+        openvino_tensorflow_lib.disable_rewrite_pass()
 
         graph = tf.Graph()
         graph_def = tf.compat.v1.GraphDef()

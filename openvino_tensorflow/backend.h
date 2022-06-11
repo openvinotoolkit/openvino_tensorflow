@@ -15,6 +15,7 @@
 #include "openvino_tensorflow/cluster_manager.h"
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_tensor.h"
+#include "openvino_tensorflow/api.h"
 
 using namespace std;
 
@@ -25,7 +26,9 @@ class Backend {
  public:
   Backend(const string& configuration_string);
   ~Backend() {
-    NGraphClusterManager::EvictAllClusters();
+    if(api::IsRewritePassEnabled()) {
+      NGraphClusterManager::EvictAllClusters();
+    }
     if (m_device != "GPU") {
       NGraphClusterManager::EvictMRUClusters();
     }
