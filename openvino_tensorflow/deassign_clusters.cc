@@ -627,7 +627,7 @@ Status DeassignClusters(Graph* graph) {
     }
   }
 
-  if (api::IsRewritePassEnabled) {
+  if (api::IsRewritePassEnabled()) {
     // Keep only Top K clusters, based on the value of K set by the following
     // environment variable
     int top_k_clusters = -1;

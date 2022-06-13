@@ -416,7 +416,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         // executing it here, however for Grappler pass the TF compute cost is
         // already calculate during initial optimize pass, and is readily
         // available for use
-        if (api::IsRewritePassEnabled) {
+        if (api::IsRewritePassEnabled()) {
           if (device == "CPU") {
             s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
             // Run warmup TF run, and enable the proper TF timing run for the
