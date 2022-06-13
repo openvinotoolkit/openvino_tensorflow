@@ -400,11 +400,7 @@ def main():
                         "pip", "install", "--force-reinstall",
                         "tensorflow==" + tf_version
                     ])
-                    #TODO: Remove this once protobuf version error is fixed in TF-2.8
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "protobuf==" + "3.20.1"
-                    ])
+
             elif arguments.cxx11_abi_version == "1":
                 if tags.interpreter == "cp37":
                     command_executor([
@@ -425,6 +421,11 @@ def main():
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
 
+            #TODO: Remove this once protobuf version error is fixed in TF-2.8
+            command_executor([
+                "pip", "install", "--force-reinstall",
+                "protobuf==" + "3.20.1"
+            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
