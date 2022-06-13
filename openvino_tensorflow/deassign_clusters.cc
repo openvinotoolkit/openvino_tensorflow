@@ -276,163 +276,12 @@ Status DeassignClusters(Graph* graph) {
     return Status::OK();
   }
 
-  std::map<int, int> arg_index_count;
-  std::map<int, GraphDef> cluster_graph_map;
-  std::map<std::tuple<int, std::string, int>, string> input_rename_map;
-  // A map from cluster indices to a vector of input data types.
-  std::map<int, std::vector<std::tuple<int, int, DataType>>> cluster_input_map;
-
-  // edge traversal is required to find out whether src or dst is clustered
-  // once the cluster is known, that fetch nodes of the cluster can be
-  // identified properly for
-  // grappler_item creation
-  for (auto edge : graph->edges()) {
-    // TODO(amprocte): should actually keep of these. During clustering we
-    // will already have identified any intra-cluster control deps. Should
-    // maintain inter-cluster control deps.
-    if (edge->IsControlEdge()) continue;
-
-    Node* src = edge->src();
-    Node* dst = edge->dst();
-
-    // TODO(amprocte): the following rejects edges involving source/sink. Is
-    // that what we want to do?
-    if (!src->IsOp() || !dst->IsOp()) {
-      continue;
-    }
-
-    int dst_cluster_idx;
-    bool dst_clustered =
-        (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
-
-    int src_cluster_idx;
-    bool src_clustered =
-        (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
-
-    // Ignore edges within a cluster. (Note that this test also works when
-    // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
-    if (dst_cluster_idx == src_cluster_idx) {
-      continue;
-    }
-
-    DataType dt = dst->input_type(edge->dst_input());
-    // If the source node lies within a cluster
-    // src is now one of the output nodes of the cluster as it connects to one
-    // of the fanout edges
-    if (src_clustered) {
-      std::stringstream ss_input_to_retval;
-      ss_input_to_retval << src->name() << ":" << edge->src_output();
-    }
-
-    // If the destination node lies within a cluster
-    // src here is one of the input nodes of the cluster
-    if (dst_clustered) {
-      std::stringstream ss;
-      ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
-      std::string new_input_name = ss.str();
-
-      input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
-                                       edge->src_output())] = new_input_name;
-      string input_prov_tag = src->name();
-
-      if (cluster_graph_map.find(dst_cluster_idx) == cluster_graph_map.end())
-        cluster_graph_map[dst_cluster_idx] =
-            *NGraphClusterManager::GetClusterGraph(dst_cluster_idx);
-
-      auto new_input_node_def = cluster_graph_map[dst_cluster_idx].add_node();
-
-      new_input_node_def->set_name(new_input_name);
-      new_input_node_def->set_op("_Arg");
-
-      SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
-      SetAttrValue(arg_index_count[dst_cluster_idx],
-                   &((*(new_input_node_def->mutable_attr()))["index"]));
-      SetAttrValue(input_prov_tag,
-                   &((*(new_input_node_def->mutable_attr()))["_prov_tag"]));
-
-      arg_index_count[dst_cluster_idx]++;
-      cluster_input_map[dst_cluster_idx].push_back(
-          std::make_tuple(src->id(), edge->src_output(), dt));
-    }
-  }
-
-  // A map from cluster indices to TF Profiled cumulative costs of nodes in the
-  // cluster
-  std::vector<std::pair<int, int64_t>> cluster_cost_map_in_ms;
-
-  for (auto& c : cluster_graph_map) {
-    int cluster_idx = c.first;
-    GraphDef graph_def = c.second;
-
-    PopulateClusterGraphDef(cluster_idx, graph_def, graph, input_rename_map);
-
-    GraphConstructorOptions opts;
-    opts.allow_internal_ops = true;
-    opts.expect_device_spec = false;
-    FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
-    Graph g(flib);
-    TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &g));
-
-    int num_nodes = 0;
-    std::pair<int, int64_t> pair_idx_cost;
-    pair_idx_cost.first = cluster_idx;
-    pair_idx_cost.second = 0;
-    for (auto n : g.nodes()) {
-      int64_t node_cost = 0;
-      if (GetNodeAttr(n->attrs(), "cost", &node_cost) != Status::OK()) continue;
-      pair_idx_cost.second += node_cost;
-      num_nodes++;
-    }
-    pair_idx_cost.second /= 1e6;  // ns to ms
-    cluster_cost_map_in_ms.push_back(pair_idx_cost);
-
-    OVTF_VLOG(1) << "Cluster with ID " << cluster_idx
-                 << ", num_nodes: " << num_nodes << ", costs "
-                 << pair_idx_cost.second << " ms";
-  }
-
-  // sort clusters based on cost
-  std::sort(cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
-            [](auto& left, auto& right) { return left.second > right.second; });
-
-  // Keep only Top K clusters, based on the value of K set by the following
-  // environment variable
-  int top_k_clusters = 3;
-  if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
-    top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
-  }
-
-  // take only top-3 clusters
-  cluster_cost_map_in_ms.erase(cluster_cost_map_in_ms.begin() + top_k_clusters,
-                               cluster_cost_map_in_ms.end());
-
-  // if (top_k_clusters != -1) {
-  //   // sort the clusters
-  //   std::sort(alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
-  //             [](const auto& x, const auto& y) { return x.second > y.second;
-  //             });
-  //   int total_clusters = alive_clusters_pairs.size();
-  //   for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
-  //     // clear the cluster
-  //     auto cluster_id_to_clear = alive_clusters_pairs[count].first;
-  //     set<Node*>& nodes = cluster_map[cluster_id_to_clear];
-
-  //     for (auto node : nodes) {
-  //       node->ClearAttr("_ovtf_cluster");
-  //       node->ClearAttr("_ovtf_marked_for_clustering");
-  //       deassigned_histogram[node->type_string()]++;
-  //     }
-  //   }
-  // }
-
   std::map<int, std::set<Node*>> cluster_map;
-
   for (auto node : graph->nodes()) {
     int cluster_idx;
     if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
-
     num_nodes_marked_before_deassign++;
     cluster_map[cluster_idx].insert(node);
   }
@@ -443,170 +292,273 @@ Status DeassignClusters(Graph* graph) {
     throw runtime_error(exec_status.error_message());
   }
 
-  for (auto& kv : cluster_map) {
-    int cluster_idx = kv.first;
-    std::set<Node*>& nodes = kv.second;
+  // Variable to store the min threshold for non trivial nodes count in a
+  // cluster
+  int min_non_trivial_nodes;
+  // A map from cluster indices to TF Profiled cumulative costs of nodes in the
+  // cluster
+  std::vector<std::pair<int, int64_t>> cluster_cost_map_in_ms;
 
-    if (std::find_if(
-            cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
-            [&cluster_idx](const std::pair<int, int64_t>& pair_idx_cost) {
-              return pair_idx_cost.first == cluster_idx;
-            }) != cluster_cost_map_in_ms.end()) {
-      OVTF_VLOG(1) << "Scheduling cluster " << cluster_idx
-                   << " on the OpenVINO backend";
-      continue;
-    } else {
-      OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
-      for (auto node : nodes) {
-        OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-                     << node->type_string() << "]";
+  if (!api::IsRewritePassEnabled()) {
+    std::map<int, int> arg_index_count;
+    std::map<int, GraphDef> cluster_graph_map;
+    std::map<std::tuple<int, std::string, int>, string> input_rename_map;
+    // A map from cluster indices to a vector of input data types.
+    std::map<int, std::vector<std::tuple<int, int, DataType>>>
+        cluster_input_map;
 
-        // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ovtf_cluster");
-        // TODO(amprocte): move attr name to a constant
-        node->ClearAttr("_ovtf_marked_for_clustering");
+    // edge traversal is required to find out whether src or dst is clustered
+    // once the cluster is known, that fetch nodes of the cluster can be
+    // identified properly for
+    // grappler_item creation
+    for (auto edge : graph->edges()) {
+      // TODO(amprocte): should actually keep of these. During clustering we
+      // will already have identified any intra-cluster control deps. Should
+      // maintain inter-cluster control deps.
+      if (edge->IsControlEdge()) continue;
 
-        deassigned_histogram[node->type_string()]++;
+      Node* src = edge->src();
+      Node* dst = edge->dst();
+
+      // TODO(amprocte): the following rejects edges involving source/sink. Is
+      // that what we want to do?
+      if (!src->IsOp() || !dst->IsOp()) {
+        continue;
       }
-      continue;
+
+      int dst_cluster_idx;
+      bool dst_clustered =
+          (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
+
+      int src_cluster_idx;
+      bool src_clustered =
+          (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
+
+      // Ignore edges within a cluster. (Note that this test also works when
+      // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
+      if (dst_cluster_idx == src_cluster_idx) {
+        continue;
+      }
+
+      DataType dt = dst->input_type(edge->dst_input());
+      // If the source node lies within a cluster
+      // src is now one of the output nodes of the cluster as it connects to one
+      // of the fanout edges
+      if (src_clustered) {
+        std::stringstream ss_input_to_retval;
+        ss_input_to_retval << src->name() << ":" << edge->src_output();
+      }
+
+      // If the destination node lies within a cluster
+      // src here is one of the input nodes of the cluster
+      if (dst_clustered) {
+        std::stringstream ss;
+        ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
+        std::string new_input_name = ss.str();
+
+        input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
+                                         edge->src_output())] = new_input_name;
+        string input_prov_tag = src->name();
+
+        if (cluster_graph_map.find(dst_cluster_idx) == cluster_graph_map.end())
+          cluster_graph_map[dst_cluster_idx] =
+              *NGraphClusterManager::GetClusterGraph(dst_cluster_idx);
+
+        auto new_input_node_def = cluster_graph_map[dst_cluster_idx].add_node();
+
+        new_input_node_def->set_name(new_input_name);
+        new_input_node_def->set_op("_Arg");
+
+        SetAttrValue(dt, &((*(new_input_node_def->mutable_attr()))["T"]));
+        SetAttrValue(arg_index_count[dst_cluster_idx],
+                     &((*(new_input_node_def->mutable_attr()))["index"]));
+        SetAttrValue(input_prov_tag,
+                     &((*(new_input_node_def->mutable_attr()))["_prov_tag"]));
+
+        arg_index_count[dst_cluster_idx]++;
+        cluster_input_map[dst_cluster_idx].push_back(
+            std::make_tuple(src->id(), edge->src_output(), dt));
+      }
     }
+
+    for (auto& c : cluster_graph_map) {
+      int cluster_idx = c.first;
+      GraphDef graph_def = c.second;
+
+      PopulateClusterGraphDef(cluster_idx, graph_def, graph, input_rename_map);
+
+      GraphConstructorOptions opts;
+      opts.allow_internal_ops = true;
+      opts.expect_device_spec = false;
+      FunctionLibraryDefinition flib(OpRegistry::Global(), graph_def.library());
+      Graph g(flib);
+      TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, graph_def, &g));
+
+      int num_nodes = 0;
+      std::pair<int, int64_t> pair_idx_cost;
+      pair_idx_cost.first = cluster_idx;
+      pair_idx_cost.second = 0;
+      for (auto n : g.nodes()) {
+        int64_t node_cost = 0;
+        if (GetNodeAttr(n->attrs(), "cost", &node_cost) != Status::OK())
+          continue;
+        pair_idx_cost.second += node_cost;
+        num_nodes++;
+      }
+      pair_idx_cost.second /= 1e6;  // ns to ms
+      cluster_cost_map_in_ms.push_back(pair_idx_cost);
+
+      OVTF_VLOG(1) << "Cluster with ID " << cluster_idx
+                   << ", num_nodes: " << num_nodes << ", costs "
+                   << pair_idx_cost.second << " ms";
+    }
+
+    // sort clusters based on cost
+    std::sort(
+        cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
+        [](auto& left, auto& right) { return left.second > right.second; });
+
+    // Keep only Top K clusters, based on the value of K set by the following
+    // environment variable
+    int top_k_clusters = 3;
+    if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
+      top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
+    }
+    // take only top-3 clusters
+    cluster_cost_map_in_ms.erase(
+        cluster_cost_map_in_ms.begin() + top_k_clusters,
+        cluster_cost_map_in_ms.end());
+
+  } else {
+    min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
+    int avg_nodes_marked_before_deassign =
+        num_nodes_marked_before_deassign / cluster_map.size();
+    if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
+      min_non_trivial_nodes >>= 2;
+    }
+    if (min_non_trivial_nodes < 6) {
+      min_non_trivial_nodes = 6;
+    }
+    if (std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
+      min_non_trivial_nodes =
+          std::stoi(std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES"));
+    }
+    OVTF_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
   }
 
+  // Common section
   std::vector<int> alive_clusters;
-  // std::vector<std::pair<int, int>> alive_clusters_pairs;
+  std::vector<std::pair<int, int>> alive_clusters_pairs;
   int max_cluster_size = 0;
   int max_cluster_idx = -1;
-
   for (auto& kv : cluster_map) {
     int cluster_idx = kv.first;
     std::set<Node*>& nodes = kv.second;
 
-    // int non_trivial_count = 0;
+    if (!api::IsRewritePassEnabled()) {
+      // Cluster selection is based on compute cost
+      if (std::find_if(
+              cluster_cost_map_in_ms.begin(), cluster_cost_map_in_ms.end(),
+              [&cluster_idx](const std::pair<int, int64_t>& pair_idx_cost) {
+                return pair_idx_cost.first == cluster_idx;
+              }) != cluster_cost_map_in_ms.end()) {
+        OVTF_VLOG(1) << "Scheduling cluster " << cluster_idx
+                     << " on the OpenVINO backend";
+      } else {
+        OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
+        for (auto node : nodes) {
+          OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
+                       << node->type_string() << "]";
 
-    // std::unordered_set<std::string> trivial_ops = {"Const", "Identitiy"};
-    // for (auto node : nodes) {
-    //   if (trivial_ops.find(node->type_string()) == trivial_ops.end()) {
-    //     non_trivial_count++;
-    //   }
-    // }
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_cluster");
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_marked_for_clustering");
 
-    // int min_non_trivial_nodes = num_nodes_marked_before_deassign >> 6;
-    // int avg_nodes_marked_before_deassign =
-    //     num_nodes_marked_before_deassign / cluster_map.size();
-    // if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
-    //   min_non_trivial_nodes >>= 2;
-    // }
-    // if (min_non_trivial_nodes < 6) {
-    //   min_non_trivial_nodes = 6;
-    // }
-    // if (std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES") != nullptr) {
-    //   min_non_trivial_nodes =
-    //       std::stoi(std::getenv("OPENVINO_TF_MIN_NONTRIVIAL_NODES"));
-    // }
-    // OVTF_VLOG(1) << "MIN_NONTRIVIAL_NODES set to " << min_non_trivial_nodes;
+          deassigned_histogram[node->type_string()]++;
+        }
+        continue;
+      }
+    } else {  // Cluster Selection based on Min Number of Non Trivial Nodes
+      int non_trivial_count = 0;
+      std::unordered_set<std::string> trivial_ops = {"Const", "Identitiy"};
+      for (auto node : nodes) {
+        if (trivial_ops.find(node->type_string()) == trivial_ops.end()) {
+          non_trivial_count++;
+        }
+      }
 
-    // if (non_trivial_count < min_non_trivial_nodes) {
-    //   OVTF_VLOG(2) << "Busting cluster " << cluster_idx;
-    //   for (auto node : nodes) {
-    //     OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-    //                  << node->type_string() << "]";
+      if (non_trivial_count < min_non_trivial_nodes) {
+        OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                     << " as number of non trivial nodes in it are less than "
+                        "MIN_NONTRIVIAL_NODES threshold";
+        for (auto node : nodes) {
+          OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
+                       << node->type_string() << "]";
 
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_cluster");
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_marked_for_clustering");
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_cluster");
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_marked_for_clustering");
 
-    //     deassigned_histogram[node->type_string()]++;
-    //   }
-    //   continue;
-    // }
-    // // Disable dynamic to static
-    // std::vector<Node*> dyn_node_check;
-    // std::set<Node*> visited_node_check;
-    // for (auto node : nodes) {
-    //   if (node->type_string() == "NonMaxSuppressionV2" ||
-    //       node->type_string() == "Reshape") {
-    //     dyn_node_check.push_back(node);
-    //     visited_node_check.insert(node);
-    //   }
-    // }
-    // bool invalid_dyn_op = false;
-    // while (dyn_node_check.size() > 0) {
-    //   Node* node = dyn_node_check.back();
-    //   dyn_node_check.pop_back();
+          deassigned_histogram[node->type_string()]++;
+        }
+        continue;
+      }
+    }
 
-    //   for (auto it : node->out_nodes()) {
-    //     int out_cluster;
-    //     Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-    //     if (s == Status::OK()) {
-    //       if (out_cluster == cluster_idx &&
-    //           (it->type_string() != "NonMaxSuppressionV2" &&
-    //            it->type_string() != "Reshape")) {
-    //         if (it->type_string() == "Size") {
-    //           invalid_dyn_op = true;
-    //           break;
-    //         } else if (visited_node_check.find(it) ==
-    //                    visited_node_check.end()) {
-    //           dyn_node_check.push_back(it);
-    //           visited_node_check.insert(it);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-    // if (invalid_dyn_op) {
-    //   OVTF_VLOG(2) << "Busting cluster " << cluster_idx
-    //                << " due to Dynamic to Static Flow";
-    //   for (auto node : nodes) {
-    //     OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
-    //                  << node->type_string() << "]";
+    // Enable dynamic to static check only for GPU
+    if (device == "GPU") {
+      OVTF_VLOG(3) << "Checking Dynamic to Static flow for GPU";
 
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_cluster");
-    //     // TODO(amprocte): move attr name to a constant
-    //     node->ClearAttr("_ovtf_marked_for_clustering");
+      std::vector<Node*> dyn_node_check;
+      std::set<Node*> visited_node_check;
+      for (auto node : nodes) {
+        if (node->type_string() == "NonMaxSuppressionV2") {
+          dyn_node_check.push_back(node);
+          visited_node_check.insert(node);
+        }
+      }
+      bool invalid_dyn_op = false;
+      while (dyn_node_check.size() > 0) {
+        Node* node = dyn_node_check.back();
+        dyn_node_check.pop_back();
 
-    //     deassigned_histogram[node->type_string()]++;
-    //   }
-    //   continue;
-    // }
+        for (auto it : node->out_nodes()) {
+          int out_cluster;
+          Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
+          if (s == Status::OK()) {
+            if (out_cluster == cluster_idx &&
+                (it->type_string() != "NonMaxSuppressionV2")) {
+              if (it->type_string() == "ZerosLike") {
+                invalid_dyn_op = true;
+                break;
+              } else if (visited_node_check.find(it) ==
+                         visited_node_check.end()) {
+                dyn_node_check.push_back(it);
+                visited_node_check.insert(it);
+              }
+            }
+          }
+        }
+      }
+      if (invalid_dyn_op) {
+        OVTF_VLOG(2) << "Busting cluster " << cluster_idx
+                     << " due to Dynamic to Static Flow";
+        for (auto node : nodes) {
+          OVTF_VLOG(2) << "Busting node: " << node->name() << " ["
+                       << node->type_string() << "]";
 
-    // Commenting the condition, not required here anymore, handled the required
-    // part with static input condition
-    // unordered_set<std::string> input_args;
-    // vector<string> cluster_inputs;
-    // bool omit_cluster = false;
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_cluster");
+          // TODO(amprocte): move attr name to a constant
+          node->ClearAttr("_ovtf_marked_for_clustering");
 
-    // for (auto node : nodes) {
-    //   for (auto it : node->in_nodes()) {
-    //     if (!input_args.count(it->name())) {
-    //       cluster_inputs.push_back(it->name());
-    //     }
-    //     input_args.insert(it->name());
-    //   }
-    // }
-    // for (auto node : nodes) {
-    //   if (node->type_string() == "Prod") {
-    //     for (auto it : node->in_nodes()) {
-    //       auto inp_name = it->name();
-    //       auto iter =
-    //           find(cluster_inputs.begin(), cluster_inputs.end(), inp_name);
-    //       if (iter != cluster_inputs.end()) {
-    //         omit_cluster = true;
-    //         break;
-    //       }
-    //     }
-    //   }
-    //   if (omit_cluster) break;
-    // }
-    // if (omit_cluster) {
-    //   for (auto node : nodes) {
-    //     node->ClearAttr("_ovtf_cluster");
-    //     node->ClearAttr("_ovtf_marked_for_clustering");
-    //     deassigned_histogram[node->type_string()]++;
-    //   }
-    //   continue;
-    // }
+          deassigned_histogram[node->type_string()]++;
+        }
+        continue;
+      }
+    }
 
     if (device == "HDDL") {
       std::vector<std::string> illegal_input_nodes = {"Unpack"};
@@ -656,10 +608,10 @@ Status DeassignClusters(Graph* graph) {
       max_cluster_size = nodes.size();
     }
     alive_clusters.push_back(cluster_idx);
-    // alive_clusters_pairs.push_back(std::make_pair(cluster_idx,
-    // nodes.size()));
+    alive_clusters_pairs.push_back(std::make_pair(cluster_idx, nodes.size()));
   }
 
+  // For HDDL and Myriad, schedule only top 1 cluster
   if (device == "HDDL" || device == "MYRIAD") {
     for (int i = 0; i < alive_clusters.size(); i++) {
       int alive_cluster_idx = alive_clusters[i];
@@ -675,6 +627,32 @@ Status DeassignClusters(Graph* graph) {
     }
   }
 
+  if (api::IsRewritePassEnabled) {
+    // Keep only Top K clusters, based on the value of K set by the following
+    // environment variable
+    int top_k_clusters = -1;
+    if (std::getenv("OPENVINO_TF_MAX_CLUSTERS") != nullptr) {
+      top_k_clusters = std::stoi(std::getenv("OPENVINO_TF_MAX_CLUSTERS"));
+    }
+    if (top_k_clusters != -1) {
+      // sort the clusters
+      std::sort(
+          alive_clusters_pairs.begin(), alive_clusters_pairs.end(),
+          [](const auto& x, const auto& y) { return x.second > y.second; });
+      int total_clusters = alive_clusters_pairs.size();
+      for (int count = total_clusters - 1; count >= top_k_clusters; count--) {
+        // clear the cluster
+        auto cluster_id_to_clear = alive_clusters_pairs[count].first;
+        set<Node*>& nodes = cluster_map[cluster_id_to_clear];
+
+        for (auto node : nodes) {
+          node->ClearAttr("_ovtf_cluster");
+          node->ClearAttr("_ovtf_marked_for_clustering");
+          deassigned_histogram[node->type_string()]++;
+        }
+      }
+    }
+  }
   //
   // At this point we have made our final decision about cluster assignment, so
   // we will log the cluster assignment now.

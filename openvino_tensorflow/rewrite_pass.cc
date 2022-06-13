@@ -170,6 +170,14 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
+    // disable NMSV5 and NMSV4 as of now as it impacts performance TF2 based SSD
+    // models
+    disabled_ops_set.insert("NonMaxSuppressionV5");
+    disabled_ops_set.insert("NonMaxSuppressionV4");
+    if (device == "MYRIAD") {
+      disabled_ops_set.insert("NonMaxSuppressionV2");
+    }
+
     FC.SetDisabledOps(disabled_ops_set);
     std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 

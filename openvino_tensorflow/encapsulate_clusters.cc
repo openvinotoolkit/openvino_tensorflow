@@ -346,13 +346,14 @@ Status Encapsulator::AnalysisPass() {
       node->ClearAttr("cost");
       continue;
     }
-
-    int64_t node_cost = 0;
-    if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
-      continue;
-    cluster_cost_map_in_ms[cluster_idx] += node_cost;
-    node->ClearAttr("cost");
-
+    // This snippet is required only for Grappler pass
+    if (!api::IsRewritePassEnabled()) {
+      int64_t node_cost = 0;
+      if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
+        continue;
+      cluster_cost_map_in_ms[cluster_idx] += node_cost;
+      node->ClearAttr("cost");
+    }
     // Because the input names may have changed from the original node def,
     // we will need to borrow some code from Graph::ToGraphDefSubRange in
     // tensorflow/core/graph/graph.cc that rewrites the node's input list.
