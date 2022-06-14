@@ -7,6 +7,7 @@
 #include <mutex>
 #include <utility>
 
+#include "openvino_tensorflow/api.h"
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/function.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
@@ -72,8 +73,14 @@ class NGraphEncapsulateOp : public OpKernel {
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
   int64_t m_cluster_cost_in_ms;
+  static std::map<size_t, bool> s_tf_timing_run_enabled_map;
+  static std::map<size_t, float> s_ovtf_cluster_timings_map;
   int64_t m_iter;
 };
+
+// Static initializers
+std::map<size_t, bool> NGraphEncapsulateOp::s_tf_timing_run_enabled_map;
+std::map<size_t, float> NGraphEncapsulateOp::s_ovtf_cluster_timings_map;
 
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
@@ -82,6 +89,8 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   m_iter = 0;
 
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
+  // Disable TF timing run for the current cluster by default
+  s_tf_timing_run_enabled_map[m_cluster_id] = false;
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
 
@@ -116,8 +125,10 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
   }
 
-  OP_REQUIRES_OK(ctx,
-                 ctx->GetAttr<int64_t>("cluster_cost", &m_cluster_cost_in_ms));
+  if (!api::IsRewritePassEnabled()) {
+    OP_REQUIRES_OK(
+        ctx, ctx->GetAttr<int64_t>("cluster_cost", &m_cluster_cost_in_ms));
+  }
 
   //
   // Initialize the "m_input_is_static" vector as follows:
@@ -186,6 +197,28 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
+  m_iter++;
+  // This snippet is executed only when Rewrite pass is enabled
+  if (api::IsRewritePassEnabled()) {
+    if (s_tf_timing_run_enabled_map[m_cluster_id]) {
+      // Measure the timing of cluster through force TF run
+      int64_t start_ns = profiler::GetCurrentTimeNanos();
+      OP_REQUIRES_OK(ctx, Fallback(ctx));
+      int64_t duration_in_ms =
+          (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+      OVTF_VLOG(1) << "Iter: " << m_iter;
+      OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
+                   << duration_in_ms << " ms.";
+      // Restore the fallback to false, if TF is taking more time than OVTF for
+      // this cluster
+      if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
+        NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
+      }
+      // Disable timing run for this cluster
+      s_tf_timing_run_enabled_map[m_cluster_id] = false;
+      return;
+    }
+  }
 
   if (NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     OP_REQUIRES_OK(ctx, Fallback(ctx));
@@ -374,20 +407,38 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         int64_t start_ns = profiler::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, &infer_duration_in_ms,
                       multi_req_execution);
-        int64_t overall_duration_in_ms =
+        int64_t duration_in_ms =
             (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
-
         OVTF_VLOG(1) << "Iter: " << m_iter;
-        OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
-                     << m_cluster_cost_in_ms << " ms.";
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
-                     << infer_duration_in_ms
-                     << " ms. Total Cost: " << overall_duration_in_ms;
+                     << duration_in_ms << " ms.";
+        // For rewrite pass the TF compute cost for the cluster is calculated by
+        // executing it here, however for Grappler pass the TF compute cost is
+        // already calculate during initial optimize pass, and is readily
+        // available for use
+        if (api::IsRewritePassEnabled()) {
+          if (device == "CPU") {
+            s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
+            // Run warmup TF run, and enable the proper TF timing run for the
+            // next iteration through a separate section at the top pf compute
+            if (NGraphClusterManager::IsClusterFallbackEnabled() &&
+                m_iter == 2) {
+              s_tf_timing_run_enabled_map[m_cluster_id] = true;
+              throw std::runtime_error("Falling back to native TF Runtime.");
+            }
+          }
+        } else {
+          int64_t overall_duration_in_ms =
+              (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
 
-        // ignore warmup iteration while comparing cluster costs
-        if ((m_iter > 0) && (overall_duration_in_ms > m_cluster_cost_in_ms))
-          throw std::runtime_error(
-              "Falling back to native TF as OVTF runtime is costlier.");
+          OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
+                       << m_cluster_cost_in_ms << " ms.";
+
+          // ignore warmup iteration while comparing cluster costs
+          if ((m_iter > 1) && (overall_duration_in_ms > m_cluster_cost_in_ms))
+            throw std::runtime_error(
+                "Falling back to native TF as OVTF runtime is costlier.");
+        }
 
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
@@ -518,7 +569,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       }
     }
   }
-  m_iter++;
 
   long vm = 0, rss = 0;
   util::MemoryProfile(vm, rss);
