@@ -244,7 +244,7 @@ Status DeassignClusters(Graph* graph) {
       continue;
     }
     // Disable dynamic to static
-    if (device == "GPU" || device == "MYRIAD") {
+    if (device == "GPU") {
       OVTF_VLOG(3) << "Checking Dynamic to Static flow for GPU and MYRIAD";
 
       std::vector<Node*> dyn_node_check;

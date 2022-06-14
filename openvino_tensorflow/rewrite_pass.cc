@@ -168,6 +168,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // models
     disabled_ops_set.insert("NonMaxSuppressionV5");
     disabled_ops_set.insert("NonMaxSuppressionV4");
+    if (device == "MYRIAD") {
+      disabled_ops_set.insert("NonMaxSuppressionV2");
+    }
     for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
          itr++) {
       OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;

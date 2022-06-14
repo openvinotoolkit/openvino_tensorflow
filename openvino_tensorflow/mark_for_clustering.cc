@@ -90,7 +90,11 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   //      return Status::OK();
   //    };
   //
-
+  string device;
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
   static std::map<std::string, SetAttributesFunction> set_attributes_map;
   static bool initialized = false;
 
@@ -128,6 +132,9 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     // set_attributes_map["TopKV2"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
     // set_attributes_map["Range"] = SetStaticInputs({0, 1, 2});
+    if (device == "GPU" || device == "MYRIAD") {
+      set_attributes_map["Reshape"] = SetStaticInputs({1});
+    }
     initialized = true;
   }
   return set_attributes_map;

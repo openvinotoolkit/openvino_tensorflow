@@ -3301,12 +3301,27 @@ static Status TranslateRelu6Op(const Node* op,
 static Status TranslateReshapeOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input, ng_shape_op;
-  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_shape_op));
+  ov::Output<ov::Node> ng_input, ng_shape;
+  TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_shape));
 
-  SaveNgOp(ng_op_map, op->name(),
-           ConstructNgNode<opset::Reshape>(op->name(), ng_input, ng_shape_op,
-                                           false));
+  std::string device;
+  // Correct output variables dimensions for CPU device
+  Status exec_status = BackendManager::GetBackendName(device);
+  if (exec_status != Status::OK()) {
+    throw runtime_error(exec_status.error_message());
+  }
+
+  if (!(device == "CPU")) {
+    std::vector<int64> shape;
+    TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &shape));
+
+    OVTF_VLOG(3) << "Requested result shape: " << ngraph::join(shape);
+    ng_shape = ConstructNgNode<opset::Constant>(op->name(), ov::element::i64,
+                                                ov::Shape{shape.size()}, shape);
+  }
+
+  SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Reshape>(
+                                      op->name(), ng_input, ng_shape, false));
   return Status::OK();
 }
 
