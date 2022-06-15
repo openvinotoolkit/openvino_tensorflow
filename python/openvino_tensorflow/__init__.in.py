@@ -37,6 +37,7 @@ from tensorflow.python.saved_model import tag_constants
 from tensorflow.python.util import nest
 from tensorflow.python.eager import context
 from tensorflow.python.eager import wrap_function
+from tensorflow.python.framework import importer
 
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -53,8 +54,7 @@ __all__ = [
     'enable', 'disable', 'is_enabled', 'list_backends',
     'set_backend', 'get_backend',
     'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__', 'cxx11_abi_flag'
-    'is_grappler_enabled', 'update_config',
+    'is_logging_placement', '__version__', 'cxx11_abi_flag', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
     'enable_dynamic_fallback', 'disable_dynamic_fallback',
     'export_ir',
@@ -71,6 +71,11 @@ TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
 TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
 TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
+
+rewriter_config = rewriter_config_pb2.RewriterConfig()
+rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
+ovtf_optimizer = rewriter_config.custom_optimizers.add()
+ovtf_optimizer.name = "ovtf-optimizer"
 
 # converting version representations to strings if not already
 try:
@@ -141,7 +146,6 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.openvino_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
-    openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
     openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
     openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p)]
@@ -204,40 +208,6 @@ if ovtf_classic_loaded:
     def cxx11_abi_flag():
         return openvino_tensorflow_lib.cxx11_abi_flag()
 
-    def is_grappler_enabled():
-        return openvino_tensorflow_lib.is_grappler_enabled()
-
-    def update_config(config, backend_name = "CPU", device_id = ""):
-        #updating session config if grappler is enabled
-        if(openvino_tensorflow_lib.is_grappler_enabled()):
-            opt_name = 'ovtf-optimizer'
-            # If the config already has ovtf-optimizer, then do not update it
-            if config.HasField('graph_options'):
-                if config.graph_options.HasField('rewrite_options'):
-                    custom_opts = config.graph_options.rewrite_options.custom_optimizers
-                    for i in range(len(custom_opts)):
-                        if custom_opts[i].name == opt_name:
-                            return config
-            rewriter_options = rewriter_config_pb2.RewriterConfig()
-            rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            rewriter_options.min_graph_nodes=-1
-            ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            ovtf_optimizer.name = opt_name
-            ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-            # For reference, if we want to provide configuration support(backend parameters)
-            # in a python script using the ovtf-optimizer
-            # rewriter_options = rewriter_config_pb2.RewriterConfig()
-            # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            # rewriter_options.min_graph_nodes=-1
-            # ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            # ovtf_optimizer.name = "ovtf-optimizer"
-            # ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            # ovtf_optimizer.parameter_map["max_batch_size"].s = b'64'
-            # ovtf_optimizer.parameter_map["ice_cores"].s = b'12'
-            # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-        return config
-
     def set_disabled_ops(unsupported_ops):
         openvino_tensorflow_lib.set_disabled_ops(unsupported_ops.encode("utf-8"))
 
@@ -262,16 +232,47 @@ if ovtf_classic_loaded:
 
         return cluster_string
     
+    def optimize_graph_with_openvino_v1(frozen_model_file,
+                                        output_node_names,
+                                        ):
+
+        if not os.path.exists(frozen_model_file):
+            raise AssertionError("Could not find model path")
+        
+        openvino_tensorflow_lib.disable_rewrite_pass()
+
+        graph = tf.Graph()
+        graph_def = tf.compat.v1.GraphDef()
+
+        with tf.compat.v1.gfile.GFile(frozen_model_file, "rb") as f:
+          graph_def.ParseFromString(f.read())
+        with graph.as_default():
+          importer.import_graph_def(graph_def, name='')
+        
+        meta_graph_def = saver.export_meta_graph(graph_def=graph.as_graph_def(add_shapes=True), graph=graph)
+
+        fetch_collection = meta_graph_pb2.CollectionDef()
+        for array in output_node_names:
+            fetch_collection.node_list.value.append(array)
+        
+        # Grappler determines fetch ops from collection 'train_op'.
+        meta_graph_def.collection_def[ops.GraphKeys.TRAIN_OP].CopyFrom(
+            fetch_collection)
+
+        grappler_session_config = config_pb2.ConfigProto()
+        grappler_session_config.graph_options.rewrite_options.CopyFrom(rewriter_config)
+        optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, meta_graph_def, graph_id=b"tf_graph")
+
+        return optimized_graph_def
+    
     def optimize_graph_with_openvino_v2(saved_model_dir,
                                         input_tensor,
-                                        saved_model_signature_key=signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
                                         saved_model_tag=tag_constants.SERVING,
                                         save_optimized_function_signature=False
                                         ):
-        rewriter_config = rewriter_config_pb2.RewriterConfig()
-        rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
-        ovtf_optimizer = rewriter_config.custom_optimizers.add()
-        ovtf_optimizer.name = "ovtf-optimizer"
+        
+        if not os.path.exists(saved_model_dir):
+            raise AssertionError("Could not find model path")
 
         openvino_tensorflow_lib.disable_rewrite_pass()
 
@@ -283,7 +284,7 @@ if ovtf_classic_loaded:
         func = tf.function(saved_model, input_signature=[tf.TensorSpec(input_tensor.shape, input_tensor.dtype)])
         func = func.get_concrete_function()
         
-        # Converting var2consts for larger models like SSD MobileNetV2 takes a long time
+        # Converting var2consts for larger models might take a long time
         frozen_func = convert_to_constants.convert_variables_to_constants_v2(func, lower_control_flow=False,
                                       aggressive_inlining=True)
         
@@ -325,7 +326,7 @@ if ovtf_classic_loaded:
         signatures["ovtf"] = optimized_func
 
         # Save the optimized function for later use
-        # Sometimes this is useful when first-inference-latency overhead needs to be avoided
+        # Sometimes this is useful when start-up overheads from this function call needs to be avoided
         if save_optimized_function_signature:
             save.save(saved_model, saved_model_dir, signatures)
             return optimized_func

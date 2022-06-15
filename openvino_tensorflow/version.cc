@@ -51,11 +51,6 @@ int cxx11_abi_flag() {
 #endif
 }
 
-bool is_grappler_enabled() {
-  // grappler is enabled by default
-  return true;
-}
-
 const char* tf_version() { return (TF_VERSION_STRING); }
 
 }  // namespace openvino_tensorflow
