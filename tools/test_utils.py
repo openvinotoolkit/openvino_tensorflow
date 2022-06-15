@@ -152,6 +152,8 @@ def run_ovtf_pytests_from_artifacts(artifacts_dir):
 
     test_manifest_file = TestEnv.get_test_manifest_filename()
     # export the env-var for pytest to process manifest in conftest.py
+    if not os.path.exists(test_manifest_file):
+        raise AssertionError("File path does not exist")
     os.environ['OPENVINO_TF_TEST_MANIFEST'] = test_manifest_file
     if (platform.system() == "Windows"):
         command_executor([
