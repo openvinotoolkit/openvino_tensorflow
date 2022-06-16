@@ -27,10 +27,10 @@ class Backend {
   Backend(const string& configuration_string);
   ~Backend() {
     if (api::IsRewritePassEnabled()) {
-      NGraphClusterManager::EvictAllClusters();
+      OpenVINOClusterManager::EvictAllClusters();
     }
     if (m_device != "GPU") {
-      NGraphClusterManager::EvictMRUClusters();
+      OpenVINOClusterManager::EvictMRUClusters();
     }
     ReleaseGlobalContext();
   }

@@ -158,7 +158,7 @@ static Status GetInputNode(const Builder::OpMap& ng_op_map, const Node* op,
     ng_op = ng_op_map.at(tf_input->name());
   } catch (const out_of_range&) {
     return Status(error::NOT_FOUND,
-                  string("Ngraph op not found for ") + tf_input->name());
+                  string("OpenVINO op not found for ") + tf_input->name());
   }
   try {
     result = ng_op.at(src_output_idx);
@@ -301,7 +301,7 @@ static Status GetStaticInputNode(
     const std::vector<const Tensor*>& static_input_map, DataType dt,
     ov::Output<ov::Node>& node_) {
   ov::element::Type type;
-  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dt, &type));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dt, &type));
   switch (dt) {
     case DataType::DT_FLOAT: {
       std::vector<float> vec_float;
@@ -487,7 +487,7 @@ static Status MakeConstOp(const Node* op, ov::element::Type et,
   TensorShape const_shape(shape_proto);
 
   ov::Shape ng_shape;
-  TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(const_shape, &ng_shape));
+  TF_RETURN_IF_ERROR(util::TFTensorShapeToOpenVINOShape(const_shape, &ng_shape));
 
   ng_node =
       ConstructNgNode<opset::Constant>(op->name(), et, ng_shape, const_values);
@@ -678,7 +678,7 @@ static Status TranslateArgMinMax(
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "output_type", &dtype));
 
   ov::element::Type ng_et;
-  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dtype, &ng_et));
 
   auto ng_k = ConstructNgNode<opset::Constant>(
       op->name(), ov::element::i64, ov::Shape{}, std::vector<int64>({1}));
@@ -929,7 +929,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "DstT", &dtype));
 
   ov::element::Type ng_et;
-  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dtype, &ng_et));
 
   auto ng_input_dtype = ng_input.get_element_type();
 
@@ -3177,7 +3177,7 @@ static Status TranslateRangeOp(
 
   ov::element::Type out_type;
   TF_RETURN_IF_ERROR(
-      util::TFDataTypeToNGraphElementType(op->output_type(0), &out_type));
+      util::TFDataTypeToOpenVINOElementType(op->output_type(0), &out_type));
 
   auto ng_range = ConstructNgNode<opset::Range>(op->name(), ng_start, ng_stop,
                                                 ng_step, out_type);
@@ -3414,7 +3414,7 @@ static Status TranslateShapeOp(const Node* op,
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "out_type", &dtype));
 
   ov::element::Type type;
-  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dtype, &type));
 
   // default output_type = element::i64
   SaveNgOp(ng_op_map, op->name(),
@@ -3432,7 +3432,7 @@ static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
 
   // Size has an attribute to specify output, int32 or int64
   ov::element::Type type;
-  TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &type));
+  TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dtype, &type));
 
   ov::Output<ov::Node> ng_result;
   if (ng_input.get_partial_shape().is_static()) {
@@ -4267,11 +4267,11 @@ Status Builder::TranslateGraph(
     }
 
     ov::element::Type ng_et;
-    TF_RETURN_IF_ERROR(util::TFDataTypeToNGraphElementType(dtype, &ng_et));
+    TF_RETURN_IF_ERROR(util::TFDataTypeToOpenVINOElementType(dtype, &ng_et));
 
     ov::Shape ng_shape;
     TF_RETURN_IF_ERROR(
-        util::TFTensorShapeToNGraphShape(inputs[index], &ng_shape));
+        util::TFTensorShapeToOpenVINOShape(inputs[index], &ng_shape));
 
     string prov_tag;
     GetNodeAttr(parm->attrs(), "_prov_tag", &prov_tag);

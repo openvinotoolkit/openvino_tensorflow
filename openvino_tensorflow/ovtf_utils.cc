@@ -97,7 +97,7 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
   return Status::OK();
 }
 
-Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et) {
+Status TFDataTypeToOpenVINOElementType(DataType tf_dt, ov::element::Type* ng_et) {
   switch (tf_dt) {
     case DataType::DT_FLOAT:
       *ng_et = ov::element::f32;
@@ -154,7 +154,7 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et) {
   return Status::OK();
 }
 
-Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
+Status TFTensorShapeToOpenVINOShape(const TensorShape& tf_shape,
                                   ov::Shape* ng_shape) {
   for (int i = 0; i < tf_shape.dims(); i++) {
     if (tf_shape.dim_size(i) < 0) {
@@ -250,8 +250,8 @@ void DumpNGGraph(std::shared_ptr<ov::Model> function, const string filename) {
     return;
   }
 
-  OVTF_VLOG(0) << "Dumping nGraph graph to " << filename + ".dot";
-  // enable shape info for nGraph graphs
+  OVTF_VLOG(0) << "Dumping OpenVINO graph to " << filename + ".dot";
+  // enable shape info for OpenVINO graphs
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES", "1");
   SetEnv("NGRAPH_VISUALIZE_TREE_IO", "1");
@@ -266,7 +266,7 @@ bool IsAlreadyProcessed(Graph* g) {
   // TODO: place a dummy node as a marker
   // Current method may fail when graph has no encapsulates after first pass
   for (Node* node : g->nodes()) {
-    if (node->type_string() == "_nGraphEncapsulate") return true;
+    if (node->type_string() == "_OpenVINOEncapsulate") return true;
   }
   return false;
 }

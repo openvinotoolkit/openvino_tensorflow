@@ -77,9 +77,9 @@ TEST(NNOps, Conv2DBackpropInputNCHWSame) {
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
-  opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
+  opexecuter_ngraph.ExecuteOnOpenVINO(ngraph_outputs);
 
-  // Define scope for tf (without nGraph)
+  // Define scope for tf (without OpenVINO)
   // Data Format: NHWC
   Scope tf_scope = Scope::NewRootScope();
   auto input_data_NHWC = ops::Const(tf_scope, input_size_NHWC);
@@ -98,7 +98,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSame) {
   vector<Tensor> tf_outputs;
   opexecuter_tf.ExecuteOnTF(tf_outputs);
 
-  // Compare NGraph and TF Outputs
+  // Compare OpenVINO and TF Outputs
   Compare(tf_outputs, ngraph_outputs, 1e-05, 1e-05);
 }  // end of op Conv2DBackpropInputNCHWSame
 
@@ -144,7 +144,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
-  opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
+  opexecuter_ngraph.ExecuteOnOpenVINO(ngraph_outputs);
 
   // Construct tf_outputs using gathered values
   vector<Tensor> tf_outputs;
@@ -162,7 +162,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWSameWithDilation) {
   AssignInputValues(tf_result, tf_output_vector);
   tf_outputs.push_back(tf_result);
 
-  // Compare NGraph and TF Outputs
+  // Compare OpenVINO and TF Outputs
   Compare(tf_outputs, ngraph_outputs);
 }  // end of op Conv2DBackpropInputNCHWSameWithDilation
 
@@ -198,9 +198,9 @@ TEST(NNOps, Conv2DBackpropInputNCHWValid) {
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
-  opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
+  opexecuter_ngraph.ExecuteOnOpenVINO(ngraph_outputs);
 
-  // Define scope for tf (without nGraph)
+  // Define scope for tf (without OpenVINO)
   // Data Format: NHWC
   Scope tf_scope = Scope::NewRootScope();
   auto input_data_NHWC = ops::Const(tf_scope, input_size_NHWC);
@@ -219,7 +219,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValid) {
   vector<Tensor> tf_outputs;
   opexecuter_tf.ExecuteOnTF(tf_outputs);
 
-  // Compare NGraph and TF Outputs
+  // Compare OpenVINO and TF Outputs
   Compare(tf_outputs, ngraph_outputs, 1e-05, 1e-05);
 }  // end of op Conv2DBackpropInputNCHWValid
 
@@ -265,7 +265,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
   OpExecuter opexecuter_ngraph(ngraph_scope, "Conv2DBackpropInput",
                                sess_run_fetchoutputs);
   vector<Tensor> ngraph_outputs;
-  opexecuter_ngraph.ExecuteOnNGraph(ngraph_outputs);
+  opexecuter_ngraph.ExecuteOnOpenVINO(ngraph_outputs);
 
   // Construct tf_outputs using gathered values
   vector<Tensor> tf_outputs;
@@ -281,7 +281,7 @@ TEST(NNOps, Conv2DBackpropInputNCHWValidWithDilation) {
   AssignInputValues(tf_result, tf_output_vector);
   tf_outputs.push_back(tf_result);
 
-  // Compare NGraph and TF Outputs
+  // Compare OpenVINO and TF Outputs
   Compare(tf_outputs, ngraph_outputs);
 }  // end of op Conv2DBackpropInputNCHWValidWithDilation
 
@@ -390,7 +390,7 @@ TEST(NNOps, Conv2DBackpropInputNHWCWithDilation) {
     std::vector<Output> sess_run_fetchoutputs = {R};
     OpExecuter opexecuter(root, "Conv2DBackpropInput", sess_run_fetchoutputs);
     vector<Tensor> ngraph_outputs;
-    opexecuter.ExecuteOnNGraph(ngraph_outputs);
+    opexecuter.ExecuteOnOpenVINO(ngraph_outputs);
 
     // Construct tf_outputs using gathered values
     vector<Tensor> tf_outputs;

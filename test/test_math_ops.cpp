@@ -191,7 +191,7 @@ TEST(MathOps, AddN) {
 // Test op: Any
 // Any with attribute KeepDims set to true
 // Fails with opset3 upgrade because there is no opset0
-// downgrade available for it in nGraph
+// downgrade available for it in OpenVINO
 TEST(MathOps, AnyKeepDims) {
   int dim1 = 2;
   int dim2 = 2;
@@ -252,7 +252,7 @@ TEST(MathOps, AnyPositiveAxis) {
 // Test op: All
 // All with attribute KeepDims set to true
 // Fails with opset3 upgrade because there is no opset0
-// downgrade available for it in nGraph
+// downgrade available for it in OpenVINO
 TEST(MathOps, AllKeepDims) {
   Scope root = Scope::NewRootScope();
   int dim1 = 2;
@@ -979,7 +979,7 @@ TEST(MathOps, FloorModBroadcasting) {
 
 // Test op: FloorModNegInt
 // Currently failing with TF produces {2,2}, NG produces {-8,-3}
-// Should enable when NGraph fixes the FloorMod
+// Should enable when OpenVINO fixes the FloorMod
 TEST(MathOps, FloorModNegInt) {
   Scope root = Scope::NewRootScope();
   vector<int> nums = {-8, -8};

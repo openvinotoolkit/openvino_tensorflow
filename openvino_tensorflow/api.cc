@@ -173,10 +173,10 @@ void SetDisabledOps(set<string> disabled_ops_set) {
   disabled_op_types = disabled_ops_set;
 }
 
-void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
+void EnableDynamicFallback() { OpenVINOClusterManager::EnableClusterFallback(); }
 
 void DisableDynamicFallback() {
-  NGraphClusterManager::DisableClusterFallback();
+  OpenVINOClusterManager::DisableClusterFallback();
 }
 
 void DisableRewritePass() { _is_rewrite_pass_enabled = false; }
@@ -191,10 +191,10 @@ bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
   }
 
   // Export IR into the output directory
-  NGraphClusterManager::ExportMRUIRs(output_dir);
+  OpenVINOClusterManager::ExportMRUIRs(output_dir);
 
   // Dump cluster info
-  NGraphClusterManager::DumpClusterInfos(cluster_info);
+  OpenVINOClusterManager::DumpClusterInfos(cluster_info);
   err_msg = "";
   return true;
 }

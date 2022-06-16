@@ -75,7 +75,7 @@ TEST(GrapplerConfig, RConfig1) {
   ASSERT_OK(ConvertGraphDefToGraph(opts, output, &output_graph));
 
   // There is only one node in the graph
-  // And it is an NGraphEncapsulateOp
+  // And it is an OpenVINOEncapsulateOp
   ASSERT_EQ(output_graph.num_op_nodes(), 1);
   Node* ng_encap = nullptr;
 
@@ -134,7 +134,7 @@ TEST(GrapplerConfig, RConfig4) {
   ASSERT_OK(ConvertGraphDefToGraph(opts, output, &output_graph));
 
   // There is only one node in the graph
-  // And it is an NGraphEncapsulateOp
+  // And it is an OpenVINOEncapsulateOp
   ASSERT_EQ(output_graph.num_op_nodes(), 1);
   Node* ng_encap = nullptr;
 

@@ -24,7 +24,7 @@ namespace openvino_tensorflow {
 
 class BackendManager {
  public:
-  // Returns the nGraph supported backend names
+  // Returns the OpenVINO supported backend names
   static vector<string> GetSupportedBackends();
 
   // Set the BackendManager backend ng_backend_name_

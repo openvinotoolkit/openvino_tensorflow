@@ -32,8 +32,8 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 //
-// The clustering pass performs a greedy search for groups of nGraph-marked ops
-// that can be coalesced into a single nGraph graph, and assigns each such
+// The clustering pass performs a greedy search for groups of OpenVINO-marked ops
+// that can be coalesced into a single OpenVINO graph, and assigns each such
 // group a unique identifier called a "cluster ID".
 //
 // For example, consider the following graph:
@@ -644,14 +644,14 @@ Status AssignClusters(Graph* graph) {
 
     if (has_ovtf_ops && has_non_ovtf_ops) {
       OVTF_VLOG(2) << "Cluster " << cluster->index
-                   << " has both nGraph and non-nGraph nodes";
+                   << " has both OpenVINO and non-OpenVINO nodes";
       for (auto node : cluster->nodes) {
-        OVTF_VLOG(2) << (NodeIsMarkedForClustering(node) ? "nGraph node: "
-                                                         : "non-nGraph node: ")
+        OVTF_VLOG(2) << (NodeIsMarkedForClustering(node) ? "OpenVINO node: "
+                                                         : "non-OpenVINO node: ")
                      << node->name() << " [" << node->type_string() << "]";
       }
       return errors::Internal("Cluster ", cluster->index,
-                              " has both nGraph and non-nGraph nodes");
+                              " has both OpenVINO and non-OpenVINO nodes");
     }
 
     if (!has_ovtf_ops) {
@@ -659,7 +659,7 @@ Status AssignClusters(Graph* graph) {
       continue;
     }
 
-    size_t cluster_idx = NGraphClusterManager::NewCluster();
+    size_t cluster_idx = OpenVINOClusterManager::NewCluster();
 
     for (auto node : cluster->nodes) {
       if (OVTF_VLOG_IS_ON(5)) {
@@ -671,7 +671,7 @@ Status AssignClusters(Graph* graph) {
       if (!NodeIsMarkedForClustering(node)) {
         return errors::Internal("Node ", node->DebugString(),
                                 " was not marked for clustering but was "
-                                "placed in an nGraph cluster.");
+                                "placed in an OpenVINO cluster.");
       }
 
       // TODO(amprocte): move attr name to a constant

@@ -88,7 +88,7 @@ static void MaybeLogPlacement(const Graph* graph) {
                   num_nodes_marked_before_deassign)
           : 0;
 
-  std::cout << NGraphLogMessage::GetTimeStampForLogging()
+  std::cout << OpenVINOLogMessage::GetTimeStampForLogging()
             << ": OVTF Summary -> " << nodes_assigned_a_cluster << " out of "
             << number_of_nodes << " nodes in the graph ("
             << perc_assigned_clusters_of_total
@@ -103,14 +103,14 @@ static void MaybeLogPlacement(const Graph* graph) {
               << num_nodes_marked_before_deassign << " ("
               << perc_marked_for_clustering_of_total << "% of total nodes)"
               << std::endl;
-    // print out the number of nodes that are running on NGraph after deassign
+    // print out the number of nodes that are running on OpenVINO after deassign
     std::cout << "OVTF_SUMMARY: Number of nodes assigned a cluster: "
               << nodes_assigned_a_cluster << " ("
               << perc_assigned_clusters_of_total << "% of total nodes) \t"
               << " (" << perc_assigned_clusters_of_marked
               << "% of nodes marked for clustering) \t" << std::endl;
     int num_encapsulates = final_cluster_map.size() - 1;
-    std::cout << "OVTF_SUMMARY: Number of ngraph clusters :" << num_encapsulates
+    std::cout << "OVTF_SUMMARY: Number of openvino clusters :" << num_encapsulates
               << std::endl;
     std::cout << "OVTF_SUMMARY: Average Nodes per cluster: "
               << ((num_encapsulates > 0) ? (float(nodes_assigned_a_cluster) /
@@ -129,9 +129,9 @@ static void MaybeLogPlacement(const Graph* graph) {
       std::string cluster_info = "ovtf_cluster_" + std::to_string(cluster_idx) +
                                  ": " + std::to_string(perc_nodes_assigned) +
                                  "%";
-      NGraphClusterManager::SetClusterInfo(cluster_idx, cluster_info);
+      OpenVINOClusterManager::SetClusterInfo(cluster_idx, cluster_info);
       if (api::IsLoggingPlacement()) {
-        std::cout << "OVTF_SUMMARY: Size of nGraph Cluster[" << cluster_idx
+        std::cout << "OVTF_SUMMARY: Size of OpenVINO Cluster[" << cluster_idx
                   << "]:\t" << kv.second.size() << std::endl;
       }
     }
@@ -152,7 +152,7 @@ static void MaybeLogPlacement(const Graph* graph) {
       if (cluster_idx == -1) {
         placement_dev << "Host\t";
       } else {
-        placement_dev << "nGraph[" << cluster_idx << "]\t";
+        placement_dev << "OpenVINO[" << cluster_idx << "]\t";
       }
       placement_dev << node->name() << " (" << node->type_string() << ")";
       std::cout << placement_dev.str() << std::endl;
@@ -353,7 +353,7 @@ Status DeassignClusters(Graph* graph) {
       // src here is one of the input nodes of the cluster
       if (dst_clustered) {
         std::stringstream ss;
-        ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
+        ss << "openvino_input_" << cluster_input_map[dst_cluster_idx].size();
         std::string new_input_name = ss.str();
 
         input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
@@ -362,7 +362,7 @@ Status DeassignClusters(Graph* graph) {
 
         if (cluster_graph_map.find(dst_cluster_idx) == cluster_graph_map.end())
           cluster_graph_map[dst_cluster_idx] =
-              *NGraphClusterManager::GetClusterGraph(dst_cluster_idx);
+              *OpenVINOClusterManager::GetClusterGraph(dst_cluster_idx);
 
         auto new_input_node_def = cluster_graph_map[dst_cluster_idx].add_node();
 

@@ -22,7 +22,7 @@ tests_common.txt
 # Specify tests/patterns/regex that should be excluded/skipped
 
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
-NGraphExecTest.Axpy8bit
+OpenVINOExecTest.Axpy8bit
 MathOps.AnyKeepDims
 MathOps.AnyNegativeAxis
 MathOps.AnyPositiveAxis
@@ -30,7 +30,7 @@ MathOps.AllKeepDims
 MathOps.AllNegativeAxis
 MathOps.AllPositiveAxis
 
-NGraphExecTest.MixedTensors
+OpenVINOExecTest.MixedTensors
 
 # mismatch between TF and NG outputs
 MathOps.Mean 

@@ -48,7 +48,7 @@ namespace openvino_tensorflow {
 
 //
 // For each cluster K in the input graph, the encapsulation pass takes the set
-// of all nodes in K and replaces them with a single NGraphEncapsulate op that
+// of all nodes in K and replaces them with a single OpenVINOEncapsulate op that
 // stands in for the internal subgraph represented by the cluster K.
 //
 // TODO(amprocte): Point to some more documentation on what we're doing here...
@@ -84,14 +84,14 @@ Status EncapsulateClusters(
   if (std::getenv("OPENVINO_TF_DUMP_CLUSTERS")) {
     for (auto& cluster_idx : newly_created_cluster_ids) {
       TF_RETURN_IF_ERROR(graph::ValidateGraphDef(
-          *NGraphClusterManager::GetClusterGraph(cluster_idx),
+          *OpenVINOClusterManager::GetClusterGraph(cluster_idx),
           *OpRegistry::Global()));
 
       Graph g(OpRegistry::Global());
       GraphConstructorOptions opts;
       opts.allow_internal_ops = true;
       TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(
-          opts, *NGraphClusterManager::GetClusterGraph(cluster_idx), &g));
+          opts, *OpenVINOClusterManager::GetClusterGraph(cluster_idx), &g));
 
       std::stringstream ss;
       ss << "ovtf_cluster_" << cluster_idx;
@@ -99,7 +99,7 @@ Status EncapsulateClusters(
 
       GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
       GraphToDotFile(&g, filename_prefix + ".dot",
-                     "nGraph Cluster Dump: " + filename_prefix);
+                     "OpenVINO Cluster Dump: " + filename_prefix);
     }
   }
 
@@ -216,10 +216,10 @@ Status Encapsulator::AnalysisPass() {
                           cluster_output_dt_map[src_cluster_idx].size());
 
       std::stringstream ss;
-      ss << "ngraph_output_" << cluster_output_dt_map[src_cluster_idx].size();
+      ss << "openvino_output_" << cluster_output_dt_map[src_cluster_idx].size();
       string output_name = ss.str();
       auto new_output_node_def =
-          NGraphClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
+          OpenVINOClusterManager::GetClusterGraph(src_cluster_idx)->add_node();
 
 #ifdef _WIN32
       auto src_node_def = src->def();
@@ -256,7 +256,7 @@ Status Encapsulator::AnalysisPass() {
           cluster_input_map[dst_cluster_idx].size();
 
       std::stringstream ss;
-      ss << "ngraph_input_" << cluster_input_map[dst_cluster_idx].size();
+      ss << "openvino_input_" << cluster_input_map[dst_cluster_idx].size();
       std::string new_input_name = ss.str();
 
       input_rename_map[std::make_tuple(dst_cluster_idx, src->name(),
@@ -264,7 +264,7 @@ Status Encapsulator::AnalysisPass() {
       string input_prov_tag = src->name();
 
       auto new_input_node_def =
-          NGraphClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
+          OpenVINOClusterManager::GetClusterGraph(dst_cluster_idx)->add_node();
 
 #ifdef _WIN32
       auto src_node_def = src->def();
@@ -406,7 +406,7 @@ Status Encapsulator::AnalysisPass() {
     // ...end code copied and pasted (and modified) from graph.cc
 
     auto node_def =
-        NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+        OpenVINOClusterManager::GetClusterGraph(cluster_idx)->add_node();
     OVTF_VLOG(4) << "Adding new node " << node->name() << " in Cluster "
                  << cluster_idx << "'s GraphDef";
     *node_def = original_def;
@@ -465,11 +465,11 @@ Status Encapsulator::RewritePass(
 
     Node* n;
     NodeBuilder nb =
-        NodeBuilder(encap_node_name, "_nGraphEncapsulate")
+        NodeBuilder(encap_node_name, "_OpenVINOEncapsulate")
             .Attr("ovtf_cluster", cluster_idx)
             .Attr("Targuments", input_types)
             .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-            .Attr("ngraph_graph_id", graph_id)
+            .Attr("openvino_graph_id", graph_id)
             .Attr("cluster_cost", cluster_cost_map_in_ms[cluster_idx])
             .Device(device_name_map[cluster_idx])
             .Input(inputs);
@@ -487,7 +487,7 @@ Status Encapsulator::RewritePass(
     vector<int> static_input_indexes;
     GraphDef* gdef_for_current_encapsulate;
     gdef_for_current_encapsulate =
-        NGraphClusterManager::GetClusterGraph(cluster_idx);
+        OpenVINOClusterManager::GetClusterGraph(cluster_idx);
     if (gdef_for_current_encapsulate == nullptr) {
       return errors::Internal(
           "Did not find encapsulated graph in cluster manager for node ",

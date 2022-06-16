@@ -43,7 +43,7 @@ class OpExecuter {
   // Scope sc                                : TF Scope with execution graph
   // string test_op                          : test_op_type e.g. "Add"
   // const vector<int>& static_input_indexes : input indices for test_op that
-  //                                           are static for nGraph
+  //                                           are static for OpenVINO
   //                                         : e.g. Conv2DBackPropFilter {1}
   // vector<DataType>& op_types              : expected tf data types of the
   //                                            output e.g.
@@ -56,16 +56,16 @@ class OpExecuter {
   ~OpExecuter();
 
   // Creates the tf graph from tf Scope
-  // Translates the tf graph to nGraph
+  // Translates the tf graph to OpenVINO
   // Returns outputs as tf Tensors
-  void ExecuteOnNGraph(vector<Tensor>& outputs);
+  void ExecuteOnOpenVINO(vector<Tensor>& outputs);
 
   // Creates tf Session from tf Scope
   // Executes on TF
   // Returns outputs
   void ExecuteOnTF(vector<Tensor>& outputs);
 
-  // Executes on NGraph backend, then executes on TF, and compares the results
+  // Executes on OpenVINO backend, then executes on TF, and compares the results
   void RunTest(float rtol = static_cast<float>(1e-05),
                float atol = static_cast<float>(1e-08));
 

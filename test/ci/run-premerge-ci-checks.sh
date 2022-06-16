@@ -8,7 +8,7 @@ echo "**************************************************************************
 ../../maint/check-code-format.sh
 
 echo "**************************************************************************"
-echo "Run TensorFlow bridge <----> NGraph-C++ Pre-Merge CI Tests..."
+echo "Run TensorFlow bridge <----> OpenVINO-C++ Pre-Merge CI Tests..."
 echo "**************************************************************************"
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

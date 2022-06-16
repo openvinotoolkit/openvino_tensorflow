@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
-#ifndef NGRAPH_LOG_H_
-#define NGRAPH_LOG_H_
+#ifndef OPENVINO_LOG_H_
+#define OPENVINO_LOG_H_
 
 #include <string>
 #include "tensorflow/core/lib/core/status.h"
@@ -14,16 +14,16 @@
 #include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/public/version.h"
 
-class NGraphLogMessage : public tensorflow::internal::LogMessage {
+class OpenVINOLogMessage : public tensorflow::internal::LogMessage {
  public:
-  static tensorflow::int64 MinNGraphVLogLevel();
+  static tensorflow::int64 MinOpenVINOVLogLevel();
   static std::string GetTimeStampForLogging();
 };
 
-#define OVTF_VLOG_IS_ON(lvl) ((lvl) <= NGraphLogMessage::MinNGraphVLogLevel())
+#define OVTF_VLOG_IS_ON(lvl) ((lvl) <= OpenVINOLogMessage::MinOpenVINOVLogLevel())
 
 #define OVTF_VLOG(lvl)      \
   if (OVTF_VLOG_IS_ON(lvl)) \
   ::tensorflow::internal::LogMessage(__FILE__, __LINE__, tensorflow::INFO)
 
-#endif  // NGRAPH_LOG_H_
+#endif  // OPENVINO_LOG_H_

@@ -49,10 +49,10 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-class NGraphEncapsulateOp : public OpKernel {
+class OpenVINOEncapsulateOp : public OpKernel {
  public:
-  explicit NGraphEncapsulateOp(OpKernelConstruction* ctx);
-  ~NGraphEncapsulateOp() override;
+  explicit OpenVINOEncapsulateOp(OpKernelConstruction* ctx);
+  ~OpenVINOEncapsulateOp() override;
   void Compute(OpKernelContext* ctx) override;
 
  private:
@@ -79,10 +79,10 @@ class NGraphEncapsulateOp : public OpKernel {
 };
 
 // Static initializers
-std::map<size_t, bool> NGraphEncapsulateOp::s_tf_timing_run_enabled_map;
-std::map<size_t, float> NGraphEncapsulateOp::s_ovtf_cluster_timings_map;
+std::map<size_t, bool> OpenVINOEncapsulateOp::s_tf_timing_run_enabled_map;
+std::map<size_t, float> OpenVINOEncapsulateOp::s_ovtf_cluster_timings_map;
 
-NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
+OpenVINOEncapsulateOp::OpenVINOEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
   OVTF_VLOG(1) << "Create Executor " << name();
   m_name = name();
@@ -94,10 +94,10 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
 
-  OVTF_VLOG(1) << "NGraphEncapsulateOp: " << m_cluster_id
+  OVTF_VLOG(1) << "OpenVINOEncapsulateOp: " << m_cluster_id
                << " Name: " << name();
 
-  GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
+  GraphDef* graph_def = OpenVINOClusterManager::GetClusterGraph(m_cluster_id);
   if (graph_def == nullptr) {
     string flib_key = "ovtf_cluster_" + to_string(m_cluster_id);
     // Read graphdef from function library
@@ -107,7 +107,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     OP_REQUIRES(
         ctx, fdef != nullptr,
         errors::Internal("Did not find graphdef for encapsulate ", flib_key,
-                         " in NGraphClusterManager or function library"));
+                         " in OpenVINOClusterManager or function library"));
     // TODO: how to convert from functiondef to graphdef. Anything easier?
     std::unique_ptr<FunctionBody> fnbody;
     const auto get_func_sig = [&flib](const string& op, const OpDef** sig) {
@@ -183,19 +183,19 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   }
 }
 
-NGraphEncapsulateOp::~NGraphEncapsulateOp() {
+OpenVINOEncapsulateOp::~OpenVINOEncapsulateOp() {
   std::ostringstream oss;
   oss << "Destroy Encapsulate_" << m_cluster_id << ": " << name();
-  OVTF_VLOG(2) << "~NGraphEncapsulateOp::" << name();
-  NGraphClusterManager::SetMRUExecutable(m_cluster_id, nullptr);
+  OVTF_VLOG(2) << "~OpenVINOEncapsulateOp::" << name();
+  OpenVINOClusterManager::SetMRUExecutable(m_cluster_id, nullptr);
   m_ng_exec_map.clear();
 }
 
-void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
+void OpenVINOEncapsulateOp::Compute(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Compute using executor " << name();
   std::ostringstream oss;
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
   m_iter++;
   // This snippet is executed only when Rewrite pass is enabled
@@ -212,7 +212,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // Restore the fallback to false, if TF is taking more time than OVTF for
       // this cluster
       if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
-        NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
+        OpenVINOClusterManager::SetClusterFallback(m_cluster_id, false);
       }
       // Disable timing run for this cluster
       s_tf_timing_run_enabled_map[m_cluster_id] = false;
@@ -220,7 +220,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
   }
 
-  if (NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
+  if (OpenVINOClusterManager::CheckClusterFallback(m_cluster_id)) {
     OP_REQUIRES_OK(ctx, Fallback(ctx));
     return;
   }
@@ -249,9 +249,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
     // Get ngraph executable and inputs information
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
-    NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
+    OpenVINOClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
     if (getex_status != Status::OK()) {
-      if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+      if (OpenVINOClusterManager::IsClusterFallbackEnabled()) {
         OP_REQUIRES_OK(ctx, Fallback(ctx));
         return;
       } else {
@@ -261,13 +261,13 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 
     OVTF_VLOG(1) << " Step_ID: " << step_id;
     OVTF_VLOG(4)
-        << "NGraphEncapsulateOp::Compute got ngraph executable for cluster "
+        << "OpenVINOEncapsulateOp::Compute got ngraph executable for cluster "
         << m_cluster_id;
 
     time_func_create_or_lookup = function_lookup_or_create.ElapsedInMS();
   }
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got graph for cluster "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute got graph for cluster "
                << m_cluster_id;
 
   Timer create_or_lookup_tensors;
@@ -290,7 +290,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       };
       if (check_ng_shape()) continue;
       ov::element::Type ng_element_type;
-      OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
+      OP_REQUIRES_OK(ctx, util::TFDataTypeToOpenVINOElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
 
       auto backend = BackendManager::GetBackend();
@@ -306,7 +306,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
   }
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute allocated argument tensors "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute allocated argument tensors "
                   "for cluster "
                << m_cluster_id;
 
@@ -333,7 +333,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       auto ng_element = ng_result_list[i];
       if (ng_element->get_output_partial_shape(0).is_dynamic()) {
         OVTF_VLOG(4)
-            << "NGraphEncapsulateOp::Compute skipping output allocation for "
+            << "OpenVINOEncapsulateOp::Compute skipping output allocation for "
                "dynamic tensor at index"
             << i;
         dyn_shape_tensors.push_back(i);
@@ -351,18 +351,18 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       Tensor* output_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, tf_shape, &output_tensor));
 
-      // Make sure the nGraph-inferred element type agrees with what TensorFlow
+      // Make sure the OpenVINO-inferred element type agrees with what TensorFlow
       // expected
       ov::element::Type expected_elem_type;
       auto ng_element_type = ng_element->get_element_type();
       if (ng_element_type == ov::element::Type_t::f16 && precision == "FP16")
         ng_element_type = ov::element::Type_t::f32;
       OP_REQUIRES_OK(ctx,
-                     util::TFDataTypeToNGraphElementType(
+                     util::TFDataTypeToOpenVINOElementType(
                          ctx->expected_output_dtype(i), &expected_elem_type));
       OP_REQUIRES(
           ctx, ng_element_type == expected_elem_type,
-          errors::Internal("Element type inferred by nGraph does not match "
+          errors::Internal("Element type inferred by OpenVINO does not match "
                            "the element type expected by TensorFlow"));
 
 #if TF_VERSION < 2
@@ -390,16 +390,16 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     }
   }
   OVTF_VLOG(4)
-      << "NGraphEncapsulateOp::Compute allocated result tensors for cluster "
+      << "OpenVINOEncapsulateOp::Compute allocated result tensors for cluster "
       << m_cluster_id;
 
   int time_create_or_lookup_tensors = create_or_lookup_tensors.ElapsedInMS();
-  // Execute the nGraph function.
+  // Execute the OpenVINO function.
   int time_execute_function;
   {
     Timer execute_function;
     {
-      OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
+      OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
         int64_t infer_duration_in_ms = 0;
@@ -421,7 +421,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
             s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
             // Run warmup TF run, and enable the proper TF timing run for the
             // next iteration through a separate section at the top pf compute
-            if (NGraphClusterManager::IsClusterFallbackEnabled() &&
+            if (OpenVINOClusterManager::IsClusterFallbackEnabled() &&
                 m_iter == 2) {
               s_tf_timing_run_enabled_map[m_cluster_id] = true;
               throw std::runtime_error("Falling back to native TF Runtime.");
@@ -435,7 +435,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                        << m_cluster_cost_in_ms << " ms.";
 
           // ignore warmup iteration while comparing cluster costs
-          if ((NGraphClusterManager::IsClusterFallbackEnabled() && 
+          if ((OpenVINOClusterManager::IsClusterFallbackEnabled()) && 
                 (m_iter > 1) && (overall_duration_in_ms > m_cluster_cost_in_ms))
             throw std::runtime_error(
                 "Falling back to native TF as OVTF runtime is costlier.");
@@ -445,7 +445,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
                                string(exp.what());
-        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+        if (OpenVINOClusterManager::IsClusterFallbackEnabled()) {
           OVTF_VLOG(4) << status_string;
           OP_REQUIRES_OK(ctx, Fallback(ctx));
           return;
@@ -455,7 +455,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       } catch (...) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id);
-        if (NGraphClusterManager::IsClusterFallbackEnabled()) {
+        if (OpenVINOClusterManager::IsClusterFallbackEnabled()) {
           OVTF_VLOG(4) << status_string;
           OP_REQUIRES_OK(ctx, Fallback(ctx));
           return;
@@ -517,11 +517,11 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
         OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
+                       util::TFDataTypeToOpenVINOElementType(
                            ctx->expected_output_dtype(i), &expected_elem_type));
         OP_REQUIRES(
             ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
+            errors::Internal("Element type inferred by OpenVINO does not match "
                              "the element type expected by TensorFlow"));
         TensorShape tf_shape;
         for (auto dim : ng_shape) {
@@ -541,11 +541,11 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         auto ng_element = ng_result_list[i];
         auto ng_element_type = ng_element->get_element_type();
         OP_REQUIRES_OK(ctx,
-                       util::TFDataTypeToNGraphElementType(
+                       util::TFDataTypeToOpenVINOElementType(
                            ctx->expected_output_dtype(i), &expected_elem_type));
         OP_REQUIRES(
             ctx, ng_element_type == expected_elem_type,
-            errors::Internal("Element type inferred by nGraph does not match "
+            errors::Internal("Element type inferred by OpenVINO does not match "
                              "the element type expected by TensorFlow"));
         TensorShape tf_shape;
         for (auto dim : ng_shape) {
@@ -579,10 +579,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                << ng_input_tensor_size_in_bytes / (1024 * 1024) << " MB"
                << " Total process memory: " << rss / (1024 * 1024) << " GB";
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call done for cluster "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute call done for cluster "
                << m_cluster_id;
 
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute done marking fresh for cluster "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute done marking fresh for cluster "
                << m_cluster_id;
   OVTF_VLOG(1) << "OPENVINO_TF_TIMING_PROFILE: OP_ID: " << m_cluster_id
                << " Step_ID: " << step_id << " Cluster: " << name()
@@ -593,7 +593,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
 }  // end compute
 
 // Computes signature and gets executable
-Status NGraphEncapsulateOp::GetExecutable(
+Status OpenVINOEncapsulateOp::GetExecutable(
     const std::vector<Tensor>& tf_input_tensors,
     std::shared_ptr<Executable>& ng_exec) {
   auto backend = BackendManager::GetBackend();
@@ -625,10 +625,10 @@ Status NGraphEncapsulateOp::GetExecutable(
   string signature = signature_ss.str();
   OVTF_VLOG(5) << "Computed signature: " << signature;
   auto it = m_ng_exec_map.find(signature);
-  OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute got inputs for cluster "
+  OVTF_VLOG(4) << "OpenVINOEncapsulateOp::Compute got inputs for cluster "
                << m_cluster_id;
 
-  // Translate the TensorFlow graph to nGraph.
+  // Translate the TensorFlow graph to OpenVINO.
   std::shared_ptr<ov::Model> ng_function;
   if (it == m_ng_exec_map.end()) {
     // Measure the current total memory usage
@@ -700,11 +700,11 @@ Status NGraphEncapsulateOp::GetExecutable(
   return Status::OK();
 }
 
-Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
+Status OpenVINOEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
-    NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
-    GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
+  if (!OpenVINOClusterManager::CheckClusterFallback(m_cluster_id)) {
+    OpenVINOClusterManager::SetClusterFallback(m_cluster_id, true);
+    GraphDef* graph_def = OpenVINOClusterManager::GetClusterGraph(m_cluster_id);
     SessionOptions options;
     std::shared_ptr<tensorflow::Session> session(
         tensorflow::NewSession(options));
@@ -802,7 +802,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
 
 }  // namespace openvino_tensorflow
 
-REGISTER_KERNEL_BUILDER(Name("_nGraphEncapsulate").Device(DEVICE_CPU),
-                        openvino_tensorflow::NGraphEncapsulateOp);
+REGISTER_KERNEL_BUILDER(Name("_OpenVINOEncapsulate").Device(DEVICE_CPU),
+                        openvino_tensorflow::OpenVINOEncapsulateOp);
 
 }  // namespace tensorflow

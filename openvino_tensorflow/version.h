@@ -24,7 +24,7 @@ extern "C" {
 // Returns the version of OpenVINO™ integration with TensorFlow
 EXPORT_SYMBOL const char* version();
 
-// Returns the nGraph version this bridge was compiled with
+// Returns the OpenVINO version this bridge was compiled with
 EXPORT_SYMBOL const char* openvino_version();
 
 // Returns the 0 if _GLIBCXX_USE_CXX11_ABI wasn't set by the

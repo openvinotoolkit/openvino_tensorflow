@@ -87,7 +87,7 @@ endif()
 
 # Default to four jobs if the command fails.
 if(NPROC_RESULT)
-    message (WARNING "Unable to detect number of processors. Building nGraph with make -j4.")
+    message (WARNING "Unable to detect number of processors. Building OpenVINO with make -j4.")
     set(NUM_MAKE_PROCESSES 4)
 endif()
 

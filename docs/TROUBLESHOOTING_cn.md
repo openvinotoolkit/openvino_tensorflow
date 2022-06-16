@@ -55,7 +55,7 @@ OVTF_SUMMARY: Op_deassigned:  Gather -> 549, Reshape -> 197, Cast -> 183, Const 
 - marked_<graph_id>.pbtxt: 这是标记了支持的节点后的图表。
 - clustered_<graph_id>.pbtxt: 这是聚类化完成后的图，在这一步之后，所有支持的节点都应该被分组到集群中。
 - declustered_<graph_id>.pbtxt: 这是一些集群被取消分配后的图表。 例如，在此步骤之后，操作数非常少的集群将被取消分配。
-- encapsulated_<graph_id>.pbtxt: 这是封装完成后的图，每个现有集群都应该封装到一个“_nGraphEncapsulate”操作中。
+- encapsulated_<graph_id>.pbtxt: 这是封装完成后的图，每个现有集群都应该封装到一个“_OpenVINOEncapsulate”操作中。
 
 OpenVINO™ 中间表示 (IR) 文件（“ovtf_cluster_<cluster_id>.xml”和“ovtf_cluster_<cluster_id>.bin”）将针对每个创建的集群进行序列化。
 

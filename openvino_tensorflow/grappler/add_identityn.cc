@@ -17,7 +17,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
     bool ref_type = false;
     fetch_node = skip_these_nodes.find(node->name()) != skip_these_nodes.end();
     if (fetch_node) {
-      OVTF_VLOG(5) << "OVTF_OPTIMIZER: Fetch Node " << node->name();
+      OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: Fetch Node " << node->name();
       // Check the number of outputs of the 'fetch_node'
       // Only move further to create an IdentityN node
       // if it is greater than 0
@@ -29,7 +29,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         std::vector<DataType> input_types;
         for (int i = 0; i < node->num_outputs(); i++) {
           if (IsRefType(node->output_type(i))) {
-            OVTF_VLOG(5) << "OVTF_OPTIMIZER: "
+            OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: "
                          << "Datatype for the node output"
                          << " at index " << i << " is ref type";
             ref_type = true;
@@ -40,11 +40,11 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
         }
 
         if (ref_type) {
-          OVTF_VLOG(5) << "OVTF_OPTIMIZER: Cannot construct an IdentityN node";
+          OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: Cannot construct an IdentityN node";
           continue;
         }
 
-        OVTF_VLOG(5) << "OVTF_OPTIMIZER: Creating an IdentityN node";
+        OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: Creating an IdentityN node";
         Node* identityN_node;
         TF_RETURN_IF_ERROR(NodeBuilder(node->name(), "IdentityN")
                                .Attr("T", input_types)
@@ -56,15 +56,15 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
 
         // Rename the skip node
         // Get a new name for the node with the given prefix
-        // We will use the 'original-node-name_ngraph' as the prefix
+        // We will use the 'original-node-name_openvino' as the prefix
         string new_name = input_graph->NewName(node->name() + "_openvino");
         // TODO: Use (guaranteed) unique name here
         node->set_name(new_name);
-        OVTF_VLOG(5) << "OVTF_OPTIMIZER: New name for fetch node "
+        OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: New name for fetch node "
                      << node->name();
       } else {
-        OVTF_VLOG(5) << "OVTF_OPTIMIZER: num outputs " << node->num_outputs();
-        OVTF_VLOG(5) << "OVTF_OPTIMIZER: Cannot construct an IdentityN node";
+        OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: num outputs " << node->num_outputs();
+        OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: Cannot construct an IdentityN node";
       }
     }
   }

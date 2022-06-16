@@ -145,7 +145,7 @@ class IE_Utils {
   //        return element::Type_t::boolean;
   //      default:
   //        THROW_IE_EXCEPTION << "Can't convert IE precision " << precision
-  //                           << " to nGraph type!";
+  //                           << " to OpenVINO type!";
   //    }
   //  }
 };

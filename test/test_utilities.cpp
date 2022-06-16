@@ -19,13 +19,13 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 namespace testing {
 
-void ActivateNGraph() {
+void ActivateOpenVINO() {
   setenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS", "1", 1);
   setenv("OPENVINO_TF_DYNAMIC_FALLBACK", "0", 1);
   unsetenv("OPENVINO_TF_DISABLE");
 }
 
-void DeactivateNGraph() {
+void DeactivateOpenVINO() {
   unsetenv("OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS");
   unsetenv("OPENVINO_TF_DYNAMIC_FALLBACK");
   setenv("OPENVINO_TF_DISABLE", "1", 1);
@@ -80,7 +80,7 @@ void RestoreEnv(const unordered_map<string, string>& map) {
 }
 
 // OPENVINO_TF_BACKEND related
-bool IsNGraphTFBackendSet() { return IsEnvVariableSet("OPENVINO_TF_BACKEND"); }
+bool IsOpenVINOTFBackendSet() { return IsEnvVariableSet("OPENVINO_TF_BACKEND"); }
 
 string GetBackendFromEnvVar() { return GetEnvVariable("OPENVINO_TF_BACKEND"); }
 

@@ -31,7 +31,7 @@ class TestResizeToDynamicShape(NgraphTest):
         val = tf.compat.v1.placeholder(tf.float32, shape=(128, 10, 10, 20, 5))
 
         # Reshape to a random permutation of the input shape. We use a fixed seed
-        # so that we get same results on CPU and nGraph, and we have to do some
+        # so that we get same results on CPU and OpenVINO, and we have to do some
         # hackery to make sure the actual op survives constant folding.
         seed = cryptogen.randint(0, 999999)
         shuffled_shape = tf.compat.v1.random_shuffle(tf.shape(val), seed=seed)

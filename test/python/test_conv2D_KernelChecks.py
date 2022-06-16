@@ -7,7 +7,7 @@
 
 They replicate the tf python test 'testOpEdgeCases' defined in
 tensorflow/tensorflow/python/kernel_tests/conv_ops_test.py in principle.
-With nGraph,the tf python test fails in kernel computation of the 
+With OpenVINO,the tf python test fails in kernel computation of the 
 placeholder as placholder values are missing and it does not reach the 
 kernel computation for Conv2D (now encapsulated).
 Tf tests these input parameters in kernel construction while we can only 
@@ -16,7 +16,7 @@ specifying the placeholder values
 
 The 3rd and 4th test(under # Filter larger than input/ "Negative dimension
 size") in testOpEdgeCases are construction time errors and do not reach
-nGraph.
+OpenVINO.
 
 """
 from __future__ import absolute_import

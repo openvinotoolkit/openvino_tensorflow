@@ -21,7 +21,7 @@ tests_common.txt
 [SKIP]
 # Specify tests/patterns/regex that should be excluded/skipped
 ArrayOps.Tile2 # accuracy
-NGraphExecTest.Axpy8bit # Tensor type f32 is not integral but passed template is integral
+OpenVINOExecTest.Axpy8bit # Tensor type f32 is not integral but passed template is integral
 
 # [PARAMETER_MISMATCH] Failed to set output blob with precision: BOOL, if CNNNetwork output blob precision is: FP32
 MathOps.AnyKeepDims
@@ -40,7 +40,7 @@ MathOps.SqueezeNoAttributes # Const layer Squeeze/Constant_66948 has incorrect d
 
 NNOps.L2Loss # Const/Const/Constant_124777 has zero dimension which is not allowed
 
-# MKLDNNGraph::CreateGraph: No inputs for the topology
+# MKLDNOpenVINO::CreateGraph: No inputs for the topology
 ArrayOps.Shape2D
 ArrayOps.Shape3D
 

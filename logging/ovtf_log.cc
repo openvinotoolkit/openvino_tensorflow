@@ -31,12 +31,12 @@ tensorflow::int64 LogLevelStrToInt(const char* tf_env_var_val) {
 }
 }  // namespace
 
-tensorflow::int64 NGraphLogMessage::MinNGraphVLogLevel() {
+tensorflow::int64 OpenVINOLogMessage::MinOpenVINOVLogLevel() {
   const char* tf_env_var_val = std::getenv("OPENVINO_TF_VLOG_LEVEL");
   return LogLevelStrToInt(tf_env_var_val);
 }
 
-std::string NGraphLogMessage::GetTimeStampForLogging() {
+std::string OpenVINOLogMessage::GetTimeStampForLogging() {
 #if TF_MAJOR_VERSION < 2
   static tensorflow::EnvTime* env_time = tensorflow::EnvTime::Default();
   tensorflow::uint64 now_micros = env_time->NowMicros();

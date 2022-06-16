@@ -17,16 +17,16 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-REGISTER_OP("_nGraphEncapsulate")
+REGISTER_OP("_OpenVINOEncapsulate")
     .Input("args: Targuments")
     .Attr("Targuments: list(type) >= 0")
     .Output("results: Tresults")
     .Attr("Tresults: list(type) >= 0")
     .Attr("ovtf_cluster: int")
-    .Attr("ngraph_graph_id: int")
+    .Attr("openvino_graph_id: int")
     .Attr("cluster_cost: int")
     .SetIsStateful()
-    .Doc("nGraph Encapsulation Op. For use by the nGraph JIT only.");
+    .Doc("OpenVINO Encapsulation Op. For use by the OpenVINO JIT only.");
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

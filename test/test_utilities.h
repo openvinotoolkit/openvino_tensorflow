@@ -35,9 +35,9 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 namespace testing {
 
-// Activate and Deactivate NGraph
-void ActivateNGraph();
-void DeactivateNGraph();
+// Activate and Deactivate OpenVINO
+void ActivateOpenVINO();
+void DeactivateOpenVINO();
 
 // Store Env Variables
 // This function takes a list of env var that the user would
@@ -58,7 +58,7 @@ void UnsetEnvVariable(const string& env_var_name);
 void SetEnvVariable(const string& env_var_name, const string& env_var_val);
 
 // OPENVINO_TF_BACKEND related
-bool IsNGraphTFBackendSet();
+bool IsOpenVINOTFBackendSet();
 string GetBackendFromEnvVar();
 void UnsetBackendUsingEnvVar();
 void SetBackendUsingEnvVar(const string& bname);

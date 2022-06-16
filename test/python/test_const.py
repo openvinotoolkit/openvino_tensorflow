@@ -88,7 +88,7 @@ class TestConstOperations(NgraphTest):
                 return sess.run(zz)
 
             # Ideally we want same behavior for both TF & NG, but for now we are deviating,
-            # NGraph will throw error, but TF will fill in zeros
+            # OpenVINO will throw error, but TF will fill in zeros
             # assert (
             #    self.with_ngraph(run_test) == self.without_ngraph(run_test)).all()
 

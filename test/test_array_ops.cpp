@@ -100,7 +100,7 @@ TEST(ArrayOps, DepthToSpaceNCHW) {
     OpExecuter opexecuter(root, "DepthToSpace", sess_run_fetchoutputs);
 
     vector<Tensor> ngraph_outputs;
-    opexecuter.ExecuteOnNGraph(ngraph_outputs);
+    opexecuter.ExecuteOnOpenVINO(ngraph_outputs);
 
     // On CPU, the op only supports NHWC data format
     Scope tf_scope = Scope::NewRootScope();
@@ -114,7 +114,7 @@ TEST(ArrayOps, DepthToSpaceNCHW) {
     vector<Tensor> tf_outputs;
     opexecuter_tf.ExecuteOnTF(tf_outputs);
 
-    // Compare NGraph and TF Outputs
+    // Compare OpenVINO and TF Outputs
     Compare(tf_outputs, ngraph_outputs);
   }
 }  // end of op DepthToSpaceNCHW
@@ -640,7 +640,7 @@ TEST(ArrayOps, SpaceToDepthNCHW) {
     OpExecuter opexecuter(root, "SpaceToDepth", sess_run_fetchoutputs);
 
     vector<Tensor> ngraph_outputs;
-    opexecuter.ExecuteOnNGraph(ngraph_outputs);
+    opexecuter.ExecuteOnOpenVINO(ngraph_outputs);
 
     // On CPU, the op only supports NHWC data format
     Scope tf_scope = Scope::NewRootScope();
@@ -654,7 +654,7 @@ TEST(ArrayOps, SpaceToDepthNCHW) {
     vector<Tensor> tf_outputs;
     opexecuter_tf.ExecuteOnTF(tf_outputs);
 
-    // Compare NGraph and TF Outputs
+    // Compare OpenVINO and TF Outputs
     Compare(tf_outputs, ngraph_outputs);
   }
 }  // end of op SpaceToDepthNCHW

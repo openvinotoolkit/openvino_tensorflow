@@ -19,17 +19,17 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 
 //
-// The "marking" pass checks every node with requested placement on nGraph,
+// The "marking" pass checks every node with requested placement on OpenVINO,
 // and either rejects the placement request, or tags it with suitable metadata.
 //
-// For now we assume that every node has nGraph placement requested, unless the
+// For now we assume that every node has OpenVINO placement requested, unless the
 // environment variable OPENVINO_TF_DISABLE is set. (TODO(amprocte): implement
 // something better.)
 //
-// Each TensorFlow op supported by nGraph has a "confirmation function"
+// Each TensorFlow op supported by OpenVINO has a "confirmation function"
 // associated with it. When the confirmation pass encounters a node of op "Op",
 // the confirmation function for "Op" first checks if this particular instance
-// of the op can be placed on nGraph, and returns "true" if placement is
+// of the op can be placed on OpenVINO, and returns "true" if placement is
 // allowed. This is followed by checks for input datatype of the
 // op.
 
@@ -39,10 +39,10 @@ namespace openvino_tensorflow {
 
 // Different Checks before we mark for clustering
 //
-// Utility function to check if placement on the NGRAPH device has been
+// Utility function to check if placement on the OpenVINO device has been
 // requested.
 //
-// FIXME(amprocte): stubbed out for now because NGRAPH device is gone.
+// FIXME(amprocte): stubbed out for now because OpenVINO device is gone.
 //
 
 // Marks the input indices in "inputs" as static
@@ -58,7 +58,7 @@ static inline void SetStaticInputs(Node* n, std::vector<int32> inputs) {
 
 // Marks the input indices given in static_input_indices as static, i.e., inputs
 // that must be driven either by an _Arg or by a Const in the encapsulated
-// graph (meaning that its value must be known at translation-to-nGraph time). A
+// graph (meaning that its value must be known at translation-to-OpenVINO time). A
 // negative value in static_input_indices indicates that the input index is
 // counted from the right.
 static SetAttributesFunction SetStaticInputs(
@@ -139,13 +139,13 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
 const std::map<std::string, std::set<std::shared_ptr<ov::Node>>>&
 GetTFToNgOpMap() {
   // Constant Op does not have default Constructor
-  // in ngraph, so passing a dummy node
+  // in , so passing a dummy node
   auto constant =
       opset::Constant::create(ov::element::f32, ov::Shape{}, {2.0f});
-  // Map:: TF ops to NG Ops to track if all the Ngraph ops
+  // Map:: TF ops to NG Ops to track if all the OpenVINO ops
   // are supported by backend
   // Update this Map if a new TF Op translation is
-  // implemented or a new Ngraph Op has been added
+  // implemented or a new OpenVINO Op has been added
   static std::map<std::string, std::set<shared_ptr<ov::Node>>> TFtoNgraphOpMap{
       {"Abs", {std::make_shared<opset::Abs>()}},
       {"Acos", {std::make_shared<opset::Acos>()}},

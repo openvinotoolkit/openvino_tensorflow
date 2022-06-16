@@ -21,8 +21,8 @@ File: tensorflow/tensorflow/compiler/jit/graphcycles/graphcycles.h
 
 *******************************************************************************/
 
-#ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
-#define NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
+#ifndef OPENVINO_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
+#define OPENVINO_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
 
 // GraphCycles detects the introduction of a cycle into a directed
 // graph that is being built up incrementally.
@@ -140,4 +140,4 @@ class GraphCycles {
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
-#endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_
+#endif  // OPENVINO_TENSORFLOW_COMPILER_JIT_GRAPHCYCLES_GRAPHCYCLES_H_

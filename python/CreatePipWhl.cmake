@@ -38,12 +38,12 @@ if (PYTHON)
         endif()
     endif()
     message(STATUS "LIB_SUFFIX: ${OVTF_INSTALL_DIR}/${LIB_SUFFIX}")
-    file(GLOB NGRAPH_LIB_FILES "${OVTF_INSTALL_DIR}/${LIB_SUFFIX}/*")
+    file(GLOB OPENVINO_LIB_FILES "${OVTF_INSTALL_DIR}/${LIB_SUFFIX}/*")
     # Copy the openvino_tensorflow include from install
     message(STATUS "OVTF_INSTALL_DIR: ${OVTF_INSTALL_DIR}")
 
     # Copy the openvino_tensorflow libraries from install
-    foreach(DEP_FILE ${NGRAPH_LIB_FILES})
+    foreach(DEP_FILE ${OPENVINO_LIB_FILES})
         get_filename_component(lib_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lib_file_name ${DEP_FILE} NAME)
         set(ovtf_libraries "${ovtf_libraries}\"${lib_file_name}\",\n\t")
@@ -65,11 +65,11 @@ if (PYTHON)
             DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/python/openvino_tensorflow/licenses")
     endforeach()
 
-    # Get the list of license files for ngraph
-    file(GLOB NGRAPH_LICENSE_FILES "${NGRAPH_INSTALL_DIR}/licenses/*")
+    # Get the list of license files for OpenVINO
+    file(GLOB OPENVINO_LICENSE_FILES "${OPENVINO_INSTALL_DIR}/licenses/*")
 
     # Copy the licenses for openvino-tensorflow
-    foreach(DEP_FILE ${NGRAPH_LICENSE_FILES})
+    foreach(DEP_FILE ${OPENVINO_LICENSE_FILES})
         get_filename_component(lic_file_real_path ${DEP_FILE} ABSOLUTE)
         get_filename_component(lic_file_name ${DEP_FILE} NAME)
         set(

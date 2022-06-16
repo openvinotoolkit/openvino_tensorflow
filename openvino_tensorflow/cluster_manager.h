@@ -16,7 +16,7 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-class NGraphClusterManager {
+class OpenVINOClusterManager {
  public:
   static size_t NewCluster();
   static tensorflow::GraphDef* GetClusterGraph(size_t idx);

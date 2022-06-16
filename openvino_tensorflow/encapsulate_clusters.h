@@ -84,7 +84,7 @@ class Encapsulator {
   // A map from cluster indices to a vector of output data types.
   std::map<int, std::vector<DataType>> cluster_output_dt_map;
 
-  // A map from cluster indices to corresponding NGraphEncapsulate nodes.
+  // A map from cluster indices to corresponding OpenVINOEncapsulate nodes.
   std::map<int, Node*> cluster_node_map;
 
   std::set<int> cluster_indices_for_this_graph;

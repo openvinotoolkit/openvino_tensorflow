@@ -38,7 +38,7 @@ class TestBfloat16(NgraphTest):
         if not self.with_ngraph(run_test) == self.without_ngraph(run_test):
             raise AssertionError
 
-    # For testing, we usually run the same graph on TF by disabling NGraph Rewrites.
+    # For testing, we usually run the same graph on TF by disabling OpenVINO Rewrites.
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.
@@ -79,7 +79,7 @@ class TestBfloat16(NgraphTest):
         if not np.allclose(ng_val, expected_val):
             raise AssertionError
 
-    # For testing, we usually run the same graph on TF by disabling NGraph Rewrites.
+    # For testing, we usually run the same graph on TF by disabling OpenVINO Rewrites.
     # However, in this case as we register CPU bfloat dummy kernels, TF assigns device CPU
     # to bfloat ops and hits the asserts in the dummy kernel.
     # So, we are testing with expected values.

@@ -29,7 +29,7 @@ OpExecuter::~OpExecuter() {}
 
 void OpExecuter::RunTest(float rtol, float atol) {
   vector<Tensor> ngraph_outputs;
-  ExecuteOnNGraph(ngraph_outputs);
+  ExecuteOnOpenVINO(ngraph_outputs);
   vector<Tensor> tf_outputs;
   ExecuteOnTF(tf_outputs);
 
@@ -49,20 +49,20 @@ void OpExecuter::RunTest(float rtol, float atol) {
 
 // Uses tf_scope to execute on TF
 void OpExecuter::ExecuteOnTF(vector<Tensor>& tf_outputs) {
-  // Deactivate nGraph to be able to run on TF
-  DeactivateNGraph();
+  // Deactivate OpenVINO to be able to run on TF
+  DeactivateOpenVINO();
   ClientSession session(tf_scope_);
   ASSERT_EQ(Status::OK(), session.Run(sess_run_fetchoutputs_, &tf_outputs))
       << "Failed to run opexecutor on TF";
   for (size_t i = 0; i < tf_outputs.size(); i++) {
     OVTF_VLOG(5) << " TF op " << i << " " << tf_outputs[i].DebugString();
   }
-  // Activate nGraph again
-  ActivateNGraph();
+  // Activate OpenVINO again
+  ActivateOpenVINO();
 }
 
 // Sets NG backend before executing on OVTF
-void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
+void OpExecuter::ExecuteOnOpenVINO(vector<Tensor>& ngraph_outputs) {
   Graph graph(OpRegistry::Global());
   TF_CHECK_OK(tf_scope_.ToGraph(&graph));
 
@@ -71,7 +71,7 @@ void OpExecuter::ExecuteOnNGraph(vector<Tensor>& ngraph_outputs) {
     GraphToPbTextFile(&graph, "unit_test_tf_graph_" + test_op_type_ + ".pbtxt");
   }
 
-  ActivateNGraph();
+  ActivateOpenVINO();
   tf::SessionOptions options = GetSessionOptions();
   ClientSession session(tf_scope_, options);
   try {

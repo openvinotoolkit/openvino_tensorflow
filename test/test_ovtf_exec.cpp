@@ -47,7 +47,7 @@ static int FindNumberOfNodes(const Graph* graph, const string op_type) {
   return count;
 }
 
-class NGraphExecTest : public ::testing::Test {
+class OpenVINOExecTest : public ::testing::Test {
  protected:
   // Loads the .pbtxt into a graph object
   Status LoadGraph(const string& graph_pbtxt_file, Graph* graph) {
@@ -95,9 +95,9 @@ class NGraphExecTest : public ::testing::Test {
     GraphDef gdef;
     graph.ToGraphDef(&gdef);
     TF_RETURN_IF_ERROR(session->Create(gdef));
-    DeactivateNGraph();
+    DeactivateOpenVINO();
     Status status = session->Run(feed_dict, out_node_names, {}, &out_tensors);
-    ActivateNGraph();
+    ActivateOpenVINO();
     return status;
   }
 
@@ -139,7 +139,7 @@ class NGraphExecTest : public ::testing::Test {
   };
 };
 
-TEST_F(NGraphExecTest, Axpy) {
+TEST_F(OpenVINOExecTest, Axpy) {
   auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
   SetBackendUsingEnvVar("CPU");
 
@@ -157,7 +157,7 @@ TEST_F(NGraphExecTest, Axpy) {
   shared_ptr<ov::Model> ng_function;
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
-  // Create the nGraph backend
+  // Create the OpenVINO backend
   auto backend = BackendManager::GetBackend();
   ASSERT_NE(backend, nullptr);
 
@@ -179,7 +179,7 @@ TEST_F(NGraphExecTest, Axpy) {
   auto t_y = make_shared<IETensor>(ov::element::f32, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
-  // Execute the nGraph function.
+  // Execute the OpenVINO function.
   auto exec = backend->Compile(ng_function);
   vector<shared_ptr<ov::Tensor>> outputs;
   exec->Call({t_x, t_y}, outputs);
@@ -194,7 +194,7 @@ TEST_F(NGraphExecTest, Axpy) {
   RestoreEnv(env_map);
 }
 
-TEST_F(NGraphExecTest, Axpy8bit) {
+TEST_F(OpenVINOExecTest, Axpy8bit) {
   auto env_map = StoreEnv({"OPENVINO_TF_BACKEND"});
   SetBackendUsingEnvVar("CPU");
 
@@ -212,7 +212,7 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   shared_ptr<ov::Model> ng_function;
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
-  // Create the nGraph backend
+  // Create the OpenVINO backend
   auto backend = BackendManager::GetBackend();
   ASSERT_NE(backend, nullptr);
 
@@ -234,7 +234,7 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   auto t_y = make_shared<IETensor>(ov::element::i8, ng_shape_y);
   t_y->write(&v_x, sizeof(v_x));
 
-  // Execute the nGraph function.
+  // Execute the OpenVINO function.
   auto exec = backend->Compile(ng_function);
   vector<shared_ptr<ov::Tensor>> outputs;
   exec->Call({t_x, t_y}, outputs);
@@ -249,7 +249,7 @@ TEST_F(NGraphExecTest, Axpy8bit) {
   RestoreEnv(env_map);
 }
 
-TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {
+TEST_F(OpenVINOExecTest, FindNumberOfNodesUtil1) {
   Graph input_graph(OpRegistry::Global());
   ASSERT_OK(LoadGraph("test_axpy_launchop.pbtxt", &input_graph));
 
@@ -264,7 +264,7 @@ TEST_F(NGraphExecTest, FindNumberOfNodesUtil1) {
   ASSERT_EQ(number_of_xyz, 0);
 }
 
-TEST_F(NGraphExecTest, FindNumberOfNodesUtil2) {
+TEST_F(OpenVINOExecTest, FindNumberOfNodesUtil2) {
   Graph input_graph(OpRegistry::Global());
   ASSERT_OK(LoadGraph("test_general_graph.pbtxt", &input_graph));
 
@@ -279,7 +279,7 @@ TEST_F(NGraphExecTest, FindNumberOfNodesUtil2) {
   ASSERT_EQ(number_of_sub, 1);
 }
 
-TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
+TEST_F(OpenVINOExecTest, OpenVINOPassConstantFolding1) {
   Graph input_graph(OpRegistry::Global());
   ASSERT_OK(LoadGraph("test_graph1.pbtxt", &input_graph));
 
@@ -292,7 +292,7 @@ TEST_F(NGraphExecTest, NGraphPassConstantFolding1) {
   unsetenv("OPENVINO_TF_CONSTANT_FOLDING");
 }
 
-TEST_F(NGraphExecTest, NGraphPassConstantFolding2) {
+TEST_F(OpenVINOExecTest, OpenVINOPassConstantFolding2) {
   Scope root = Scope::NewRootScope();
   Graph* pgraph = root.graph();
   Status s;

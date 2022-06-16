@@ -5,8 +5,8 @@
  *******************************************************************************/
 #pragma once
 
-#ifndef OPENVINO_TF_NGRAPHOPTIMIZER_H_
-#define OPENVINO_TF_NGRAPHOPTIMIZER_H_
+#ifndef OPENVINO_GRAPPLER_OPTIMIZER_H_
+#define OPENVINO_GRAPPLER_OPTIMIZER_H_
 
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/graph/graph.h"
@@ -34,22 +34,22 @@
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-// Custom Grappler Optimizer for NGraph-TF
-class OVTFOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
+// Custom Grappler Optimizer for OpenVINO-TF
+class OpenVINOGrapplerOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
  public:
-  OVTFOptimizer() = default;
-  ~OVTFOptimizer() override = default;
+  OpenVINOGrapplerOptimizer() = default;
+  ~OpenVINOGrapplerOptimizer() override = default;
 
-  string name() const override { return "OVTFOptimizer"; };
+  string name() const override { return "OpenVINOGrapplerOptimizer"; };
 
   bool UsesFunctionLibrary() const override { return true; }
 
   Status Init(
       const tensorflow::RewriterConfig_CustomGraphOptimizer* config) override;
 
-  // This is a grappler pass to change a TF graph to nGraph enabled TF graph.
-  // It accepts TF nodes that can be processed by nGraph and encapsulates them
-  // into NGraphEncapsulateOp
+  // This is a grappler pass to change a TF graph to OpenVINO enabled TF graph.
+  // It accepts TF nodes that can be processed by OpenVINO and encapsulates them
+  // into OpenVINOEncapsulateOp
   // To honour fetch (result-bearing) nodes, this pass does one of 2 things
   // (which make it different from the normal non-grappler optimization passes):
   // 1. The grappler pass attaches IdentityN nodes to fetch nodes
@@ -68,9 +68,9 @@ class OVTFOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
   static mutex s_serial_counter_mutex;
 };
 
-int OVTFOptimizer::s_serial_counter = 0;
-mutex OVTFOptimizer::s_serial_counter_mutex;
+int OpenVINOGrapplerOptimizer::s_serial_counter = 0;
+mutex OpenVINOGrapplerOptimizer::s_serial_counter_mutex;
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
-#endif  // OPENVINO_TF_NGRAPHOPTIMIZER_H_
+#endif  // OPENVINO_GRAPPLER_OPTIMIZER_H_

@@ -55,7 +55,7 @@ This will serialize the TensorFlow graph in each step of the clustering in "pbtx
 - marked_<graph_id>.pbtxt: This is the graph after the supported nodes are marked.
 - clustered_<graph_id>.pbtxt: This is the graph after the clustering is completed. All the supported nodes should be grouped into clusters after this step.
 - declustered_<graph_id>.pbtxt: This is the graph after some of the clusters are deassigned. For example, the clusters with very low number of ops will be deassigned after this step.
-- encapsulated_<graph_id>.pbtxt: This is the graph after the encapsulation is completed. Each of the existing clusters should be encapsulated into a "_nGraphEncapsulate" op.
+- encapsulated_<graph_id>.pbtxt: This is the graph after the encapsulation is completed. Each of the existing clusters should be encapsulated into a "_OpenVINOEncapsulate" op.
 
 The OpenVINO™  Intermediate Representation (IR) files ("ovtf_cluster_<cluster_id>.xml" and "ovtf_cluster_<cluster_id>.bin") will be serialized for each of the created cluster.
 

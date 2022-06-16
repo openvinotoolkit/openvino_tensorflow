@@ -750,7 +750,7 @@ if __name__ == '__main__':
         learning_rate=0.001, momentum=0.9)
 
     with tf.compat.v1.variable_scope('resnet', reuse=tf.AUTO_REUSE):
-        #Model on nGraph
+        #Model on OpenVINO
         with tf.device('/job:localhost/replica:0/task:0/device:' + 'NGRAPH' +
                        ':0'):
             tf.compat.v1.set_random_seed(0)
@@ -773,11 +773,11 @@ if __name__ == '__main__':
 
     labels = np.random.randint(0, _NUM_CLASSES, size=(batch_size,))
 
-    ##Run Session on nGraph
+    ##Run Session on OpenVINO
     with tf.compat.v1.Session(
             config=tf.compat.v1.ConfigProto(
                 allow_soft_placement=True)) as sess_1:
-        print("Running on nGraph")
+        print("Running on OpenVINO")
 
         sess_1.run(init)
         if phase_training:

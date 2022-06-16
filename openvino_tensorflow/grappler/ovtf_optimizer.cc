@@ -33,7 +33,7 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-Status OVTFOptimizer::Init(
+Status OpenVINOGrapplerOptimizer::Init(
     const tensorflow::RewriterConfig_CustomGraphOptimizer* config) {
   const auto params = config->parameter_map();
   for (auto i : params) {
@@ -44,10 +44,10 @@ Status OVTFOptimizer::Init(
   return Status::OK();
 }
 
-Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
+Status OpenVINOGrapplerOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                                const tensorflow::grappler::GrapplerItem& item,
                                GraphDef* output) {
-  OVTF_VLOG(5) << "OVTF_OPTIMIZER: grappler item id " << item.id;
+  OVTF_VLOG(5) << "OpenVINOGrapplerOptimizer: grappler item id " << item.id;
 
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
@@ -57,7 +57,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   FunctionLibraryDefinition flib(OpRegistry::Global(), item.graph.library());
   Graph graph(flib);
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
-  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+  OVTF_VLOG(1) << "OpenVINOGrapplerOptimizer: Successfully converted GraphDef to Graph";
 
   /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
   cluster->DisableDetailedStats(false);  // This enables tracing HW performance
@@ -97,8 +97,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
                         "OVTF Grappler optimizer pass will not run because ") +
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
-    NGraphClusterManager::EvictAllClusters();
-    NGraphClusterManager::EvictMRUClusters();
+    OpenVINOClusterManager::EvictAllClusters();
+    OpenVINOClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
     return Status::OK();
   }
@@ -159,7 +159,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   }
 
   //
-  // Encapsulation: Part that rewrites the graph for nGraph operation.
+  // Encapsulation: Part that rewrites the graph for OpenVINO operation.
   //
   // The part has several phases, each executed in sequence:
   //
@@ -243,7 +243,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   return Status::OK();
 }
 
-int OVTFOptimizer::FreshIndex() {
+int OpenVINOGrapplerOptimizer::FreshIndex() {
   mutex_lock l(s_serial_counter_mutex);
   return s_serial_counter++;
 }
@@ -263,7 +263,7 @@ class VerboseCustomGraphOptimizerRegistrar
 static VerboseCustomGraphOptimizerRegistrar OVTFOptimizationPass_Registrar(
     []() {
       VLOG(1) << "Instantiating CustomOptimizationPass object ovtf-optimizer";
-      return new OVTFOptimizer;
+      return new OpenVINOGrapplerOptimizer;
     },
     ("ovtf-optimizer"));
 

@@ -29,8 +29,8 @@ File: tensorflow/tensorflow/compiler/jit/deadness_analysis.h
 
 #include "openvino_tensorflow/ovtf_utils.h"
 
-#ifndef NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
-#define NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
+#ifndef OPENVINO_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
+#define OPENVINO_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
@@ -110,4 +110,4 @@ class DeadnessAnalysis {
 
 }  // namespace tensorflow
 
-#endif  // NGRAPH_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_
+#endif  // OPENVINO_TENSORFLOW_COMPILER_JIT_DEADNESS_ANALYSIS_H_

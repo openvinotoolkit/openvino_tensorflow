@@ -71,7 +71,7 @@ def main():
     ])
 
     # Print the version information
-    print("\nnGraph-TensorFlow Information ")
+    print("\nOpenVINO-TensorFlow Information ")
     if not os.path.exists(arguments.python_location):
         raise AssertionError("Path doesn't exist")
     python_exe = os.path.join(arguments.python_location, "python3")

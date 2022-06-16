@@ -29,7 +29,7 @@ using namespace std;
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-class NGraphRewritePass : public GraphOptimizationPass {
+class OpenVINORewritePass : public GraphOptimizationPass {
  public:
   virtual Status Run(const GraphOptimizationPassOptions& options) = 0;
 
@@ -45,11 +45,11 @@ class NGraphRewritePass : public GraphOptimizationPass {
   static mutex s_serial_counter_mutex;
 };
 
-int NGraphRewritePass::s_serial_counter = 0;
-mutex NGraphRewritePass::s_serial_counter_mutex;
+int OpenVINORewritePass::s_serial_counter = 0;
+mutex OpenVINORewritePass::s_serial_counter_mutex;
 
 //
-// Pass that rewrites the graph for nGraph operation.
+// Pass that rewrites the graph for OpenVINO operation.
 //
 // The pass has several phases, each executed in the below sequence:
 //
@@ -58,7 +58,7 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 //   3. Cluster Deassignment [deassign_clusters.cc]
 //   4. Cluster Encapsulation [encapsulate_clusters.cc]
 
-class NGraphEncapsulationPass : public NGraphRewritePass {
+class OpenVINOEncapsulationPass : public OpenVINORewritePass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
     bool rewrite_pass_enabled = api::IsRewritePassEnabled();
@@ -70,20 +70,20 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     // If we don't get a main graph, log that fact and bail.
     if (options.graph == nullptr) {
-      OVTF_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
+      OVTF_VLOG(0) << "OpenVINOEncapsulationPass: options.graph == nullptr";
       return Status::OK();
     }
 
     if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
       int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
       if (dyn_fallback == 0) {
-        NGraphClusterManager::DisableClusterFallback();
+        OpenVINOClusterManager::DisableClusterFallback();
       } else {
-        NGraphClusterManager::EnableClusterFallback();
+        OpenVINOClusterManager::EnableClusterFallback();
       }
     }
     bool dynamic_fallback_enabled =
-        NGraphClusterManager::IsClusterFallbackEnabled();
+        OpenVINOClusterManager::IsClusterFallbackEnabled();
 
     tensorflow::Graph* graph = options.graph->get();
     if (dynamic_fallback_enabled) {
@@ -91,7 +91,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
         int cluster;
         Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
         if (s == Status::OK()) {
-          if (NGraphClusterManager::CheckClusterFallback(cluster))
+          if (OpenVINOClusterManager::CheckClusterFallback(cluster))
             return Status::OK();
           else
             break;
@@ -135,12 +135,12 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                           (already_processed
                                ? "graph is already preprocessed"
                                : "openvino-tensorflow is disabled");
-      NGraphClusterManager::EvictAllClusters();
-      NGraphClusterManager::EvictMRUClusters();
+      OpenVINOClusterManager::EvictAllClusters();
+      OpenVINOClusterManager::EvictMRUClusters();
       return Status::OK();
     }
 
-    NGraphClusterManager::ClearMRUClusters();
+    OpenVINOClusterManager::ClearMRUClusters();
 
     // Now Process the Graph
 
@@ -220,5 +220,5 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 }  // namespace openvino_tensorflow
 
 REGISTER_OPTIMIZATION(OptimizationPassRegistry::POST_REWRITE_FOR_EXEC, 0,
-                      openvino_tensorflow::NGraphEncapsulationPass);
+                      openvino_tensorflow::OpenVINOEncapsulationPass);
 }  // namespace tensorflow
