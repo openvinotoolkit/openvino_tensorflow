@@ -405,8 +405,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         int64_t infer_duration_in_ms = 0;
 
         int64_t start_ns = profiler::GetCurrentTimeNanos();
-        ng_exec->Call(ng_inputs, ng_func_outputs, &infer_duration_in_ms,
-                      multi_req_execution);
+        ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
         int64_t duration_in_ms =
             (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;

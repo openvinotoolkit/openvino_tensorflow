@@ -52,7 +52,7 @@ void IE_VADM_Engine::infer(
     std::vector<std::shared_ptr<IETensor>>& outputs,
     std::vector<std::string>& output_names,
     std::vector<std::shared_ptr<IETensor>>& hoisted_params,
-    std::vector<std::string>& param_names, int64_t* infer_duration_in_ms) {
+    std::vector<std::string>& param_names) {
   // Batch size is 0 and the number of requests is 1 when
   // multi request execution is disabled.
   int num_req = 1;
