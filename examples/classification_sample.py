@@ -203,8 +203,6 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
-        model = ovtf.optimize_graph_with_openvino_v2(model_file, t)
-
         # Warmup
         if image_id == 0:
             results = model(t)
