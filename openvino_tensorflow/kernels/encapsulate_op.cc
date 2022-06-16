@@ -416,7 +416,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         // executing it here, however for Grappler pass the TF compute cost is
         // already calculate during initial optimize pass, and is readily
         // available for use
-        if (api::IsRewritePassEnabled()) {
+        if (api::IsRewritePassEnabled()) {  // Rewrite Pass
           if (device == "CPU") {
             s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
             // Run warmup TF run, and enable the proper TF timing run for the
@@ -427,7 +427,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
               throw std::runtime_error("Falling back to native TF Runtime.");
             }
           }
-        } else {
+        } else {  // Grappler Pass
           int64_t overall_duration_in_ms =
               (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
 
@@ -435,7 +435,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                        << m_cluster_cost_in_ms << " ms.";
 
           // ignore warmup iteration while comparing cluster costs
-          if ((m_iter > 1) && (overall_duration_in_ms > m_cluster_cost_in_ms))
+          if ((NGraphClusterManager::IsClusterFallbackEnabled() && 
+                (m_iter > 1) && (overall_duration_in_ms > m_cluster_cost_in_ms))
             throw std::runtime_error(
                 "Falling back to native TF as OVTF runtime is costlier.");
         }
