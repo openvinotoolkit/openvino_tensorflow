@@ -129,7 +129,7 @@ class NGraphExecTest : public ::testing::Test {
 
   void expect_const_count_ngfunc(const Graph& g, int expected) {
     std::vector<TensorShape> tf_input_shapes;
-    shared_ptr<ov::Model> func;
+    shared_ptr<ov::Model> func = nullptr;
     ASSERT_OK(TranslateTFGraphNoStatic(tf_input_shapes, g, func));
     int numconst = 0;
     for (const auto& node : func->get_ops()) {
@@ -154,7 +154,7 @@ TEST_F(NGraphExecTest, Axpy) {
   input_shapes.push_back(x.shape());
   input_shapes.push_back(y.shape());
 
-  shared_ptr<ov::Model> ng_function;
+  shared_ptr<ov::Model> ng_function = nullptr;
   ASSERT_OK(TranslateTFGraphNoStatic(input_shapes, input_graph, ng_function));
 
   // Create the nGraph backend
