@@ -8,21 +8,18 @@
 from tools.build_utils import *
 
 
-def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
-                  disable_cpp_api):
+def version_check():
     # Check pre-requisites
-    if use_prebuilt_tensorflow and not disable_cpp_api:
-        # Check if the gcc version is at least 5.3.0
-        if (platform.system() != 'Darwin' and platform.system() != 'Windows'):
-            gcc_ver_list = get_gcc_version()
-            gcc_ver = float(".".join(gcc_ver_list[:2]))
-            gcc_desired_version = 5.3
-            if gcc_ver < gcc_desired_version:
-                raise Exception(
-                    "Need GCC " + str(gcc_desired_version) +
-                    " or newer to build using prebuilt TensorFlow\n"
-                    "Gcc version installed: " + '.'.join(gcc_ver_list) + "\n"
-                    "To build from source omit `use_prebuilt_tensorflow`")
+
+    # Check if the gcc version is at least 5.3.0
+    if (platform.system() != 'Darwin' and platform.system() != 'Windows'):
+        gcc_ver_list = get_gcc_version()
+        gcc_ver = float(".".join(gcc_ver_list[:2]))
+        gcc_desired_version = 5.3
+        if gcc_ver < gcc_desired_version:
+            raise Exception("Need GCC " + str(gcc_desired_version) +
+                            " or newer to build using prebuilt TensorFlow\n"
+                            "Gcc version installed: " + '.'.join(gcc_ver_list))
     # Check cmake version
     cmake_ver_list = get_cmake_version()
     cmake_ver = float(".".join(cmake_ver_list[:2]))
@@ -32,14 +29,6 @@ def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                         str(cmake_desired_version) + " \n"
                         "Got: " + '.'.join(cmake_ver_list))
 
-    if not use_tensorflow_from_location and not disable_cpp_api and not use_prebuilt_tensorflow:
-        # Check bazel version
-        bazel_kind, bazel_ver = get_bazel_version()
-        got_correct_bazel_version = bazel_kind == 'Bazelisk version'
-        if (not got_correct_bazel_version and int(bazel_ver[0]) < 2):
-            raise Exception("Need bazel version >= 2.0.0 \n" + "Got: " +
-                            '.'.join(bazel_ver))
-
 
 def main():
     '''
@@ -47,7 +36,7 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.8.0"
+    tf_version = "v2.9.1"
     ovtf_version = "v2.0.0"
     use_intel_tf = False
 
@@ -104,9 +93,7 @@ def main():
 
     parser.add_argument(
         '--use_openvino_from_location',
-        help=
-        "Use OpenVINO from a directory where it was already built and stored.\n"
-        "NOTE: This location is expected to be populated by build_ov.py\n",
+        help="Use OpenVINO from a directory where it is installed.",
         action="store",
         default='')
 
@@ -117,15 +104,10 @@ def main():
         action="store_true")
 
     parser.add_argument(
-        '--disable_cpp_api',
-        help="Disables C++ API, unit tests and examples\n",
-        action="store_true")
-
-    parser.add_argument(
         '--cxx11_abi_version',
         help="Desired version of ABI to be used while building Tensorflow, \n" +
         "OpenVINO integration with TensorFlow, and OpenVINO libraries",
-        default='0')
+        default='1')
 
     parser.add_argument(
         '--resource_usage_ratio',
@@ -157,12 +139,21 @@ def main():
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
-    if arguments.cxx11_abi_version == "1" and not arguments.build_tf_from_source:
+    tf_maj_version = tf_version.split(".")[0]
+    tf_min_version = int(arguments.tf_version.split(".")[1])
+
+    if tf_maj_version == "v2" and tf_min_version > 8:
+        allowed_cxx11_abi_version = "1"
+    else:
+        allowed_cxx11_abi_version = "0"
+
+    if not (arguments.cxx11_abi_version == allowed_cxx11_abi_version or
+            arguments.use_tensorflow_from_location):
         if not (tf_version == arguments.tf_version):
             raise AssertionError(
                 "Currently ABI1 Tensorflow %s wheel is unavailable. " %
                 arguments.tf_version +
-                "Please consider adding --build_tf_from_source")
+                "Please consider adding --use_tensorflow_from_location")
 
     # Update the build time tensorflow version with the user specified version
     tf_version = arguments.tf_version
@@ -182,11 +173,6 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.use_tensorflow_from_location != '' and
-            arguments.build_tf_from_source):
-        raise AssertionError(
-            "\"use_tensorflow_from_location\" and \"build_tf_from_source\" "
-            "cannot be used together.")
     if (arguments.openvino_version not in ["master", "2022.1.0"]):
         raise AssertionError(
             "Only 2022.1.0 OpenVINO version and master branch are supported")
@@ -206,9 +192,7 @@ def main():
                  arguments.openvino_version + \
                     " does not match the version specified in use_openvino_from_location")
 
-    version_check((not arguments.build_tf_from_source),
-                  (arguments.use_tensorflow_from_location != ''),
-                  arguments.disable_cpp_api)
+    version_check()
 
     if arguments.use_tensorflow_from_location != '':
         if (platform.system() == 'Windows'):
@@ -349,10 +333,6 @@ def main():
             command_executor(
                 ["pip", "install", "--force-reinstall", "-U", tf_whl])
 
-            #TODO: Remove this once protobuf version error is fixed in TF-2.8
-            command_executor([
-                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
-            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -375,156 +355,74 @@ def main():
             raise AssertionError("Path doesn't exist {0}".format(cwd))
         os.chdir(cwd)
     else:
-        if not arguments.build_tf_from_source:
-            print("Install TensorFlow")
-            # get the python version tag
-            tags = next(sys_tags())
-            if arguments.cxx11_abi_version == "0":
-                if (platform.system() == "Windows"):
-                    if tags.interpreter == "cp39":
-                        command_executor([
-                            "pip", "install", "--force-reinstall",
-                            "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow-2.8.0-cp39-cp39-win_amd64.whl"
-                        ])
-                    else:
-                        raise AssertionError(
-                            "Only python39 is supported on Windows")
+        print("Install TensorFlow")
+        # get the python version tag
+        tags = next(sys_tags())
 
-                else:
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "tensorflow==" + tf_version
-                    ])
-                    #TODO: Remove this once protobuf version error is fixed in TF-2.8
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "protobuf==" + "3.20.1"
-                    ])
-            elif arguments.cxx11_abi_version == "1":
-                if tags.interpreter == "cp37":
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
-                    ])
-                if tags.interpreter == "cp38":
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
-                    ])
-                if tags.interpreter == "cp39":
-                    command_executor([
-                        "pip", "install", "--force-reinstall",
-                        "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
-                    ])
-                # ABI 1 TF required latest numpy
-                command_executor(
-                    ["pip", "install", "--force-reinstall", "-U numpy"])
-
-            #TODO: Remove this once protobuf version error is fixed in TF-2.8
-            command_executor([
-                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
-            ])
-            tf_cxx_abi = get_tf_cxxabi()
-
-            if not (arguments.cxx11_abi_version == tf_cxx_abi):
-                raise AssertionError(
-                    "Desired ABI version and tensorflow library installed with "
-                    "pip are incompatible")
-
-            tf_src_dir = os.path.join(artifacts_location, "tensorflow")
-            print("TF_SRC_DIR: ", tf_src_dir)
-            # Download TF source for enabling TF python tests
-            pwd_now = os.getcwd()
-            if not os.path.exists(artifacts_location):
-                raise AssertionError(
-                    "Path doesn't exist {0}".format(artifacts_location))
-            os.chdir(artifacts_location)
-            print("DOWNLOADING TF: PWD", os.getcwd())
-            download_repo("tensorflow",
-                          "https://github.com/tensorflow/tensorflow.git",
-                          tf_version)
-            print("Using TensorFlow version", tf_version)
-            if not os.path.exists(pwd_now):
-                raise AssertionError("Path doesn't exist {0}".format(pwd_now))
-            os.chdir(pwd_now)
-            # Finally, copy the libtensorflow_framework.so to the artifacts
-            if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
-                tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
+        if (platform.system() == "Windows"):
+            if tags.interpreter == "cp39":
+                command_executor([
+                    "pip", "install", "--force-reinstall",
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow-2.8.0-cp39-cp39-win_amd64.whl"
+                ])
             else:
-                tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
-            if (platform.system() == 'Darwin'):
-                if (tf_version.startswith("v1.") or
-                    (tf_version.startswith("1."))):
-                    tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
-                else:
-                    tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
-            elif (platform.system() == 'Windows'):
-                tf_fmwk_lib_name = '_pywrap_tensorflow_internal.lib'
-                tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'
+                raise AssertionError("Only python39 is supported on Windows")
 
-            import tensorflow as tf
-            tf_lib_dir = tf.sysconfig.get_lib()
-            if (platform.system() == 'Windows'):
-                tf_lib_file = os.path.join(tf_lib_dir, "python",
-                                           tf_fmwk_lib_name)
-                tf_dll_file = os.path.join(tf_lib_dir, "python",
-                                           tf_fmwk_dll_name)
-            else:
-                tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
-            print("SYSCFG LIB: ", tf_lib_file)
-            dst_dir = os.path.join(artifacts_location, "tensorflow")
-            if not os.path.exists(dst_dir):
-                raise AssertionError(
-                    "Directory doesn't exist {0}".format(dst_dir))
-            if not os.path.isdir(dst_dir):
-                os.mkdir(dst_dir)
-            dst = os.path.join(dst_dir, tf_fmwk_lib_name)
-            shutil.copyfile(tf_lib_file, dst)
-            # copy pyd file for windows
-            if (platform.system() == 'Windows'):
-                dst = os.path.join(dst_dir, tf_fmwk_dll_name)
-                shutil.copyfile(tf_dll_file, dst)
         else:
-            print("Building TensorFlow from source")
-            if (platform.system() == 'Windows'):
-                os.chdir(artifacts_location)
-            # Download TensorFlow
-            download_repo("tensorflow",
-                          "https://github.com/tensorflow/tensorflow.git",
-                          tf_version)
+            command_executor([
+                "pip", "install", "--force-reinstall",
+                "tensorflow==" + tf_version
+            ])
 
-            tf_src_dir = os.path.join(os.getcwd(), "tensorflow")
-            print("TF_SRC_DIR: ", tf_src_dir)
+        tf_src_dir = os.path.join(artifacts_location, "tensorflow")
+        print("TF_SRC_DIR: ", tf_src_dir)
+        # Download TF source for enabling TF python tests
+        pwd_now = os.getcwd()
+        if not os.path.exists(artifacts_location):
+            raise AssertionError(
+                "Path doesn't exist {0}".format(artifacts_location))
+        os.chdir(artifacts_location)
+        print("DOWNLOADING TF: PWD", os.getcwd())
+        download_repo("tensorflow",
+                      "https://github.com/tensorflow/tensorflow.git",
+                      tf_version)
+        print("Using TensorFlow version", tf_version)
+        if not os.path.exists(pwd_now):
+            raise AssertionError("Path doesn't exist {0}".format(pwd_now))
+        os.chdir(pwd_now)
+        # Finally, copy the libtensorflow_framework.so to the artifacts
+        if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
+            tf_fmwk_lib_name = 'libtensorflow_framework.so.1'
+        else:
+            tf_fmwk_lib_name = 'libtensorflow_framework.so.2'
+        if (platform.system() == 'Darwin'):
+            if (tf_version.startswith("v1.") or (tf_version.startswith("1."))):
+                tf_fmwk_lib_name = 'libtensorflow_framework.1.dylib'
+            else:
+                tf_fmwk_lib_name = 'libtensorflow_framework.2.dylib'
+        elif (platform.system() == 'Windows'):
+            tf_fmwk_lib_name = '_pywrap_tensorflow_internal.lib'
+            tf_fmwk_dll_name = '_pywrap_tensorflow_internal.pyd'
 
-            # Build TensorFlow
-            build_tensorflow(
-                tf_version,
-                "tensorflow",
-                artifacts_location,
-                target_arch,
-                verbosity,
-                use_intel_tf,
-                arguments.cxx11_abi_version,
-                resource_usage_ratio=float(arguments.resource_usage_ratio))
-
-            # Now build the libtensorflow_cc.so - the C++ library
-            build_tensorflow_cc(tf_version, tf_src_dir, artifacts_location,
-                                target_arch, verbosity, use_intel_tf,
-                                arguments.cxx11_abi_version)
-
-            if (platform.system() == 'Windows'):
-                os.chdir(build_dir_abs)
-
-            tf_cxx_abi = install_tensorflow(venv_dir, artifacts_location)
-
-            # This function copies the .so files from
-            # use_tensorflow_from_location/artifacts/tensorflow to
-            # artifacts/tensorflow
-            cwd = os.getcwd()
-            os.chdir(tf_src_dir)
-            dst_dir = os.path.join(artifacts_location, "tensorflow")
-            copy_tf_to_artifacts(tf_version, dst_dir, None, use_intel_tf)
-            os.chdir(cwd)
+        import tensorflow as tf
+        tf_lib_dir = tf.sysconfig.get_lib()
+        if (platform.system() == 'Windows'):
+            tf_lib_file = os.path.join(tf_lib_dir, "python", tf_fmwk_lib_name)
+            tf_dll_file = os.path.join(tf_lib_dir, "python", tf_fmwk_dll_name)
+        else:
+            tf_lib_file = os.path.join(tf_lib_dir, tf_fmwk_lib_name)
+        print("SYSCFG LIB: ", tf_lib_file)
+        dst_dir = os.path.join(artifacts_location, "tensorflow")
+        if not os.path.exists(dst_dir):
+            raise AssertionError("Directory doesn't exist {0}".format(dst_dir))
+        if not os.path.isdir(dst_dir):
+            os.mkdir(dst_dir)
+        dst = os.path.join(dst_dir, tf_fmwk_lib_name)
+        shutil.copyfile(tf_lib_file, dst)
+        # copy pyd file for windows
+        if (platform.system() == 'Windows'):
+            dst = os.path.join(dst_dir, tf_fmwk_dll_name)
+            shutil.copyfile(tf_dll_file, dst)
 
     # OpenVINO Build
     if arguments.use_openvino_from_location != "":
@@ -603,27 +501,8 @@ def main():
                 "-DTF_SRC_DIR=" + os.path.abspath(
                     arguments.use_tensorflow_from_location + '/tensorflow')
             ])
-    else:
-        if not arguments.disable_cpp_api and arguments.build_tf_from_source:
-            print("TF_SRC_DIR: ", tf_src_dir)
-            if (platform.system() == 'Windows'):
-                openvino_tf_cmake_flags.extend(
-                    ["-DTF_SRC_DIR=" + tf_src_dir.replace("\\", "\\\\")])
-            else:
-                openvino_tf_cmake_flags.extend(["-DTF_SRC_DIR=" + tf_src_dir])
 
     openvino_tf_cmake_flags.extend(["-DUNIT_TEST_ENABLE=ON"])
-    if not arguments.disable_cpp_api and arguments.build_tf_from_source:
-        if (platform.system() == 'Windows'):
-            openvino_tf_cmake_flags.extend([
-                "-DUNIT_TEST_TF_CC_DIR=" + ((os.path.join(
-                    artifacts_location, "tensorflow")).replace("\\", "\\\\"))
-            ])
-        else:
-            openvino_tf_cmake_flags.extend([
-                "-DUNIT_TEST_TF_CC_DIR=" + os.path.join(artifacts_location,
-                                                        "tensorflow")
-            ])
 
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
@@ -671,13 +550,7 @@ def main():
     #       3. OR build_tf_from_source is defined
     # 4. use_tensorflow_from_location is defined
     if arguments.use_tensorflow_from_location == '':
-        # Case 1
-        if not arguments.build_tf_from_source:
-            # Case 2
-            base_dir = None
-        else:
-            # Case 3
-            base_dir = build_dir_abs
+        base_dir = None
     else:
         # Case 4
         base_dir = arguments.use_tensorflow_from_location
