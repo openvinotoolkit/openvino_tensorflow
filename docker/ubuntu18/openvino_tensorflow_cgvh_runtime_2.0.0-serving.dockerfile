@@ -18,7 +18,7 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ARG TF_VERSION="v2.8.0"
 ARG OPENVINO_VERSION="2022.1.0"
-ARG OVTF_BRANCH="releases/2.0.0"
+ARG OVTF_BRANCH="tf-serving"
 
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -56,9 +56,9 @@ RUN python3 build_ovtf.py \
     --resource_usage_ratio=1.0;
 
 # Run Unit Tests
-RUN source build_cmake/venv-tf-py3/bin/activate && \
-    source ${INTEL_OPENVINO_DIR}/setupvars.sh && \
-    python3 test_ovtf.py
+# RUN source build_cmake/venv-tf-py3/bin/activate && \
+#     source ${INTEL_OPENVINO_DIR}/setupvars.sh && \
+#     python3 test_ovtf.py
 
 CMD ["/bin/bash"]
 
