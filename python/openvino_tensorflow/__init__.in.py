@@ -238,12 +238,29 @@ if ovtf_classic_loaded:
                                         output_node_names,
                                         ):
         """
+        Rewrites the tf.Graph of the frozen model with the OpenVINOGrapplerOptimizer.
+
+        Example usage:
+
+        >>> import openvino_tensorflow as ovtf
+        >>> pb_file = "inception_v3_2016_08_28_frozen.pb"
+        >>> output_names = ['InceptionV3/Predictions/Reshape_1']
+        >>> model = ovtf.optimize_graph_with_openvino_tf1(pb_file, output_names)
+        >>> with tf.compat.v1.Session() as sess:
+              prob_tensor = tf.import_graph_def(model, name='', return_elements=output_names)
+              preds = sess.run(prob_tensor, tf_inputs)
         
         Args:
+          frozen_model_file: Path to the frozen model file containing the graphdef to optimize
+          output_node_names: A list of output node names, which will be used as fetch nodes while 
+                             creating the GrapplerItem object
 
         Raises:
-
+          AssertionError: If the frozen model path is invalid
+          AssertionError: If a backend other than CPU is used
+        
         Returns:
+          The optimized GraphDef
         """
 
         if not os.path.exists(frozen_model_file):
