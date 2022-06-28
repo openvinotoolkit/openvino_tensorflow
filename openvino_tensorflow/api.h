@@ -49,6 +49,9 @@ extern EXPORT_SYMBOL const char* get_disabled_ops();
 extern EXPORT_SYMBOL void enable_dynamic_fallback();
 extern EXPORT_SYMBOL void disable_dynamic_fallback();
 
+extern EXPORT_SYMBOL void disable_rewrite_pass();
+extern EXPORT_SYMBOL bool is_rewrite_pass_enabled();
+
 extern EXPORT_SYMBOL bool export_ir(const char* output_dir, char** cluster_info,
                                     char** err_msg);
 }
@@ -72,6 +75,9 @@ extern void SetDisabledOps(string);
 
 extern void EnableDynamicFallback();
 extern void DisableDynamicFallback();
+
+extern void DisableRewritePass();
+extern bool IsRewritePassEnabled();
 
 extern bool ExportIR(const string& output_dir, string& cluster_info,
                      string& err_msg);

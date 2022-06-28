@@ -123,3 +123,12 @@ test_scatternd_update.*
 test_prod.*
 test_resize_to_dynamic_shape.*
 test_shared_const.*
+
+# NonZero type NonZero(op::v3) is not supported
+test_ctc_greedy_decoder.*
+test_fused_ctc_greedy_decoder.*
+
+# DT_DOUBLE is not supported on GPU
+test_expand_dims.TestExpandDims.test_expand_dims_float64
+test_reshape.TestReshape.test_reshape_float64
+test_tile.TestTile.test_tile_float64

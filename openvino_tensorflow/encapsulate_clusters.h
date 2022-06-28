@@ -89,6 +89,10 @@ class Encapsulator {
 
   std::set<int> cluster_indices_for_this_graph;
 
+  // A map from cluster indices to TF Profiled cumulative costs of nodes in the
+  // cluster
+  std::map<int, int64_t> cluster_cost_map_in_ms;
+
   static void AddInput(NodeDef* dst, StringPiece src_name, int src_slot);
 };
 

@@ -379,6 +379,9 @@ reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
 reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
 reduction_ops_test.MeanReductionTest.testUint8
 
+# NonZero type NonZero(op::v3) is not supported
+ctc_decoder_ops_test.CTCGreedyDecoderTest.testCTCGreedyDecoder
+
 # length of size_splits must sum to the value of the dimension along split_dim
 split_op_test.SplitOpTest.testSpecialCasesVariable
 split_op_test.SplitOpTest.testDegenerateVariable

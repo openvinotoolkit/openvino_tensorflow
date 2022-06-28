@@ -51,14 +51,6 @@ int cxx11_abi_flag() {
 #endif
 }
 
-bool is_grappler_enabled() {
-#if defined(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
-  return true;
-#else
-  return false;
-#endif
-}
-
 const char* tf_version() { return (TF_VERSION_STRING); }
 
 }  // namespace openvino_tensorflow

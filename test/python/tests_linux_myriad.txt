@@ -20,6 +20,8 @@ test*
 [RUN]
 
 test_api.*
+test_batchmatmul.*
+test_batchmatmulv2.*
 test_cast.*
 test_const.*
 test_conv2D_KernelChecks.*
@@ -28,3 +30,4 @@ test_maxpool3d.*
 test_floor.*
 test_scatternd_update.*
 test_avgpool3d.*
+test_nms.*

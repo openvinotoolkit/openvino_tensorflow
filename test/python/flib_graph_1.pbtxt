@@ -108,6 +108,12 @@ node {
       i: 0
     }
   }
+  attr {
+    key: "cluster_cost"
+    value {
+      i: 50
+    }
+  }  
 }
 node {
   name: "add_1"

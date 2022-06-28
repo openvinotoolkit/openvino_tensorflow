@@ -32,10 +32,6 @@ EXPORT_SYMBOL const char* openvino_version();
 // _GLIBCXX_USE_CXX11_ABI set during the compilation time
 EXPORT_SYMBOL int cxx11_abi_flag();
 
-// Returns true when openvino_tensorflow is using Grappler optimizer APIs for
-// graph rewriting
-EXPORT_SYMBOL bool is_grappler_enabled();
-
 // Returns the tensorflow version
 EXPORT_SYMBOL const char* tf_version();
 }

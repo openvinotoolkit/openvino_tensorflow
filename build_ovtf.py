@@ -7,10 +7,6 @@
 
 from tools.build_utils import *
 
-# grappler related defaults
-builder_version = 0.50
-flag_string_map = {True: 'YES', False: 'NO'}
-
 
 def version_check(use_prebuilt_tensorflow, use_tensorflow_from_location,
                   disable_cpp_api):
@@ -91,12 +87,6 @@ def main():
         "Note: in this case C++ API, unit tests and examples will be built for "
         + "OpenVINO integration with TensorFlow",
         action="store_true")
-
-    if (builder_version > 0.50):
-        parser.add_argument(
-            '--use_grappler_optimizer',
-            help="Use Grappler optimizer instead of the optimization passes\n",
-            action="store_true")
 
     parser.add_argument(
         '--artifacts_dir',
@@ -358,6 +348,11 @@ def main():
             # Install the found TF whl file
             command_executor(
                 ["pip", "install", "--force-reinstall", "-U", tf_whl])
+
+            #TODO: Remove this once protobuf version error is fixed in TF-2.8
+            command_executor([
+                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
+            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -400,6 +395,11 @@ def main():
                         "pip", "install", "--force-reinstall",
                         "tensorflow==" + tf_version
                     ])
+                    #TODO: Remove this once protobuf version error is fixed in TF-2.8
+                    command_executor([
+                        "pip", "install", "--force-reinstall",
+                        "protobuf==" + "3.20.1"
+                    ])
             elif arguments.cxx11_abi_version == "1":
                 if tags.interpreter == "cp37":
                     command_executor([
@@ -420,6 +420,10 @@ def main():
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
 
+            #TODO: Remove this once protobuf version error is fixed in TF-2.8
+            command_executor([
+                "pip", "install", "--force-reinstall", "protobuf==" + "3.20.1"
+            ])
             tf_cxx_abi = get_tf_cxxabi()
 
             if not (arguments.cxx11_abi_version == tf_cxx_abi):
@@ -621,12 +625,6 @@ def main():
                                                         "tensorflow")
             ])
 
-    if (builder_version > 0.50):
-        openvino_tf_cmake_flags.extend([
-            "-DOPENVINO_TF_USE_GRAPPLER_OPTIMIZER=" +
-            flag_string_map[arguments.use_grappler_optimizer]
-        ])
-
     if arguments.disable_packaging_openvino_libs:
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
     if arguments.python_executable != '':
@@ -733,13 +731,6 @@ def main():
     else:
         install_openvino_tf(tf_version, venv_dir,
                             os.path.join(artifacts_location, ov_tf_whl))
-
-    if builder_version > 0.50 and arguments.use_grappler_optimizer:
-        import tensorflow as tf
-        import openvino_tensorflow
-        if not openvino_tensorflow.is_grappler_enabled():
-            raise Exception(
-                "Build failed: 'use_grappler_optimizer' specified but not used")
 
     print('\033[1;32mBuild successful\033[0m')
     os.chdir(pwd)

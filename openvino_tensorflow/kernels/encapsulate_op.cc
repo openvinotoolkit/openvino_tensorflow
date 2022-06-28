@@ -7,6 +7,7 @@
 #include <mutex>
 #include <utility>
 
+#include "openvino_tensorflow/api.h"
 #include "tensorflow/core/common_runtime/dma_helper.h"
 #include "tensorflow/core/common_runtime/function.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
@@ -24,6 +25,7 @@
 #include "tensorflow/core/graph/graph_constructor.h"
 #endif
 #include "tensorflow/core/graph/algorithm.h"
+#include "tensorflow/core/profiler/utils/time_utils.h"
 #include "tensorflow/core/public/session.h"
 
 #include "logging/ovtf_log.h"
@@ -70,14 +72,34 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
+  int64_t m_cluster_cost_in_ms;
+  static std::map<size_t, bool> s_tf_timing_run_enabled_map;
+  static std::map<size_t, float> s_ovtf_cluster_timings_map;
+  int64_t m_iter;
+  bool m_disable_cost_based_assignment;
 };
+
+// Static initializers
+std::map<size_t, bool> NGraphEncapsulateOp::s_tf_timing_run_enabled_map;
+std::map<size_t, float> NGraphEncapsulateOp::s_ovtf_cluster_timings_map;
 
 NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     : OpKernel(ctx), m_graph(OpRegistry::Global()) {
   OVTF_VLOG(1) << "Create Executor " << name();
   m_name = name();
+  m_iter = 0;
+  // if this is set to 1, run time cost based assignment of clusters will be
+  // disabled
+  m_disable_cost_based_assignment = 0;
+  if (std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != nullptr) {
+    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT"))) {
+      m_disable_cost_based_assignment = 1;
+    }
+  }
 
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
+  // Disable TF timing run for the current cluster by default
+  s_tf_timing_run_enabled_map[m_cluster_id] = false;
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
 
@@ -110,6 +132,11 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     GraphConstructorOptions opts;
     opts.allow_internal_ops = true;
     OP_REQUIRES_OK(ctx, ConvertGraphDefToGraph(opts, *graph_def, &m_graph));
+  }
+
+  if (!api::IsRewritePassEnabled()) {
+    OP_REQUIRES_OK(
+        ctx, ctx->GetAttr<int64_t>("cluster_cost", &m_cluster_cost_in_ms));
   }
 
   //
@@ -179,6 +206,26 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
+  m_iter++;
+  // This snippet is executed only when Rewrite pass is enabled
+  if (api::IsRewritePassEnabled() &&
+      s_tf_timing_run_enabled_map[m_cluster_id]) {
+    // Measure the timing of cluster through force TF run
+    int64_t start_ns = profiler::GetCurrentTimeNanos();
+    OP_REQUIRES_OK(ctx, Fallback(ctx));
+    int64_t duration_in_ms = (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "Iter: " << m_iter;
+    OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took " << duration_in_ms
+                 << " ms.";
+    // Restore the fallback to false, if TF is taking more time than OVTF for
+    // this cluster
+    if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
+      NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
+    }
+    // Disable timing run for this cluster
+    s_tf_timing_run_enabled_map[m_cluster_id] = false;
+    return;
+  }
 
   if (NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     OP_REQUIRES_OK(ctx, Fallback(ctx));
@@ -362,7 +409,43 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
+        int64_t start_ns = profiler::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
+        int64_t duration_in_ms =
+            (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+        OVTF_VLOG(1) << "Iter: " << m_iter;
+        OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
+                     << duration_in_ms << " ms.";
+
+        if (!m_disable_cost_based_assignment) {
+          // For rewrite pass the TF compute cost for the cluster is calculated
+          // by
+          // executing it here, however for Grappler pass the TF compute cost is
+          // already calculate during initial optimize pass, and is readily
+          // available for use
+          if (api::IsRewritePassEnabled()) {
+            if (device == "CPU") {
+              // Run warmup TF run, and enable the proper TF timing run for the
+              // next iteration through a separate section at the top pf compute
+              if (NGraphClusterManager::IsClusterFallbackEnabled() &&
+                  m_iter == 2) {
+                s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
+                s_tf_timing_run_enabled_map[m_cluster_id] = true;
+                throw std::runtime_error(
+                    "Falling back to native TF Runtime for TF warm-up run.");
+              }
+            }
+          } else { // Grappler Pass
+            OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
+                         << m_cluster_cost_in_ms << " ms.";
+            // ignore warmup iteration while comparing cluster costs
+            if ((NGraphClusterManager::IsClusterFallbackEnabled()) && 
+                  (m_iter > 1) && (duration_in_ms > m_cluster_cost_in_ms))
+              throw std::runtime_error(
+                  "Falling back to native TF as OVTF runtime is costlier.");
+          }
+        }
+
       } catch (const std::exception& exp) {
         string status_string = "Caught exception while executing cluster " +
                                to_string(m_cluster_id) + ": " +
@@ -563,7 +646,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         input_shapes, static_input_map, &m_graph, m_name, ng_function,
         ng_result_list, tf_input_tensors));
     util::DumpNGGraph(ng_function, m_name);
-
     std::vector<ov::Shape> ng_output_shapes;
     ng_output_shapes.resize(ng_result_list.size());
     for (int i = 0; i < ng_result_list.size(); i++) {
@@ -573,7 +655,6 @@ Status NGraphEncapsulateOp::GetExecutable(
         ng_output_shapes[i] = ng_result_list[i]->get_shape();
       }
     }
-
     // Evict the cache if the number of elements exceeds the limit
     std::shared_ptr<Executable> evicted_ng_exec;
     const char* cache_depth_specified =
