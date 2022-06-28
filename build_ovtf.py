@@ -141,6 +141,7 @@ def main():
 
     tf_maj_version = tf_version.split(".")[0]
     tf_min_version = int(arguments.tf_version.split(".")[1])
+    tf_patch_version = int(arguments.tf_version.split(".")[2])
 
     if tf_maj_version == "v2" and tf_min_version > 8:
         allowed_cxx11_abi_version = "1"
@@ -303,7 +304,8 @@ def main():
         if (platform.system() == 'Windows'):
             tf_whl = os.path.abspath(
                 arguments.use_tensorflow_from_location +
-                "\\\\tensorflow\\\\tensorflow-2.8.0-cp39-cp39-win_amd64.whl")
+                "\\\\tensorflow\\\\tensorflow-{}.{}.{}-cp39-cp39-win_amd64.whl".format(
+                    tf_maj_version[1], tf_min_version, tf_patch_version))
             command_executor([
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
