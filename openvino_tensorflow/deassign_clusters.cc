@@ -294,7 +294,7 @@ Status DeassignClusters(Graph* graph) {
 
   // Variable to store the min threshold for non trivial nodes count in a
   // cluster
-  int min_non_trivial_nodes;
+  int min_non_trivial_nodes = 6;
   // A map from cluster indices to TF Profiled cumulative costs of nodes in the
   // cluster
   std::vector<std::pair<int, int64_t>> cluster_cost_map_in_ms;
