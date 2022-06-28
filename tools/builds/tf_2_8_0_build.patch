@@ -1,8 +1,8 @@
 diff --git a/tensorflow/core/graph/graph.cc b/tensorflow/core/graph/graph.cc
-index ea5c789072c..378919e0e69 100644
+index 98f4f361ca3..bbce905f2df 100644
 --- a/tensorflow/core/graph/graph.cc
 +++ b/tensorflow/core/graph/graph.cc
-@@ -38,7 +38,7 @@ limitations under the License.
+@@ -39,7 +39,7 @@ limitations under the License.
  
  namespace tensorflow {
  
@@ -12,10 +12,10 @@ index ea5c789072c..378919e0e69 100644
  // Node
  Node::NodeClass Node::GetNodeClassForOp(const std::string& ts) {
 diff --git a/tensorflow/core/graph/graph.h b/tensorflow/core/graph/graph.h
-index 1474168683b..6149adb2c14 100644
+index decc54acc3a..270927782f0 100644
 --- a/tensorflow/core/graph/graph.h
 +++ b/tensorflow/core/graph/graph.h
-@@ -531,7 +531,7 @@ class Graph {
+@@ -539,7 +539,7 @@ class Graph {
    // Clone the current graph into a new one.
    std::unique_ptr<Graph> Clone();
  
@@ -25,10 +25,10 @@ index 1474168683b..6149adb2c14 100644
    // The GraphDef version range of this graph (see graph.proto).
    const VersionDef& versions() const;
 diff --git a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-index 47d9214b1cd..09513f9b38c 100644
+index ecf2312a36c..fa01e8dce45 100644
 --- a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
 +++ b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-@@ -276,6 +276,79 @@ def main():
+@@ -272,6 +272,87 @@ def main():
      def_fp.write("\t ?MaybeSavedModelDirectory@tensorflow@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
      def_fp.write("\t ?_TensorShapeProto_default_instance_@tensorflow@@3VTensorShapeProtoDefaultTypeInternal@1@A\n")
      def_fp.write("\t ?_GraphDef_default_instance_@tensorflow@@3VGraphDefDefaultTypeInternal@1@A\n")
@@ -104,7 +104,15 @@ index 47d9214b1cd..09513f9b38c 100644
 +    def_fp.write("\t ?begin@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?end@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?PrintToString@TextFormat@protobuf@google@@SA_NAEBVMessage@23@PEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
-+    def_fp.write("\t ?PrintDebugString@Message@protobuf@google@@QEBAXXZ\n")	
++    def_fp.write("\t ?PrintDebugString@Message@protobuf@google@@QEBAXXZ\n")
++    def_fp.write("\t ?_FunctionDefLibrary_default_instance_@tensorflow@@3VFunctionDefLibraryDefaultTypeInternal@1@A\n")
++    def_fp.write("\t ?RegisterOptimizerOrDie@CustomGraphOptimizerRegistry@grappler@tensorflow@@SAXAEBV?$function@$$A6APEAVCustomGraphOptimizer@grappler@tensorflow@@XZ@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@5@@Z\n")
++    def_fp.write("\t ?GenericSwap@internal@protobuf@google@@YAXPEAVMessageLite@23@0@Z\n")
++    def_fp.write("\t ?_StepStats_default_instance_@tensorflow@@3VStepStatsDefaultTypeInternal@1@A\n")
++    def_fp.write("\t ??0AnalyticalCostEstimator@grappler@tensorflow@@QEAA@PEAVCluster@12@_N1@Z\n")
++    def_fp.write("\t ?kEmptyGroup@container_internal@lts_20211102@absl@@3QBW4ctrl_t@123@B\n")
++    def_fp.write("\t ?_OpInfo_default_instance_@tensorflow@@3VOpInfoDefaultTypeInternal@1@A\n")
++    
  
      # Each symbols returned by undname matches the same position in candidates.
      # We compare on undname but use the decorated name from candidates.
