@@ -420,8 +420,7 @@ def main():
                 command_executor(
                     ["pip", "install", "--force-reinstall", "-U numpy"])
                 command_executor(
-                    ["pip", "install", "--force-reinstall", "protobuf==3.20.1"]
-                )
+                    ["pip", "install", "--force-reinstall", "protobuf==3.20.1"])
 
             #TODO: Remove this once protobuf version error is fixed in TF-2.8
             command_executor([
