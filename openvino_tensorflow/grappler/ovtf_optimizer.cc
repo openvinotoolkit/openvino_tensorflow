@@ -248,24 +248,7 @@ int OVTFOptimizer::FreshIndex() {
   return s_serial_counter++;
 }
 
-class VerboseCustomGraphOptimizerRegistrar
-    : public grappler::CustomGraphOptimizerRegistrar {
- public:
-  VerboseCustomGraphOptimizerRegistrar(
-      const grappler::CustomGraphOptimizerRegistry::Creator& cr,
-      const string& name)
-      : grappler::CustomGraphOptimizerRegistrar(cr, name) {
-    VLOG(1) << "Constructing a CustomOptimizationPass registration object for "
-            << name;
-  }
-};
-
-static VerboseCustomGraphOptimizerRegistrar OVTFOptimizationPass_Registrar(
-    []() {
-      VLOG(1) << "Instantiating CustomOptimizationPass object ovtf-optimizer";
-      return new OVTFOptimizer;
-    },
-    ("ovtf-optimizer"));
+REGISTER_GRAPH_OPTIMIZER_AS(OVTFOptimizer, "ovtf-optimizer");
 
 }  // end namespace openvino_tensorflow
 }  // end namespace tensorflow
