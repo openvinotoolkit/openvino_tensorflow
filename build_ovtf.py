@@ -37,7 +37,7 @@ def main():
 
     # Component versions
     tf_version = "v2.9.1"
-    ovtf_version = "v2.0.0"
+    ovtf_version = "v2.1.0"
     use_intel_tf = False
 
     # Command line parser options
