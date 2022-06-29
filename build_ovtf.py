@@ -304,8 +304,8 @@ def main():
         if (platform.system() == 'Windows'):
             tf_whl = os.path.abspath(
                 arguments.use_tensorflow_from_location +
-                "\\\\tensorflow\\\\tensorflow-{}.{}.{}-cp39-cp39-win_amd64.whl".format(
-                    tf_maj_version[1], tf_min_version, tf_patch_version))
+                "\\\\tensorflow\\\\tensorflow-{}.{}.{}-cp39-cp39-win_amd64.whl".
+                format(tf_maj_version[1], tf_min_version, tf_patch_version))
             command_executor([
                 "pip", "install", "--force-reinstall",
                 tf_whl.replace("\\", "\\\\")
@@ -560,15 +560,9 @@ def main():
     if base_dir != None:
         dest_dir = os.path.join(artifacts_location, "tensorflow")
         if (platform.system() == 'Windows'):
-            command_executor(
-                [
-                    'cp',
-                    '-r',
-                    base_dir +
-                    '\\\\tensorflow\\\\tensorflow\\\\python',  # base_dir + '\\\\artifacts\\\\tensorflow\\\\tensorflow\\\\python',
-                    dest_dir.replace("\\", "\\\\")
-                ],
-                verbose=True)
+            shutil.copytree(
+                os.path.join(base_dir, "tensorflow", "tensorflow", "python"),
+                os.path.join(dest_dir, "python"))
         else:
             command_executor([
                 'cp', '-r', base_dir + '/tensorflow/tensorflow/python', dest_dir
