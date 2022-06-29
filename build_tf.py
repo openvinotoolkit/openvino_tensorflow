@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.8.0")
+        default="v2.9.1")
     parser.add_argument(
         '--output_dir',
         type=str,
@@ -38,12 +38,19 @@ def main():
     parser.add_argument(
         '--cxx11_abi_version',
         help="Desired version of ABI to be used while building Tensorflow",
-        default='0')
+        default='1')
     parser.add_argument(
         '--resource_usage_ratio',
         help="Ratio of CPU / RAM resources to utilize during Tensorflow build",
         default=0.5)
     arguments = parser.parse_args()
+
+    # Check bazel version
+    bazel_kind, bazel_ver = get_bazel_version()
+    got_correct_bazel_version = bazel_kind == 'Bazelisk version'
+    if (not got_correct_bazel_version and int(bazel_ver[0]) < 2):
+        raise Exception("Need bazel version >= 2.0.0 \n" + "Got: " +
+                        '.'.join(bazel_ver))
 
     if not os.path.isdir(arguments.output_dir):
         os.makedirs(arguments.output_dir)
