@@ -4,7 +4,7 @@
 ARG OV_TAG="2022.1.0"
 
 ################################################################################
-FROM nncv-harbor.inn.intel.com/openvino/ubuntu18_dev:${OV_TAG}
+FROM openvino/ubuntu18_dev:${OV_TAG}
 ################################################################################
 
 LABEL description="This is the Ubuntu based dockerfile that builds CXX11 Python 3.x wheels \
