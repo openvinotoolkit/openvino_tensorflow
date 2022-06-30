@@ -21,9 +21,9 @@ RUN git clone https://github.com/tensorflow/tensorflow /tf/tensorflow/; \
     git checkout ${TF_TAG}
 
 # Build pip wheel
-# ubuntu18.04-gcc7_manylinux2010-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain is the release toolchain for CPU as well
-# https://github.com/tensorflow/tensorflow/blob/07606166fdec2b21d645322b5465d13809bf06de/.bazelrc#L442
-ARG CROSSTOOL_TOP="@ubuntu18.04-gcc7_manylinux2010-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain"
+# @ubuntu20.04-gcc9_manylinux2014-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain is the release toolchain for CPU as well
+# https://github.com/tensorflow/tensorflow/blob/07606166fdec2b21d645322b5465d13809bf06de/.bazelrc#L621
+ARG CROSSTOOL_TOP="@ubuntu20.04-gcc9_manylinux2014-cuda11.2-cudnn8.1-tensorrt7.2_config_cuda//crosstool:toolchain"
 
 RUN bazel --bazelrc=/usertools/cpu.bazelrc build \
     --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=1" \
@@ -44,7 +44,7 @@ RUN mkdir -p /tf/pkg/artifacts/tensorflow/; \
     cp --parents bazel-bin/tensorflow/libtensorflow_cc.so.2 /tf/pkg/tensorflow/; \
     cp --parents bazel-bin/tensorflow/core/kernels/{libtfkernel_sobol_op.so,libops_testutil.so} /tf/pkg/tensorflow/; \
     mv /tf/pkg/*whl /tf/pkg/artifacts/tensorflow/; \
-    rm /tf/pkg/audit.txt /tf/pkg/profile.json
+    rm /tf/pkg/audit.txt
 
 CMD ["/bin/bash"]
 
