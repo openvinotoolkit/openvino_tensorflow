@@ -435,12 +435,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                     "Falling back to native TF Runtime for TF warm-up run.");
               }
             }
-          } else { // Grappler Pass
+          } else {  // Grappler Pass
             OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took "
                          << m_cluster_cost_in_ms << " ms.";
             // ignore warmup iteration while comparing cluster costs
-            if ((NGraphClusterManager::IsClusterFallbackEnabled()) && 
-                  (m_iter > 1) && (duration_in_ms > m_cluster_cost_in_ms))
+            if ((NGraphClusterManager::IsClusterFallbackEnabled()) &&
+                (m_iter > 1) && (duration_in_ms > m_cluster_cost_in_ms))
               throw std::runtime_error(
                   "Falling back to native TF as OVTF runtime is costlier.");
           }

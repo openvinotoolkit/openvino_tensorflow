@@ -121,7 +121,8 @@ void CostAnalyzer::PreprocessCosts() {
     double analytical_compute_cost = analytical.compute_time();
     if ((analytical_compute_cost == 0) || (measured_cost == 0)) {
       // Negative infinity indicates unavailable data.
-      // If measured_cost is 0, the result is undefined so mark efficiency data unavailable
+      // If measured_cost is 0, the result is undefined so mark efficiency data
+      // unavailable
       perf->set_compute_efficiency(-INFINITY);
     } else {
       perf->set_compute_efficiency(analytical_compute_cost / measured_cost);
@@ -130,7 +131,8 @@ void CostAnalyzer::PreprocessCosts() {
     double analytical_memory_cost = analytical.memory_time();
     if ((analytical_compute_cost == 0) || (measured_cost == 0)) {
       // Negative infinity indicates unavailable data.
-      // If measured_cost is 0, the result is undefined so mark efficiency data unavailable
+      // If measured_cost is 0, the result is undefined so mark efficiency data
+      // unavailable
       perf->set_memory_efficiency(-INFINITY);
     } else {
       perf->set_memory_efficiency(analytical_memory_cost / measured_cost);
