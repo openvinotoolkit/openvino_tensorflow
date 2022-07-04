@@ -18,7 +18,7 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ARG TF_VERSION="v2.8.0"
 ARG OPENVINO_VERSION="2022.1.0"
-ARG OVTF_BRANCH="releases/2.1.0"
+ARG OVTF_BRANCH="releases/2.0.0"
 
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -106,7 +106,7 @@ RUN bazel clean --expunge --color=yes && \
     rm -rf /root/.cache
 
 ################################################################################
-FROM openvino/openvino_tensorflow_ubuntu18_runtime:2.1.0 AS runtime_serving
+FROM openvino/openvino_tensorflow_ubuntu18_runtime:2.0.0 AS runtime_serving
 ################################################################################
 
 LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
