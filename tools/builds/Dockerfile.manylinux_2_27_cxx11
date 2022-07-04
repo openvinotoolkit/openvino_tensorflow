@@ -19,8 +19,6 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ARG OVTF_BRANCH="releases/2.1.0"
 
-ADD rename_wheel.sh /
-
 RUN apt-get update; \
     apt install -y --no-install-recommends software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa; \

@@ -8,11 +8,7 @@ ARG PY_VERSION="python3.8"
 FROM tensorflow/build:latest-${PY_VERSION} as tensorflow_build
 ################################################################################
 
-<<<<<<< Updated upstream
-# Defaults to v2.9.1, can be changed with --build-arg TF_TAG
-=======
 # Defaults to v2.8.0, can be changed with --build-arg TF_TAG
->>>>>>> Stashed changes
 ARG TF_TAG="v2.9.1"
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
