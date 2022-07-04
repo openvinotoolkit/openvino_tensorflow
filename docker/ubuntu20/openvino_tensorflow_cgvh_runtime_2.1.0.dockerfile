@@ -16,9 +16,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
-ARG TF_VERSION="v2.8.0"
+ARG TF_VERSION="v2.9.1"
 ARG OPENVINO_VERSION="2022.1.0"
-ARG OVTF_BRANCH="releases/2.0.0"
+ARG OVTF_BRANCH="releases/2.1.0"
 
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -71,8 +71,6 @@ LABEL vendor="Intel Corporation"
 
 USER root
 
-ARG tf_package_url="https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.0.0/tensorflow_abi1-2.8.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl"
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
@@ -109,7 +107,7 @@ RUN chown openvino -R /home/openvino
 WORKDIR /home/openvino/openvino_tensorflow/
 
 RUN python3 -m pip install --upgrade pip; \
-    python3 -m pip install --no-cache-dir ${tf_package_url}; \
+    python3 -m pip install --no-cache-dir tensorflow==${TF_VERSION}; \
     python3 -m pip install --no-cache-dir build_artifacts/openvino_tensorflow*whl; \
     python3 -m pip install --no-cache-dir -r examples/requirements.txt; \
     python3 -m pip install --upgrade numpy jupyter;
