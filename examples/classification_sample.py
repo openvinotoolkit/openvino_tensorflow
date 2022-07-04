@@ -29,10 +29,9 @@ from __future__ import print_function
 
 import argparse
 import os
-# Enable these variables for runtime inference optimizations
+# Enable this variable for runtime inference optimizations
 os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
-os.environ[
-    "TF_ENABLE_ONEDNN_OPTS"] = "1"  # This needs to be set before importing TF
+
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
