@@ -202,9 +202,10 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
-        # Warmup
+        # Warmup iterations
         if image_id == 0:
-            results = model(t)
+            for _ in range(5):
+                results = model(t)
 
         # run
         start = time.time()

@@ -223,9 +223,10 @@ if __name__ == "__main__":
         img_resized = tf.convert_to_tensor(
             preprocess_image(image, (input_height, input_width)))
 
-        # Warmup
+        # Warmup iterations
         if image_id == 0:
-            detected_boxes = model(img_resized)
+            for _ in range(5):
+                detected_boxes = model(img_resized)
 
         # Run
         start = time.time()
