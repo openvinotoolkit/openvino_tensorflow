@@ -1,7 +1,6 @@
 # Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG TF_VERSION="v2.9.1"
 ARG TF_SERVING_VERSION="2.9.0"
 ARG OVTF_VERSION="2.1.0"
 
@@ -62,8 +61,6 @@ FROM ovtf_runtime AS ovtf_serving_runtime
 
 LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
 LABEL vendor="Intel Corporation"
-
-ARG TF_VERSION
 
 USER root
 
