@@ -198,8 +198,9 @@ int main(int argc, char** argv) {
   //  Warm up iterations
   std::vector<Tensor> outputs;
   tensorflow::openvino_tensorflow::Timer compilation_timer;
+  Status run_status;
   for (int warmup_iter = 0; warmup_iter < 5; warmup_iter++) {
-    Status run_status = session->Run({{input_layer, resized_tensor}},
+    run_status = session->Run({{input_layer, resized_tensor}},
                                      {output_layer}, {}, &outputs);
   }
   compilation_timer.Stop();
