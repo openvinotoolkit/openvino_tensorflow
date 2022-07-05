@@ -10,9 +10,6 @@ ARG OVTF_VERSION="2.1.0"
 FROM openvino/openvino_tensorflow_ubuntu18_runtime:${OVTF_VERSION} as ovtf_runtime
 #######################################################################################
 
-LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
-LABEL vendor="Intel Corporation"
-
 #######################################################################################
 FROM tensorflow/serving:${TF_SERVING_VERSION}-devel as build_serving
 #######################################################################################
@@ -82,10 +79,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install TF Serving pkg
 COPY --from=build_serving /usr/local/bin/tensorflow_model_server /usr/bin/tensorflow_model_server
-
-# install TensorFlow
-RUN python3.8 -m pip install --upgrade pip; \
-    python3.8 -m pip install --no-cache-dir tensorflow==${TF_VERSION};
 
 # Expose ports
 # gRPC
