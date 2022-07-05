@@ -29,10 +29,9 @@ from __future__ import print_function
 
 import argparse
 import os
-# Enable these variables for runtime inference optimizations
+# Enable this variable for runtime inference optimizations
 os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
-os.environ[
-    "TF_ENABLE_ONEDNN_OPTS"] = "1"  # This needs to be set before importing TF
+
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
@@ -203,9 +202,10 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
-        # Warmup
+        # Warmup iterations
         if image_id == 0:
-            results = model(t)
+            for _ in range(5):
+                results = model(t)
 
         # run
         start = time.time()

@@ -247,10 +247,11 @@ if __name__ == "__main__":
                 input_mean=input_mean,
                 input_std=input_std)
 
-            # Warmup
+            # Warmup iterations
             if image_id == 0:
-                results = sess.run(output_operation.outputs[0],
-                                   {input_operation.outputs[0]: t})
+                for _ in range(5):
+                    results = sess.run(output_operation.outputs[0],
+                                       {input_operation.outputs[0]: t})
 
             start = time.time()
             results = sess.run(output_operation.outputs[0],
