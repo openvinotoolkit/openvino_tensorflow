@@ -7,15 +7,14 @@
 
   ### Install **OpenVINO™ integration with TensorFlow** PyPi release
   * Includes pre-built libraries of OpenVINO™ version 2022.1.0. The users do not have to install OpenVINO™ separately 
-  * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
+  * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support 
 
         pip3 install -U pip
         pip3 install tensorflow==2.9.1
         pip3 install openvino-tensorflow==2.1.0
-  The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow wheel for TF 2.9.1 would work with any future PATCH versions like TF 2.9.2, and 2.9.3
-  
+    The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow wheel for TF 2.9.1 would work with any future PATCH versions like TF 2.9.2, and 2.9.3
   <br/>  
-
+ 
   ### Install **OpenVINO™ integration with TensorFlow** PyPi release alongside the Intel® Distribution of OpenVINO™ Toolkit for VAD-M Support
   * Compatible with OpenVINO™ version 2022.1.0
   * Supports Intel<sup>®</sup> Vision Accelerator Design with Movidius™ (VAD-M), it also supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
@@ -26,8 +25,7 @@
 
         source setupvars.sh  
       
-<br/>  
-
+  
 ## macOS
 
   Install **OpenVINO™ integration with TensorFlow** PyPi release
@@ -37,7 +35,7 @@
         pip3 install -U pip
         pip3 install tensorflow==2.9.1
         pip3 install openvino-tensorflow==2.1.0
-<br/>  
+
 
 ## Windows
 
