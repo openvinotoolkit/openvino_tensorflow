@@ -10,8 +10,8 @@
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    TF_LOCATION: /Users/intel/ci_setup/tf_2_9_1_abi1
-    OV_LOCATION: /Users/intel/ci_setup/openvino_2022.1_abi1/
+    TF_LOCATION: /Users/intel/ci_setup/tf_2_9_1_abi0
+    OV_LOCATION: /Users/intel/ci_setup/openvino_2022.1_abi0/
     
  steps:
  
