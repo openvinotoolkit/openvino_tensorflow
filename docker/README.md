@@ -1,5 +1,5 @@
 
-# Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
+# OpenVINO™ integration with TensorFlow (OVTF) Runtime Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
 
 
 We provide Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04 which can be used to build runtime Docker* images for OpenVINO™ integration with TensorFlow on CPU, GPU, VPU, and VAD-M.
@@ -130,7 +130,7 @@ Here is an example to serve Resnet50 model using OpenVINO™ Integration with Te
 		wget https://raw.githubusercontent.com/tensorflow/serving/master/tensorflow_serving/example/resnet_client.py
 		python resnet_client.py
 
-All related environmental variables that applies during the execution of **OpenVINO™ integration with TensorFlow** is applicable while running through containers also. For example, to disable OpenVINO™ while starting a TensorFlow Serving container, simply provide OPENVINO_TF_DISABLE=1 as one of the environmental variables of the `docker run` command. See [USAGE.md](../docs/USAGE.md) for more such environmental variables.
+All related environmental variables that applies during the execution of **OpenVINO™ integration with TensorFlow** is applicable while running through containers also. For example, to disable **OpenVINO™ integration with TensorFlow** while starting a TensorFlow Serving container, simply provide OPENVINO_TF_DISABLE=1 as one of the environmental variables of the `docker run` command. See [USAGE.md](../docs/USAGE.md) for more such environmental variables.
 
 		
 		docker run -it --rm \
