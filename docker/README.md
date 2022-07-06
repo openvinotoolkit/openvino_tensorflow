@@ -1,5 +1,5 @@
 
-# OpenVINO™ integration with TensorFlow (OVTF) Runtime Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
+# **OpenVINO™ integration with TensorFlow Runtime** Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
 
 
 We provide Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04 which can be used to build runtime Docker* images for OpenVINO™ integration with TensorFlow on CPU, GPU, VPU, and VAD-M.
@@ -9,7 +9,7 @@ The following ARGS are available to configure the docker build
 
 TF_VERSION: TensorFlow version to be used. Defaults to "v2.9.1"
 OPENVINO_VERSION: OpenVINO version to be used. Defaults to "2022.1.0"
-OVTF_BRANCH: OVTF branch to be used. Defaults to "releases/2.1.0"
+OVTF_BRANCH: OpenVINO™ integration with TensorFlow branch to be used. Defaults to "releases/2.1.0"
 
 Build the docker image
 
@@ -63,16 +63,16 @@ If execution fails on iGPU for 10th and 11th Generation Intel devices, provide d
 
 # Dockerfiles for [TF-Serving](#https://github.com/tensorflow/serving) with OpenVINO<sup>TM</sup> integration with Tensorflow
 
-The TF Serving dockerfile requires the OVTF runtime image to be built. Refer to the section above on building OVTF runtime images.
+The TF Serving dockerfile requires the **OpenVINO™ integration with TensorFlow Runtime** image to be built. Refer to the section above for instructions on building it.
 
 The following ARGS are available to configure the docker build
 
 TF_SERVING_VERSION: Tag of the TF Serving image to use to build the model serving executable. Defaults to "2.9.0"
-OVTF_VERSION: Tag of the OVTF runtime image to use. Defaults to "2.1.0"
+OVTF_VERSION: Tag of the **OpenVINO™ integration with TensorFlow Runtime** image to use. Defaults to "2.1.0"
 
 Build serving docker images:
 
-1. This dockerfile builds, and installs tensorflow model server binary onto the OpenVINO<sup>TM</sup> integration with Tensorflow runtime image.
+1. This dockerfile builds, and installs tensorflow model server binary onto the **OpenVINO<sup>TM</sup> integration with Tensorflow Runtime** image.
 
 		docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.1.0-serving -f ubuntu20/openvino_tensorflow_cgvh_runtime_2.1.0-serving.dockerfile .
 
