@@ -14,7 +14,7 @@
 
 - Ubuntu 18.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
 - Python* 3.7, 3.8 or 3.9
-- TensorFlow* v2.8.0
+- TensorFlow* v2.9.1
 
 <sup>1</sup>Windows release supports only Python3.9 
 
@@ -25,12 +25,12 @@ This package supports:
 - Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
         pip3 install -U pip
-        pip3 install tensorflow==2.8.0
-        pip3 install openvino-tensorflow==2.0.0
+        pip3 install tensorflow==2.9.1
+        pip3 install openvino-tensorflow==2.1.0
 
-To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit).
+To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#install-openvino™-integration-with-tensorflow-pypi-release-alongside-the-intel®-distribution-of-openvino™-toolkit-for-vad-m-support).
 
-For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
+For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#windows)
 
 For more details on installation please refer to [INSTALL.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md), and for build from source options please refer to [BUILD.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/BUILD.md)
 
@@ -45,11 +45,11 @@ To check if **OpenVINO™ integration with TensorFlow** is properly installed, r
 
 This should produce an output like:
 
-        TensorFlow version:  2.8.0
-        OpenVINO integration with TensorFlow version: b'2.0.0'
+        TensorFlow version:  2.9.1
+        OpenVINO integration with TensorFlow version: b'2.1.0'
         OpenVINO version used for this build: b'2022.1.0'
-        TensorFlow version used for this build: v2.8.0
-        CXX11_ABI flag used for this build: 0
+        TensorFlow version used for this build: v2.9.1
+        CXX11_ABI flag used for this build: 1
 
 ## Usage
 
@@ -63,9 +63,7 @@ To determine what processing units are available on your system for inference, u
 
     openvino_tensorflow.list_backends()
 
-For more API calls and environment variables, see [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE.md).
-
-[Note: For the best results with TensorFlow, it is advised to enable [oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN) by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=1`]
+For further performance improvements, it is advised to set the environment variable OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS=1. For more API calls and environment variables, see [USAGE.md](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/USAGE.md).
 
 [Note: If a CUDA capable device is present in the system then set the environment variable CUDA_VISIBLE_DEVICES to -1]  
 
