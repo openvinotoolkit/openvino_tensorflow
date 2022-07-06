@@ -3998,13 +3998,21 @@ static Status TranslateWhereOp(
 static Status TranslateZerosLikeOp(const Node* op,
                                    const std::vector<const Tensor*>&,
                                    Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
+  ov::Output<ov::Node> ng_input, ng_result;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input));
 
-  ov::Shape input_shape = ng_input.get_shape();
-  std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
-  auto ng_result = ConstructNgNode<opset::Constant>(
-      op->name(), ng_input.get_element_type(), input_shape, const_values);
+  if (ng_input.get_partial_shape().is_static()) {
+    ov::Shape input_shape = ng_input.get_shape();
+    std::vector<std::string> const_values(ov::shape_size(input_shape), "0");
+    ng_result = ConstructNgNode<opset::Constant>(
+        op->name(), ng_input.get_element_type(), input_shape, const_values);
+  } else {
+    auto input_shape = ConstructNgNode<opset::ShapeOf>(op->name(), ng_input);
+    auto zero = ConstructNgNode<opset::Constant>(
+        op->name(), ng_input.get_element_type(), ov::Shape{1}, 0);
+    ng_result =
+        ConstructNgNode<opset::Broadcast>(op->name(), zero, input_shape);
+  }
   SaveNgOp(ng_op_map, op->name(), ng_result);
   return Status::OK();
 }
