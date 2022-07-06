@@ -1,8 +1,12 @@
 # Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+ARG TF_VERSION="v2.9.1"
+ARG OPENVINO_VERSION="2022.1.0"
+ARG OVTF_BRANCH="releases/2.1.0"
+
 ################################################################################
-FROM openvino/ubuntu20_dev:2022.1.0 AS ovtf_build
+FROM openvino/ubuntu20_dev:${OPENVINO_VERSION} AS ovtf_build
 ################################################################################
 
 # Stage 1 builds OpenVINO™ integration with TensorFlow from source, prepares wheel for use by the final image
@@ -10,15 +14,15 @@ FROM openvino/ubuntu20_dev:2022.1.0 AS ovtf_build
 LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
+ARG TF_VERSION
+ARG OPENVINO_VERSION
+ARG OVTF_BRANCH
+
 USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
-
-ARG TF_VERSION="v2.9.1"
-ARG OPENVINO_VERSION="2022.1.0"
-ARG OVTF_BRANCH="releases/2.1.0"
 
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -63,11 +67,13 @@ RUN mkdir build_artifacts && \
 CMD ["/bin/bash"]
 
 ################################################################################
-FROM openvino/ubuntu20_runtime:2022.1.0 AS ovtf_runtime
+FROM openvino/ubuntu20_runtime:${OPENVINO_VERSION} AS ovtf_runtime
 ################################################################################
 
 LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
+
+ARG TF_VERSION
 
 USER root
 
