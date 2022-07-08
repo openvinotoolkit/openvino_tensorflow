@@ -26,6 +26,16 @@ const std::map<::tensorflow::DataType, ov::element::Type>& TYPE_MAP() {
   return type_map;
 }
 }  // namespace
+  
+OVTFDecoder::OVTFDecoder(const ::tensorflow::NodeDef* node_def)
+      : m_node_def(node_def) {
+  for (int i=0; i<m_node_def->input_size(); i++) {
+    std::string producer_port_name = m_node_def->input(i);
+    if (producer_port_name.at(0) != '^') {
+      m_producer_port_names.push_back(producer_port_name);
+    }
+  }
+}
 
 // ov::Any OVTFDecoder::get_attribute(const std::string& name,
 //                                    const std::type_info& type_info) const {
@@ -179,12 +189,13 @@ ov::Any OVTFDecoder::get_native_attribute(const std::string& name) const {
   }
 }
 
-size_t OVTFDecoder::get_input_size() const { return m_node_def->input_size(); }
+size_t OVTFDecoder::get_input_size() const { return m_producer_port_names.size(); }
 
 void OVTFDecoder::get_input_node(size_t input_port_idx,
                                  std::string& producer_name,
                                  size_t& producer_output_port_index) const {
-  std::string producer_port_name = m_node_def->input(input_port_idx);
+  //std::string producer_port_name = m_node_def->input(input_port_idx);
+  std::string producer_port_name = m_producer_port_names[input_port_idx];
   auto delim_pos = producer_port_name.find(':');
   if (delim_pos != std::string::npos) {
     producer_name = producer_port_name.substr(0, delim_pos);
