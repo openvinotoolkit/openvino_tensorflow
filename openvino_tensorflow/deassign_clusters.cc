@@ -399,7 +399,7 @@ Status DeassignClusters(Graph* graph) {
       pair_idx_cost.first = cluster_idx;
       pair_idx_cost.second = 0;
       for (auto n : g.nodes()) {
-        int64_t node_cost = 0;
+        tensorflow::int64 node_cost = 0;
         if (GetNodeAttr(n->attrs(), "cost", &node_cost) != Status::OK())
           continue;
         pair_idx_cost.second += node_cost;

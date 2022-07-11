@@ -136,7 +136,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
 
   if (!api::IsRewritePassEnabled()) {
     OP_REQUIRES_OK(
-        ctx, ctx->GetAttr<int64_t>("cluster_cost", &m_cluster_cost_in_ms));
+        ctx, ctx->GetAttr<tensorflow::int64>("cluster_cost", &m_cluster_cost_in_ms));
   }
 
   //
@@ -211,9 +211,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   if (api::IsRewritePassEnabled() &&
       s_tf_timing_run_enabled_map[m_cluster_id]) {
     // Measure the timing of cluster through force TF run
-    int64_t start_ns = profiler::GetCurrentTimeNanos();
+    int64_t start_ns = absl::GetCurrentTimeNanos();
     OP_REQUIRES_OK(ctx, Fallback(ctx));
-    int64_t duration_in_ms = (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+    int64_t duration_in_ms = (absl::GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "Iter: " << m_iter;
     OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took " << duration_in_ms
                  << " ms.";
@@ -409,10 +409,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
-        int64_t start_ns = profiler::GetCurrentTimeNanos();
+        int64_t start_ns = absl::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
         int64_t duration_in_ms =
-            (profiler::GetCurrentTimeNanos() - start_ns) / 1e6;
+            (absl::GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
                      << duration_in_ms << " ms.";

@@ -348,7 +348,7 @@ Status Encapsulator::AnalysisPass() {
     }
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
-      int64_t node_cost = 0;
+      tensorflow::int64 node_cost = 0;
       if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
         continue;
       cluster_cost_map_in_ms[cluster_idx] += node_cost;
