@@ -72,7 +72,7 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
-  int64_t m_cluster_cost_in_ms;
+  tensorflow::int64 m_cluster_cost_in_ms;
   static std::map<size_t, bool> s_tf_timing_run_enabled_map;
   static std::map<size_t, float> s_ovtf_cluster_timings_map;
   int64_t m_iter;
