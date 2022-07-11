@@ -242,8 +242,11 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
 
     if xml_output:
         cmd.extend(["--xml_report", test_xml_report])
-    command_executor(cmd, verbose=True)
 
+    if (platform.system() == "Darwin"):
+        os.system(" ".join(cmd))
+    else:
+        command_executor(cmd, verbose=True)
     os.environ.pop('OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
     if openvino_tf_disable_deassign_clusters is not None:
