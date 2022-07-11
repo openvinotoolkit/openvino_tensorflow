@@ -398,54 +398,84 @@ static Status ValuesFromConstNode(const NodeDef& node,
     }
     values->resize(n_elements);
 
-    auto val_lastsaved = (T)0;  // cast
+    // Extract dtype and size of the values provided in proto
+    auto& tensor = node.attr().at("value").tensor();
+    auto dt = node.attr().at("dtype").type();
+    int64 val_size = 0;
+    switch (dt) {
+      // TODO(amprocte/NGRAPH-2502): there are more element types to support
+      // here
+      case DT_INT32:
+        val_size = tensor.int_val_size();
+        break;
+      case DT_INT64:
+        val_size = tensor.int64_val_size();
+        break;
+      case DT_FLOAT:
+        val_size = tensor.float_val_size();
+        break;
+      case DT_BOOL:
+        val_size = tensor.bool_val_size();
+        break;
+      case DT_DOUBLE:
+        val_size = tensor.double_val_size();
+        break;
+      default:
+        OVTF_VLOG(0) << "Const node has empty tensor and we don't know how to "
+                        "handle this element type";
+        OVTF_VLOG(0) << node.DebugString();
+        OVTF_VLOG(0) << shape.DebugString();
+        return errors::Unimplemented("Encountered unknown element type ",
+                                     DataType_Name(dt), " on an empty tensor");
+    }
 
+    auto val_lastsaved = (T)0;  // cast
     for (auto i = 0; i < n_elements; i++) {
-      auto& tensor = node.attr().at("value").tensor();
-      auto dt = node.attr().at("dtype").type();
-      int64 val_size = 0;
-      auto val_i = (T)0;  // cast
-      switch (dt) {
-        // TODO(amprocte/NGRAPH-2502): there are more element types to support
-        // here
-        case DT_INT32:
-          val_size = tensor.int_val_size();
-          if (val_size > 0) val_i = tensor.int_val()[i];
-          break;
-        case DT_INT64:
-          val_size = tensor.int64_val_size();
-          if (val_size > 0) val_i = tensor.int64_val()[i];
-          break;
-        case DT_FLOAT:
-          val_size = tensor.float_val_size();
-          if (val_size > 0) val_i = tensor.float_val()[i];
-          break;
-        case DT_BOOL:
-          val_size = tensor.bool_val_size();
-          if (val_size > 0) val_i = tensor.bool_val()[i];
-          break;
-        case DT_DOUBLE:
-          val_size = tensor.double_val_size();
-          if (val_size > 0) val_i = tensor.double_val()[i];
-          break;
-        default:
-          OVTF_VLOG(0)
-              << "Const node has empty tensor and we don't know how to "
-                 "handle this element type";
-          OVTF_VLOG(0) << node.DebugString();
-          OVTF_VLOG(0) << shape.DebugString();
-          return errors::Unimplemented("Encountered unknown element type ",
-                                       DataType_Name(dt),
-                                       " on an empty tensor");
-      }
+      // Default value set to 0 and typecasted to the dtype of the const op
+      auto val_i = (T)0;
+      // If no values are specified for the const node, fill all the values with
+      // default value or return error based on the TF version
       if (val_size == 0) {
 #if (TF_MAJOR_VERSION > 1 && TF_MINOR_VERSION >= 7)
-        val_i = 0;
+        (*values)[i] = val_i;
 #else
         return errors::InvalidArgument("Empty values vector");
 #endif
+        continue;
+      }
 
-      } else if (i < val_size) {
+      // If the values are same for all the elements or repeating after certain
+      // index, then copy the single value or the last occured value for all the
+      // remaining indices
+      if (i < val_size) {
+        switch (dt) {
+          // TODO(amprocte/NGRAPH-2502): there are more element types to support
+          // here
+          case DT_INT32:
+            val_i = tensor.int_val()[i];
+            break;
+          case DT_INT64:
+            val_i = tensor.int64_val()[i];
+            break;
+          case DT_FLOAT:
+            val_i = tensor.float_val()[i];
+            break;
+          case DT_BOOL:
+            val_i = tensor.bool_val()[i];
+            break;
+          case DT_DOUBLE:
+            val_i = tensor.double_val()[i];
+            break;
+          default:
+            OVTF_VLOG(0)
+                << "Const node has empty tensor and we don't know how to "
+                   "handle this element type";
+            OVTF_VLOG(0) << node.DebugString();
+            OVTF_VLOG(0) << shape.DebugString();
+            return errors::Unimplemented("Encountered unknown element type ",
+                                         DataType_Name(dt),
+                                         " on an empty tensor");
+        }
         (*values)[i] = val_i;
         val_lastsaved = val_i;
       } else {
