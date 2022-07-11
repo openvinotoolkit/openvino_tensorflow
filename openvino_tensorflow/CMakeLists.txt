@@ -54,8 +54,8 @@ string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
 list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
 list(GET TF_VERSION_LIST 1 TF_MINOR_VERSION)
 
-# Enable Grappler only for TF >= 2.6
-if(NOT ((TF_MAJOR_VERSION STRGREATER_EQUAL "2") AND (TF_MINOR_VERSION STRGREATER_EQUAL "6")))
+# Enable Grappler only for TF >= 2.8
+if(NOT ((TF_MAJOR_VERSION STRGREATER_EQUAL "2") AND (TF_MINOR_VERSION STRGREATER_EQUAL "8")))
    list(REMOVE_ITEM SRC grappler/ovtf_optimizer.cc)
    list(REMOVE_ITEM SRC grappler/add_identityn.cc)
    list(REMOVE_ITEM SRC grappler/costs/measuring_cost_estimator.cc)

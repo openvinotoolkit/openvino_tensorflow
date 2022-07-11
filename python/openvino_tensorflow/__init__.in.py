@@ -265,8 +265,8 @@ if ovtf_classic_loaded:
           The optimized GraphDef
         """
 
-        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 6)):
-            raise AssertionError("Only TF Versions >= 2.6.x are supported for the optimize_graph APIs")
+        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 8)):
+            raise AssertionError("Only TF Versions >= 2.8.x are supported for the optimize_graph APIs")
 
         if not os.path.exists(frozen_model_file):
             raise AssertionError("Could not find frozen model path")
@@ -352,8 +352,8 @@ if ovtf_classic_loaded:
 
         #[TODO] Add support for taking direct tf.Graph or tf.function inputs
 
-        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 6)):
-            raise AssertionError("Only TF Versions >= 2.6.x are supported for the optimize_graph APIs")
+        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 8)):
+            raise AssertionError("Only TF Versions >= 2.8.x are supported for the optimize_graph APIs")
         
         if not os.path.exists(saved_model_dir):
           raise AssertionError("Could not find saved model path")
