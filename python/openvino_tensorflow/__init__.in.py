@@ -71,6 +71,8 @@ TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
 TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
 TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
+TF_MAJOR_VERSION = int(TF_VERSION.split(".")[0])
+TF_MINOR_VERSION = int(TF_VERSION.split(".")[1])
 
 rewriter_config = rewriter_config_pb2.RewriterConfig()
 rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
@@ -263,6 +265,9 @@ if ovtf_classic_loaded:
           The optimized GraphDef
         """
 
+        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 6)):
+            raise AssertionError("Only TF Versions >= 2.6.x are supported for the optimize_graph APIs")
+
         if not os.path.exists(frozen_model_file):
             raise AssertionError("Could not find frozen model path")
         
@@ -346,6 +351,9 @@ if ovtf_classic_loaded:
         """
 
         #[TODO] Add support for taking direct tf.Graph or tf.function inputs
+
+        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 6)):
+            raise AssertionError("Only TF Versions >= 2.6.x are supported for the optimize_graph APIs")
         
         if not os.path.exists(saved_model_dir):
           raise AssertionError("Could not find saved model path")
