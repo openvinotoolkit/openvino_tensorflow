@@ -32,13 +32,6 @@
       python3 build_ovtf.py --use_openvino_from_location=${OV_LOCATION} --cxx11_abi_version=0
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
-     
-   - script: |
-      source build_cmake/venv-tf-py3/bin/activate
-      python3 -m pip install -U build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      python3 -m pip install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
-     workingDirectory: $(WORK_DIR) 
-     displayName: "Install"
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
@@ -93,7 +86,6 @@
       cd $(WORK_DIR)
       python3 -m pip install -r examples/requirements.txt
       python3 examples/TF_1_x/object_detection_sample.py --no_show
-     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF1"     
 
@@ -106,7 +98,6 @@
       ./convert_yolov4.sh
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show
-     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU OD Inference Example TF2"
 
@@ -129,7 +120,6 @@
       python3 -m pip install -r requirements.txt
       cd $(WORK_DIR)
       python3 examples/object_detection_sample.py --no_show --backend MYRIAD
-     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD OD Inference Example TF2"
      
@@ -140,7 +130,6 @@
       source build_cmake/venv-tf-py3/bin/activate
       python3 -m pip install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show
-     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU Classification Inference Example TF1"
    
@@ -150,7 +139,6 @@
       source build_cmake/venv-tf-py3/bin/activate
       python3 -m pip install -r examples/requirements.txt
       python3 examples/classification_sample.py --no_show --backend MYRIAD
-     condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python MYRIAD Classification Inference Example TF1"
 
