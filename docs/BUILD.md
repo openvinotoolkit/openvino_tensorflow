@@ -6,10 +6,11 @@
 	* 1.2. [macOS](#macOS)
 	* 1.3. [Windows](#Windows)
  2. [OpenVINO™ integration with TensorFlow](#OpenVINOintegrationwithTensorFlow)
-	* 2.1. [Build Instructions for Linux and macOS](#BuildInstructionsLinuxAndmacOS)
-	* 2.2. [Build Instructions for Windows](#BuildInstructionsWindows)
-	* 2.3. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
-	* 2.4. [Build Verification](#BuildVerification)
+	* 2.1. [Build Instructions for Linux](#BuildInstructionsLinux)
+	* 2.2. [Build Instructions for macOS](#BuildInstructionsmacOS)
+	* 2.3. [Build Instructions for Windows](#BuildInstructionsWindows)
+	* 2.4. [Build Instructions for Intel Atom® Processor](#BuildInstructionsforIntelAtomProcessor)
+	* 2.5. [Build Verification](#BuildVerification)
  3. [Backwards Compatibility with TensorFlow](#BackwardsCompatibilitywithTensorFlow)
  4. [OpenVINO™](#OpenVINO)
  5. [TensorFlow](#TensorFlow)
@@ -138,7 +139,7 @@ Notes:
 
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 
-###  2.1. <a name='BuildInstructionsLinuxAndmacOS'></a>Build Instructions for **Linux and macOS**
+###  2.1. <a name='BuildInstructionsLinux'></a>Build Instructions for **Linux**
 **OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with prebuilt TensorFlow C++ libraries. For VAD-M support, build with OpenVINO™ binary and initialize the OpenVINO™ environment by running the `setupvars.sh`.  
 Use one of the following common build options based on the requirements. 
 
@@ -166,7 +167,13 @@ Select the `help` option of `build_ovtf.py` script to learn more about various b
 
         python3 build_ovtf.py --help
 
-###  2.2. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
+###  2.2. <a name='BuildInstructionsmacOS'></a>Build Instructions for **macOS**
+
+Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. Currently only ABI0 is supported on macOS.
+
+        python3 build_ovtf.py --tf_version=v2.9.1 --openvino_version=2022.1.0 --cxx11_abi_version=0
+
+###  2.3. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
 Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
 1. Pulls prebuilt TensorFlow 2.9.1 python package from Github release assets. Uses OpenVINO™ binary from specified location.
 
@@ -176,13 +183,13 @@ Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as adminis
 
         python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 
-###  2.3. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
+###  2.4. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
 In order to build **OpenVINO™ integration with TensorFlow** to use with the Intel Atom® processor, we recommend building TensorFlow from source, and then build openvino-tensorflow:
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.1 --target_arch silvermont
         python3 build_ovtf.py --use_tensorflow_from_location=${PATH_TO_TF_BUILD} --openvino_version=2022.1.0 --target_arch silvermont
 
-###  2.4. <a name='BuildVerification'></a> Build Verification
+###  2.5. <a name='BuildVerification'></a> Build Verification
 When the build is finished, a new `virtualenv` directory with name `venv-tf-py3` is created in `build_cmake`. Build artifacts (e.g. the `openvino_tensorflow-<VERSION>-cp38-cp38-manylinux2014_x86_64.whl`) are created in the `build_cmake/artifacts/` directory.
 
 Activate the following `virtualenv` to start using **OpenVINO™ integration with TensorFlow**.
