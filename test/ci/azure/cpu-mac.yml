@@ -69,9 +69,8 @@
       export NGRAPH_TF_UTEST_RTOL=0.0001
       python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/python/tensorflow/tf_unittest_runner.py \
-      --tensorflow_path build_cmake/artifacts//tensorflow/python \
-      --run_tests_from_file test/python/tensorflow/tests_darwin_myriad.txt
+      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+        --artifacts build_cmake/artifacts --test_tf_python
      condition: always()
      workingDirectory: $(WORK_DIR)   
      displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
