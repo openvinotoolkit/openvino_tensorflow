@@ -135,8 +135,8 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   }
 
   if (!api::IsRewritePassEnabled()) {
-    OP_REQUIRES_OK(
-        ctx, ctx->GetAttr<tensorflow::int64>("cluster_cost", &m_cluster_cost_in_ms));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr<tensorflow::int64>("cluster_cost",
+                                                        &m_cluster_cost_in_ms));
   }
 
   //
@@ -411,8 +411,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       try {
         int64_t start_ns = absl::GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
-        int64_t duration_in_ms =
-            (absl::GetCurrentTimeNanos() - start_ns) / 1e6;
+        int64_t duration_in_ms = (absl::GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
                      << duration_in_ms << " ms.";
