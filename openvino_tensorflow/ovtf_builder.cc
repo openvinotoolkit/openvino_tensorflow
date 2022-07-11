@@ -4442,7 +4442,6 @@ Status Builder::TranslateGraph(
         OVTF_VLOG(5) << "Not using Fused translation for "
                      << "CTCGreedyDecoder and SparseToDense Ops";
     }
-    //
 
     const function<Status(const Node*, const std::vector<const Tensor*>&,
                           Builder::OpMap&)>* op_fun;
