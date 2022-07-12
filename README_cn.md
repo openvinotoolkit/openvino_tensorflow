@@ -41,19 +41,17 @@
         pip3 install tensorflow==2.9.1
         pip3 install openvino-tensorflow==2.1.0
 
-关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#InstallOpenVINOintegrationwithTensorFlowalongsideTensorFlow)
+关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#windows)
 
 如果您想使用Intel<sup>®</sup> 集成显卡进行推理，请确保安装[Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 
-如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#12-install-openvino-integration-with-tensorflow-alongside-the-intel-distribution-of-openvino-toolkit)。
+如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#install-openvino™-integration-with-tensorflow-pypi-release-alongside-the-intel®-distribution-of-openvino™-toolkit-for-vad-m-support)。
 
 更多安装详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多源构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
 
 ## 配置
 
 安装 **OpenVINO™ integration with TensorFlow** 后，您可以在TensorFlow* 上对训练好的模型运行推理操作。
-
-为了进一步提高性能，建议通过设置环境变量 `TF_ENABLE_ONEDNN_OPTS=1` 来启用[oneDNN Deep Neural Network Library (oneDNN)](https://github.com/oneapi-src/oneDNN)。
 
 如要查看 **OpenVINO™ integration with TensorFlow** 是否安装正确，请运行
 
@@ -77,8 +75,7 @@
 如要确定系统上的哪些处理单元用于推理，可使用以下函数：
 
     openvino_tensorflow.list_backends()
-如欲了解更多 API 调用和环境变量的信息，请查看 [USAGE.md](docs/USAGE_cn.md)。
-
+为了进一步提高性能，建议通过设置环境变量 `OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS=1` 来启用。如欲了解更多 API 调用和环境变量的信息，请查看 [USAGE.md](docs/USAGE_cn.md)。
 
 
 ## 示例

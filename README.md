@@ -75,7 +75,7 @@ Supported backends include 'CPU', 'GPU', 'GPU_FP16', 'MYRIAD', and 'VAD-M'.
 To determine what processing units are available on your system for inference, use the following function:
 
     openvino_tensorflow.list_backends()
-For further performance improvements, it is advised to set the environment variable OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS=1. For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
+For further performance improvements, it is advised to set the environment variable `OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS=1`. For more API calls and environment variables, see [USAGE.md](docs/USAGE.md).
 
 
 ## Examples
