@@ -50,6 +50,19 @@ set(SRC
    grappler/costs/cost_analyzer.cc
 )
 
+string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
+list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
+list(GET TF_VERSION_LIST 1 TF_MINOR_VERSION)
+
+# Enable Grappler only for TF >= 2.8
+if(NOT ((TF_MAJOR_VERSION STRGREATER_EQUAL "2") AND (TF_MINOR_VERSION STRGREATER_EQUAL "8")))
+   list(REMOVE_ITEM SRC grappler/ovtf_optimizer.cc)
+   list(REMOVE_ITEM SRC grappler/add_identityn.cc)
+   list(REMOVE_ITEM SRC grappler/costs/measuring_cost_estimator.cc)
+   list(REMOVE_ITEM SRC grappler/costs/robust_stats.cc)
+   list(REMOVE_ITEM SRC grappler/costs/cost_analyzer.cc)
+endif()
+
 if(OPENVINO_BUILD_VERSION)
     add_compile_definitions(OPENVINO_BUILD_VERSION="${OPENVINO_BUILD_VERSION}")
 endif()
@@ -87,8 +100,6 @@ target_compile_definitions(
 
 target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
 
-string(REPLACE "." ";" TF_VERSION_LIST ${TensorFlow_VERSION})
-list(GET TF_VERSION_LIST 0 TF_MAJOR_VERSION)
 add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
 
 #------------------------------------------------------------------------------

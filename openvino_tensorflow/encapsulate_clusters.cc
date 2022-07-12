@@ -348,7 +348,7 @@ Status Encapsulator::AnalysisPass() {
     }
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
-      int64_t node_cost = 0;
+      tensorflow::int64 node_cost = 0;
       if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
         continue;
       cluster_cost_map_in_ms[cluster_idx] += node_cost;
@@ -470,7 +470,7 @@ Status Encapsulator::RewritePass(
             .Attr("Targuments", input_types)
             .Attr("Tresults", cluster_output_dt_map[cluster_idx])
             .Attr("ngraph_graph_id", graph_id)
-            .Attr("cluster_cost", cluster_cost_map_in_ms[cluster_idx])
+            .Attr("cluster_cost", (int)cluster_cost_map_in_ms[cluster_idx])
             .Device(device_name_map[cluster_idx])
             .Input(inputs);
     if (!device_config.empty()) {
