@@ -1,4 +1,4 @@
-[English]|(./INSTALL.md) | 简体中文
+[English](./INSTALL.md) | 简体中文
 
 # <a name='Pre-BuiltPackages'></a>使用预构建软件包安装
 
