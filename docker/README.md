@@ -1,4 +1,6 @@
 
+<p>English | <a href="./README_cn.md">简体中文</a></p>
+
 # **OpenVINO™ integration with TensorFlow Runtime** Dockerfiles for Ubuntu* 18.04 and Ubuntu* 20.04
 
 

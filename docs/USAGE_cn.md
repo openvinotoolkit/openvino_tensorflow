@@ -85,26 +85,9 @@
 **OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS**
 默认条件下禁用该变量，且在图表解析阶段将来自TensorFlow's ReadVariableOp的变量冻结为常量。强烈建议启用该变量，以保证需迫切执行模型上的最佳推理延时。加载推理模型后当模型权值修改时禁用此变量。
 
-**OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
-形成集群后，由于某些原因（如集群太小，目标设备不支持某些条件），部分集群可能仍然会返回原生 TensorFlow。如果已设置此变量，集群将不会被删除，而是强行在 OpenVINO™ 后端上运行。这可能会导致性能降低，一定情况下还会导致执行崩溃。
-
 示例：
 
-    OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
-
-**OPENVINO_TF_VLOG_LEVEL:**
-此变量用于打印执行日志。设为 1 将打印极少细节，设为 5 将打印最详细的日志。
-
-示例：
-
-    OPENVINO_TF_VLOG_LEVEL="4"
-
-**OPENVINO_TF_LOG_PLACEMENT:**
-如果此变量设为 1，将打印与集群形成和封装相关的日志。
-
-示例：
-
-    OPENVINO_TF_LOG_PLACEMENT="1"
+    OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS="1"
 
 **OPENVINO_TF_BACKEND:** 
 可使用此变量设置后端设备名称。可以设为“CPU”，“GPU”，"GPU_FP16",“MYRIAD”或“VAD-M”。
@@ -113,12 +96,77 @@
 
     OPENVINO_TF_BACKEND="MYRIAD"
 
+
+**OPENVINO_TF_DISABLE:**
+此变量设为 1 将禁用 **OpenVINO™ integration with TensorFlow**。
+
+示例：
+
+    OPENVINO_TF_DISABLE="1"
+
+**OPENVINO_TF_LOG_PLACEMENT:**
+如果此变量设为 1，将打印与集群形成和封装相关的日志。
+
+示例：
+
+    OPENVINO_TF_LOG_PLACEMENT="1"
+
+**OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
+此变量设置集群中可以存在的最少算子数。如果算子数量小于指定数量，集群将退回至 TensorFlow。默认情况下，该数量根据总图形大小来计算，但不能小于 6，除非手动设置（启用非常小的集群没有任何性能优势。要获得详细的集群摘要，请将“OPENVINO_TF_LOG_PLACEMENT”设置为 1。
+
+示例：
+
+    OPENVINO_TF_MIN_NONTRIVIAL_NODES="10"
+
+**OPENVINO_TF_MAX_CLUSTERS:**
+
+此变量设置使用 OpenVINO™ 后端选择执行的最大集群数。集群是根据大小（从最高到最低）选择的，这个决定是在集群解除分配的最后阶段做出的。剩余集群的操作没有标记，并使用本机 TensorFlow 执行。如果存在一些大型集群和许多小型集群，则设置此环境变量很有用，并且通过使用 OpenVINO™ 后端仅调度大型集群来提高性能。要获得详细的集群摘要，请将“OPENVINO_TF_LOG_PLACEMENT”设置为 1。
+
+示例：
+
+    OPENVINO_TF_MAX_CLUSTERS="3"
+
+**OPENVINO_TF_VLOG_LEVEL:**
+此变量用于打印执行日志。设为 1 将打印极少细节，设为 5 将打印最详细的日志。
+
+示例：
+
+    OPENVINO_TF_VLOG_LEVEL="4"
+
 **OPENVINO_TF_DISABLED_OPS:**
 使用此变量传递已禁用算子列表。这些算子不考虑进行集群化，而是返回原生 TensorFlow。
 
 示例：
 
     OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
+
+**OPENVINO_TF_DUMP_GRAPHS:**
+设置此参数将在optimization pass的所有阶段序列化整个图表，并将其保存至当前目录。
+
+示例：
+
+    OPENVINO_TF_DUMP_GRAPHS="1"
+
+**OPENVINO_TF_DUMP_CLUSTERS:**
+此变量设为 1 将以“.pbtxt”格式序列化所有集群。
+
+示例：
+
+    OPENVINO_TF_DUMP_CLUSTERS="1"
+
+**OPENVINO_TF_ENABLE_BATCHING:** 
+如果此参数设为 1 且 VAD-M 用作后端，后端引擎会将输入分成多个异步请求，以利用 VAD-M 中的所有设备来提升性能。
+
+示例：
+
+    OPENVINO_TF_ENABLE_BATCHING="1"
+
+**OPENVINO_TF_DYNAMIC_FALLBACK**
+此变量启用或禁用动态回退功能。 应设置为“0”以禁用，设置为“1”以启用动态回退。 启用后，在运行期间导致错误的集群可以回退到原生 TensorFlow，尽管它们被分配为在 OpenVINO™ 上运行。 默认启用。
+
+示例:
+
+    OPENVINO_TF_DYNAMIC_FALLBACK="0"
 
 **OPENVINO_TF_CONSTANT_FOLDING：** 
 它将启用/禁用已解析集群上constant的folding pass（默认禁用）。
@@ -134,47 +182,12 @@
 
     OPENVINO_TF_TRANSPOSE_SINKING="0"
 
-**OPENVINO_TF_ENABLE_BATCHING:** 
-如果此参数设为 1 且 VAD-M 用作后端，后端引擎会将输入分成多个异步请求，以利用 VAD-M 中的所有设备来提升性能。
+**OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
+形成集群后，由于某些原因（如集群太小，目标设备不支持某些条件），部分集群可能仍然会返回原生 TensorFlow。如果已设置此变量，集群将不会被删除，而是强行在 OpenVINO™ 后端上运行。这可能会导致性能降低，一定情况下还会导致执行崩溃。
 
 示例：
 
-    OPENVINO_TF_ENABLE_BATCHING="1"
-
-**OPENVINO_TF_DUMP_GRAPHS:**
-设置此参数将在optimization pass的所有阶段序列化整个图表，并将其保存至当前目录。
-
-示例：
-
-    OPENVINO_TF_DUMP_GRAPHS=1
-
-**OPENVINO_TF_DUMP_CLUSTERS:**
-此变量设为 1 将以“.pbtxt”格式序列化所有集群。
-
-示例：
-
-    OPENVINO_TF_DUMP_CLUSTERS=1
-
-**OPENVINO_TF_DISABLE:**
-此变量设为 1 将禁用 **OpenVINO™ integration with TensorFlow**。
-
-示例：
-
-    OPENVINO_TF_DISABLE=1
-
-**OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
-此变量设置集群中可以存在的最少算子数。如果算子数量小于指定数量，集群将退回至 TensorFlow。默认情况下，该数量根据总图形大小来计算，但不能小于 6，除非手动设置（启用非常小的集群没有任何性能优势）。
-
-示例：
-
-    OPENVINO_TF_MIN_NONTRIVIAL_NODES=10
-
-**OPENVINO_TF_DYNAMIC_FALLBACK**
-此变量启用或禁用动态回退功能。 应设置为“0”以禁用，设置为“1”以启用动态回退。 启用后，在运行期间导致错误的集群可以回退到原生 TensorFlow，尽管它们被分配为在 OpenVINO™ 上运行。 默认启用。
-
-示例:
-
-    OPENVINO_TF_DYNAMIC_FALLBACK=0
+    OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
 
 ## GPU 数据精度
 
