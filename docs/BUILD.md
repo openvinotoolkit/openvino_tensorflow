@@ -1,3 +1,5 @@
+<p>English | <a href="./BUILD_cn.md">简体中文</a></p>
+
 # Build Instructions
 
 <!-- markdown-toc -->

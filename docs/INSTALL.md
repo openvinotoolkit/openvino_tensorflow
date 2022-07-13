@@ -1,3 +1,5 @@
+<p>English | <a href="./INSTALL_cn.md">简体中文</a></p>
+
 # <a name='Pre-BuiltPackages'></a>Installation using Pre-Built Packages
 
 **OpenVINO™ integration with TensorFlow** is released for Linux, macOS, and Windows. You can choose one of the following methods based on your requirements.
