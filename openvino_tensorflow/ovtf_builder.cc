@@ -1191,13 +1191,14 @@ static Status TranslateConv2DOp(const Node* op,
 static Status TranslateConv2DBackpropInputOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_filter, ng_out_backprop, ng_unused;
+  ov::Output<ov::Node> ng_filter, ng_out_backprop, ng_input;
   TF_RETURN_IF_ERROR(
-      GetInputNodes(ng_op_map, op, ng_unused, ng_filter, ng_out_backprop));
+      GetInputNodes(ng_op_map, op, ng_input, ng_filter, ng_out_backprop));
 
   // TODO: refactor me to be less redundant with other convolution ops
   std::vector<int32> tf_strides;
   std::vector<int32> tf_dilations;
+  std::vector<int32> tf_paddings;
   std::string tf_padding_type;
   std::string tf_data_format;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "strides", &tf_strides));
@@ -1211,15 +1212,15 @@ static Status TranslateConv2DBackpropInputOp(
         tf_data_format);
   }
 
-  std::vector<int64> tf_input_sizes;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 0, static_input_map, &tf_input_sizes));
+  // std::vector<int64> tf_input_sizes;
+  // TF_RETURN_IF_ERROR(
+  //     GetStaticInputVector(op, 0, static_input_map, &tf_input_sizes));
 
-  if (std::any_of(tf_input_sizes.begin(), tf_input_sizes.end(),
-                  [](int32 size) { return size <= 0; })) {
-    return errors::InvalidArgument(
-        "Conv2DBackpropInput input sizes must be positive integers");
-  }
+  // if (std::any_of(tf_input_sizes.begin(), tf_input_sizes.end(),
+  //                 [](int32 size) { return size <= 0; })) {
+  //   return errors::InvalidArgument(
+  //       "Conv2DBackpropInput input sizes must be positive integers");
+  // }
 
   bool is_nhwc = (tf_data_format == "NHWC");
 
@@ -1236,19 +1237,22 @@ static Status TranslateConv2DBackpropInputOp(
 
   NHWCtoHW(is_nhwc, tf_strides, ng_strides);
   NHWCtoHW(is_nhwc, tf_dilations, ng_dilations);
-  NHWCtoHW(is_nhwc, tf_input_sizes, ng_image_shape);
+  // NHWCtoHW(is_nhwc, tf_input_sizes, ng_image_shape);
+  // if (ng_input.get_partial_shape().is_static()) {
+  //   NHWCtoHW(is_nhwc, ng_input.get_shape(), ng_image_shape);
+  // }
   NHWCtoNCHW(op->name(), is_nhwc, ng_out_backprop);
-  if (is_nhwc) {
-    ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
-                      static_cast<unsigned long>(tf_input_sizes[3]),
-                      static_cast<unsigned long>(tf_input_sizes[1]),
-                      static_cast<unsigned long>(tf_input_sizes[2])};
-  } else {
-    ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
-                      static_cast<unsigned long>(tf_input_sizes[1]),
-                      static_cast<unsigned long>(tf_input_sizes[2]),
-                      static_cast<unsigned long>(tf_input_sizes[3])};
-  }
+  // if (is_nhwc) {
+  //   ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
+  //                     static_cast<unsigned long>(tf_input_sizes[3]),
+  //                     static_cast<unsigned long>(tf_input_sizes[1]),
+  //                     static_cast<unsigned long>(tf_input_sizes[2])};
+  // } else {
+  //   ng_batch_shape = {static_cast<unsigned long>(tf_input_sizes[0]),
+  //                     static_cast<unsigned long>(tf_input_sizes[1]),
+  //                     static_cast<unsigned long>(tf_input_sizes[2]),
+  //                     static_cast<unsigned long>(tf_input_sizes[3])};
+  // }
 
   OVTF_VLOG(3) << "ng_strides: " << ngraph::join(ng_strides);
   OVTF_VLOG(3) << "ng_dilations: " << ngraph::join(ng_dilations);
@@ -1262,19 +1266,56 @@ static Status TranslateConv2DBackpropInputOp(
 
   OVTF_VLOG(3) << "ng_kernel_shape: " << ngraph::join(ng_kernel_shape);
 
+  ov::Output<ov::Node> ng_data;
+  ov::op::PadType pad_type;
   ov::CoordinateDiff ng_padding_below;
   ov::CoordinateDiff ng_padding_above;
-  Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
-                       ng_strides, ng_dilations, ng_padding_below,
-                       ng_padding_above);
+  // Builder::MakePadding(tf_padding_type, ng_image_shape, ng_kernel_shape,
+  //                      ng_strides, ng_dilations, ng_padding_below,
+  //                      ng_padding_above);
 
-  auto ng_output_shape = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{ng_batch_shape.size() - 2},
-      vector<size_t>(ng_batch_shape.begin() + 2, ng_batch_shape.end()));
+  if (tf_padding_type == "EXPLICIT") {
+    TF_RETURN_IF_ERROR(
+        GetNodeAttr(op->attrs(), "explicit_paddings", &tf_paddings));
+    if (is_nhwc) {
+      ng_padding_below.push_back(tf_paddings[2]);
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_above.push_back(tf_paddings[3]);
+      ng_padding_above.push_back(tf_paddings[5]);
+    } else {
+      ng_padding_below.push_back(tf_paddings[4]);
+      ng_padding_below.push_back(tf_paddings[6]);
+      ng_padding_above.push_back(tf_paddings[5]);
+      ng_padding_above.push_back(tf_paddings[7]);
+    }
+    OVTF_VLOG(3) << " ========== EXPLICIT Padding ========== ";
+    OVTF_VLOG(3) << "ng_padding_below: " << ngraph::join(ng_padding_below);
+    OVTF_VLOG(3) << "ng_padding_above: " << ngraph::join(ng_padding_above);
+    ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
+        op->name(), ng_out_backprop, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "VALID") {
+    OVTF_VLOG(3) << " ========== VALID Padding ========== ";
+    ng_padding_below.assign(ng_image_shape.size(), 0);
+    ng_padding_above.assign(ng_image_shape.size(), 0);
+    ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
+        op->name(), ng_out_backprop, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations);
+  } else if (tf_padding_type == "SAME") {
+    OVTF_VLOG(3) << "========== SAME Padding - Dynamic Shape ========== ";
+    pad_type = ov::op::PadType::SAME_UPPER;
+    ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
+        op->name(), ng_out_backprop, ng_filter, ng_strides, ng_padding_below,
+        ng_padding_above, ng_dilations, pad_type);
+  }
 
-  auto ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
-      op->name(), ng_out_backprop, ng_filter, ng_output_shape, ng_strides,
-      ng_padding_below, ng_padding_above, ng_dilations);
+  // auto ng_output_shape = ConstructNgNode<opset::Constant>(
+  //     op->name(), ov::element::i64, ov::Shape{ng_batch_shape.size() - 2},
+  //     vector<size_t>(ng_batch_shape.begin() + 2, ng_batch_shape.end()));
+
+  // auto ng_data = ConstructNgNode<opset::ConvolutionBackpropData>(
+  //     op->name(), ng_out_backprop, ng_filter, ng_output_shape, ng_strides,
+  //     ng_padding_below, ng_padding_above, ng_dilations);
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_data);
   SaveNgOp(ng_op_map, op->name(), ng_data);
