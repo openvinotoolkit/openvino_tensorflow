@@ -142,7 +142,7 @@ Notes:
 ##  2. <a name='OpenVINOintegrationwithTensorFlow'></a>OpenVINO™ integration with TensorFlow
 
 ###  2.1. <a name='BuildInstructionsLinux'></a>Build Instructions for **Linux**
-**OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with prebuilt TensorFlow C++ libraries. For VAD-M support, build with OpenVINO™ binary and initialize the OpenVINO™ environment by running the `setupvars.sh`.  
+**OpenVINO™ integration with TensorFlow** built using PyPI TensorFlow enables only the Python APIs. To enable C++ APIs, build **OpenVINO™ integration with TensorFlow** with prebuilt TensorFlow C++ libraries. For VAD-M support, build with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html) binary and initialize the OpenVINO™ environment by running the `setupvars.sh`.  
 Use one of the following common build options based on the requirements. 
 
 1. Pulls compatible TensorFlow package from PyPi, uses OpenVINO™ binary from specified location. This is the recommended build option for most of the use cases.
@@ -165,7 +165,7 @@ Use one of the following common build options based on the requirements.
         python3 build_ovtf.py --use_tensorflow_from_location=/path/to/tensorflow/build/ --openvino_version=2022.1.0 --cxx11_abi_version=0
 
 
-Select the `help` option of `build_ovtf.py` script to learn more about various build options.
+Use the `help` option of `build_ovtf.py` script to learn more about various build options.
 
         python3 build_ovtf.py --help
 
@@ -221,7 +221,7 @@ Test the installation:
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
   
 ##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>Backwards Compatibility with TensorFlow on Linux
-**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions v2.4.4, v2.5.3, v2.6.3, v2.7.1, v2.8.0 and 2.9.1). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box. For example PyPi openvino-tensorflow 2.1.0 which depends on TF 2.9.1 does not work with PyPi TensorFlow 2.6.0.
+**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions **v2.4.4, v2.5.3, v2.6.3, v2.7.1, v2.8.0 and 2.9.1**). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box. For example PyPi openvino-tensorflow 2.1.0 which depends on TF 2.9.1 does not work with PyPi TensorFlow 2.6.0.
 
 Please note that PyPi openvino-tensorflow 2.1.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow 2.1.0 built against TF 2.9.1 will work with PATCH versions like TF 2.9.0, and 2.9.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
 

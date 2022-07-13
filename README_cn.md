@@ -45,7 +45,7 @@
 
 如果您想使用Intel<sup>®</sup> 集成显卡进行推理，请确保安装[Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 
-如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#安装-openvino™-integration-with-tensorflow-pypi-发布版与独立安装intel®-openvino™-发布版以支持vad-m)。
+如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#安装-openvino-integration-with-tensorflow-pypi-发布版与独立安装intel-openvino-发布版以支持vad-m)。
 
 更多安装详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多源构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
 
