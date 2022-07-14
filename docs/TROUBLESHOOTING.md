@@ -1,3 +1,5 @@
+<p>English | <a href="./TROUBLESHOOTING_cn.md">简体中文</a></p>
+
 # Tips for Troubleshooting Failing models
 If the model fails to run on **OpenVINO™ Integration with TensorFlow** or you are having a performance/accuracy issue, follow the steps below to debug the issue.
 

@@ -146,6 +146,9 @@ Status Encapsulator::AnalysisPass() {
                    << "'";
       device_name_map[cluster_idx] = node->assigned_device_name();
     }
+
+    // initialize cluster costs
+    cluster_cost_map_in_ms[cluster_idx] = 0;
   }
 
   // Pass 2: Find all nodes that are feeding into/out of each cluster, and
@@ -340,9 +343,17 @@ Status Encapsulator::AnalysisPass() {
 
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
         Status::OK()) {
+      node->ClearAttr("cost");
       continue;
     }
-
+    // This snippet is required only for Grappler pass
+    if (!api::IsRewritePassEnabled()) {
+      tensorflow::int64 node_cost = 0;
+      if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
+        continue;
+      cluster_cost_map_in_ms[cluster_idx] += node_cost;
+      node->ClearAttr("cost");
+    }
     // Because the input names may have changed from the original node def,
     // we will need to borrow some code from Graph::ToGraphDefSubRange in
     // tensorflow/core/graph/graph.cc that rewrites the node's input list.
@@ -396,6 +407,8 @@ Status Encapsulator::AnalysisPass() {
 
     auto node_def =
         NGraphClusterManager::GetClusterGraph(cluster_idx)->add_node();
+    OVTF_VLOG(4) << "Adding new node " << node->name() << " in Cluster "
+                 << cluster_idx << "'s GraphDef";
     *node_def = original_def;
     for (auto& input : *(node_def->mutable_input())) {
       TensorId tensor_id = ParseTensorName(input);
@@ -448,14 +461,18 @@ Status Encapsulator::RewritePass(
           NodeBuilder::NodeOut(graph->FindNodeId(src_node_id), src_output_idx));
     }
 
+    cluster_cost_map_in_ms[cluster_idx] /= 1e6;  // convert cost from ns to ms
+
     Node* n;
-    NodeBuilder nb = NodeBuilder(encap_node_name, "_nGraphEncapsulate")
-                         .Attr("ovtf_cluster", cluster_idx)
-                         .Attr("Targuments", input_types)
-                         .Attr("Tresults", cluster_output_dt_map[cluster_idx])
-                         .Attr("ngraph_graph_id", graph_id)
-                         .Device(device_name_map[cluster_idx])
-                         .Input(inputs);
+    NodeBuilder nb =
+        NodeBuilder(encap_node_name, "_nGraphEncapsulate")
+            .Attr("ovtf_cluster", cluster_idx)
+            .Attr("Targuments", input_types)
+            .Attr("Tresults", cluster_output_dt_map[cluster_idx])
+            .Attr("ngraph_graph_id", graph_id)
+            .Attr("cluster_cost", (int)cluster_cost_map_in_ms[cluster_idx])
+            .Device(device_name_map[cluster_idx])
+            .Input(inputs);
     if (!device_config.empty()) {
       OVTF_VLOG(3) << "Device config is not empty";
       for (auto const& i : device_config) {

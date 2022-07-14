@@ -74,32 +74,6 @@ static SetAttributesFunction SetStaticInputs(
   return cf;
 };
 
-// Check if op is supported by backend using is_supported API
-Status IsSupportedByBackend(
-    const Node* node, const shared_ptr<Backend> op_backend,
-    const std::map<std::string, std::set<shared_ptr<ov::Node>>>&
-        TFtoNgraphOpMap,
-    bool& is_supported) {
-  is_supported = true;
-
-  auto ng_op = TFtoNgraphOpMap.find(node->type_string());
-  if (ng_op == TFtoNgraphOpMap.end()) {
-    return errors::Internal("TF Op is not found in the map: ",
-                            node->type_string());
-  }
-
-  // Loop through the ngraph op list to query
-  for (auto it = ng_op->second.begin(); it != ng_op->second.end(); it++) {
-    // Pass ngraph node to check if backend supports this op
-    auto ret = op_backend->IsSupported(**it);
-    if (!ret) {
-      is_supported = false;
-      return Status::OK();
-    }
-  }
-  return Status::OK();
-}
-
 const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   //
   // A map of op types (e.g. "Add") to set_attribute functions. These can be
@@ -131,15 +105,11 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["Conv2DBackpropInput"] = SetStaticInputs({0});
     set_attributes_map["CropAndResize"] = SetStaticInputs({1, 2, 3});
     set_attributes_map["ExpandDims"] = SetStaticInputs({1});
-    set_attributes_map["Fill"] = SetStaticInputs({0});
     set_attributes_map["GatherV2"] = SetStaticInputs({2});
     set_attributes_map["Max"] = SetStaticInputs({1});
     set_attributes_map["Mean"] = SetStaticInputs({1});
     set_attributes_map["Min"] = SetStaticInputs({1});
     set_attributes_map["MirrorPad"] = SetStaticInputs({1});
-    set_attributes_map["NonMaxSuppressionV2"] = SetStaticInputs({2});
-    set_attributes_map["NonMaxSuppressionV3"] = SetStaticInputs({2});
-    set_attributes_map["OneHot"] = SetStaticInputs({1});
     set_attributes_map["Pad"] = SetStaticInputs({1});
     set_attributes_map["PadV2"] = SetStaticInputs({1});
     set_attributes_map["Prod"] = SetStaticInputs({1});
@@ -151,9 +121,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
     set_attributes_map["StridedSlice"] = SetStaticInputs({1, 2, 3});
     set_attributes_map["Sum"] = SetStaticInputs({1});
-    set_attributes_map["TopKV2"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
-    set_attributes_map["Range"] = SetStaticInputs({0, 1, 2});
     initialized = true;
   }
   return set_attributes_map;

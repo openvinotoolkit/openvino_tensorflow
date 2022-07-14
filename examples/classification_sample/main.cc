@@ -115,11 +115,6 @@ void PrintVersion() {
             << tensorflow::openvino_tensorflow::version() << std::endl;
   std::cout << "CXX11_ABI Used: "
             << tensorflow::openvino_tensorflow::cxx11_abi_flag() << std::endl;
-  std::cout << "Grappler Enabled? "
-            << (tensorflow::openvino_tensorflow::is_grappler_enabled()
-                    ? std::string("Yes")
-                    : std::string("No"))
-            << std::endl;
   PrintAvailableBackends();
 }
 
@@ -200,11 +195,14 @@ int main(int argc, char** argv) {
   }
   const Tensor& resized_tensor = resized_tensors[0];
 
-  //  Warm up
+  //  Warm up iterations
   std::vector<Tensor> outputs;
   tensorflow::openvino_tensorflow::Timer compilation_timer;
-  Status run_status = session->Run({{input_layer, resized_tensor}},
-                                   {output_layer}, {}, &outputs);
+  Status run_status;
+  for (int warmup_iter = 0; warmup_iter < 5; warmup_iter++) {
+    run_status = session->Run({{input_layer, resized_tensor}}, {output_layer},
+                              {}, &outputs);
+  }
   compilation_timer.Stop();
   cout << "Compilation Time in ms: " << compilation_timer.ElapsedInMS() << endl;
 

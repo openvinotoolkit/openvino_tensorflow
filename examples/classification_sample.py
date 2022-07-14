@@ -29,10 +29,9 @@ from __future__ import print_function
 
 import argparse
 import os
-# Enable these variables for runtime inference optimizations
+# Enable this variable for runtime inference optimizations
 os.environ["OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS"] = "1"
-os.environ[
-    "TF_ENABLE_ONEDNN_OPTS"] = "1"  # This needs to be set before importing TF
+
 import numpy as np
 import tensorflow as tf
 import openvino_tensorflow as ovtf
@@ -140,7 +139,7 @@ if __name__ == "__main__":
 
     if model_file == "":
         model = hub.load(
-            "https://tfhub.dev/google/imagenet/inception_v3/classification/4")
+            "https://tfhub.dev/google/imagenet/inception_v3/classification/5")
     else:
         model = tf.saved_model.load(model_file)
 
@@ -203,9 +202,10 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
-        # Warmup
+        # Warmup iterations
         if image_id == 0:
-            results = model(t)
+            for _ in range(5):
+                results = model(t)
 
         # run
         start = time.time()
@@ -214,7 +214,8 @@ if __name__ == "__main__":
         fps = 1 / elapsed
         print('Inference time in ms: %.2f' % (elapsed * 1000))
 
-        results = tf.nn.softmax(results).numpy()
+        results = tf.nn.softmax(results)
+
         if label_file:
             cv2.putText(frame,
                         'Inference Running on : {0}'.format(backend_name),
@@ -223,15 +224,13 @@ if __name__ == "__main__":
                 frame, 'FPS : {0} | Inference Time : {1}ms'.format(
                     int(fps), round((elapsed * 1000), 2)), (30, 80), font,
                 font_size, color, font_thickness)
-            top_5 = tf.argsort(
-                results, axis=-1, direction="DESCENDING")[0][:5].numpy()
+            scores, class_ids = tf.math.top_k(results, k=5, sorted=True)
             c = 130
-            for i, item in enumerate(top_5):
-                cv2.putText(
-                    frame, '{0} : {1}'.format(labels[item],
-                                              results[0][top_5][i]), (30, c),
-                    font, font_size, color, font_thickness)
-                print(labels[item], results[0][top_5][i])
+            for score, class_id in zip(scores[0], class_ids[0]):
+                score = score.numpy()
+                cv2.putText(frame, '{0} : {1}'.format(labels[class_id], score),
+                            (30, c), font, font_size, color, font_thickness)
+                print(labels[class_id], score)
                 c += 30
         else:
             print("No label file provided. Cannot print classification results")

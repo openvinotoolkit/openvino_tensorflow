@@ -15,7 +15,7 @@
 // http://semver.org/
 
 #define OV_TF_MAJOR_VERSION 2
-#define OV_TF_MINOR_VERSION 0
+#define OV_TF_MINOR_VERSION 1
 #define OV_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers
@@ -48,14 +48,6 @@ int cxx11_abi_flag() {
   return _GLIBCXX_USE_CXX11_ABI;
 #else
   return 0;
-#endif
-}
-
-bool is_grappler_enabled() {
-#if defined(OPENVINO_TF_USE_GRAPPLER_OPTIMIZER)
-  return true;
-#else
-  return false;
 #endif
 }
 

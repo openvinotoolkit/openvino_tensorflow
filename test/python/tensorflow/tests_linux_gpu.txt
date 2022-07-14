@@ -389,3 +389,6 @@ pool_test.PoolingTest.testGradient2D
 # AssertionError
 gather_nd_op_test.GatherNdTest.testBadIndicesCPU
 gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
+
+# NonZero type NonZero(op::v3) is not supported
+ctc_decoder_ops_test.CTCGreedyDecoderTest.testCTCGreedyDecoder

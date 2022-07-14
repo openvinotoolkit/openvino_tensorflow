@@ -8,13 +8,12 @@
 #define OPENVINO_TF_BRIDGE_DEFAULT_OPSET_H_
 #pragma once
 
-#include "openvino/opsets/opset7.hpp"
+#include "openvino/opsets/opset8.hpp"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
 
-namespace opset = ov::opset7;
-namespace default_opset = ov::opset7;
+namespace opset = ov::opset8;
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -20,6 +20,7 @@ namespace api {
 
 static bool _is_enabled = true;
 static bool _is_logging_placement = false;
+static bool _is_rewrite_pass_enabled = true;
 static std::set<std::string> disabled_op_types{};
 static char* backendName = nullptr;
 static char* backendList[4];
@@ -101,6 +102,8 @@ extern const char* get_disabled_ops() {
 void enable_dynamic_fallback() { EnableDynamicFallback(); }
 void disable_dynamic_fallback() { DisableDynamicFallback(); }
 
+void disable_rewrite_pass() { DisableRewritePass(); }
+
 bool export_ir(const char* output_dir, char** cluster_info, char** err_msg) {
   string str_cluster_info("");
   string str_err_msg("");
@@ -175,6 +178,10 @@ void EnableDynamicFallback() { NGraphClusterManager::EnableClusterFallback(); }
 void DisableDynamicFallback() {
   NGraphClusterManager::DisableClusterFallback();
 }
+
+void DisableRewritePass() { _is_rewrite_pass_enabled = false; }
+
+bool IsRewritePassEnabled() { return _is_rewrite_pass_enabled; }
 
 bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
   struct stat st;

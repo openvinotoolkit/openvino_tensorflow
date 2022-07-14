@@ -242,8 +242,11 @@ def run_tensorflow_pytests_from_artifacts(openvino_tf_src_dir, tf_src_dir,
 
     if xml_output:
         cmd.extend(["--xml_report", test_xml_report])
-    command_executor(cmd, verbose=True)
 
+    if (platform.system() == "Darwin"):
+        os.system(" ".join(cmd))
+    else:
+        command_executor(cmd, verbose=True)
     os.environ.pop('OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS', None)
 
     if openvino_tf_disable_deassign_clusters is not None:
@@ -272,14 +275,7 @@ def run_resnet50_from_artifacts(openvino_tf_src_dir, artifact_dir, batch_size,
     subprocess.Popen(
         shlex.split('git checkout aef6daa90a467a1fc7ce8395cd0067e5fda1ecff'))
 
-    # Check to see if we need to patch the repo for Grappler
-    # benchmark_cnn.patch will only work for the CPU backend
-    patch_file = os.path.abspath(
-        os.path.join(openvino_tf_src_dir, "test/grappler/benchmark_cnn.patch"))
     import openvino_tensorflow
-    if openvino_tensorflow.is_grappler_enabled():
-        print("Patching repo using: %s" % patch_file)
-        apply_patch(patch_file)
     if not os.path.exists('scripts/tf_cnn_benchmarks/'):
         raise AssertionError(
             "Could not find directory: {}".format('scripts/tf_cnn_benchmarks/'))

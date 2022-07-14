@@ -463,3 +463,6 @@ conv3d_transpose_test.Conv3DTransposeTest.testGradient
 
 # Failing on windows
 cwise_ops_binary_test.BinaryOpTest.testBCast_9D
+
+# input #0 has type S32, but one of [FP16] is expected
+ctc_decoder_ops_test.CTCGreedyDecoderTest.testCTCGreedyDecoder

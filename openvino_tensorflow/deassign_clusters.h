@@ -9,6 +9,8 @@
 #pragma once
 
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 
 namespace tensorflow {
 

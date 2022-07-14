@@ -10,6 +10,7 @@
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
+#include "tensorflow/core/profiler/utils/time_utils.h"
 
 using namespace InferenceEngine;
 

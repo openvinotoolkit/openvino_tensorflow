@@ -10,6 +10,8 @@
 #include "tensorflow/core/framework/attr_value.pb.h"
 #include "tensorflow/core/framework/node_def.pb.h"
 #include "tensorflow/core/grappler/clusters/cluster.h"
+#include "tensorflow/core/grappler/clusters/virtual_cluster.h"
+#include "tensorflow/core/grappler/costs/analytical_cost_estimator.h"
 #include "tensorflow/core/grappler/grappler_item.h"
 #include "tensorflow/core/grappler/op_types.h"
 #include "tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.h"
@@ -19,6 +21,7 @@
 #include "openvino_tensorflow/api.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/cluster_manager.h"
+#include "openvino_tensorflow/grappler/costs/cost_analyzer.h"
 #include "openvino_tensorflow/grappler/ovtf_optimizer.h"
 
 #include "ocm/include/ocm_nodes_checker.h"
@@ -49,9 +52,22 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Convert the GraphDef to Graph
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
-  opts.expect_device_spec = true;
-  Graph graph(OpRegistry::Global());
+  opts.expect_device_spec = false;
+
+  FunctionLibraryDefinition flib(OpRegistry::Global(), item.graph.library());
+  Graph graph(flib);
   TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, item.graph, &graph));
+  OVTF_VLOG(1) << "OVTF_OPTIMIZER: Successfully converted GraphDef to Graph";
+
+  /* Cost Analyzer will profile and annotate Op wise costs onto the graph*/
+  cluster->DisableDetailedStats(false);  // This enables tracing HW performance
+  cluster->SetNumWarmupSteps(1);
+  std::unique_ptr<grappler::CostAnalyzer> analyzer =
+      absl::make_unique<grappler::CostAnalyzer>(item, cluster);
+  TF_RETURN_IF_ERROR(analyzer->GenerateReport(std::cout,
+                                              /*print_analysis=*/false,
+                                              /*verbose=*/false));
+  TF_RETURN_IF_ERROR(analyzer->AnnotateOpCosts(graph));
 
   // For filename generation purposes, grab a fresh index. This is just an
   // arbitrary integer to avoid filename collisions resulting from subsequent
@@ -77,7 +93,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     OVTF_VLOG(0) << "openvino_tensorflow is available but disabled.";
   }
   if (ovtf_not_enabled || already_processed) {
-    OVTF_VLOG(1) << std::string("Rewrite pass will not run because ") +
+    OVTF_VLOG(1) << std::string(
+                        "OVTF Grappler optimizer pass will not run because ") +
                         (already_processed ? "graph is already preprocessed"
                                            : "openvino_tensorflow is disabled");
     NGraphClusterManager::EvictAllClusters();
@@ -94,6 +111,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Feed Nodes
   for (size_t i = 0; i < item.feed.size(); i++) {
     nodes_to_preserve.insert(item.feed[i].first);
+    OVTF_VLOG(1) << "Feed node: " << item.feed[i].first;
   }
 
   // Keep Ops
@@ -134,7 +152,11 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   nodes_to_preserve.insert(nodes_to_add_identity_to.begin(),
                            nodes_to_add_identity_to.end());
-  std::set<string>& skip_these_nodes = nodes_to_preserve;
+  OVTF_VLOG(1) << "These nodes are preserved from being marked for clustering";
+  for (auto itr = nodes_to_preserve.begin(); itr != nodes_to_preserve.end();
+       itr++) {
+    OVTF_VLOG(1) << *itr;
+  }
 
   //
   // Encapsulation: Part that rewrites the graph for nGraph operation.
@@ -161,11 +183,29 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   const char* device_id(device.c_str());
   std::string ov_version;
 #if defined(OPENVINO_2022_1)
-  ov_version = "2022.1";
+  ov_version = "2022.1.0";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);
-  FC.SetDisabledOps(api::GetDisabledOps());
+
+  if (device == "HDDL" && std::getenv("OPENVINO_TF_ENABLE_BATCHING")) {
+    std::vector<std::string> batched_disabled_ops = {"Shape"};
+    for (int i = 0; i < batched_disabled_ops.size(); i++) {
+      disabled_ops_set.insert(batched_disabled_ops[i]);
+    }
+  }
+
+  // disable NMSV5 and NMSV4 as of now as it impacts performance TF2 based SSD
+  // models
+  disabled_ops_set.insert("NonMaxSuppressionV5");
+  disabled_ops_set.insert("NonMaxSuppressionV4");
+  for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
+       itr++) {
+    OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
+  }
+
+  FC.SetDisabledOps(disabled_ops_set);
+  FC.SetSkipNodes(nodes_to_preserve);
   std::vector<void*> nodes_list = FC.MarkSupportedNodes();
 
   // cast back the nodes in the TF format and mark the nodes for clustering
@@ -201,12 +241,6 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // Convert the graph back to Graphdef
   graph.ToGraphDef(output);
   return Status::OK();
-}
-
-void OVTFOptimizer::Feedback(tensorflow::grappler::Cluster* cluster,
-                             const tensorflow::grappler::GrapplerItem& item,
-                             const GraphDef& optimize_output, double result) {
-  // no-op
 }
 
 int OVTFOptimizer::FreshIndex() {

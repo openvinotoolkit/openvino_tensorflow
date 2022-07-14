@@ -25,6 +25,20 @@ from tensorflow.python.framework import ops
 from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.framework import load_library
 
+from tensorflow.core.protobuf import config_pb2
+from tensorflow.core.protobuf import meta_graph_pb2
+from tensorflow.python.grappler import tf_optimizer
+from tensorflow.python.saved_model import load
+from tensorflow.python.saved_model import save
+from tensorflow.python.framework import convert_to_constants
+from tensorflow.python.training import saver
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
+from tensorflow.python.util import nest
+from tensorflow.python.eager import context
+from tensorflow.python.eager import wrap_function
+from tensorflow.python.framework import importer
+
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -40,8 +54,7 @@ __all__ = [
     'enable', 'disable', 'is_enabled', 'list_backends',
     'set_backend', 'get_backend',
     'start_logging_placement', 'stop_logging_placement',
-    'is_logging_placement', '__version__', 'cxx11_abi_flag'
-    'is_grappler_enabled', 'update_config',
+    'is_logging_placement', '__version__', 'cxx11_abi_flag', 'update_config',
     'set_disabled_ops', 'get_disabled_ops',
     'enable_dynamic_fallback', 'disable_dynamic_fallback',
     'export_ir',
@@ -58,6 +71,13 @@ TF_VERSION = tf.version.VERSION
 TF_GIT_VERSION = tf.version.GIT_VERSION
 TF_VERSION_NEEDED = "${TensorFlow_VERSION}"
 TF_GIT_VERSION_BUILT_WITH = "${TensorFlow_GIT_VERSION}"
+TF_MAJOR_VERSION = int(TF_VERSION.split(".")[0])
+TF_MINOR_VERSION = int(TF_VERSION.split(".")[1])
+
+rewriter_config = rewriter_config_pb2.RewriterConfig()
+rewriter_config.meta_optimizer_iterations = (rewriter_config_pb2.RewriterConfig.ONE)
+ovtf_optimizer = rewriter_config.custom_optimizers.add()
+ovtf_optimizer.name = "ovtf-optimizer"
 
 # converting version representations to strings if not already
 try:
@@ -128,10 +148,10 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.openvino_version.restype = ctypes.c_char_p
     openvino_tensorflow_lib.cxx11_abi_flag.restype = ctypes.c_int
-    openvino_tensorflow_lib.is_grappler_enabled.restype = ctypes.c_bool
     openvino_tensorflow_lib.set_disabled_ops.argtypes = [ctypes.c_char_p]
     openvino_tensorflow_lib.get_disabled_ops.restype = ctypes.c_char_p
-    openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p)]
+    openvino_tensorflow_lib.export_ir.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), 
+                                                  ctypes.POINTER(ctypes.c_char_p)]
     openvino_tensorflow_lib.export_ir.restype = ctypes.c_bool
     openvino_tensorflow_lib.freeClusterInfo.argtypes = []
     openvino_tensorflow_lib.freeClusterInfo.restype = ctypes.c_void_p
@@ -191,40 +211,6 @@ if ovtf_classic_loaded:
     def cxx11_abi_flag():
         return openvino_tensorflow_lib.cxx11_abi_flag()
 
-    def is_grappler_enabled():
-        return openvino_tensorflow_lib.is_grappler_enabled()
-
-    def update_config(config, backend_name = "CPU", device_id = ""):
-        #updating session config if grappler is enabled
-        if(openvino_tensorflow_lib.is_grappler_enabled()):
-            opt_name = 'ovtf-optimizer'
-            # If the config already has ovtf-optimizer, then do not update it
-            if config.HasField('graph_options'):
-                if config.graph_options.HasField('rewrite_options'):
-                    custom_opts = config.graph_options.rewrite_options.custom_optimizers
-                    for i in range(len(custom_opts)):
-                        if custom_opts[i].name == opt_name:
-                            return config
-            rewriter_options = rewriter_config_pb2.RewriterConfig()
-            rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            rewriter_options.min_graph_nodes=-1
-            ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            ovtf_optimizer.name = opt_name
-            ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-            # For reference, if we want to provide configuration support(backend parameters)
-            # in a python script using the ovtf-optimizer
-            # rewriter_options = rewriter_config_pb2.RewriterConfig()
-            # rewriter_options.meta_optimizer_iterations=(rewriter_config_pb2.RewriterConfig.ONE)
-            # rewriter_options.min_graph_nodes=-1
-            # ovtf_optimizer = rewriter_options.custom_optimizers.add()
-            # ovtf_optimizer.name = "ovtf-optimizer"
-            # ovtf_optimizer.parameter_map["device_id"].s = device_id.encode()
-            # ovtf_optimizer.parameter_map["max_batch_size"].s = b'64'
-            # ovtf_optimizer.parameter_map["ice_cores"].s = b'12'
-            # config.MergeFrom(tf.compat.v1.ConfigProto(graph_options=tf.compat.v1.GraphOptions(rewrite_options=rewriter_options)))
-        return config
-
     def set_disabled_ops(unsupported_ops):
         openvino_tensorflow_lib.set_disabled_ops(unsupported_ops.encode("utf-8"))
 
@@ -240,7 +226,8 @@ if ovtf_classic_loaded:
     def export_ir(output_dir):
         cluster_info = ctypes.c_char_p()
         err_msg = ctypes.c_char_p()
-        if not openvino_tensorflow_lib.export_ir(output_dir.encode("utf-8"), ctypes.byref(cluster_info), ctypes.byref(err_msg)):
+        if not openvino_tensorflow_lib.export_ir(output_dir.encode("utf-8"), 
+                ctypes.byref(cluster_info), ctypes.byref(err_msg)):
             err_string = err_msg.value.decode("utf-8")
             openvino_tensorflow_lib.freeErrMsg()
             raise Exception("Cannot export IR files: "+err_string)
@@ -248,9 +235,12 @@ if ovtf_classic_loaded:
         openvino_tensorflow_lib.freeClusterInfo()
 
         return cluster_string
-
+                
     __version__ = \
-    "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) + "\n" + \
-    "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) + "\n" + \
-    "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED + "\n" \
+    "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) \
+    + "\n" + \
+    "OpenVINO version used for this build: " + str(openvino_tensorflow_lib.openvino_version()) \
+    + "\n" + \
+    "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED \
+    + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"

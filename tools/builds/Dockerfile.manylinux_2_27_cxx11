@@ -4,7 +4,7 @@
 ARG OV_TAG="2022.1.0"
 
 ################################################################################
-FROM nncv-harbor.inn.intel.com/openvino/ubuntu18_dev:${OV_TAG}
+FROM openvino/ubuntu18_dev:${OV_TAG}
 ################################################################################
 
 LABEL description="This is the Ubuntu based dockerfile that builds CXX11 Python 3.x wheels \
@@ -17,9 +17,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
-ARG OVTF_BRANCH="releases/2.0.0"
-
-ADD rename_wheel.sh /
+ARG OVTF_BRANCH="releases/2.1.0"
 
 RUN apt-get update; \
     apt install -y --no-install-recommends software-properties-common && \
@@ -66,14 +64,10 @@ RUN for py_ver in 3.7 3.8 3.9; do \
         # start build
         python build_ovtf.py --python_executable=`which python` \
                              --cxx11_abi_version=1 \
-                             --disable_packaging_openvino_libs \
                              --use_openvino_from_location=/opt/intel/openvino/ \
                              --build_dir=build_venv_${py_ver}; \
-        # rename wheel to openvino_tensorflow_abi1
-        source /rename_wheel.sh && \
-        whl_rename build_venv_${py_ver}/artifacts/*.whl openvino_tensorflow_abi1 && \
         # copy to artifacts dir
-        cp build_venv_${py_ver}/artifacts/openvino_tensorflow_abi1*.whl /whl/abi1/; \
+        cp build_venv_${py_ver}/artifacts/openvino_tensorflow*.whl /whl/abi1/; \
         rm -rf build_venv_${py_ver}; \
         deactivate; \
     done

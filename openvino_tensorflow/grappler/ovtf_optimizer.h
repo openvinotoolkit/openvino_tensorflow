@@ -60,10 +60,6 @@ class OVTFOptimizer : public tensorflow::grappler::CustomGraphOptimizer {
                   const tensorflow::grappler::GrapplerItem&,
                   GraphDef*) override;
 
-  void Feedback(tensorflow::grappler::Cluster*,
-                const tensorflow::grappler::GrapplerItem&, const GraphDef&,
-                double) override;
-
  private:
   std::unordered_map<std::string, std::string> m_config_map;
   static int FreshIndex();

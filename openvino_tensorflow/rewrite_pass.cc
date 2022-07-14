@@ -61,6 +61,13 @@ mutex NGraphRewritePass::s_serial_counter_mutex;
 class NGraphEncapsulationPass : public NGraphRewritePass {
  public:
   Status Run(const GraphOptimizationPassOptions& options) override {
+    bool rewrite_pass_enabled = api::IsRewritePassEnabled();
+
+    if (!rewrite_pass_enabled) {
+      OVTF_VLOG(1) << std::string("Rewrite pass is disabled.");
+      return Status::OK();
+    }
+
     // If we don't get a main graph, log that fact and bail.
     if (options.graph == nullptr) {
       OVTF_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
@@ -163,12 +170,12 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       }
     }
 
-    // disable TopKV2 as of now as it impacts performance for TF_HUB object
-    // detection models
-    disabled_ops_set.insert("TopKV2");
-    for (auto itr = disabled_ops_set.begin(); itr != disabled_ops_set.end();
-         itr++) {
-      OVTF_VLOG(2) << "Disabled OP - " << *itr << std::endl;
+    // disable NMSV5 and NMSV4 as of now as it impacts performance TF2 based SSD
+    // models
+    disabled_ops_set.insert("NonMaxSuppressionV5");
+    disabled_ops_set.insert("NonMaxSuppressionV4");
+    if (device == "MYRIAD") {
+      disabled_ops_set.insert("NonMaxSuppressionV2");
     }
 
     FC.SetDisabledOps(disabled_ops_set);
