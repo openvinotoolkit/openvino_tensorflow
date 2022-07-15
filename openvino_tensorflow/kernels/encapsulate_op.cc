@@ -349,6 +349,10 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       }
 
       ov::Any any = ng_element->get_rt_info()["index"];
+      if (any.empty()) {
+        j++;
+        continue;
+      }
       int64_t output_index = any.as<int64_t>();
 
       // Create the TF output tensor
