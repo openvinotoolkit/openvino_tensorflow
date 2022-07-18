@@ -26,8 +26,7 @@ namespace openvino_tensorflow {
 // function.
 class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
  public:
-  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def)
-      : m_node_def(node_def) {}
+  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def);
 
   // Master branch has this function defintion
   // but Ivan branch has the other definition
@@ -49,6 +48,7 @@ class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
 
  private:
   const ::tensorflow::NodeDef* m_node_def;
+  std::vector<std::string> m_producer_port_names;
 };
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
