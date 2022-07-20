@@ -22,4 +22,7 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "_FusedDepthwiseConv2dNative",
         ov::frontend::tensorflow::op::translate_depthwise_conv_2d_native_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "_MklSwish",
+        ov::frontend::tensorflow::op::translate_mkl_swish_op),
 }));
