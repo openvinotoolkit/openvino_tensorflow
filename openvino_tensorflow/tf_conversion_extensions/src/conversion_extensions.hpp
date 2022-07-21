@@ -19,6 +19,7 @@ OP_CONVERTER(translate_fused_conv_2d_op);
 OP_CONVERTER(translate_fused_mat_mul_op);
 OP_CONVERTER(translate_fused_batch_norm_op);
 OP_CONVERTER(translate_depthwise_conv_2d_native_op);
+OP_CONVERTER(translate_mkl_swish_op);
 
 }  // namespace op
 }  // namespace tensorflow
