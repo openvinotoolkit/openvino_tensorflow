@@ -25,4 +25,25 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "_MklSwish",
         ov::frontend::tensorflow::op::translate_mkl_swish_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "Concat",
+        ov::frontend::tensorflow::op::translate_concat_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "ConcatV2",
+        ov::frontend::tensorflow::op::translate_concat_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "NonMaxSuppression",
+        ov::frontend::tensorflow::op::translate_non_max_suppression_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "NonMaxSuppressionV2",
+        ov::frontend::tensorflow::op::translate_non_max_suppression_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "NonMaxSuppressionV3",
+        ov::frontend::tensorflow::op::translate_non_max_suppression_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "NonMaxSuppressionV4",
+        ov::frontend::tensorflow::op::translate_non_max_suppression_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "NonMaxSuppressionV5",
+        ov::frontend::tensorflow::op::translate_non_max_suppression_op),
 }));
