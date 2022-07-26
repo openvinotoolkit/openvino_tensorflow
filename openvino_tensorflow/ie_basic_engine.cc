@@ -12,6 +12,12 @@
 #include "openvino_tensorflow/ie_utils.h"
 #include "tensorflow/core/profiler/utils/time_utils.h"
 
+#ifdef _WIN32
+#define GetCurrentTimeNanos() profiler::GetCurrentTimeNanos()
+#else
+#define GetCurrentTimeNanos() absl::GetCurrentTimeNanos()
+#endif
+
 using namespace InferenceEngine;
 
 namespace tensorflow {
@@ -19,7 +25,12 @@ namespace openvino_tensorflow {
 
 IE_Basic_Engine::IE_Basic_Engine(std::shared_ptr<ov::Model> model,
                                  std::string device)
-    : IE_Backend_Engine(model, device) {}
+    : IE_Backend_Engine(model, device) {
+
+  if (std::getenv("OPENVINO_TF_EXECUTION_PROFILING")) {
+      profiling = true;
+  }
+}
 
 IE_Basic_Engine::~IE_Basic_Engine() {}
 
@@ -35,6 +46,10 @@ void IE_Basic_Engine::infer(
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
 
+  int64_t start_ns, duration_in_ms;
+
+  if (profiling)
+      start_ns = GetCurrentTimeNanos();
   //  Prepare input blobs
   auto parameters = m_model->get_parameters();
   if (m_in_idx.size() == 0) {
@@ -45,6 +60,7 @@ void IE_Basic_Engine::infer(
       }
     }
   }
+  int valid_inputs = 0;
   for (int i = 0; i < inputs.size(); i++) {
     if (inputs[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
@@ -55,6 +71,7 @@ void IE_Basic_Engine::infer(
                                  " not found in ov::Model");
       }
       m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
+      valid_inputs++;
     }
   }
 
@@ -76,9 +93,16 @@ void IE_Basic_Engine::infer(
                                  param_names[i] + " not found in ov::Model");
       }
       m_infer_reqs[0].set_input_tensor(param_idx, *(hoisted_params[i]));
+      valid_inputs++;
     }
   }
+  if (profiling) {
+      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+      std::cout << "OVTF_DEBUG - num_inputs: " << inputs.size() << ", valid_inputs: " << valid_inputs << ", set_inputs_duration: " << duration_in_ms << std::endl;
+  }
 
+  if (profiling)
+      start_ns = GetCurrentTimeNanos();
   //  Prepare output blobs
   auto results = m_model->get_results();
   if (m_out_idx.size() == 0) {
@@ -87,6 +111,7 @@ void IE_Basic_Engine::infer(
       m_out_idx[i] = get_output_idx(output_names[i]);
     }
   }
+  int valid_static_outs = 0;
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_output_tensor() ("
@@ -97,11 +122,25 @@ void IE_Basic_Engine::infer(
                                  output_names[i] + " not found in ov::Model");
       }
       m_infer_reqs[0].set_output_tensor(out_idx, *(outputs[i]));
+      valid_static_outs++;
     }
   }
+  if (profiling) {
+      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+      std::cout << "OVTF_DEBUG - num_static_outs: " << outputs.size() << ", valid_static_outs: " << valid_static_outs << ", set_static_outs_duration: " << duration_in_ms << std::endl;
+  }
 
+  if (profiling)
+      start_ns = GetCurrentTimeNanos();
   m_infer_reqs[0].infer();
+  if (profiling) {
+      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+      std::cout << "OVTF_DEBUG - infer_request_duration: " << duration_in_ms << std::endl;
+  }
 
+  if (profiling)
+      start_ns = GetCurrentTimeNanos();
+  int valid_dynamic_outs = 0;
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] == nullptr) {
@@ -115,7 +154,12 @@ void IE_Basic_Engine::infer(
       auto tensor = m_infer_reqs[0].get_output_tensor(out_idx);
       outputs[i] = std::make_shared<IETensor>(
           tensor.get_element_type(), tensor.get_shape(), tensor.data());
+      valid_dynamic_outs++;
     }
+  }
+  if (profiling) {
+      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+      std::cout << "OVTF_DEBUG - num_dynamic_outs: " << outputs.size() << ", valid_dynamic_outs: " << valid_dynamic_outs << ", set_dynamic_outs_duration: " << duration_in_ms << std::endl;
   }
   OVTF_VLOG(4) << "Inference Successful";
 }
