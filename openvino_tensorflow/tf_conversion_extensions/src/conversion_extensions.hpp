@@ -22,6 +22,8 @@ OP_CONVERTER(translate_depthwise_conv_2d_native_op);
 OP_CONVERTER(translate_mkl_swish_op);
 OP_CONVERTER(translate_concat_op);
 OP_CONVERTER(translate_non_max_suppression_op);
+OP_CONVERTER(translate_slice_op);
+OP_CONVERTER(translate_cast_op);
 
 }  // namespace op
 }  // namespace tensorflow

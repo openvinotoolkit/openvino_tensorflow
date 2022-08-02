@@ -189,6 +189,9 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   std::vector<std::string> input_names(inputs.size());
   for (int i = 0; i < parameters.size(); i++) {
     ov::Any any = parameters[i]->get_rt_info()["index"];
+    if (any.empty()) {
+      continue;
+    }
     int64_t input_index = any.as<int64_t>();
     if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
         m_skipped_inputs.end()) {
