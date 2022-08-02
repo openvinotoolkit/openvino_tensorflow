@@ -97,215 +97,215 @@ shape_ops_test.ShapeOpsTest.testSqueezeGradient
 
 # zero dim error
 
-identity_bijector_test.IdentityBijectorTest.testScalarCongruency
-math_ops_test.DivAndModTest.testFloorDivGrad
-reduction_ops_test.SumReductionTest.testDegenerate
-reduction_ops_test.MeanReductionTest.testDegenerate
-reduction_ops_test.ProdReductionTest.testDegenerate
+#identity_bijector_test.IdentityBijectorTest.testScalarCongruency
+#math_ops_test.DivAndModTest.testFloorDivGrad
+#reduction_ops_test.SumReductionTest.testDegenerate
+#reduction_ops_test.MeanReductionTest.testDegenerate
+#reduction_ops_test.ProdReductionTest.testDegenerate
 
-cwise_ops_binary_test.BinaryOpTest.testBCast_10A
-cwise_ops_binary_test.BinaryOpTest.testBCast_10B
-cwise_ops_binary_test.BinaryOpTest.testBCast_10C
-cwise_ops_binary_test.BinaryOpTest.testBCast_10D
-cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
+#cwise_ops_binary_test.BinaryOpTest.testBCast_10A
+#cwise_ops_binary_test.BinaryOpTest.testBCast_10B
+#cwise_ops_binary_test.BinaryOpTest.testBCast_10C
+#cwise_ops_binary_test.BinaryOpTest.testBCast_10D
+#cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
 
 #Failed to set Blob with precision not corresponding to user output precision.
 
-cast_op_test.CastOpTest.testSmallValues
-spacetodepth_op_test.SpaceToDepthTest.testBasic
-scan_ops_test.CumsumTest.test1D
-scan_ops_test.CumsumTest.test2D
-scan_ops_test.CumsumTest.test3D
+#cast_op_test.CastOpTest.testSmallValues
+#spacetodepth_op_test.SpaceToDepthTest.testBasic
+#scan_ops_test.CumsumTest.test1D
+#scan_ops_test.CumsumTest.test2D
+#scan_ops_test.CumsumTest.test3D
 
 #Unable to add a parameter to a function with no parameters!
 
-array_ops_test.StridedSliceGradTest.testInt64Indices
+#array_ops_test.StridedSliceGradTest.testInt64Indices
 
-math_ops_test.AddNTest.testInt
-math_ops_test.SquaredDifferenceTest.testSquaredDifference
+#math_ops_test.AddNTest.testInt
+#math_ops_test.SquaredDifferenceTest.testSquaredDifference
 
-scan_ops_test.CumsumTest.testAxisType
-reduction_ops_test.SumReductionTest.testHighRank
+#scan_ops_test.CumsumTest.testAxisType
+#reduction_ops_test.SumReductionTest.testHighRank
 
 #incorrect number of input/output dimensions
-array_ops_test.ShapeSizeRankTest.testSparseShape
-reduction_ops_test.AllReductionTest.testAxesType
-reduction_ops_test.AnyReductionTest.testAxesType
-reduction_ops_test.MinReductionTest.testAxesType
-reduction_ops_test.ProdReductionTest.testAxesType
+#array_ops_test.ShapeSizeRankTest.testSparseShape
+#reduction_ops_test.AllReductionTest.testAxesType
+#reduction_ops_test.AnyReductionTest.testAxesType
+#reduction_ops_test.MinReductionTest.testAxesType
+#reduction_ops_test.ProdReductionTest.testAxesType
 
-array_ops_test.StridedSliceTest.testExpand
+#array_ops_test.StridedSliceTest.testExpand
 
-array_ops_test.StridedSliceTest.testOptimizedCases
+#array_ops_test.StridedSliceTest.testOptimizedCases
 
 # data doesn't exist
-array_ops_test.StridedSliceTest.testTensorIndexing
-concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
-concat_op_test.ConcatOpTest.testGradientsFirstDim
-concat_op_test.ConcatOpTest.testGradientsLastDim
-concat_op_test.ConcatOpTest.testGradientsNegativeAxis
-concat_op_test.ConcatOpTest.testGradientsRandom
-concat_op_test.ConcatOpTest.testGradientsSimple
-concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim0Grad
-concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad
-concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad_UnknownInputDim
-concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim2Grad
-identity_bijector_test.IdentityBijectorTest.testBijector
-math_ops_test.LogSumExpTest.testInfinity
-math_ops_test.LogSumExpTest.testKeepDims
-math_ops_test.LogSumExpTest.testOverflow
-math_ops_test.LogSumExpTest.testReduceLogSumExp
-math_ops_test.LogSumExpTest.testReductionIndices
-math_ops_test.LogSumExpTest.testReductionIndices2
-math_ops_test.LogSumExpTest.testUnderflow
-math_ops_test.ReduceTest.testReduceAllDims
-math_ops_test.ReduceTest.testReduceExplicitAxes
-nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig2
-pool_test.PoolingTest.testGradient1D
-softmax_op_test.SoftmaxTest.testAlongFirstDimension
-softmax_op_test.SoftmaxTest.testAlongSecondDimension
-softmax_op_test.SoftmaxTest.testDimTooLarge
-sparse_xent_op_test.SparseXentTest.testHighDim
-sparse_xent_op_test.SparseXentTest.testHighDim2
-sparse_xent_op_test.SparseXentTest.testVector
-topk_op_test.TopKTest.testTopKGradients
-xent_op_test.XentTest.testGradient
-xent_op_test.XentTest.testGradientLabelWithV2
-xent_op_test.XentTest.testWrapper
-xent_op_test.XentTest.testZeroDimension
-reduction_ops_test.SumReductionTest.testInfinity
-reduction_ops_test.SumReductionTest.testInt32
-reduction_ops_test.MaxReductionTest.testFloatReduce3D
-reduction_ops_test.MaxReductionTest.testGradient2
-reduction_ops_test.MaxReductionTest.testInfinity
-reduction_ops_test.MaxReductionTest.testInt64Reduce3D
-reduction_ops_test.MeanReductionTest.testFloat32
-reduction_ops_test.MeanReductionTest.testInfinity
-reduction_ops_test.MeanReductionTest.testInt32
-reduction_ops_test.MinReductionTest.testFloatReduce3D
-reduction_ops_test.MinReductionTest.testGradient2
-reduction_ops_test.MinReductionTest.testInfinity
-reduction_ops_test.ProdReductionTest.testEmptyGradients
-reduction_ops_test.ProdReductionTest.testFloat32
-reduction_ops_test.ProdReductionTest.testGradientWithZeros
-reduction_ops_test.ProdReductionTest.testInfinity
-cwise_ops_unary_test.UnaryOpTest.testFloatBasic
-pooling_test.Pooling1DTest.test_averagepooling_1d
-pooling_test.Pooling1DTest.test_maxpooling_1d
-pooling_test.Pooling2DTest.test_averagepooling_2d
-pooling_test.Pooling2DTest.test_maxpooling_2d
-pooling_test.Pooling3DTest.test_averagepooling_3d
-pooling_test.Pooling3DTest.test_maxpooling_3d
+#array_ops_test.StridedSliceTest.testTensorIndexing
+#concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
+#concat_op_test.ConcatOpTest.testGradientsFirstDim
+#concat_op_test.ConcatOpTest.testGradientsLastDim
+#concat_op_test.ConcatOpTest.testGradientsNegativeAxis
+#concat_op_test.ConcatOpTest.testGradientsRandom
+#concat_op_test.ConcatOpTest.testGradientsSimple
+#concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim0Grad
+#concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad
+#concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad_UnknownInputDim
+#concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim2Grad
+#identity_bijector_test.IdentityBijectorTest.testBijector
+#math_ops_test.LogSumExpTest.testInfinity
+#math_ops_test.LogSumExpTest.testKeepDims
+#math_ops_test.LogSumExpTest.testOverflow
+#math_ops_test.LogSumExpTest.testReduceLogSumExp
+#math_ops_test.LogSumExpTest.testReductionIndices
+#math_ops_test.LogSumExpTest.testReductionIndices2
+#math_ops_test.LogSumExpTest.testUnderflow
+#math_ops_test.ReduceTest.testReduceAllDims
+#math_ops_test.ReduceTest.testReduceExplicitAxes
+#nn_fused_batchnorm_test.BatchNormalizationTest.testBatchNormGradGradConfig2
+#pool_test.PoolingTest.testGradient1D
+#softmax_op_test.SoftmaxTest.testAlongFirstDimension
+#softmax_op_test.SoftmaxTest.testAlongSecondDimension
+#softmax_op_test.SoftmaxTest.testDimTooLarge
+#sparse_xent_op_test.SparseXentTest.testHighDim
+#sparse_xent_op_test.SparseXentTest.testHighDim2
+#sparse_xent_op_test.SparseXentTest.testVector
+#topk_op_test.TopKTest.testTopKGradients
+#xent_op_test.XentTest.testGradient
+#xent_op_test.XentTest.testGradientLabelWithV2
+#xent_op_test.XentTest.testWrapper
+#xent_op_test.XentTest.testZeroDimension
+#reduction_ops_test.SumReductionTest.testInfinity
+#reduction_ops_test.SumReductionTest.testInt32
+#reduction_ops_test.MaxReductionTest.testFloatReduce3D
+#reduction_ops_test.MaxReductionTest.testGradient2
+#reduction_ops_test.MaxReductionTest.testInfinity
+#reduction_ops_test.MaxReductionTest.testInt64Reduce3D
+#reduction_ops_test.MeanReductionTest.testFloat32
+#reduction_ops_test.MeanReductionTest.testInfinity
+#reduction_ops_test.MeanReductionTest.testInt32
+#reduction_ops_test.MinReductionTest.testFloatReduce3D
+#reduction_ops_test.MinReductionTest.testGradient2
+#reduction_ops_test.MinReductionTest.testInfinity
+#reduction_ops_test.ProdReductionTest.testEmptyGradients
+#reduction_ops_test.ProdReductionTest.testFloat32
+#reduction_ops_test.ProdReductionTest.testGradientWithZeros
+#reduction_ops_test.ProdReductionTest.testInfinity
+#cwise_ops_unary_test.UnaryOpTest.testFloatBasic
+#pooling_test.Pooling1DTest.test_averagepooling_1d
+#pooling_test.Pooling1DTest.test_maxpooling_1d
+#pooling_test.Pooling2DTest.test_averagepooling_2d
+#pooling_test.Pooling2DTest.test_maxpooling_2d
+#pooling_test.Pooling3DTest.test_averagepooling_3d
+#pooling_test.Pooling3DTest.test_maxpooling_3d
 
-gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
-gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
-math_ops_test.AddNTest.testGrad
+#gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
+#gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
+#math_ops_test.AddNTest.testGrad
 
 # Input image format I64 is not supported yet...
-math_ops_test.DivAndModTest.testConsistent
+#math_ops_test.DivAndModTest.testConsistent
 
 # Incorrect precision f64
-math_ops_test.XdivyTest.testXdivyNoZero
-math_ops_test.XdivyTest.testXdivyWithZero
-math_ops_test.XdivyTest.testXdivyWithZeroBroadcast
-math_ops_test.Xlog1pyTest.testXlog1pyNoNeg1
-math_ops_test.Xlog1pyTest.testXlog1pyWithZeroBroadcast
-softmax_op_test.SoftmaxTest.testDouble
-relu_op_test.ReluTest.testGradGradFloat64
+#math_ops_test.XdivyTest.testXdivyNoZero
+#math_ops_test.XdivyTest.testXdivyWithZero
+#math_ops_test.XdivyTest.testXdivyWithZeroBroadcast
+#math_ops_test.Xlog1pyTest.testXlog1pyNoNeg1
+#math_ops_test.Xlog1pyTest.testXlog1pyWithZeroBroadcast
+#softmax_op_test.SoftmaxTest.testDouble
+#relu_op_test.ReluTest.testGradGradFloat64
 
 # OneHot operation has a form that is not supported. should be converted to OneHotIE operation.
-one_hot_op_test.OneHotTest.testFloatBasic
-one_hot_op_test.OneHotTest.testIndicesTypes
-one_hot_op_test.OneHotTest.testInt32Basic
-one_hot_op_test.OneHotTest.testInt64Basic
-one_hot_op_test.OneHotTest.testPrefixDimOverflow
-one_hot_op_test.OneHotTest.testSimpleCases
-one_hot_op_test.OneHotTest.testSingleValueGiven
+#one_hot_op_test.OneHotTest.testFloatBasic
+#one_hot_op_test.OneHotTest.testIndicesTypes
+#one_hot_op_test.OneHotTest.testInt32Basic
+#one_hot_op_test.OneHotTest.testInt64Basic
+#one_hot_op_test.OneHotTest.testPrefixDimOverflow
+#one_hot_op_test.OneHotTest.testSimpleCases
+#one_hot_op_test.OneHotTest.testSingleValueGiven
 
 # AssertionError: Arrays are not equal
-reduction_ops_test.ReducedShapeTest.testSimple
-math_ops_test.DivAndModTest.testFloorModFloat
-array_ops_test.StridedSliceTest.test_basic_slice
+#reduction_ops_test.ReducedShapeTest.testSimple
+#math_ops_test.DivAndModTest.testFloorModFloat
+#array_ops_test.StridedSliceTest.test_basic_slice
 
 # Dim size cannot be less than -1
-slice_op_test.SliceTest.testGradientsAll
+#slice_op_test.SliceTest.testGradientsAll
 
 # Input rank plus number of new axis has to be at least the size of Lower and Upper bounds vector.
-slice_op_test.SliceTest.testInvalidIndex
-slice_op_test.SliceTest.testScalarInput
+#slice_op_test.SliceTest.testInvalidIndex
+#slice_op_test.SliceTest.testScalarInput
 
 #slice_op_test.SliceTest.testSingleDimension
 
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
-scan_ops_test.CumsumTest.test6D
+#scan_ops_test.CumsumTest.test6D
 
 # Invalid reduction dimension 
-reduction_ops_test.MaxReductionTest.testGradient
-reduction_ops_test.MaxReductionTest.testGradient3
-reduction_ops_test.MaxReductionTest.testGradient4
-reduction_ops_test.MinReductionTest.testGradient4
+#reduction_ops_test.MaxReductionTest.testGradient
+#reduction_ops_test.MaxReductionTest.testGradient3
+#reduction_ops_test.MaxReductionTest.testGradient4
+#reduction_ops_test.MinReductionTest.testGradient4
 
 # Requires start >= limit when delta < 0: 0/4
-reduction_ops_test.MinReductionTest.testGradient3
+#reduction_ops_test.MinReductionTest.testGradient3
 
-reduction_ops_test.SumReductionTest.testGradient
-reduction_ops_test.ReducedShapeTest.testZeros
+#reduction_ops_test.SumReductionTest.testGradient
+#reduction_ops_test.ReducedShapeTest.testZeros
 
-reduction_ops_test.MinReductionTest.testGradient
-reduction_ops_test.ReducedShapeTest.testNegAxes
+#reduction_ops_test.MinReductionTest.testGradient
+#reduction_ops_test.ReducedShapeTest.testNegAxes
 
 # Gradient tests fail with Intel TF
-relu_op_test.Relu6Test.testGradientFloat32
-pool_test.PoolingTest.testGradient3D
+#relu_op_test.Relu6Test.testGradientFloat32
+#pool_test.PoolingTest.testGradient3D
 
 # Results don't match between TF and OV
-lrn_op_test.LRNOpTest.testGradients
-lrn_op_test.LRNOpTest.testCompute
+#lrn_op_test.LRNOpTest.testGradients
+#lrn_op_test.LRNOpTest.testCompute
 
 # END:TBD <<--
 
 #concat_op_test.ConcatOpTest.testConcatLargeNumberOfTensors # takes long in GPU
-scan_ops_test.CumsumTest.testLarge # takes very long in GPU
+#scan_ops_test.CumsumTest.testLarge # takes very long in GPU
 
 # AssertionError
-array_ops_test.StridedSliceTest.testShrink
-conv_ops_test.Conv2DTest.testInputGradientKernelSizeMatchesInputSize
-conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideOne
-conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideThree
-conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideTwo
-conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne
-conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
-conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo
-math_ops_test.ModTest.testFloat
+#array_ops_test.StridedSliceTest.testShrink
+#conv_ops_test.Conv2DTest.testInputGradientKernelSizeMatchesInputSize
+#conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideOne
+#conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideThree
+#conv_ops_test.Conv2DTest.testInputGradientSamePaddingStrideTwo
+#conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideOne
+#conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideThree
+#conv_ops_test.Conv2DTest.testInputGradientValidPaddingStrideTwo
+#math_ops_test.ModTest.testFloat
 
-split_op_test.SplitOpTest.testSplitRows
+#split_op_test.SplitOpTest.testSplitRows
 
 # Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
-conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
-conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
-conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
-conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
-conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
-conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
-conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
+#conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
+#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
+#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
+#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
+#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
+#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
+#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
 
 # implementation_map for N5cldnn11convolutionE could not find any implementation to match key
-conv_ops_test.Conv2DTest.testConv2D1x1Filter
-conv_ops_test.Conv2DTest.testConv2D1x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
-conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
-conv_ops_test.Conv2DTest.testConv2D0x0Padding
-conv_ops_test.Conv2DTest.testConv2D1x1Padding
-conv_ops_test.Conv2DTest.testConv2D2x2Filter
-conv_ops_test.Conv2DTest.testConv2D2x2Padding
-conv_ops_test.Conv2DTest.testConv2DExplicitPaddingWithDilations
-conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSize
-conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideSame
-conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
-conv_ops_test.Conv2DTest.testConv2DOnlyBottomPadding
-conv_ops_test.Conv2DTest.testConv2DOnlyTopRightPadding
-cwise_ops_binary_test.BinaryOpTest.testBCast_12B
+#conv_ops_test.Conv2DTest.testConv2D1x1Filter
+#conv_ops_test.Conv2DTest.testConv2D1x2Filter
+#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride1x2
+#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2
+#conv_ops_test.Conv2DTest.testConv2D2x2FilterStride2Same
+#conv_ops_test.Conv2DTest.testConv2D0x0Padding
+#conv_ops_test.Conv2DTest.testConv2D1x1Padding
+#conv_ops_test.Conv2DTest.testConv2D2x2Filter
+#conv_ops_test.Conv2DTest.testConv2D2x2Padding
+#conv_ops_test.Conv2DTest.testConv2DExplicitPaddingWithDilations
+#conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSize
+#conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideSame
+#conv_ops_test.Conv2DTest.testConv2DKernelSmallerThanStrideValid
+#conv_ops_test.Conv2DTest.testConv2DOnlyBottomPadding
+#conv_ops_test.Conv2DTest.testConv2DOnlyTopRightPadding
+#cwise_ops_binary_test.BinaryOpTest.testBCast_12B
 
 # Error has occured for: eltwise:FusedBatchNormV3_2/Mul/Multiply_1675_cldnn_in0_reshape
 # Output layout count(=6) is not equal to: input layout count(=36)  /  Output layout of reshape primitive changes size of input buffer
@@ -313,82 +313,82 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_12B
 # This passes for NMSV2 but fails for others because the constants get encapsulated
 # leading to wrong results
 # Fails because of trivial fn check at the bridge, passes without the check 
-image_ops_test.NonMaxSuppressionTest.testDataTypes
+#image_ops_test.NonMaxSuppressionTest.testDataTypes
 
 # These tests fail because of the Range op dynamic output.
-reduction_ops_test.SumReductionTest.testFloat64
-reduction_ops_test.SumReductionTest.testFloat16
-reduction_ops_test.SumReductionTest.testComplex64
-reduction_ops_test.SumReductionTest.testComplex128
-reduction_ops_test.ProdReductionTest.testInt32
-reduction_ops_test.ProdReductionTest.testFloat64
-reduction_ops_test.ProdReductionTest.testComplex64
-reduction_ops_test.ProdReductionTest.testComplex128
-reduction_ops_test.MinReductionTest.testDoubleReduce3D
-reduction_ops_test.MeanReductionTest.testFloat64
-reduction_ops_test.MeanReductionTest.testComplex64
-reduction_ops_test.MeanReductionTest.testComplex128
-reduction_ops_test.MaxReductionTest.testDoubleReduce3D
+#reduction_ops_test.SumReductionTest.testFloat64
+#reduction_ops_test.SumReductionTest.testFloat16
+#reduction_ops_test.SumReductionTest.testComplex64
+#reduction_ops_test.SumReductionTest.testComplex128
+#reduction_ops_test.ProdReductionTest.testInt32
+#reduction_ops_test.ProdReductionTest.testFloat64
+#reduction_ops_test.ProdReductionTest.testComplex64
+#reduction_ops_test.ProdReductionTest.testComplex128
+#reduction_ops_test.MinReductionTest.testDoubleReduce3D
+#reduction_ops_test.MeanReductionTest.testFloat64
+#reduction_ops_test.MeanReductionTest.testComplex64
+#reduction_ops_test.MeanReductionTest.testComplex128
+#reduction_ops_test.MaxReductionTest.testDoubleReduce3D
 
 # Parameter Mismatch: Failed to set output blob with precision I32, if CNNNetwork output blob precision is FP32
 
 # Axis Dimension is out of range. Got random value, should be in range [-4, 4)
-nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
-lrn_op_test.LRNOpTest.testGradientsZeroInput
-softmax_op_test.SoftmaxTest.testEmptyInput
+#nn_fused_batchnorm_test.BatchNormalizationTest.testTrainingShape4
+#lrn_op_test.LRNOpTest.testGradientsZeroInput
+#softmax_op_test.SoftmaxTest.testEmptyInput
 
-spacetobatch_op_test.RequiredSpaceToBatchPaddingsTest.testSimple
+#spacetobatch_op_test.RequiredSpaceToBatchPaddingsTest.testSimple
 
 #const has zero dimension which is not allowed
-spacetobatch_op_test.SpaceToBatchNDTest.testDirect
+#spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 
 # Encountered unknown element type on an empty tensor
-constant_op_test.ZerosLikeTest.testZerosLikeCPU
+#constant_op_test.ZerosLikeTest.testZerosLikeCPU
 
 # Internal: Unhandled exception in op handler
-conv_ops_test.Conv2DTest.testConv2DEmpty
-conv_ops_test.Conv2DTest.testConv2DEmptyDilation
-conv_ops_test.Conv2DTest.testConv2DLotsPadding
-pooling_ops_test.PoolingTest.testAvgPooling
-topk_op_test.TopKTest.testKNegative
+#conv_ops_test.Conv2DTest.testConv2DEmpty
+#conv_ops_test.Conv2DTest.testConv2DEmptyDilation
+#conv_ops_test.Conv2DTest.testConv2DLotsPadding
+#pooling_ops_test.PoolingTest.testAvgPooling
+#topk_op_test.TopKTest.testKNegative
 
 #input sizes must be positive integers
-conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
+#conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
 
 # Strides in batch and depth dimensions is not supported:
-conv_ops_test.Conv2DTest.testOpEdgeCases
+#conv_ops_test.Conv2DTest.testOpEdgeCases
 
 # Caught exception while executing cluster 51: Program build failed
-cwise_ops_binary_test.BinaryOpTest.testBCast_12D
+#cwise_ops_binary_test.BinaryOpTest.testBCast_12D
 
 # Not equal to tolerance rtol=0.001, atol=0.001
-cwise_ops_binary_test.BinaryOpTest.testFloatBasic
+#cwise_ops_binary_test.BinaryOpTest.testFloatBasic
 
 # Invalid argument: No translation handler registered for op: MaxPoolV2
-pooling_ops_test.PoolingTest.testMaxPooling
+#pooling_ops_test.PoolingTest.testMaxPooling
 
 # Caught exception while executing cluster 0
-reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
-concat_op_test.ConcatOpTest.testRandom
-constant_op_test.ConstantTest.testBFloat16
-gather_op_test.GatherTest.testHigherRank
+#reduction_ops_test.MeanReductionTest.testSizeOverflowInt8
+#concat_op_test.ConcatOpTest.testRandom
+#constant_op_test.ConstantTest.testBFloat16
+#gather_op_test.GatherTest.testHigherRank
 
 # range/Range_5 of type Range(op::v4) is not supported
-reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
-reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
-reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
-reduction_ops_test.MeanReductionTest.testUint8
+#reduction_ops_test.MeanReductionTest.testSizeOverflowUint8
+#reduction_ops_test.MeanReductionTest.testSizeOverflowInt16
+#reduction_ops_test.MeanReductionTest.testSizeOverflowUint16
+#reduction_ops_test.MeanReductionTest.testUint8
 
 # length of size_splits must sum to the value of the dimension along split_dim
-split_op_test.SplitOpTest.testSpecialCasesVariable
-split_op_test.SplitOpTest.testDegenerateVariable
+#split_op_test.SplitOpTest.testSpecialCasesVariable
+#split_op_test.SplitOpTest.testDegenerateVariable
 
 # Unsupported parameter nodes type BatchToSpace
-pool_test.PoolingTest.testGradient2D
+#pool_test.PoolingTest.testGradient2D
 
 # AssertionError
-gather_nd_op_test.GatherNdTest.testBadIndicesCPU
-gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
+#gather_nd_op_test.GatherNdTest.testBadIndicesCPU
+#gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
 
 # NonZero type NonZero(op::v3) is not supported
-ctc_decoder_ops_test.CTCGreedyDecoderTest.testCTCGreedyDecoder
+#ctc_decoder_ops_test.CTCGreedyDecoderTest.testCTCGreedyDecoder
