@@ -49,4 +49,7 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "Slice",
         ov::frontend::tensorflow::op::translate_slice_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "Cast",
+        ov::frontend::tensorflow::op::translate_cast_op),
 }));
