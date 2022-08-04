@@ -8,9 +8,9 @@
  pool:
   vmImage: 'windows-2019'
  variables:
-    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    OV_LOCATION: /opt/intel/openvino/
-    TF_LOCATION: /home/openvino/tensorflow_pkg/
+    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow/
+    OV_LOCATION: $(Pipeline.Workspace)/openvino/
+    TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
 
  steps:
   
@@ -29,13 +29,18 @@
 
   - script: |
       pip3 install -r requirements.txt
-      pip3 install -U pytest 
-    displayName: "Setup" 
-    
+      pip3 install -U pytest
+    displayName: "Setup"
+
+  - powershell: |
+      Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino_2022.1.0.643.zip -UseBasicParsing
+      Expand-Archive openvino_2022.1.643.zip -DestinationPath $(OV_LOCATION)
+    displayName: "Download and expand OpenVINO"
+
   - script: |
       git submodule init
       git submodule update
-      python build_ovtf.py --tf_version=v2.9.1 
+      python build_ovtf.py --tf_version=v2.9.1 --use_openvino_from_location=$(OV_LOCATION)
     workingDirectory: $(WORK_DIR) 
     displayName: "Build"
      
