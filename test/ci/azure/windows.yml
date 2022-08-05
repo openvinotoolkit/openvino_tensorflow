@@ -33,14 +33,21 @@
     displayName: "Setup"
 
   - powershell: |
-      Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino_2022.1.0.643.zip -UseBasicParsing
-      Expand-Archive openvino_2022.1.643.zip -DestinationPath $(OV_LOCATION)
-    displayName: "Download and expand OpenVINO"
+      Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino.zip -UseBasicParsing
+      Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
+    displayName: "Download OpenVINO"
 
   - script: |
       git submodule init
       git submodule update
-      python build_ovtf.py --tf_version=v2.9.1 --use_openvino_from_location=$(OV_LOCATION)
-    workingDirectory: $(WORK_DIR) 
+      python build_ovtf.py --tf_version=v2.9.1 --use_openvino_from_location=$(OV_LOCATION)/w_openvino_toolkit_runtime_p_2022.1.0.643/
+    workingDirectory: $(WORK_DIR)
     displayName: "Build"
+
+  - script: |
+      source build_cmake/venv-tf-py3/bin/activate
+      pip3 install -U https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.1.0/tensorflow-2.9.1-cp39-cp39-win_amd64.whl
+      pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
+    workingDirectory: $(WORK_DIR)
+    displayName: "Install"
      
