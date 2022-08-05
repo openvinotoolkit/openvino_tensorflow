@@ -45,15 +45,15 @@
     displayName: "Build"
 
   - script: |
-      .\build_cmake\venv-tf-py3\bin\activate
+      CALL build_cmake\venv-tf-py3\bin\activate
       pip3 install -U https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.1.0/tensorflow-2.9.1-cp39-cp39-win_amd64.whl
       pip3 install --no-deps -U build_cmake\artifacts\openvino_tensorflow-2.1.0-cp39-cp39-win_amd64.whl
     workingDirectory: $(WORK_DIR)
     displayName: "Install"
 
   - script: |
-      $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
-      .\build_cmake\venv-tf-py3\bin\activate
+      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
+      CALL build_cmake\venv-tf-py3\bin\activate
       set OPENVINO_TF_BACKEND=CPU
       set PYTHONPATH=%cd%
       python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_python
