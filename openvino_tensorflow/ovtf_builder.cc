@@ -3273,13 +3273,9 @@ static Status TranslateRelu6Op(const Node* op,
   if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
-  if (device == "CPU") {
-    if (ng_input_rank == 4) Transpose<0, 3, 1, 2>(ng_input);
-  }
+  if (ng_input_rank == 4) Transpose<0, 3, 1, 2>(ng_input);
   auto ng_output = ConstructNgNode<opset::Clamp>(op->name(), ng_input, 0, 6);
-  if (device == "CPU") {
-    if (ng_input_rank == 4) Transpose<0, 2, 3, 1>(ng_output);
-  }
+  if (ng_input_rank == 4) Transpose<0, 2, 3, 1>(ng_output);
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
   return Status::OK();
