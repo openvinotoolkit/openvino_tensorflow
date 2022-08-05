@@ -104,20 +104,18 @@
     displayName: "MYRIAD python: TF Python Tests"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       cd .\examples
       CALL .\convert_yolov4.bat
       cd $(WORK_DIR)
       set OPENVINO_TF_BACKEND=CPU
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      pip3 install -r requirements.txt
+      pip3 install -r .\examples\requirements.txt
       python .\examples\TF_1_x\object_detection_sample.py --no_show
     condition: always()
     workingDirectory: $(WORK_DIR)
     displayName: "python CPU OD Inference Example TF1"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=CPU
       python .\examples\object_detection_sample.py --no_show
@@ -126,7 +124,6 @@
     displayName: "python CPU OD Inference Example TF2"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=GPU
       python .\examples\TF_1_x\object_detection_sample.py --no_show --backend GPU
@@ -135,7 +132,6 @@
     displayName: "python GPU OD Inference Example TF1"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=GPU
       python .\examples\object_detection_sample.py --no_show --backend GPU
@@ -144,25 +140,22 @@
     displayName: "python GPU OD Inference Example TF2"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=MYRIAD
-      python .\examples\TF_1_x\object_detection_sample.py --no_show
+      python .\examples\TF_1_x\object_detection_sample.py --no_show --backend MYRIAD
     condition: always()
     workingDirectory: $(WORK_DIR)
     displayName: "python MYRIAD OD Inference Example TF1"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=MYRIAD
-      python .\examples\object_detection_sample.py --no_show
+      python .\examples\object_detection_sample.py --no_show --backend MYRIAD
     condition: always()
     workingDirectory: $(WORK_DIR)
     displayName: "python MYRIAD OD Inference Example TF2"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=CPU
       python .\examples\classification_sample.py --no_show
@@ -171,7 +164,6 @@
     displayName: "python CPU Classification Inference Example TF1"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=GPU
       python .\examples\classification_sample.py --no_show --backend GPU
@@ -180,7 +172,6 @@
     displayName: "python GPU Classification Inference Example TF1"
 
   - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
       set OPENVINO_TF_BACKEND=MYRIAD
       python .\examples\classification_sample.py --no_show --backend MYRIAD
