@@ -13,9 +13,7 @@
     TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
 
  steps:
-  
-  # - script: |
-  #     rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.9' 
@@ -71,49 +69,37 @@
     workingDirectory: $(WORK_DIR)
     displayName: "CPU python: TF Python Tests"
 
-  - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=GPU
-      set PYTHONPATH=%cd%
-      python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_python
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "GPU python: Python Tests"
+  # - script: |
+  #     CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=GPU
+  #     set PYTHONPATH=%cd%
+  #     python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_python
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "GPU python: Python Tests"
 
-  - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=MYRIAD
-      set NGRAPH_TF_UTEST_RTOL=0.0001
-      set PYTHONPATH=%cd%
-      python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_python
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "MYRIAD python: Python Tests"
+  # - script: |
+  #     CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=MYRIAD
+  #     set NGRAPH_TF_UTEST_RTOL=0.0001
+  #     set PYTHONPATH=%cd%
+  #     python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_python
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "MYRIAD python: Python Tests"
 
-  - script: |
-      CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=MYRIAD
-      set NGRAPH_TF_UTEST_RTOL=0.0001
-      set PYTHONPATH=%cd%
-      python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_tf_python
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "MYRIAD python: TF Python Tests"
-
-  - script: |
-      cd .\examples
-      CALL .\convert_yolov4.bat
-      cd $(WORK_DIR)
-      set OPENVINO_TF_BACKEND=CPU
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      pip3 install -r .\examples\requirements.txt
-      python .\examples\TF_1_x\object_detection_sample.py --no_show
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python CPU OD Inference Example TF1"
+  # - script: |
+  #     CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=MYRIAD
+  #     set NGRAPH_TF_UTEST_RTOL=0.0001
+  #     set PYTHONPATH=%cd%
+  #     python .\test\ci\azure\test_runner.py --artifacts .\build_cmake\artifacts --test_tf_python
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "MYRIAD python: TF Python Tests"
 
   - script: |
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
@@ -123,37 +109,21 @@
     workingDirectory: $(WORK_DIR)
     displayName: "python CPU OD Inference Example TF2"
 
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=GPU
-      python .\examples\TF_1_x\object_detection_sample.py --no_show --backend GPU
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python GPU OD Inference Example TF1"
+  # - script: |
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=GPU
+  #     python .\examples\object_detection_sample.py --no_show --backend GPU
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "python GPU OD Inference Example TF2"
 
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=GPU
-      python .\examples\object_detection_sample.py --no_show --backend GPU
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python GPU OD Inference Example TF2"
-
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=MYRIAD
-      python .\examples\TF_1_x\object_detection_sample.py --no_show --backend MYRIAD
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python MYRIAD OD Inference Example TF1"
-
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=MYRIAD
-      python .\examples\object_detection_sample.py --no_show --backend MYRIAD
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python MYRIAD OD Inference Example TF2"
+  # - script: |
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=MYRIAD
+  #     python .\examples\object_detection_sample.py --no_show --backend MYRIAD
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "python MYRIAD OD Inference Example TF2"
 
   - script: |
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
@@ -163,18 +133,18 @@
     workingDirectory: $(WORK_DIR)
     displayName: "python CPU Classification Inference Example TF1"
 
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=GPU
-      python .\examples\classification_sample.py --no_show --backend GPU
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python GPU Classification Inference Example TF1"
+  # - script: |
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=GPU
+  #     python .\examples\classification_sample.py --no_show --backend GPU
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "python GPU Classification Inference Example TF1"
 
-  - script: |
-      CALL .\build_cmake\venv-tf-py3\Scripts\activate
-      set OPENVINO_TF_BACKEND=MYRIAD
-      python .\examples\classification_sample.py --no_show --backend MYRIAD
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python MYRIAD Classification Inference Example TF1"
+  # - script: |
+  #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
+  #     set OPENVINO_TF_BACKEND=MYRIAD
+  #     python .\examples\classification_sample.py --no_show --backend MYRIAD
+  #   condition: always()
+  #   workingDirectory: $(WORK_DIR)
+  #   displayName: "python MYRIAD Classification Inference Example TF1"
