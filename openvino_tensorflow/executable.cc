@@ -89,39 +89,50 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   if (model->get_parameters().size() == 0) {
     OVTF_VLOG(1) << "No parameters found in OpenVINO model!";
     // Try to find a node that can be converted into a "static input"
-    bool param_replaced = false;
     for (const auto& node : model->get_ordered_ops()) {
       // Only try to convert constant nodes at the edge to parameters
       // FIXME: IE cannot handle input parameters with i64/u6 precision
       // at the moment
       if (node->get_input_size() == 0 && ov::op::util::is_constant(node) &&
+              !(!(node->is_dynamic()) && node->get_shape().size() > 0 &&
+                  node->get_shape()[0] == 0) &&
           !(node->get_element_type() == ov::element::i64 ||
             node->get_element_type() == ov::element::u64)) {
-        auto constant = ov::as_type_ptr<opset::Constant>(node);
-        auto element_type = constant->get_element_type();
-        auto shape = constant->get_shape();
-        auto param = std::make_shared<opset::Parameter>(element_type, shape);
-        param->set_friendly_name(node->get_friendly_name());
-        ov::replace_node(node, param);
-        // OpenVINO doesn't provide a way to set a parameter to an existing
-        // function, so we clone the function here...
-        model = make_shared<ov::Model>(model->get_results(),
-                                       ov::ParameterVector{param},
-                                       model->get_friendly_name());
-        auto ie_tensor = make_shared<IETensor>(element_type, shape);
-        ie_tensor->write(constant->get_data_ptr(),
-                         shape_size(shape) * element_type.size());
-        m_hoisted_params.push_back(
-            make_pair(param->get_friendly_name(), ie_tensor));
-        OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
-                     << param;
-        param_replaced = true;
-        break;
+
+        // TODO: Converting StridedSlice inputs to Parameters causes
+        // the model to crash when creating request. Find a propoer
+        // solution to handle this issue.
+        auto inputs = node->get_output_target_inputs(0);
+        bool static_ss_input = false;
+        for (auto t_input : inputs) {
+          auto t_node = t_input.get_node();
+          if (strcmp(t_node->get_type_name(), "StridedSlice") == 0) {
+              static_ss_input = true;
+          }
+        }
+
+        if (!static_ss_input) {
+          auto constant = ov::as_type_ptr<opset::Constant>(node);
+          auto element_type = constant->get_element_type();
+          auto shape = constant->get_shape();
+          auto param = std::make_shared<opset::Parameter>(element_type, shape);
+          param->set_friendly_name(node->get_friendly_name());
+          ov::replace_node(node, param);
+          // OpenVINO doesn't provide a way to set a parameter to an existing
+          // function, so we clone the function here...
+          model = make_shared<ov::Model>(model->get_results(),
+                                         ov::ParameterVector{param},
+                                         model->get_friendly_name());
+          auto ie_tensor = make_shared<IETensor>(element_type, shape);
+          ie_tensor->write(constant->get_data_ptr(),
+                           shape_size(shape) * element_type.size());
+          m_hoisted_params.push_back(
+              make_pair(param->get_friendly_name(), ie_tensor));
+          OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
+                       << param;
+          break;
+        }
       }
-    }
-    if (!param_replaced) {
-      throw runtime_error(
-          "Unable to add a parameter to a model with no parameterss");
     }
   }
 
