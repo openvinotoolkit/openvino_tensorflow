@@ -22,6 +22,7 @@ OutputVector translate_fused_batch_norm_op(
   auto ng_variance = node.get_input(4);
 
   bool is_v3 = node.get_op_type() == "FusedBatchNormV3";
+  bool is_v1 = node.get_op_type() == "FusedBatchNorm";
 
   auto data_format = node.get_attribute<std::string>("data_format");
   FRONT_END_GENERAL_CHECK(data_format == "NHWC" || data_format == "NCHW",
@@ -38,7 +39,7 @@ OutputVector translate_fused_batch_norm_op(
           ->output(0);
   convert_nchw_to_nhwc(is_nhwc, ng_batch_norm);
 
-  if (is_v3) {
+  if (is_v3 || is_v1) {
     return {ng_batch_norm};
   }
 

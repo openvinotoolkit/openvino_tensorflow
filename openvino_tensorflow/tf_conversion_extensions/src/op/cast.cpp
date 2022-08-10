@@ -31,12 +31,6 @@ OutputVector translate_cast_op(
 
     auto res = make_shared<Convert>(ng_input, ng_et);
     return res->outputs();
-
-
-
-    //auto res = make_shared<Convert>(ng_input, ng_et);
-    ////set_node_name(node.get_name(), res);
-    //return res->outputs();
 }
 
 }  // namespace op
