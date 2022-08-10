@@ -17,6 +17,9 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
         "_FusedBatchNormEx",
         ov::frontend::tensorflow::op::translate_fused_batch_norm_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "FusedBatchNorm",
+        ov::frontend::tensorflow::op::translate_fused_batch_norm_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "FusedBatchNormV3",
         ov::frontend::tensorflow::op::translate_fused_batch_norm_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
