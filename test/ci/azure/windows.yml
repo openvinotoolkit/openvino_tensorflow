@@ -102,7 +102,11 @@
   #   displayName: "MYRIAD python: TF Python Tests"
 
   - script: |
+      cd .\examples
+      CALL .\convert_yolov4.bat
+      cd $(WORK_DIR)
       CALL .\build_cmake\venv-tf-py3\Scripts\activate
+      pip3 install -r .\examples\requirements.txt
       set OPENVINO_TF_BACKEND=CPU
       python .\examples\object_detection_sample.py --no_show
     condition: always()
@@ -131,7 +135,7 @@
       python .\examples\classification_sample.py --no_show
     condition: always()
     workingDirectory: $(WORK_DIR)
-    displayName: "python CPU Classification Inference Example TF1"
+    displayName: "python CPU Classification Inference Example TF2"
 
   # - script: |
   #     CALL .\build_cmake\venv-tf-py3\Scripts\activate
