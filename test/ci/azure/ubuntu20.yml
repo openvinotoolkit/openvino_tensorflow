@@ -245,7 +245,7 @@
 
    - script: |
       source build_cmake/venv-tf-py3/bin/activate
-      set OPENVINO_TF_BACKEND=CPU
+      export OPENVINO_TF_BACKEND=CPU
       python3 examples/classification_sample.py --no_show
      condition: always()
      workingDirectory: $(WORK_DIR)
