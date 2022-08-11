@@ -28,7 +28,6 @@
      path: openvino_tensorflow
  
    - script: |
-      pip3 install -U pip
       pip3 install -r requirements.txt
       pip3 install -U pytest 
      displayName: "Setup" 
@@ -52,11 +51,11 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
     
-   - script: |
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      ./maint/check-code-format.sh
-     workingDirectory: $(WORK_DIR) 
-     displayName: "Code format check"
+  #  - script: |
+  #     source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+  #     ./maint/check-code-format.sh
+  #    workingDirectory: $(WORK_DIR)
+  #    displayName: "Code format check"
     
    # - script: |
    #    source ${OV_LOCATION}/setupvars.sh
