@@ -34,7 +34,7 @@ tests_common.txt
 #OV TopK expects data to be F32 or BF16 and index I32
 
 # zero dim error
-#identity_bijector_test.IdentityBijectorTest.testScalarCongruency
+identity_bijector_test.IdentityBijectorTest.testScalarCongruency
 #math_ops_test.DivAndModTest.testFloorDivGrad
 ##reduction_ops_test.SumReductionTest.testDegenerate
 ##reduction_ops_test.MeanReductionTest.testDegenerate
@@ -154,7 +154,7 @@ tests_common.txt
 #reduction_ops_test.MinReductionTest.testInfinity
 #reduction_ops_test.ProdReductionTest.testEmptyGradients
 #reduction_ops_test.ProdReductionTest.testFloat32
-#reduction_ops_test.ProdReductionTest.testGradientWithZeros
+reduction_ops_test.ProdReductionTest.testGradientWithZeros
 #reduction_ops_test.ProdReductionTest.testInfinity
 #pooling_test.Pooling1DTest.test_averagepooling_1d
 #pooling_test.Pooling1DTest.test_maxpooling_1d
@@ -174,7 +174,7 @@ tests_common.txt
 #gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
 #gather_nd_op_test.GatherNdTest.testBadIndicesCPU
 #gather_nd_op_test.GatherNdTest.testBadIndicesWithSlicesCPU
-#math_ops_test.AddNTest.testGrad
+math_ops_test.AddNTest.testGrad
 
 # Input image format I64 is not supported yet...
 #math_ops_test.DivAndModTest.testConsistent
@@ -274,8 +274,8 @@ tests_common.txt
 
 #runtime errors; TBD
 #conv_ops_test.Conv2DTest.testConv2D1x1Filter
-#conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
-#conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
+conv_ops_test.Conv2DTest.testConv2D2x2FilterDilation
+conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeDilation
 
 #ERROR:tensorflow:Strides in batch and depth dimensions is not supported: Conv2D
 #conv_ops_test.Conv2DTest.testOpEdgeCases
@@ -293,7 +293,7 @@ tests_common.txt
 #RUNTIME ERROR:  exited with code: -11
 #cwise_ops_binary_test.BinaryOpTest.testBCast_11B
 #cwise_ops_binary_test.BinaryOpTest.testBCast_5B
-#cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
 #math_ops_test.AddNTest.testIndexedSlices
 #reduction_ops_test.MeanReductionTest.testGradient
 #array_ops_test.StridedSliceTest.test_basic_slice
