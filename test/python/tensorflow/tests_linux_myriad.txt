@@ -159,7 +159,7 @@ tests_common.txt
 
 #gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 #gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
-#math_ops_test.AddNTest.testGrad
+math_ops_test.AddNTest.testGrad
 
 # Input image format I64 is not supported yet...
 #math_ops_test.DivAndModTest.testConsistent
@@ -426,7 +426,7 @@ constant_op_test.ZerosLikeTest.test_session
 #cwise_ops_binary_test.BinaryOpTest.testDoubleBasic
 #cwise_ops_binary_test.BinaryOpTest.testFloatBasic
 #cwise_ops_binary_test.BinaryOpTest.testFloatDifferentShapes
-#cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
 #cwise_ops_unary_test.UnaryOpTest.testFloatTanhEdge
 #gather_op_test.GatherTest.testHigherRank
 #math_ops_test.AddNTest.test_iterable
