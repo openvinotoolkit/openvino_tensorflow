@@ -31,6 +31,7 @@
     displayName: "Setup"
 
   - powershell: |
+      $ProgressPreference = 'SilentlyContinue'
       Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino.zip
       Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
     displayName: "Download OpenVINO"
