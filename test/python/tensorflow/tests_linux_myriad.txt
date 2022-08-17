@@ -141,7 +141,7 @@ cwise_ops_unary_test.UnaryOpTest.testFloatBasic
 #pooling_test.Pooling3DTest.test_maxpooling_3d
 conv_ops_test.Conv2DTest.testConv2D2x2Depth1ValidBackpropInput
 conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInput
-#Testing: conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInputStride1x2
+conv_ops_test.Conv2DTest.testConv2D2x2Depth3ValidBackpropInputStride1x2
 conv_ops_test.Conv2DTest.testConv2DKernelSizeMatchesInputSizeBackpropInput
 cwise_ops_binary_test.BinaryOpTest.testBCast_6A
 depthtospace_op_test.DepthToSpaceTest.testBasic
@@ -151,8 +151,8 @@ depthtospace_op_test.DepthToSpaceTest.testBlockSize4FlatInput
 depthtospace_op_test.DepthToSpaceTest.testDepthInterleaved
 depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedDepth3
 depthtospace_op_test.DepthToSpaceTest.testDepthInterleavedLarger
-#Testing: depthtospace_op_test.DepthToSpaceTest.testNonSquare
 
+depthtospace_op_test.DepthToSpaceTest.testNonSquare
 # unsupported type
 #cast_op_test.CastOpTest.testBfloat16
 
