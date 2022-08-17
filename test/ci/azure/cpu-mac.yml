@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  vmImage: 'macOS-11'
+  vmImage: 'macOS-10.15'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
@@ -28,37 +28,30 @@
      path: openvino_tensorflow
 
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/m_openvino_toolkit_runtime_p_2022.1.0.643.tgz
       mkdir -p ${OV_LOCATION}
       tar -xvf m_openvino_toolkit_runtime_p_2022.1.0.643.tgz -C ${OV_LOCATION}
      displayName: "Install OpenVINO" 
  
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
-      brew upgrade node
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
      displayName: "Setup" 
     
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       git submodule init
       git submodule update
       python3 build_ovtf.py --use_openvino_from_location=${OV_LOCATION}/m_openvino_toolkit_runtime_p_2022.1.0.643/ --cxx11_abi_version=0
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
 
-   # - script: |
-   #    otool -l myexecutable | grep RPATH -A2
-   #    otool -l
-   #    otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-   #    ln -s /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib @rpath/libopenvino_cd.dylib
-   #   workingDirectory: $(WORK_DIR)
-   #   displayName: "Create Symbolic link for Library"
+   - script: |
+      otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
+      install_name_tool -change @rpath/libopenvino_cd.dylib @rpath/libopenvino_c.dylib /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
+     workingDirectory: $(WORK_DIR)
+     displayName: "Change load library name"
    
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
@@ -69,7 +62,6 @@
      displayName: "python:  Python Tests CPU"
      
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
@@ -102,7 +94,6 @@
   #    displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
       chmod +x convert_yolov4.sh
@@ -115,7 +106,6 @@
      displayName: "python CPU OD Inference Example TF1"     
 
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       cd  examples/
       chmod +x convert_yolov4.sh
@@ -150,7 +140,6 @@
   #    displayName: "python MYRIAD OD Inference Example TF2"
      
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
@@ -161,7 +150,6 @@
      displayName: "python CPU Classification Inference Example TF1"
 
    - script: |
-      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       python3 examples/classification_sample.py --no_show
