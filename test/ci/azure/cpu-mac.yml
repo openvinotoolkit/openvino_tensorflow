@@ -18,7 +18,7 @@
    #    rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)
    - task: UsePythonVersion@0
      inputs:
-      versionSpec: '3.9'
+      versionSpec: '3.8'
       addToPath: true
       #architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
    
