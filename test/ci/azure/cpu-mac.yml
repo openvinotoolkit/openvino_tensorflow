@@ -36,6 +36,7 @@
  
    - script: |
       export SYSTEM_VERSION_COMPAT=0
+      brew upgrade node
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
      displayName: "Setup" 
