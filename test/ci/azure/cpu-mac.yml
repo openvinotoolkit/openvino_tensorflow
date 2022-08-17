@@ -46,8 +46,12 @@
      displayName: "Build"
 
    - script: |
+      echo "---------Load Libraries before changing name---------"
       otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
       install_name_tool -change @rpath/libopenvino_cd.dylib @rpath/libopenvino_c.dylib /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
+      install_name_tool -change @rpath/libopenvinod.dylib @rpath/libopenvino.dylib /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
+      echo "---------Load Libraries after changing name----------"
+      otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
      workingDirectory: $(WORK_DIR)
      displayName: "Change load library name"
    
