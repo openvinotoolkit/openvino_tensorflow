@@ -12,201 +12,264 @@ namespace openvino_tensorflow {
 
 namespace {
 const std::map<::tensorflow::DataType, ov::element::Type>& TYPE_MAP() {
-  static const std::map<::tensorflow::DataType, ov::element::Type> type_map{
-      {::tensorflow::DataType::DT_BOOL, ov::element::boolean},
-      {::tensorflow::DataType::DT_INT16, ov::element::i16},
-      {::tensorflow::DataType::DT_INT32, ov::element::i32},
-      {::tensorflow::DataType::DT_INT64, ov::element::i64},
-      {::tensorflow::DataType::DT_HALF, ov::element::f16},
-      {::tensorflow::DataType::DT_FLOAT, ov::element::f32},
-      {::tensorflow::DataType::DT_DOUBLE, ov::element::f64},
-      {::tensorflow::DataType::DT_UINT8, ov::element::u8},
-      {::tensorflow::DataType::DT_INT8, ov::element::i8},
-      {::tensorflow::DataType::DT_BFLOAT16, ov::element::bf16}};
-  return type_map;
+    static const std::map<::tensorflow::DataType, ov::element::Type> type_map{
+        {::tensorflow::DataType::DT_BOOL, ov::element::boolean},
+        {::tensorflow::DataType::DT_INT16, ov::element::i16},
+        {::tensorflow::DataType::DT_INT32, ov::element::i32},
+        {::tensorflow::DataType::DT_INT64, ov::element::i64},
+        {::tensorflow::DataType::DT_HALF, ov::element::f16},
+        {::tensorflow::DataType::DT_FLOAT, ov::element::f32},
+        {::tensorflow::DataType::DT_DOUBLE, ov::element::f64},
+        {::tensorflow::DataType::DT_UINT8, ov::element::u8},
+        {::tensorflow::DataType::DT_INT8, ov::element::i8},
+        {::tensorflow::DataType::DT_BFLOAT16, ov::element::bf16}};
+    return type_map;
+}
+
+template <typename T>
+void extract_tensor_content(const std::string& tensor_content, ov::Tensor* values) {
+    const auto tensor_content_size = tensor_content.size();
+    FRONT_END_GENERAL_CHECK(tensor_content_size % sizeof(T) == 0,
+                            "Size of tensor_content (",
+                            tensor_content_size,
+                            ") is not a multiple of ",
+                            sizeof(T));
+
+    const T* tensor_values = reinterpret_cast<const T*>(tensor_content.data());
+    FRONT_END_GENERAL_CHECK(values->get_size() == tensor_content_size / sizeof(T),
+                            "Size of tensor is not equal to tensor_content size.");
+    std::copy(tensor_values, tensor_values + tensor_content_size / sizeof(T), values->data<T>());
+}
+
+template <typename T>
+void extract_compressed_tensor_content(const ::tensorflow::TensorProto& tensor_proto,
+                                       int64_t val_size,
+                                       ov::Tensor* values) {
+    auto val_lastsaved = static_cast<T>(0);
+    auto values_data = values->data<T>();
+    for (auto i = 0; i < values->get_size(); i++) {
+        if (val_size == 0) {
+            values_data[i] = static_cast<T>(0);
+        } else if (i < val_size) {
+            auto val_i = static_cast<T>(0);
+            switch (values->get_element_type()) {
+            // TODO: there are more element types to support here
+            case ov::element::boolean:
+                val_i = tensor_proto.bool_val()[i];
+                break;
+            case ov::element::i32:
+                val_i = tensor_proto.int_val()[i];
+                break;
+            case ov::element::i64:
+                val_i = tensor_proto.int64_val()[i];
+                break;
+            case ov::element::f32:
+                val_i = tensor_proto.float_val()[i];
+                break;
+            case ov::element::f64:
+                val_i = tensor_proto.double_val()[i];
+                break;
+            default:
+                FRONT_END_THROW("Encountered unknown element type " + values->get_element_type().get_type_name());
+            }
+            values_data[i] = val_i;
+            val_lastsaved = val_i;
+        } else {
+            values_data[i] = val_lastsaved;
+        }
+    }
 }
 }  // namespace
-  
-OVTFDecoder::OVTFDecoder(const ::tensorflow::NodeDef* node_def)
-      : m_node_def(node_def) {
-  // TODO: Ignoring control edges as a temporary fix.
-  // Find a proper way to handle conrtol outputs.
-  for (int i=0; i<m_node_def->input_size(); i++) {
-    std::string producer_port_name = m_node_def->input(i);
-    if (producer_port_name.at(0) != '^') {
-      m_producer_port_names.push_back(producer_port_name);
-    }
-  }
-}
-
-// ov::Any OVTFDecoder::get_attribute(const std::string& name,
-//                                    const std::type_info& type_info) const {
-//   auto attrs = decode_attribute_helper(name);
-//   if (attrs.empty()) {
-//     return {};
-//   }
-
-//   if (type_info == typeid(std::string)) {
-//     return attrs[0].s();
-//   } else if (type_info == typeid(int64_t)) {
-//     return attrs[0].i();
-//   } else if (type_info == typeid(std::vector<int64_t>)) {
-//     std::vector<int64_t> longs;
-//     longs.reserve(attrs[0].list().i_size());
-//     for (size_t idx = 0; idx < attrs[0].list().i_size(); ++idx) {
-//       longs.push_back(attrs[0].list().i(idx));
-//     }
-//     return longs;
-//   } else if (type_info == typeid(int32_t)) {
-//     return static_cast<int32_t>(attrs[0].i());
-//   } else if (type_info == typeid(std::vector<int32_t>)) {
-//     std::vector<int32_t> ints;
-//     ints.reserve(attrs[0].list().i_size());
-//     for (size_t idx = 0; idx < attrs[0].list().i_size(); ++idx) {
-//       ints.push_back(static_cast<int32_t>(attrs[0].list().i(idx)));
-//     }
-//     return ints;
-//   } else if (type_info == typeid(float)) {
-//     return attrs[0].f();
-//   } else if (type_info == typeid(std::vector<float>)) {
-//     std::vector<float> floats;
-//     floats.reserve(attrs[0].list().i_size());
-//     for (size_t idx = 0; idx < attrs[0].list().i_size(); ++idx) {
-//       floats.push_back(attrs[0].list().f(idx));
-//     }
-//     return floats;
-//   } else if (type_info == typeid(ov::element::Type)) {
-//     auto data_type = attrs[0].type();
-//     return TYPE_MAP().at(data_type);
-//   } else if (type_info == typeid(bool)) {
-//     return attrs[0].b();
-//   } else if (type_info == typeid(::tensorflow::DataType)) {
-//     return attrs[0].type();
-//   } else if (type_info == typeid(::tensorflow::TensorProto)) {
-//     return attrs[0].tensor();
-//   } else if (type_info == typeid(::ov::PartialShape)) {
-//     std::vector<ov::Dimension> dims;
-//     auto tf_shape = attrs[0].shape();
-//     for (int i = 0; i < tf_shape.dim_size(); i++) {
-//       dims.push_back(tf_shape.dim(i).size());
-//     }
-//     auto pshape = ov::PartialShape(dims);
-//     return pshape;
-//   }
-
-//   // type is not supported by decoder
-//   return {};
-// }
 
 ov::Any OVTFDecoder::get_attribute(const std::string& name) const {
-  auto attrs = decode_attribute_helper(name);
-  if (attrs.empty()) {
-    return {};
-  }
-
-  switch (attrs[0].value_case()) {
-    case ::tensorflow::AttrValue::ValueCase::kB:
-      return attrs[0].b();
-    case ::tensorflow::AttrValue::ValueCase::kF:
-      return attrs[0].f();
-    case ::tensorflow::AttrValue::ValueCase::kS:
-      return attrs[0].s();
-    case ::tensorflow::AttrValue::ValueCase::kI:
-      return attrs[0].i();
-    case ::tensorflow::AttrValue::ValueCase::kShape: {
-      std::vector<ov::Dimension> dims;
-      const auto& tf_shape = attrs[0].shape();
-      for (int i = 0; i < tf_shape.dim_size(); i++) {
-        dims.emplace_back(tf_shape.dim(i).size());
-      }
-      return ov::PartialShape(dims);
+    auto attrs = decode_attribute_helper(name);
+    if (attrs.empty()) {
+        return {};
     }
 
-    case ::tensorflow::AttrValue::ValueCase::kType:
-      return TYPE_MAP().at(attrs[0].type());
+    switch (attrs[0].value_case()) {
+    case ::tensorflow::AttrValue::ValueCase::kB:
+        return attrs[0].b();
+    case ::tensorflow::AttrValue::ValueCase::kF:
+        return attrs[0].f();
+    case ::tensorflow::AttrValue::ValueCase::kS:
+        return attrs[0].s();
+    case ::tensorflow::AttrValue::ValueCase::kI:
+        return attrs[0].i();
+    case ::tensorflow::AttrValue::ValueCase::kShape: {
+        std::vector<ov::Dimension> dims;
+        const auto& tf_shape = attrs[0].shape();
+        for (int i = 0; i < tf_shape.dim_size(); i++) {
+            dims.emplace_back(tf_shape.dim(i).size());
+        }
+        return ov::PartialShape(dims);
+    }
+
+    case ::tensorflow::AttrValue::ValueCase::kType: {
+        if (TYPE_MAP().count(attrs[0].type())) {
+            return TYPE_MAP().at(attrs[0].type());
+        } else {
+            // for all unsupported types return undefined type
+            return ov::element::undefined;
+        }
+    }
 
     case ::tensorflow::AttrValue::ValueCase::kList: {
-      const auto& list = attrs[0].list();
-      if (list.i_size())
-        return std::vector<int64_t>(list.i().begin(), list.i().end());
+        const auto& list = attrs[0].list();
+        if (list.i_size())
+            return std::vector<int64_t>(list.i().begin(), list.i().end());
 
-      if (list.f_size())
-        return std::vector<float>(list.f().begin(), list.f().end());
+        if (list.f_size())
+            return std::vector<float>(list.f().begin(), list.f().end());
 
-      if (list.s_size())
-        return std::vector<std::string>(list.s().begin(), list.s().end());
+        if (list.s_size())
+            return std::vector<std::string>(list.s().begin(), list.s().end());
 
-      if (list.b_size())
-        return std::vector<bool>(list.b().begin(), list.b().end());
+        if (list.b_size())
+            return std::vector<bool>(list.b().begin(), list.b().end());
 
-      if (list.shape_size()) {
-        std::vector<ov::PartialShape> res;
-        for (const auto& it : list.shape()) {
-          std::vector<ov::Dimension> dims;
-          for (int i = 0; i < it.dim_size(); i++) {
-            dims.emplace_back(it.dim(i).size());
-          }
-          res.emplace_back(dims);
+        if (list.shape_size()) {
+            std::vector<ov::PartialShape> res;
+            for (const auto& it : list.shape()) {
+                std::vector<ov::Dimension> dims;
+                for (int i = 0; i < it.dim_size(); i++) {
+                    dims.emplace_back(it.dim(i).size());
+                }
+                res.emplace_back(dims);
+            }
         }
-      }
 
-      if (list.type_size()) {
-        std::vector<ov::element::Type> res;
-        for (int idx = 0; idx < list.type_size(); ++idx) {
-          res.emplace_back(TYPE_MAP().at(list.type(idx)));
+        if (list.type_size()) {
+            std::vector<ov::element::Type> res;
+            for (int idx = 0; idx < list.type_size(); ++idx) {
+                res.emplace_back(TYPE_MAP().at(list.type(idx)));
+            }
+            return res;
         }
-        return res;
-      }
 
-      if (list.tensor_size() || list.func_size())
+        if (list.tensor_size() || list.func_size())
+            FRONT_END_GENERAL_CHECK(
+                false,
+                "Conversion from Tensorflow to OpenVINO data type failed: List of tensors/functions type for '",
+                name,
+                "' attribute is not supported.");
+
         FRONT_END_GENERAL_CHECK(false,
-                                "Conversion from tensorflow data type to "
-                                "openvino data type is not supported.");
+                                "Conversion from Tensorflow to OpenVINO data type failed: List type for '",
+                                name,
+                                "' attribute is not supported.");
     }
 
-    case ::tensorflow::AttrValue::ValueCase::kTensor:
-      return attrs[0].tensor();
+    case ::tensorflow::AttrValue::ValueCase::kTensor: {
+        const auto& tensor_proto = attrs[0].tensor();
+        const auto& tf_shape = tensor_proto.tensor_shape();
+        ov::PartialShape pshape;
+        for (int i = 0; i < tf_shape.dim_size(); i++) {
+            pshape.push_back(tf_shape.dim(i).size());
+        }
+        FRONT_END_GENERAL_CHECK(pshape.is_static(), "Dynamic shapes are not supported for Tensor attribute.");
+        const auto& tf_type = tensor_proto.dtype();
+        FRONT_END_GENERAL_CHECK(
+            TYPE_MAP().count(tf_type),
+            "Encountered unknown element type " + DataType_Name(tf_type) + " on an empty tensor_proto");
+        auto ov_type = TYPE_MAP().at(tf_type);
+        ov::Tensor res(ov_type, pshape.get_shape());
+        auto tensor_content = tensor_proto.tensor_content();
+        if (!tensor_content.empty() && tensor_proto.has_tensor_shape()) {
+            switch (ov_type) {
+            case ov::element::u8:
+                extract_tensor_content<uint8_t>(tensor_content, &res);
+                break;
+            case ov::element::i8:
+                extract_tensor_content<int8_t>(tensor_content, &res);
+                break;
+            case ov::element::i16:
+                extract_tensor_content<int16_t>(tensor_content, &res);
+                break;
+            case ov::element::i32:
+                extract_tensor_content<int32_t>(tensor_content, &res);
+                break;
+            case ov::element::i64:
+                extract_tensor_content<int64_t>(tensor_content, &res);
+                break;
+            case ov::element::f16:
+                extract_tensor_content<ov::float16>(tensor_content, &res);
+                break;
+            case ov::element::f32:
+                extract_tensor_content<float>(tensor_content, &res);
+                break;
+            case ov::element::f64:
+                extract_tensor_content<double>(tensor_content, &res);
+                break;
+            case ov::element::bf16:
+                extract_tensor_content<bfloat16>(tensor_content, &res);
+                break;
+            default:
+                FRONT_END_THROW("Encountered unknown element type " + ov_type.get_type_name());
+            }
+        } else {
+            int64_t val_size = 0;
+            switch (ov_type) {
+            case ov::element::boolean:
+                val_size = tensor_proto.bool_val_size();
+                extract_compressed_tensor_content<bool>(tensor_proto, val_size, &res);
+                break;
+            case ov::element::i32:
+                val_size = tensor_proto.int_val_size();
+                extract_compressed_tensor_content<int32_t>(tensor_proto, val_size, &res);
+                break;
+            case ov::element::i64:
+                val_size = tensor_proto.int64_val_size();
+                extract_compressed_tensor_content<int64_t>(tensor_proto, val_size, &res);
+                break;
+            case ov::element::f32:
+                val_size = tensor_proto.float_val_size();
+                extract_compressed_tensor_content<float>(tensor_proto, val_size, &res);
+                break;
+            case ov::element::f64:
+                val_size = tensor_proto.double_val_size();
+                extract_compressed_tensor_content<double>(tensor_proto, val_size, &res);
+                break;
+            default:
+                FRONT_END_THROW("Encountered unknown element type " + ov_type.get_type_name());
+            }
+        }
+        return res;
+    }
     case ::tensorflow::AttrValue::ValueCase::kPlaceholder:
+        FRONT_END_GENERAL_CHECK(false,
+                                "Conversion from Tensorflow to OpenVINO data type failed: Placeholder type for '",
+                                name,
+                                "' attribute is not supported.");
     case ::tensorflow::AttrValue::ValueCase::kFunc:
+        FRONT_END_GENERAL_CHECK(false,
+                                "Conversion from Tensorflow to OpenVINO data type failed: Function type for '",
+                                name,
+                                "' attribute is not supported.");
     default:
-      FRONT_END_GENERAL_CHECK(false,
-                              "Conversion from tensorflow data type to "
-                              "openvino data type is not supported.");
-  }
+        FRONT_END_GENERAL_CHECK(false, "Conversion from Tensorflow to OpenVINO data type failed.");
+    }
 }
 
-ov::Any OVTFDecoder::get_native_attribute(const std::string& name) const {
-  auto attrs = decode_attribute_helper(name);
-  if (attrs.empty()) {
-    return {};
-  }
-
-  switch (attrs[0].value_case()) {
-    case ::tensorflow::AttrValue::ValueCase::kTensor:
-      return attrs[0].tensor();
-    case ::tensorflow::AttrValue::ValueCase::kType:
-      return attrs[0].type();
-    default:
-      FRONT_END_GENERAL_CHECK(false, "Data type is not covered.");
-  }
-}
-
-size_t OVTFDecoder::get_input_size() const { return m_producer_port_names.size(); }
+size_t OVTFDecoder::get_input_size() const { return m_node_def->input_size(); }
 
 void OVTFDecoder::get_input_node(size_t input_port_idx,
                                  std::string& producer_name,
                                  size_t& producer_output_port_index) const {
-  std::string producer_port_name = m_producer_port_names[input_port_idx];
-  auto delim_pos = producer_port_name.find(':');
-  if (delim_pos != std::string::npos) {
-    producer_name = producer_port_name.substr(0, delim_pos);
-    std::string p_p_idx_str = producer_port_name.substr(delim_pos + 1);
-    producer_output_port_index =
-        std::stoi(producer_port_name.substr(delim_pos + 1));
-    return;
-  }
-  producer_name = producer_port_name;
-  producer_output_port_index = 0;
+    // TODO: handle body graph nodes with a couple of columns
+    std::string producer_port_name = m_node_def->input(input_port_idx);
+    auto delim_pos = producer_port_name.find(':');
+    if (delim_pos != std::string::npos) {
+        producer_name = producer_port_name.substr(0, delim_pos);
+        auto port_id = producer_port_name.substr(delim_pos + 1);
+        FRONT_END_GENERAL_CHECK(!port_id.empty() && std::all_of(port_id.begin(), port_id.end(), ::isdigit),
+                                "Port id is not specified or not a number. Value: ",
+                                port_id);
+        producer_output_port_index = std::stoi(port_id);
+        return;
+    }
+    producer_name = producer_port_name;
+    producer_output_port_index = 0;
 }
 
 const std::string& OVTFDecoder::get_op_type() const { return m_node_def->op(); }
