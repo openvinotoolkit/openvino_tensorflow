@@ -2,8 +2,8 @@ diff --git a/cmake/dependencies.cmake b/cmake/dependencies.cmake
 index 5cf1706a9..c9f173f35 100644
 --- a/cmake/dependencies.cmake
 +++ b/cmake/dependencies.cmake
-@@ -26,12 +26,12 @@ fetch_models_and_validation_set()
- get_linux_name(LINUX_OS_NAME)
+@@ -28,12 +28,12 @@ fetch_models_and_validation_set()
+ endif()
  
  if(CMAKE_CROSSCOMPILING AND CMAKE_HOST_SYSTEM_NAME MATCHES Linux AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
 -    set(protoc_version "3.18.2")
