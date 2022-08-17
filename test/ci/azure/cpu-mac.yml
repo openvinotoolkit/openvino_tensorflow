@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  vmImage: 'macOS-11'
+  vmImage: 'macOS-latest'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
