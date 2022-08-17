@@ -19,6 +19,9 @@ tests_common.txt
 
 ###################################################
 [SKIP]
+
+# Commented tests are fixed with Openvino 2022.1.0
+
 # This test fails with Intel-TF; is added for reproducing the failure seen with TF py test
 #test_maxpool3dgrad.TestMaxpool3DGrad.test_maxpool3d_grad
 
@@ -78,7 +81,7 @@ tests_common.txt
 #test_prod.TestProductOperations.test_prod_no_axis[v10-expected0]
 #test_prod.TestProductOperations.test_dynamic_axis_fallback[v10-0-expected0]
 
-#test_set_backend.TestSetBackend.test_set_backend
+test_set_backend.TestSetBackend.test_set_backend
 
 # Segmentation fault
 #test_slice.TestSliceOperations.test_strided_slice
@@ -94,7 +97,7 @@ tests_common.txt
 #test_l2loss.TestL2Loss.test_l2loss[xshape1]
 
 # OP disable tests are not supported as of now
-#test_op_disable.TestOpDisableOperations.*
+test_op_disable.TestOpDisableOperations.*
 
 # Parameter mismtach: Failed to set output blob with precision: I32, if CNNNetwork output blob precision is: FP32
 #test_topkv2.TestTopKV2.test_topkv2_1d
