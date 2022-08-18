@@ -9,6 +9,7 @@
 #include "backend_manager.h"
 #include "openvino_tensorflow/ie_backend_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
+#include "ie/ie_common.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
