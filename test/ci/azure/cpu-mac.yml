@@ -34,6 +34,9 @@
    - script: |
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
+      softwareupdate --all --install --force
+      rm -rf /Library/Developer/CommandLineTools
+      xcode-select --install
      displayName: "Setup" 
     
    - script: |
