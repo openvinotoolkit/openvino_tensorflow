@@ -99,6 +99,7 @@ done
 
 # Check format of py files at root (build_ovtf.py, build_tf.py, test_ovtf.py etc)
 for SRC_FILE in $(find . -maxdepth 1  -name '*py' -print); do
+    python3 -m yapf -d -p --style google --no-local-style "${SRC_FILE}"
     if ! python3 -m yapf -d -p --style google --no-local-style "${SRC_FILE}">/dev/null; then
         FAILED_FILES_YAPF+=( "${SRC_FILE}" )
     fi
