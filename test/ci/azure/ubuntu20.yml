@@ -13,9 +13,6 @@
     TF_LOCATION: /home/openvino/tensorflow_pkg/
     
  steps:
- 
-   #- script: |
-   #   rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
    - task: UsePythonVersion@0
      inputs:
       versionSpec: '3.8'
@@ -28,6 +25,8 @@
      path: openvino_tensorflow
  
    - script: |
+      sudo apt-get update -y
+      sudo apt-get install -y clang-format-3.9
       pip3 install -r requirements.txt
       pip3 install -U pytest 
      displayName: "Setup" 
@@ -50,6 +49,12 @@
       pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
+
+   - script: |
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      ./maint/check-code-format.sh
+     workingDirectory: $(WORK_DIR)
+     displayName: "Code format check"
     
    # - script: |
    #    source ${OV_LOCATION}/setupvars.sh

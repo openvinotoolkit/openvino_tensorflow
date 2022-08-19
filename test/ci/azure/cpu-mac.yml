@@ -12,6 +12,7 @@
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     OV_LOCATION: $(Pipeline.Workspace)/openvino/
     MACOSX_DEPLOYMENT_TARGET: '11_0'
+    SYSTEM_VERSION_COMPAT: '0'
     
  steps:
    - task: UsePythonVersion@0
@@ -34,9 +35,6 @@
    - script: |
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
-      softwareupdate --all --install --force
-      rm -rf /Library/Developer/CommandLineTools
-      xcode-select --install
      displayName: "Setup" 
     
    - script: |
@@ -46,15 +44,11 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
 
-   # - script: |
-   #    echo "---------Load Libraries before changing name---------"
-   #    otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-   #    install_name_tool -change @rpath/libopenvino_cd.dylib @rpath/libopenvino_c.dylib /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-   #    install_name_tool -change @rpath/libopenvinod.dylib @rpath/libopenvino.dylib /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-   #    echo "---------Load Libraries after changing name----------"
-   #    otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-   #   workingDirectory: $(WORK_DIR)
-   #   displayName: "Change load library name"
+   - script: |
+      source build_cmake/venv-tf-py3/bin/activate
+      pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
+     workingDirectory: $(WORK_DIR)
+     displayName: "Install"
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU

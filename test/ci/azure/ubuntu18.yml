@@ -25,6 +25,8 @@
      path: openvino_tensorflow
  
    - script: |
+      sudo apt-get update -y
+      sudo apt-get install -y clang-format-3.9
       pip3 install -r requirements.txt
       pip3 install -U pytest 
      displayName: "Setup" 
