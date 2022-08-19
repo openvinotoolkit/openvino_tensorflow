@@ -4683,96 +4683,20 @@ Status Builder::TranslateGraphWithTFFE(
           "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
                       -> ov::OutputVector {
             ov::Output<ov::Node> res;
-            auto element_type = node.get_attribute<ov::element::Type>("T");
             auto index = node.get_attribute<int64_t>("index");
-            auto shape = indexed_shape.at(index);
-            auto is_static_input = node.get_attribute<bool>("_static_input");
             auto prov_tag = node.get_attribute<std::string>("_prov_tag");
+            auto is_static_input = node.get_attribute<bool>("_static_input");
             if (is_static_input) {
-              ov::Any any_proto = node.get_attribute<::tensorflow::TensorProto>(
-                  "_static_value");
-              auto tensor_proto = any_proto.as<::tensorflow::TensorProto>();
-              ov::Any any_type =
+              auto tensor = node.get_attribute<ov::Tensor>("_static_value");
+              auto dtype =
                   node.get_attribute<ov::element::Type>("_static_dtype");
-              auto dt = any_type.as<ov::element::Type>();
-              switch (dt) {
-                case ov::element::Type_t::f32: {
-                  vector<float> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<float>(tensor_proto, dt, &const_shape,
-                                                 &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::f64: {
-                  vector<double> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<double>(tensor_proto, dt,
-                                                  &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::u8: {
-                  vector<uint8> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<uint8>(tensor_proto, dt, &const_shape,
-                                                 &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::i8: {
-                  vector<int8> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<int8>(tensor_proto, dt, &const_shape,
-                                                &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::i32: {
-                  vector<int32> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<int32>(tensor_proto, dt, &const_shape,
-                                                 &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::u64: {
-                  vector<uint64> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<uint64>(tensor_proto, dt,
-                                                  &const_shape, &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::i64: {
-                  vector<int64> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<int64>(tensor_proto, dt, &const_shape,
-                                                 &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                case ov::element::Type_t::boolean: {
-                  vector<bool> const_vec;
-                  ov::Shape const_shape;
-                  values_from_tensorproto<bool>(tensor_proto, dt, &const_shape,
-                                                &const_vec);
-                  res = std::make_shared<ov::opset8::Constant>(dt, const_shape,
-                                                               const_vec);
-                  break;
-                }
-                default:
-                  THROW_IE_EXCEPTION << "Unkown const input type";
-              }
-
+              FRONT_END_GENERAL_CHECK(
+                  dtype == tensor.get_element_type(),
+                  "_Arg has tensor with type different from _static_dtype attribute.");
+              res = std::make_shared<ov::opset8::Constant>(tensor.get_element_type(), tensor.get_shape(), tensor.data());
             } else {
+              auto element_type = node.get_attribute<ov::element::Type>("T");
+              auto shape = indexed_shape.at(index);
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }

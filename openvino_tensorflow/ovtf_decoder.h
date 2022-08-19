@@ -26,14 +26,10 @@ namespace openvino_tensorflow {
 // function.
 class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
  public:
-  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def);
+  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def) : m_node_def(node_def) {}
 
-  // Master branch has this function defintion
-  // but Ivan branch has the other definition
-  // ov::Any get_attribute(const std::string& name,
-  //                       const std::type_info& type_info) const override;
   ov::Any get_attribute(const std::string& name) const override;
-  ov::Any get_native_attribute(const std::string& name) const override;
+
   size_t get_input_size() const override;
 
   void get_input_node(const size_t input_port_idx, std::string& producer_name,
@@ -43,12 +39,10 @@ class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
 
   const std::string& get_op_name() const override;
 
+ private:
   vector<::tensorflow::AttrValue> decode_attribute_helper(
       const string& name) const;
-
- private:
   const ::tensorflow::NodeDef* m_node_def;
-  std::vector<std::string> m_producer_port_names;
 };
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

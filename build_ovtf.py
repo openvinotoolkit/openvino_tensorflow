@@ -446,24 +446,11 @@ def main():
         # Download OpenVINO
         download_repo(
             "openvino",
-            #TODO: Switch back to the main OV repo before merging
-            #"https://github.com/openvinotoolkit/openvino.git",
-            "https://github.com/rkazants/openvino.git",
+            "https://github.com/openvinotoolkit/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
-
-        # TODO: Temporary workaround for the protobuf issue.
-        #       Remove after the issue is fixed.
-        pwd = os.getcwd()
-        os.chdir(openvino_src_dir)
-        command_executor(["git", "apply", "../../ov_tf_fe.patch"])
-        command_executor(["git", "submodule", "update", "--init", "--recursive"])
-        os.chdir(openvino_src_dir+"/thirdparty/protobuf/protobuf")
-        command_executor(["git", "checkout", "52b244724"])
-        os.chdir(pwd)
-        
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
