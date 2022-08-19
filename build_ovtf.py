@@ -521,9 +521,9 @@ def main():
         ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
 
     # Now build openvino-tensorflow
-    ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
-                                  openvino_tf_src_dir, venv_dir,
-                                  openvino_tf_cmake_flags, arguments.debug_build, verbosity)
+    ov_tf_whl = build_openvino_tf(
+        build_dir, artifacts_location, openvino_tf_src_dir, venv_dir,
+        openvino_tf_cmake_flags, arguments.debug_build, verbosity)
 
     # Make sure that the openvino_tensorflow whl is present in the artfacts directory
     if not os.path.exists(artifacts_location):
