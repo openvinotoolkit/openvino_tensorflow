@@ -25,6 +25,11 @@
      path: openvino_tensorflow
  
    - script: |
+      pip3 install -r requirements.txt
+      pip3 install -U pytest 
+     displayName: "Setup" 
+
+   - script: |
       wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18617/l_openvino_toolkit_p_2022.1.0.643_offline.sh
       chmod +x l_openvino_toolkit_p_2022.1.0.643_offline.sh
       ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept --install-dir $(Pipeline.Workspace)/openvino/
@@ -42,12 +47,6 @@
       pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
-
-   - script: |
-      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-      ./maint/check-code-format.sh
-     workingDirectory: $(WORK_DIR)
-     displayName: "Code format check"
     
    # - script: |
    #    source ${OV_LOCATION}/setupvars.sh
