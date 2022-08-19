@@ -34,8 +34,6 @@
    - script: |
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
-      sudo rm -rf /Library/Developer/CommandLineTools
-      sudo xcode-select --install
      displayName: "Setup" 
     
    - script: |
