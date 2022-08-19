@@ -488,9 +488,6 @@ def main():
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_VERSION=" + arguments.openvino_version])
 
-    if (arguments.debug_build):
-        openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
-
     if arguments.use_tensorflow_from_location:
         if (platform.system() == 'Windows'):
             openvino_tf_cmake_flags.extend([
