@@ -11,7 +11,6 @@
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     OV_LOCATION: $(Pipeline.Workspace)/openvino/
-    MACOSX_DEPLOYMENT_TARGET: '11_0'
     SYSTEM_VERSION_COMPAT: '0'
     
  steps:
@@ -35,6 +34,8 @@
    - script: |
       python3 -m pip install -r requirements.txt
       pip3 install -U pytest
+      sudo rm -rf /Library/Developer/CommandLineTools
+      sudo xcode-select --install
      displayName: "Setup" 
     
    - script: |
