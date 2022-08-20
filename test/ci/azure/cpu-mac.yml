@@ -57,6 +57,7 @@
    #   displayName: "Create Symbolic link for Library"
    
    - script: |
+      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
@@ -64,9 +65,10 @@
       --artifacts build_cmake/artifacts --test_python
      condition: always()
      workingDirectory: $(WORK_DIR) 
-     displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
+     displayName: "python:  Python Tests CPU"
      
    - script: |
+      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       python3 -m pip install keras
       source build_cmake/venv-tf-py3/bin/activate
@@ -74,7 +76,7 @@
         --artifacts build_cmake/artifacts --test_tf_python
      condition: always()
      workingDirectory: $(WORK_DIR)   
-     displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
+     displayName: "python: TF Python Tests CPU"
      
   #  - script: |
   #     export OPENVINO_TF_BACKEND="MYRIAD"
@@ -99,7 +101,7 @@
   #    displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
    - script: |
-      
+      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       cd  examples/TF_1_x/
       chmod +x convert_yolov4.sh
@@ -112,6 +114,7 @@
      displayName: "python CPU OD Inference Example TF1"     
 
    - script: |
+      export SYSTEM_VERSION_COMPAT=0
       export OPENVINO_TF_BACKEND=CPU
       cd  examples/
       chmod +x convert_yolov4.sh
@@ -146,6 +149,7 @@
   #    displayName: "python MYRIAD OD Inference Example TF2"
      
    - script: |
+      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       cd  $(WORK_DIR)
       curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
@@ -156,6 +160,7 @@
      displayName: "python CPU Classification Inference Example TF1"
 
    - script: |
+      export SYSTEM_VERSION_COMPAT=0
       source build_cmake/venv-tf-py3/bin/activate
       export OPENVINO_TF_BACKEND=CPU
       python3 examples/classification_sample.py --no_show
