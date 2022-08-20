@@ -39,7 +39,7 @@
    - script: |
       git submodule init
       git submodule update
-      python3 build_ovtf.py --use_openvino_from_location=${OV_LOCATION}/m_openvino_toolkit_runtime_p_2022.1.0.643/ --cxx11_abi_version=0
+      python3 build_ovtf.py --use_openvino_from_location=${OV_LOCATION}/m_openvino_toolkit_runtime_p_2022.1.0.643/ --openvino_version=2022.1.0 --cxx11_abi_version=0
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
 
