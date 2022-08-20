@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  name: 'Ubuntu18'
+  vmImage: 'ubuntu-18.04'
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
     OV_LOCATION: /opt/intel/openvino/
@@ -14,8 +14,8 @@
     
  steps:
  
-   - script: |
-      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
+   #- script: |
+   #   rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
    
    - checkout: self
      clean: true
@@ -24,8 +24,14 @@
  
    - script: |
       pip3 install -r requirements.txt
-      pip3 install -U yapf==0.26.0 pytest 
+      pip3 install -U pytest 
      displayName: "Setup" 
+
+   - script: |
+      wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18617/l_openvino_toolkit_p_2022.1.0.643_offline.sh
+      chmod +x l_openvino_toolkit_p_2022.1.0.643_offline.sh
+      ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept
+     displayName: "Install OpenVINO"
     
    - script: |
       git submodule init
