@@ -13,9 +13,6 @@
     TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
     
  steps:
- 
-   #- script: |
-   #   rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
    - task: UsePythonVersion@0
      inputs:
       versionSpec: '3.8'
@@ -51,11 +48,11 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "Install"
     
-  #  - script: |
-  #     source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
-  #     ./maint/check-code-format.sh
-  #    workingDirectory: $(WORK_DIR)
-  #    displayName: "Code format check"
+   - script: |
+      source $(WORK_DIR)/build_cmake/venv-tf-py3/bin/activate
+      ./maint/check-code-format.sh
+     workingDirectory: $(WORK_DIR)
+     displayName: "Code format check"
     
    # - script: |
    #    source ${OV_LOCATION}/setupvars.sh
