@@ -6,7 +6,7 @@
     name: openvinotoolkit/openvino_tensorflow
     
  pool:
-  vmImage: 'macOS-10.15'
+  vmImage: 'macOS-11'
   
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
@@ -45,13 +45,13 @@
      workingDirectory: $(WORK_DIR) 
      displayName: "Build"
 
-   - script: |
-      otool -l myexecutable | grep RPATH -A2
-      otool -l
-      otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
-      ln -s /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib @rpath/libopenvino_cd.dylib
-     workingDirectory: $(WORK_DIR)
-     displayName: "Create Symbolic link for Library"
+   # - script: |
+   #    otool -l myexecutable | grep RPATH -A2
+   #    otool -l
+   #    otool -l /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib
+   #    ln -s /Users/runner/work/1/openvino_tensorflow/build_cmake/venv-tf-py3/lib/python3.8/site-packages/openvino_tensorflow/libopenvino_tensorflow.dylib @rpath/libopenvino_cd.dylib
+   #   workingDirectory: $(WORK_DIR)
+   #   displayName: "Create Symbolic link for Library"
    
    - script: |
       export OPENVINO_TF_BACKEND=CPU
