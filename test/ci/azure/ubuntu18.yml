@@ -9,13 +9,18 @@
   vmImage: 'ubuntu-18.04'
  variables:
     WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    OV_LOCATION: /opt/intel/openvino/
-    TF_LOCATION: /home/openvino/tensorflow_pkg/
+    OV_LOCATION: $(Pipeline.Workspace)/openvino/
+    TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
     
  steps:
  
    #- script: |
    #   rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
+   - task: UsePythonVersion@0
+     inputs:
+      versionSpec: '3.8'
+      addToPath: true
+      #architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
    
    - checkout: self
      clean: true
@@ -37,7 +42,7 @@
       ls
       wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18617/l_openvino_toolkit_p_2022.1.0.643_offline.sh
       chmod +x l_openvino_toolkit_p_2022.1.0.643_offline.sh
-      ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept
+      ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept --install-dir $(Pipeline.Workspace)/openvino/
      displayName: "Install OpenVINO"
     
    - script: |
