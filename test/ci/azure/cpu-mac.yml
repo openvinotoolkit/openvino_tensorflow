@@ -29,6 +29,7 @@
 
    - script: |
       wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/m_openvino_toolkit_runtime_p_2022.1.0.643.tgz
+      mkdir -p ${OV_LOCATION}
       tar -xvf m_openvino_toolkit_runtime_p_2022.1.0.643.tgz -C ${OV_LOCATION}
      displayName: "Install OpenVINO" 
  
