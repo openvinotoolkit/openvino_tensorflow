@@ -179,5 +179,3 @@ $ python3 examples/TF_1_x/object_detection_sample.py --input=examples/data/peopl
 For using camera as input use ```--input=0```. Here '0' refers to the camera present at /dev/video0. If the camera is connected to a different port, change it appropriately.
 
 **Note:** The results with input as an image or a directory of images, are written to output images. For video or camera input use the application display window for the results.
-
-**Note:** TF1 object detection sample is only supported on linux. 
