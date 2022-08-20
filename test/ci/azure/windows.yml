@@ -1,0 +1,36 @@
+ resources:
+  repositories:
+  - repository: openvino_tensorflow
+    type: github
+    endpoint: openvinotoolkit
+    name: openvinotoolkit/openvino_tensorflow
+
+ pool:
+  vmImage: 'windows-2019'
+ variables:
+    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
+    OV_LOCATION: /opt/intel/openvino/
+    TF_LOCATION: /home/openvino/tensorflow_pkg/
+
+ steps:
+  
+  # - script: |
+  #     rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)      
+  
+  - checkout: self
+    clean: true
+    lfs: false
+    path: openvino_tensorflow
+
+  - script: |
+      pip3 install -r requirements.txt
+      pip3 install -U pytest 
+    displayName: "Setup" 
+    
+  - script: |
+      git submodule init
+      git submodule update
+      python build_ovtf.py --tf_version=v2.9.1 
+    workingDirectory: $(WORK_DIR) 
+    displayName: "Build"
+     
