@@ -34,8 +34,6 @@
      displayName: "Setup" 
 
    - script: |
-      pwd
-      ls
       wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18617/l_openvino_toolkit_p_2022.1.0.643_offline.sh
       chmod +x l_openvino_toolkit_p_2022.1.0.643_offline.sh
       ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept --install-dir $(Pipeline.Workspace)/openvino/
@@ -271,6 +269,14 @@
      condition: always()
      workingDirectory: $(WORK_DIR) 
      displayName: "python CPU Classification Inference Example TF1"
+
+   - script: |
+      source build_cmake/venv-tf-py3/bin/activate
+      export OPENVINO_TF_BACKEND=CPU
+      python3 examples/classification_sample.py --no_show
+     condition: always()
+     workingDirectory: $(WORK_DIR)
+     displayName: "python CPU Classification Inference Example TF2"
    
    # - script: |
    #    source build_cmake/venv-tf-py3/bin/activate

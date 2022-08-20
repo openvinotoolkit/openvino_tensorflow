@@ -248,9 +248,9 @@
       source build_cmake/venv-tf-py3/bin/activate
       set OPENVINO_TF_BACKEND=CPU
       python3 examples/classification_sample.py --no_show
-    condition: always()
-    workingDirectory: $(WORK_DIR)
-    displayName: "python CPU Classification Inference Example TF2"
+     condition: always()
+     workingDirectory: $(WORK_DIR)
+     displayName: "python CPU Classification Inference Example TF2"
    
    # - script: |
    #    source ${OV_LOCATION}/setupvars.sh
