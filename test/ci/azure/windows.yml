@@ -10,7 +10,7 @@ jobs:
   timeoutInMinutes: 0 # how long to run the job before automatically cancelling, specify 0 for maximum limit.
 
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-2022'
   variables:
       WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow/
       OV_LOCATION: $(Pipeline.Workspace)/openvino/
@@ -25,11 +25,11 @@ jobs:
         addToPath: true
         architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
 
-    - task: VSBuild@1
-      inputs:
-        vsVersion: '16.0'
-        platform: 'x64'
-        msbuildArchitecture: 'x64'
+    # - task: VSBuild@1
+    #   inputs:
+    #     vsVersion: '16.0'
+    #     platform: 'x64'
+    #     msbuildArchitecture: 'x64'
 
     - checkout: self
       clean: true
