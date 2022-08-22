@@ -15,7 +15,6 @@ jobs:
       WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow/
       OV_LOCATION: $(Pipeline.Workspace)/openvino/
       TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
-      PreferredToolArchitecture: 'x64'
 
   steps:
 
@@ -50,6 +49,7 @@ jobs:
       displayName: "Download OpenVINO"
 
     - script: |
+        SET PreferredToolArchitecture=x64
         git submodule init
         git submodule update
         python build_ovtf.py
