@@ -25,12 +25,12 @@ jobs:
         addToPath: true
         architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
 
-    - task: VSBuild@1
-      inputs:
-        solution: '**\*.sln'
-        vsVersion: '16.0'
-        platform: 'x64'
-        msbuildArchitecture: 'x64'
+    # - task: VSBuild@1
+    #   inputs:
+    #     solution: '**\*.sln'
+    #     vsVersion: '16.0'
+    #     platform: 'x64'
+    #     msbuildArchitecture: 'x64'
 
     - checkout: self
       clean: true
