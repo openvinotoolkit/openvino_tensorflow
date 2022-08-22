@@ -63,7 +63,6 @@ jobs:
       displayName: "Install"
 
     - script: |
-        CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
         CALL build_cmake\venv-tf-py3\Scripts\activate
         set OPENVINO_TF_BACKEND=CPU
         set PYTHONPATH=%cd%
@@ -73,7 +72,6 @@ jobs:
       displayName: "CPU python: Python Tests"
 
     - script: |
-        CALL $(OV_LOCATION)\w_openvino_toolkit_runtime_p_2022.1.0.643\setupvars.bat
         CALL .\build_cmake\venv-tf-py3\Scripts\activate
         set OPENVINO_TF_BACKEND=CPU
         set PYTHONPATH=%cd%
