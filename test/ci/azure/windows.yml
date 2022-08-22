@@ -15,6 +15,7 @@ jobs:
       WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow/
       OV_LOCATION: $(Pipeline.Workspace)/openvino/
       TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
+      PreferredToolArchitecture: 'x64'
 
   steps:
 
@@ -22,7 +23,13 @@ jobs:
       inputs:
         versionSpec: '3.9'
         addToPath: true
-        #architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
+        architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
+
+    - task: VSBuild@1
+      inputs:
+        vsVersion: '16.0'
+        platform: 'x64'
+        msbuildArchitecture: 'x64'
 
     - checkout: self
       clean: true
@@ -30,6 +37,7 @@ jobs:
       path: openvino_tensorflow
 
     - script: |
+        wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
         pip3 install -r requirements.txt
         pip3 install -U pytest
       displayName: "Setup"

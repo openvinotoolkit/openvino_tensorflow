@@ -30,6 +30,7 @@ jobs:
       path: openvino_tensorflow
 
     - script: |
+        lscpu
         sudo apt-get update -y
         sudo apt-get install -y libusb-1.0-0-dev
         pip3 install -r requirements.txt
@@ -78,24 +79,22 @@ jobs:
     #   displayName: "CPU C++ Inference Example"
 
     - script: |
-        source ${OV_LOCATION}/setupvars.sh
         source build_cmake/venv-tf-py3/bin/activate
         export OPENVINO_TF_BACKEND=CPU
         PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
         --artifacts build_cmake/artifacts --test_python
       condition: always()
       workingDirectory: $(WORK_DIR)
-      displayName: "CPU python:  Python Tests ${OPENVINO_TF_BACKEND}"
+      displayName: "CPU python:  Python Tests CPU"
 
     - script: |
-        source ${OV_LOCATION}/setupvars.sh
         source build_cmake/venv-tf-py3/bin/activate
         export OPENVINO_TF_BACKEND=CPU
         PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
           --artifacts build_cmake/artifacts --test_tf_python
       condition: always()
       workingDirectory: $(WORK_DIR)
-      displayName: "CPU python: TF Python Tests ${OPENVINO_TF_BACKEND}"
+      displayName: "CPU python: TF Python Tests CPU"
 
     # - script: |
     #    source ${OV_LOCATION}/setupvars.sh
