@@ -52,7 +52,8 @@ jobs:
         SET PreferredToolArchitecture=x64
         git submodule init
         git submodule update
-        python build_ovtf.py
+        python build_ov.py --output_dir $(WORK_DIR)\openvino_build\
+        python build_ovtf.py --use_openvino_from_location $(WORK_DIR)\openvino_build\artifacts\openvino
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
