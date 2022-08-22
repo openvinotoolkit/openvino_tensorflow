@@ -117,7 +117,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='rkazants/tf_fe_2022_1_integration')
+        default='releases/2022/2')
 
     parser.add_argument(
         '--python_executable',
@@ -174,7 +174,7 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0", "rkazants/tf_fe_2022_1_integration"]):
+    if (arguments.openvino_version not in ["master", "2022.1.0", "releases/2022/2"]):
         raise AssertionError(
             "Only 2022.1.0 OpenVINO version and master branch are supported")
 
@@ -438,15 +438,13 @@ def main():
             openvino_release_tag = "master"
         elif (arguments.openvino_version == "2022.1.0"):
             openvino_release_tag = "2022.1.0"
-        elif (arguments.openvino_version == "rkazants/tf_fe_2022_1_integration"):
-            openvino_release_tag = "rkazants/tf_fe_2022_1_integration"
+        elif (arguments.openvino_version == "releases/2022/2"):
+            openvino_release_tag = "releases/2022/2"
 
         # Download OpenVINO
         download_repo(
             "openvino",
-            #TODO: Switch back to the main OV repo before merging
-            #"https://github.com/openvinotoolkit/openvino.git",
-            "https://github.com/rkazants/openvino.git",
+            "https://github.com/openvinotoolkit/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
