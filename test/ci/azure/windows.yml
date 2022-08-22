@@ -46,14 +46,18 @@ jobs:
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino.zip
         Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
+        wmic logicaldisk get freespace
       displayName: "Download OpenVINO"
 
     - script: |
         SET PreferredToolArchitecture=x64
         git submodule init
         git submodule update
+        wmic logicaldisk get freespace
         python build_ov.py --output_dir $(WORK_DIR)\openvino_build\
+        wmic logicaldisk get freespace
         python build_ovtf.py --use_openvino_from_location $(WORK_DIR)\openvino_build\artifacts\openvino
+        wmic logicaldisk get freespace
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
