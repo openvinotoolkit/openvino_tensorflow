@@ -1,13 +1,13 @@
+resources:
+  repositories:
+  - repository: openvino_tensorflow
+    type: github
+    endpoint: openvinotoolkit
+    name: openvinotoolkit/openvino_tensorflow
+
 jobs:
 - job: Default
   timeoutInMinutes: 0 # how long to run the job before automatically cancelling, specify 0 for maximum limit.
-
-  resources:
-    repositories:
-    - repository: openvino_tensorflow
-      type: github
-      endpoint: openvinotoolkit
-      name: openvinotoolkit/openvino_tensorflow
 
   pool:
     vmImage: 'macOS-11'
