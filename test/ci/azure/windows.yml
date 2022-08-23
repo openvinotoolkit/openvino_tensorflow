@@ -12,9 +12,9 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   variables:
-      WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow/
-      OV_LOCATION: $(Pipeline.Workspace)/openvino/
-      TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
+      WORK_DIR: $(Pipeline.Workspace)\openvino_tensorflow\
+      OV_LOCATION: $(Pipeline.Workspace)\openvino\
+      TF_LOCATION: $(Pipeline.Workspace)\tensorflow_pkg\
 
   steps:
 
@@ -55,11 +55,16 @@ jobs:
         git submodule update
         wmic logicaldisk get freespace
         python build_ov.py --output_dir $(WORK_DIR)\openvino_build\
+      workingDirectory: $(WORK_DIR)
+      displayName: "OpenVINO Build"
+
+    - script: |
+        SET PreferredToolArchitecture=x64
         wmic logicaldisk get freespace
         python build_ovtf.py --use_openvino_from_location $(WORK_DIR)\openvino_build\artifacts\openvino
         wmic logicaldisk get freespace
       workingDirectory: $(WORK_DIR)
-      displayName: "Build"
+      displayName: "OVTF Build"
 
     - script: |
         CALL build_cmake\venv-tf-py3\Scripts\activate
