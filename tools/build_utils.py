@@ -674,7 +674,7 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
     os.chdir(path)
     if (platform.system() == 'Windows'):
         cmake_cmd = [
-            "cmake", "-G \"Visual Studio 16 2019\"",
+            "cmake", "-G \"Visual Studio 17 2022\"",
             "-DCMAKE_BUILD_TYPE=Release"
         ]
         cmake_cmd.extend(cmake_flags)
@@ -882,7 +882,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     if (platform.system() == 'Windows'):
         openvino_cmake_flags.extend([
             "-DCMAKE_INSTALL_PREFIX=" + install_location.replace("\\", "\\\\"),
-            "-G \"Visual Studio 16 2019\"", "-A x64"
+            "-G \"Visual Studio 17 2022\"", "-A x64"
         ])
     else:
         openvino_cmake_flags.extend(
@@ -930,7 +930,7 @@ def build_protobuf(artifacts_location, protobuf_branch, debug_enabled,
                 pass
         os.chdir("debug")
         cmake_cmd = [
-            "cmake", "-G \"Visual Studio 16 2019\"", "-DCMAKE_BUILD_TYPE=Debug",
+            "cmake", "-G \"Visual Studio 17 2022\"", "-DCMAKE_BUILD_TYPE=Debug",
             "-DBUILD_SHARED_LIBS=ON",
             "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."
         ]
@@ -948,7 +948,7 @@ def build_protobuf(artifacts_location, protobuf_branch, debug_enabled,
                 pass
         os.chdir("release")
         cmake_cmd = [
-            "cmake", "-G \"Visual Studio 16 2019\"",
+            "cmake", "-G \"Visual Studio 17 2022\"",
             "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_SHARED_LIBS=ON",
             "-DCMAKE_INSTALL_PREFIX=../../../../install", "../.."
         ]

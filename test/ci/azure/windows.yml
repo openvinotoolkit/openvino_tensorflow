@@ -10,7 +10,7 @@ jobs:
   timeoutInMinutes: 0 # how long to run the job before automatically cancelling, specify 0 for maximum limit.
 
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-2022'
   variables:
       WORK_DIR: $(Pipeline.Workspace)\openvino_tensorflow\
       OV_LOCATION: $(Pipeline.Workspace)\openvino\
@@ -50,19 +50,9 @@ jobs:
       displayName: "Download OpenVINO"
 
     - script: |
-        SET PreferredToolArchitecture=x64
         git submodule init
         git submodule update
-        wmic logicaldisk get freespace
-        python build_ov.py --output_dir $(WORK_DIR)\openvino_build\
-      workingDirectory: $(WORK_DIR)
-      displayName: "OpenVINO Build"
-
-    - script: |
-        SET PreferredToolArchitecture=x64
-        wmic logicaldisk get freespace
-        python build_ovtf.py --use_openvino_from_location $(WORK_DIR)\openvino_build\artifacts\openvino
-        wmic logicaldisk get freespace
+        python build_ovtf.py
       workingDirectory: $(WORK_DIR)
       displayName: "OVTF Build"
 
