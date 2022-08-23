@@ -62,9 +62,9 @@ void IE_Backend_Engine::start_async_inference(const int req_id) {
   try {
     m_infer_reqs[req_id].start_async();
   } catch (ov::Exception const& e) {
-    THROW_IE_EXCEPTION << "Couldn't start Inference: ";
+    throw ov::Exception("Couldn't start Inference: ");
   } catch (...) {
-    THROW_IE_EXCEPTION << "Couldn't start Inference: ";
+    throw ov::Exception("Couldn't start Inference: ");
   }
 }
 
@@ -73,9 +73,9 @@ void IE_Backend_Engine::complete_async_inference(const int req_id) {
   try {
     m_infer_reqs[req_id].wait();
   } catch (ov::Exception const& e) {
-    THROW_IE_EXCEPTION << " Exception with completing Inference: ";
+    throw ov::Exception(" Exception with completing Inference: ");
   } catch (...) {
-    THROW_IE_EXCEPTION << " Exception with completing Inference: ";
+    throw ov::Exception(" Exception with completing Inference: ");
   }
 }
 
