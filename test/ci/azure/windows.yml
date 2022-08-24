@@ -37,6 +37,7 @@ jobs:
       path: openvino_tensorflow
 
     - script: |
+        echo $(Build.Repository.Uri)
         echo $(Build.SourceBranchName)
         echo $(Build.SourceBranch)
         echo $(System.PullRequest.SourceRepositoryURI)
