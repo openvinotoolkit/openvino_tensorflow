@@ -4576,6 +4576,8 @@ Status Builder::TranslateGraphWithTFFE(
         } catch (const std::exception&) {
           OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
         }
+        if (is_variable)
+          n->AddAttr("_static_input", true);
         static_input |= is_variable;
       }
       if (static_input) {
