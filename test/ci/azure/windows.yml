@@ -12,7 +12,7 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   variables:
-      WORK_DIR: C:\openvino_tensorflow\
+      WORK_DIR: $(Pipeline.Workspace)\openvino_tensorflow\
       # OV_LOCATION: $(Pipeline.Workspace)\openvino\
       # TF_LOCATION: $(Pipeline.Workspace)\tensorflow_pkg\
 
@@ -34,9 +34,13 @@ jobs:
     - checkout: self
       clean: true
       lfs: false
-      path: C:\openvino_tensorflow\
+      path: openvino_tensorflow
 
     - script: |
+        echo $(Build.SourceBranchName)
+        echo $(Build.SourceBranch)
+        echo $(System.PullRequest.SourceRepositoryURI)
+        echo $(System.PullRequest.SourceBranch)
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
         pip3 install -r requirements.txt
         pip3 install -U pytest
