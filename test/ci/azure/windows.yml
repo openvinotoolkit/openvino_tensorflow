@@ -12,7 +12,7 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   variables:
-      WORK_DIR: C:\openvino_tensorflow\
+      WORK_DIR: $(Pipeline.Workspace)\openvino_tensorflow\
       # OV_LOCATION: $(Pipeline.Workspace)\openvino\
       # TF_LOCATION: $(Pipeline.Workspace)\tensorflow_pkg\
 
@@ -31,19 +31,13 @@ jobs:
     #     platform: 'x64'
     #     msbuildArchitecture: 'x64'
 
-    # - checkout: self
-    #   clean: true
-    #   lfs: false
-    #   path: openvino_tensorflow
+    - checkout: self
+      clean: true
+      lfs: false
+      path: openvino_tensorflow
 
     - script: |
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
-        cd C:
-        git clone $(Build.Repository.Uri)
-        cd $(WORK_DIR)
-        git checkout $(Build.SourceBranch)
-        git submodule init
-        git submodule update
         pip3 install -r requirements.txt
         pip3 install -U pytest
       displayName: "Setup"
@@ -56,11 +50,11 @@ jobs:
     #   displayName: "Download OpenVINO"
 
     - script: |
-        cd
-        dir
-        python build_ovtf.py
+        git submodule init
+        git submodule update
+        python build_ovtf.py --openvino_version 2022.1.0
       workingDirectory: $(WORK_DIR)
-      displayName: "OVTF Build"
+      displayName: "Build"
 
     - script: |
         CALL build_cmake\venv-tf-py3\Scripts\activate
