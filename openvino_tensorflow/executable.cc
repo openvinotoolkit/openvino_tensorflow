@@ -179,8 +179,11 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
   std::vector<std::string> input_names(inputs.size());
   int j = 0;
-  for (int i = 0; i < inputs.size(); i++) {
-    if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
+  if (m_in_names.size() == 0) {
+    m_in_names.resize(inputs.size());
+    for (int i = 0; i < inputs.size(); i++) {
+      m_in_names[i] = "-1";
+      if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
         m_skipped_inputs.end()) {
       continue;
     }
@@ -190,8 +193,13 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
       continue;
     }
     ie_inputs[i] = nullptr;
-    ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
-    input_names[i] = input_name;
+    m_in_names[i] = input_name;
+    }
+  }
+  for (int i = 0; i < inputs.size(); i++) {
+      std::string input_name = m_in_names[i];
+      if (input_name != "-1")
+        ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
   }
 
   std::vector<std::shared_ptr<IETensor>> ie_hoisted_params(
@@ -227,7 +235,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
     m_ie_engine->enable_multi_req_execution();
   }
 
-  m_ie_engine->infer(ie_inputs, input_names, ie_outputs, output_names,
+  m_ie_engine->infer(ie_inputs, m_in_names, ie_outputs, output_names,
                      ie_hoisted_params, param_names);
 
   // Set dynamic output blobs
