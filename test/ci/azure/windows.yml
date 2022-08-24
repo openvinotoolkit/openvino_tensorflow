@@ -10,11 +10,11 @@ jobs:
   timeoutInMinutes: 0 # how long to run the job before automatically cancelling, specify 0 for maximum limit.
 
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2019'
   variables:
-      WORK_DIR: $(Pipeline.Workspace)\openvino_tensorflow\
-      OV_LOCATION: $(Pipeline.Workspace)\openvino\
-      TF_LOCATION: $(Pipeline.Workspace)\tensorflow_pkg\
+      WORK_DIR: C:\openvino_tensorflow\
+      # OV_LOCATION: $(Pipeline.Workspace)\openvino\
+      # TF_LOCATION: $(Pipeline.Workspace)\tensorflow_pkg\
 
   steps:
 
@@ -34,7 +34,7 @@ jobs:
     - checkout: self
       clean: true
       lfs: false
-      path: openvino_tensorflow
+      path: C:\openvino_tensorflow\
 
     - script: |
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
@@ -42,14 +42,16 @@ jobs:
         pip3 install -U pytest
       displayName: "Setup"
 
-    - powershell: |
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino.zip
-        Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
-        wmic logicaldisk get freespace
-      displayName: "Download OpenVINO"
+    # - powershell: |
+    #     $ProgressPreference = 'SilentlyContinue'
+    #     Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/w_openvino_toolkit_runtime_p_2022.1.0.643.zip -OutFile openvino.zip
+    #     Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
+    #     wmic logicaldisk get freespace
+    #   displayName: "Download OpenVINO"
 
     - script: |
+        cd
+        dir
         git submodule init
         git submodule update
         python build_ovtf.py
