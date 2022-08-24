@@ -197,24 +197,33 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   //  Prepare input blobs
   auto parameters = model->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
-  std::vector<std::string> input_names(inputs.size());
+  if (m_in_mapping.size() == 0) {
+    m_in_mapping.resize(inputs.size());
+    m_in_names.resize(inputs.size());
+    for (int i = 0; i < parameters.size(); i++) {
+      m_in_mapping[i] = -1;
+      ov::Any any = parameters[i]->get_rt_info()["index"];
+      if (any.empty()) {
+        continue;
+      }
+      int64_t input_index = any.as<int64_t>();
+      if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
+          m_skipped_inputs.end()) {
+        continue;
+      }
+      auto input_name = parameters[i]->get_friendly_name();
+      if (m_ie_engine->get_input_idx(input_name) < 0) {
+        OVTF_VLOG(1) << "Skipping unused input " << input_name;
+        continue;
+      }
+      m_in_mapping[i] = input_index;
+      m_in_names[input_index] = input_name;
+    }
+  }
   for (int i = 0; i < parameters.size(); i++) {
-    ov::Any any = parameters[i]->get_rt_info()["index"];
-    if (any.empty()) {
-      continue;
-    }
-    int64_t input_index = any.as<int64_t>();
-    if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
-        m_skipped_inputs.end()) {
-      continue;
-    }
-    auto input_name = parameters[i]->get_friendly_name();
-    if (m_ie_engine->get_input_idx(input_name) < 0) {
-      OVTF_VLOG(1) << "Skipping unused input " << input_name;
-      continue;
-    }
-    ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
-    input_names[input_index] = input_name;
+      int64_t input_index = m_in_mapping[i];
+      if (input_index != -1)
+        ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
   }
 
   std::vector<std::shared_ptr<IETensor>> ie_hoisted_params(
@@ -251,7 +260,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
     m_ie_engine->enable_multi_req_execution();
   }
 
-  m_ie_engine->infer(ie_inputs, input_names, ie_outputs, output_names,
+  m_ie_engine->infer(ie_inputs, m_in_names, ie_outputs, output_names,
                      ie_hoisted_params, param_names);
 
   // Set dynamic output blobs
