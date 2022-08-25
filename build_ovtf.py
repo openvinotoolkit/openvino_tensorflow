@@ -174,7 +174,9 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0", "releases/2022/2"]):
+    if (arguments.openvino_version not in [
+            "master", "2022.1.0", "releases/2022/2"
+    ]):
         raise AssertionError(
             "Only 2022.1.0 OpenVINO version and master branch are supported")
 
@@ -490,9 +492,6 @@ def main():
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_VERSION=" + arguments.openvino_version])
 
-    if (arguments.debug_build):
-        openvino_tf_cmake_flags.extend(["-DCMAKE_BUILD_TYPE=Debug"])
-
     if arguments.use_tensorflow_from_location:
         if (platform.system() == 'Windows'):
             openvino_tf_cmake_flags.extend([
@@ -526,9 +525,9 @@ def main():
         ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
 
     # Now build openvino-tensorflow
-    ov_tf_whl = build_openvino_tf(build_dir, artifacts_location,
-                                  openvino_tf_src_dir, venv_dir,
-                                  openvino_tf_cmake_flags, verbosity)
+    ov_tf_whl = build_openvino_tf(
+        build_dir, artifacts_location, openvino_tf_src_dir, venv_dir,
+        openvino_tf_cmake_flags, arguments.debug_build, verbosity)
 
     # Make sure that the openvino_tensorflow whl is present in the artfacts directory
     if not os.path.exists(artifacts_location):

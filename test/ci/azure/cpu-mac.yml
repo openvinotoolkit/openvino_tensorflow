@@ -1,162 +1,176 @@
- resources:
+resources:
   repositories:
   - repository: openvino_tensorflow
     type: github
     endpoint: openvinotoolkit
     name: openvinotoolkit/openvino_tensorflow
-    
- pool:
-  name: 'macOS'
-  
- variables:
-    WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-    TF_LOCATION: /Users/intel/ci_setup/tf_2_8_0_abi1/
-    OV_LOCATION: /Users/intel/ci_setup/openvino_2022.1_abi1/
-    
- steps:
- 
-   - script: |
-      rm -rf $(WORK_DIR) ; mkdir $(WORK_DIR)
-   
-   - checkout: self
-     clean: true
-     lfs: false
-     path: openvino_tensorflow
- 
-   - script: |
-      python3 -m pip install -r requirements.txt
-     displayName: "Setup" 
-    
-   - script: |
-      git submodule init
-      git submodule update
-      python3 build_ovtf.py --use_tensorflow_from_location=$(TF_LOCATION) --use_openvino_from_location=${OV_LOCATION} --cxx11_abi_version=1
-     workingDirectory: $(WORK_DIR) 
-     displayName: "Build"
-     
-   - script: |
-      source build_cmake/venv-tf-py3/bin/activate
-      python3 -m pip install -U build_cmake/artifacts/tensorflow/tensorflow-*.whl
-      python3 -m pip install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
-     workingDirectory: $(WORK_DIR) 
-     displayName: "Install"
-   
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      python3 -m pip install keras
-      source build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-      --artifacts build_cmake/artifacts --test_python
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python:  Python Tests ${OPENVINO_TF_BACKEND}"
-     
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      python3 -m pip install keras
-      source build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-        --artifacts build_cmake/artifacts --test_tf_python
-     condition: always()
-     workingDirectory: $(WORK_DIR)   
-     displayName: "python: TF Python Tests ${OPENVINO_TF_BACKEND}"  
-     
-   - script: |
-      export OPENVINO_TF_BACKEND="MYRIAD"
-      export NGRAPH_TF_UTEST_RTOL=0.0001
-      python3 -m pip install keras
-      source build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-      --artifacts build_cmake/artifacts --test_python
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
-     
-   - script: |
-      export OPENVINO_TF_BACKEND="MYRIAD"
-      export NGRAPH_TF_UTEST_RTOL=0.0001
-      python3 -m pip install keras
-      source build_cmake/venv-tf-py3/bin/activate
-      PYTHONPATH=`pwd` python3 test/python/tensorflow/tf_unittest_runner.py \
-      --tensorflow_path build_cmake/artifacts//tensorflow/python \
-      --run_tests_from_file test/python/tensorflow/tests_darwin_myriad.txt
-     condition: always()
-     workingDirectory: $(WORK_DIR)   
-     displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
 
-   - script: |
-      
-      source build_cmake/venv-tf-py3/bin/activate
-      cd  examples/TF_1_x/
-      chmod +x convert_yolov4.sh
-      ./convert_yolov4.sh
-      export OPENVINO_TF_BACKEND=CPU
-      cd $(WORK_DIR)
-      python3 -m pip install -r examples/requirements.txt
-      python3 examples/TF_1_x/object_detection_sample.py --no_show
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python CPU OD Inference Example TF1"     
+jobs:
+- job: Default
+  timeoutInMinutes: 0 # how long to run the job before automatically cancelling, specify 0 for maximum limit.
 
-   - script: |
-      export OPENVINO_TF_BACKEND=CPU
-      source build_cmake/venv-tf-py3/bin/activate
-      cd  examples/
-      python3 -m pip install -r requirements.txt
-      chmod +x convert_yolov4.sh
-      ./convert_yolov4.sh
-      cd $(WORK_DIR)
-      python3 examples/object_detection_sample.py --no_show
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python CPU OD Inference Example TF2"
+  pool:
+    vmImage: 'macOS-11'
 
-   # - script: |
-   
-   #    cd  examples/TF_1_x/
-   #    chmod +x convert_yolov4.sh
-   #    ./convert_yolov4.sh
-   #    cd $(WORK_DIR)
-   #    pip3 install -r examples/requirements.txt
-   #    python3 examples/TF_1_x/object_detection_sample.py --no_show --backend MYRIAD
-   #   condition: always()
-   #   workingDirectory: $(WORK_DIR) 
-   #   displayName: "python MYRIAD OD Inference Example TF1"
+  variables:
+      WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
+      OV_LOCATION: $(Pipeline.Workspace)/openvino/
+      SYSTEM_VERSION_COMPAT: '0'
 
-   - script: |
-      
-      source build_cmake/venv-tf-py3/bin/activate
-      cd  examples/
-      python3 -m pip install -r requirements.txt
-      cd $(WORK_DIR)
-      python3 examples/object_detection_sample.py --no_show --backend MYRIAD
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python MYRIAD OD Inference Example TF2"
-     
-   - script: |
-      cd  $(WORK_DIR)
-      export TFHUB_CACHE_DIR=$HOME/.cache/tfhub_modules
-      export OPENVINO_TF_BACKEND=CPU
-      source build_cmake/venv-tf-py3/bin/activate
-      python3 -m pip install -r examples/requirements.txt
-      python3 examples/classification_sample.py --no_show
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python CPU Classification Inference Example TF1"
-   
-   - script: |
-      cd  $(WORK_DIR)
-      export TFHUB_CACHE_DIR=$HOME/.cache/tfhub_modules
-      source build_cmake/venv-tf-py3/bin/activate
-      python3 -m pip install -r examples/requirements.txt
-      python3 examples/classification_sample.py --no_show --backend MYRIAD
-     condition: always()
-     workingDirectory: $(WORK_DIR) 
-     displayName: "python MYRIAD Classification Inference Example TF1"
+  steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.8'
+        addToPath: true
+        #architecture: 'x64' # Options: x86, x64 (this argument applies only on Windows agents)
 
-   - script: |
-      rm -rf *
-     condition: always()
-     displayName: "Cleanup"   
-     workingDirectory: $(WORK_DIR)
+    - checkout: self
+      clean: true
+      lfs: false
+      path: openvino_tensorflow
+
+    - script: |
+        wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.1/m_openvino_toolkit_runtime_p_2022.1.0.643.tgz
+        mkdir -p ${OV_LOCATION}
+        tar -xvf m_openvino_toolkit_runtime_p_2022.1.0.643.tgz -C ${OV_LOCATION}
+      displayName: "Install OpenVINO"
+
+    - script: |
+        sysctl -a | grep machdep.cpu
+        python3 -m pip install -r requirements.txt
+        pip3 install -U pytest
+      displayName: "Setup"
+
+    - script: |
+        git submodule init
+        git submodule update
+        python3 build_ovtf.py
+      workingDirectory: $(WORK_DIR)
+      displayName: "Build"
+
+    - script: |
+        source build_cmake/venv-tf-py3/bin/activate
+        pip3 install --no-deps -U build_cmake/artifacts/openvino_tensorflow*.whl
+      workingDirectory: $(WORK_DIR)
+      displayName: "Install"
+
+    - script: |
+        export OPENVINO_TF_BACKEND=CPU
+        python3 -m pip install keras
+        source build_cmake/venv-tf-py3/bin/activate
+        PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+        --artifacts build_cmake/artifacts --test_python
+      condition: always()
+      workingDirectory: $(WORK_DIR)
+      displayName: "python:  Python Tests CPU"
+
+    - script: |
+        export OPENVINO_TF_BACKEND=CPU
+        python3 -m pip install keras
+        source build_cmake/venv-tf-py3/bin/activate
+        PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+          --artifacts build_cmake/artifacts --test_tf_python
+      condition: always()
+      workingDirectory: $(WORK_DIR)
+      displayName: "python: TF Python Tests CPU"
+
+    #  - script: |
+    #     export OPENVINO_TF_BACKEND="MYRIAD"
+    #     export NGRAPH_TF_UTEST_RTOL=0.0001
+    #     python3 -m pip install keras
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+    #     --artifacts build_cmake/artifacts --test_python
+    #    condition: always()
+    #    workingDirectory: $(WORK_DIR)
+    #    displayName: "MYRIAD python:  Python Tests ${OPENVINO_TF_BACKEND}"
+
+    #  - script: |
+    #     export OPENVINO_TF_BACKEND="MYRIAD"
+    #     export NGRAPH_TF_UTEST_RTOL=0.0001
+    #     python3 -m pip install keras
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+    #       --artifacts build_cmake/artifacts --test_tf_python
+    #    condition: always()
+    #    workingDirectory: $(WORK_DIR)
+    #    displayName: "MYRIAD python: TF Python Tests ${OPENVINO_TF_BACKEND}"
+
+    - script: |
+        source build_cmake/venv-tf-py3/bin/activate
+        cd  examples/TF_1_x/
+        chmod +x convert_yolov4.sh
+        ./convert_yolov4.sh
+        export OPENVINO_TF_BACKEND=CPU
+        cd $(WORK_DIR)
+        python3 -m pip install -r examples/requirements.txt
+        python3 examples/TF_1_x/object_detection_sample.py --no_show
+      workingDirectory: $(WORK_DIR)
+      displayName: "python CPU OD Inference Example TF1"
+
+    - script: |
+        export OPENVINO_TF_BACKEND=CPU
+        cd  examples/
+        chmod +x convert_yolov4.sh
+        ./convert_yolov4.sh
+        cd $(WORK_DIR)
+        source build_cmake/venv-tf-py3/bin/activate
+        python3 -m pip install -r requirements.txt
+        python3 examples/object_detection_sample.py --no_show
+      workingDirectory: $(WORK_DIR)
+      displayName: "python CPU OD Inference Example TF2"
+
+    # - script: |
+
+    #    cd  examples/TF_1_x/
+    #    chmod +x convert_yolov4.sh
+    #    ./convert_yolov4.sh
+    #    cd $(WORK_DIR)
+    #    pip3 install -r examples/requirements.txt
+    #    python3 examples/TF_1_x/object_detection_sample.py --no_show --backend MYRIAD
+    #   condition: always()
+    #   workingDirectory: $(WORK_DIR)
+    #   displayName: "python MYRIAD OD Inference Example TF1"
+
+    #  - script: |
+
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     cd  examples/
+    #     python3 -m pip install -r requirements.txt
+    #     cd $(WORK_DIR)
+    #     python3 examples/object_detection_sample.py --no_show --backend MYRIAD
+    #    workingDirectory: $(WORK_DIR)
+    #    displayName: "python MYRIAD OD Inference Example TF2"
+
+    - script: |
+        source build_cmake/venv-tf-py3/bin/activate
+        cd  $(WORK_DIR)
+        curl -L "https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz" | tar -C examples/data -xz
+        export OPENVINO_TF_BACKEND=CPU
+        python3 examples/TF_1_x/classification_sample.py --no_show
+      condition: always()
+      workingDirectory: $(WORK_DIR)
+      displayName: "python CPU Classification Inference Example TF1"
+
+    - script: |
+        source build_cmake/venv-tf-py3/bin/activate
+        export OPENVINO_TF_BACKEND=CPU
+        python3 examples/classification_sample.py --no_show
+      condition: always()
+      workingDirectory: $(WORK_DIR)
+      displayName: "python CPU Classification Inference Example TF2"
+
+    #  - script: |
+    #     cd  $(WORK_DIR)
+    #     export TFHUB_CACHE_DIR=$HOME/.cache/tfhub_modules
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     python3 -m pip install -r examples/requirements.txt
+    #     python3 examples/classification_sample.py --no_show --backend MYRIAD
+    #    workingDirectory: $(WORK_DIR)
+    #    displayName: "python MYRIAD Classification Inference Example TF1"
+
+    #  - script: |
+    #     rm -rf *
+    #    condition: always()
+    #    displayName: "Cleanup"
+    #    workingDirectory: $(WORK_DIR)
