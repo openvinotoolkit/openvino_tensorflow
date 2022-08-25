@@ -450,6 +450,12 @@ def main():
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
         print("OV_SRC_DIR: ", openvino_src_dir)
 
+        # TODO: Temporary fix for DepthwiseConv2dNative issue.
+        pwd = os.getcwd()
+        os.chdir(openvino_src_dir)
+        command_executor(["git", "apply", "../../ov_tffe_temp_fix.patch"])
+        os.chdir(pwd)
+
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
                        artifacts_location, arguments.debug_build, verbosity)
 
