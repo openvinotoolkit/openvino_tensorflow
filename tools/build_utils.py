@@ -639,7 +639,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
 
 def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
-                      cmake_flags, verbose):
+                      cmake_flags, debug_enabled, verbose):
     pwd = os.getcwd()
 
     # Load the virtual env
@@ -681,6 +681,10 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
         cmake_cmd.extend([ovtf_src_loc.replace("\\", "\\\\")])
     else:
         cmake_cmd = ["cmake"]
+        if debug_enabled:
+            cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+        else:
+            cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Release"])
         cmake_cmd.extend(cmake_flags)
         cmake_cmd.extend([ovtf_src_loc])
     command_executor(cmake_cmd)
