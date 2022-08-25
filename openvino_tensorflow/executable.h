@@ -63,6 +63,8 @@ class Executable {
   // This is the original OpenVINO model corresponding to this executable
   shared_ptr<ov::Model> m_model;
   shared_ptr<IE_Backend_Engine> m_ie_engine;
+  std::vector<int> m_in_mapping;
+  std::vector<std::string> m_in_names;
 };
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
