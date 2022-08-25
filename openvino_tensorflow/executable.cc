@@ -197,7 +197,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   //  Prepare input blobs
   auto parameters = model->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
-  if (m_in_mapping.size() == 0) {
+  if (m_in_mapping.size() == 0 && inputs.size() > 0) {
     m_in_mapping.resize(inputs.size());
     m_in_names.resize(inputs.size());
     for (int i = 0; i < parameters.size(); i++) {
@@ -220,7 +220,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
       m_in_names[input_index] = input_name;
     }
   }
-  for (int i = 0; i < parameters.size(); i++) {
+  for (int i = 0; i < inputs.size(); i++) {
       int64_t input_index = m_in_mapping[i];
       if (input_index != -1)
         ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
