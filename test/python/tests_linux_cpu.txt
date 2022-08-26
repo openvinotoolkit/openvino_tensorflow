@@ -26,8 +26,8 @@ tests_common.txt
 #test_maxpool3dgrad.TestMaxpool3DGrad.test_maxpool3d_grad
 
 # unsupported type
-#test_bfloat16.TestBfloat16.test_conv2d_bfloat16
-#test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
+test_bfloat16.TestBfloat16.test_conv2d_bfloat16
+test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
 
 # Failed to set Blob with precision not corresponding to user output precision
 #test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]
