@@ -4601,8 +4601,13 @@ Status Builder::TranslateGraphWithTFFE(
     if (n->IsArg()) {
       bool static_input = false;
       try {
-        GetNodeAttr(n->attrs(), "_static_input", &static_input);
+        if (Status::OK() != GetNodeAttr(n->attrs(), "_static_input", &static_input)) {
+          n->AddAttr("_static_input", false);
+          static_input = false;
+        }
       } catch (const std::exception&) {
+        // TODO: What are the expected exceptions?
+        // Non-existing attribute names are already handled above.
         OVTF_VLOG(1) << "Parameter " << n->name()
                      << " is not a static input to any node";
       }
@@ -4629,6 +4634,18 @@ Status Builder::TranslateGraphWithTFFE(
         const Tensor tensor = tf_input_tensors[index];
         n->AddAttr("_static_value", tensor);
         n->AddAttr("_static_dtype", dtype);
+      }
+      try {
+        std::string prov_tag;
+        if (Status::OK() != GetNodeAttr(n->attrs(), "_prov_tag", &prov_tag)) {
+          //TODO: Assign a proper prov tag instead of an empty string.
+          n->AddAttr("_prov_tag", prov_tag);
+        }
+      } catch (const std::exception&) {
+        // TODO: What are the expected exceptions?
+        // Non-existing attribute names are already handled above.
+        OVTF_VLOG(1) << "Parameter " << n->name()
+                     << " does not have a _prov_tag assigned";
       }
     }
   }
