@@ -4,6 +4,7 @@
 #include <openvino/core/type/element_type.hpp>
 #include <openvino/frontend/tensorflow/decoder.hpp>
 #include <openvino/frontend/tensorflow/frontend.hpp>
+#include "openvino/frontend/tensorflow/special_types.hpp"
 #include <string>
 #include <vector>
 
@@ -154,10 +155,8 @@ ov::Any OVTFDecoder::get_attribute(const std::string& name) const {
                 name,
                 "' attribute is not supported.");
 
-        FRONT_END_GENERAL_CHECK(false,
-                                "Conversion from Tensorflow to OpenVINO data type failed: List type for '",
-                                name,
-                                "' attribute is not supported.");
+        // If we got to this point it must mean we have empty list attribute
+        return ov::frontend::tensorflow::EmptyList();
     }
 
     case ::tensorflow::AttrValue::ValueCase::kTensor: {
