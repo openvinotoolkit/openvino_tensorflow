@@ -41,7 +41,7 @@ Backend::Backend(const string& config) {
     throw runtime_error(ss.str());
   }
 
-  if ((device.find("GPU") != std::string::npos) && prec != "" && prec != "FP16") {
+  if ((device.find("GPU") != std::string::npos) && prec != "" && prec != "FP16") { // device == GPU
     stringstream ss;
     if (prec == "FP32") {
       ss << "'GPU_FP32' is not a supported device name."
@@ -51,7 +51,7 @@ Backend::Backend(const string& config) {
       ss << "The precision '" << prec << "' is not supported on 'GPU'.";
       throw runtime_error(ss.str());
     }
-  } else if ((device.find("GPU") != std::string::npos) && prec != "") {
+  } else if ((device.find("GPU") == std::string::npos) && prec != "") { // device != GPU
     stringstream ss;
     ss << "Device '" << device << "' does not support custom precisions.";
     throw runtime_error(ss.str());
