@@ -178,7 +178,7 @@ if ovtf_classic_loaded:
         result = (ctypes.c_char_p * len_backends)()
         if not openvino_tensorflow_lib.list_backends(result):
             raise Exception("Expected " + str(len_backends) +
-                            " backends, but got some  other number of backends")
+                            " backends, but got some other number of backends")
         list_result = list(result)
         # convert bytes to string required for py3 (encode/decode bytes)
         backend_list = []
