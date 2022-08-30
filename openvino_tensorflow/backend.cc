@@ -51,7 +51,7 @@ Backend::Backend(const string& config) {
       ss << "The precision '" << prec << "' is not supported on 'GPU'.";
       throw runtime_error(ss.str());
     }
-  } else if (device != "GPU" && prec != "") {
+  } else if ((device.find("GPU") != std::string::npos) && prec != "") {
     stringstream ss;
     ss << "Device '" << device << "' does not support custom precisions.";
     throw runtime_error(ss.str());
