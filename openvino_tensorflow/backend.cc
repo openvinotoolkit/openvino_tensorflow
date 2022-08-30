@@ -41,7 +41,7 @@ Backend::Backend(const string& config) {
     throw runtime_error(ss.str());
   }
 
-  if (device == "GPU" && prec != "" && prec != "FP16") {
+  if ((device.find("GPU") != std::string::npos) && prec != "" && prec != "FP16") {
     stringstream ss;
     if (prec == "FP32") {
       ss << "'GPU_FP32' is not a supported device name."
