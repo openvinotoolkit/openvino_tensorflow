@@ -420,7 +420,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                    << m_cluster_id;
       try {
         int64_t start_ns = GetCurrentTimeNanos();
-        ng_exec->Call(ng_inputs, ng_func_outputs, multi_req_execution);
+        ng_exec->Call(ng_inputs, ng_outputs, multi_req_execution);
         int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
