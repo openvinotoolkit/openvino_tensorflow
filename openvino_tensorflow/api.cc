@@ -33,7 +33,7 @@ void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
 bool CheckBackend(const char* backend) {
-  const char* devices[1] = {"GNA"}; // Blacklist unsupported OVTF backends
+  const char* devices[1] = {"GNA"};  // Blacklist unsupported OVTF backends
   for (int i = 0; i < 1; i++) {
     if (strcmp(backend, devices[i]) == 0) return false;
   }

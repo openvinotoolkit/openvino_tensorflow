@@ -118,8 +118,8 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
 
   m_model = model;
 
-  if ((m_device_type.find("GPU") != std::string::npos) && 
-        (m_device_type.find("FP16") != std::string::npos)) {
+  if ((m_device_type.find("GPU") != std::string::npos) &&
+      (m_device_type.find("FP16") != std::string::npos)) {
     ov::pass::ConvertFP32ToFP16().run_on_model(model);
     model->validate_nodes_and_infer_types();
 
