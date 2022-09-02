@@ -26,7 +26,8 @@ namespace openvino_tensorflow {
 // function.
 class OVTFDecoder : public ov::frontend::tensorflow::DecoderBase {
  public:
-  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def) : m_node_def(node_def) {}
+  explicit OVTFDecoder(const ::tensorflow::NodeDef* node_def)
+      : m_node_def(node_def) {}
 
   ov::Any get_attribute(const std::string& name) const override;
 

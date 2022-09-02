@@ -26,14 +26,11 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
         "_FusedDepthwiseConv2dNative",
         ov::frontend::tensorflow::op::translate_depthwise_conv_2d_native_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
-        "_MklSwish",
-        ov::frontend::tensorflow::op::translate_mkl_swish_op),
+        "_MklSwish", ov::frontend::tensorflow::op::translate_mkl_swish_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
-        "Concat",
-        ov::frontend::tensorflow::op::translate_concat_op),
+        "Concat", ov::frontend::tensorflow::op::translate_concat_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
-        "ConcatV2",
-        ov::frontend::tensorflow::op::translate_concat_op),
+        "ConcatV2", ov::frontend::tensorflow::op::translate_concat_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "NonMaxSuppression",
         ov::frontend::tensorflow::op::translate_non_max_suppression_op),
@@ -50,11 +47,9 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
         "NonMaxSuppressionV5",
         ov::frontend::tensorflow::op::translate_non_max_suppression_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
-        "Slice",
-        ov::frontend::tensorflow::op::translate_slice_op),
+        "Slice", ov::frontend::tensorflow::op::translate_slice_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
-        "Cast",
-        ov::frontend::tensorflow::op::translate_cast_op),
+        "Cast", ov::frontend::tensorflow::op::translate_cast_op),
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "CTCGreedyDecoder",
         ov::frontend::tensorflow::op::translate_ctc_greedy_decoder_op),

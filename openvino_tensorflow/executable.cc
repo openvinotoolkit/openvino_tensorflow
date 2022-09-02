@@ -94,11 +94,10 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
       // FIXME: IE cannot handle input parameters with i64/u6 precision
       // at the moment
       if (node->get_input_size() == 0 && ov::op::util::is_constant(node) &&
-              !(!(node->is_dynamic()) && node->get_shape().size() > 0 &&
-                  node->get_shape()[0] == 0) &&
+          !(!(node->is_dynamic()) && node->get_shape().size() > 0 &&
+            node->get_shape()[0] == 0) &&
           !(node->get_element_type() == ov::element::i64 ||
             node->get_element_type() == ov::element::u64)) {
-
         // TODO: Converting StridedSlice inputs to Parameters causes
         // the model to crash when creating request. Find a propoer
         // solution to handle this issue.
@@ -107,7 +106,7 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
         for (auto t_input : inputs) {
           auto t_node = t_input.get_node();
           if (strcmp(t_node->get_type_name(), "StridedSlice") == 0) {
-              static_ss_input = true;
+            static_ss_input = true;
           }
         }
 
@@ -222,9 +221,10 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
       }
     }
     for (int i = 0; i < parameters.size(); i++) {
-        int64_t input_index = m_in_mapping[i];
-        if (input_index != -1)
-          ie_inputs[input_index] = static_pointer_cast<IETensor>(inputs[input_index]);
+      int64_t input_index = m_in_mapping[i];
+      if (input_index != -1)
+        ie_inputs[input_index] =
+            static_pointer_cast<IETensor>(inputs[input_index]);
     }
   }
 

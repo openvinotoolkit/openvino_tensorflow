@@ -6,9 +6,9 @@
 #ifndef OPENVINO_TF_BRIDGE_BUILDER_H_
 #define OPENVINO_TF_BRIDGE_BUILDER_H_
 
+#include <mutex>
 #include <ostream>
 #include <vector>
-#include <mutex>
 
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
