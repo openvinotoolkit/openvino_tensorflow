@@ -174,26 +174,26 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0"]):
-        raise AssertionError(
-            "Only 2022.1.0 OpenVINO version and master branch are supported")
+    #if (arguments.openvino_version not in ["master", "2022.1.0"]):
+    #    raise AssertionError(
+    #        "Only 2022.1.0 OpenVINO version and master branch are supported")
 
-    if arguments.use_openvino_from_location != '':
-        if not os.path.isdir(arguments.use_openvino_from_location):
-            raise AssertionError("Path doesn't exist {0}".format(
-                arguments.use_openvino_from_location))
-        ver_file = arguments.use_openvino_from_location + \
-                      '/runtime/version.txt'
-        if not os.path.exists(ver_file):
-            raise AssertionError("Path doesn't exist {0}".format(ver_file))
-        with open(ver_file) as f:
-            line = f.readline()
-            if not line.find(arguments.openvino_version) != -1:
-                raise AssertionError("OpenVINO version " + \
-                 arguments.openvino_version + \
-                    " does not match the version specified in use_openvino_from_location")
+    #if arguments.use_openvino_from_location != '':
+    #    if not os.path.isdir(arguments.use_openvino_from_location):
+    #        raise AssertionError("Path doesn't exist {0}".format(
+    #            arguments.use_openvino_from_location))
+    #    ver_file = arguments.use_openvino_from_location + \
+    #                  '/runtime/version.txt'
+    #    if not os.path.exists(ver_file):
+    #        raise AssertionError("Path doesn't exist {0}".format(ver_file))
+    #    with open(ver_file) as f:
+    #        line = f.readline()
+    #        if not line.find(arguments.openvino_version) != -1:
+    #            raise AssertionError("OpenVINO version " + \
+    #             arguments.openvino_version + \
+    #                " does not match the version specified in use_openvino_from_location")
 
-    version_check()
+    #version_check()
 
     if arguments.use_tensorflow_from_location != '':
         if (platform.system() == 'Windows'):
