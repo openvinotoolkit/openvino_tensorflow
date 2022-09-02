@@ -32,14 +32,29 @@ void enable() { Enable(); }
 void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
-size_t backends_len() { return ListBackends().size(); }
+bool CheckBackend(const char* backend) {
+  const char* devices[1] = {"GNA"}; // Blacklist unsupported OVTF backends
+  for (int i = 0; i < 1; i++) {
+    if (strcmp(backend, devices[i]) == 0) return false;
+  }
+  return true;
+}
+size_t backends_len() {
+  const auto ovtf_backends = ListBackends();
+  int backends_count = 0;
+  for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
+    if (CheckBackend(ovtf_backends[idx].c_str())) backends_count++;
+  }
+  return backends_count;
+}
 
 bool list_backends(char** backends) {
   const auto ovtf_backends = ListBackends();
   int i = 0;
   for (size_t idx = 0; idx < ovtf_backends.size(); idx++) {
     backendList[idx] = strdup(ovtf_backends[idx].c_str());
-    backends[i++] = backendList[idx];
+    if (CheckBackend(ovtf_backends[idx].c_str()))
+      backends[i++] = backendList[idx];
   }
   return true;
 }
