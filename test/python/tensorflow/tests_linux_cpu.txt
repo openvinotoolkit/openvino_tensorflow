@@ -38,7 +38,7 @@ tests_common.txt
 
 # zero dim error
 identity_bijector_test.IdentityBijectorTest.testScalarCongruency
-#math_ops_test.DivAndModTest.testFloorDivGrad
+math_ops_test.DivAndModTest.testFloorDivGrad
 #reduction_ops_test.SumReductionTest.testDegenerate
 reduction_ops_test.MeanReductionTest.testDegenerate
 reduction_ops_test.ProdReductionTest.testDegenerate
