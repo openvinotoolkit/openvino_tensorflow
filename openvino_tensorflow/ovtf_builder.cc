@@ -4747,6 +4747,12 @@ Status Builder::TranslateGraphWithTFFE(
   try {
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
     ng_function = m_frontend_ptr->convert(input_model);
+  } catch (const ov::NodeValidationFailure& exp) {
+    // Treat NODE_VALIDATION_CHECK errors as InvalidArgument errors for proper
+    // handling at TF
+    // Workaround required for SplitVOp Tests
+    return errors::InvalidArgument("NodeValidationFailure error: " +
+                                   string(exp.what()));
   } catch (const std::exception& exp) {
     return errors::Internal("Frontend conversion error: " + string(exp.what()));
   } catch (...) {
