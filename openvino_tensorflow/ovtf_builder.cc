@@ -4751,8 +4751,9 @@ Status Builder::TranslateGraphWithTFFE(
     // Treat NODE_VALIDATION_CHECK errors as InvalidArgument errors for proper
     // handling at TF
     // Workaround required for SplitVOp Tests
-    return errors::InvalidArgument("NodeValidationFailure error: " +
-                                   string(exp.what()));
+    return errors::InvalidArgument(
+        "Frontend conversion error: NodeValidationFailure: " +
+        string(exp.what()));
   } catch (const std::exception& exp) {
     return errors::Internal("Frontend conversion error: " + string(exp.what()));
   } catch (...) {
