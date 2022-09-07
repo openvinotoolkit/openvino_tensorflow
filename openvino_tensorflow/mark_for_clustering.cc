@@ -120,6 +120,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
     set_attributes_map["SpaceToBatchND"] = SetStaticInputs({1});
     set_attributes_map["Split"] = SetStaticInputs({0});
     set_attributes_map["SplitV"] = SetStaticInputs({1, 2});
+    set_attributes_map["StridedSlice"] = SetStaticInputs({1, 2, 3});
     set_attributes_map["Sum"] = SetStaticInputs({1});
     set_attributes_map["Tile"] = SetStaticInputs({1});
     initialized = true;

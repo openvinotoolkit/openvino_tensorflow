@@ -49,20 +49,26 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
 
   OVTF_VLOG(2) << "Checking for unused parameters";
   auto parameters = model->get_parameters();
-  ov::ParameterVector used_parameters;
-  for (int i = 0; i < parameters.size(); ++i) {
-    OVTF_VLOG(3) << parameters[i];
-    if (parameters[i]->get_users().size() == 0) {
-      m_skipped_inputs.push_back(i);
-      OVTF_VLOG(2) << "Removing unused parameter " << parameters[i]->get_name();
-    } else {
-      used_parameters.push_back(parameters[i]);
-    }
-  }
-  if (parameters.size() != used_parameters.size()) {
-    model = make_shared<ov::Model>(model->get_results(), used_parameters,
-                                   model->get_friendly_name());
-  }
+
+  // TODO: Temporarily disabling since some parameters
+  // seems to have 0 users although they are used from
+  // the graphs from base translations.
+  // Also, check if this is needed for graphs translated
+  // with TF FE.
+  //ov::ParameterVector used_parameters;
+  //for (int i = 0; i < parameters.size(); ++i) {
+  //  OVTF_VLOG(3) << parameters[i];
+  //  if (parameters[i]->get_users().size() == 0) {
+  //    m_skipped_inputs.push_back(i);
+  //    OVTF_VLOG(2) << "Removing unused parameter " << parameters[i]->get_name();
+  //  } else {
+  //    used_parameters.push_back(parameters[i]);
+  //  }
+  //}
+  //if (parameters.size() != used_parameters.size()) {
+  //  model = make_shared<ov::Model>(model->get_results(), used_parameters,
+  //                                 model->get_friendly_name());
+  //}
 
   // A trivial function is one of
   //  1. constant function (Const -> Result)
@@ -204,11 +210,13 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
         m_in_mapping[i] = -1;
         ov::Any any = parameters[i]->get_rt_info()["index"];
         if (any.empty()) {
+          OVTF_VLOG(1) << "Skipping input: no input index";
           continue;
         }
         int64_t input_index = any.as<int64_t>();
         if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
             m_skipped_inputs.end()) {
+          OVTF_VLOG(1) << "Skipping removed input ";
           continue;
         }
         auto input_name = parameters[i]->get_friendly_name();

@@ -615,7 +615,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
   static_input_map.resize(tf_input_tensors.size());
   for (int i = 0; i < tf_input_tensors.size(); i++) {
-      static_input_map[i] = nullptr;
+    static_input_map[i] = nullptr;
     if (m_input_is_static[i]) {
       static_input_map[i] = &tf_input_tensors[i];
       TF_RETURN_IF_ERROR(
