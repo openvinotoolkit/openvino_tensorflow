@@ -36,9 +36,8 @@ class Builder {
       const std::vector<Tensor>& tf_input_tensors);
 
   static Status TranslateGraphWithTFFE(
-      const std::vector<TensorShape>& inputs,
-      const Graph* input_graph, const string name,
-      std::shared_ptr<ov::Model>& ng_function,
+      const std::vector<TensorShape>& inputs, const Graph* input_graph,
+      const string name, std::shared_ptr<ov::Model>& ng_function,
       ov::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 

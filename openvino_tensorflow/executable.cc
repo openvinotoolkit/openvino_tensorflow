@@ -55,17 +55,18 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   // the graphs from base translations.
   // Also, check if this is needed for graphs translated
   // with TF FE.
-  //ov::ParameterVector used_parameters;
-  //for (int i = 0; i < parameters.size(); ++i) {
+  // ov::ParameterVector used_parameters;
+  // for (int i = 0; i < parameters.size(); ++i) {
   //  OVTF_VLOG(3) << parameters[i];
   //  if (parameters[i]->get_users().size() == 0) {
   //    m_skipped_inputs.push_back(i);
-  //    OVTF_VLOG(2) << "Removing unused parameter " << parameters[i]->get_name();
+  //    OVTF_VLOG(2) << "Removing unused parameter " <<
+  //    parameters[i]->get_name();
   //  } else {
   //    used_parameters.push_back(parameters[i]);
   //  }
   //}
-  //if (parameters.size() != used_parameters.size()) {
+  // if (parameters.size() != used_parameters.size()) {
   //  model = make_shared<ov::Model>(model->get_results(), used_parameters,
   //                                 model->get_friendly_name());
   //}

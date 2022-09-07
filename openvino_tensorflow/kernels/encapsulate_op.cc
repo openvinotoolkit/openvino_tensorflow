@@ -647,8 +647,8 @@ Status NGraphEncapsulateOp::GetExecutable(
     } else {
       OVTF_VLOG(1) << "Using TF FE Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
-          input_shapes, &m_graph, m_name, ng_function,
-          zero_dim_outputs, tf_input_tensors));
+          input_shapes, &m_graph, m_name, ng_function, zero_dim_outputs,
+          tf_input_tensors));
     }
     util::DumpNGGraph(ng_function, m_name);
 

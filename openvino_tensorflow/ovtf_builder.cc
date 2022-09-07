@@ -4247,8 +4247,7 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ov::Model>& ng_function,
-    ov::ResultVector& zero_dim_outputs,
+    shared_ptr<ov::Model>& ng_function, ov::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   //
   // We will visit ops in topological order.
@@ -4417,8 +4416,7 @@ Status Builder::TranslateGraph(
     }
     ng_parameter_list[index] =
         ov::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
-    ng_parameter_list[index]->get_rt_info().insert(
-        {"index", ov::Any(index)});
+    ng_parameter_list[index]->get_rt_info().insert({"index", ov::Any(index)});
   }
 
   //
@@ -4584,9 +4582,8 @@ ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
     std::make_shared<ov::frontend::tensorflow::FrontEnd>();
 
 Status Builder::TranslateGraphWithTFFE(
-    const std::vector<TensorShape>& inputs,
-    const Graph* input_graph, const string name,
-    std::shared_ptr<ov::Model>& ng_function,
+    const std::vector<TensorShape>& inputs, const Graph* input_graph,
+    const string name, std::shared_ptr<ov::Model>& ng_function,
     ov::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   std::lock_guard<std::mutex> lock(m_translate_lock_);
