@@ -4247,7 +4247,7 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ov::Model>& ng_function, ov::ResultVector& ng_result_list,
+    shared_ptr<ov::Model>& ng_function, ov::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   //
   // We will visit ops in topological order.
@@ -4315,7 +4315,7 @@ Status Builder::TranslateGraph(
     if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
       return errors::InvalidArgument("No data type defined for _Arg");
     }
-    int index;
+    int64_t index;
     if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Arg");
     }
@@ -4416,6 +4416,7 @@ Status Builder::TranslateGraph(
     }
     ng_parameter_list[index] =
         ov::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
+    ng_parameter_list[index]->get_rt_info().insert({"index", ov::Any(index)});
   }
 
   //
@@ -4475,6 +4476,7 @@ Status Builder::TranslateGraph(
   //
   // Populate the result list.
   //
+  ov::ResultVector ng_result_list;
   ng_result_list.resize(tf_ret_vals.size());
   ov::ResultVector ng_func_result_list;
   ng_func_result_list.reserve(tf_params.size());
@@ -4486,7 +4488,7 @@ Status Builder::TranslateGraph(
                                      " inputs, should have 1");
     }
 
-    int index;
+    int64_t index;
     if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Retval");
     }
@@ -4496,6 +4498,7 @@ Status Builder::TranslateGraph(
     auto ng_result = ConstructNgNode<opset::Result>(n->name(), result);
     ng_result_list[index] =
         ov::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
+    ng_result_list[index]->get_rt_info().insert({"index", ov::Any(index)});
   }
 
   auto param_dim_check = [ng_parameter_list](int i) {
@@ -4512,6 +4515,7 @@ Status Builder::TranslateGraph(
     }
   }
 
+  // Get the result nodes with valid dim values
   auto result_dim_check = [ng_result_list](int i) {
     auto res_shape_list = ng_result_list[i]->get_shape();
     for (auto dim : res_shape_list) {
@@ -4524,6 +4528,8 @@ Status Builder::TranslateGraph(
     if (ng_result_list[i]->is_dynamic() ||
         !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
       ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
 
@@ -4576,11 +4582,9 @@ ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
     std::make_shared<ov::frontend::tensorflow::FrontEnd>();
 
 Status Builder::TranslateGraphWithTFFE(
-    const std::vector<TensorShape>& inputs,
-    const std::vector<const Tensor*>& static_input_map,
-    const Graph* input_graph, const string name,
-    std::shared_ptr<ngraph::Function>& ng_function,
-    ngraph::ResultVector& zero_dim_outputs,
+    const std::vector<TensorShape>& inputs, const Graph* input_graph,
+    const string name, std::shared_ptr<ov::Model>& ng_function,
+    ov::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   std::lock_guard<std::mutex> lock(m_translate_lock_);
   vector<Node*> ordered;
@@ -4627,7 +4631,7 @@ Status Builder::TranslateGraphWithTFFE(
         if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
           return errors::InvalidArgument("No data type defined for _Arg");
         }
-        int index;
+        int64_t index;
         if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
           return errors::InvalidArgument("No index defined for _Arg");
         }

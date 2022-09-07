@@ -83,6 +83,7 @@ class NGraphEncapsulateOp : public OpKernel {
   static std::map<size_t, float> s_ovtf_cluster_timings_map;
   int64_t m_iter;
   bool m_disable_cost_based_assignment;
+  bool m_disable_tffe;
 };
 
 // Static initializers
@@ -100,6 +101,15 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   if (std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != nullptr) {
     if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT"))) {
       m_disable_cost_based_assignment = 1;
+    }
+  }
+
+  // if this is set to 1, tensorflow front-end will be
+  // disabled
+  m_disable_tffe = 0;
+  if (std::getenv("OPENVINO_TF_DISABLE_TFFE") != nullptr) {
+    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_TFFE"))) {
+      m_disable_tffe = 1;
     }
   }
 
@@ -615,6 +625,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
   static_input_map.resize(tf_input_tensors.size());
   for (int i = 0; i < tf_input_tensors.size(); i++) {
+    static_input_map[i] = nullptr;
     if (m_input_is_static[i]) {
       static_input_map[i] = &tf_input_tensors[i];
       TF_RETURN_IF_ERROR(
@@ -638,9 +649,17 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-    TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
-        input_shapes, static_input_map, &m_graph, m_name, ng_function,
-        zero_dim_outputs, tf_input_tensors));
+    if (m_disable_tffe) {
+      OVTF_VLOG(1) << "Using Base OVTF Translator: " << name();
+      TF_RETURN_IF_ERROR(Builder::TranslateGraph(
+          input_shapes, static_input_map, &m_graph, m_name, ng_function,
+          zero_dim_outputs, tf_input_tensors));
+    } else {
+      OVTF_VLOG(1) << "Using TF FE Translator: " << name();
+      TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
+          input_shapes, &m_graph, m_name, ng_function, zero_dim_outputs,
+          tf_input_tensors));
+    }
     util::DumpNGGraph(ng_function, m_name);
 
     // Evict the cache if the number of elements exceeds the limit

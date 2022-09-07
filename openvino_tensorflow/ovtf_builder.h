@@ -32,15 +32,13 @@ class Builder {
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
       const string name, std::shared_ptr<ov::Model>& ng_function,
-      ov::ResultVector& ng_func_result_list,
+      ov::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 
   static Status TranslateGraphWithTFFE(
-      const std::vector<TensorShape>& inputs,
-      const std::vector<const Tensor*>& static_input_map,
-      const Graph* input_graph, const string name,
-      std::shared_ptr<ngraph::Function>& ng_function,
-      ngraph::ResultVector& zero_dim_outputs,
+      const std::vector<TensorShape>& inputs, const Graph* input_graph,
+      const string name, std::shared_ptr<ov::Model>& ng_function,
+      ov::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 
   using OpMap =
