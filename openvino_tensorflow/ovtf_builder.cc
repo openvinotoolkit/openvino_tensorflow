@@ -4601,7 +4601,8 @@ Status Builder::TranslateGraphWithTFFE(
     if (n->IsArg()) {
       bool static_input = false;
       try {
-        if (Status::OK() != GetNodeAttr(n->attrs(), "_static_input", &static_input)) {
+        if (Status::OK() !=
+            GetNodeAttr(n->attrs(), "_static_input", &static_input)) {
           n->AddAttr("_static_input", false);
           static_input = false;
         }
@@ -4618,8 +4619,7 @@ Status Builder::TranslateGraphWithTFFE(
         } catch (const std::exception&) {
           OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
         }
-        if (is_variable)
-          n->AddAttr("_static_input", true);
+        if (is_variable) n->AddAttr("_static_input", true);
         static_input |= is_variable;
       }
       if (static_input) {
@@ -4638,7 +4638,7 @@ Status Builder::TranslateGraphWithTFFE(
       try {
         std::string prov_tag;
         if (Status::OK() != GetNodeAttr(n->attrs(), "_prov_tag", &prov_tag)) {
-          //TODO: Assign a proper prov tag instead of an empty string.
+          // TODO: Assign a proper prov tag instead of an empty string.
           n->AddAttr("_prov_tag", prov_tag);
         }
       } catch (const std::exception&) {
@@ -4709,10 +4709,11 @@ Status Builder::TranslateGraphWithTFFE(
               auto tensor = node.get_attribute<ov::Tensor>("_static_value");
               auto dtype =
                   node.get_attribute<ov::element::Type>("_static_dtype");
-              FRONT_END_GENERAL_CHECK(
-                  dtype == tensor.get_element_type(),
-                  "_Arg has tensor with type different from _static_dtype attribute.");
-              res = std::make_shared<ov::opset8::Constant>(tensor.get_element_type(), tensor.get_shape(), tensor.data());
+              FRONT_END_GENERAL_CHECK(dtype == tensor.get_element_type(),
+                                      "_Arg has tensor with type different "
+                                      "from _static_dtype attribute.");
+              res = std::make_shared<ov::opset8::Constant>(
+                  tensor.get_element_type(), tensor.get_shape(), tensor.data());
             } else {
               auto element_type = node.get_attribute<ov::element::Type>("T");
               auto shape = indexed_shape.at(index);
@@ -4746,6 +4747,13 @@ Status Builder::TranslateGraphWithTFFE(
   try {
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
     ng_function = m_frontend_ptr->convert(input_model);
+  } catch (const ov::NodeValidationFailure& exp) {
+    // Treat NODE_VALIDATION_CHECK errors as InvalidArgument errors for proper
+    // handling at TF
+    // Workaround required for SplitVOp Tests
+    return errors::InvalidArgument(
+        "Frontend conversion error: NodeValidationFailure: " +
+        string(exp.what()));
   } catch (const std::exception& exp) {
     return errors::Internal("Frontend conversion error: " + string(exp.what()));
   } catch (...) {

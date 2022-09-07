@@ -29,9 +29,6 @@ class Backend {
     if (api::IsRewritePassEnabled()) {
       NGraphClusterManager::EvictAllClusters();
     }
-    if (m_device != "GPU") {
-      NGraphClusterManager::EvictMRUClusters();
-    }
     ReleaseGlobalContext();
   }
 

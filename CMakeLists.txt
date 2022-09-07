@@ -204,6 +204,10 @@ endif()
 
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
+elseif(APPLE)
+    set(LIB "lib/intel64/Release")
+elseif(WIN32)
+    set(LIB "bin/intel64/Release")
 else()
     set(LIB "lib/intel64")
 endif()
@@ -214,18 +218,29 @@ else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
 
+if(APPLE)
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.dylib)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.dylib)
+elseif(WIN32)
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.dll)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.dll)
+else()
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.so)
+endif()
+
 add_library(tensorflow_frontend_lib SHARED IMPORTED)                                                                       
 set_target_properties(
     tensorflow_frontend_lib
     PROPERTIES IMPORTED_LOCATION
-    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so
+    ${libtensorflow_frontend_path}
 )
 
 add_library(openvino_lib SHARED IMPORTED)                                                                       
 set_target_properties(
     openvino_lib
     PROPERTIES IMPORTED_LOCATION
-    ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.so
+    ${libopenvino_path}
 )
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")

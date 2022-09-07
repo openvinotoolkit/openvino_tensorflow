@@ -388,7 +388,6 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       ng_outputs[i] = make_shared<IETensor>(ng_element_type, ng_shape,
                                             output_tensor->data());
 #endif
-
     }
     for (auto i = 0; i < zero_dim_outputs.size(); i++) {
       auto ng_element = zero_dim_outputs[i];
@@ -498,7 +497,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
       Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
       auto size = ng_output->get_byte_size();
       auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
