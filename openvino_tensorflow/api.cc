@@ -33,11 +33,11 @@ void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
 bool CheckBackend(const char* backend) {
-  const char* devices[5] = {"CPU", "GPU", "GPU_FP16", "MYRIAD", "VAD-M"};
-  for (int i = 0; i < 5; i++) {
-    if (strcmp(backend, devices[i]) == 0) return true;
+  const char* devices[1] = {"GNA"};  // Blacklist unsupported OVTF backends
+  for (int i = 0; i < 1; i++) {
+    if (strcmp(backend, devices[i]) == 0) return false;
   }
-  return false;
+  return true;
 }
 size_t backends_len() {
   const auto ovtf_backends = ListBackends();

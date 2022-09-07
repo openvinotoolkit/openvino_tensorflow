@@ -35,6 +35,14 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
   } else if (bname.find("GPU") != string::npos) {
+    // Since m_backend_name is assigned "GPU" whenever the string "GPU" is found
+    // in bname,
+    // for ex: in GPU.0, GPU.1, or GPU.1_FP16, we can ignore maintaining
+    // fullnames,
+    // as m_backend_name is used by OCM and only needs "GPU" to check for Op
+    // support.
+    // In OVTF, we will assume that all types of GPU devices have the same Op
+    // support.
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
