@@ -40,8 +40,7 @@ Status BackendManager::SetBackend(const string& backend_name) {
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
-    if (bname.find("HDDL") != string::npos)
-      m_tf_frontend_disabled = true;
+    if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
 
   if (std::getenv("OPENVINO_TF_DISABLE_TFFE") != nullptr) {
@@ -127,8 +126,6 @@ vector<string> BackendManager::GetSupportedBackends() {
 }
 
 // Returns if TF Frontend is disabled
-bool BackendManager::TFFrontendDisabled() {
-  return m_tf_frontend_disabled;
-}
+bool BackendManager::TFFrontendDisabled() { return m_tf_frontend_disabled; }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
