@@ -74,30 +74,17 @@ endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
 
-if(WIN32)
-  target_link_libraries(
-            ${LIB_NAME}
-            ovtf_logger
-            ${TensorFlow_FRAMEWORK_LIBRARY}
-            absl_algorithm
-            absl_container
-            absl_strings
-            ${InferenceEngine_LIBRARIES}
-            ocm
+target_link_libraries(
+        ${LIB_NAME}
+        ovtf_logger
+        ${TensorFlow_FRAMEWORK_LIBRARY}
+        absl_algorithm
+        absl_container
+        absl_strings
+        ${InferenceEngine_LIBRARIES}
+        tensorflow_frontend_lib
+        ocm
     )
-else()
-  target_link_libraries(
-          ${LIB_NAME}
-          ovtf_logger
-          ${TensorFlow_FRAMEWORK_LIBRARY}
-          absl_algorithm
-          absl_container
-          absl_strings
-          ${InferenceEngine_LIBRARIES}
-          tensorflow_frontend_lib
-          ocm
-      )
-endif()
 
 target_compile_definitions(
     ${LIB_NAME} PRIVATE
@@ -159,7 +146,7 @@ elseif(WIN32)
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/Release/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
   set(OCM_LIB libocm.so)
   set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.so")
