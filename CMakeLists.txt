@@ -235,11 +235,12 @@ set_target_properties(
     PROPERTIES IMPORTED_LOCATION
     ${libtensorflow_frontend_path}
 )
-
-set_target_properties(
-		tensorflow_frontend_lib
-		PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_fe.lib
-	)
+if(WIN32)
+    set_target_properties(
+            tensorflow_frontend_lib
+            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_fe.lib
+        )
+endif()
 
 add_library(openvino_lib SHARED IMPORTED)                                                                       
 set_target_properties(
@@ -248,10 +249,12 @@ set_target_properties(
     ${libopenvino_path}
 )
 
-set_target_properties(
-		openvino_lib
-		PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino.lib
-	)
+if(WIN32)
+    set_target_properties(
+            openvino_lib
+            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino.lib
+        )
+endif()
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")
 INCLUDE_DIRECTORIES("${BASEPATH}")
