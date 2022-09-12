@@ -15,6 +15,7 @@ namespace openvino_tensorflow {
 shared_ptr<Backend> BackendManager::m_backend;
 string BackendManager::m_backend_name;
 mutex BackendManager::m_backend_mutex;
+bool BackendManager::m_tf_frontend_disabled = false;
 
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
@@ -34,11 +35,20 @@ Status BackendManager::SetBackend(const string& backend_name) {
   m_backend = backend;
   if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
+    m_tf_frontend_disabled = true;
   } else if (bname.find("GPU") != string::npos) {
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
+    if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
+
+  if (std::getenv("OPENVINO_TF_DISABLE_TFFE") != nullptr) {
+    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_TFFE"))) {
+      m_tf_frontend_disabled = true;
+    }
+  }
+
   return Status::OK();
 }
 
@@ -114,5 +124,8 @@ vector<string> BackendManager::GetSupportedBackends() {
   }
   return devices;
 }
+
+// Returns if TF Frontend is disabled
+bool BackendManager::TFFrontendDisabled() { return m_tf_frontend_disabled; }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -4820,7 +4820,7 @@ Status Builder::TranslateGraphWithTFFE(
     if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
       passes.register_pass<ov::pass::ConstantFolding>();
     }
-    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") != "0") {
+    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") == "1") {
       passes.register_pass<pass::TransposeSinking>();
     }
     passes.run_passes(ng_function);

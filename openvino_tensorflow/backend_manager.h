@@ -36,6 +36,9 @@ class BackendManager {
   // Returns the currently set backend's name
   static Status GetBackendName(string& backend_name);
 
+  // Returns if TF Frontend is disabled
+  static bool TFFrontendDisabled();
+
   ~BackendManager();
 
  private:
@@ -46,6 +49,7 @@ class BackendManager {
   static shared_ptr<Backend> m_backend;
   static string m_backend_name;
   static mutex m_backend_mutex;
+  static bool m_tf_frontend_disabled;
 };
 
 }  // namespace openvino_tensorflow
