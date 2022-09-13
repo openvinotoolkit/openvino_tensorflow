@@ -26,6 +26,7 @@ OP_CONVERTER(translate_slice_op);
 OP_CONVERTER(translate_cast_op);
 OP_CONVERTER(translate_ctc_greedy_decoder_op);
 OP_CONVERTER(translate_sparse_to_dense_op);
+OP_CONVERTER(translate_expand_dims_op);
 
 }  // namespace op
 }  // namespace tensorflow
