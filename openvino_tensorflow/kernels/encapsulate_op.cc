@@ -212,6 +212,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
+  auto start_ns = GetCurrentTimeNanos();
   m_iter++;
   // This snippet is executed only when Rewrite pass is enabled
   if (api::IsRewritePassEnabled() &&
@@ -571,6 +572,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
           ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
+  int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+  OVTF_VLOG(1) << "NgraphEncapsulate::Compute() time taken: " << duration_in_ms << " ms";
 
   long vm = 0, rss = 0;
   util::MemoryProfile(vm, rss);
@@ -703,6 +706,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
+  auto start_ns = GetCurrentTimeNanos();
   if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
     GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
@@ -767,7 +771,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
           std::to_string(output_edges[0]->src_output());
     }
   }
-
+  
   std::vector<std::pair<string, Tensor>> input_tensor_list(
       m_session_input_names.size());
   for (int i = 0; i < m_session_input_names.size(); i++) {
@@ -798,6 +802,8 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
 #endif
     }
   }
+  int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+  OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: " << duration_in_ms << " ms";
   return Status::OK();
 }
 
