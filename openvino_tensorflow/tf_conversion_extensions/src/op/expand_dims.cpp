@@ -20,15 +20,15 @@ OutputVector translate_expand_dims_op(const ov::frontend::NodeContext& node) {
 
   auto backend_name = node.get_attribute<std::string>("_ovtf_backend_name");
 
-
   if (backend_name == "MYRIAD" || backend_name == "HDDL") {
     auto dims_const_in = get_constant_from_source(dims);
     const auto& dims_vec = dims_const_in->cast_vector<int64_t>();
-    dims = make_shared<Constant>(ov::element::i64, ov::Shape{dims_vec.size()}, dims_vec);
+    dims = make_shared<Constant>(ov::element::i64, ov::Shape{dims_vec.size()},
+                                 dims_vec);
   }
 
   auto res = make_shared<Unsqueeze>(input, dims);
-  //set_node_name(node.get_name(), res);
+  // set_node_name(node.get_name(), res);
   return res->outputs();
 }
 
