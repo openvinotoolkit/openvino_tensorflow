@@ -45,7 +45,7 @@ jobs:
     - script: |
         git submodule init
         git submodule update
-        python build_ovtf.py --tf_version=v2.9.1 --openvino_version=2022.1.0 --use_openvino_from_location=$(OV_LOCATION)/w_openvino_toolkit_runtime_p_2022.1.0.643/
+        python build_ovtf.py --tf_version=v2.10.0 --openvino_version=2022.1.0 --use_openvino_from_location=$(OV_LOCATION)/w_openvino_toolkit_runtime_p_2022.1.0.643/
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
