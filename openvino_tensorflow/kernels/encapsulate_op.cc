@@ -212,15 +212,20 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
-  auto start_ns = GetCurrentTimeNanos();
+  int64_t start_compute_ns;
+  if (BackendManager::OVTFProfilingEnabled())
+    start_compute_ns = GetCurrentTimeNanos();
   m_iter++;
   // This snippet is executed only when Rewrite pass is enabled
   if (api::IsRewritePassEnabled() &&
       s_tf_timing_run_enabled_map[m_cluster_id]) {
     // Measure the timing of cluster through force TF run
-    int64_t start_ns = GetCurrentTimeNanos();
+    int64_t start_ns, duration_in_ms;
+    if (BackendManager::OVTFProfilingEnabled())
+      start_ns = GetCurrentTimeNanos();
     OP_REQUIRES_OK(ctx, Fallback(ctx));
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    if (BackendManager::OVTFProfilingEnabled())
+      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "Iter: " << m_iter;
     OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took " << duration_in_ms
                  << " ms.";
@@ -419,9 +424,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute call starting for cluster "
                    << m_cluster_id;
       try {
-        int64_t start_ns = GetCurrentTimeNanos();
+        int64_t start_ns, duration_in_ms;
+        if (BackendManager::OVTFProfilingEnabled())
+          start_ns = GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_outputs, multi_req_execution);
-        int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+        if (BackendManager::OVTFProfilingEnabled())
+          duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
                      << duration_in_ms << " ms.";
@@ -572,9 +580,12 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
           ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
     }
   }
-  int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
-  OVTF_VLOG(1) << "NgraphEncapsulate::Compute() time taken: " << duration_in_ms
-               << " ms";
+
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_compute_ns) / 1e6;
+    OVTF_VLOG(1) << "NgraphEncapsulate::Compute() time taken: "
+                 << duration_in_ms << " ms";
+  }
 
   long vm = 0, rss = 0;
   util::MemoryProfile(vm, rss);
@@ -707,7 +718,8 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  auto start_ns = GetCurrentTimeNanos();
+  int64_t start_ns;
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
     GraphDef* graph_def = NGraphClusterManager::GetClusterGraph(m_cluster_id);
@@ -803,9 +815,12 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
 #endif
     }
   }
-  int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
-  OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: " << duration_in_ms
-               << " ms";
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: "
+                 << duration_in_ms << " ms"
+                 << " for cluster " << m_cluster_id;
+  }
   return Status::OK();
 }
 
