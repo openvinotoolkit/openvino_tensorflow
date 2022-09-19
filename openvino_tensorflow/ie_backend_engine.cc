@@ -26,12 +26,12 @@ IE_Backend_Engine::~IE_Backend_Engine() {}
 void IE_Backend_Engine::load_network() {
   if (m_network_ready) return;
 
-  if (std::getenv("OPENVINO_TF_ENABLE_PERF_COUNT"))
+  if (BackendManager::PerfCountersEnabled())
     Backend::GetGlobalContext().ie_core.set_property(
         m_device, {ov::enable_profiling(true)});
 
   // TODO: Model caching needs to be validated with different use cases.
-  const char* model_cache_dir = std::getenv("OPENVINO_TF_MODEL_CACHE_DIR");
+  const char* model_cache_dir = BackendManager::GetModelCacheDir();
 
   if (!(model_cache_dir == nullptr)) {
     Backend::GetGlobalContext().ie_core.set_property(
