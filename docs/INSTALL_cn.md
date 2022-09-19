@@ -11,9 +11,9 @@
   * 支持 Intel<sup>®</sup> CPU、Intel<sup>®</sup> 集成 GPU 和 Intel<sup>®</sup> Movidius™ 视觉处理单元 (VPU)，但不支持 VAD-M。
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.1
+        pip3 install tensorflow==2.10.0
         pip3 install openvino-tensorflow==2.1.0
-    openvino-tensorflow PyPi 安装包对tensorflow的补丁版交叉兼容。例如 openvino-tensorflow 针对TF 2.9.1 的模块依然可以在像 TF 2.9.2 和 2.9.3 这样的补丁版本上运行。
+    openvino-tensorflow PyPi 安装包对tensorflow的补丁版交叉兼容。例如 openvino-tensorflow 针对TF 2.10.0 的模块依然可以在像 TF 2.9.2 和 2.9.3 这样的补丁版本上运行。
 <br/>
 
   ### 安装 **OpenVINO™ integration with TensorFlow** PyPi 发布版与独立安装Intel® OpenVINO™ 发布版以支持VAD-M
@@ -34,7 +34,7 @@
   * 支持 Intel<sup>®</sup> CPU、Intel<sup>®</sup> 集成 GPU 和 Intel<sup>®</sup> Movidius™ 视觉处理单元 (VPU)，但不支持 VAD-M。
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.1
+        pip3 install tensorflow==2.10.0
         pip3 install openvino-tensorflow==2.1.0
 
 
@@ -46,6 +46,6 @@
   * 支持 Intel<sup>®</sup> CPU、Intel<sup>®</sup> 集成 GPU 和 Intel<sup>®</sup> Movidius™ 视觉处理单元 (VPU)，但不支持 VAD-M。
 
         pip3.9 install -U pip
-        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.1.0/tensorflow-2.9.1-cp39-cp39-win_amd64.whl
+        pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.1.0/tensorflow-2.10.0-cp39-cp39-win_amd64.whl
         pip3.9 install openvino-tensorflow==2.1.0
 

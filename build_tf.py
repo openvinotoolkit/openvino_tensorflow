@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.9.1")
+        default="v2.10.0")
     parser.add_argument(
         '--output_dir',
         type=str,

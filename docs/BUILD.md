@@ -147,7 +147,7 @@ Use one of the following common build options based on the requirements.
 
 1. Pulls compatible TensorFlow package from PyPi, uses OpenVINO™ binary from specified location. This is the recommended build option for most of the use cases.
 
-        python3 build_ovtf.py --tf_version=v2.9.1 --use_openvino_from_location=/opt/intel/openvino_2022.1.0/
+        python3 build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location=/opt/intel/openvino_2022.1.0/
   
 2. Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. Make sure that the options provided are CXX11_ABI compatible. As TensorFlow is compiled with CXX11_ABI=0 for versions earlier than 2.9.0, which is incompatible with OpenVINO™ binary released package. Choose this option primarily to build **OpenVINO™ integration with TensorFlow** for TensorFlow version earlier than 2.9.0 or when OpenVINO™ binary package is not installed. If not passed the default value of "--cxx11_abi_version" argument is 1.
 
@@ -173,13 +173,13 @@ Use the `help` option of `build_ovtf.py` script to learn more about various buil
 
 Pulls compatible TensorFlow package from PyPi, clones and builds OpenVINO™ from source. Currently only ABI0 is supported on macOS.
 
-        python3 build_ovtf.py --tf_version=v2.9.1 --openvino_version=2022.1.0 --cxx11_abi_version=0
+        python3 build_ovtf.py --tf_version=v2.10.0 --openvino_version=2022.1.0 --cxx11_abi_version=0
 
 ###  2.3. <a name='BuildInstructionsWindows'></a>Build Instructions for **Windows**
 Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as administrator, and follow below options to build from source:
-1. Pulls prebuilt TensorFlow 2.9.1 python package from Github release assets. Uses OpenVINO™ binary from specified location.
+1. Pulls prebuilt TensorFlow 2.10.0 python package from Github release assets. Uses OpenVINO™ binary from specified location.
 
-        python build_ovtf.py --tf_version=v2.9.1 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" 
+        python build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" 
 
 2. To use prebuilt TensorFlow from the given location [refer the TensorFlow build instructions](#TFWindows). It uses OpenVINO™ binary from specified location. Use this build option to run C++ examples and to integrate openvino-tensorflow in TensorFlow C++ inference applications.
 
@@ -188,7 +188,7 @@ Use "Command Prompt" or "x64 Native Tools Command Prompt for VS 2019" as adminis
 ###  2.4. <a name='BuildInstructionsforIntelAtomProcessor'></a>Build Instructions for Intel Atom® Processor
 In order to build **OpenVINO™ integration with TensorFlow** to use with the Intel Atom® processor, we recommend building TensorFlow from source, and then build openvino-tensorflow:
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.1 --target_arch silvermont
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.10.0 --target_arch silvermont
         python3 build_ovtf.py --use_tensorflow_from_location=${PATH_TO_TF_BUILD} --openvino_version=2022.1.0 --target_arch silvermont
 
 ###  2.5. <a name='BuildVerification'></a> Build Verification
@@ -207,10 +207,10 @@ Verify that `openvino-tensorflow` is installed correctly:
 
 This should produce an output like:
 
-        TensorFlow version:  2.9.1
+        TensorFlow version:  2.10.0
         OpenVINO integration with TensorFlow version: b'2.1.0'
         OpenVINO version used for this build: b'2022.1.0'
-        TensorFlow version used for this build: v2.9.1
+        TensorFlow version used for this build: v2.10.0
         CXX11_ABI flag used for this build: 1
 
 
@@ -221,9 +221,9 @@ Test the installation:
 This command runs all C++ and Python unit tests from the `openvino_tensorflow` source tree. It also runs various TensorFlow Python tests using OpenVINO™.
   
 ##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>Backwards Compatibility with TensorFlow on Linux
-**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions **v2.4.4, v2.5.3, v2.6.3, v2.7.1, v2.8.0 and 2.9.1**). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box. For example PyPi openvino-tensorflow 2.1.0 which depends on TF 2.9.1 does not work with PyPi TensorFlow 2.6.0.
+**OpenVINO™ integration with TensorFlow** core library ensures backwards compatibility across **TensorFlow 2.x APIs**. This means you will be able to build its source code with the past MINOR versions of TensorFlow 2.x. (validated for TensorFlow versions **v2.4.4, v2.5.3, v2.6.3, v2.7.1, v2.8.0 and 2.9.1**). However, TensorFlow does not guarantee the binary interfaces compatibility across its MINOR versions for the C++ runtime libraries (see https://www.tensorflow.org/guide/versions). Therefore an **OpenVINO™ integration with TensorFlow** wheel that depends on a given TensorFlow version will not work with past MINOR versions of TensorFlow out-of-the-box. For example PyPi openvino-tensorflow 2.1.0 which depends on TF 2.10.0 does not work with PyPi TensorFlow 2.6.0.
 
-Please note that PyPi openvino-tensorflow 2.1.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow 2.1.0 built against TF 2.9.1 will work with PATCH versions like TF 2.9.0, and 2.9.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
+Please note that PyPi openvino-tensorflow 2.1.0 is still cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow 2.1.0 built against TF 2.10.0 will work with PATCH versions like TF 2.9.0, and 2.9.2. This is because security and bug fixes done in PATCH versions of TensorFlow don't affect the binary interfaces of its C++ runtime libraries.
 
 ##  4. <a name='OpenVINO'></a>OpenVINO™
 
@@ -244,11 +244,11 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
 
 - Builds TensorFlow with default CXX11_ABI=1 option with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.1 
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.10.0 
 
 - Builds TensorFlow with CXX11_ABI=0 with a desired TensorFlow version
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.1 --cxx11_abi_version=0 
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.10.0 --cxx11_abi_version=0 
 
 ### <a name='TFWindows'></a> For Windows
 - Complete the setup steps: https://www.tensorflow.org/install/source_windows#setup_for_windows
@@ -256,7 +256,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
   
         git clone https://github.com/tensorflow/tensorflow.git
         cd tensorflow
-        git checkout v2.9.1
+        git checkout v2.10.0
         # apply following patch to enable the symbols required to build OpenVINO™ integration with TensorFlow
         git apply \path\to\openvino_tensorflow\repo\tools\builds\tf_win_build.patch --ignore-whitespace
         # if you want to enable more symbols add them to tensorflow\tensorflow\tools\def_file_filter\def_file_filter.py.tpl file
@@ -270,7 +270,7 @@ TensorFlow can be built from source using `build_tf.py`. The build artifacts can
         bazel-bin\tensorflow\tools\pip_package\build_pip_package C:/tmp/tensorflow_pkg
 
         # copy this PIP package to working directory (tensorflow source code directory)
-        cp C:/tmp/tensorflow_pkg/tensorflow-2.9.1-cp39-cp39-win_amd64.whl .\
+        cp C:/tmp/tensorflow_pkg/tensorflow-2.10.0-cp39-cp39-win_amd64.whl .\
   
 - Build CC libraries
   
