@@ -141,20 +141,19 @@ void IE_Basic_Engine::infer(
   }
 
   if (BackendManager::PerfCountersEnabled()) {
-      std::cout << "Performance counts:" << std::endl;
-      auto prof_infos = m_infer_reqs[0].get_profiling_info();
-      std::sort(prof_infos.begin(), prof_infos.end(),
-                [](auto prof_info_a, auto prof_info_b) {
-                  return prof_info_b.real_time < prof_info_a.real_time;
-                });
-      std::cout << "Type;Real Time (ms);Node Name" << std::endl;
-      for (auto info : prof_infos) {
-        std::cout
-        << info.node_type 
-        << ";"
-        << std::to_string(std::chrono::duration<double, std::milli>(info.real_time).count())
-        << ";"
-        << info.node_name << std::endl;
+    std::cout << "Performance counts:" << std::endl;
+    auto prof_infos = m_infer_reqs[0].get_profiling_info();
+    std::sort(prof_infos.begin(), prof_infos.end(),
+              [](auto prof_info_a, auto prof_info_b) {
+                return prof_info_b.real_time < prof_info_a.real_time;
+              });
+    std::cout << "Type;Real Time (ms);Node Name" << std::endl;
+    for (auto info : prof_infos) {
+      std::cout << info.node_type << ";"
+                << std::to_string(
+                       std::chrono::duration<double, std::milli>(info.real_time)
+                           .count())
+                << ";" << info.node_name << std::endl;
     }
   }
 

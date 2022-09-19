@@ -45,6 +45,9 @@ class BackendManager {
   // Returns the model cache dir if set
   static char* GetModelCacheDir();
 
+  // Returns if TF Frontend is disabled
+  static bool TFFrontendDisabled();
+
   ~BackendManager();
 
  private:
@@ -58,6 +61,7 @@ class BackendManager {
   static bool m_perf_counters_enabled;
   static bool m_enable_ovtf_profiling;
   static char* m_model_cache_dir;
+  static bool m_tf_frontend_disabled;
 };
 
 }  // namespace openvino_tensorflow
