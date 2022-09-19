@@ -36,6 +36,15 @@ class BackendManager {
   // Returns the currently set backend's name
   static Status GetBackendName(string& backend_name);
 
+  // Returns if Performance Counters are enabled
+  static bool PerfCountersEnabled();
+
+  // Returns if profiling is enabled in OVTF
+  static bool OVTFProfilingEnabled();
+
+  // Returns the model cache dir if set
+  static char* GetModelCacheDir();
+
   // Returns if TF Frontend is disabled
   static bool TFFrontendDisabled();
 
@@ -49,6 +58,9 @@ class BackendManager {
   static shared_ptr<Backend> m_backend;
   static string m_backend_name;
   static mutex m_backend_mutex;
+  static bool m_perf_counters_enabled;
+  static bool m_enable_ovtf_profiling;
+  static char* m_model_cache_dir;
   static bool m_tf_frontend_disabled;
 };
 
