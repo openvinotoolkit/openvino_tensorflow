@@ -650,17 +650,21 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
+#ifndef __APPLE__ || __MACH__
     if (BackendManager::TFFrontendDisabled()) {
+#endif
       OVTF_VLOG(1) << "Using Base OVTF Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraph(
           input_shapes, static_input_map, &m_graph, m_name, ng_function,
           zero_dim_outputs, tf_input_tensors));
+#ifndef __APPLE__ || __MACH__
     } else {
       OVTF_VLOG(1) << "Using TF FE Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
           input_shapes, &m_graph, m_name, ng_function, zero_dim_outputs,
           tf_input_tensors));
     }
+#endif
     util::DumpNGGraph(ng_function, m_name);
 
     // Evict the cache if the number of elements exceeds the limit
