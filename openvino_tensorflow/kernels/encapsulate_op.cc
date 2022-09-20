@@ -221,11 +221,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       s_tf_timing_run_enabled_map[m_cluster_id]) {
     // Measure the timing of cluster through force TF run
     int64_t start_ns, duration_in_ms;
-    if (BackendManager::OVTFProfilingEnabled())
-      start_ns = GetCurrentTimeNanos();
+    start_ns = GetCurrentTimeNanos();
     OP_REQUIRES_OK(ctx, Fallback(ctx));
-    if (BackendManager::OVTFProfilingEnabled())
-      duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "Iter: " << m_iter;
     OVTF_VLOG(1) << "TF: Cluster " << m_cluster_id << " took " << duration_in_ms
                  << " ms.";
@@ -425,11 +423,9 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                    << m_cluster_id;
       try {
         int64_t start_ns, duration_in_ms;
-        if (BackendManager::OVTFProfilingEnabled())
-          start_ns = GetCurrentTimeNanos();
+        start_ns = GetCurrentTimeNanos();
         ng_exec->Call(ng_inputs, ng_outputs, multi_req_execution);
-        if (BackendManager::OVTFProfilingEnabled())
-          duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+        duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
         OVTF_VLOG(1) << "Iter: " << m_iter;
         OVTF_VLOG(1) << "OVTF: Cluster " << m_cluster_id << " took "
                      << duration_in_ms << " ms.";
