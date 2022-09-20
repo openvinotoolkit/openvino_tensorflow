@@ -29,9 +29,18 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
       m_trivial_fn{nullptr},
       m_model(model) {
   OVTF_VLOG(2) << "Checking for unsupported ops";
-  const auto& opset = ov::get_opset8();
+  // TODO: This is a temporary fix until all ops are
+  // supported by opset8.
+  std::vector<ov::OpSet> supported_opsets;
+  supported_opsets.push_back(ngraph::get_opset7());
+  supported_opsets.push_back(ngraph::get_opset8());
   for (const auto& node : model->get_ops()) {
-    if (!opset.contains_op_type(node.get())) {
+    bool op_supported = false;
+    for (const auto& opset : supported_opsets) {
+      op_supported = opset.contains_op_type(node.get());
+      if (op_supported) break;
+    }
+    if (!op_supported) {
       OVTF_VLOG(0) << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name;
       throw runtime_error("Detected op " + node->get_name() +
                           " not belonging to opset8!");
@@ -40,20 +49,27 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
 
   OVTF_VLOG(2) << "Checking for unused parameters";
   auto parameters = model->get_parameters();
-  ov::ParameterVector used_parameters;
-  for (int i = 0; i < parameters.size(); ++i) {
-    OVTF_VLOG(3) << parameters[i];
-    if (parameters[i]->get_users().size() == 0) {
-      m_skipped_inputs.push_back(i);
-      OVTF_VLOG(2) << "Removing unused parameter " << parameters[i]->get_name();
-    } else {
-      used_parameters.push_back(parameters[i]);
-    }
-  }
-  if (parameters.size() != used_parameters.size()) {
-    model = make_shared<ov::Model>(model->get_results(), used_parameters,
-                                   model->get_friendly_name());
-  }
+
+  // TODO: Temporarily disabling since some parameters
+  // seems to have 0 users although they are used from
+  // the graphs from base translations.
+  // Also, check if this is needed for graphs translated
+  // with TF FE.
+  // ov::ParameterVector used_parameters;
+  // for (int i = 0; i < parameters.size(); ++i) {
+  //  OVTF_VLOG(3) << parameters[i];
+  //  if (parameters[i]->get_users().size() == 0) {
+  //    m_skipped_inputs.push_back(i);
+  //    OVTF_VLOG(2) << "Removing unused parameter " <<
+  //    parameters[i]->get_name();
+  //  } else {
+  //    used_parameters.push_back(parameters[i]);
+  //  }
+  //}
+  // if (parameters.size() != used_parameters.size()) {
+  //  model = make_shared<ov::Model>(model->get_results(), used_parameters,
+  //                                 model->get_friendly_name());
+  //}
 
   // A trivial function is one of
   //  1. constant function (Const -> Result)
@@ -80,39 +96,49 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   if (model->get_parameters().size() == 0) {
     OVTF_VLOG(1) << "No parameters found in OpenVINO model!";
     // Try to find a node that can be converted into a "static input"
-    bool param_replaced = false;
     for (const auto& node : model->get_ordered_ops()) {
       // Only try to convert constant nodes at the edge to parameters
       // FIXME: IE cannot handle input parameters with i64/u6 precision
       // at the moment
       if (node->get_input_size() == 0 && ov::op::util::is_constant(node) &&
+          !(!(node->is_dynamic()) && node->get_shape().size() > 0 &&
+            node->get_shape()[0] == 0) &&
           !(node->get_element_type() == ov::element::i64 ||
             node->get_element_type() == ov::element::u64)) {
-        auto constant = ov::as_type_ptr<opset::Constant>(node);
-        auto element_type = constant->get_element_type();
-        auto shape = constant->get_shape();
-        auto param = std::make_shared<opset::Parameter>(element_type, shape);
-        param->set_friendly_name(node->get_friendly_name());
-        ov::replace_node(node, param);
-        // OpenVINO doesn't provide a way to set a parameter to an existing
-        // function, so we clone the function here...
-        model = make_shared<ov::Model>(model->get_results(),
-                                       ov::ParameterVector{param},
-                                       model->get_friendly_name());
-        auto ie_tensor = make_shared<IETensor>(element_type, shape);
-        ie_tensor->write(constant->get_data_ptr(),
-                         shape_size(shape) * element_type.size());
-        m_hoisted_params.push_back(
-            make_pair(param->get_friendly_name(), ie_tensor));
-        OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
-                     << param;
-        param_replaced = true;
-        break;
+        // TODO: Converting StridedSlice inputs to Parameters causes
+        // the model to crash when creating request. Find a propoer
+        // solution to handle this issue.
+        auto inputs = node->get_output_target_inputs(0);
+        bool static_ss_input = false;
+        for (auto t_input : inputs) {
+          auto t_node = t_input.get_node();
+          if (strcmp(t_node->get_type_name(), "StridedSlice") == 0) {
+            static_ss_input = true;
+          }
+        }
+
+        if (!static_ss_input) {
+          auto constant = ov::as_type_ptr<opset::Constant>(node);
+          auto element_type = constant->get_element_type();
+          auto shape = constant->get_shape();
+          auto param = std::make_shared<opset::Parameter>(element_type, shape);
+          param->set_friendly_name(node->get_friendly_name());
+          ov::replace_node(node, param);
+          // OpenVINO doesn't provide a way to set a parameter to an existing
+          // function, so we clone the function here...
+          model = make_shared<ov::Model>(model->get_results(),
+                                         ov::ParameterVector{param},
+                                         model->get_friendly_name());
+          auto ie_tensor = make_shared<IETensor>(element_type, shape);
+          ie_tensor->write(constant->get_data_ptr(),
+                           shape_size(shape) * element_type.size());
+          m_hoisted_params.push_back(
+              make_pair(param->get_friendly_name(), ie_tensor));
+          OVTF_VLOG(1) << "Converted node " << constant << " to a parameter "
+                       << param;
+          break;
+        }
       }
-    }
-    if (!param_replaced) {
-      throw runtime_error(
-          "Unable to add a parameter to a model with no parameterss");
     }
   }
 
@@ -178,26 +204,44 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
   //  Prepare input blobs
   auto parameters = model->get_parameters();
   std::vector<std::shared_ptr<IETensor>> ie_inputs(inputs.size());
-  std::vector<std::string> input_names(inputs.size());
-  int j = 0;
-  for (int i = 0; i < inputs.size(); i++) {
-    if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
-        m_skipped_inputs.end()) {
-      continue;
+  if (inputs.size() > 0) {
+    if (m_in_mapping.size() == 0) {
+      m_in_mapping.resize(inputs.size());
+      m_in_names.resize(inputs.size());
+      for (int i = 0; i < parameters.size(); i++) {
+        m_in_mapping[i] = -1;
+        ov::Any any = parameters[i]->get_rt_info()["index"];
+        if (any.empty()) {
+          OVTF_VLOG(1) << "Skipping input: no input index";
+          continue;
+        }
+        int64_t input_index = any.as<int64_t>();
+        if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
+            m_skipped_inputs.end()) {
+          OVTF_VLOG(1) << "Skipping removed input ";
+          continue;
+        }
+        auto input_name = parameters[i]->get_friendly_name();
+        if (m_ie_engine->get_input_idx(input_name) < 0) {
+          OVTF_VLOG(1) << "Skipping unused input " << input_name;
+          continue;
+        }
+        m_in_mapping[i] = input_index;
+        m_in_names[input_index] = input_name;
+      }
     }
-    auto input_name = parameters[j++]->get_friendly_name();
-    if (m_ie_engine->get_input_idx(input_name) < 0) {
-      OVTF_VLOG(1) << "Skipping unused input " << input_name;
-      continue;
+    for (int i = 0; i < parameters.size(); i++) {
+      int64_t input_index = m_in_mapping[i];
+      if (input_index != -1)
+        ie_inputs[input_index] =
+            static_pointer_cast<IETensor>(inputs[input_index]);
     }
-    ie_inputs[i] = nullptr;
-    ie_inputs[i] = static_pointer_cast<IETensor>(inputs[i]);
-    input_names[i] = input_name;
   }
 
   std::vector<std::shared_ptr<IETensor>> ie_hoisted_params(
       m_hoisted_params.size());
   std::vector<std::string> param_names(m_hoisted_params.size());
+  int j = 0;
   for (const auto& it : m_hoisted_params) {
     auto input_name = it.first;
     if (m_ie_engine->get_input_idx(input_name) < 0) {
@@ -228,7 +272,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
     m_ie_engine->enable_multi_req_execution();
   }
 
-  m_ie_engine->infer(ie_inputs, input_names, ie_outputs, output_names,
+  m_ie_engine->infer(ie_inputs, m_in_names, ie_outputs, output_names,
                      ie_hoisted_params, param_names);
 
   // Set dynamic output blobs
@@ -274,10 +318,8 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
       }
       auto size = inputs[index]->get_byte_size();
       unsigned char* buf_ptr = new unsigned char[size];
-      // inputs[index]->read(buf_ptr, size);
       std::copy((uint8_t*)(inputs[index]->data()),
                 ((uint8_t*)(inputs[index]->data())) + size, buf_ptr);
-      // outputs[i]->write(buf_ptr, size);
       std::copy((uint8_t*)buf_ptr, ((uint8_t*)buf_ptr) + size,
                 (uint8_t*)(outputs[i]->data()));
       delete[] buf_ptr;
@@ -289,9 +331,6 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
             constant->get_element_type(), constant->get_shape(),
             const_cast<void*>(constant->get_data_ptr()));
       } else {
-        // outputs[i]->write(constant->get_data_ptr(),
-        //                  shape_size(constant->get_shape()) *
-        //                      constant->get_element_type().size());
         std::copy((uint8_t*)constant->get_data_ptr(),
                   ((uint8_t*)(constant->get_data_ptr())) +
                       (shape_size(constant->get_shape()) *
@@ -308,10 +347,11 @@ bool Executable::CallTrivial(const vector<shared_ptr<ov::Tensor>>& inputs,
 }
 
 void Executable::ExportIR(const string& output_dir) {
-  // if (!m_function || !m_ie_engine) return;
-  // auto& name = m_function->get_friendly_name();
-  // m_network.serialize(output_dir + "/" + name + ".xml",
-  //                    output_dir + "/" + name + ".bin");
+  if (!m_model || !m_ie_engine) return;
+  std::string name = m_model->get_friendly_name();
+  ov::pass::Serialize serializer(output_dir + "/" + name + ".xml",
+                                 output_dir + "/" + name + ".bin");
+  serializer.run_on_model(m_model);
 }
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

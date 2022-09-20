@@ -8,9 +8,16 @@
 #include <memory>
 
 #include "logging/ovtf_log.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
 #include "tensorflow/core/profiler/utils/time_utils.h"
+
+#ifdef _WIN32
+#define GetCurrentTimeNanos() profiler::GetCurrentTimeNanos()
+#else
+#define GetCurrentTimeNanos() absl::GetCurrentTimeNanos()
+#endif
 
 using namespace InferenceEngine;
 
@@ -30,11 +37,24 @@ void IE_Basic_Engine::infer(
     std::vector<std::string>& output_names,
     std::vector<std::shared_ptr<IETensor>>& hoisted_params,
     std::vector<std::string>& param_names) {
+  int64_t start_ns;
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   load_network();
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_LOAD_NETWORK_TIME: " << duration_in_ms << " ms";
+  }
+
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (m_infer_reqs.empty()) {
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_CREATE_REQUEST_TIME: " << duration_in_ms << " ms";
+  }
 
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   //  Prepare input blobs
   auto parameters = m_model->get_parameters();
   if (m_in_idx.size() == 0) {
@@ -57,7 +77,12 @@ void IE_Basic_Engine::infer(
       m_infer_reqs[0].set_input_tensor(in_idx, *(inputs[i]));
     }
   }
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_INPUTS_SET_TIME: " << duration_in_ms << " ms";
+  }
 
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (m_param_idx.size() == 0) {
     m_param_idx.resize(hoisted_params.size());
     for (int i = 0; i < hoisted_params.size(); i++) {
@@ -78,7 +103,12 @@ void IE_Basic_Engine::infer(
       m_infer_reqs[0].set_input_tensor(param_idx, *(hoisted_params[i]));
     }
   }
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_PARAMS_SET_TIME: " << duration_in_ms << " ms";
+  }
 
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   //  Prepare output blobs
   auto results = m_model->get_results();
   if (m_out_idx.size() == 0) {
@@ -99,9 +129,35 @@ void IE_Basic_Engine::infer(
       m_infer_reqs[0].set_output_tensor(out_idx, *(outputs[i]));
     }
   }
-
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_OUTPUTS_SET_TIME: " << duration_in_ms << " ms";
+  }
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   m_infer_reqs[0].infer();
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_INFERENCE_TIME: " << duration_in_ms << " ms";
+  }
 
+  if (BackendManager::PerfCountersEnabled()) {
+    std::cout << "Performance counts:" << std::endl;
+    auto prof_infos = m_infer_reqs[0].get_profiling_info();
+    std::sort(prof_infos.begin(), prof_infos.end(),
+              [](auto prof_info_a, auto prof_info_b) {
+                return prof_info_b.real_time < prof_info_a.real_time;
+              });
+    std::cout << "Type;Real Time (ms);Node Name" << std::endl;
+    for (auto info : prof_infos) {
+      std::cout << info.node_type << ";"
+                << std::to_string(
+                       std::chrono::duration<double, std::milli>(info.real_time)
+                           .count())
+                << ";" << info.node_name << std::endl;
+    }
+  }
+
+  if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   // Set dynamic output blobs
   for (int i = 0; i < results.size(); i++) {
     if (outputs[i] == nullptr) {
@@ -116,6 +172,10 @@ void IE_Basic_Engine::infer(
       outputs[i] = std::make_shared<IETensor>(
           tensor.get_element_type(), tensor.get_shape(), tensor.data());
     }
+  }
+  if (BackendManager::OVTFProfilingEnabled()) {
+    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    OVTF_VLOG(1) << "OVTF_DYNAMIC_OUTPUT_SET_TIME: " << duration_in_ms << " ms";
   }
   OVTF_VLOG(4) << "Inference Successful";
 }

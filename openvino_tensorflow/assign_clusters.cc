@@ -676,6 +676,7 @@ Status AssignClusters(Graph* graph) {
 
       // TODO(amprocte): move attr name to a constant
       node->AddAttr("_ovtf_cluster", (int)cluster_idx);
+      node->AddAttr("_ovtf_backend_name", device);
 
       if (api::IsLoggingPlacement()) {
         // map from cluster id to ovtf_cluster id

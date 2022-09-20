@@ -15,33 +15,40 @@ namespace openvino_tensorflow {
 
 IE_VADM_Engine::IE_VADM_Engine(std::shared_ptr<ov::Model> model)
     : IE_Backend_Engine(model, "HDDL"), m_orig_batch_size(0) {
-  // FIXME: Paremeter layouts should be set based on the
+  // TODO: Paremeter layouts should be set based on the
   // destination op types
-  bool has_batch = false;
-  ;
+  m_has_batch = false;
   for (int i = 0; i < m_model->get_parameters().size(); i++) {
     if (m_model->get_parameters()[i]->get_shape().size() == 5) {
       m_model->get_parameters()[i]->set_layout("NCDHW");
-      has_batch = true;
+      m_has_batch = true;
     } else if (m_model->get_parameters()[i]->get_shape().size() == 4) {
       m_model->get_parameters()[i]->set_layout("NCHW");
-      has_batch = true;
+      m_has_batch = true;
     } else if (m_model->get_parameters()[i]->get_shape().size() == 3) {
       m_model->get_parameters()[i]->set_layout("nhw");
-      has_batch = true;
+      m_has_batch = true;
     } else if (m_model->get_parameters()[i]->get_shape().size() == 2) {
       m_model->get_parameters()[i]->set_layout("NC");
-      has_batch = true;
+      m_has_batch = true;
     } else if (m_model->get_parameters()[i]->get_shape().size() == 1) {
       m_model->get_parameters()[i]->set_layout("C");
+      m_has_batch = false;
+      break;
+    } else {
+      m_has_batch = false;
+      break;
     }
   }
-  if (has_batch) {
-    ov::Dimension batch_dim = ov::get_batch(m_model);
-    m_orig_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
-  } else {
-    m_orig_batch_size = 0;
+  if (m_has_batch) {
+    for (int i = 0; i < m_model->get_results().size(); i++) {
+      if (m_model->get_results()[i]->get_shape().size() < 2) {
+        m_has_batch = false;
+        break;
+      }
+    }
   }
+  m_orig_batch_size = 0;
 }
 
 IE_VADM_Engine::~IE_VADM_Engine() {}
@@ -60,8 +67,7 @@ void IE_VADM_Engine::infer(
 
   int multi_req_support = false;
   int tmp_batch = 0;
-  if (m_multi_req_execution && m_orig_batch_size > 0 &&
-      hoisted_params.size() == 0) {
+  if (m_multi_req_execution && m_has_batch && hoisted_params.size() == 0) {
     multi_req_support = true;
     for (int i = 0; i < inputs.size(); i++) {
       if (inputs[i] == nullptr) {
@@ -84,6 +90,10 @@ void IE_VADM_Engine::infer(
   }
 
   if (multi_req_support && tmp_batch != 0) {
+    if (m_orig_batch_size == 0) {
+      ov::Dimension batch_dim = ov::get_batch(m_model);
+      m_orig_batch_size = (batch_dim.is_static() ? batch_dim.get_length() : 1);
+    }
     // Set the batch size per request and number of requests
     batch_size = IE_Utils::GetInputBatchSize(tmp_batch, m_device);
     assert(batch_size > 0);

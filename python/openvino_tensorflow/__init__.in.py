@@ -157,6 +157,19 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.freeClusterInfo.restype = ctypes.c_void_p
     openvino_tensorflow_lib.freeErrMsg.argtypes = []
     openvino_tensorflow_lib.freeErrMsg.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.load_tf_conversion_extensions.argtypes = [ctypes.c_char_p]
+    
+    def load_tf_conversion_extensions():
+        import importlib
+        lib_dir = os.path.dirname(importlib.util.find_spec("openvino_tensorflow").origin)
+        if system() == "Windows":
+            tf_conversion_extensions_lib_name = "${TF_CONVERSION_EXTENSIONS_LIB_NAME}." + ext
+        else:
+            tf_conversion_extensions_lib_name = "lib" + "${TF_CONVERSION_EXTENSIONS_LIB_NAME}." + ext
+        tf_conversion_extensions_so_path = os.path.join(lib_dir, tf_conversion_extensions_lib_name)
+        openvino_tensorflow_lib.load_tf_conversion_extensions(tf_conversion_extensions_so_path.encode("utf-8"))
+    
+    load_tf_conversion_extensions()
 
     def enable():
         openvino_tensorflow_lib.enable()
@@ -351,10 +364,10 @@ if ovtf_classic_loaded:
         """
 
         #[TODO] Add support for taking direct tf.Graph or tf.function inputs
-
+        
         if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 8)):
             raise AssertionError("Only TF Versions >= 2.8.x are supported for the optimize_graph APIs")
-        
+
         if not os.path.exists(saved_model_dir):
           raise AssertionError("Could not find saved model path")
 
@@ -474,7 +487,7 @@ if ovtf_classic_loaded:
           return optimized_func
         else:
           return optimized_func
-
+                
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) \
     + "\n" + \
