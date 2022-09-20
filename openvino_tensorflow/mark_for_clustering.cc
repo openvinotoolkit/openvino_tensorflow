@@ -321,8 +321,7 @@ bool NodeIsMarkedForClustering(const Node* node) {
 }
 
 void GetStaticInputs(const Node* node, std::vector<int32>* inputs) {
-  if (GetNodeAttr(node->attrs(), "_ovtf_static_inputs", inputs) !=
-      OkStatus()) {
+  if (GetNodeAttr(node->attrs(), "_ovtf_static_inputs", inputs) != OkStatus()) {
     *inputs = std::vector<int32>{};
   }
 }

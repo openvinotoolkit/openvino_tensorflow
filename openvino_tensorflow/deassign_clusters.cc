@@ -88,11 +88,12 @@ static void MaybeLogPlacement(const Graph* graph) {
                   num_nodes_marked_before_deassign)
           : 0;
 
-  std::cout << NGraphLogMessage::GetTimeStampForLogging()
-            << ": OVTF Summary -> " << nodes_assigned_a_cluster << " out of "
-            << number_of_nodes << " nodes in the graph ("
-            << perc_assigned_clusters_of_total
-            << "%) are now running with OpenVINO™ backend" << std::endl;
+  if (nodes_assigned_a_cluster > 0)
+    std::cout << NGraphLogMessage::GetTimeStampForLogging()
+              << ": OVTF Summary -> " << nodes_assigned_a_cluster << " out of "
+              << number_of_nodes << " nodes in the graph ("
+              << perc_assigned_clusters_of_total
+              << "%) are now running with OpenVINO™ backend" << std::endl;
 
   if (api::IsLoggingPlacement()) {
     std::cout << "\n";  // insert a new line at the start of OVTF_SUMMARY
@@ -400,8 +401,7 @@ Status DeassignClusters(Graph* graph) {
       pair_idx_cost.second = 0;
       for (auto n : g.nodes()) {
         tensorflow::int64 node_cost = 0;
-        if (GetNodeAttr(n->attrs(), "cost", &node_cost) != OkStatus())
-          continue;
+        if (GetNodeAttr(n->attrs(), "cost", &node_cost) != OkStatus()) continue;
         pair_idx_cost.second += node_cost;
         num_nodes++;
       }
@@ -431,8 +431,12 @@ Status DeassignClusters(Graph* graph) {
 
   } else {
     min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
-    int avg_nodes_marked_before_deassign =
-        num_nodes_marked_before_deassign / cluster_map.size();
+    int avg_nodes_marked_before_deassign = 0;
+    if (cluster_map.size() > 0)
+      avg_nodes_marked_before_deassign =
+          num_nodes_marked_before_deassign / cluster_map.size();
+    else
+      avg_nodes_marked_before_deassign = INFINITY;
     if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
       min_non_trivial_nodes >>= 2;
     }
