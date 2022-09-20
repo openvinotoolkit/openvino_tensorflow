@@ -41,7 +41,7 @@ Status OVTFOptimizer::Init(
     OVTF_VLOG(3) << "Attribute: " << i.first
                  << " Value: " << m_config_map["_ovtf_" + i.first];
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
@@ -100,7 +100,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
     NGraphClusterManager::EvictAllClusters();
     NGraphClusterManager::EvictMRUClusters();
     graph.ToGraphDef(output);
-    return Status::OK();
+    return OkStatus();
   }
 
   // TODO: Find out a better way to preserve feed nodes, init_ops and
@@ -177,7 +177,7 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   // OCM call for marking supported nodes
   std::string device;
   Status exec_status = BackendManager::GetBackendName(device);
-  if (exec_status != Status::OK()) {
+  if (exec_status != OkStatus()) {
     throw runtime_error(exec_status.error_message());
   }
   const char* device_id(device.c_str());
@@ -235,14 +235,14 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
 
   // 4. Encapsulate clusters then, if requested, dump the graphs.
   auto status = EncapsulateClusters(&graph, idx, m_config_map);
-  if (status != Status::OK()) {
+  if (status != OkStatus()) {
     return status;
   }
   util::DumpTFGraph(&graph, idx, "encapsulated");
 
   // Convert the graph back to Graphdef
   graph.ToGraphDef(output);
-  return Status::OK();
+  return OkStatus();
 }
 
 int OVTFOptimizer::FreshIndex() {

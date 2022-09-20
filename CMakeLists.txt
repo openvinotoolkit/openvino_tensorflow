@@ -17,11 +17,11 @@ include(cmake/sdl.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wno-comment -Wno-sign-compare")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /wd4308 /wd4146 /wd4703 /wd4244 /wd4819 /EHsc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /wd4308 /wd4146 /wd4703 /wd4244 /wd4819 /EHsc")
 endif()
 
 # In order to compile ngraph-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.

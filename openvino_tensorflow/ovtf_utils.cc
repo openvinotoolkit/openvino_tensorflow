@@ -94,7 +94,7 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor) {
                               DataType_Name(tensor.dtype()));
       break;
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et) {
@@ -151,7 +151,7 @@ Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et) {
       return errors::Unimplemented("Unsupported TensorFlow data type: ",
                                    DataType_Name(tf_dt));
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
@@ -168,7 +168,7 @@ Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
     (*ng_shape)[i] = tf_shape.dim_size(i);
   }
 
-  return Status::OK();
+  return OkStatus();
 }
 
 void PrintNodeHistogram(const std::unordered_map<string, int>& histogram,

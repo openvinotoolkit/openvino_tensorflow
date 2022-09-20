@@ -121,7 +121,7 @@ Status CanContractEdgeDeadnessCheck(
       !DeadnessAnalysis::IsTruePredString(dst_predicate) &&
       src_predicate != dst_predicate) {
     is_deadness_ok = false;
-    return Status::OK();
+    return OkStatus();
   }
 
   // Case src X , dst True // invalid scenario
@@ -163,7 +163,7 @@ Status CanContractEdgeDeadnessCheck(
     // Cannot contract this edge
     if (!found_same_out_preds) {
       is_deadness_ok = false;
-      return Status::OK();
+      return OkStatus();
     }
   }
 
@@ -172,7 +172,7 @@ Status CanContractEdgeDeadnessCheck(
   // cluster have pred Y
   // Ok to contract
   is_deadness_ok = true;
-  return Status::OK();
+  return OkStatus();
 }
 
 // Some sanity checks for Node's cluster assignment wrt Deadness
@@ -227,7 +227,7 @@ Status CheckNodeClusterAssignmentWRTDeadness(
     }
   }
 
-  return Status::OK();
+  return OkStatus();
 }
 
 // Merges src and dst clusters of the edge
@@ -806,14 +806,14 @@ Status AssignClusters(Graph* graph) {
                          });
   }
 
-  return Status::OK();
+  return OkStatus();
 }
 
 // Updates cluster with the assigned cluster-id of the node
 Status GetNodeCluster(const Node* node, int* cluster) {
   // TODO(amprocte): move attr name to a constant
   Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", cluster);
-  if (s != Status::OK()) {
+  if (s != OkStatus()) {
     *cluster = -1;
   }
   return s;
