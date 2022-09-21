@@ -6,9 +6,7 @@
 #ifndef OPENVINO_TF_BRIDGE_TIMER_H_
 #define OPENVINO_TF_BRIDGE_TIMER_H_
 
-#ifdef _WIN32
-#include <windows.h>
-#else
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 
