@@ -68,7 +68,7 @@ The TF Serving dockerfile requires the **OpenVINO™ integration with TensorFlow
 
 以下 ARGS 可用于配置 docker build
 
-TF_SERVING_VERSION: 用于构建模型服务可执行文件的 TF Serving 映像的标记。默认为“v2.9.0”  
+TF_SERVING_VERSION: 用于构建模型服务可执行文件的 TF Serving 映像的标记。默认为“v2.9.2”  
 OVTF_VERSION: 要使用的 **OpenVINO™ integration with TensorFlow Runtime** 集成图像的标签。认为"2.2.0"    
 
 构建服务docker镜像：
