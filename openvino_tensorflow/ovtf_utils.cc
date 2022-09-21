@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -21,11 +25,8 @@
 
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif
+// using namespace std;
 
-using namespace std;
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -171,16 +172,16 @@ Status TFTensorShapeToNGraphShape(const TensorShape& tf_shape,
   return OkStatus();
 }
 
-void PrintNodeHistogram(const std::unordered_map<string, int>& histogram,
+void PrintNodeHistogram(const std::unordered_map<std::string, int>& histogram,
                         bool sorted) {
   int histogram_size = histogram.size();
   if (histogram_size == 0) {
     std::cout << "None";
   } else {
-    vector<std::pair<string, int>> vec(begin(histogram), end(histogram));
+    std::vector<std::pair<std::string, int>> vec(begin(histogram), end(histogram));
     if (sorted) {
-      sort(begin(vec), end(vec),
-           [](const pair<string, int>& a, const pair<string, int>& b) {
+      std::sort(begin(vec), end(vec),
+           [](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) {
              // descending sort
              return a.second > b.second;
            });
@@ -245,7 +246,7 @@ void DumpTFGraph(tensorflow::Graph* graph, int idx, std::string filename) {
   GraphToPbTextFile(graph, ss.str() + ".pbtxt");
 }
 
-void DumpNGGraph(std::shared_ptr<ov::Model> function, const string filename) {
+void DumpNGGraph(std::shared_ptr<ov::Model> function, const std::string filename) {
   if (!DumpAllGraphs()) {
     return;
   }
@@ -271,7 +272,7 @@ bool IsAlreadyProcessed(Graph* g) {
   return false;
 }
 
-string GetEnv(const std::string& env) {
+std::string GetEnv(const std::string& env) {
   const char* val = getenv(env.c_str());
   return val == NULL ? std::string() : std::string(val);
 }

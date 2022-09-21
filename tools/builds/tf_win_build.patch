@@ -1,5 +1,16 @@
+From 008daeb2febde92cc0778a20c25f432a63dcdd33 Mon Sep 17 00:00:00 2001
+From: kotreshr <kotreshx.rajappa@intel.com>
+Date: Tue, 20 Sep 2022 15:54:53 -0700
+Subject: [PATCH 66/66] tf_win_build patch
+
+---
+ tensorflow/core/graph/graph.cc                |  2 +-
+ tensorflow/core/graph/graph.h                 |  2 +-
+ .../def_file_filter/def_file_filter.py.tpl    | 60 +++++++++++++++++++
+ 3 files changed, 62 insertions(+), 2 deletions(-)
+
 diff --git a/tensorflow/core/graph/graph.cc b/tensorflow/core/graph/graph.cc
-index 98f4f361ca3..bbce905f2df 100644
+index bdf38518525..a7e375438a0 100644
 --- a/tensorflow/core/graph/graph.cc
 +++ b/tensorflow/core/graph/graph.cc
 @@ -39,7 +39,7 @@ limitations under the License.
@@ -25,15 +36,14 @@ index decc54acc3a..270927782f0 100644
    // The GraphDef version range of this graph (see graph.proto).
    const VersionDef& versions() const;
 diff --git a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-index ecf2312a36c..e425724a85b 100644
+index ecf2312a36c..c6fb14fa1a8 100644
 --- a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
 +++ b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-@@ -272,6 +272,95 @@ def main():
+@@ -272,6 +272,66 @@ def main():
      def_fp.write("\t ?MaybeSavedModelDirectory@tensorflow@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
      def_fp.write("\t ?_TensorShapeProto_default_instance_@tensorflow@@3VTensorShapeProtoDefaultTypeInternal@1@A\n")
      def_fp.write("\t ?_GraphDef_default_instance_@tensorflow@@3VGraphDefDefaultTypeInternal@1@A\n")
-+    
-+	# OVTF core linking issues
++    # OVTF core linking issues
 +    def_fp.write("\t ?GetReversePostOrder@tensorflow@@YAXAEBVGraph@1@PEAV?$vector@PEAVNode@tensorflow@@V?$allocator@PEAVNode@tensorflow@@@std@@@std@@AEBV?$function@$$A6A_NPEBVNode@tensorflow@@0@Z@4@AEBV?$function@$$A6A_NAEBVEdge@tensorflow@@@Z@4@@Z\n")
 +    def_fp.write("\t ?ConvertGraphDefToGraph@tensorflow@@YA?AVStatus@1@AEBUGraphConstructorOptions@1@AEBVGraphDef@1@PEAVGraph@1@@Z\n")
 +    def_fp.write("\t ?ValidateGraphDef@graph@tensorflow@@YA?AVStatus@2@AEBVGraphDef@2@AEBVOpRegistryInterface@2@@Z\n")
@@ -45,32 +55,10 @@ index ecf2312a36c..e425724a85b 100644
 +    def_fp.write("\t ?Global@OptimizationPassRegistry@tensorflow@@SAPEAV12@XZ\n")
 +    #def_fp.write("\t ?kControlSlot@Graph@tensorflow@@2HB\n")
 +	
-+	# for C++ example
-+    def_fp.write("\t ??0Operation@tensorflow@@QEAA@PEAVNode@1@@Z\n")
-+    def_fp.write("\t ??0Initializer@Input@tensorflow@@QEAA@AEBV?$initializer_list@UInitializer@Input@tensorflow@@@std@@@Z\n")	
-+    def_fp.write("\t ??1Scope@tensorflow@@QEAA@XZ\n")
-+    def_fp.write("\t ?NewRootScope@Scope@tensorflow@@SA?AV12@XZ\n")
-+    def_fp.write("\t ??0Placeholder@ops@tensorflow@@QEAA@AEBVScope@2@W4DataType@2@@Z\n")
-+    def_fp.write("\t ?ToGraphDef@Scope@tensorflow@@QEBA?AVStatus@2@PEAVGraphDef@2@@Z\n")
-+    def_fp.write("\t ?WithOpNameImpl@Scope@tensorflow@@AEBA?AV12@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
-+    def_fp.write("\t ?Const@ops@tensorflow@@YA?AVOutput@2@AEBVScope@2@AEBUInitializer@Input@2@@Z\n")
-+    def_fp.write("\t ??0DecodeBmp@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
-+    def_fp.write("\t ??0DecodeGif@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
-+    def_fp.write("\t ??0DecodeJpeg@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@AEBUAttrs@012@@Z\n")
-+    def_fp.write("\t ??0DecodePng@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@AEBUAttrs@012@@Z\n")
-+    def_fp.write("\t ??0ResizeBilinear@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
-+    def_fp.write("\t ??0ExpandDims@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
-+    def_fp.write("\t ??0Squeeze@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@@Z\n")
-+    def_fp.write("\t ??0Cast@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@W4DataType@2@@Z\n")
-+    def_fp.write("\t ??0Div@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
-+    def_fp.write("\t ??0Subtract@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")
-+    def_fp.write("\t ??0TopK@ops@tensorflow@@QEAA@AEBVScope@2@VInput@2@1@Z\n")	
-+	
-+	# for protobuf
++	  # for protobuf
 +    def_fp.write("\t ?empty@?$RepeatedField@_N@protobuf@google@@QEBA_NXZ\n")
 +    def_fp.write("\t ?size@?$RepeatedField@_N@protobuf@google@@QEBAHXZ\n")
 +    def_fp.write("\t ?Get@?$RepeatedField@_N@protobuf@google@@QEBAAEB_NH@Z\n")
-+    def_fp.write("\t ?begin@?$RepeatedField@_N@protobuf@google@@QEAAPEA_NXZ\n")
 +    def_fp.write("\t ?end@?$RepeatedField@_N@protobuf@google@@QEAAPEA_NXZ\n")
 +    def_fp.write("\t ?empty@?$RepeatedField@H@protobuf@google@@QEBA_NXZ\n")
 +    def_fp.write("\t ?size@?$RepeatedField@H@protobuf@google@@QEBAHXZ\n")
@@ -80,7 +68,7 @@ index ecf2312a36c..e425724a85b 100644
 +    def_fp.write("\t ?empty@?$RepeatedField@_J@protobuf@google@@QEBA_NXZ\n")
 +    def_fp.write("\t ?size@?$RepeatedField@_J@protobuf@google@@QEBAHXZ\n")
 +    def_fp.write("\t ?Get@?$RepeatedField@_J@protobuf@google@@QEBAAEB_JH@Z\n")
-+    def_fp.write("\t ?begin@?$RepeatedField@_J@protobuf@google@@QEAAPEA_JXZ\n")
++    def_fp.write("\t ?begin@?$RepeatedField@_J@protobuf@google@@QEAAPEA_JXZ\n") 
 +    def_fp.write("\t ?end@?$RepeatedField@_J@protobuf@google@@QEAAPEA_JXZ\n")
 +    def_fp.write("\t ?empty@?$RepeatedField@M@protobuf@google@@QEBA_NXZ\n")
 +    def_fp.write("\t ?size@?$RepeatedField@M@protobuf@google@@QEBAHXZ\n")
@@ -94,8 +82,8 @@ index ecf2312a36c..e425724a85b 100644
 +    def_fp.write("\t ?end@?$RepeatedField@N@protobuf@google@@QEAAPEANXZ\n")
 +    def_fp.write("\t ?NameOfEnum@internal@protobuf@google@@YAAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEBVEnumDescriptor@23@H@Z\n")
 +    def_fp.write("\t ?DebugString@Message@protobuf@google@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ\n")
-+    def_fp.write("\t ?Reserve@RepeatedPtrFieldBase@internal@protobuf@google@@IEAAXH@Z\n")
-+    def_fp.write("\t ?size@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBAHXZ\n")
++    def_fp.write("\t ?Reserve@RepeatedPtrFieldBase@internal@protobuf@google@@IEAAXH@Z\n") 
++    def_fp.write("\t ?size@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBAHXZ\n") 
 +    def_fp.write("\t ?Get@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBAAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z\n")
 +    def_fp.write("\t ?Add@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAPEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ\n")
 +    def_fp.write("\t ?Add@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAAX$$QEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
@@ -104,20 +92,14 @@ index ecf2312a36c..e425724a85b 100644
 +    def_fp.write("\t ?begin@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?end@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEAA?AV?$RepeatedPtrIterator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?PrintToString@TextFormat@protobuf@google@@SA_NAEBVMessage@23@PEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
-+    def_fp.write("\t ?PrintDebugString@Message@protobuf@google@@QEBAXXZ\n")
 +    def_fp.write("\t ?_FunctionDefLibrary_default_instance_@tensorflow@@3VFunctionDefLibraryDefaultTypeInternal@1@A\n")
-+    def_fp.write("\t ?RegisterOptimizerOrDie@CustomGraphOptimizerRegistry@grappler@tensorflow@@SAXAEBV?$function@$$A6APEAVCustomGraphOptimizer@grappler@tensorflow@@XZ@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@5@@Z\n")
-+    def_fp.write("\t ?GenericSwap@internal@protobuf@google@@YAXPEAVMessageLite@23@0@Z\n")
-+    def_fp.write("\t ?_StepStats_default_instance_@tensorflow@@3VStepStatsDefaultTypeInternal@1@A\n")
-+    def_fp.write("\t ??0AnalyticalCostEstimator@grappler@tensorflow@@QEAA@PEAVCluster@12@_N1@Z\n")
-+    def_fp.write("\t ?kEmptyGroup@container_internal@lts_20211102@absl@@3QBW4ctrl_t@123@B\n")
-+    def_fp.write("\t ?_OpInfo_default_instance_@tensorflow@@3VOpInfoDefaultTypeInternal@1@A\n")
 +    def_fp.write("\t ?begin@?$RepeatedField@_N@protobuf@google@@QEBAPEB_NXZ\n")
 +    def_fp.write("\t ?end@?$RepeatedField@_N@protobuf@google@@QEBAPEB_NXZ\n")
 +    def_fp.write("\t ?begin@?$RepeatedField@_J@protobuf@google@@QEBAPEB_JXZ\n")
 +    def_fp.write("\t ?end@?$RepeatedField@_J@protobuf@google@@QEBAPEB_JXZ\n")
 +    def_fp.write("\t ?begin@?$RepeatedField@M@protobuf@google@@QEBAPEBMXZ\n")
 +    def_fp.write("\t ?end@?$RepeatedField@M@protobuf@google@@QEBAPEBMXZ\n")
++    def_fp.write("\t ?begin@?$RepeatedField@_N@protobuf@google@@QEAAPEA_NXZ\n")
 +    def_fp.write("\t ?begin@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBA?AV?$RepeatedPtrIterator@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?end@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBA?AV?$RepeatedPtrIterator@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?_AttrValue_ListValue_default_instance_@tensorflow@@3VAttrValue_ListValueDefaultTypeInternal@1@A\n")
