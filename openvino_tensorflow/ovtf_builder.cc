@@ -3800,8 +3800,11 @@ static Status TranslateSqueezeOp(const Node* op,
 static Status TranslateStridedSliceOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  ov::Output<ov::Node> input, begin, end, strides;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, begin));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, end));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, strides));
 
   int32 begin_mask, end_mask, new_axis_mask, shrink_axis_mask, ellipsis_mask;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "begin_mask", &begin_mask));
@@ -3817,21 +3820,6 @@ static Status TranslateStridedSliceOp(
                << "  shrink axis mask: " << shrink_axis_mask
                << "  ellipsis mask: " << ellipsis_mask;
 
-  std::vector<int64> begin_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &begin_vec));
-  std::vector<int64> end_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &end_vec));
-  std::vector<int64> stride_vec;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 3, static_input_map, &stride_vec));
-
-  auto begin = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{begin_vec.size()}, begin_vec);
-  auto end = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{end_vec.size()}, end_vec);
-  auto strides = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{stride_vec.size()}, stride_vec);
-
   auto mask_to_vec = [](int32 mask) {
     auto length = sizeof(mask) * CHAR_BIT;
     std::vector<int64_t> vec(length, 0);
@@ -3846,12 +3834,11 @@ static Status TranslateStridedSliceOp(
     return vec;
   };
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::StridedSlice>(
-          op->name(), ng_input, begin, end, strides, mask_to_vec(begin_mask),
-          mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
-          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::StridedSlice>(
+               op->name(), input, begin, end, strides, mask_to_vec(begin_mask),
+               mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
+               mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
   return Status::OK();
 }
 

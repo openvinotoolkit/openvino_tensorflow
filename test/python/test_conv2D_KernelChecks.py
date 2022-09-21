@@ -76,7 +76,11 @@ class TestConv2DBackpropInput(NgraphTest, test.TestCase):
         with pytest.raises(Exception) as excinfo:
             self.with_ngraph(run_test)
         if self.assertRaises(errors_impl.InvalidArgumentError):
-            if not "Check 'input_order_shape.compatible" in excinfo.value.message:
+            if (not "Check 'input_order_shape.compatible" in
+                    excinfo.value.message
+               ) and (
+                   not "Strides in batch and depth dimensions is not supported: Conv2D"
+                   in excinfo.value.message):
                 raise AssertionError
 
         # TF also fails
