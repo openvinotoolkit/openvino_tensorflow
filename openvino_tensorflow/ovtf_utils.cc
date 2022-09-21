@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+//error C2872: 'byte': ambiguous symbol, windows header file causing error with 
+//respect to byte with std::byte datatype in c++17, windows header has been moved to top.
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -25,7 +28,6 @@
 
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/version.h"
-// using namespace std;
 
 
 namespace tensorflow {
