@@ -49,7 +49,7 @@ RUN mkdir -p /tf/pkg/artifacts/tensorflow/; \
 CMD ["/bin/bash"]
 
 ################################################################################
-FROM openvino/ubuntu20_dev:2022.1.0 AS ovtf_build
+FROM openvino/ubuntu20_dev:2022.2.0 AS ovtf_build
 ################################################################################
 
 LABEL description="This is the dev image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"

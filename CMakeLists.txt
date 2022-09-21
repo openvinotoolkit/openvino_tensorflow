@@ -189,9 +189,11 @@ message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 
 if (${OPENVINO_VERSION} MATCHES "master")
   # master works with checks of latest release
-  add_definitions(-DOPENVINO_2022_1=1)
+  add_definitions(-DOPENVINO_2022_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.1.0")
   add_definitions(-DOPENVINO_2022_1=1)
+  elseif (${OPENVINO_VERSION} MATCHES "2022.2.0")
+  add_definitions(-DOPENVINO_2022_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "releases/2022/2")
   add_definitions(-DOPENVINO_2022_2=1)
 else()

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG TF_SERVING_VERSION="2.9.0"
-ARG OVTF_VERSION="2.1.0"
+ARG OVTF_VERSION="2.2.0"
 
 
 #######################################################################################

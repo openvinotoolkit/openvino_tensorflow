@@ -37,7 +37,7 @@ def main():
 
     # Component versions
     tf_version = "v2.9.2"
-    ovtf_version = "v2.1.0"
+    ovtf_version = "v2.2.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -175,10 +175,10 @@ def main():
     build_dir = arguments.build_dir
 
     if (arguments.openvino_version not in [
-            "master", "2022.1.0", "releases/2022/2"
+            "master", "2022.1.0", "2022.2.0", releases/2022/2"
     ]):
         raise AssertionError(
-            "Only 2022.1.0 OpenVINO version and master branch are supported")
+            "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported")
 
     if arguments.use_openvino_from_location != '':
         if not os.path.isdir(arguments.use_openvino_from_location):
@@ -440,6 +440,8 @@ def main():
             openvino_release_tag = "master"
         elif (arguments.openvino_version == "2022.1.0"):
             openvino_release_tag = "2022.1.0"
+        elif (arguments.openvino_version == "2022.2.0"):
+            openvino_release_tag = "2022.2.0"
         elif (arguments.openvino_version == "releases/2022/2"):
             openvino_release_tag = "releases/2022/2"
 
