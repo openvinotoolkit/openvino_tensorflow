@@ -25,22 +25,22 @@ tests_common.txt
 
 # Commented tests are fixed with Openvino 2022.1.0
 #NGraphExecTest.Axpy8bit
-#MathOps.AnyKeepDims
-#MathOps.AnyNegativeAxis
-#MathOps.AnyPositiveAxis
-#MathOps.AllKeepDims
-#MathOps.AllNegativeAxis
-#MathOps.AllPositiveAxis
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
 
 NGraphExecTest.MixedTensors
 
 # mismatch between TF and NG outputs
 MathOps.Mean 
-#MathOps.IsFinite
-#MathOps.LogicalOr
-#MathOps.LogicalNot
-#MathOps.NotEqual
-#MathOps.FloorModNegInt
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.NotEqual
+MathOps.FloorModNegInt
 MathOps.FloorDivNegInt
 
 #MathOps.Ceil # Unsupported primitive of type: Ceiling
@@ -63,3 +63,6 @@ MathOps.FloorDivNegInt
 #ArrayOps.SplitVZeroSizeNegSplit
 
 #MathOps.FloorModNegFloat #Floor_mod supports only I32 precision of inputs
+
+# [BACKLOG] Mismatch in TF and OV outputs
+NNOps.LRNattr

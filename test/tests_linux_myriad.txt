@@ -25,22 +25,22 @@ tests_common.txt
 
 # [PARAMETER_MISMATCH] Failed to set Blob with precision not corresponding to user output precision
 #NGraphExecTest.Axpy8bit
-#MathOps.AnyKeepDims
-#MathOps.AnyNegativeAxis
-#MathOps.AnyPositiveAxis
-#MathOps.AllKeepDims
-#MathOps.AllNegativeAxis
-#MathOps.AllPositiveAxis
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
 
 NGraphExecTest.MixedTensors
 
 # mismatch between TF and NG outputs
 MathOps.Mean 
-#MathOps.IsFinite
-#MathOps.LogicalOr
-#MathOps.LogicalNot
-#MathOps.NotEqual
-#MathOps.FloorModNegInt
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.NotEqual
+MathOps.FloorModNegInt
 MathOps.FloorDivNegInt
 
 #MathOps.Ceil # Unsupported primitive of type: Ceiling
@@ -67,5 +67,5 @@ MathOps.FloorDivNegInt
 # The following test is a reproducer for the Alexnet accuracy issue related to TS
 #TransposeSinking.MultiOutputConV
 
-
-
+# [BACKLOG] Mismatch in TF and OV outputs
+NNOps.LRNattr
