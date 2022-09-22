@@ -74,8 +74,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
-    if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
-      int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
+    const char* openvino_tf_dynamic_fallback_env = std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK");
+    if (openvino_tf_dynamic_fallback_env != nullptr) {
+      int dyn_fallback = std::stoi(openvino_tf_dynamic_fallback_env);
       if (dyn_fallback == 0) {
         NGraphClusterManager::DisableClusterFallback();
       } else {

@@ -97,8 +97,9 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   // if this is set to 1, run time cost based assignment of clusters will be
   // disabled
   m_disable_cost_based_assignment = 0;
-  if (std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != nullptr) {
-    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT"))) {
+  const char* openvino_tf_disable_cost_assignment = std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT");
+  if (openvino_tf_disable_cost_assignment != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_cost_assignment)) {
       m_disable_cost_based_assignment = 1;
     }
   }
@@ -718,7 +719,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  int64_t start_ns;
+  int64_t start_ns, end_ns, duration_in_ms;
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
@@ -816,7 +817,8 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    end_ns = GetCurrentTimeNanos();
+    duration_in_ms = (end_ns - start_ns) / 1e6;
     OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: "
                  << duration_in_ms << " ms"
                  << " for cluster " << m_cluster_id;
