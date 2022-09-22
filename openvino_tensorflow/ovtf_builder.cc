@@ -4731,7 +4731,11 @@ Status Builder::TranslateGraphWithTFFE(
 
             auto index = node.get_attribute<int64_t>("index");
             auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+            if (res == nullptr){
+              throw errors::Internal("Failed while creating _Retval extension");
+            }
             res->get_rt_info().insert({"index", ov::Any(index)});
+            
             return res->outputs();
           }));
 

@@ -719,7 +719,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  int64_t start_ns, end_ns, duration_in_ms;
+  int64_t start_ns = 0, duration_in_ms;
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
@@ -817,8 +817,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    end_ns = GetCurrentTimeNanos();
-    duration_in_ms = (end_ns - start_ns) / 1e6;
+    duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: "
                  << duration_in_ms << " ms"
                  << " for cluster " << m_cluster_id;

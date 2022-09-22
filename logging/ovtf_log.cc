@@ -48,7 +48,6 @@ std::string NGraphLogMessage::GetTimeStampForLogging() {
       static_cast<tensorflow::int32>(now_micros % 1000000);
   const size_t time_buffer_size = 30;
   char time_buffer[time_buffer_size];
-  assert(now_seconds!=NULL); 
   strftime(time_buffer, time_buffer_size, "%Y-%m-%d %H:%M:%S",
            localtime(&now_seconds));
   return std::string(time_buffer) + "." + std::to_string(micros_remainder);
