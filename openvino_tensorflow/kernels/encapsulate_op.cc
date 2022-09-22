@@ -78,7 +78,7 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
-  tensorflow::int64 m_cluster_cost_in_ms;
+  tensorflow::int64 m_cluster_cost_in_ms = 0;
   static std::map<size_t, bool> s_tf_timing_run_enabled_map;
   static std::map<size_t, float> s_ovtf_cluster_timings_map;
   int64_t m_iter;
@@ -162,7 +162,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     if (node->type_string() == "_Arg") {
       arg_nodes.push_back(node);
 
-      int32 index;
+      int32 index = 0;
       OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
       if (index > max_arg_index) max_arg_index = index;
     }
@@ -176,7 +176,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   }
 
   for (auto node : arg_nodes) {
-    int32 index;
+    int32 index = 0;
     OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
 
     bool is_static = false;

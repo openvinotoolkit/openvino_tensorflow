@@ -70,7 +70,7 @@ OutputVector translate_non_max_suppression_op(
     // set_node_name(node.get_name(), res);
     // return {res->output(0)};
   } else {
-    // TENSORFLOW_OP_VALIDATION(node, false, "No translator found.");
+    FRONT_END_GENERAL_CHECK(false, "No translator found.");
   }
 
   OutputVector res;
