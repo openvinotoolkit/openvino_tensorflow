@@ -178,29 +178,19 @@ set (IE_LIBS
 
 # Install Openvino and TBB libraries
 if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
-  install(FILES ${IE_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-  install(DIRECTORY ${TBB_LIBS} DESTINATION "${OVTF_INSTALL_LIB_DIR}" )
-  if(WIN32)
-    file(GLOB OV_LIB_FILES "${OVTF_INSTALL_LIB_DIR}/*")
-    foreach(LIB_FILE ${OV_LIB_FILES})
-      get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
+  file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
+  set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
+
+  foreach(LIB_FILE ${OPENVINO_LIB_FILES})
+      file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
       get_filename_component(lib_file_name ${LIB_FILE} NAME)
-      if(${lib_file_name} MATCHES ".dll*")
-        install(CODE "execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)")
+      set(lib_file_real_path "${OVTF_INSTALL_LIB_DIR}/${lib_file_name}")
+      if(${lib_file_name} MATCHES ".so*")
+          install(CODE "
+          execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
+          ")
       endif()
-    endforeach()
-  else()
-    file(GLOB OV_LIB_FILES "${OVTF_INSTALL_LIB_DIR}/*")
-    foreach(LIB_FILE ${OV_LIB_FILES})
-        get_filename_component(lib_file_real_path ${LIB_FILE} ABSOLUTE)
-        get_filename_component(lib_file_name ${LIB_FILE} NAME)
-        if(${lib_file_name} MATCHES ".so*")
-            install(CODE "
-            execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
-            ")
-        endif()
-    endforeach()
-  endif()
+  endforeach()
 endif()
 
 # Now create the Python pip package. The following variables are passed to the
