@@ -128,7 +128,7 @@ Status Encapsulator::AnalysisPass() {
     if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
-
+    CHECK(cluster_idx >= 0);
     auto it = device_name_map.find(cluster_idx);
     if (it != device_name_map.end()) {
       if (it->second != node->assigned_device_name()) {
@@ -369,6 +369,7 @@ Status Encapsulator::AnalysisPass() {
       node->ClearAttr("cost");
       continue;
     }
+    CHECK(cluster_idx >= 0);
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
       tensorflow::int64 node_cost = 0;
@@ -475,7 +476,7 @@ Status Encapsulator::RewritePass(
     for (auto& tup : cluster_input_map[cluster_idx]) {
       int src_node_id = -1;
       int src_output_idx = -1;
-      DataType dt;
+      DataType dt = DT_INVALID;
       std::tie(src_node_id, src_output_idx, dt) = tup;
 
       input_types.push_back(dt);

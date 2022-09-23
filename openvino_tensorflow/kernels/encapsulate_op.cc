@@ -78,7 +78,7 @@ class NGraphEncapsulateOp : public OpKernel {
   std::shared_ptr<tensorflow::Session> m_session;
   std::vector<std::string> m_session_input_names;
   std::vector<std::string> m_session_output_names;
-  tensorflow::int64 m_cluster_cost_in_ms;
+  tensorflow::int64 m_cluster_cost_in_ms = 0;
   static std::map<size_t, bool> s_tf_timing_run_enabled_map;
   static std::map<size_t, float> s_ovtf_cluster_timings_map;
   int64_t m_iter;
@@ -97,14 +97,16 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   // if this is set to 1, run time cost based assignment of clusters will be
   // disabled
   m_disable_cost_based_assignment = 0;
-  if (std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != nullptr) {
-    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT"))) {
+  const char* openvino_tf_disable_cost_assignment = std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT");
+  if (openvino_tf_disable_cost_assignment != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_cost_assignment)) {
       m_disable_cost_based_assignment = 1;
     }
   }
 
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
   // Disable TF timing run for the current cluster by default
+  CHECK(m_cluster_id >= 0);
   s_tf_timing_run_enabled_map[m_cluster_id] = false;
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
@@ -161,7 +163,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
     if (node->type_string() == "_Arg") {
       arg_nodes.push_back(node);
 
-      int32 index;
+      int32 index = 0;
       OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
       if (index > max_arg_index) max_arg_index = index;
     }
@@ -175,8 +177,9 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   }
 
   for (auto node : arg_nodes) {
-    int32 index;
+    int32 index = 0;
     OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
+    CHECK(index >= 0);
 
     bool is_static = false;
     for (auto edge : node->out_edges()) {
@@ -212,7 +215,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   oss << "Execute: Encapsulate_" << m_cluster_id << ": " << name();
   OVTF_VLOG(4) << "NGraphEncapsulateOp::Compute starting for cluster "
                << m_cluster_id;
-  int64_t start_compute_ns;
+  int64_t start_compute_ns = 0;
   if (BackendManager::OVTFProfilingEnabled())
     start_compute_ns = GetCurrentTimeNanos();
   m_iter++;
@@ -442,6 +445,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
               // next iteration through a separate section at the top pf compute
               if (NGraphClusterManager::IsClusterFallbackEnabled() &&
                   m_iter == 2) {
+                CHECK(m_cluster_id >= 0);
                 s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
                 s_tf_timing_run_enabled_map[m_cluster_id] = true;
                 throw std::runtime_error(
@@ -650,14 +654,14 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-#ifndef __APPLE__ || __MACH__
+#if !defined(__APPLE__) && !defined(__MACH__)
     if (BackendManager::TFFrontendDisabled()) {
 #endif
       OVTF_VLOG(1) << "Using Base OVTF Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraph(
           input_shapes, static_input_map, &m_graph, m_name, ng_function,
           zero_dim_outputs, tf_input_tensors));
-#ifndef __APPLE__ || __MACH__
+#if !defined(__APPLE__) && !defined(__MACH__)
     } else {
       OVTF_VLOG(1) << "Using TF FE Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
@@ -718,7 +722,7 @@ Status NGraphEncapsulateOp::GetExecutable(
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   OVTF_VLOG(1) << "Cluster " << name() << " fallback to native TF runtime ";
-  int64_t start_ns;
+  int64_t start_ns = 0, duration_in_ms = 0;
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   if (!NGraphClusterManager::CheckClusterFallback(m_cluster_id)) {
     NGraphClusterManager::SetClusterFallback(m_cluster_id, true);
@@ -765,6 +769,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
         return errors::InvalidArgument("No index defined for _Arg");
       }
+      CHECK(index >= 0);
       m_session_input_names[index] = parm->name();
     }
     m_session_output_names.resize(tf_ret_vals.size());
@@ -779,6 +784,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       }
       std::vector<const Edge*> output_edges;
       TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
+      CHECK(index >= 0);
       m_session_output_names[index] =
           output_edges[0]->src()->name() + ":" +
           std::to_string(output_edges[0]->src_output());
@@ -816,7 +822,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "NGraphEncapsulateOp::Fallback time taken: "
                  << duration_in_ms << " ms"
                  << " for cluster " << m_cluster_id;

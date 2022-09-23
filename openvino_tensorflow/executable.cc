@@ -216,6 +216,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
           continue;
         }
         int64_t input_index = any.as<int64_t>();
+        CHECK(input_index >= 0);
         if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
             m_skipped_inputs.end()) {
           OVTF_VLOG(1) << "Skipping removed input ";
