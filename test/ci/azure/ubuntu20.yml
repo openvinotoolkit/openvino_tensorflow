@@ -40,7 +40,7 @@ jobs:
 
     - script: |
         wget https://github.com/openvinotoolkit/openvino/releases/download/2022.2.0/l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64.tgz
-        tar -xvf l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64
+        tar -xvf l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64.tgz
         mv l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64 openvino_2022.2.0.7713
       workingDirectory: $(OV_LOCATION)
       displayName: "Install OpenVINO"
