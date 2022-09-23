@@ -14,7 +14,7 @@ jobs:
 
   variables:
       WORK_DIR: $(Pipeline.Workspace)/openvino_tensorflow
-      OV_LOCATION: $(Pipeline.Workspace)/openvino/openvino_2022.1.0.643/
+      OV_LOCATION: $(Pipeline.Workspace)/openvino/
       TF_LOCATION: $(Pipeline.Workspace)/tensorflow_pkg/
 
   steps:
@@ -38,15 +38,16 @@ jobs:
       displayName: "Setup"
 
     - script: |
-        wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18617/l_openvino_toolkit_p_2022.1.0.643_offline.sh
-        chmod +x l_openvino_toolkit_p_2022.1.0.643_offline.sh
-        ./l_openvino_toolkit_p_2022.1.0.643_offline.sh -a -s --eula accept --install-dir $(Pipeline.Workspace)/openvino/
+        wget https://github.com/openvinotoolkit/openvino/releases/download/2022.2.0/l_openvino_toolkit_ubuntu18_2022.2.0.7713.af16ea1d79a_x86_64.tgz
+        tar -xvf l_openvino_toolkit_ubuntu18_2022.2.0.7713.af16ea1d79a_x86_64.tgz
+        mv l_openvino_toolkit_ubuntu18_2022.2.0.7713.af16ea1d79a_x86_64 openvino_2022.2.0.7713
+      workingDirectory: $(OV_LOCATION)
       displayName: "Install OpenVINO"
 
     - script: |
         git submodule init
         git submodule update
-        python3 build_ovtf.py
+        python3 build_ovtf.py --use_openvino_from_location ${OV_LOCATION}/openvino_2022.2.0.7713/ --cxx11_abi_version 1
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
