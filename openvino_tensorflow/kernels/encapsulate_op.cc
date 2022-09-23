@@ -106,6 +106,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
 
   OP_REQUIRES_OK(ctx, ctx->GetAttr<int>("ovtf_cluster", &m_cluster_id));
   // Disable TF timing run for the current cluster by default
+  CHECK(m_cluster_id >= 0);
   s_tf_timing_run_enabled_map[m_cluster_id] = false;
   std::ostringstream oss;
   oss << "Encapsulate_" << m_cluster_id << ": " << name();
@@ -178,6 +179,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   for (auto node : arg_nodes) {
     int32 index = 0;
     OP_REQUIRES_OK(ctx, GetNodeAttr(node->attrs(), "index", &index));
+    CHECK(index >= 0);
 
     bool is_static = false;
     for (auto edge : node->out_edges()) {
@@ -443,6 +445,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
               // next iteration through a separate section at the top pf compute
               if (NGraphClusterManager::IsClusterFallbackEnabled() &&
                   m_iter == 2) {
+                CHECK(m_cluster_id >= 0);
                 s_ovtf_cluster_timings_map[m_cluster_id] = duration_in_ms;
                 s_tf_timing_run_enabled_map[m_cluster_id] = true;
                 throw std::runtime_error(
@@ -766,6 +769,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
         return errors::InvalidArgument("No index defined for _Arg");
       }
+      CHECK(index >= 0);
       m_session_input_names[index] = parm->name();
     }
     m_session_output_names.resize(tf_ret_vals.size());
@@ -780,6 +784,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
       }
       std::vector<const Edge*> output_edges;
       TF_RETURN_IF_ERROR(n->input_edges(&output_edges));
+      CHECK(index >= 0);
       m_session_output_names[index] =
           output_edges[0]->src()->name() + ":" +
           std::to_string(output_edges[0]->src_output());

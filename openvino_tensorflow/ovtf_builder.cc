@@ -1032,6 +1032,7 @@ static Status TranslateConcatV2Op(
       inp_shape = ng_arg.get_shape();
       concat_axis_out_dim_value += inp_shape[concat_axis];
     }
+    CHECK(concat_axis >= 0);
     inp_shape[concat_axis] = concat_axis_out_dim_value;
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::Constant>(
@@ -3925,6 +3926,7 @@ static Status TranslateUnpackOp(const Node* op,
   for (int i = 0; i < num_outputs; ++i) {
     std::vector<int64_t> begin(rank, 0);
     std::vector<int64_t> end(rank, 0);
+    CHECK(tf_axis >= 0);
     begin[tf_axis] = i;
     end[tf_axis] = i + 1;
     auto ng_begin = ConstructNgNode<opset::Constant>(
@@ -4401,6 +4403,7 @@ Status Builder::TranslateGraph(
       } else
         SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
+    CHECK(index >= 0);
     ng_parameter_list[index] =
         ov::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
     ng_parameter_list[index]->get_rt_info().insert({"index", ov::Any(index)});
@@ -4480,6 +4483,7 @@ Status Builder::TranslateGraph(
       return errors::InvalidArgument("No index defined for _Retval");
     }
 
+    CHECK(index >= 0);
     ov::Output<ov::Node> result;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, n, 0, result));
     auto ng_result = ConstructNgNode<opset::Result>(n->name(), result);

@@ -128,7 +128,7 @@ Status Encapsulator::AnalysisPass() {
     if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
-
+    CHECK(cluster_idx >= 0);
     auto it = device_name_map.find(cluster_idx);
     if (it != device_name_map.end()) {
       if (it->second != node->assigned_device_name()) {
@@ -369,6 +369,7 @@ Status Encapsulator::AnalysisPass() {
       node->ClearAttr("cost");
       continue;
     }
+    CHECK(cluster_idx >= 0);
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
       tensorflow::int64 node_cost = 0;
