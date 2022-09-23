@@ -117,7 +117,7 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source",
-        default='releases/2022/2')
+        default='2022.2.0')
 
     parser.add_argument(
         '--python_executable',
@@ -175,7 +175,7 @@ def main():
     build_dir = arguments.build_dir
 
     if (arguments.openvino_version not in [
-            "master", "2022.1.0", "2022.2.0", "releases/2022/2"
+            "master", "2022.1.0", "2022.2.0"
     ]):
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
@@ -443,8 +443,6 @@ def main():
             openvino_release_tag = "2022.1.0"
         elif (arguments.openvino_version == "2022.2.0"):
             openvino_release_tag = "2022.2.0"
-        elif (arguments.openvino_version == "releases/2022/2"):
-            openvino_release_tag = "releases/2022/2"
 
         # Download OpenVINO
         download_repo(
