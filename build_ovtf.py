@@ -174,9 +174,7 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in [
-            "master", "2022.1.0", "2022.2.0"
-    ]):
+    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0"]):
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
