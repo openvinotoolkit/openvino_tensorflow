@@ -23,9 +23,13 @@ Operator Capability Manager (OCM) 对 TensorFlow 算子实施几项检查，以�
 
 Graph partitioner 检查 OCM 标记的节点，并对其进行进一步分析。在这一阶段，标记的算子首先分配给集群。一些集群会在分析之后被删除掉。例如，如果集群很小，或者在接收较多上下文后，集群不被后端支持，那么该集群将被删除，算子返回原生 TensorFlow 运行时。之后，每个算子集群都被封装到自定义算子中，在 OpenVINO™ 运行时中执行。
 
+#### TensorFlow Frontend
+
+[TensorFlow Frontend](https://github.com/openvinotoolkit/openvino/tree/master/src/frontends/tensorflow) 将集群中的 TensorFlow 操作转换为具有最新可用 [操作集](https:// docs.openvino.ai/latest/openvino_docs_ops_opset.html) 用于 OpenVINO™ 工具包。 创建模型后，将其编译为具体的 OpenVINO™ 插件以进行推理。
+
 #### TensorFlow Importer
 
-TensorFlow importer 通过用于 OpenVINO™ 工具套件的最新[算子集](https://docs.OpenVINOtoolkit.org/latest/openvino_docs_ops_opset.html)将集群中的 TensorFlow 算子解析为 OpenVINO™ nGraph 算子。nGraph 函数 专门用于各个集群。该函数创建后，将被封装到 OpenVINO™ CNNNetwork 中，该网络包含将在 OpenVINO™ 后端执行的集群的中间表示。
+从 2022.2 版本开始，TensorFlow Frontend 执行 TensorFlow Importer 的功能并替换它。 在某些特殊情况下，**OpenVINO™ 与 TensorFlow 的集成** 可以回退到 TensorFlow Importer。
 
 #### Backend Manager
 
