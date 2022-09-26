@@ -221,9 +221,9 @@ void CostAnalyzer::PrintAnalysis(std::ostream& os, bool per_node_report,
   float acc_percent = 0;
   double percent = 0;
   for (const auto& op : ops_) {
-    if(total_time_measured_serialized_ != 0){
-    percent = static_cast<double>(op.time) /
-              static_cast<double>(total_time_measured_serialized_);
+    if (total_time_measured_serialized_ != 0) {
+      percent = static_cast<double>(op.time) /
+                static_cast<double>(total_time_measured_serialized_);
     }
     double eff =
         static_cast<double>(op.time_upper) / static_cast<double>(op.time);
