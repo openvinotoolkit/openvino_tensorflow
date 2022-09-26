@@ -23,7 +23,7 @@
   * To use it:
     1. Install tensorflow and openvino-tensorflow packages from PyPi as explained in the section above
     2. Download & install Intel® Distribution of OpenVINO™ Toolkit 2022.2.0 release along with its dependencies from ([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html)).
-    3. Initialize the OpenVINO™ environment by running the `setupvars.sh` located in <code>\<openvino\_install\_directory\>\/bin</code> using the command below. This step needs to be executed in the same environment which is used for the TensorFlow model inference using openvino-tensorflow.
+    3. Initialize the OpenVINO™ environment by running the `setupvars.sh` located in <code>\<openvino\_install\_directory\></code> using the command below. This step needs to be executed in the same environment which is used for the TensorFlow model inference using openvino-tensorflow.
 
         source setupvars.sh  
       
