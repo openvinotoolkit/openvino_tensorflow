@@ -17,6 +17,8 @@ Build the docker image
 
 	docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0 - < ubuntu20/openvino_tensorflow_cgvh_runtime_2.2.0.dockerfile
 
+### For Ubuntu Host System
+
 Launch the Jupyter server with **CPU** access:
 
 	docker run -it --rm \
@@ -48,6 +50,33 @@ Launch the Jupyter server with **VAD-M** access:
 		   --device /dev/ion:/dev/ion \
 		   -v /dev/bus/usb:/dev/bus/usb \
 		   openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0
+
+### For Windows Host System
+
+<br/>
+Launch the Jupyter server with **CPU** access:
+
+<br/>
+
+	docker run -it --rm \
+		-p 8888:8888 \
+		openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0
+
+Launch the Jupyter server with **iGPU** access: <br />
+
+Pre-requisite for Windows :
+*  Windows* 10 21H2 or Windows* 11 with [WSL-2](https://docs.microsoft.com/en-us/windows/wsl/install) 
+* [Intel iGPU driver](https://www.intel.com/content/www/us/en/download/19344/intel-graphics-windows-dch-drivers.html) >= 30.0.100.9684
+<br />
+
+<br />
+
+	docker run -it --rm \
+	-p 8888:8888 \
+	--device /dev/dxg:/dev/dxg \
+	--volume /usr/lib/wsl:/usr/lib/wsl \
+	openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0
+
 
 Run image with runtime target /bin/bash for container shell with CPU, iGPU, and MYRIAD device access
 
