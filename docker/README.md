@@ -17,6 +17,8 @@ Build the docker image
 
 	docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0 - < ubuntu20/openvino_tensorflow_cgvh_runtime_2.2.0.dockerfile
 
+### For Ubuntu
+
 Launch the Jupyter server with **CPU** access:
 
 	docker run -it --rm \
@@ -63,7 +65,32 @@ If execution fails on iGPU for 10th and 11th Generation Intel devices, provide d
 
 	docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0 --build-arg INTEL_OPENCL=20.35.17767 - < ubuntu20/openvino_tensorflow_cgvh_runtime_2.2.0.dockerfile
 
-# Dockerfiles for [TF-Serving](#https://github.com/tensorflow/serving) with OpenVINO<sup>TM</sup> integration with Tensorflow
+### For Windows
+ 
+Launch the Jupyter server with **CPU** access:
+
+```
+docker run -it --rm \
+	-p 8888:8888 \
+	openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0
+```
+
+Launch the Jupyter server with **iGPU** access: <br />
+
+Pre-requisites -
+
+*  Windows* 10 21H2 or Windows* 11 with [WSL-2](https://docs.microsoft.com/en-us/windows/wsl/install) 
+* [Intel iGPU driver](https://www.intel.com/content/www/us/en/download/19344/intel-graphics-windows-dch-drivers.html) >= 30.0.100.9684
+
+```
+docker run -it --rm \
+	-p 8888:8888 \
+	--device /dev/dxg:/dev/dxg \
+	--volume /usr/lib/wsl:/usr/lib/wsl \
+	openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0
+```
+
+# Dockerfiles for [TF-Serving](https://github.com/tensorflow/serving) with OpenVINO<sup>TM</sup> integration with Tensorflow
 
 The TF Serving dockerfile requires the **OpenVINO™ integration with TensorFlow Runtime** image to be built. Refer to the section above for instructions on building it.
 
@@ -80,7 +107,7 @@ Build serving docker images:
 
 Here is an example to serve Resnet50 model using OpenVINO™ Integration with Tensorflow and a client script that performs inference on the model using the REST API.
 
-1. Download [Resnet50 model](#https://storage.googleapis.com/tfhub-modules/google/imagenet/resnet_v2_50/classification/5.tar.gz) from TF Hub and untar its contents into the folder `resnet_v2_50_classifiation/5` 
+1. Download [Resnet50 model](https://storage.googleapis.com/tfhub-modules/google/imagenet/resnet_v2_50/classification/5.tar.gz) from TF Hub and untar its contents into the folder `resnet_v2_50_classifiation/5` 
 
 2. Start serving container for the resnet50 model:
 	
