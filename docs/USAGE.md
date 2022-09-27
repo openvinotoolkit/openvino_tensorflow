@@ -188,6 +188,41 @@ Example:
 
     OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
 
+**OPENVINO_TF_DISABLE_TFFE:**
+Starting from **OpenVINO™ integration with TensorFlow 2.2.0** release, TensorFlow operations are converted by [TensorFlow Frontend](https://github.com/openvinotoolkit/openvino/tree/master/src/frontends/tensorflow) to the latest available [Operation Set](https://docs.openvino.ai/latest/openvino_docs_ops_opset.html) by OpenVINO™ toolkit except some exceptional cases. By setting **OPENVINO_TF_DISABLE_TFFE** to **1**, TensorFlow Frontend can be disabled. In that case, TensorFlow Importer (the default translator of **OpenVINO™ integration with TensorFlow 2.1.0** and earlier) will be used to translate TensorFlow operations for all backends. If this environment variable is set to **0**, TensorFlow Frontend will be enabled for all backends. As of **OpenVINO™ integration with TensorFlow 2.2.0** release, this environment variable is effective only on Ubuntu and Windows platforms and TensorFlow Frontend is not supported on MacOS yet. The table below shows the translation modules used for each backend and platform by default for **OpenVINO™ integration with TensorFlow 2.2.0**.
+
+|             | **CPU**     | **GPU**     | **GPU_FP16** | **MYRIAD**  | **VAD-M**   |                                                                |
+|-------------|-------------|-------------|--------------|-------------|-------------|----------------------------------------------------------------|
+| **Ubuntu**  | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
+| **Windows** | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
+| **MacOS**   | TF Importer | TF Importer | TF Importer  | TF Importer | TF Importer | _Environment variable is not effective_                       |
+
+Example:
+
+    OPENVINO_TF_DISABLE_TFFE="1"
+
+**OPENVINO_TF_MODEL_CACHE_DIR:**
+Using this environment variable, a cache directory for [OpenVINO™ model caching](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html). Reusing cached model can reduce the model compile time which impacts the first inference latency using **OpenVINO™ integration with TensorFlow**. Model caching is disabled by default. To enable it, the cache directory should be specified using this environment variable.
+
+Example:
+
+    OPENVINO_TF_MODEL_CACHE_DIR=path/to/model/cache/directory
+
+**OPENVINO_TF_ENABLE_OVTF_PROFILING:**
+When this environment variable is set to **1**, additional performance timing information will be printed as part of verbose logs. This environment variable should be used with **OPENVINO_TF_VLOG_LEVEL** environment variable and it is only effective when verbose log level is set to **1** or greater.
+
+Example:
+
+    OPENVINO_TF_VLOG_LEVEL=1
+    OPENVINO_TF_ENABLE_OVTF_PROFILING=1
+
+**OPENVINO_TF_ENABLE_PERF_COUNT:**
+This environment variable is used to print operator level performance counter information. This is only supported by the CPU backend.
+
+Example:
+
+    OPENVINO_TF_ENABLE_PERF_COUNT=1
+
 ## GPU Precision
 
 The default precision for Intel<sup>®</sup> Integrated GPU (iGPU) is FP32. So, if you set the backend name as **'GPU'**, the execution on iGPU will be operated on FP32 precision. To change the iGPU precision to FP16, use the device name **'GPU_FP16'**.
