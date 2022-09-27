@@ -3,8 +3,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
+
+#ifndef _WIN32
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#endif
 
 #include <memory>
 #include "tensorflow/core/framework/tensor.pb.h"
