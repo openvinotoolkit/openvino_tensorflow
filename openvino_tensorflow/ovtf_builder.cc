@@ -3,6 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
+#define _GNU_SOURCE
+#include <dlfcn.h>
 
 #include <memory>
 #include "tensorflow/core/framework/tensor.pb.h"
@@ -24,6 +26,8 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
+
+#include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
 
 using tensorflow::int32;
 using namespace std;
@@ -4672,19 +4676,27 @@ Status Builder::TranslateGraphWithTFFE(
 
     // This would set the conversion extension path for c++ library
     if (m_tf_conversion_extensions_lib_path.empty()) {
-      std::string lib_path;
+      std::string lib_path = "";
+#ifdef _WIN32
 #ifdef OVTF_INSTALL_LIB_DIR
       lib_path = OVTF_INSTALL_LIB_DIR;
 #endif
 #ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME
-#ifdef _WIN32
       lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#endif
 #else
-      lib_path =
-          lib_path + "/" + "lib" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+      // Dynamically try to determine the location of
+      // libtf_conversion_extensions.so / .dylib
+      // using the identifier dummy function ptr of tf_ce_dll_id_
+      // This way of identifying the library path works only on Linux and OSX
+      // and *is required* whenever OVTF is used through the TF C++ API.
+      // For the Python API, it is handled through an explicit SetLibPath call
+      // during `import openvino_tensorflow`
+      Dl_info dl_info;
+      dladdr((void*)ov::frontend::tensorflow::op::tf_ce_dll_id_, &dl_info);
+      lib_path = (std::string)dl_info.dli_fname;
 #endif
-#endif
-      // TODO: Add check if the lib_path exists, otherwise throw error
+      // If library is not found during add_extension(), dlopen throws an error
       SetLibPath(lib_path);
     }
     m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);

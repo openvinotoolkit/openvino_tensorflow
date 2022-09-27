@@ -195,7 +195,7 @@ elseif (${OPENVINO_VERSION} MATCHES "2022.1.0")
 elseif (${OPENVINO_VERSION} MATCHES "2022.2.0")
   add_definitions(-DOPENVINO_2022_2=1)
 else()
-  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
+  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION}")
 endif()
 
 if(WIN32)
