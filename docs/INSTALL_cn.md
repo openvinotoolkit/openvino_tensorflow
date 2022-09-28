@@ -22,7 +22,7 @@
     * 使用方法：
     1. 按照上述方法从PyPi安装tensorflow 和 openvino-tensorflow。
     2. 下载安装Intel<sup>®</sup> OpenVINO™ 2022.2.0发布版，一并安装其依赖([https://software.intel.com/en-us/openvino-toolkit/download](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit/download.html))。
-    3. 初始化Intel<sup>®</sup> OpenVINO™, 可以运行位于<code>\<openvino\_install\_directory\>\/bin</code> 的命令脚本`setupvars.sh` 。该步骤需要在运行openvino-tensorflow做推理的同一个环境下执行。
+    3. 初始化Intel<sup>®</sup> OpenVINO™, 可以运行位于<code>\<openvino\_install\_directory\></code> 的命令脚本`setupvars.sh` 。该步骤需要在运行openvino-tensorflow做推理的同一个环境下执行。
 
         source setupvars.sh  
       

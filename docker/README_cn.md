@@ -62,7 +62,7 @@ OVTF_BRANCH：要使用的 OpenVINO™ integration with TensorFlow 分支。默�
 
 	docker build -t openvino/openvino_tensorflow_ubuntu20_runtime:2.2.0 --build-arg INTEL_OPENCL=20.35.17767 - < ubuntu20/openvino_tensorflow_cgvh_runtime_2.2.0.dockerfile
 
-# Dockerfiles for [TF-Serving](#https://github.com/tensorflow/serving) with OpenVINO<sup>TM</sup> integration with Tensorflow
+# Dockerfiles for [TF-Serving](https://github.com/tensorflow/serving) with OpenVINO<sup>TM</sup> integration with Tensorflow
 
 The TF Serving dockerfile requires the **OpenVINO™ integration with TensorFlow Runtime** image to be built. Refer to the section above for instructions on building it.
 
@@ -78,7 +78,7 @@ OVTF_VERSION: 要使用的 **OpenVINO™ integration with TensorFlow Runtime** �
 
 此处为Resnet50模型使用OpenVINO Integration with Tensorflow实例，提供了REST API相关客户端脚本。
 
-1. 从TF社区下载[Resnet50 model](#https://storage.googleapis.com/tfhub-modules/google/imagenet/resnet_v2_50/classification/5.tar.gz)并将其目录解压至`resnet_v2_50_classifiation/5`文件夹。 
+1. 从TF社区下载[Resnet50 model](https://storage.googleapis.com/tfhub-modules/google/imagenet/resnet_v2_50/classification/5.tar.gz)并将其目录解压至`resnet_v2_50_classifiation/5`文件夹。 
 
 2. 启动resnet50模型的服务容器：
 	
