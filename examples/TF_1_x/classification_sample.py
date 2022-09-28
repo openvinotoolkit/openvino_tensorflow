@@ -247,10 +247,6 @@ if __name__ == "__main__":
                 input_mean=input_mean,
                 input_std=input_std)
 
-            if (image_id == 0):
-                ovtf.prepare_model_with_session(sess, graph, (input_name,),
-                                                (output_name,), (t.shape,))
-
             # Warmup iterations
             if image_id == 0:
                 for _ in range(5):

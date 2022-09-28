@@ -239,13 +239,6 @@ if __name__ == "__main__":
             img_resized = preprocess_image(image,
                                            (input_height, input_width))[0]
 
-            if (image_id == 0):
-                ovtf.prepare_model_with_session(
-                    sess, graph, (input_name,),
-                    ("import/" + output_layer[0], "import/" + output_layer[1],
-                     "import/" + output_layer[2]), (tf.TensorShape(
-                         (1,)).concatenate(img_resized.shape),))
-
             # Warmup iterations
             if image_id == 0:
                 for _ in range(5):
