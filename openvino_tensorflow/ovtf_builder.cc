@@ -4311,7 +4311,7 @@ Status Builder::TranslateGraph(
     if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
       return errors::InvalidArgument("No data type defined for _Arg");
     }
-    int64_t index;
+    tensorflow::int64 index;
     if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Arg");
     }
@@ -4485,7 +4485,7 @@ Status Builder::TranslateGraph(
                                      " inputs, should have 1");
     }
 
-    int64_t index;
+    tensorflow::int64 index;
     if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Retval");
     }
@@ -4629,7 +4629,7 @@ Status Builder::TranslateGraphWithTFFE(
         if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
           return errors::InvalidArgument("No data type defined for _Arg");
         }
-        int64_t index;
+        tensorflow::int64 index;
         if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
           return errors::InvalidArgument("No index defined for _Arg");
         }
