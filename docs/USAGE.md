@@ -82,146 +82,145 @@ or
 
 ## Environment Variables  
 
-**OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS**
-
+- **OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS:**
 This variable is disabled by default, and it freezes variables from TensorFlow's ReadVariableOp as constants during the graph translation phase. Highly recommended to enable it to ensure optimal inference latencies on eagerly executed models. Disable it when model weights are modified after loading the model for inference.
 
-Example:
+    Example:
 
-    OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS="1"
+        OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS="1"
 
-**OPENVINO_TF_BACKEND:**
+- **OPENVINO_TF_BACKEND:**
 Backend device name can be set using this variable. It should be set to "CPU", "GPU", "GPU_FP16", "MYRIAD", or "VAD-M".
 
-Example:
+    Example:
+    
+        OPENVINO_TF_BACKEND="MYRIAD"
 
-    OPENVINO_TF_BACKEND="MYRIAD"
-
-**OPENVINO_TF_DISABLE:**
+- **OPENVINO_TF_DISABLE:**
 Disables **OpenVINO™ integration with TensorFlow** if set to 1.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_DISABLE="1"
 
-    OPENVINO_TF_DISABLE="1"
-
-**OPENVINO_TF_LOG_PLACEMENT:**
+- **OPENVINO_TF_LOG_PLACEMENT:**
 If this variable is set to 1, it will print the logs related to cluster formation and encapsulation.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_LOG_PLACEMENT="1"
 
-    OPENVINO_TF_LOG_PLACEMENT="1"
-
-**OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
+- **OPENVINO_TF_MIN_NONTRIVIAL_NODES:**
 This variable sets the minimum number of operators that can exist in a cluster. If the number of operators in a cluster is smaller than the specified number, the cluster will be de-assigned and all the Ops in it are executed using native TensorFlow. By default, it is calculated based on the total graph size, but it cannot be less than 6 unless it is set manually. (No performance benefit is observed by enabling very small clusters). To get a detailed cluster summary set "OPENVINO_TF_LOG_PLACEMENT" to 1. 
 
-Example:
+    Example:
+    
+        OPENVINO_TF_MIN_NONTRIVIAL_NODES="10"
 
-    OPENVINO_TF_MIN_NONTRIVIAL_NODES="10"
-
-**OPENVINO_TF_MAX_CLUSTERS:**
+- **OPENVINO_TF_MAX_CLUSTERS:**
 This variable sets the maximum number of clusters selected for execution using OpenVINO™ backend. The clusters are selected based on the size (from highest to lowest), and this decision is made at the final stage of cluster de-assignment. Ops of remaining clusters are unmarked and are executed using native TensorFlow. Setting this environment variable is useful if there are some large clusters and a number of small clusters, and performance improves by scheduling only the large clusters using OpenVINO™ backend. To get a detailed cluster summary set "OPENVINO_TF_LOG_PLACEMENT" to 1.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_MAX_CLUSTERS="3"
 
-    OPENVINO_TF_MAX_CLUSTERS="3"
-
-**OPENVINO_TF_VLOG_LEVEL:**
+- **OPENVINO_TF_VLOG_LEVEL:**
 This variable is used to print the execution logs. Setting it to 1 will print the minumum amount of details and setting it to 5 will print the most detailed logs.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_VLOG_LEVEL="4"
 
-    OPENVINO_TF_VLOG_LEVEL="4"
-
-**OPENVINO_TF_DISABLED_OPS:**
+- **OPENVINO_TF_DISABLED_OPS:**
 A list of disabled operators can be passed using this variable. These operators will not be considered for clustering and they will fall back on to native TensorFlow.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
 
-    OPENVINO_TF_DISABLED_OPS="Squeeze,Greater,Gather,Unpack"
-
-**OPENVINO_TF_DUMP_GRAPHS:**
+- **OPENVINO_TF_DUMP_GRAPHS:**
 Setting this will serialize the full graphs in all stages during the optimization pass and save them in the current directory.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_DUMP_GRAPHS="1"
 
-    OPENVINO_TF_DUMP_GRAPHS="1"
-
-**OPENVINO_TF_DUMP_CLUSTERS:**
+- **OPENVINO_TF_DUMP_CLUSTERS:**
 Setting this variable to 1 will serialize all the clusters in ".pbtxt" format and save them in the current directory.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_DUMP_CLUSTERS="1"
 
-    OPENVINO_TF_DUMP_CLUSTERS="1"
-
-**OPENVINO_TF_ENABLE_BATCHING:**
+- **OPENVINO_TF_ENABLE_BATCHING:**
 If this parameter is set to 1 while using VAD-M as the backend, the backend engine will divide the input into multiple asynchronous requests to utilize all devices in VAD-M to achieve better performance.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_ENABLE_BATCHING="1"
 
-    OPENVINO_TF_ENABLE_BATCHING="1"
-
-**OPENVINO_TF_DYNAMIC_FALLBACK**
+- **OPENVINO_TF_DYNAMIC_FALLBACK**
 This variable enables or disables dynamic fallback feature. Should be set to "0" to disable and "1" to enable dynamic fallback. When enabled, clusters causing errors during runtime can fallback to native TensorFlow although they are assigned to run on OpenVINO™. Enabled by default.
 
-Example:
-
-    OPENVINO_TF_DYNAMIC_FALLBACK="0"
+    Example:
     
-**OPENVINO_TF_CONSTANT_FOLDING:**
+        OPENVINO_TF_DYNAMIC_FALLBACK="0"
+    
+- **OPENVINO_TF_CONSTANT_FOLDING:**
 This will enable/disable constant folding pass on the translated clusters (Disabled by default).
 
-Example:
+    Example:
+    
+        OPENVINO_TF_CONSTANT_FOLDING="1"
 
-    OPENVINO_TF_CONSTANT_FOLDING="1"
-
-**OPENVINO_TF_TRANSPOSE_SINKING:**
+- **OPENVINO_TF_TRANSPOSE_SINKING:**
 This will enable/disable transpose sinking pass on the translated clusters (Enabled by default).
 
-Example:
+    Example:
+    
+        OPENVINO_TF_TRANSPOSE_SINKING="0"
 
-    OPENVINO_TF_TRANSPOSE_SINKING="0"
-
-**OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
+- **OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS:**
 After clusters are formed, some of the clusters may still fall back to native TensorFlow (e.g a cluster is too small, some conditions are not supported by the target device). If this variable is set, clusters will not be dropped and forced to run on OpenVINO™ backend. This may reduce the performance gain or may lead the execution to crash in some cases.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
 
-    OPENVINO_TF_DISABLE_DEASSIGN_CLUSTERS="1"
-
-**OPENVINO_TF_DISABLE_TFFE:**
+- **OPENVINO_TF_DISABLE_TFFE:**
 Starting from **OpenVINO™ integration with TensorFlow 2.2.0** release, TensorFlow operations are converted by [TensorFlow Frontend](https://github.com/openvinotoolkit/openvino/tree/master/src/frontends/tensorflow) to the latest available [Operation Set](https://docs.openvino.ai/latest/openvino_docs_ops_opset.html) by OpenVINO™ toolkit except some exceptional cases. By setting **OPENVINO_TF_DISABLE_TFFE** to **1**, TensorFlow Frontend can be disabled. In that case, TensorFlow Importer (the default translator of **OpenVINO™ integration with TensorFlow 2.1.0** and earlier) will be used to translate TensorFlow operations for all backends. If this environment variable is set to **0**, TensorFlow Frontend will be enabled for all backends. As of **OpenVINO™ integration with TensorFlow 2.2.0** release, this environment variable is effective only on Ubuntu and Windows platforms and TensorFlow Frontend is not supported on MacOS yet. The table below shows the translation modules used for each backend and platform by default for **OpenVINO™ integration with TensorFlow 2.2.0**.
 
-|             | **CPU**     | **GPU**     | **GPU_FP16** | **MYRIAD**  | **VAD-M**   |                                                                |
-|-------------|-------------|-------------|--------------|-------------|-------------|----------------------------------------------------------------|
-| **Ubuntu**  | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
-| **Windows** | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
-| **MacOS**   | TF Importer | TF Importer | TF Importer  | TF Importer | TF Importer | _Environment variable is not effective_                       |
+    |             | **CPU**     | **GPU**     | **GPU_FP16** | **MYRIAD**  | **VAD-M**   |                                                                |
+    |-------------|-------------|-------------|--------------|-------------|-------------|----------------------------------------------------------------|
+    | **Ubuntu**  | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
+    | **Windows** | TF Frontend | TF Frontend | TF Frontend  | TF Importer | TF Importer | _Environment variable changes the default translator_ |
+    | **MacOS**   | TF Importer | TF Importer | TF Importer  | TF Importer | TF Importer | _Environment variable is not effective_                       |
+    
+    Example:
+    
+        OPENVINO_TF_DISABLE_TFFE="1"
 
-Example:
-
-    OPENVINO_TF_DISABLE_TFFE="1"
-
-**OPENVINO_TF_MODEL_CACHE_DIR:**
+- **OPENVINO_TF_MODEL_CACHE_DIR:**
 Using this environment variable, a cache directory for [OpenVINO™ model caching](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html). Reusing cached model can reduce the model compile time which impacts the first inference latency using **OpenVINO™ integration with TensorFlow**. Model caching is disabled by default. To enable it, the cache directory should be specified using this environment variable.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_MODEL_CACHE_DIR=path/to/model/cache/directory
 
-    OPENVINO_TF_MODEL_CACHE_DIR=path/to/model/cache/directory
-
-**OPENVINO_TF_ENABLE_OVTF_PROFILING:**
+- **OPENVINO_TF_ENABLE_OVTF_PROFILING:**
 When this environment variable is set to **1**, additional performance timing information will be printed as part of verbose logs. This environment variable should be used with **OPENVINO_TF_VLOG_LEVEL** environment variable and it is only effective when verbose log level is set to **1** or greater.
 
-Example:
+    Example:
+    
+        OPENVINO_TF_VLOG_LEVEL=1
+        OPENVINO_TF_ENABLE_OVTF_PROFILING=1
 
-    OPENVINO_TF_VLOG_LEVEL=1
-    OPENVINO_TF_ENABLE_OVTF_PROFILING=1
-
-**OPENVINO_TF_ENABLE_PERF_COUNT:**
+- **OPENVINO_TF_ENABLE_PERF_COUNT:**
 This environment variable is used to print operator level performance counter information. This is only supported by the CPU backend.
 
-Example:
-
-    OPENVINO_TF_ENABLE_PERF_COUNT=1
+    Example:
+    
+        OPENVINO_TF_ENABLE_PERF_COUNT=1
 
 ## GPU Precision
 
