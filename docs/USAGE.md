@@ -201,7 +201,7 @@ Starting from **OpenVINO™ integration with TensorFlow 2.2.0** release, TensorF
         OPENVINO_TF_DISABLE_TFFE="1"
 
 - **OPENVINO_TF_MODEL_CACHE_DIR:**
-Using this environment variable, a cache directory for [OpenVINO™ model caching](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html). Reusing cached model can reduce the model compile time which impacts the first inference latency using **OpenVINO™ integration with TensorFlow**. Model caching is disabled by default. To enable it, the cache directory should be specified using this environment variable.
+Using this environment variable, a cache directory for [OpenVINO™ model caching](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html). Reusing cached model can reduce the model compile time which impacts the first inference latency using **OpenVINO™ integration with TensorFlow**. Model caching is disabled by default. To enable it, the cache directory should be specified using this environment variable. **Note: Model caching support is experimental for OpenVINO™ integration with TensorFlow 2.2.0 release and it is not fully validated.**
 
     Example:
     
