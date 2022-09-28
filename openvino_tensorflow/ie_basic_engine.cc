@@ -7,13 +7,13 @@
 #include <iostream>
 #include <memory>
 
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
 #include "openvino_tensorflow/ie_utils.h"
 #include "tensorflow/core/profiler/utils/time_utils.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
 
 #ifdef _WIN32
 #define GetCurrentTimeNanos() profiler::GetCurrentTimeNanos()
