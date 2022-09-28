@@ -57,3 +57,5 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
         "SparseToDense",
         ov::frontend::tensorflow::op::translate_sparse_to_dense_op),
 }));
+
+void ov::frontend::tensorflow::op::tf_ce_dll_id_() {}

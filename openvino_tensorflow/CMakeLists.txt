@@ -84,6 +84,7 @@ target_link_libraries(
         ${InferenceEngine_LIBRARIES}
         tensorflow_frontend_lib
         ocm
+        tf_conversion_extensions
     )
 
 target_compile_definitions(
