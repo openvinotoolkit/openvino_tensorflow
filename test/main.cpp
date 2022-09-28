@@ -135,7 +135,7 @@ class TestEnv {
 // 'Linux', 'Windows', 'Darwin', or 'Unknown'
 #ifdef _WIN32
     return "Windows";
-#elif __APPLE__ || __MACH__
+#elif !defined(__APPLE__) && !defined(__MACH__)
     return "Darwin";
 #elif __linux__
     return "Linux";

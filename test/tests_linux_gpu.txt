@@ -26,16 +26,16 @@ tests_common.txt
 #NGraphExecTest.Axpy8bit # Tensor type f32 is not integral but passed template is integral
 
 # [PARAMETER_MISMATCH] Failed to set output blob with precision: BOOL, if CNNNetwork output blob precision is: FP32
-#MathOps.AnyKeepDims
-#MathOps.AnyNegativeAxis
-#MathOps.AnyPositiveAxis
-#MathOps.AllKeepDims
-#MathOps.AllNegativeAxis
-#MathOps.AllPositiveAxis
-#MathOps.IsFinite
-#MathOps.LogicalOr
-#MathOps.LogicalNot
-#MathOps.NotEqual
+MathOps.AnyKeepDims
+MathOps.AnyNegativeAxis
+MathOps.AnyPositiveAxis
+MathOps.AllKeepDims
+MathOps.AllNegativeAxis
+MathOps.AllPositiveAxis
+MathOps.IsFinite
+MathOps.LogicalOr
+MathOps.LogicalNot
+MathOps.NotEqual
 
 MathOps.Mean # accuracy
 #MathOps.SqueezeNoAttributes # Const layer Squeeze/Constant_66948 has incorrect dimensions in the output data 0
@@ -52,3 +52,6 @@ MathOps.Mean # accuracy
 
 # mismatch between TF and NG outputs
 MathOps.FloorDivNegInt
+
+# [BACKLOG] Mismatch in TF and OV outputs
+NNOps.LRNattr

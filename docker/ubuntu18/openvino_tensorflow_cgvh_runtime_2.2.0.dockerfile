@@ -1,17 +1,17 @@
 # Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG TF_VERSION="v2.9.1"
-ARG OPENVINO_VERSION="2022.1.0"
-ARG OVTF_BRANCH="releases/2.1.0"
+ARG TF_VERSION="v2.9.2"
+ARG OPENVINO_VERSION="2022.2.0"
+ARG OVTF_BRANCH="releases/2.2.0"
 
 ################################################################################
-FROM openvino/ubuntu20_dev:${OPENVINO_VERSION} AS ovtf_build
+FROM openvino/ubuntu18_dev:${OPENVINO_VERSION} AS ovtf_build
 ################################################################################
 
 # Stage 1 builds OpenVINO™ integration with TensorFlow from source, prepares wheel for use by the final image
 
-LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
+LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
 LABEL vendor="Intel Corporation"
 
 ARG TF_VERSION
@@ -26,8 +26,12 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 RUN apt-get update; \
     apt-get install -y --no-install-recommends \
-    git wget build-essential; \
+    git wget build-essential \
+    python3.8 python3.8-venv python3-pip; \
     rm -rf /var/lib/apt/lists/*;
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70;
 
 WORKDIR /opt/intel/
 
@@ -67,10 +71,10 @@ RUN mkdir build_artifacts && \
 CMD ["/bin/bash"]
 
 ################################################################################
-FROM openvino/ubuntu20_runtime:${OPENVINO_VERSION} AS ovtf_runtime
+FROM openvino/ubuntu18_runtime:${OPENVINO_VERSION} AS ovtf_runtime
 ################################################################################
 
-LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
+LABEL description="This is the runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
 LABEL vendor="Intel Corporation"
 
 ARG TF_VERSION
@@ -84,8 +88,9 @@ SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 RUN apt-get update; \
     dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt; \
     apt-get install -y --no-install-recommends \
-    git wget libsm6; \
-    rm -rf /var/lib/apt/lists/*
+    git wget libsm6 \
+    python3.8 python3.8-venv python3-pip; \
+    rm -rf /var/lib/apt/lists/*;
 
 # Download sources for GPL/LGPL packages
 RUN apt-get update; \
@@ -103,7 +108,10 @@ RUN apt-get update; \
     done && \
     echo "Download source for $(ls | wc -l) third-party packages: $(du -sh)"; \
     rm -rf /var/lib/apt/lists/*;
-    
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 70; \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 70;
+
 ENV INTEL_OPENVINO_DIR /opt/intel/openvino
 
 COPY --from=ovtf_build /opt/intel/openvino_tensorflow/ /home/openvino/openvino_tensorflow/

@@ -266,8 +266,10 @@ void MergeClusters(Edge* edge,
   // invalidate the iterator when `node` == `dst`
   // this happens with clang but not gcc
   for (auto node : cluster_dst->nodes) {
-    cluster_map[src]->nodes.insert(node);
-    cluster_map[node] = cluster_map[src];
+    if (node != nullptr) {
+      cluster_map[src]->nodes.insert(node);
+      cluster_map[node] = cluster_map[src];
+    }
   }
 }
 
@@ -289,22 +291,25 @@ Status AssignClusters(Graph* graph) {
   // Initial Step: Each node is a cluster of its own
   for (auto node : graph->nodes()) {
     int new_index = gc.NewNode();
-    cluster_map[node] = std::make_shared<Cluster>();
-    cluster_map[node]->index = new_index;
-    cluster_map[node]->nodes.insert(node);
-    OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
-                 << node->name() << "[" << node->type_string() << "]";
+    if (node != nullptr) {
+      cluster_map[node] = std::make_shared<Cluster>();
+      cluster_map[node]->index = new_index;
+      cluster_map[node]->nodes.insert(node);
+      OVTF_VLOG(5) << "Creating graphcycle Node: " << new_index << " for "
+                   << node->name() << "[" << node->type_string() << "]";
 
-    // get predicate string for the node
-    string pred_string;
-    TF_RETURN_IF_ERROR(deadness_analyzer->GetNodePredicate(*node, pred_string));
-    nodes_predicate_map[node] = pred_string;
-    cluster_map[node]->predicate_string = pred_string;
+      // get predicate string for the node
+      string pred_string;
+      TF_RETURN_IF_ERROR(
+          deadness_analyzer->GetNodePredicate(*node, pred_string));
+      nodes_predicate_map[node] = pred_string;
+      cluster_map[node]->predicate_string = pred_string;
 
-    cluster_map[node]->outgoing_edges = std::set<const Edge*>(
-        node->out_edges().begin(), node->out_edges().end());
-    OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
-                 << "  : Predicate " << pred_string;
+      cluster_map[node]->outgoing_edges = std::set<const Edge*>(
+          node->out_edges().begin(), node->out_edges().end());
+      OVTF_VLOG(5) << node->name() << "[" << node->type_string() << "]"
+                   << "  : Predicate " << pred_string;
+    }
   }
 
   // Check for existing cyclicity in the graph

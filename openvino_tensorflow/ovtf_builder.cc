@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#ifndef _WIN32
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#endif
+
 #include <memory>
 #include "tensorflow/core/framework/tensor.pb.h"
 #include "tensorflow/core/framework/tensor_shape.pb.h"
@@ -24,6 +29,8 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
+
+#include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
 
 using tensorflow::int32;
 using namespace std;
@@ -1032,6 +1039,7 @@ static Status TranslateConcatV2Op(
       inp_shape = ng_arg.get_shape();
       concat_axis_out_dim_value += inp_shape[concat_axis];
     }
+    CHECK(concat_axis >= 0);
     inp_shape[concat_axis] = concat_axis_out_dim_value;
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::Constant>(
@@ -3800,8 +3808,11 @@ static Status TranslateSqueezeOp(const Node* op,
 static Status TranslateStridedSliceOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  ov::Output<ov::Node> input, begin, end, strides;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, begin));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, end));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, strides));
 
   int32 begin_mask, end_mask, new_axis_mask, shrink_axis_mask, ellipsis_mask;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "begin_mask", &begin_mask));
@@ -3817,21 +3828,6 @@ static Status TranslateStridedSliceOp(
                << "  shrink axis mask: " << shrink_axis_mask
                << "  ellipsis mask: " << ellipsis_mask;
 
-  std::vector<int64> begin_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &begin_vec));
-  std::vector<int64> end_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &end_vec));
-  std::vector<int64> stride_vec;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 3, static_input_map, &stride_vec));
-
-  auto begin = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{begin_vec.size()}, begin_vec);
-  auto end = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{end_vec.size()}, end_vec);
-  auto strides = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{stride_vec.size()}, stride_vec);
-
   auto mask_to_vec = [](int32 mask) {
     auto length = sizeof(mask) * CHAR_BIT;
     std::vector<int64_t> vec(length, 0);
@@ -3846,12 +3842,11 @@ static Status TranslateStridedSliceOp(
     return vec;
   };
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::StridedSlice>(
-          op->name(), ng_input, begin, end, strides, mask_to_vec(begin_mask),
-          mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
-          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::StridedSlice>(
+               op->name(), input, begin, end, strides, mask_to_vec(begin_mask),
+               mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
+               mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
   return Status::OK();
 }
 
@@ -3938,6 +3933,7 @@ static Status TranslateUnpackOp(const Node* op,
   for (int i = 0; i < num_outputs; ++i) {
     std::vector<int64_t> begin(rank, 0);
     std::vector<int64_t> end(rank, 0);
+    CHECK(tf_axis >= 0);
     begin[tf_axis] = i;
     end[tf_axis] = i + 1;
     auto ng_begin = ConstructNgNode<opset::Constant>(
@@ -4414,6 +4410,7 @@ Status Builder::TranslateGraph(
       } else
         SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
+    CHECK(index >= 0);
     ng_parameter_list[index] =
         ov::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
     ng_parameter_list[index]->get_rt_info().insert({"index", ov::Any(index)});
@@ -4493,6 +4490,7 @@ Status Builder::TranslateGraph(
       return errors::InvalidArgument("No index defined for _Retval");
     }
 
+    CHECK(index >= 0);
     ov::Output<ov::Node> result;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, n, 0, result));
     auto ng_result = ConstructNgNode<opset::Result>(n->name(), result);
@@ -4681,19 +4679,27 @@ Status Builder::TranslateGraphWithTFFE(
 
     // This would set the conversion extension path for c++ library
     if (m_tf_conversion_extensions_lib_path.empty()) {
-      std::string lib_path;
+      std::string lib_path = "";
+#ifdef _WIN32
 #ifdef OVTF_INSTALL_LIB_DIR
       lib_path = OVTF_INSTALL_LIB_DIR;
 #endif
 #ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME
-#ifdef _WIN32
       lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#endif
 #else
-      lib_path =
-          lib_path + "/" + "lib" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+      // Dynamically try to determine the location of
+      // libtf_conversion_extensions.so / .dylib
+      // using the identifier dummy function ptr of tf_ce_dll_id_
+      // This way of identifying the library path works only on Linux and OSX
+      // and *is required* whenever OVTF is used through the TF C++ API.
+      // For the Python API, it is handled through an explicit SetLibPath call
+      // during `import openvino_tensorflow`
+      Dl_info dl_info;
+      dladdr((void*)ov::frontend::tensorflow::op::tf_ce_dll_id_, &dl_info);
+      lib_path = (std::string)dl_info.dli_fname;
 #endif
-#endif
-      // TODO: Add check if the lib_path exists, otherwise throw error
+      // If library is not found during add_extension(), dlopen throws an error
       SetLibPath(lib_path);
     }
     m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);
@@ -4744,6 +4750,9 @@ Status Builder::TranslateGraphWithTFFE(
 
             auto index = node.get_attribute<int64_t>("index");
             auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+            if (res == nullptr) {
+              throw errors::Internal("Failed while converting op: _Retval");
+            }
             res->get_rt_info().insert({"index", ov::Any(index)});
             return res->outputs();
           }));

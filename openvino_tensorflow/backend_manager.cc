@@ -54,21 +54,27 @@ Status BackendManager::SetBackend(const string& backend_name) {
     if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
   // read value of OPENVINO_TF_ENABLE_PERF_COUNT
-  if (std::getenv("OPENVINO_TF_ENABLE_PERF_COUNT") != nullptr) {
-    if (1 == std::stoi(std::getenv("OPENVINO_TF_ENABLE_PERF_COUNT"))) {
+  const char* openvino_tf_enable_perf_count =
+      std::getenv("OPENVINO_TF_ENABLE_PERF_COUNT");
+  if (openvino_tf_enable_perf_count != nullptr) {
+    if (1 == std::stoi(openvino_tf_enable_perf_count)) {
       m_perf_counters_enabled = true;
     }
   }
 
   // read value of OPENVINO_TF_ENABLE_OVTF_PROFILING
-  if (std::getenv("OPENVINO_TF_ENABLE_OVTF_PROFILING") != nullptr) {
-    if (1 == std::stoi(std::getenv("OPENVINO_TF_ENABLE_OVTF_PROFILING"))) {
+  const char* openvino_tf_enable_ovtf_profiling =
+      std::getenv("OPENVINO_TF_ENABLE_OVTF_PROFILING");
+  if (openvino_tf_enable_ovtf_profiling != nullptr) {
+    if (1 == std::stoi(openvino_tf_enable_ovtf_profiling)) {
       m_enable_ovtf_profiling = true;
     }
   }
 
-  if (std::getenv("OPENVINO_TF_DISABLE_TFFE") != nullptr) {
-    if (1 == std::stoi(std::getenv("OPENVINO_TF_DISABLE_TFFE"))) {
+  const char* openvino_tf_disable_tffe =
+      std::getenv("OPENVINO_TF_DISABLE_TFFE");
+  if (openvino_tf_disable_tffe != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_tffe)) {
       m_tf_frontend_disabled = true;
     }
   }

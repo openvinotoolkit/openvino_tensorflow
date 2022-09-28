@@ -496,3 +496,36 @@ if ovtf_classic_loaded:
     "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED \
     + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"
+
+    def prepare_model_with_session(session, graph, input_names, output_names, input_shapes):
+        in_dict = {}
+        shape_idx = 0
+        for in_name in input_names:
+            input_operation = graph.get_operation_by_name(in_name)
+            r = np.ndarray(input_shapes[shape_idx], dtype=input_operation.outputs[0].dtype.as_numpy_dtype)
+            in_dict[input_operation.outputs[0]] = r
+            shape_idx += 1
+        out_list = []
+        for out_name in output_names:
+            output_operation = graph.get_operation_by_name(out_name)
+            out_list.append(output_operation.outputs[0])
+        num_iter = 1
+        if (get_backend()=="CPU" and os.environ.get("OPENVINO_TF_DYNAMIC_FALLBACK") != "0" and os.environ.get("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != "1"):
+            num_iter=3
+        for i in range(num_iter):
+            results = session.run(out_list, in_dict)
+
+
+    def prepare_model(model, shape, data_type):
+        t = tf.random.uniform(
+            shape,
+            minval=0,
+            maxval=None,
+            dtype=data_type,
+            seed=None,
+            name=None)
+        num_iter = 1
+        if (get_backend()=="CPU" and os.environ.get("OPENVINO_TF_DYNAMIC_FALLBACK") != "0" and os.environ.get("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != "1"):
+            num_iter=3
+        for i in range(num_iter):
+            model(t)

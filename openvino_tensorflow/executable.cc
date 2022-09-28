@@ -9,6 +9,7 @@
 #include "openvino/pass/serialize.hpp"
 
 #include "logging/ovtf_log.h"
+#include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/default_opset.h"
 #include "openvino_tensorflow/executable.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
@@ -50,26 +51,28 @@ Executable::Executable(shared_ptr<ov::Model> model, string device,
   OVTF_VLOG(2) << "Checking for unused parameters";
   auto parameters = model->get_parameters();
 
-  // TODO: Temporarily disabling since some parameters
+  // TODO: Temporarily disabling for TF FE since some parameters
   // seems to have 0 users although they are used from
   // the graphs from base translations.
   // Also, check if this is needed for graphs translated
   // with TF FE.
-  // ov::ParameterVector used_parameters;
-  // for (int i = 0; i < parameters.size(); ++i) {
-  //  OVTF_VLOG(3) << parameters[i];
-  //  if (parameters[i]->get_users().size() == 0) {
-  //    m_skipped_inputs.push_back(i);
-  //    OVTF_VLOG(2) << "Removing unused parameter " <<
-  //    parameters[i]->get_name();
-  //  } else {
-  //    used_parameters.push_back(parameters[i]);
-  //  }
-  //}
-  // if (parameters.size() != used_parameters.size()) {
-  //  model = make_shared<ov::Model>(model->get_results(), used_parameters,
-  //                                 model->get_friendly_name());
-  //}
+  if (BackendManager::TFFrontendDisabled()) {
+    ov::ParameterVector used_parameters;
+    for (int i = 0; i < parameters.size(); ++i) {
+      OVTF_VLOG(3) << parameters[i];
+      if (parameters[i]->get_users().size() == 0) {
+        m_skipped_inputs.push_back(i);
+        OVTF_VLOG(2) << "Removing unused parameter "
+                     << parameters[i]->get_name();
+      } else {
+        used_parameters.push_back(parameters[i]);
+      }
+    }
+    if (parameters.size() != used_parameters.size()) {
+      model = make_shared<ov::Model>(model->get_results(), used_parameters,
+                                     model->get_friendly_name());
+    }
+  }
 
   // A trivial function is one of
   //  1. constant function (Const -> Result)
@@ -216,6 +219,7 @@ bool Executable::Call(const vector<shared_ptr<ov::Tensor>>& inputs,
           continue;
         }
         int64_t input_index = any.as<int64_t>();
+        CHECK(input_index >= 0);
         if (find(m_skipped_inputs.begin(), m_skipped_inputs.end(), i) !=
             m_skipped_inputs.end()) {
           OVTF_VLOG(1) << "Skipping removed input ";

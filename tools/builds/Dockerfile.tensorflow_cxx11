@@ -8,8 +8,8 @@ ARG PY_VERSION="python3.8"
 FROM tensorflow/build:latest-${PY_VERSION}
 ################################################################################
 
-# Defaults to v2.9.1, can be changed with --build-arg TF_TAG
-ARG TF_TAG="v2.9.1"
+# Defaults to v2.9.2, can be changed with --build-arg TF_TAG
+ARG TF_TAG="v2.9.2"
 
 ADD rename_wheel.sh /usertools/
 

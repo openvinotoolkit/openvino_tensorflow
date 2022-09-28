@@ -83,6 +83,7 @@ void NGraphClusterManager::ExportMRUIRs(const string& output_dir) {
 
 void NGraphClusterManager::SetClusterInfo(const size_t idx,
                                           const string cluster_info) {
+  CHECK(idx >= 0);
   s_cluster_info[idx] = cluster_info;
 }
 

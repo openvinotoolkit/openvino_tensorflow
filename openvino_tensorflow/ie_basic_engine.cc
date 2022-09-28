@@ -7,6 +7,8 @@
 #include <iostream>
 #include <memory>
 
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "logging/ovtf_log.h"
 #include "openvino_tensorflow/backend_manager.h"
 #include "openvino_tensorflow/ie_basic_engine.h"
@@ -37,7 +39,7 @@ void IE_Basic_Engine::infer(
     std::vector<std::string>& output_names,
     std::vector<std::shared_ptr<IETensor>>& hoisted_params,
     std::vector<std::string>& param_names) {
-  int64_t start_ns;
+  int64_t start_ns = 0;
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   load_network();
   if (BackendManager::OVTFProfilingEnabled()) {

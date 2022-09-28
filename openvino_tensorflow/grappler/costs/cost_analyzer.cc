@@ -219,9 +219,12 @@ void CostAnalyzer::PrintAnalysis(std::ostream& os, bool per_node_report,
   os << std::setw(width_narrow + 2) << "Compute eff";
   os << std::setw(width_narrow + 2) << "Memory eff" << std::endl;
   float acc_percent = 0;
+  double percent = 0;
   for (const auto& op : ops_) {
-    double percent = static_cast<double>(op.time) /
-                     static_cast<double>(total_time_measured_serialized_);
+    if (total_time_measured_serialized_ != 0) {
+      percent = static_cast<double>(op.time) /
+                static_cast<double>(total_time_measured_serialized_);
+    }
     double eff =
         static_cast<double>(op.time_upper) / static_cast<double>(op.time);
     double compute_eff =

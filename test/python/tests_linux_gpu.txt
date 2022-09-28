@@ -118,7 +118,8 @@ test_op_disable.TestOpDisableOperations.*
 #test_topkv2.TestTopKV2.test_topkv2_2d
 #test_topkv2.TestTopKV2.test_topkv2_3d
 
-#test_conv3d.Conv3DTest.*
+# [BACKLOG] Unable to convert data format b_fs_zyx_fsv16 to weights format
+test_conv3d.Conv3DTest.*
 
 # NonZero type NonZero(op::v3) is not supported
 #test_ctc_greedy_decoder.*

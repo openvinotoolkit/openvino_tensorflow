@@ -261,7 +261,7 @@ pool_test.PoolingTest.testGradient3D
 
 # Results don't match between TF and OV
 #lrn_op_test.LRNOpTest.testGradients
-#lrn_op_test.LRNOpTest.testCompute
+lrn_op_test.LRNOpTest.testCompute
 
 # END:TBD <<--
 
@@ -282,13 +282,13 @@ scan_ops_test.CumsumTest.testLarge # takes very long in GPU
 split_op_test.SplitOpTest.testSplitRows
 
 # Unable to convert tensor layout b_fs_zyx_fsv16 to weights layout
-#conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
-#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
-#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
-#conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
-#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
-#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
-#conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
+conv_ops_3d_test.Conv3DTest.testFilterGradientKernelSizeMatchesInputSize
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientSamePaddingStrideTwo
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideOne
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideThree
+conv_ops_3d_test.Conv3DTest.testFilterGradientValidPaddingStrideTwo
 
 # implementation_map for N5cldnn11convolutionE could not find any implementation to match key
 conv_ops_test.Conv2DTest.testConv2D1x1Filter
