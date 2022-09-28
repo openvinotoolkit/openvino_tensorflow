@@ -223,6 +223,9 @@ if __name__ == "__main__":
         img_resized = tf.convert_to_tensor(
             preprocess_image(image, (input_height, input_width)))
 
+        if (image_id == 0):
+            ovtf.prepare_model(model, img_resized.shape, img_resized.dtype)
+
         # Warmup iterations
         if image_id == 0:
             for _ in range(5):

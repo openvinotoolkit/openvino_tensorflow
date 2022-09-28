@@ -202,6 +202,9 @@ if __name__ == "__main__":
             preprocess_image(
                 frame, input_height=input_height, input_width=input_width))
 
+        if (image_id == 0):
+            ovtf.prepare_model(model, t.shape, t.dtype)
+
         # Warmup iterations
         if image_id == 0:
             for _ in range(5):
