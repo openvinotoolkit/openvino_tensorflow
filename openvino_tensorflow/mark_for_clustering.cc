@@ -94,6 +94,8 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   static std::map<std::string, SetAttributesFunction> set_attributes_map;
   static bool initialized = false;
 
+  if (!BackendManager::TFFrontendDisabled()) initialized = true;
+
   if (!initialized) {
     // Set Additional Attributes (if any)
     set_attributes_map["Any"] = SetStaticInputs({1});
