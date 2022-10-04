@@ -6,6 +6,7 @@
 #ifndef OPENVINO_TF_BRIDGE_BUILDER_H_
 #define OPENVINO_TF_BRIDGE_BUILDER_H_
 
+#include <mutex>
 #include <ostream>
 #include <vector>
 
@@ -13,6 +14,9 @@
 #include "tensorflow/core/graph/graph.h"
 
 #include "openvino/core/validation_util.hpp"
+#include "openvino/frontend/tensorflow/frontend.hpp"
+
+#include "openvino_tensorflow/ovtf_graph_iterator.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -28,7 +32,13 @@ class Builder {
       const std::vector<TensorShape>& inputs,
       const std::vector<const Tensor*>& static_input_map, const Graph* tf_graph,
       const string name, std::shared_ptr<ov::Model>& ng_function,
-      ov::ResultVector& ng_func_result_list,
+      ov::ResultVector& zero_dim_outputs,
+      const std::vector<Tensor>& tf_input_tensors);
+
+  static Status TranslateGraphWithTFFE(
+      const std::vector<TensorShape>& inputs, const Graph* input_graph,
+      const string name, std::shared_ptr<ov::Model>& ng_function,
+      ov::ResultVector& zero_dim_outputs,
       const std::vector<Tensor>& tf_input_tensors);
 
   using OpMap =
@@ -70,6 +80,15 @@ class Builder {
   // 3. Prints a log if OPENVINO_TF_LOG_PLACEMENT=1
   static void SetTracingInfo(const std::string& op_name,
                              const ov::Output<ov::Node> ng_node);
+
+  static void SetLibPath(const std::string&);
+
+ private:
+  // tf_conversion_extensions module lib path, to load the library using
+  // Frontend
+  static std::string m_tf_conversion_extensions_lib_path;
+  static ov::frontend::FrontEnd::Ptr m_frontend_ptr;
+  static std::mutex m_translate_lock_;
 };
 
 }  // namespace openvino_tensorflow

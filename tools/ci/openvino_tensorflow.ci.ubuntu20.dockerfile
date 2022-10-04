@@ -8,8 +8,8 @@ ARG PY_VERSION="python3.8"
 FROM tensorflow/build:latest-${PY_VERSION} as tensorflow_build
 ################################################################################
 
-# Defaults to v2.9.1, can be changed with --build-arg TF_TAG
-ARG TF_TAG="v2.9.1"
+# Defaults to v2.9.2, can be changed with --build-arg TF_TAG
+ARG TF_TAG="v2.9.2"
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
@@ -49,7 +49,7 @@ RUN mkdir -p /tf/pkg/artifacts/tensorflow/; \
 CMD ["/bin/bash"]
 
 ################################################################################
-FROM openvino/ubuntu20_dev:2022.1.0 AS ovtf_build
+FROM openvino/ubuntu20_dev:2022.2.0 AS ovtf_build
 ################################################################################
 
 LABEL description="This is the dev image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"

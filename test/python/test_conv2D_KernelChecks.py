@@ -30,13 +30,15 @@ tf.compat.v1.disable_eager_execution()
 from tensorflow.python.framework import constant_op
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import array_ops
+from tensorflow.python.framework import errors_impl
 from common import NgraphTest
 from tensorflow.python.framework import dtypes
+from tensorflow.python.platform import test
 
 import numpy as np
 
 
-class TestConv2DBackpropInput(NgraphTest):
+class TestConv2DBackpropInput(NgraphTest, test.TestCase):
     INPUT_SIZES_NHWC = [1, 7, 6, 2]
     FILTER_IN_SIZES = [3, 3, 2, 2]
 
@@ -58,7 +60,7 @@ class TestConv2DBackpropInput(NgraphTest):
         ([2, 1, 1, 1],),
         ([1, 1, 1, 2],),
     ))
-    def test_conv2d_stride_in_batch_not_supported(self, strides):
+    def test_conv2d_stride_in_batch_not_supported(self):
         inp_values, filt_values = self.make_filter_and_backprop_args()
 
         def run_test(sess):
@@ -73,8 +75,13 @@ class TestConv2DBackpropInput(NgraphTest):
 
         with pytest.raises(Exception) as excinfo:
             self.with_ngraph(run_test)
-        if not "Strides in batch and depth dimensions is not supported: Conv2D" in excinfo.value.message:
-            raise AssertionError
+        if self.assertRaises(errors_impl.InvalidArgumentError):
+            if (not "Check 'input_order_shape.compatible" in
+                    excinfo.value.message
+               ) and (
+                   not "Strides in batch and depth dimensions is not supported: Conv2D"
+                   in excinfo.value.message):
+                raise AssertionError
 
         # TF also fails
         with pytest.raises(Exception) as excinfo1:

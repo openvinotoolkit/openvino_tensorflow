@@ -157,6 +157,19 @@ if ovtf_classic_loaded:
     openvino_tensorflow_lib.freeClusterInfo.restype = ctypes.c_void_p
     openvino_tensorflow_lib.freeErrMsg.argtypes = []
     openvino_tensorflow_lib.freeErrMsg.restype = ctypes.c_void_p
+    openvino_tensorflow_lib.load_tf_conversion_extensions.argtypes = [ctypes.c_char_p]
+    
+    def load_tf_conversion_extensions():
+        import importlib
+        lib_dir = os.path.dirname(importlib.util.find_spec("openvino_tensorflow").origin)
+        if system() == "Windows":
+            tf_conversion_extensions_lib_name = "${TF_CONVERSION_EXTENSIONS_LIB_NAME}." + ext
+        else:
+            tf_conversion_extensions_lib_name = "lib" + "${TF_CONVERSION_EXTENSIONS_LIB_NAME}." + ext
+        tf_conversion_extensions_so_path = os.path.join(lib_dir, tf_conversion_extensions_lib_name)
+        openvino_tensorflow_lib.load_tf_conversion_extensions(tf_conversion_extensions_so_path.encode("utf-8"))
+    
+    load_tf_conversion_extensions()
 
     def enable():
         openvino_tensorflow_lib.enable()
@@ -178,7 +191,7 @@ if ovtf_classic_loaded:
         result = (ctypes.c_char_p * len_backends)()
         if not openvino_tensorflow_lib.list_backends(result):
             raise Exception("Expected " + str(len_backends) +
-                            " backends, but got some  other number of backends")
+                            " backends, but got some other number of backends")
         list_result = list(result)
         # convert bytes to string required for py3 (encode/decode bytes)
         backend_list = []
@@ -351,10 +364,10 @@ if ovtf_classic_loaded:
         """
 
         #[TODO] Add support for taking direct tf.Graph or tf.function inputs
-
+        
         if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 8)):
             raise AssertionError("Only TF Versions >= 2.8.x are supported for the optimize_graph APIs")
-        
+
         if not os.path.exists(saved_model_dir):
           raise AssertionError("Could not find saved model path")
 
@@ -474,7 +487,7 @@ if ovtf_classic_loaded:
           return optimized_func
         else:
           return optimized_func
-
+                
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) \
     + "\n" + \
@@ -483,3 +496,36 @@ if ovtf_classic_loaded:
     "TensorFlow version used for this build: " + "v" + TF_VERSION_NEEDED \
     + "\n" \
     "CXX11_ABI flag used for this build: " + str(openvino_tensorflow_lib.cxx11_abi_flag()) + "\n"
+
+    def prepare_model_with_session(session, graph, input_names, output_names, input_shapes):
+        in_dict = {}
+        shape_idx = 0
+        for in_name in input_names:
+            input_operation = graph.get_operation_by_name(in_name)
+            r = np.ndarray(input_shapes[shape_idx], dtype=input_operation.outputs[0].dtype.as_numpy_dtype)
+            in_dict[input_operation.outputs[0]] = r
+            shape_idx += 1
+        out_list = []
+        for out_name in output_names:
+            output_operation = graph.get_operation_by_name(out_name)
+            out_list.append(output_operation.outputs[0])
+        num_iter = 1
+        if (get_backend()=="CPU" and os.environ.get("OPENVINO_TF_DYNAMIC_FALLBACK") != "0" and os.environ.get("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != "1"):
+            num_iter=3
+        for i in range(num_iter):
+            results = session.run(out_list, in_dict)
+
+
+    def prepare_model(model, shape, data_type):
+        t = tf.random.uniform(
+            shape,
+            minval=0,
+            maxval=None,
+            dtype=data_type,
+            seed=None,
+            name=None)
+        num_iter = 1
+        if (get_backend()=="CPU" and os.environ.get("OPENVINO_TF_DYNAMIC_FALLBACK") != "0" and os.environ.get("OPENVINO_TF_DISABLE_COST_ASSIGNMENT") != "1"):
+            num_iter=3
+        for i in range(num_iter):
+            model(t)

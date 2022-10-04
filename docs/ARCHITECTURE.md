@@ -24,13 +24,18 @@ Operator Capability Manager (OCM) implements several checks on TensorFlow operat
 
 Graph partitioner examines the operators that are marked for clustering by OCM and performs further analysis on them. In this stage, the marked operators are first assigned to clusters. Some clusters are dropped after the analysis. For example, if the cluster size is very small or if the cluster is not supported by the backend after receiving more context, then the clusters are dropped and the operators fall back on native TensorFlow runtime. Each cluster of operators is then encapsulated into a custom operator that is executed in OpenVINO™ runtime.
 
+#### TensorFlow Frontend
+
+[TensorFlow Frontend](https://github.com/openvinotoolkit/openvino/tree/master/src/frontends/tensorflow) converts the TensorFlow operations in the clusters to OpenVINO™ Model
+with the latest available [Operation Set](https://docs.openvino.ai/latest/openvino_docs_ops_opset.html) for OpenVINO™ toolkit. Once the model is created, it is compiled to the concrete OpenVINO™ plugin for inference.
+
 #### TensorFlow Importer
 
-TensorFlow importer translates the TensorFlow operators in the clusters to OpenVINO™ nGraph operators with the latest available [operator set](https://docs.OpenVINOtoolkit.org/latest/openvino_docs_ops_opset.html) for OpenVINO™ toolkit. An nGraph function is built for each of the clusters. Once created, it is wrapped into an OpenVINO™ CNNNetwork that holds the intermediate representation of the cluster to be executed in OpenVINO™ backend.
+Since 2022.2 release TensorFlow Frontend executes functions of TensorFlow Importer and replaces it. In some exceptional cases **OpenVINO™ integration with TensorFlow** can fallback to TensorFlow Importer.
 
 #### Backend Manager
 
-Backend manager creates a backend for the execution of the CNNNetwork. We implemented two types of backends:
+Backend manager creates a backend for the execution of OpenVINO™ Model. We implemented two types of backends:
 
 * Basic backend
 * VAD-M backend
@@ -39,4 +44,4 @@ Basic backend is used for Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated
 
 VAD-M backend is used for Intel® Vision Accelerator Design with 8 Intel<sup>®</sup> Movidius™ MyriadX VPUs (referred to as VAD-M or HDDL). We use batch level parallelism for inference execution in the VAD-M backend. When the user provides a batched input, multiple inference requests are created, and inference is run in parallel on all the available VPUs in the VAD-M.
 
-Backend Manager supports Dynamic Fallback which means if the execution of the corresponding CNNNetwork fails in OpenVINO™ runtime, the execution falls back to native TensorFlow runtime. 
+Backend Manager supports Dynamic Fallback which means if the execution of the corresponding model fails in OpenVINO™ runtime, the execution falls back to native TensorFlow runtime. 

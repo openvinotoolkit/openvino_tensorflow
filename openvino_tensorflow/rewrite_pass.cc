@@ -74,8 +74,10 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       return Status::OK();
     }
 
-    if (std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK") != nullptr) {
-      int dyn_fallback = std::stoi(std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK"));
+    const char* openvino_tf_dynamic_fallback_env =
+        std::getenv("OPENVINO_TF_DYNAMIC_FALLBACK");
+    if (openvino_tf_dynamic_fallback_env != nullptr) {
+      int dyn_fallback = std::stoi(openvino_tf_dynamic_fallback_env);
       if (dyn_fallback == 0) {
         NGraphClusterManager::DisableClusterFallback();
       } else {
@@ -158,6 +160,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
 #if defined(OPENVINO_2022_1)
     ov_version = "2022.1.0";
+#elif defined(OPENVINO_2022_2)
+    ov_version = "2022.2.0";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,

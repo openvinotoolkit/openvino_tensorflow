@@ -128,7 +128,7 @@ Status Encapsulator::AnalysisPass() {
     if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
-
+    CHECK(cluster_idx >= 0);
     auto it = device_name_map.find(cluster_idx);
     if (it != device_name_map.end()) {
       if (it->second != node->assigned_device_name()) {
@@ -284,6 +284,29 @@ Status Encapsulator::AnalysisPass() {
       if (src->type_string() == "ReadVariableOp") {
         SetAttrValue(
             true, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      }
+
+      vector<int> static_input_indexes;
+      try {
+        GetNodeAttr(dst->attrs(), "_ovtf_static_inputs", &static_input_indexes);
+      } catch (const std::exception&) {
+        OVTF_VLOG(1) << "Node " << dst->name()
+                     << " does not have static inputs";
+      }
+      if (std::find(static_input_indexes.begin(), static_input_indexes.end(),
+                    edge->dst_input()) != static_input_indexes.end()) {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
+      } else if (src->type_string() == "Const") {
+        // TODO: This check might be redundant
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
+      } else {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_static_input"]));
       }
 
       arg_index_count[dst_cluster_idx]++;
@@ -346,6 +369,7 @@ Status Encapsulator::AnalysisPass() {
       node->ClearAttr("cost");
       continue;
     }
+    CHECK(cluster_idx >= 0);
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
       tensorflow::int64 node_cost = 0;
@@ -452,7 +476,7 @@ Status Encapsulator::RewritePass(
     for (auto& tup : cluster_input_map[cluster_idx]) {
       int src_node_id = -1;
       int src_output_idx = -1;
-      DataType dt;
+      DataType dt = DT_INVALID;
       std::tie(src_node_id, src_output_idx, dt) = tup;
 
       input_types.push_back(dt);

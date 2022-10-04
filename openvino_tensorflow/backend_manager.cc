@@ -15,6 +15,10 @@ namespace openvino_tensorflow {
 shared_ptr<Backend> BackendManager::m_backend;
 string BackendManager::m_backend_name;
 mutex BackendManager::m_backend_mutex;
+bool BackendManager::m_perf_counters_enabled = false;
+bool BackendManager::m_enable_ovtf_profiling = false;
+char* BackendManager::m_model_cache_dir = nullptr;
+bool BackendManager::m_tf_frontend_disabled = false;
 
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
@@ -34,11 +38,50 @@ Status BackendManager::SetBackend(const string& backend_name) {
   m_backend = backend;
   if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
+    m_tf_frontend_disabled = true;
   } else if (bname.find("GPU") != string::npos) {
+    // Since m_backend_name is assigned "GPU" whenever the string "GPU" is found
+    // in bname,
+    // for ex: in GPU.0, GPU.1, or GPU.1_FP16, we can ignore maintaining
+    // fullnames,
+    // as m_backend_name is used by OCM and only needs "GPU" to check for Op
+    // support.
+    // In OVTF, we will assume that all types of GPU devices have the same Op
+    // support.
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
+    if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
+  // read value of OPENVINO_TF_ENABLE_PERF_COUNT
+  const char* openvino_tf_enable_perf_count =
+      std::getenv("OPENVINO_TF_ENABLE_PERF_COUNT");
+  if (openvino_tf_enable_perf_count != nullptr) {
+    if (1 == std::stoi(openvino_tf_enable_perf_count)) {
+      m_perf_counters_enabled = true;
+    }
+  }
+
+  // read value of OPENVINO_TF_ENABLE_OVTF_PROFILING
+  const char* openvino_tf_enable_ovtf_profiling =
+      std::getenv("OPENVINO_TF_ENABLE_OVTF_PROFILING");
+  if (openvino_tf_enable_ovtf_profiling != nullptr) {
+    if (1 == std::stoi(openvino_tf_enable_ovtf_profiling)) {
+      m_enable_ovtf_profiling = true;
+    }
+  }
+
+  const char* openvino_tf_disable_tffe =
+      std::getenv("OPENVINO_TF_DISABLE_TFFE");
+  if (openvino_tf_disable_tffe != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_tffe)) {
+      m_tf_frontend_disabled = true;
+    }
+  }
+
+  //  read value of OPENVINO_TF_MODEL_CACHE_DIR
+  m_model_cache_dir = std::getenv("OPENVINO_TF_MODEL_CACHE_DIR");
+
   return Status::OK();
 }
 
@@ -114,5 +157,18 @@ vector<string> BackendManager::GetSupportedBackends() {
   }
   return devices;
 }
+
+// Returns if Performance Counters are Enabled
+bool BackendManager::PerfCountersEnabled() { return m_perf_counters_enabled; }
+
+// Returns if Profiling is Enabled in OVTF
+bool BackendManager::OVTFProfilingEnabled() { return m_enable_ovtf_profiling; }
+
+// Returns the value of Model Cache Dir if set
+char* BackendManager::GetModelCacheDir() { return m_model_cache_dir; }
+
+// Returns if TF Frontend is disabled
+bool BackendManager::TFFrontendDisabled() { return m_tf_frontend_disabled; }
+
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

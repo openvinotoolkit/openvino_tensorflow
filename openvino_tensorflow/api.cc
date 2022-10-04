@@ -13,6 +13,7 @@
 
 #include "api.h"
 #include "backend_manager.h"
+#include "ovtf_builder.h"
 
 namespace tensorflow {
 namespace openvino_tensorflow {
@@ -33,11 +34,11 @@ void disable() { Disable(); }
 bool is_enabled() { return IsEnabled(); }
 
 bool CheckBackend(const char* backend) {
-  const char* devices[5] = {"CPU", "GPU", "GPU_FP16", "MYRIAD", "VAD-M"};
-  for (int i = 0; i < 5; i++) {
-    if (strcmp(backend, devices[i]) == 0) return true;
+  const char* devices[1] = {"GNA"};  // Blacklist unsupported OVTF backends
+  for (int i = 0; i < 1; i++) {
+    if (strcmp(backend, devices[i]) == 0) return false;
   }
-  return false;
+  return true;
 }
 size_t backends_len() {
   const auto ovtf_backends = ListBackends();
@@ -115,6 +116,11 @@ bool export_ir(const char* output_dir, char** cluster_info, char** err_msg) {
   clusterInfo = strdup(str_cluster_info.c_str());
   *cluster_info = clusterInfo;
   return true;
+}
+
+void load_tf_conversion_extensions(
+    const char* tf_conversion_extensions_so_path) {
+  LoadTFConversionExtensions(tf_conversion_extensions_so_path);
 }
 }
 
@@ -199,6 +205,10 @@ bool ExportIR(const string& output_dir, string& cluster_info, string& err_msg) {
   return true;
 }
 
+void LoadTFConversionExtensions(
+    const string& tf_conversion_extensions_so_path) {
+  Builder::SetLibPath(tf_conversion_extensions_so_path);
+}
 }  // namespace api
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

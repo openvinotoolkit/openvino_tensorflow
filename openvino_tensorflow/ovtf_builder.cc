@@ -4,12 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 
+#ifndef _WIN32
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#endif
+
+#include <memory>
 #include "tensorflow/core/framework/tensor.pb.h"
 #include "tensorflow/core/framework/tensor_shape.pb.h"
 #include "tensorflow/core/graph/algorithm.h"
 #include "tensorflow/core/graph/edgeset.h"
 #include "tensorflow/core/lib/core/errors.h"
 
+#include "openvino/frontend/tensorflow/extension/conversion.hpp"
 #include "openvino/opsets/opset8.hpp"
 #include "openvino/pass/constant_folding.hpp"
 
@@ -22,6 +29,8 @@
 #include "openvino_tensorflow/ovtf_builder.h"
 #include "openvino_tensorflow/ovtf_utils.h"
 #include "openvino_tensorflow/pass/transpose_sinking.h"
+
+#include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
 
 using tensorflow::int32;
 using namespace std;
@@ -91,6 +100,7 @@ void Builder::SetTracingInfo(const std::string& op_name,
                              const ov::Output<ov::Node> ng_node) {
   auto node = ng_node.get_node_shared_ptr();
   node->set_friendly_name(op_name + "/" + node->get_name());
+  // node->add_provenance_tag(op_name);
   if (api::IsLoggingPlacement()) {
     cout << "TF_to_NG: " << op_name << " --> " << node << endl;
   }
@@ -1029,6 +1039,7 @@ static Status TranslateConcatV2Op(
       inp_shape = ng_arg.get_shape();
       concat_axis_out_dim_value += inp_shape[concat_axis];
     }
+    CHECK(concat_axis >= 0);
     inp_shape[concat_axis] = concat_axis_out_dim_value;
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::Constant>(
@@ -3797,8 +3808,11 @@ static Status TranslateSqueezeOp(const Node* op,
 static Status TranslateStridedSliceOp(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
     Builder::OpMap& ng_op_map) {
-  ov::Output<ov::Node> ng_input;
-  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
+  ov::Output<ov::Node> input, begin, end, strides;
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, input));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, begin));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 2, end));
+  TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 3, strides));
 
   int32 begin_mask, end_mask, new_axis_mask, shrink_axis_mask, ellipsis_mask;
   TF_RETURN_IF_ERROR(GetNodeAttr(op->attrs(), "begin_mask", &begin_mask));
@@ -3814,21 +3828,6 @@ static Status TranslateStridedSliceOp(
                << "  shrink axis mask: " << shrink_axis_mask
                << "  ellipsis mask: " << ellipsis_mask;
 
-  std::vector<int64> begin_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 1, static_input_map, &begin_vec));
-  std::vector<int64> end_vec;
-  TF_RETURN_IF_ERROR(GetStaticInputVector(op, 2, static_input_map, &end_vec));
-  std::vector<int64> stride_vec;
-  TF_RETURN_IF_ERROR(
-      GetStaticInputVector(op, 3, static_input_map, &stride_vec));
-
-  auto begin = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{begin_vec.size()}, begin_vec);
-  auto end = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{end_vec.size()}, end_vec);
-  auto strides = ConstructNgNode<opset::Constant>(
-      op->name(), ov::element::i64, ov::Shape{stride_vec.size()}, stride_vec);
-
   auto mask_to_vec = [](int32 mask) {
     auto length = sizeof(mask) * CHAR_BIT;
     std::vector<int64_t> vec(length, 0);
@@ -3843,12 +3842,11 @@ static Status TranslateStridedSliceOp(
     return vec;
   };
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::StridedSlice>(
-          op->name(), ng_input, begin, end, strides, mask_to_vec(begin_mask),
-          mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
-          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::StridedSlice>(
+               op->name(), input, begin, end, strides, mask_to_vec(begin_mask),
+               mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
+               mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
   return Status::OK();
 }
 
@@ -3935,6 +3933,7 @@ static Status TranslateUnpackOp(const Node* op,
   for (int i = 0; i < num_outputs; ++i) {
     std::vector<int64_t> begin(rank, 0);
     std::vector<int64_t> end(rank, 0);
+    CHECK(tf_axis >= 0);
     begin[tf_axis] = i;
     end[tf_axis] = i + 1;
     auto ng_begin = ConstructNgNode<opset::Constant>(
@@ -4244,7 +4243,7 @@ Status Builder::TranslateGraph(
     const std::vector<TensorShape>& inputs,
     const std::vector<const Tensor*>& static_input_map,
     const Graph* input_graph, const string name,
-    shared_ptr<ov::Model>& ng_function, ov::ResultVector& ng_result_list,
+    shared_ptr<ov::Model>& ng_function, ov::ResultVector& zero_dim_outputs,
     const std::vector<Tensor>& tf_input_tensors) {
   //
   // We will visit ops in topological order.
@@ -4312,7 +4311,7 @@ Status Builder::TranslateGraph(
     if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
       return errors::InvalidArgument("No data type defined for _Arg");
     }
-    int index;
+    int64_t index;
     if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Arg");
     }
@@ -4411,8 +4410,10 @@ Status Builder::TranslateGraph(
       } else
         SaveNgOp(ng_op_map, parm->name(), ng_param);
     }
+    CHECK(index >= 0);
     ng_parameter_list[index] =
         ov::as_type_ptr<opset::Parameter>(ng_param.get_node_shared_ptr());
+    ng_parameter_list[index]->get_rt_info().insert({"index", ov::Any(index)});
   }
 
   //
@@ -4472,6 +4473,7 @@ Status Builder::TranslateGraph(
   //
   // Populate the result list.
   //
+  ov::ResultVector ng_result_list;
   ng_result_list.resize(tf_ret_vals.size());
   ov::ResultVector ng_func_result_list;
   ng_func_result_list.reserve(tf_params.size());
@@ -4483,16 +4485,18 @@ Status Builder::TranslateGraph(
                                      " inputs, should have 1");
     }
 
-    int index;
+    int64_t index;
     if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Retval");
     }
 
+    CHECK(index >= 0);
     ov::Output<ov::Node> result;
     TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, n, 0, result));
     auto ng_result = ConstructNgNode<opset::Result>(n->name(), result);
     ng_result_list[index] =
         ov::as_type_ptr<opset::Result>(ng_result.get_node_shared_ptr());
+    ng_result_list[index]->get_rt_info().insert({"index", ov::Any(index)});
   }
 
   auto param_dim_check = [ng_parameter_list](int i) {
@@ -4509,6 +4513,7 @@ Status Builder::TranslateGraph(
     }
   }
 
+  // Get the result nodes with valid dim values
   auto result_dim_check = [ng_result_list](int i) {
     auto res_shape_list = ng_result_list[i]->get_shape();
     for (auto dim : res_shape_list) {
@@ -4521,6 +4526,8 @@ Status Builder::TranslateGraph(
     if (ng_result_list[i]->is_dynamic() ||
         !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
       ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
 
@@ -4557,6 +4564,285 @@ Status Builder::TranslateGraph(
     result->set_needs_default_layout(true);
   }
   NGRAPH_SUPPRESS_DEPRECATED_END
+  return Status::OK();
+}
+
+std::mutex Builder::m_translate_lock_;
+
+// Initialize the lib path as empty string
+std::string Builder::m_tf_conversion_extensions_lib_path = "";
+
+void Builder::SetLibPath(const std::string& tf_conversion_extensions_so_path) {
+  // TODO: Add check if the lib_path exists, otherwise throw error
+  m_tf_conversion_extensions_lib_path = tf_conversion_extensions_so_path;
+}
+ov::frontend::FrontEnd::Ptr Builder::m_frontend_ptr =
+    std::make_shared<ov::frontend::tensorflow::FrontEnd>();
+
+Status Builder::TranslateGraphWithTFFE(
+    const std::vector<TensorShape>& inputs, const Graph* input_graph,
+    const string name, std::shared_ptr<ov::Model>& ng_function,
+    ov::ResultVector& zero_dim_outputs,
+    const std::vector<Tensor>& tf_input_tensors) {
+  std::lock_guard<std::mutex> lock(m_translate_lock_);
+  vector<Node*> ordered;
+  GetReversePostOrder(*input_graph, &ordered, NodeComparatorName());
+
+  // Assign attributes for constant inputs
+  for (const auto n : ordered) {
+    if (n->IsSink() || n->IsSource()) {
+      continue;
+    }
+
+    if (n->IsControlFlow()) {
+      return errors::Unimplemented(
+          "Encountered a control flow op in the openvino_tensorflow: ",
+          n->DebugString());
+    }
+
+    if (n->IsArg()) {
+      bool static_input = false;
+      try {
+        if (Status::OK() !=
+            GetNodeAttr(n->attrs(), "_static_input", &static_input)) {
+          n->AddAttr("_static_input", false);
+          static_input = false;
+        }
+      } catch (const std::exception&) {
+        // TODO: What are the expected exceptions?
+        // Non-existing attribute names are already handled above.
+        OVTF_VLOG(1) << "Parameter " << n->name()
+                     << " is not a static input to any node";
+      }
+      if (util::GetEnv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS") != "0") {
+        bool is_variable = false;
+        try {
+          GetNodeAttr(n->attrs(), "_is_variable", &is_variable);
+        } catch (const std::exception&) {
+          OVTF_VLOG(1) << "Parameter " << n->name() << " is not a variable";
+        }
+        if (is_variable) n->AddAttr("_static_input", true);
+        static_input |= is_variable;
+      }
+      if (static_input) {
+        DataType dtype;
+        if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
+          return errors::InvalidArgument("No data type defined for _Arg");
+        }
+        int64_t index;
+        if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
+          return errors::InvalidArgument("No index defined for _Arg");
+        }
+        const Tensor tensor = tf_input_tensors[index];
+        n->AddAttr("_static_value", tensor);
+        n->AddAttr("_static_dtype", dtype);
+      }
+      try {
+        std::string prov_tag;
+        if (Status::OK() != GetNodeAttr(n->attrs(), "_prov_tag", &prov_tag)) {
+          // TODO: Assign a proper prov tag instead of an empty string.
+          n->AddAttr("_prov_tag", prov_tag);
+        }
+      } catch (const std::exception&) {
+        // TODO: What are the expected exceptions?
+        // Non-existing attribute names are already handled above.
+        OVTF_VLOG(1) << "Parameter " << n->name()
+                     << " does not have a _prov_tag assigned";
+      }
+    }
+  }
+
+  std::shared_ptr<OVTFGraphIterator> giter =
+      std::make_shared<OVTFGraphIterator>(ordered);
+
+  ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
+  ov::Any gany(gi_ptr);
+
+  std::vector<ov::Shape> indexed_shape;
+  indexed_shape.reserve(inputs.size());
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    ov::Shape ng_shape;
+    TF_RETURN_IF_ERROR(util::TFTensorShapeToNGraphShape(inputs[i], &ng_shape));
+    indexed_shape.push_back(ng_shape);
+  }
+
+  // Add the OV extension lib
+  static bool once = true;
+  if (once) {
+#ifdef _WIN32
+#define EXT ".dll"
+#elif __APPLE__
+#define EXT ".dylib"
+#else
+#define EXT ".so"
+#endif
+
+    // This would set the conversion extension path for c++ library
+    if (m_tf_conversion_extensions_lib_path.empty()) {
+      std::string lib_path = "";
+#ifdef _WIN32
+#ifdef OVTF_INSTALL_LIB_DIR
+      lib_path = OVTF_INSTALL_LIB_DIR;
+#endif
+#ifdef TF_CONVERSION_EXTENSIONS_MODULE_NAME
+      lib_path = lib_path + "/" + TF_CONVERSION_EXTENSIONS_MODULE_NAME + EXT;
+#endif
+#else
+      // Dynamically try to determine the location of
+      // libtf_conversion_extensions.so / .dylib
+      // using the identifier dummy function ptr of tf_ce_dll_id_
+      // This way of identifying the library path works only on Linux and OSX
+      // and *is required* whenever OVTF is used through the TF C++ API.
+      // For the Python API, it is handled through an explicit SetLibPath call
+      // during `import openvino_tensorflow`
+      Dl_info dl_info;
+      dladdr((void*)ov::frontend::tensorflow::op::tf_ce_dll_id_, &dl_info);
+      lib_path = (std::string)dl_info.dli_fname;
+#endif
+      // If library is not found during add_extension(), dlopen throws an error
+      SetLibPath(lib_path);
+    }
+    m_frontend_ptr->add_extension(m_tf_conversion_extensions_lib_path);
+    once = false;
+  }
+
+  // _Arg implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Arg", [&indexed_shape](const ov::frontend::NodeContext& node)
+                      -> ov::OutputVector {
+            ov::Output<ov::Node> res;
+            auto index = node.get_attribute<int64_t>("index");
+            auto prov_tag = node.get_attribute<std::string>("_prov_tag");
+            auto is_static_input = node.get_attribute<bool>("_static_input");
+            if (is_static_input) {
+              auto tensor = node.get_attribute<ov::Tensor>("_static_value");
+              auto dtype =
+                  node.get_attribute<ov::element::Type>("_static_dtype");
+              FRONT_END_GENERAL_CHECK(dtype == tensor.get_element_type(),
+                                      "_Arg has tensor with type different "
+                                      "from _static_dtype attribute.");
+              res = std::make_shared<ov::opset8::Constant>(
+                  tensor.get_element_type(), tensor.get_shape(), tensor.data());
+            } else {
+              auto element_type = node.get_attribute<ov::element::Type>("T");
+              auto shape = indexed_shape.at(index);
+              res =
+                  std::make_shared<ov::opset8::Parameter>(element_type, shape);
+            }
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"index", ov::Any(index)});
+            res.get_node_shared_ptr()->get_rt_info().insert(
+                {"_prov_tag", ov::Any(prov_tag)});
+            return {res};
+          }));
+
+  // _Retval implementation
+  m_frontend_ptr->add_extension(
+      std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+          "_Retval", [&indexed_shape](const ov::frontend::NodeContext& node)
+                         -> ov::OutputVector {
+            if (node.get_input_size() != 1) {
+              FRONT_END_GENERAL_CHECK(
+                  false, "_Retval has " + to_string(node.get_input_size()) +
+                             " inputs, should have 1");
+            }
+
+            auto index = node.get_attribute<int64_t>("index");
+            auto res = make_shared<ov::op::v0::Result>(node.get_input(0));
+            if (res == nullptr) {
+              throw errors::Internal("Failed while converting op: _Retval");
+            }
+            res->get_rt_info().insert({"index", ov::Any(index)});
+            return res->outputs();
+          }));
+
+  try {
+    ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
+    ng_function = m_frontend_ptr->convert(input_model);
+  } catch (const ov::NodeValidationFailure& exp) {
+    // Treat NODE_VALIDATION_CHECK errors as InvalidArgument errors for proper
+    // handling at TF
+    // Workaround required for SplitVOp Tests
+    return errors::InvalidArgument(
+        "Frontend conversion error: NodeValidationFailure: " +
+        string(exp.what()));
+  } catch (const std::exception& exp) {
+    return errors::Internal("Frontend conversion error: " + string(exp.what()));
+  } catch (...) {
+    return errors::Internal("Frontend conversion error");
+  }
+
+  // Get the parameter nodes with non zero dim values or valid dim values
+  auto ng_parameter_list = ng_function->get_parameters();
+  ov::ParameterVector ng_func_parameter_list;
+
+  auto param_dim_check = [ng_parameter_list](int i) {
+    auto param_shape_list = ng_parameter_list[i]->get_shape();
+    for (auto dim : param_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
+  for (int i = 0; i < ng_parameter_list.size(); i++) {
+    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+      ng_func_parameter_list.push_back(ng_parameter_list[i]);
+    }
+  }
+
+  // Get the result nodes with valid dim values
+  auto ng_result_list = ng_function->get_results();
+  auto result_dim_check = [ng_result_list](int i) {
+    auto res_shape_list = ng_result_list[i]->get_shape();
+    for (auto dim : res_shape_list) {
+      if (dim == 0) return true;
+    }
+    return false;
+  };
+
+  ov::ResultVector ng_func_result_list;
+  for (int i = 0; i < ng_result_list.size(); i++) {
+    if (ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
+      ng_func_result_list.push_back(ng_result_list[i]);
+    } else {
+      zero_dim_outputs.push_back(ng_result_list[i]);
+    }
+  }
+
+  // Refine the OpenVINO Model based on refined params and retvals
+  //
+  try {
+    ng_function = make_shared<ov::Model>(ng_func_result_list,
+                                         ng_func_parameter_list, name);
+  } catch (const std::exception& exp) {
+    return errors::Internal("Failed to create OpenVINO Model for " + name +
+                            ": " + string(exp.what()));
+  }
+
+  //
+  // Apply additional passes on the nGraph function here.
+  //
+  {
+    ov::pass::Manager passes;
+    if (util::GetEnv("OPENVINO_TF_CONSTANT_FOLDING") == "1") {
+      passes.register_pass<ov::pass::ConstantFolding>();
+    }
+    if (util::GetEnv("OPENVINO_TF_TRANSPOSE_SINKING") == "1") {
+      passes.register_pass<pass::TransposeSinking>();
+    }
+    passes.run_passes(ng_function);
+  }
+  OVTF_VLOG(5) << "Done with passes";
+  //
+  // Request row-major layout on results.
+  //
+  for (auto result : ng_function->get_results()) {
+    result->set_needs_default_layout(true);
+  }
+  OVTF_VLOG(5) << "Done with translations";
+
   return Status::OK();
 }
 

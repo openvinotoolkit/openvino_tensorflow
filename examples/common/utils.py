@@ -52,6 +52,7 @@ def rename_file(filePath, out_classes, labels):
 
     img = Image.open(filePath)
     img_exif = img.getexif()
+    img.close()
 
     if len(img_exif) == 0:
         print('Sorry, image has no exif data.')

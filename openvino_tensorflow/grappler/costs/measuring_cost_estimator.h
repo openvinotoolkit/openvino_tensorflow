@@ -63,8 +63,8 @@ class MeasuringCostEstimator : public CostEstimator {
 
  private:
   Cluster* cluster_;  // Not owned.
-  int measurement_steps_;
-  int measurement_threads_;
+  int measurement_steps_ = 0;
+  int measurement_threads_ = 0;
   std::vector<std::pair<string, Tensor>> feed_;
   std::vector<string> fetch_;
   std::unique_ptr<thread::ThreadPool> thread_pool_;

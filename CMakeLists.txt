@@ -19,7 +19,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare -Wno-backslash-newline-escape")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-comment -Wno-sign-compare -Wno-unused-function")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /wd4308 /wd4146 /wd4703 /wd4244 /wd4819 /EHsc")
 endif()
@@ -189,11 +189,13 @@ message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 
 if (${OPENVINO_VERSION} MATCHES "master")
   # master works with checks of latest release
-  add_definitions(-DOPENVINO_2022_1=1)
+  add_definitions(-DOPENVINO_2022_2=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.1.0")
   add_definitions(-DOPENVINO_2022_1=1)
+elseif (${OPENVINO_VERSION} MATCHES "2022.2.0")
+  add_definitions(-DOPENVINO_2022_2=1)
 else()
-  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION")
+  message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION}")
 endif()
 
 if(WIN32)
@@ -202,6 +204,10 @@ endif()
 
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
+elseif(APPLE)
+    set(LIB "lib/intel64/Release")
+elseif(WIN32)
+    set(LIB "bin/intel64/Release")
 else()
     set(LIB "lib/intel64")
 endif()
@@ -210,6 +216,44 @@ if(ngraph_FOUND)
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime)
 else()
     set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
+endif()
+
+if(APPLE)
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.dylib)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.dylib)
+elseif(WIN32)
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/openvino_tensorflow_fe.dll)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/openvino.dll)
+else()
+    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so)
+    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.so)
+endif()
+
+add_library(tensorflow_frontend_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    tensorflow_frontend_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${libtensorflow_frontend_path}
+)
+if(WIN32)
+    set_target_properties(
+            tensorflow_frontend_lib
+            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_fe.lib
+        )
+endif()
+
+add_library(openvino_lib SHARED IMPORTED)                                                                       
+set_target_properties(
+    openvino_lib
+    PROPERTIES IMPORTED_LOCATION
+    ${libopenvino_path}
+)
+
+if(WIN32)
+    set_target_properties(
+            openvino_lib
+            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino.lib
+        )
 endif()
 
 SET(BASEPATH "${CMAKE_SOURCE_DIR}")

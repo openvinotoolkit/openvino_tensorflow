@@ -639,7 +639,7 @@ def install_tensorflow(venv_dir, artifacts_dir):
 
 
 def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
-                      cmake_flags, verbose):
+                      cmake_flags, debug_enabled, verbose):
     pwd = os.getcwd()
 
     # Load the virtual env
@@ -681,6 +681,10 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
         cmake_cmd.extend([ovtf_src_loc.replace("\\", "\\\\")])
     else:
         cmake_cmd = ["cmake"]
+        if debug_enabled:
+            cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Debug"])
+        else:
+            cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Release"])
         cmake_cmd.extend(cmake_flags)
         cmake_cmd.extend([ovtf_src_loc])
     command_executor(cmake_cmd)
@@ -872,7 +876,9 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         # "-DENABLE_OV_TF_FRONTEND=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
         # "-DENABLE_OPENCV=OFF",  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
-        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\""
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DENABLE_PYTHON=OFF",
+        "-DENABLE_SYSTEM_TBB=OFF"
     ]
 
     if (platform.system() == 'Windows'):
