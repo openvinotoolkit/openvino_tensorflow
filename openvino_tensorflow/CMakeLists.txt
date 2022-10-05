@@ -173,6 +173,9 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_auto_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_auto_batch_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_hetero_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
     "${IE_LIBS_PATH}/plugins.xml" 
     )
