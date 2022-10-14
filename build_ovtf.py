@@ -117,7 +117,9 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source or when using a pre-built package",
-        default='2022.3.0')
+        #default='2022.3.0')
+        #default='rkazants/muse_2022_2')
+        default='feature/optimize_muse')
     
     parser.add_argument(
         '--openvino_branch',
@@ -180,7 +182,7 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "2022.3.0"]):
+    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "2022.3.0", "rkazants/muse_2022_2", "feature/optimize_muse"]):
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
@@ -449,7 +451,8 @@ def main():
         # Download OpenVINO
         download_repo(
             "openvino",
-            "https://github.com/openvinotoolkit/openvino.git",
+            #"https://github.com/openvinotoolkit/openvino.git",
+            "https://github.com/rkazants/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
