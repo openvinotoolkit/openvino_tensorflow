@@ -26,6 +26,7 @@ OP_CONVERTER(translate_slice_op);
 OP_CONVERTER(translate_cast_op);
 OP_CONVERTER(translate_ctc_greedy_decoder_op);
 OP_CONVERTER(translate_sparse_to_dense_op);
+OP_CONVERTER(translate_parallel_dynamic_stitch_op);
 
 void tf_ce_dll_id_();
 
