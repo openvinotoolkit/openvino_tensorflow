@@ -1,0 +1,46 @@
+diff --git a/OCM/tf/ocm_tf_checker.cc b/OCM/tf/ocm_tf_checker.cc
+index e386596..e976978 100644
+--- a/OCM/tf/ocm_tf_checker.cc
++++ b/OCM/tf/ocm_tf_checker.cc
+@@ -1878,6 +1878,41 @@ std::vector<void *> TFNodesChecker::PrepareSupportedNodesList() {
+     bool is_node_supported = true;
+     // check if the optype supported
+     do {
++      if (node->type_string() == "Select") {
++          is_node_supported = true;
++          break;
++      }
++      if (node->type_string() == "SegmentSum") {
++          is_node_supported = true;
++          break;
++      }
++      if (node->type_string() == "ParallelDynamicStitch") {
++          is_node_supported = true;
++          break;
++      }
++      //if (node->type_string() == "DynamicPartition") {
++      //    is_node_supported = true;
++      //    break;
++      //}
++
++
++      //if (node->type_string() == "Unique") {
++      //    is_node_supported = true;
++      //    break;
++      //}
++      //if (node->type_string() == "ResourceGather") {
++      //    is_node_supported = true;
++      //    break;
++      //}
++      //if (node->type_string() == "RaggedTensorToSparse") {
++      //    is_node_supported = true;
++      //    break;
++      //}
++      //if (node->type_string() == "SentencepieceTokenizeOp") {
++      //    is_node_supported = true;
++      //    break;
++      //}
++
+ 
+       // CHECK_0: Check if some nodes need to be skipped
+       // instruct to skip marking keep, init, feed, and fetch ops (mainly used for grappler pass)
