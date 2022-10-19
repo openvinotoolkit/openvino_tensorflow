@@ -71,6 +71,8 @@ void IE_Basic_Engine::infer(
     if (inputs[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                    << input_names[i] << ")";
+      std::cout << "OVTF_DEBUG - input " << i << ": " << inputs[i]->get_shape() << std::endl;
+      if (inputs[i]->get_shape().size() > 0 && inputs[i]->get_shape()[0] == 0) continue;
       const int in_idx = m_in_idx[i];
       if (in_idx < 0) {
         throw std::runtime_error("Input with friendly name " + input_names[i] +

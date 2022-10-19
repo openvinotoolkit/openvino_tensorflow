@@ -47,7 +47,7 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
     convert_nhwc_to_hw(is_nhwc, tf_strides, ng_strides);
     convert_nhwc_to_hw(is_nhwc, ng_input.get_shape(), ng_image_shape);
     convert_nhwc_to_hw(is_nhwc, tf_dilations, ng_dilations);
-    convert_nhwc_to_nchw(is_nhwc, ng_input);
+    convert_nhwc_to_nchw(is_nhwc, ng_input, ov::Rank(4));
 
     auto& ng_filter_shape = ng_filter.get_shape();
     ng_kernel_shape[0] = ng_filter_shape[0];
@@ -110,11 +110,11 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
     if (vec_str_cmp(fused_ops, {"BiasAdd", "Relu"})) {
       auto ng_relu = make_shared<Relu>(ng_add)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu, ov::Rank(4));
       return {ng_relu};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Relu6"})) {
       auto ng_relu6 = make_shared<Clamp>(ng_add, 0, 6)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu6);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu6, ov::Rank(4));
       return {ng_relu6};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "LeakyRelu"})) {
       auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
@@ -122,30 +122,30 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
           make_shared<Constant>(element::f32, Shape{}, tf_leakyrelu_alpha);
       auto ng_alphax = make_shared<Multiply>(ng_leakyrelu_alpha, ng_add);
       auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_add)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu, ov::Rank(4));
       return {ng_lrelu};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Elu"})) {
       float tf_elu_alpha = 1.0;
       tf_elu_alpha = node.get_attribute<float>("leakyrelu_alpha");
       auto ng_elu = make_shared<Elu>(ng_add, tf_elu_alpha)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_elu);
+      convert_nchw_to_nhwc(is_nhwc, ng_elu, ov::Rank(4));
       return {ng_elu};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add"})) {
       auto ng_input2 = node.get_input(3);
-      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2, ov::Rank(4));
       auto ng_out = make_shared<Add>(ng_add, ng_input2)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_out);
+      convert_nchw_to_nhwc(is_nhwc, ng_out, ov::Rank(4));
       return {ng_out};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add", "Relu"})) {
       auto ng_input2 = node.get_input(3);
-      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2, ov::Rank(4));
       auto ng_add2 = make_shared<Add>(ng_add, ng_input2)->output(0);
       auto ng_relu = make_shared<Relu>(ng_add2)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu, ov::Rank(4));
       return {ng_relu};
     } else if (vec_str_cmp(fused_ops, {"BiasAdd", "Add", "LeakyRelu"})) {
       auto ng_input2 = node.get_input(3);
-      convert_nhwc_to_nchw(is_nhwc, ng_input2);
+      convert_nhwc_to_nchw(is_nhwc, ng_input2, ov::Rank(4));
       auto ng_add2 = make_shared<Add>(ng_add, ng_input2)->output(0);
       auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
       auto ng_leakyrelu_alpha =
@@ -154,10 +154,10 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
       auto ng_alphax =
           make_shared<Multiply>(ng_leakyrelu_alpha, ng_add2)->output(0);
       auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_add2)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu, ov::Rank(4));
       return {ng_lrelu};
     } else {
-      convert_nchw_to_nhwc(is_nhwc, ng_add);
+      convert_nchw_to_nhwc(is_nhwc, ng_add, ov::Rank(4));
       return {ng_add};
     }
   } else if (vec_str_cmp(fused_ops, {"FusedBatchNorm"}) ||
@@ -183,11 +183,11 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
     if (vec_str_cmp(fused_ops, {"FusedBatchNorm", "Relu"})) {
       auto ng_relu = make_shared<Relu>(ng_batch_norm)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu, ov::Rank(4));
       return {ng_relu};
     } else if (vec_str_cmp(fused_ops, {"FusedBatchNorm", "Relu6"})) {
       auto ng_relu6 = make_shared<Clamp>(ng_batch_norm, 0, 6)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu6);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu6, ov::Rank(4));
       return {ng_relu6};
     } else if (vec_str_cmp(fused_ops, {"FusedBatchNorm", "LeakyRelu"})) {
       auto tf_leakyrelu_alpha = node.get_attribute<float>("leakyrelu_alpha");
@@ -197,10 +197,10 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
       auto ng_alphax =
           make_shared<Multiply>(ng_leakyrelu_alpha, ng_batch_norm)->output(0);
       auto ng_lrelu = make_shared<Maximum>(ng_alphax, ng_batch_norm)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_lrelu);
+      convert_nchw_to_nhwc(is_nhwc, ng_lrelu, ov::Rank(4));
       return {ng_lrelu};
     } else {
-      convert_nchw_to_nhwc(is_nhwc, ng_batch_norm);
+      convert_nchw_to_nhwc(is_nhwc, ng_batch_norm, ov::Rank(4));
       return {ng_batch_norm};
     }
   } else {

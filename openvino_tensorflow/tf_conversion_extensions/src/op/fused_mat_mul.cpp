@@ -17,6 +17,7 @@ namespace op {
 OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
   // auto num_args = node.get_attribute<int>("num_args"); // TODO: it is unused
   // but why?
+  std::cout << "OVTF_DEBUG - FusedMatMul - 1" << std::endl;
   auto fused_ops = node.get_attribute<std::vector<string>>("fused_ops");
 
   // Transpose arguments if requested.
@@ -29,13 +30,13 @@ OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
   Output<Node> ng_matmul =
       make_shared<MatMul>(ng_lhs, ng_rhs, transpose_a, transpose_b);
 
-  auto ng_matmul_shape = ng_matmul.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
+  //auto ng_matmul_shape = ng_matmul.get_shape();
+  //auto ng_bias_shape = ng_bias.get_shape();
 
-  if (ng_bias_shape.size() != 1) {
-    FRONT_END_GENERAL_CHECK(
-        false, "Bias argument to BiasAdd does not have one dimension");
-  }
+  //if (ng_bias_shape.size() != 1) {
+  //  FRONT_END_GENERAL_CHECK(
+  //      false, "Bias argument to BiasAdd does not have one dimension");
+  //}
 
   auto ng_add = make_shared<Add>(ng_matmul, ng_bias);
   if (fused_ops.size() == 1) {  // Only fusing BiasAdd
