@@ -4728,10 +4728,13 @@ Status Builder::TranslateGraphWithTFFE(
             } else {
               auto element_type = node.get_attribute<ov::element::Type>("T");
               auto shape = indexed_shape.at(index);
-              std::cout << "OVTF_DEBUG - Arg - index: " << index << ", shape: " << shape << std::endl;
-              //shape[0] = -1;
-              for (int d=0; d<shape.size(); d++) {
-                  shape[d] = -1;
+              if (BackendManager::DynamicShapesEnabled()) {
+                auto dynamic_shape_support = node.get_attribute<bool>("_dynamic_shape");
+                if (dynamic_shape_support) {
+                  for (int d=0; d<shape.size(); d++) {
+                      shape[d] = -1;
+                  }
+                }
               }
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
@@ -4764,10 +4767,8 @@ Status Builder::TranslateGraphWithTFFE(
           }));
 
   try {
-  std::cout << "OVTF_DEBUG - Builder - 1" << std::endl;
     ov::frontend::InputModel::Ptr input_model = m_frontend_ptr->load(gany);
     ng_function = m_frontend_ptr->convert(input_model);
-  std::cout << "OVTF_DEBUG - Builder - 2" << std::endl;
   } catch (const ov::NodeValidationFailure& exp) {
     // Treat NODE_VALIDATION_CHECK errors as InvalidArgument errors for proper
     // handling at TF
@@ -4780,27 +4781,6 @@ Status Builder::TranslateGraphWithTFFE(
   } catch (...) {
     return errors::Internal("Frontend conversion error");
   }
-  std::cout << "OVTF_DEBUG - Builder - 3" << std::endl;
-
-  // Get the parameter nodes with non zero dim values or valid dim values
-  auto ng_parameter_list = ng_function->get_parameters();
-  ov::ParameterVector ng_func_parameter_list;
-
-  std::cout << "OVTF_DEBUG - Builder - 4" << std::endl;
-  auto param_dim_check = [ng_parameter_list](int i) {
-    auto param_shape_list = ng_parameter_list[i]->get_shape();
-    for (auto dim : param_shape_list) {
-      if (dim == 0) return true;
-    }
-    return false;
-  };
-
-  for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_partial_shape().is_static() && ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
-      ng_func_parameter_list.push_back(ng_parameter_list[i]);
-    }
-  }
-  std::cout << "OVTF_DEBUG - Builder - 5" << std::endl;
 
   // Get the result nodes with valid dim values
   auto ng_result_list = ng_function->get_results();
@@ -4811,29 +4791,16 @@ Status Builder::TranslateGraphWithTFFE(
     }
     return false;
   };
-  std::cout << "OVTF_DEBUG - Builder - 6" << std::endl;
 
   ov::ResultVector ng_func_result_list;
   for (int i = 0; i < ng_result_list.size(); i++) {
-    if (ng_result_list[i]->is_dynamic() ||
-        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
-      ng_func_result_list.push_back(ng_result_list[i]);
-    } else {
+    if (!(ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i)))) {
       zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
-  std::cout << "OVTF_DEBUG - Builder - 7" << std::endl;
 
-  // Refine the OpenVINO Model based on refined params and retvals
-  //
-  try {
-    ng_function = make_shared<ov::Model>(ng_func_result_list,
-                                         ng_func_parameter_list, name);
-  } catch (const std::exception& exp) {
-    return errors::Internal("Failed to create OpenVINO Model for " + name +
-                            ": " + string(exp.what()));
-  }
-  std::cout << "OVTF_DEBUG - Builder - 8" << std::endl;
+  ng_function->set_friendly_name(name);
 
   //
   // Apply additional passes on the nGraph function here.

@@ -48,6 +48,9 @@ class BackendManager {
   // Returns if TF Frontend is disabled
   static bool TFFrontendDisabled();
 
+  // Returns true if dynamic input shape support is enabled
+  static bool DynamicShapesEnabled();
+
   ~BackendManager();
 
  private:
@@ -62,6 +65,7 @@ class BackendManager {
   static bool m_enable_ovtf_profiling;
   static char* m_model_cache_dir;
   static bool m_tf_frontend_disabled;
+  static bool m_dynamic_shapes_enabled;
 };
 
 }  // namespace openvino_tensorflow

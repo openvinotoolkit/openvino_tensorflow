@@ -310,7 +310,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         }
         return false;
       };
-      //if (check_ng_shape()) continue;
+      if (!(BackendManager::DynamicShapesEnabled()) && check_ng_shape()) continue;
       ov::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
@@ -623,7 +623,11 @@ Status NGraphEncapsulateOp::GetExecutable(
     const Tensor& input_tensor = tf_input_tensors[i];
     input_shapes.push_back(input_tensor.shape());
     for (const auto& x : input_tensor.shape()) {
-      signature_ss << x.size << ",";
+      if (BackendManager::DynamicShapesEnabled()) {
+        signature_ss << "-1,";
+      } else {
+        signature_ss << x.size << ",";
+      }
     }
     signature_ss << ";";
   }
@@ -639,7 +643,6 @@ Status NGraphEncapsulateOp::GetExecutable(
       signature_ss << ";";
     }
   }
-  std::cout << "OVTF_DEBUG - cluster: " << m_cluster_id << ", signature: " << signature_ss.str() << std::endl;
 
   string signature = signature_ss.str();
   OVTF_VLOG(5) << "Computed signature: " << signature;
