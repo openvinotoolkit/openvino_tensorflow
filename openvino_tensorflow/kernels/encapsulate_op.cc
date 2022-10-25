@@ -310,7 +310,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         }
         return false;
       };
-      if (check_ng_shape()) continue;
+      if (!(BackendManager::DynamicShapesEnabled()) && check_ng_shape()) continue;
       ov::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
@@ -506,22 +506,32 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // TODO: Zero-copy is depreciated temporarily because of memory allocation
       // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
-      Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(
-          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      // It can be enabled manually by setting env variable below
+      // OPENVINO_TF_OUTPUT_ZERO_COPY=1
+      if (BackendManager::OutputZeroCopy()) {
+        // Zero-copy OV tensor to TF
+        IETensorBuffer* tf_buffer =
+            new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
+        Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape, tf_buffer);
+        ctx->set_output(output_index, tf_tensor);
+      } else {
+        Tensor* output_tensor = nullptr;
+        OP_REQUIRES_OK(
+            ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
-      auto size = ng_output->get_byte_size();
-      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+        auto size = ng_output->get_byte_size();
+        auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
 
 #if TF_VERSION < 2
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t**)DMAHelper::base(output_tensor));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t**)DMAHelper::base(output_tensor));
 #else
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t*)(output_tensor->data()));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t*)(output_tensor->data()));
 #endif
+      }
     }
   } else {
     for (int i = 0; i < results.size(); i++) {
@@ -623,7 +633,11 @@ Status NGraphEncapsulateOp::GetExecutable(
     const Tensor& input_tensor = tf_input_tensors[i];
     input_shapes.push_back(input_tensor.shape());
     for (const auto& x : input_tensor.shape()) {
-      signature_ss << x.size << ",";
+      if (BackendManager::DynamicShapesEnabled()) {
+        signature_ss << "-1,";
+      } else {
+        signature_ss << x.size << ",";
+      }
     }
     signature_ss << ";";
   }
