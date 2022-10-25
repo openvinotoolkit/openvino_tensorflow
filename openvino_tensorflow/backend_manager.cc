@@ -20,6 +20,7 @@ bool BackendManager::m_enable_ovtf_profiling = false;
 char* BackendManager::m_model_cache_dir = nullptr;
 bool BackendManager::m_tf_frontend_disabled = false;
 bool BackendManager::m_dynamic_shapes_enabled = false;
+bool BackendManager::m_output_zero_copy = false;
 
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
@@ -85,6 +86,14 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if (openvino_tf_enable_dynamic_shapes != nullptr) {
     if (1 == std::stoi(openvino_tf_enable_dynamic_shapes)) {
       m_dynamic_shapes_enabled = true;
+    }
+  }
+
+  const char* openvino_tf_output_zero_copy =
+      std::getenv("OPENVINO_TF_OUTPUT_ZERO_COPY");
+  if (openvino_tf_output_zero_copy != nullptr) {
+    if (1 == std::stoi(openvino_tf_output_zero_copy)) {
+      m_output_zero_copy = true;
     }
   }
 
@@ -180,7 +189,10 @@ char* BackendManager::GetModelCacheDir() { return m_model_cache_dir; }
 bool BackendManager::TFFrontendDisabled() { return m_tf_frontend_disabled; }
 
 // Returns true if dynamic input shape support is enabled
-bool BackendManager::DynamicShapesEnabled() { return m_dynamic_shapes_enabled;}
+bool BackendManager::DynamicShapesEnabled() { return m_dynamic_shapes_enabled; }
+
+// Returns true if zero-copy enabled for dynamic outputs
+bool BackendManager::OutputZeroCopy() { return m_output_zero_copy; }
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

@@ -51,6 +51,9 @@ class BackendManager {
   // Returns true if dynamic input shape support is enabled
   static bool DynamicShapesEnabled();
 
+  // Returns true if zero-copy enabled for dynamic outputs
+  static bool OutputZeroCopy();
+
   ~BackendManager();
 
  private:
@@ -66,6 +69,7 @@ class BackendManager {
   static char* m_model_cache_dir;
   static bool m_tf_frontend_disabled;
   static bool m_dynamic_shapes_enabled;
+  static bool m_output_zero_copy;
 };
 
 }  // namespace openvino_tensorflow
