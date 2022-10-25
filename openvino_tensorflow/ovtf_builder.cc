@@ -4658,7 +4658,8 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  std::vector<ov::Shape> indexed_shape;
+  //std::vector<ov::Shape> indexed_shape;
+  std::vector<ov::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
     ov::Shape ng_shape;
@@ -4727,6 +4728,14 @@ Status Builder::TranslateGraphWithTFFE(
             } else {
               auto element_type = node.get_attribute<ov::element::Type>("T");
               auto shape = indexed_shape.at(index);
+              if (BackendManager::DynamicShapesEnabled()) {
+                auto dynamic_shape_support = node.get_attribute<bool>("_dynamic_shape");
+                if (dynamic_shape_support) {
+                  for (int d=0; d<shape.size(); d++) {
+                      shape[d] = -1;
+                  }
+                }
+              }
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
@@ -4773,24 +4782,6 @@ Status Builder::TranslateGraphWithTFFE(
     return errors::Internal("Frontend conversion error");
   }
 
-  // Get the parameter nodes with non zero dim values or valid dim values
-  auto ng_parameter_list = ng_function->get_parameters();
-  ov::ParameterVector ng_func_parameter_list;
-
-  auto param_dim_check = [ng_parameter_list](int i) {
-    auto param_shape_list = ng_parameter_list[i]->get_shape();
-    for (auto dim : param_shape_list) {
-      if (dim == 0) return true;
-    }
-    return false;
-  };
-
-  for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
-      ng_func_parameter_list.push_back(ng_parameter_list[i]);
-    }
-  }
-
   // Get the result nodes with valid dim values
   auto ng_result_list = ng_function->get_results();
   auto result_dim_check = [ng_result_list](int i) {
@@ -4803,23 +4794,13 @@ Status Builder::TranslateGraphWithTFFE(
 
   ov::ResultVector ng_func_result_list;
   for (int i = 0; i < ng_result_list.size(); i++) {
-    if (ng_result_list[i]->is_dynamic() ||
-        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i))) {
-      ng_func_result_list.push_back(ng_result_list[i]);
-    } else {
+    if (!(ng_result_list[i]->is_dynamic() ||
+        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i)))) {
       zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }
 
-  // Refine the OpenVINO Model based on refined params and retvals
-  //
-  try {
-    ng_function = make_shared<ov::Model>(ng_func_result_list,
-                                         ng_func_parameter_list, name);
-  } catch (const std::exception& exp) {
-    return errors::Internal("Failed to create OpenVINO Model for " + name +
-                            ": " + string(exp.what()));
-  }
+  ng_function->set_friendly_name(name);
 
   //
   // Apply additional passes on the nGraph function here.

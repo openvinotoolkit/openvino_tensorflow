@@ -289,6 +289,14 @@ Status Encapsulator::AnalysisPass() {
             false, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
       }
 
+      if (dst->type_string() == "SparseToDense" && edge->dst_input() == 1) {
+        SetAttrValue(
+            false, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+      } else {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+      }
+
       vector<int> static_input_indexes;
       try {
         GetNodeAttr(dst->attrs(), "_ovtf_static_inputs", &static_input_indexes);
