@@ -17,7 +17,6 @@ namespace op {
 OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
   // auto num_args = node.get_attribute<int>("num_args"); // TODO: it is unused
   // but why?
-  std::cout << "OVTF_DEBUG - FusedMatMul - 1" << std::endl;
   auto fused_ops = node.get_attribute<std::vector<string>>("fused_ops");
 
   // Transpose arguments if requested.
