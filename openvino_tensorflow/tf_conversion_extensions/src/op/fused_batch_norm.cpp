@@ -39,16 +39,20 @@ OutputVector translate_fused_batch_norm_op(
           ->output(0);
   convert_nchw_to_nhwc(is_nhwc, ng_batch_norm);
 
-  if (is_v3 || is_v1) {
-    return {ng_batch_norm};
-  }
+  // TODO: Why are there so many? Is it correct?
+    OutputVector result = {ng_batch_norm, ng_mean, ng_variance, ng_mean, ng_variance};
+    if (is_v3) {
+        // FusedBatchNormV3 has 6 outputs
+        result.push_back(ng_mean);  // reserve_space_3
+    }
+    set_node_name(node.get_op_type(), ng_batch_norm.get_node_shared_ptr());
+    return result;
+  // string activation_mode = node.get_attribute<string>("activation_mode");
+  // FRONT_END_GENERAL_CHECK(activation_mode == "Relu",
+  //                         "Unsupported _FusedBatchNormEx activation mode");
 
-  string activation_mode = node.get_attribute<string>("activation_mode");
-  FRONT_END_GENERAL_CHECK(activation_mode == "Relu",
-                          "Unsupported _FusedBatchNormEx activation mode");
-
-  auto relu_op = make_shared<Relu>(ng_batch_norm);
-  return {relu_op};
+  // auto relu_op = make_shared<Relu>(ng_batch_norm);
+  // return {relu_op};
 }
 
 }  // namespace op
