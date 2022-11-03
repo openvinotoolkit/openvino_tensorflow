@@ -494,14 +494,9 @@ if ovtf_classic_loaded:
                                                          input_tensors=None,
                                                          saved_model_signature=
                                                          signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
-                                                         saved_model_tag=tag_constants.SERVING,
-                                                         save_optimized_function_signature=False
+                                                         saved_model_tag=tag_constants.SERVING
                                                          ):
         """
-        Rewrites the tf.Graph of a TF2 SavedModel Function Signature with the 
-        OpenVINOGrapplerOptimizer. Expects a sample input tensor with a fully defined shape and 
-        dtype, which will be used to create the input feeds of GrapplerItem used for CostAnalysis.
-
         Converts all Variable ops into Const ops, and inlines supported compute heavy subgraphs 
         as encapsulated OpenVINO custom ops. Returns a single ConcreteFunction specialized to 
         input shape and dtype of the provided 'input_tensor'.
@@ -512,7 +507,7 @@ if ovtf_classic_loaded:
         >>> model_path = "ssd_resnet101_v1_fpn_1024x1024"
         >>> image_numpy = np.array(np.random.rand(1, 1024,1024,3)).astype(np.uint8)
         >>> input_tensor = tf.convert_to_tensor(image_numpy, dtype=tf.uint8)
-        >>> model = ovtf.optimize_graph_with_openvino_tf2(model_path, input_tensor)
+        >>> model = ovtf.convert_variables_to_constants_with_openvino_tf2(model_path, input_tensor)
         >>> print(model)
         <ConcreteFunction pruned(args_0) at 0x>
         >>> results = model(input_tensor)
@@ -523,8 +518,6 @@ if ovtf_classic_loaded:
             type will be used by OpenVINOGrapplerOptimizer for cost analysis. 
           saved_model_signature: SavedModel tag to load
           saved_model_tag: The SavedModel function signature key, whose graph will be optimized
-          save_optimized_function_signature: Whether to save the new optimized function signature to
-            the model at 'saved_model_dir'
 
         Raises:
           AssertionError: If the SavedModel path is invalid
@@ -549,8 +542,6 @@ if ovtf_classic_loaded:
                                   "optimize_graph_with_openvino_tf2 to use OpenVINO"
                                   "on other backends."))
         
-        #openvino_tensorflow_lib.disable_rewrite_pass()
-
         # prepare tf function from saved_model
         # Load model with provided saved model tag
         try:
@@ -609,56 +600,8 @@ if ovtf_classic_loaded:
         # Converting var2consts for larger models might take a long time
         frozen_func = convert_to_constants.convert_variables_to_constants_v2(func, 
                                                 lower_control_flow=False, aggressive_inlining=True)
+
         return frozen_func
-        
-        #meta_graph_def = saver.export_meta_graph(graph_def=
-        #                                         frozen_func.graph.as_graph_def(add_shapes=True), 
-        #                                         graph=frozen_func.graph)
-
-        #fetch_collection = meta_graph_pb2.CollectionDef()
-        #for array in frozen_func.outputs:
-        #  fetch_collection.node_list.value.append(array.name)
-        #
-        ## Grappler determines fetch ops from collection 'train_op'.
-        #meta_graph_def.collection_def[ops.GraphKeys.TRAIN_OP].CopyFrom(
-        #    fetch_collection)
-
-        #grappler_session_config = config_pb2.ConfigProto()
-        #grappler_session_config.graph_options.rewrite_options.CopyFrom(rewriter_config)
-        #optimized_graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, 
-        #                                                 meta_graph_def, graph_id=b"tf_graph")
-        #
-        ## Swap original function with optimized function in TF's context
-        #for f in optimized_graph_def.library.function:
-        #  while context.context().has_function(f.signature.name):
-        #      context.context().remove_function(f.signature.name)
-
-        #optimized_func = wrap_function.function_from_graph_def(
-        #    optimized_graph_def,
-        #    [tensor.name for tensor in frozen_func.inputs],
-        #    [tensor.name for tensor in frozen_func.outputs])
-
-        #optimized_func.graph.structured_outputs = nest.pack_sequence_as(
-        #    func.graph.structured_outputs,
-        #    optimized_func.graph.structured_outputs)
-
-        #optimized_func.graph.structured_input_signature = (
-        #    func.structured_input_signature)
-
-        ## Rewrite the signature map using the optimized ConcreteFunction.
-        #signatures = {
-        #    key: value for key, value in saved_model.signatures.items()
-        #}
-        #signatures["ovtf"] = optimized_func
-
-        ## Save the optimized function for later use
-        ## Sometimes this is useful when start-up overheads from this function call 
-        ## needs to be avoided
-        #if save_optimized_function_signature:
-        #  save.save(saved_model, saved_model_dir)
-        #  return optimized_func
-        #else:
-        #  return optimized_func
 
 
     __version__ = \

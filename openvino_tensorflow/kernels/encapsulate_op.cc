@@ -310,7 +310,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         }
         return false;
       };
-      if (!(BackendManager::DynamicShapesEnabled()) && check_ng_shape()) continue;
+      if (!(BackendManager::DynamicShapesEnabled()) && check_ng_shape())
+        continue;
       ov::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
@@ -512,7 +513,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         // Zero-copy OV tensor to TF
         IETensorBuffer* tf_buffer =
             new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
-        Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape, tf_buffer);
+        Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape,
+                         tf_buffer);
         ctx->set_output(output_index, tf_tensor);
       } else {
         Tensor* output_tensor = nullptr;

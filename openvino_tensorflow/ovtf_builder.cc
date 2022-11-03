@@ -4658,7 +4658,6 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  //std::vector<ov::Shape> indexed_shape;
   std::vector<ov::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
@@ -4729,10 +4728,11 @@ Status Builder::TranslateGraphWithTFFE(
               auto element_type = node.get_attribute<ov::element::Type>("T");
               auto shape = indexed_shape.at(index);
               if (BackendManager::DynamicShapesEnabled()) {
-                auto dynamic_shape_support = node.get_attribute<bool>("_dynamic_shape");
+                auto dynamic_shape_support =
+                    node.get_attribute<bool>("_dynamic_shape");
                 if (dynamic_shape_support) {
-                  for (int d=0; d<shape.size(); d++) {
-                      shape[d] = -1;
+                  for (int d = 0; d < shape.size(); d++) {
+                    shape[d] = -1;
                   }
                 }
               }
@@ -4795,7 +4795,8 @@ Status Builder::TranslateGraphWithTFFE(
   ov::ResultVector ng_func_result_list;
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (!(ng_result_list[i]->is_dynamic() ||
-        !(ng_result_list[i]->get_shape().size() > 0 && result_dim_check(i)))) {
+          !(ng_result_list[i]->get_shape().size() > 0 &&
+            result_dim_check(i)))) {
       zero_dim_outputs.push_back(ng_result_list[i]);
     }
   }

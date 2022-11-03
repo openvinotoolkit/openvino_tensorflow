@@ -29,10 +29,11 @@ OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
   Output<Node> ng_matmul =
       make_shared<MatMul>(ng_lhs, ng_rhs, transpose_a, transpose_b);
 
-  //auto ng_matmul_shape = ng_matmul.get_shape();
-  //auto ng_bias_shape = ng_bias.get_shape();
+  // TODO: Revisit to handle this with dynamic shapes
+  // auto ng_matmul_shape = ng_matmul.get_shape();
+  // auto ng_bias_shape = ng_bias.get_shape();
 
-  //if (ng_bias_shape.size() != 1) {
+  // if (ng_bias_shape.size() != 1) {
   //  FRONT_END_GENERAL_CHECK(
   //      false, "Bias argument to BiasAdd does not have one dimension");
   //}

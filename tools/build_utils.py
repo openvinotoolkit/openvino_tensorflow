@@ -861,7 +861,7 @@ def get_bazel_version():
 
 
 def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-                   artifacts_location, debug_enabled, verbosity):
+                   artifacts_location, debug_enabled, verbosity, threading):
     install_location = os.path.join(artifacts_location, "openvino")
     print("INSTALL location: " + artifacts_location)
 
@@ -884,6 +884,7 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
         "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
+        "-DTHREADING=" + threading
     ]
 
     if (platform.system() == 'Windows'):
