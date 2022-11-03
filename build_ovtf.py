@@ -116,8 +116,14 @@ def main():
 
     parser.add_argument(
         '--openvino_version',
-        help="Openvino version to be used for building from source",
-        default='master')
+        help="Openvino version to be used for building from source or when using a pre-built package",
+        default='2022.3.0')
+    
+    parser.add_argument(
+        '--openvino_branch',
+        help="Openvino branch to be used for building from source. \n" +
+        "Note that this has to be used along openvino_version to specify an appropriate version",
+        action="store")
 
     parser.add_argument(
         '--python_executable',
@@ -174,7 +180,7 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0"]):
+    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "2022.3.0"]):
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
@@ -435,12 +441,14 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-        if (arguments.openvino_version == "master"):
-            openvino_release_tag = "master"
+        if arguments.openvino_branch:
+            openvino_release_tag = arguments.openvino_branch
         elif (arguments.openvino_version == "2022.1.0"):
             openvino_release_tag = "2022.1.0"
         elif (arguments.openvino_version == "2022.2.0"):
             openvino_release_tag = "2022.2.0"
+        elif (arguments.openvino_version == "2022.3.0"):
+            openvino_release_tag = "2022.3.0"
 
         # Download OpenVINO
         download_repo(
@@ -490,6 +498,10 @@ def main():
 
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_VERSION=" + arguments.openvino_version])
+
+    if arguments.openvino_branch:
+        openvino_tf_cmake_flags.extend(
+        ["-DOPENVINO_BRANCH=" + arguments.openvino_branch])
 
     if arguments.use_tensorflow_from_location:
         if (platform.system() == 'Windows'):

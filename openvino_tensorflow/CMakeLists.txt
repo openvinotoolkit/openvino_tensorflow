@@ -119,15 +119,28 @@ message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 # Install the openvino_tensorflow lib
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
+string(REPLACE "." ";" OPENVINO_VERSION_LIST ${OPENVINO_VERSION})
+list(GET OPENVINO_VERSION_LIST 0 OPENVINO_VERSION_MAJOR)
+string(SUBSTRING ${OPENVINO_VERSION_MAJOR} 2 2 OPENVINO_VERSION_MAJOR)
+list(GET OPENVINO_VERSION_LIST 1 OPENVINO_VERSION_MINOR)
+list(GET OPENVINO_VERSION_LIST 2 OPENVINO_VERSION_PATCH)
+set(OPENVINO_SO_VER "${OPENVINO_VERSION_MAJOR}${OPENVINO_VERSION_MINOR}${OPENVINO_VERSION_PATCH}")
+
 # Install OCM and set a variable with required OpenVINO libraries path,
 if (APPLE)
   set(OCM_LIB libocm.dylib)
   set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dylib")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
-  SET(OV_LIB_EXT "dylib")
+  
+  if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT "${OPENVINO_SO_VER}.dylib")
+  else()
+    set(OV_LIB_EXT ".dylib")
+  endif()
+
   set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/Release)
-  set (IE_LIBS 
+  set(IE_LIBS 
       "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
       )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
@@ -153,7 +166,13 @@ else()
   set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.so")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
-  set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+
+  if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT "${PLUGIN_LIB_EXT}.${OPENVINO_SO_VER}")
+  else()
+    set(OV_LIB_EXT "${PLUGIN_LIB_EXT}")
+  endif()
+
   set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64)
   set (IE_LIBS 
       "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
@@ -171,12 +190,6 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.2022.3.0.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.2022.3.0.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.2022.3.0.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.2230.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.2230.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.2230.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
