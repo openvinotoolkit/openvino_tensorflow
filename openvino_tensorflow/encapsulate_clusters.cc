@@ -291,7 +291,8 @@ Status Encapsulator::AnalysisPass() {
 
       if (dst->type_string() == "SparseToDense" && edge->dst_input() == 1) {
         SetAttrValue(
-            false, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+            false,
+            &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
       } else {
         SetAttrValue(
             true, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));

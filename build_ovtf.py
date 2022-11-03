@@ -136,6 +136,11 @@ def main():
         help="Protobuf branch to be used for the Windows build",
         action="store",
         default='v3.18.1')
+
+    parser.add_argument(
+        '--openvino_threading',
+        help="Threading library to use in openvino",
+        default='TBB')
     # Done with the options. Now parse the commandline
     arguments = parser.parse_args()
 
@@ -174,10 +179,16 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-    if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "rkazants/muse_2022_2"]):
+    if (arguments.openvino_version not in [
+            "master", "2022.1.0", "2022.2.0", "rkazants/muse_2022_2"
+    ]):
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
+
+    if (arguments.openvino_threading not in ["TBB", "OMP"]):
+        raise AssertionError(
+            "Only TBB and OMP are supported as openvino threading library")
 
     if arguments.use_openvino_from_location != '':
         if not os.path.isdir(arguments.use_openvino_from_location):
@@ -286,6 +297,10 @@ def main():
     # Tensorflow still uses ABI 0 for its PyPi builds, and OpenVINO uses ABI 1
     # To maintain compatibility, a single ABI flag should be used for both builds
     cxx_abi = arguments.cxx11_abi_version
+
+    # Threading library to compile opencino with
+    # It should be set to TBB (default) or OMP
+    threading = arguments.openvino_threading
 
     # TensorFlow Build
     if arguments.use_tensorflow_from_location != "":
@@ -455,7 +470,8 @@ def main():
         print("OV_SRC_DIR: ", openvino_src_dir)
 
         build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-                       artifacts_location, arguments.debug_build, verbosity)
+                       artifacts_location, arguments.debug_build, verbosity,
+                       threading)
 
     # Next build CMAKE options for the openvino-tensorflow
     if (platform.system() == 'Windows'):
