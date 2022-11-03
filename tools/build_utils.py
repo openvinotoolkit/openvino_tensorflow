@@ -687,6 +687,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
             cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Release"])
         cmake_cmd.extend(cmake_flags)
         cmake_cmd.extend([ovtf_src_loc])
+    # to indicate that the build was triggered from a python script
+    cmake_cmd.extend(["-DPY_SCRIPT_BUILD=1"])
     command_executor(cmake_cmd)
 
     import psutil

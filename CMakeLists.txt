@@ -52,8 +52,57 @@ MARK_AS_ADVANCED(
     CMAKE_SHARED_LINKER_FLAGS_SANITIZE)
 
 # These variables are undocumented but useful.
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Set project related CACHE defaults
+SET(OPENVINO_TF_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts" CACHE STRING "Install path for build artifacts" FORCE )
+SET(OPENVINO_ARTIFACTS_DIR     "${OPENVINO_TF_INSTALL_PREFIX}/openvino" CACHE STRING "OpenVINO install location" )
+SET(OPENVINO_VERSION           "2022.2.0" CACHE STRING "OpenVINO version to be used" )
+SET(OPENVINO_BUILD_VERSION     "${OPENVINO_VERSION}" CACHE STRING "OpenVINO version to be used" )
+SET(TF_PIP_VERSION             "2.9.2" CACHE STRING "TensorFlow version to be installed from PyPi" )
+
+# Build options
+option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
+option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
+option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
+
+message(STATUS "OPENVINO_TF_INSTALL_PREFIX: ${OPENVINO_TF_INSTALL_PREFIX}")
+message(STATUS "OPENVINO_ARTIFACTS_DIR: ${OPENVINO_ARTIFACTS_DIR}")
+message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
+message(STATUS "TF_PIP_VERSION: ${TF_PIP_VERSION}")
+
+if(NOT PY_SCRIPT_BUILD)
+    # Create the python virtual environment
+    set(VENV "${CMAKE_CURRENT_BINARY_DIR}/venv-tf-py3")
+    
+    find_package (Python3 REQUIRED COMPONENTS Interpreter)
+
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m venv "${VENV}"
+    )
+    
+    set (ENV{VIRTUAL_ENV} "${VENV}")
+    set (Python3_FIND_VIRTUALENV FIRST)
+    unset (Python3_EXECUTABLE)
+    
+    find_package (Python3 COMPONENTS Interpreter Development)
+    
+    # Upgrade pip in the virtual environment
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -U pip
+    )
+
+    # Install the desired TensorFlow version from PyPi
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -U tensorflow==${TF_PIP_VERSION}
+    )
+    
+    if(NOT USE_OPENVINO_FROM_LOCATION)
+        add_subdirectory(third-party/openvino)
+    endif()
+
+    set(OPENVINO_ARTIFACTS_DIR "")
+endif()
 
 # Invoke a command to determine how many CPU cores we have, and set
 # NUM_MAKE_PROCESSES accordingly so we know what number to pass to make -j.
@@ -79,7 +128,7 @@ if(NOT APPLE)
 
     string(REGEX MATCH "ID=\"([a-z])+\"" OS_VERSION "${LSB_RELEASE_ID_SHORT}")
     string(REGEX MATCH "\"([a-z])+\"" OS_VERSION "${OS_VERSION}")
-    message("OS version is ${OS_VERSION}")
+    message(STATUS "OS version is ${OS_VERSION}")
 else()
     # Handle the case for MacOS
     # TBD
@@ -145,11 +194,6 @@ if(WIN32)
 	add_definitions(-DNOMINMAX)
 endif()
 
-# Build options
-option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
-option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
-option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
-option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
 
 set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(InferenceEngine REQUIRED)
@@ -273,9 +317,9 @@ get_filename_component(
     ABSOLUTE
 )
 
-add_subdirectory(examples)
 if (DEFINED TF_SRC_DIR)
     message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+    add_subdirectory(examples)
     add_subdirectory(examples/classification_sample)
 else()
     message(
