@@ -1,3 +1,4 @@
 [submodule "ocm"]
 	path = ocm
 	url = https://github.com/intel/ocm
+	branch = a974fba59a2e591728bdcc5b2dbffccfa2d52f75
