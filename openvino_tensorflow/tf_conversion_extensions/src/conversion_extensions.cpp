@@ -54,6 +54,9 @@ OPENVINO_CREATE_EXTENSIONS(std::vector<ov::Extension::Ptr>({
     std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
         "SparseToDense",
         ov::frontend::tensorflow::op::translate_sparse_to_dense_op),
+    std::make_shared<ov::frontend::tensorflow::ConversionExtension>(
+        "ParallelDynamicStitch",
+        ov::frontend::tensorflow::op::translate_parallel_dynamic_stitch_op),
 }));
 
 void ov::frontend::tensorflow::op::tf_ce_dll_id_() {}
