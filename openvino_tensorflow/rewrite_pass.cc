@@ -162,6 +162,8 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     ov_version = "2022.1.0";
 #elif defined(OPENVINO_2022_2)
     ov_version = "2022.2.0";
+#elif defined(OPENVINO_2022_3)
+    ov_version = "2022.3.0";
 #endif
     ocm::Framework_Names fName = ocm::Framework_Names::TF;
     ocm::FrameworkNodesChecker FC(fName, device_id, ov_version,
