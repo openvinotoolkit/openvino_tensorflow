@@ -39,7 +39,6 @@ OutputVector translate_fused_batch_norm_op(
           ->output(0);
   convert_nchw_to_nhwc(is_nhwc, ng_batch_norm);
 
-  // TODO: Why are there so many? Is it correct?
     OutputVector result = {ng_batch_norm, ng_mean, ng_variance, ng_mean, ng_variance};
     if (is_v3) {
         // FusedBatchNormV3 has 6 outputs
