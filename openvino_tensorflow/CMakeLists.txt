@@ -4,10 +4,9 @@
 
 set(LIB_NAME openvino_tensorflow)
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-include_directories(${NGRAPH_INSTALL_DIR}/include)
-include_directories(${ABSL_INCLUDE_DIR})
+if (PY_SCRIPT_BUILD)
+  include_directories(${OPENVINO_INSTALL_DIR}/include)
+endif()
 
 set(TF_CONVERSION_EXTENSIONS_MODULE_NAME "tf_conversion_extensions")
 add_compile_definitions(TF_CONVERSION_EXTENSIONS_MODULE_NAME="${TF_CONVERSION_EXTENSIONS_MODULE_NAME}")
@@ -74,6 +73,11 @@ endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
 
+target_include_directories(${LIB_NAME} PRIVATE 
+                          ${TensorFlow_INCLUDE_DIR}
+                          ${TensorFlow_INCLUDE_DIR}/external/nsync/public
+                          ${ABSL_INCLUDE_DIR})
+
 target_link_libraries(
         ${LIB_NAME}
         ovtf_logger
@@ -92,7 +96,7 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${OPENVINO_INSTALL_DIR}/include")
 
 add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
 
@@ -197,7 +201,8 @@ set (IE_LIBS
     )
 
 # Install Openvino and TBB libraries
-if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
+
+if((NOT DISABLE_PACKAGING_OPENVINO_LIBS) AND (PY_SCRIPT_BUILD))
   file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
@@ -213,13 +218,20 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
   endforeach()
 endif()
 
+if (NOT PY_SCRIPT_BUILD)
+  add_dependencies(${LIB_NAME}
+                   openvino::runtime
+                   openvino::runtime::c
+                   openvino::frontend::tensorflow)
+endif()
+
 # Now create the Python pip package. The following variables are passed to the
 # CreatePipWhl.cmake
 # CMake "install" target "CODE" will propagate these variables to the
 # target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
 # So any variable that we need to propagate needs to be added here
 install(CODE "set(OS_VERSION ${OS_VERSION})")
-install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
+install(CODE "set(OPENVINO_INSTALL_DIR \"${OPENVINO_INSTALL_DIR}\")")
 install(CODE "set(OVTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(OVTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")

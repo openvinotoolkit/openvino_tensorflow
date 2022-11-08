@@ -4,12 +4,9 @@
 
 set(LIB_NAME ovtf_logger)
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -std=c++17")
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -20,14 +17,17 @@ set(SRC
 )
 
 add_library(${LIB_NAME} ${SRC})
+
+target_include_directories(${LIB_NAME} PRIVATE ${TensorFlow_INCLUDE_DIR}
+                           ${TensorFlow_INCLUDE_DIR}/external/nsync/public)
 target_link_libraries( 
     ${LIB_NAME} 
     ${TensorFlow_FRAMEWORK_LIBRARY} 
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}")
-target_include_directories(${LIB_NAME} PUBLIC "${TensorFlow_INCLUDE_DIR}/external/nsync/public")
+target_include_directories(${LIB_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${LIB_NAME} PRIVATE "${TensorFlow_INCLUDE_DIR}")
+target_include_directories(${LIB_NAME} PRIVATE "${TensorFlow_INCLUDE_DIR}/external/nsync/public")
 
 target_compile_definitions( 
     ${LIB_NAME} PRIVATE
