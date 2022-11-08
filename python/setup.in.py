@@ -8,6 +8,7 @@ from setuptools import setup
 from setuptools.command.install import install as InstallCommandBase
 from wheel.bdist_wheel import bdist_wheel
 from wheel.vendored.packaging.tags import sys_tags
+from pathlib import Path
 import os
 
 # https://stackoverflow.com/questions/45150304/how-to-force-a-python-wheel-to-be-platform-specific-when-building-it
@@ -45,13 +46,25 @@ with open(@README_DOC@, "r", encoding="utf-8") as fh:
 
 # The following is filled in my cmake - essentially a list of library
 # and license files
-ng_data_list = [
+ov_libs_list = [
     @ovtf_libraries@ @license_files@ @licence_top_level@
 ]
 
+# from https://github.com/openvinotoolkit/openvino/pull/13725
+# transform libX.so.Y / libX.Y.dylib symlinks to real files
+for symlink in Path(".").rglob("*"):
+    if symlink.is_symlink():
+        file_name = os.readlink(symlink)
+        if not os.path.isabs(file_name):
+            file_name = os.path.join(os.path.dirname(symlink), file_name)
+
+        os.unlink(symlink)
+        os.rename(file_name, symlink)
+        print(f"Resolved symlink {symlink} as {file_name}")
+
 # This is the contents of the Package Data
 package_data_dict = {}
-package_data_dict['openvino_tensorflow'] = ng_data_list
+package_data_dict['openvino_tensorflow'] = ov_libs_list
 
 setup(
     name='openvino_tensorflow',
