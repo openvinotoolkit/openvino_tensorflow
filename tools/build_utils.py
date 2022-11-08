@@ -868,19 +868,23 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
     # Now build OpenVINO
     # TODO: Enable other options once 80842 ticket is resolved
     openvino_cmake_flags = [
-        # "-DENABLE_TESTS=OFF",
-        "-DENABLE_SAMPLES=OFF",
-        # "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        # "-DENABLE_INTEL_GNA=OFF",
-        # "-DENABLE_OV_PADDLE_FRONTEND=OFF",
-        # "-DENABLE_OV_ONNX_FRONTEND=OFF",
-        # "-DENABLE_OV_IR_FRONTEND=ON",
-        # "-DENABLE_OV_TF_FRONTEND=OFF",
-        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
-        # "-DENABLE_OPENCV=OFF",  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
-        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
         "-DENABLE_PYTHON=OFF",
-        "-DENABLE_SYSTEM_TBB=OFF"
+        "-DENABLE_SYSTEM_TBB=OFF",
+        "-DENABLE_AUTO=OFF",
+        "-DENABLE_AUTO_BATCH=OFF",
+        "-DENABLE_INTEL_GNA=OFF",
+        "-DENABLE_HETERO=OFF",
+        "-DENABLE_OV_IR_FRONTEND=OFF",
+        "-DENABLE_OV_ONNX_FRONTEND=OFF",
+        "-DENABLE_OV_PADDLE_FRONTEND=OFF",
+        "-DENABLE_FASTER_BUILD=ON",
+        "-DENABLE_TESTS=OFF",
+        "-DENABLE_TESTING=OFF",
+        "-DENABLE_SAMPLES=OFF",
+        "-DENABLE_FUNCTIONAL_TESTS=OFF",
+        "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
+        "-DBUILD_EXAMPLES=OFF",
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
     ]
 
     if (platform.system() == 'Windows'):
