@@ -883,7 +883,6 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_SAMPLES=OFF",
         "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
-        "-DBUILD_EXAMPLES=OFF",
         "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
     ]
 
