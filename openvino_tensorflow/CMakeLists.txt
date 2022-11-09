@@ -138,6 +138,7 @@ if (APPLE)
   set(PLUGIN_LIB_EXT "so")
   
   if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT_DOT "${OPENVINO_VERSION}.dylib")
     set(OV_LIB_EXT "${OPENVINO_SO_VER}.dylib")
   else()
     set(OV_LIB_EXT ".dylib")
@@ -172,6 +173,7 @@ else()
   set(PLUGIN_LIB_EXT "so")
 
   if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT_DOT "${PLUGIN_LIB_EXT}.${OPENVINO_VERSION}")
     set(OV_LIB_EXT "${PLUGIN_LIB_EXT}.${OPENVINO_SO_VER}")
   else()
     set(OV_LIB_EXT "${PLUGIN_LIB_EXT}")
@@ -194,6 +196,9 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT_DOT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT_DOT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
     "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
