@@ -27,11 +27,12 @@ target_include_directories(${TARGET_NAME}
             ${InferenceEngine_INCLUDE_DIRS}
             ${OV_FRONTEND_INCLUDE_DIRECTORIES}
             ${OV_RUNTIME_INCLUDE_DIRECTORIES}
-            ${OV_RUNTIME_C_INCLUDE_DIRECTORIES})
+            ${OV_RUNTIME_C_INCLUDE_DIRECTORIES}
+            ${OPENVINO_INSTALL_DIR}/include/)
 
 target_link_libraries(${TARGET_NAME} tensorflow_frontend_lib openvino_lib)
 
-if (NOT PY_SCRIPT_BUILD)
+if ((NOT PY_SCRIPT_BUILD) AND (NOT USE_OPENVINO_FROM_LOCATION))
   add_dependencies(${TARGET_NAME}
                    openvino::runtime
                    openvino::runtime::c

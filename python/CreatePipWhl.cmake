@@ -129,4 +129,17 @@ if (PYTHON)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/
     )
 
+    if (NOT PY_SCRIPT_BUILD)
+
+        file(GLOB OVTF_WHEEL_FILE "${CMAKE_BINARY_DIR}/python/dist/*")
+
+        # Install the wheel into the python virtual environment and
+        # copy the wheelk to artifacts
+        execute_process (
+        COMMAND cp ${OVTF_WHEEL_FILE} ${OPENVINO_TF_INSTALL_PREFIX}
+        COMMAND ${PYTHON} -m pip install --force-reinstall ${OVTF_WHEEL_FILE}
+        COMMAND_ECHO STDOUT)
+
+    endif()
+
 endif()

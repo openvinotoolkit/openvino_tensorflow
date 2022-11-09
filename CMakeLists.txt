@@ -197,7 +197,9 @@ if(WIN32)
 	add_definitions(-DNOMINMAX)
 endif()
 
-if(NOT PY_SCRIPT_BUILD)
+if(PY_SCRIPT_BUILD OR USE_OPENVINO_FROM_LOCATION)
+    set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
+else()
     set(InferenceEngine_DIR ${CMAKE_CURRENT_BINARY_DIR})
     set(OpenVINO_DIR ${CMAKE_CURRENT_BINARY_DIR})
     find_package(OpenVINO REQUIRED COMPONENTS Runtime TensorFlow)
@@ -207,19 +209,12 @@ if(NOT PY_SCRIPT_BUILD)
     openvino::runtime INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(OV_RUNTIME_C_INCLUDE_DIRECTORIES 
     openvino::runtime::c INTERFACE_INCLUDE_DIRECTORIES)
-else()
-    set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 endif()
 
 find_package(InferenceEngine REQUIRED)
 
 set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(ngraph QUIET)
-
-include_directories(${InferenceEngine_INCLUDE_DIRS}
-                    ${OV_FRONTEND_INCLUDE_DIRECTORIES}
-                    ${OV_RUNTIME_INCLUDE_DIRECTORIES}
-                    ${OV_RUNTIME_C_INCLUDE_DIRECTORIES})
 
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/cmake)
@@ -279,6 +274,12 @@ if(ngraph_FOUND)
 else()
     set(OPENVINO_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
+
+include_directories(${InferenceEngine_INCLUDE_DIRS}
+                    ${OV_FRONTEND_INCLUDE_DIRECTORIES}
+                    ${OV_RUNTIME_INCLUDE_DIRECTORIES}
+                    ${OV_RUNTIME_C_INCLUDE_DIRECTORIES}
+                    ${OPENVINO_INSTALL_DIR}/include/)
 
 if(APPLE)
     set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.${OPENVINO_VERSION}.dylib)

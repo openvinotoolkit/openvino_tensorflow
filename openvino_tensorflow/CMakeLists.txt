@@ -228,6 +228,19 @@ if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
   endforeach()
 endif()
 
+if (NOT PY_SCRIPT_BUILD)
+
+  if (NOT USE_OPENVINO_FROM_LOCATION)
+    # Configure OpenVINO as OVTF's dependency
+    add_dependencies(${LIB_NAME}
+                    openvino::runtime
+                    openvino::runtime::c
+                    openvino::frontend::tensorflow)
+  endif()
+
+endif()
+
+
 # Now create the Python pip package. The following variables are passed to the
 # CreatePipWhl.cmake
 # CMake "install" target "CODE" will propagate these variables to the
@@ -240,28 +253,10 @@ install(CODE "set(OVTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
+install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
+install(CODE "set(PY_SCRIPT_BUILD \"${PY_SCRIPT_BUILD}\")")
+
 if(PYTHON_EXECUTABLE)
     install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
 endif()
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")
-
-if (NOT PY_SCRIPT_BUILD)
-
-  # Configure OpenVINO as OVTF's dependency
-  add_dependencies(${LIB_NAME}
-                   openvino::runtime
-                   openvino::runtime::c
-                   openvino::frontend::tensorflow)
-
-  # Finally, install the created wheel
-  file(GLOB OVTF_WHEEL_FILE "${CMAKE_BINARY_DIR}/python/dist/*")
-  install(CODE "execute_process (
-                COMMAND ${Python3_EXECUTABLE} -m 
-                pip install --force-reinstall ${OVTF_WHEEL_FILE}
-                COMMAND_ECHO STDOUT)")
-
-  # Copy the wheel to artifacts
-  install(CODE "execute_process (
-                COMMAND cp -av ${OVTF_WHEEL_FILE} ${OPENVINO_TF_INSTALL_PREFIX}
-                COMMAND_ECHO STDOUT)")
-endif()
