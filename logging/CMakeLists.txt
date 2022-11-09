@@ -16,7 +16,7 @@ set(SRC
    tf_graph_writer.cc
 )
 
-add_library(${LIB_NAME} ${SRC})
+add_library(${LIB_NAME} STATIC ${SRC})
 
 target_include_directories(${LIB_NAME} PRIVATE ${TensorFlow_INCLUDE_DIR}
                            ${TensorFlow_INCLUDE_DIR}/external/nsync/public)

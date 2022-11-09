@@ -207,27 +207,25 @@ set (IE_LIBS
 
 # Install Openvino and TBB libraries
 
-if((NOT DISABLE_PACKAGING_OPENVINO_LIBS) AND (PY_SCRIPT_BUILD))
+if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
   file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
   foreach(LIB_FILE ${OPENVINO_LIB_FILES})
-      file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      if (PY_SCRIPT_BUILD)
+        file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      endif()
       get_filename_component(lib_file_name ${LIB_FILE} NAME)
       set(lib_file_real_path "${OVTF_INSTALL_LIB_DIR}/${lib_file_name}")
       if(${lib_file_name} MATCHES ".so*")
+          if (NOT PY_SCRIPT_BUILD)
+            install(CODE "execute_process(COMMAND cp -av ${LIB_FILE} ${OVTF_INSTALL_LIB_DIR} COMMAND_ECHO STDOUT)")
+          endif()
           install(CODE "
           execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
           ")
       endif()
   endforeach()
-endif()
-
-if (NOT PY_SCRIPT_BUILD)
-  add_dependencies(${LIB_NAME}
-                   openvino::runtime
-                   openvino::runtime::c
-                   openvino::frontend::tensorflow)
 endif()
 
 # Now create the Python pip package. The following variables are passed to the
@@ -246,3 +244,24 @@ if(PYTHON_EXECUTABLE)
     install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
 endif()
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")
+
+if (NOT PY_SCRIPT_BUILD)
+
+  # Configure OpenVINO as OVTF's dependency
+  add_dependencies(${LIB_NAME}
+                   openvino::runtime
+                   openvino::runtime::c
+                   openvino::frontend::tensorflow)
+
+  # Finally, install the created wheel
+  file(GLOB OVTF_WHEEL_FILE "${CMAKE_BINARY_DIR}/python/dist/*")
+  install(CODE "execute_process (
+                COMMAND ${Python3_EXECUTABLE} -m 
+                pip install --force-reinstall ${OVTF_WHEEL_FILE}
+                COMMAND_ECHO STDOUT)")
+
+  # Copy the wheel to artifacts
+  install(CODE "execute_process (
+                COMMAND cp -av ${OVTF_WHEEL_FILE} ${OPENVINO_TF_INSTALL_PREFIX}
+                COMMAND_ECHO STDOUT)")
+endif()
