@@ -521,7 +521,7 @@ def main():
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
     if arguments.python_executable != '':
         openvino_tf_cmake_flags.extend(
-            ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
+            ["-DPYTHON3X_EXECUTABLE=%s" % arguments.python_executable])
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags.extend(
             ["-DTensorFlow_CXX_ABI=" + arguments.cxx11_abi_version])
