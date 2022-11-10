@@ -124,6 +124,20 @@ if (PYTHON)
         endif()
      endif()
 
+    # Glob and install TBB libs during install time
+    if (NOT PY_SCRIPT_BUILD)
+        file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
+        foreach(LIB_FILE ${TBB_LIB_FILES})
+            get_filename_component(lib_file_name ${LIB_FILE} NAME)
+            set(lib_file_real_path "${OPENVINO_TF_INSTALL_PREFIX}/lib/${lib_file_name}")
+            if(${lib_file_name} MATCHES ".so*")
+                execute_process(COMMAND cp -av ${LIB_FILE} ${OPENVINO_TF_INSTALL_PREFIX}/lib/ COMMAND_ECHO STDOUT)
+                execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
+                set(ovtf_libraries "${ovtf_libraries}\"${lib_file_name}\",\n\t")
+            endif()
+        endforeach()
+    endif()
+
     execute_process(
         COMMAND ${PYTHON} "setup.py" "bdist_wheel"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/

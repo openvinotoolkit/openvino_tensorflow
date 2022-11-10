@@ -208,6 +208,8 @@ set (IE_LIBS
 # Install Openvino and TBB libraries
 
 if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
+  # TBB Libs are not glob-able here for standalone CMake but will be installed
+  # when CreatePipWhl.cmake is run
   file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
@@ -255,6 +257,7 @@ install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
 install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
 install(CODE "set(PY_SCRIPT_BUILD \"${PY_SCRIPT_BUILD}\")")
+install(CODE "set(TBB_LIBS \"${TBB_LIBS}\")")
 
 if(PYTHON3X_EXECUTABLE)
     install(CODE "set(Python3_EXECUTABLE \"${PYTHON3X_EXECUTABLE}\")")
