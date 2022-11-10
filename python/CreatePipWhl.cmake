@@ -5,9 +5,9 @@
 # ******************************************************************************
 
 # Create the pip package
-if(PYTHON_EXECUTABLE)
-    set(PYTHON ${PYTHON_EXECUTABLE})
-else(PYTHON_EXECUTABLE)
+if(Python3_EXECUTABLE)
+    set(PYTHON ${Python3_EXECUTABLE})
+else(Python3_EXECUTABLE)
     find_program(PYTHON "python")
 endif()
 

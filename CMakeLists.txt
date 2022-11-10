@@ -89,8 +89,9 @@ if(NOT PY_SCRIPT_BUILD)
     find_package (Python3 COMPONENTS Interpreter Development)
     
     # Upgrade pip in the virtual environment
+    message(STATUS "Upgrading pip")
     execute_process (
-        COMMAND "${Python3_EXECUTABLE}" -m pip install -U pip
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -q -U pip
     )
     
     if(NOT USE_OPENVINO_FROM_LOCATION)
@@ -114,8 +115,9 @@ if(NOT PY_SCRIPT_BUILD)
     endif()
 
     # Install the desired TensorFlow version from PyPi
+    message(STATUS "Installing TensorFlow ${TF_PIP_VERSION}")
     execute_process (
-        COMMAND "${Python3_EXECUTABLE}" -m pip install -U tensorflow==${TF_PIP_VERSION}
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -q -U tensorflow==${TF_PIP_VERSION}
     )
 endif()
 

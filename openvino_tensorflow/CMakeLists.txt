@@ -256,7 +256,10 @@ install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
 install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
 install(CODE "set(PY_SCRIPT_BUILD \"${PY_SCRIPT_BUILD}\")")
 
-if(PYTHON_EXECUTABLE)
-    install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
+if(PYTHON3X_EXECUTABLE)
+    install(CODE "set(Python3_EXECUTABLE \"${PYTHON3X_EXECUTABLE}\")")
+else()
+    install(CODE "set(Python3_EXECUTABLE \"${Python3_EXECUTABLE}\")")
 endif()
+
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")
