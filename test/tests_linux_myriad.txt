@@ -36,11 +36,11 @@ NGraphExecTest.MixedTensors
 
 # mismatch between TF and NG outputs
 MathOps.Mean 
-MathOps.IsFinite
-MathOps.LogicalOr
-MathOps.LogicalNot
-MathOps.NotEqual
-MathOps.FloorModNegInt
+#MathOps.IsFinite
+#MathOps.LogicalOr
+#MathOps.LogicalNot
+#MathOps.NotEqual
+#MathOps.FloorModNegInt
 MathOps.FloorDivNegInt
 
 #MathOps.Ceil # Unsupported primitive of type: Ceiling
