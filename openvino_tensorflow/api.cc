@@ -69,7 +69,7 @@ void EXPORT_SYMBOL freeBackendsList() {
 
 bool set_backend(const char* backend) {
   auto status = BackendManager::SetBackend(string(backend));
-  if (status != Status::OK()) {
+  if (status != OkStatus()) {
     std::cerr << status.error_message() << std::endl;
     return false;
   }
@@ -134,14 +134,14 @@ vector<string> ListBackends() { return BackendManager::GetSupportedBackends(); }
 
 void SetBackend(const string& type) {
   Status exec_status = BackendManager::SetBackend(type);
-  if (exec_status != Status::OK()) {
+  if (exec_status != OkStatus()) {
     throw runtime_error(exec_status.error_message());
   }
 }
 
 string GetBackend() {
   string backend;
-  if (BackendManager::GetBackendName(backend) != Status::OK()) {
+  if (BackendManager::GetBackendName(backend) != OkStatus()) {
     return "";
   }
   return backend;

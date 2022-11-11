@@ -82,7 +82,7 @@ Status BackendManager::SetBackend(const string& backend_name) {
   //  read value of OPENVINO_TF_MODEL_CACHE_DIR
   m_model_cache_dir = std::getenv("OPENVINO_TF_MODEL_CACHE_DIR");
 
-  return Status::OK();
+  return OkStatus();
 }
 
 shared_ptr<Backend> BackendManager::GetBackend() {
@@ -110,7 +110,7 @@ Status BackendManager::GetBackendName(string& backend_name) {
   }
   lock_guard<mutex> lock(m_backend_mutex);
   backend_name = m_backend_name;
-  return Status::OK();
+  return OkStatus();
 }
 
 Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
@@ -143,7 +143,7 @@ Status BackendManager::CreateBackend(shared_ptr<Backend>& backend,
   }
 
   OVTF_VLOG(2) << "BackendManager::CreateBackend(): " << backend_name;
-  return Status::OK();
+  return OkStatus();
 }
 
 // Returns the supported backend names

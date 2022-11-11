@@ -103,7 +103,7 @@ Status EncapsulateClusters(
     }
   }
 
-  return Status::OK();
+  return OkStatus();
 }
 
 Encapsulator::Encapsulator(Graph* g)
@@ -125,7 +125,7 @@ Status Encapsulator::AnalysisPass() {
   for (auto node : graph->op_nodes()) {
     int cluster_idx;
 
-    if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
+    if (GetNodeCluster(node, &cluster_idx) != OkStatus()) {
       continue;
     }
     CHECK(cluster_idx >= 0);
@@ -179,11 +179,11 @@ Status Encapsulator::AnalysisPass() {
 
     int dst_cluster_idx;
     bool dst_clustered =
-        (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
+        (GetNodeCluster(dst, &dst_cluster_idx) == OkStatus());
 
     int src_cluster_idx;
     bool src_clustered =
-        (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
+        (GetNodeCluster(src, &src_cluster_idx) == OkStatus());
 
     // Ignore edges within a cluster. (Note that this test also works when
     // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
@@ -365,7 +365,7 @@ Status Encapsulator::AnalysisPass() {
     int cluster_idx;
 
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
-        Status::OK()) {
+        OkStatus()) {
       node->ClearAttr("cost");
       continue;
     }
@@ -373,7 +373,7 @@ Status Encapsulator::AnalysisPass() {
     // This snippet is required only for Grappler pass
     if (!api::IsRewritePassEnabled()) {
       tensorflow::int64 node_cost = 0;
-      if (GetNodeAttr(node->attrs(), "cost", &node_cost) != Status::OK())
+      if (GetNodeAttr(node->attrs(), "cost", &node_cost) != OkStatus())
         continue;
       cluster_cost_map_in_ms[cluster_idx] += node_cost;
       node->ClearAttr("cost");
@@ -449,7 +449,7 @@ Status Encapsulator::AnalysisPass() {
 
   analysis_done = true;
 
-  return Status::OK();
+  return OkStatus();
 }
 
 Status Encapsulator::RewritePass(
@@ -553,10 +553,10 @@ Status Encapsulator::RewritePass(
   for (auto edge : edges) {
     int src_cluster_idx;
     bool src_clustered =
-        (GetNodeCluster(edge->src(), &src_cluster_idx) == Status::OK());
+        (GetNodeCluster(edge->src(), &src_cluster_idx) == OkStatus());
     int dst_cluster_idx;
     bool dst_clustered =
-        (GetNodeCluster(edge->dst(), &dst_cluster_idx) == Status::OK());
+        (GetNodeCluster(edge->dst(), &dst_cluster_idx) == OkStatus());
 
     if (src_cluster_idx == dst_cluster_idx) {
       continue;
@@ -606,7 +606,7 @@ Status Encapsulator::RewritePass(
     int cluster_idx;
 
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
-        Status::OK()) {
+        OkStatus()) {
       continue;
     }
     nodes_to_remove.push_back(node);
@@ -618,7 +618,7 @@ Status Encapsulator::RewritePass(
   }
 
   rewrite_done = true;
-  return Status::OK();
+  return OkStatus();
 }
 
 Status Encapsulator::GetNewClusterIDs(set<int>& result) {
@@ -631,7 +631,7 @@ Status Encapsulator::GetNewClusterIDs(set<int>& result) {
   for (auto it = device_name_map.begin(); it != device_name_map.end(); ++it) {
     result.insert(it->first);
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 }  // namespace openvino_tensorflow

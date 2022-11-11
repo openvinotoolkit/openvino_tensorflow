@@ -105,7 +105,7 @@ Status ReadLabelsFile(const string& file_name, std::vector<string>* result,
   while (result->size() % padding) {
     result->emplace_back();
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ static Status ReadEntireFile(tensorflow::Env* env, const string& filename,
                                         data.size());
   }
   output->scalar<tensorflow::tstring>()() = tensorflow::tstring(data);
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -203,7 +203,7 @@ Status ReadTensorFromImageFile(const string& file_name, const int input_height,
   std::unique_ptr<tensorflow::Session> session(tensorflow::NewSession(options));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(session->Run({inputs}, {output_name}, {}, out_tensors));
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -224,7 +224,7 @@ Status LoadGraph(const string& graph_file_name,
   if (!session_create_status.ok()) {
     return session_create_status;
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -251,7 +251,7 @@ Status GetTopLabels(const std::vector<Tensor>& outputs, int how_many_labels,
                                   {}, &out_tensors));
   *scores = out_tensors[0];
   *indices = out_tensors[1];
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -280,7 +280,7 @@ Status PrintTopLabels(const std::vector<Tensor>& outputs,
     std::cout << labels[label_index] << " (" << label_index << "): " << score
               << "\n";
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -302,5 +302,5 @@ Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,
   } else {
     *is_expected = true;
   }
-  return Status::OK();
+  return OkStatus();
 }

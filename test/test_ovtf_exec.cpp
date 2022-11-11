@@ -60,7 +60,7 @@ class NGraphExecTest : public ::testing::Test {
     // during the graph rewrite passes and considered internal
     opts.allow_internal_ops = true;
     TF_RETURN_IF_ERROR(ConvertGraphDefToGraph(opts, gdef, graph));
-    return Status::OK();
+    return OkStatus();
   }
 
   // Translates the TFGraph into NGFunction assumes no static inputs
@@ -73,7 +73,7 @@ class NGraphExecTest : public ::testing::Test {
     TF_RETURN_IF_ERROR(openvino_tensorflow::Builder::TranslateGraph(
         tf_input_shapes, static_input_map, &input_graph, "test_ovtf_exec",
         ng_function));
-    return Status::OK();
+    return OkStatus();
   }
 
   // Executes the graph on TF

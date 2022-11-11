@@ -20,11 +20,11 @@
 
 // Define useful macros used by others
 #if !defined(ASSERT_OK)
-#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::Status::OK())
+#define ASSERT_OK(x) ASSERT_EQ((x), ::tensorflow::OkStatus())
 #endif
 
 #if !defined(ASSERT_NOT_OK)
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
+#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::OkStatus());
 #endif
 
 using namespace std;

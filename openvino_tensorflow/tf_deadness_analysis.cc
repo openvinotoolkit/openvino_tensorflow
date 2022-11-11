@@ -363,7 +363,7 @@ Status DeadnessAnalysisImpl::HandleSwitch(Node* n) {
   // Control is alive iff any inputs are alive.
   SetPred(n, Graph::kControlSlot,
           predicate_factory_.MakeAndPredicate(input_preds));
-  return Status::OK();
+  return OkStatus();
 }
 Status DeadnessAnalysisImpl::HandleMerge(Node* n) {
   // Merge ignores deadness of its control inputs.  A merge that isn't the
@@ -380,7 +380,7 @@ Status DeadnessAnalysisImpl::HandleMerge(Node* n) {
           : predicate_factory_.MakeOrPredicate(
                 GetIncomingPreds(n, EdgeKind::kDataOnly));
   SetPred(n, {0, 1, Graph::kControlSlot}, input_data_pred);
-  return Status::OK();
+  return OkStatus();
 }
 Status DeadnessAnalysisImpl::HandleRecv(Node* n) {
   // In addition to being alive or dead based on the inputs, a _Recv can also
@@ -391,7 +391,7 @@ Status DeadnessAnalysisImpl::HandleRecv(Node* n) {
       TensorId(n->name(), 0), /*must_be_true=*/false));
   SetPred(n, {0, Graph::kControlSlot},
           predicate_factory_.MakeAndPredicate(input_preds));
-  return Status::OK();
+  return OkStatus();
 }
 Status DeadnessAnalysisImpl::HandleGeneric(Node* n) {
   // Generally nodes are alive iff all their inputs are alive.
@@ -401,7 +401,7 @@ Status DeadnessAnalysisImpl::HandleGeneric(Node* n) {
     SetPred(n, output_idx, pred);
   }
   SetPred(n, Graph::kControlSlot, pred);
-  return Status::OK();
+  return OkStatus();
 }
 Status DeadnessAnalysisImpl::Populate() {
   std::vector<Node*> rpo;
@@ -424,7 +424,7 @@ Status DeadnessAnalysisImpl::Populate() {
       TF_RETURN_IF_ERROR(HandleGeneric(n));
     }
   }
-  return Status::OK();
+  return OkStatus();
 }
 bool DeadnessAnalysisImpl::HasInputsWithMismatchingDeadness(const Node& node) {
   CHECK(!node.IsMerge());
@@ -462,7 +462,7 @@ Status DeadnessAnalysisImpl::GetNodePredicate(const Node& node,
                                               string& pred_string) {
   if (node.IsSource() || node.IsSink() || node.IsControlFlow()) {
     DeadnessAnalysis::GetControlFlowPredString(pred_string);
-    return Status::OK();
+    return OkStatus();
   }
 
   Predicate* pred = nullptr;
@@ -483,7 +483,7 @@ Status DeadnessAnalysisImpl::GetNodePredicate(const Node& node,
   if (pred != nullptr) {
     pred_string = pred->ToString();
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 void DeadnessAnalysisImpl::Print() const {
@@ -511,7 +511,7 @@ DeadnessAnalysis::~DeadnessAnalysis() {}
     analysis->Print();
   }
   *result = std::move(analysis);
-  return Status::OK();
+  return OkStatus();
 }
 
 /*static*/ const std::string DeadnessAnalysis::CONTROL_FLOW_PRED_STRING =

@@ -65,13 +65,13 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
 
     if (!rewrite_pass_enabled) {
       OVTF_VLOG(1) << std::string("Rewrite pass is disabled.");
-      return Status::OK();
+      return OkStatus();
     }
 
     // If we don't get a main graph, log that fact and bail.
     if (options.graph == nullptr) {
       OVTF_VLOG(0) << "NGraphEncapsulationPass: options.graph == nullptr";
-      return Status::OK();
+      return OkStatus();
     }
 
     const char* openvino_tf_dynamic_fallback_env =
@@ -92,9 +92,9 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
       for (Node* node : graph->nodes()) {
         int cluster;
         Status s = GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster);
-        if (s == Status::OK()) {
+        if (s == OkStatus()) {
           if (NGraphClusterManager::CheckClusterFallback(cluster))
-            return Status::OK();
+            return OkStatus();
           else
             break;
         } else if (!node->IsSink() && !node->IsSource() &&
@@ -139,7 +139,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
                                : "openvino-tensorflow is disabled");
       NGraphClusterManager::EvictAllClusters();
       NGraphClusterManager::EvictMRUClusters();
-      return Status::OK();
+      return OkStatus();
     }
 
     NGraphClusterManager::ClearMRUClusters();
@@ -152,7 +152,7 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // OCM call for marking supported nodes
     std::string device;
     Status exec_status = BackendManager::GetBackendName(device);
-    if (exec_status != Status::OK()) {
+    if (exec_status != OkStatus()) {
       throw runtime_error(exec_status.error_message());
     }
     const char* device_id(device.c_str());
@@ -214,12 +214,12 @@ class NGraphEncapsulationPass : public NGraphRewritePass {
     // 4. Encapsulate clusters then, if requested, dump the graphs.
     std::unordered_map<std::string, std::string> config_map;
     auto status = EncapsulateClusters(graph, idx, config_map);
-    if (status != Status::OK()) {
+    if (status != OkStatus()) {
       return status;
     }
 
     util::DumpTFGraph(graph, idx, "encapsulated");
-    return Status::OK();
+    return OkStatus();
   }
 };
 

@@ -69,7 +69,7 @@ static SetAttributesFunction SetStaticInputs(
     std::transform(indices.begin(), indices.end(), indices.begin(),
                    [n](int x) { return x >= 0 ? x : n->num_inputs() + x; });
     SetStaticInputs(n, indices);
-    return Status::OK();
+    return OkStatus();
   };
   return cf;
 };
@@ -87,7 +87,7 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
   //
   //      vector<int32> static_input_index =5;
   //      n->AddAttr("_ovtf_static_inputs", static_input_index);
-  //      return Status::OK();
+  //      return OkStatus();
   //    };
   //
 
@@ -316,13 +316,13 @@ bool NodeIsMarkedForClustering(const Node* node) {
   bool is_marked;
   // TODO(amprocte): move attr name to a constant
   return (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering",
-                      &is_marked) == Status::OK() &&
+                      &is_marked) == OkStatus() &&
           is_marked);
 }
 
 void GetStaticInputs(const Node* node, std::vector<int32>* inputs) {
   if (GetNodeAttr(node->attrs(), "_ovtf_static_inputs", inputs) !=
-      Status::OK()) {
+      OkStatus()) {
     *inputs = std::vector<int32>{};
   }
 }
@@ -339,7 +339,7 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
     if (node->type_string() == "_Arg") {
       int32 index;
       auto status = GetNodeAttr(node->attrs(), "index", &index);
-      if (status != Status::OK()) {
+      if (status != OkStatus()) {
         return errors::Internal("error getting node attribute index");
       }
 
@@ -359,7 +359,7 @@ Status GetStaticInputs(Graph* graph, std::vector<int32>* static_input_indexes) {
       }
     }
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 }  // namespace openvino_tensorflow
