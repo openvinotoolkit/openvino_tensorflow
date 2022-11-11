@@ -15,7 +15,7 @@
 // http://semver.org/
 
 #define OV_TF_MAJOR_VERSION 2
-#define OV_TF_MINOR_VERSION 2
+#define OV_TF_MINOR_VERSION 3
 #define OV_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers

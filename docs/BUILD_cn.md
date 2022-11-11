@@ -145,7 +145,7 @@
 
 1. 从 PyPi 中获取兼容的TensorFlow 包，使用指定位置的OpenVINO™库。这是针对大多数使用案例推荐的构建选项。
 
-       python3 build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location=/opt/intel/openvino_2022.1.0/
+       python3 build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location=/opt/intel/openvino_2022.3.0/
 
 2. 从 PyPi 中获取兼容的TensorFlow 包，从源代码克隆和构建 OpenVINO™。确保构建选项与CXX11_ABI兼容。早于2.9.0版本的TensorFlow使用CXX11_ABI=0编译，这与OpenVINO™发行包不兼容。选择该选项主要为了在早于2.9.0版本的TensorFlow上构建**OpenVINO™ integration with TensorFlow**或在没有安装OpenVINO™发行包时。如果不设置"--cxx11_abi_version"的默认值，默认值为1.
 
@@ -172,13 +172,13 @@
 
 从PyPi中获取兼容的TensorFlow 版本，克隆并编译OpenVINO™ 源码。当前在macOS上仅支持ABI0。
 
-        python3 build_ovtf.py --tf_version=v2.10.0 --openvino_version=2022.1.0 --cxx11_abi_version=0
+        python3 build_ovtf.py --tf_version=v2.10.0 --openvino_version=2022.3.0 --cxx11_abi_version=0
 
 ###  2.3. <a name='BuildInstructionsWindows'></a>针对 **Windows**的构建指令
 使用管理员权限打开 "Command Prompt"或"x64 Native Tools Command Prompt for VS 2019"，并从源代码采用以下构建选项：
 1. 从 Github 发布版本中获取预构建 TensorFlow 2.10.0 python包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.1.0" 
+        python build_ovtf.py --tf_version=v2.10.0 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.3.0" 
 
 2.  使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#TFWindows)）。使用指定位置的OpenVINO™ 二进制文件。使用此构建选项运行C++示例，并将openvino-tensorflow集成至TensorFlow C++推理应用中。
 
@@ -188,7 +188,7 @@
 为了构建 **OpenVINO™ integration with TensorFlow** 与英特尔凌动® 处理器一起使用，我们建议使用以下命令从源代码构建 TensorFlow：
 
         python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.10.0 --target_arch silvermont
-        python3 build_ovtf.py --use_tensorflow_from_location=${PATH_TO_TF_BUILD} --openvino_version=2022.1.0 --target_arch silvermont
+        python3 build_ovtf.py --use_tensorflow_from_location=${PATH_TO_TF_BUILD} --openvino_version=2022.3.0 --target_arch silvermont
 
 ###  2.5. <a name='BuildVerification'></a> 编译校验
 构建完成后，会在 `build_cmake`内创建一个新的名为 `venv-tf-py3` 的`virtualenv` 目录。`build_cmake/artifacts/` 目录中创建了一些构建包（如 `openvino_tensorflow-<VERSION>-cp38-cp38-manylinux2014_x86_64.whl`）
@@ -207,8 +207,8 @@
 它会生成以下输出：
 
         TensorFlow version:  2.10.0
-        OpenVINO integration with TensorFlow version: b'2.1.0'
-        OpenVINO version used for this build: b'2022.1.0'
+        OpenVINO integration with TensorFlow version: b'2.3.0'
+        OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.10.0
         CXX11_ABI flag used for this build: 1
 

@@ -26,7 +26,7 @@ This package supports:
 
         pip3 install -U pip
         pip3 install tensorflow==2.10.0
-        pip3 install openvino-tensorflow==2.1.0
+        pip3 install openvino-tensorflow==2.3.0
 
 To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#install-openvino™-integration-with-tensorflow-pypi-release-alongside-the-intel®-distribution-of-openvino™-toolkit-for-vad-m-support).
 
@@ -46,8 +46,8 @@ To check if **OpenVINO™ integration with TensorFlow** is properly installed, r
 This should produce an output like:
 
         TensorFlow version:  2.10.0
-        OpenVINO integration with TensorFlow version: b'2.1.0'
-        OpenVINO version used for this build: b'2022.1.0'
+        OpenVINO integration with TensorFlow version: b'2.3.0'
+        OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.10.0
         CXX11_ABI flag used for this build: 1
 

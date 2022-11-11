@@ -39,7 +39,7 @@ The **OpenVINO™ integration with TensorFlow** package comes with pre-built lib
 
         pip3 install -U pip
         pip3 install tensorflow==2.10.0
-        pip3 install openvino-tensorflow==2.1.0
+        pip3 install openvino-tensorflow==2.3.0
 
 For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL.md#windows)
 
@@ -61,8 +61,8 @@ To see if **OpenVINO™ integration with TensorFlow** is properly installed, run
 This should produce an output like:
 
         TensorFlow version:  2.10.0
-        OpenVINO integration with TensorFlow version: b'2.1.0'
-        OpenVINO version used for this build: b'2022.1.0'
+        OpenVINO integration with TensorFlow version: b'2.3.0'
+        OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.10.0
         CXX11_ABI flag used for this build: 1
 

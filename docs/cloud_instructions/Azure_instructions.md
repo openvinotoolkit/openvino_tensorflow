@@ -47,8 +47,8 @@ $ sudo pip3 install openvino-tensorflow==2.2.0
 ```bash
 azureuser@tf-u26:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)" 
 TensorFlow version:  2.10.0
-OpenVINO integration with TensorFlow version: b'2.1.0'
-OpenVINO version used for this build: b'2022.1.0'
+OpenVINO integration with TensorFlow version: b'2.3.0'
+OpenVINO version used for this build: b'2022.3.0'
 TensorFlow version used for this build: v2.10.0
 CXX11_ABI flag used for this build: 1
 ```

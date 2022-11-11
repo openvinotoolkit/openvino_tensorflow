@@ -9,8 +9,8 @@
 以下 ARGS 可用于配置 docker build
 
 TF_VERSION：要使用的 TensorFlow 版本。默认为“v2.10.0”  
-OPENVINO_VERSION：要使用的 OpenVINO 版本。默认为“2022.1.0”  
-OVTF_BRANCH：要使用的 OpenVINO™ integration with TensorFlow 分支。默认为“releases/2.1.0”  
+OPENVINO_VERSION：要使用的 OpenVINO 版本。默认为“2022.3.0”  
+OVTF_BRANCH：要使用的 OpenVINO™ integration with TensorFlow 分支。默认为“releases/2.3.0”  
 
 构建docker镜像
 
