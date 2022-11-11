@@ -47,10 +47,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_10A
 cwise_ops_binary_test.BinaryOpTest.testBCast_10B
 cwise_ops_binary_test.BinaryOpTest.testBCast_10C
 cwise_ops_binary_test.BinaryOpTest.testBCast_10D
-transpose_op_test.TransposeTest.testNullTensor
-topk_op_test.TopKTest.testTop3ZeroRows
-topk_op_test.TopKTest.testTop1AllNan
-topk_op_test.TopKTest.testTop3ZeroRows
 
 #Failed to set Blob with precision not corresponding to user output precision.
 #cast_op_test.CastOpTest.testSmallValues
@@ -115,7 +111,7 @@ array_ops_test.ShapeSizeRankTest.testSparseShape
 #reduction_ops_test.AnyReductionTest.testAxesType
 #reduction_ops_test.MinReductionTest.testAxesType
 #reduction_ops_test.ProdReductionTest.testAxesType
-cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
+#cwise_ops_unary_test.UnaryOpTest.testComplexAbsGradGrad
 
 # data doesn't exist
 #concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
@@ -153,10 +149,10 @@ topk_op_test.TopKTest.testTopKGradients
 #xent_op_test.XentTest.testZeroDimension
 reduction_ops_test.SumReductionTest.testInfinity
 reduction_ops_test.SumReductionTest.testInt32
-reduction_ops_test.MaxReductionTest.testFloatReduce3D
+#reduction_ops_test.MaxReductionTest.testFloatReduce3D
 #reduction_ops_test.MaxReductionTest.testGradient2
 #reduction_ops_test.MaxReductionTest.testInfinity
-reduction_ops_test.MaxReductionTest.testInt64Reduce3D
+#reduction_ops_test.MaxReductionTest.testInt64Reduce3D
 #reduction_ops_test.MinReductionTest.testFloatReduce3D
 #reduction_ops_test.MinReductionTest.testGradient2
 #reduction_ops_test.MinReductionTest.testInfinity
@@ -198,32 +194,23 @@ math_ops_test.DivAndModTest.testConsistent
 
 # OneHot operation has a form that is not supported. should be converted to OneHotIE operation.
 #one_hot_op_test.OneHotTest.testFloatBasic
-one_hot_op_test.OneHotTest.testIndicesTypes
+#one_hot_op_test.OneHotTest.testIndicesTypes
 #one_hot_op_test.OneHotTest.testInt32Basic
 #one_hot_op_test.OneHotTest.testInt64Basic
-one_hot_op_test.OneHotTest.testPrefixDimOverflow
+#one_hot_op_test.OneHotTest.testPrefixDimOverflow
 #one_hot_op_test.OneHotTest.testSimpleCases
 #one_hot_op_test.OneHotTest.testSingleValueGiven
 
 # AssertionError: Arrays are not equal
 #reduction_ops_test.ReducedShapeTest.testSimple
-cast_op_test.CastOpTest.testIntToFloatBoundary
-cwise_ops_binary_test.BinaryOpTest.testInt64Basic
-cwise_ops_binary_test.BinaryOpTest.testUint16Basic
-cwise_ops_binary_test.BinaryOpTest.testUint8Basic
-cwise_ops_unary_test.UnaryOpTest.testInt64Basic
-cwise_ops_unary_test.UnaryOpTest.testInt64Square
-topk_op_test.TopKTest.testStableSort
 
 # Dim size cannot be less than -1
 slice_op_test.SliceTest.testGradientsAll 
 conv_ops_test.Conv2DTest.testConv2DEmptyBackpropInput
 
 # Input rank plus number of new axis has to be at least the size of Lower and Upper bounds vector.
-slice_op_test.SliceTest.testInvalidIndex
-slice_op_test.SliceTest.testScalarInput
-shape_ops_test.TileTest.testTypes
-shape_ops_test.TileTest.testScalar
+#slice_op_test.SliceTest.testInvalidIndex
+#slice_op_test.SliceTest.testScalarInput
 
 # CumSum layer with name 'Cumsum/CumSum_140' doesn't support 'data' input tensor with rank: 6
 scan_ops_test.CumsumTest.test6D
@@ -231,9 +218,6 @@ scan_ops_test.CumsumTest.test6D
 # The length of size_splits must sum to the value of the dimension along split_dim
 split_op_test.SplitOpTest.testDegenerateVariable
 split_op_test.SplitOpTest.testSpecialCasesVariable
-split_op_test.SplitOpTest.testNonexistentDimTensor
-split_op_test.SplitOpTest.testShapeInference
-split_op_test.SplitOpTest.testExplicitNum
 
 # Invalid reduction dimension 
 #reduction_ops_test.MaxReductionTest.testGradient
@@ -282,10 +266,7 @@ reduction_ops_test.MeanReductionTest.testComplex128
 # Tests randomly failing with error:
 # Caught exception while executing cluster: wstring_convert::to_bytes
 # TBD
-softmax_op_test.SoftmaxTest.testEmptyInput
-slice_op_test.SliceTest.testSingleElementAll
-reshape_op_test.ReshapeTest.testZeroDimWithUnspecifiedDim
-reshape_op_test.ReshapeTest.testInt64Shape
+#softmax_op_test.SoftmaxTest.testEmptyInput
 
 #const has zero dimension which is not allowed
 spacetobatch_op_test.SpaceToBatchNDTest.testDirect
@@ -293,7 +274,7 @@ spacetobatch_op_test.SpaceToBatchNDTest.testDirect
 #disabled due to empty tensor in test case
 #array_ops_test.ReverseV2Test.testReverse2DimAuto
 #defect in OpenVINO 2021.4; appears to be a memory leak
-array_ops_test.StridedSliceTest.testEllipsis
+#array_ops_test.StridedSliceTest.testEllipsis
 
 #runtime errors; TBD
 #conv_ops_test.Conv2DTest.testConv2D1x1Filter
@@ -320,16 +301,12 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_5B
 cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
 #math_ops_test.AddNTest.testIndexedSlices
 reduction_ops_test.MeanReductionTest.testGradient
-array_ops_test.StridedSliceTest.test_basic_slice
+#array_ops_test.StridedSliceTest.test_basic_slice
 #array_ops_test.StridedSliceTest.testExpandVariable
 #conv_ops_test.Conv2DTest.testConv2D1x2Filter
 
 # AssertionError: False is not true
 lrn_op_test.LRNOpTest.testCompute  
-
-#zero dimension error
-argmax_op_test.ArgMaxTest.testEmpty
-conv_ops_test.Conv2DTest.testConv2DEmptyDilation
 
 # Unhandled exception in op handler
 #pooling_ops_test.PoolingTest.testAvgPooling
@@ -359,17 +336,9 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_1B
 cwise_ops_binary_test.BinaryOpTest.testBCast_2B
 cwise_ops_binary_test.BinaryOpTest.testBCast_7B
 cwise_ops_binary_test.BinaryOpTest.testFloatBasic
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape1
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape2
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape3
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape4
-nn_fused_batchnorm_test.BatchNormalizationTest.testInferenceShape5
-
 
 # bad_alloc from OV-2021.4
 #array_ops_test.StridedSliceTest.testTensorIndexing
-conv_ops_test.Conv2DTest.testConv2D1x2FilterDilation
-pool_test.PoolingTest.testPool1D
 
 # what(): Check 'batch_size.is_dynamic() || batch_size.get_length() > 0' failed at core/src/validation_util.cpp:531:
 # While validating node 'v1::MaxPool MaxPool_45068 (max_pool_3d/Transpose_45067[0]:f32{0,64,112,112,112}) -> (dynamic?)' with friendly_name 'MaxPool_45068':
@@ -378,19 +347,4 @@ pool_test.PoolingTest.testPool1D
 
 # Failing after TF-2.7 upgrade
 gather_op_test.GatherTest.testBadAxis
-gather_op_test.GatherTest.testBadIndicesCPU
 
-#No OpKernel was registered to support Op 'DepthToSpace'
-depthtospace_op_test.DepthToSpaceTest.*
-
-#TBD
-pad_op_test.PadOpTest.testInputDims
-pad_op_test.PadOpTest.testIntTypes
-pad_op_test.PadOpTest.testPadTypes
-pad_op_test.PadOpTest.testPaddingsDim
-pad_op_test.PadOpTest.testPaddingsDim2
-pad_op_test.PadOpTest.testPaddingsDim3
-pad_op_test.PadOpTest.testPaddingsDim4
-pad_op_test.PadOpTest.testPaddingsNonNegative
-pad_op_test.PadOpTest.testPaddingsNonNegative2
-pad_op_test.PadOpTest.testScalars
