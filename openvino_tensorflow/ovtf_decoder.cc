@@ -22,6 +22,7 @@ const std::map<::tensorflow::DataType, ov::element::Type>& TYPE_MAP() {
       {::tensorflow::DataType::DT_FLOAT, ov::element::f32},
       {::tensorflow::DataType::DT_DOUBLE, ov::element::f64},
       {::tensorflow::DataType::DT_UINT8, ov::element::u8},
+      {::tensorflow::DataType::DT_UINT16, ov::element::u16},
       {::tensorflow::DataType::DT_INT8, ov::element::i8},
       {::tensorflow::DataType::DT_BFLOAT16, ov::element::bf16}};
   return type_map;
@@ -183,6 +184,9 @@ ov::Any OVTFDecoder::get_attribute(const std::string& name) const {
         switch (ov_type) {
           case ov::element::u8:
             extract_tensor_content<uint8_t>(tensor_content, &res);
+            break;
+          case ov::element::u16:
+            extract_tensor_content<uint16_t>(tensor_content, &res);
             break;
           case ov::element::i8:
             extract_tensor_content<int8_t>(tensor_content, &res);
