@@ -453,7 +453,9 @@ def main():
         # Download OpenVINO
         download_repo(
             "openvino",
-            "https://github.com/openvinotoolkit/openvino.git",
+            #TODO: Switch back to the main OV repo before merging
+            #"https://github.com/openvinotoolkit/openvino.git",
+            "https://github.com/rkazants/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
