@@ -178,12 +178,10 @@ Status Encapsulator::AnalysisPass() {
     }
 
     int dst_cluster_idx;
-    bool dst_clustered =
-        (GetNodeCluster(dst, &dst_cluster_idx) == OkStatus());
+    bool dst_clustered = (GetNodeCluster(dst, &dst_cluster_idx) == OkStatus());
 
     int src_cluster_idx;
-    bool src_clustered =
-        (GetNodeCluster(src, &src_cluster_idx) == OkStatus());
+    bool src_clustered = (GetNodeCluster(src, &src_cluster_idx) == OkStatus());
 
     // Ignore edges within a cluster. (Note that this test also works when
     // both nodes are unclustered; GetNodeCluster gives us -1 in that case.

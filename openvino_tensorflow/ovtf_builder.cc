@@ -915,8 +915,7 @@ static Status TranslateBiasAddOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_bias));
 
   std::string tf_data_format;
-  if (GetNodeAttr(op->attrs(), "data_format", &tf_data_format) !=
-      OkStatus()) {
+  if (GetNodeAttr(op->attrs(), "data_format", &tf_data_format) != OkStatus()) {
     tf_data_format = "NHWC";
   }
 
