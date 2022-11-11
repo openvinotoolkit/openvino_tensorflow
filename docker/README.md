@@ -9,9 +9,9 @@ They contain all required runtime python packages, and shared libraries to suppo
 
 The following ARGS are available to configure the docker build
 
-TF_VERSION: TensorFlow version to be used. Defaults to "v2.9.2"
-OPENVINO_VERSION: OpenVINO version to be used. Defaults to "2022.2.0"
-OVTF_BRANCH: OpenVINO™ integration with TensorFlow branch to be used. Defaults to "releases/2.2.0"
+TF_VERSION: TensorFlow version to be used. Defaults to "v2.10.0"
+OPENVINO_VERSION: OpenVINO version to be used. Defaults to "2022.1.0"
+OVTF_BRANCH: OpenVINO™ integration with TensorFlow branch to be used. Defaults to "releases/2.1.0"
 
 Build the docker image
 
