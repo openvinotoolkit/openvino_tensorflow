@@ -443,12 +443,8 @@ def main():
         )
         if arguments.openvino_branch:
             openvino_release_tag = arguments.openvino_branch
-        elif (arguments.openvino_version == "2022.1.0"):
-            openvino_release_tag = "2022.1.0"
-        elif (arguments.openvino_version == "2022.2.0"):
-            openvino_release_tag = "2022.2.0"
-        elif (arguments.openvino_version == "2022.3.0"):
-            openvino_release_tag = "2022.3.0"
+        else:
+            openvino_release_tag = arguments.openvino_version
 
         # Download OpenVINO
         download_repo(
@@ -502,6 +498,9 @@ def main():
     if arguments.openvino_branch:
         openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_BRANCH=" + arguments.openvino_branch])
+    else:
+        openvino_tf_cmake_flags.extend(
+        ["-DOPENVINO_BRANCH=" + arguments.openvino_version])
 
     if arguments.use_tensorflow_from_location:
         if (platform.system() == 'Windows'):
@@ -522,7 +521,7 @@ def main():
         openvino_tf_cmake_flags.extend(["-DDISABLE_PACKAGING_OPENVINO_LIBS=1"])
     if arguments.python_executable != '':
         openvino_tf_cmake_flags.extend(
-            ["-DPYTHON_EXECUTABLE=%s" % arguments.python_executable])
+            ["-DPYTHON3X_EXECUTABLE=%s" % arguments.python_executable])
     if (platform.system() == 'Windows'):
         openvino_tf_cmake_flags.extend(
             ["-DTensorFlow_CXX_ABI=" + arguments.cxx11_abi_version])
