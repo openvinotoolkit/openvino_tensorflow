@@ -98,7 +98,7 @@ TEST(TFExec, axpy) {
   // auto status = ReadTextProto(Env::Default(), "test_py.pbtxt",
   // &gdef);
   auto status = ReadTextProto(Env::Default(), "test_axpy.pbtxt", &gdef);
-  ASSERT_TRUE(status == OkStatus()) << "Can't read protobuf graph";
+  ASSERT_TRUE(status == Status::OK()) << "Can't read protobuf graph";
 
   // graph::SetDefaultDevice("/device:NGRAPH:0", &gdef);
 

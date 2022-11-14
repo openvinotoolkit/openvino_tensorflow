@@ -40,7 +40,7 @@ Status TensorToStream(std::ostream& ostream, const Tensor& tensor);
 
 // Converts a TensorFlow DataType to an nGraph element::Type. Returns
 // errors::Unimplemented if the element type is not supported by nGraph
-// Core. Otherwise returns OkStatus().
+// Core. Otherwise returns Status::OK().
 Status TFDataTypeToNGraphElementType(DataType tf_dt, ov::element::Type* ng_et);
 
 // Converts a TensorFlow TensorShape to an nGraph Shape. Requires that none of

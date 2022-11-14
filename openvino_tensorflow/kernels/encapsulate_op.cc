@@ -271,7 +271,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
     // Get ngraph executable and inputs information
     Status getex_status = GetExecutable(tf_input_tensors, ng_exec);
     NGraphClusterManager::SetMRUExecutable(m_cluster_id, ng_exec);
-    if (getex_status != OkStatus()) {
+    if (getex_status != Status::OK()) {
       if (NGraphClusterManager::IsClusterFallbackEnabled()) {
         OP_REQUIRES_OK(ctx, Fallback(ctx));
         return;
@@ -337,7 +337,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
   auto results = ng_exec->GetResults();
   std::string device;
   Status exec_status = BackendManager::GetBackendName(device);
-  if (exec_status != OkStatus()) {
+  if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
   auto backend = BackendManager::GetBackend();
@@ -718,7 +718,7 @@ Status NGraphEncapsulateOp::GetExecutable(
     }
     ng_exec = it->second;
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
@@ -763,11 +763,11 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
     m_session_input_names.resize(tf_params.size());
     for (auto parm : tf_params) {
       DataType dtype;
-      if (GetNodeAttr(parm->attrs(), "T", &dtype) != OkStatus()) {
+      if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
         return errors::InvalidArgument("No data type defined for _Arg");
       }
       int index;
-      if (GetNodeAttr(parm->attrs(), "index", &index) != OkStatus()) {
+      if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
         return errors::InvalidArgument("No index defined for _Arg");
       }
       CHECK(index >= 0);
@@ -780,7 +780,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
                                        " inputs, should have 1");
       }
       int index;
-      if (GetNodeAttr(n->attrs(), "index", &index) != OkStatus()) {
+      if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
         return errors::InvalidArgument("No index defined for _Retval");
       }
       std::vector<const Edge*> output_edges;
@@ -804,7 +804,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
   Status run_status =
       m_session->Run(run_options, input_tensor_list, m_session_output_names, {},
                      &outputs, &run_metadata);
-  if (run_status != OkStatus()) {
+  if (run_status != Status::OK()) {
     return errors::Internal("Failed to run TF session for " + name());
   }
   for (int i = 0; i < outputs.size(); i++) {
@@ -828,7 +828,7 @@ Status NGraphEncapsulateOp::Fallback(OpKernelContext* ctx) {
                  << duration_in_ms << " ms"
                  << " for cluster " << m_cluster_id;
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 }  // namespace openvino_tensorflow

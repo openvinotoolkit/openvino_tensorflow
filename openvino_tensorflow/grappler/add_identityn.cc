@@ -68,7 +68,7 @@ Status AddIdentityN(Graph* input_graph, std::set<string> skip_these_nodes) {
       }
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 }  // namespace openvino_tensorflow

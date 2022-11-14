@@ -49,7 +49,7 @@ static Status ValidateInputCount(const Node* op, tensorflow::int32 count) {
                                    " input(s), got ", op->num_inputs(),
                                    " instead");
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status ValidateInputCountMin(const Node* op, tensorflow::int32 count) {
@@ -58,11 +58,11 @@ static Status ValidateInputCountMin(const Node* op, tensorflow::int32 count) {
                                    count, " input(s), got ", op->num_inputs(),
                                    " instead");
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 // Check to make sure the axis dimension for reduction are in within range.
-// Returns error if axis is out of range. Otherwise returns OkStatus().
+// Returns error if axis is out of range. Otherwise returns Status::OK().
 static Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
   for (auto i : axes) {
     if (i < (int)-rank || i >= (int)rank) {
@@ -71,7 +71,7 @@ static Status CheckAxisDimInRange(std::vector<int64> axes, size_t rank) {
                                      rank, ")");
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 //
@@ -176,12 +176,12 @@ static Status GetInputNode(const Builder::OpMap& ng_op_map, const Node* op,
     return Status(error::NOT_FOUND, string("Input node not found at index ") +
                                         to_string(src_output_idx));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 namespace detail {
 static Status GetInputNodes(const Builder::OpMap&, const Node*, size_t) {
-  return OkStatus();
+  return Status::OK();
 }
 
 template <typename... Arguments>
@@ -214,13 +214,13 @@ static Status GetStaticNodeTensor(
           "static input map");
     }
     *result = *source_tensor;
-    return OkStatus();
+    return Status::OK();
   } else if (node->type_string() == "Const") {
     if (!result->FromProto(node->def().attr().at("value").tensor())) {
       return errors::Internal(
           "GetStaticNodeTensor: Const tensor proto parsing failed");
     }
-    return OkStatus();
+    return Status::OK();
   } else {
     return errors::Internal("GetStaticNodeTensor called on node with type ",
                             node->type_string(), "; _Arg or Const expected");
@@ -289,7 +289,7 @@ static Status TensorDataToVector(const Tensor& tensor, std::vector<T>* vector) {
                                 "; don't know how to convert");
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 template <typename T>
@@ -303,7 +303,7 @@ static Status GetStaticInputVector(
   TF_RETURN_IF_ERROR(
       GetStaticNodeTensor(input_node, static_input_map, &input_tensor));
   TF_RETURN_IF_ERROR(TensorDataToVector(input_tensor, vector));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status GetStaticInputNode(
@@ -346,7 +346,7 @@ static Status GetStaticInputNode(
                               DataType_Name(dt), " not supported.");
       break;
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 // Taken from: tensorflow/core/grappler/optimizers/arithmetic_optimizer.cc
@@ -386,7 +386,7 @@ static Status ValuesFromConstNode(const NodeDef& node,
     if (shape.dim_size() == 1 && shape.dim(0).size() == tensor_values->size()) {
       values->insert(values->end(), tensor_values->begin(),
                      tensor_values->end());
-      return OkStatus();
+      return Status::OK();
     }
   }
 
@@ -498,7 +498,7 @@ static Status ValuesFromConstNode(const NodeDef& node,
                       reinterpret_cast<char*>(values->data()));
   }
 
-  return OkStatus();
+  return Status::OK();
 }
 
 template <typename T>
@@ -511,7 +511,7 @@ static Status MakeConstOpForParam(const Tensor& tensor, string prov_tag,
   ng_node =
       ConstructNgNode<opset::Constant>(prov_tag, ng_et, ng_shape, const_values);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 // Helper for Builder::TranslateGraph ("Const" op)
@@ -531,7 +531,7 @@ static Status MakeConstOp(const Node* op, ov::element::Type et,
 
   ng_node =
       ConstructNgNode<opset::Constant>(op->name(), et, ng_shape, const_values);
-  return OkStatus();
+  return Status::OK();
 }
 
 const Builder::ConstMap& Builder::TF_NGRAPH_CONST_MAP() {
@@ -586,7 +586,7 @@ static Status TranslateUnaryOp(
     Builder::SetTracingInfo(op->name(), ng_node);
   }
   SaveNgOp(ng_op_map, op->name(), ng_node);
-  return OkStatus();
+  return Status::OK();
 }
 
 // Helper function to translate a unary op in cases where there is a one-to-one
@@ -647,7 +647,7 @@ static Status TranslateBinaryOp(
     Builder::SetTracingInfo(op->name(), ng_node);
   }
   SaveNgOp(ng_op_map, op->name(), ng_node);
-  return OkStatus();
+  return Status::OK();
 }
 
 // Helper function to translate a binary op in cases where there is a one-to-one
@@ -687,7 +687,7 @@ static Status TranslateAddNOp(const Node* op, const std::vector<const Tensor*>&,
            // first element. default op is
            // addition
   SaveNgOp(ng_op_map, op->name(), ng_addn);
-  return OkStatus();
+  return Status::OK();
 }
 static Status TranslateArgMinMax(
     const Node* op, const std::vector<const Tensor*>& static_input_map,
@@ -734,7 +734,7 @@ static Status TranslateArgMinMax(
       ConstructNgNode<opset::Squeeze>(op->name(), ng_indices, axis_to_remove);
   Builder::SetTracingInfo(op->name(), reshaped_indices);
   SaveNgOp(ng_op_map, op->name(), reshaped_indices);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateArgMaxOp(
@@ -806,7 +806,7 @@ static Status TranslateAvgPoolOp(const Node* op,
                << "}";
 
   SaveNgOp(ng_op_map, op->name(), ng_avgpool);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateBatchMatMulOp(const Node* op,
@@ -821,7 +821,7 @@ static Status TranslateBatchMatMulOp(const Node* op,
 
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::MatMul>(
                                       op->name(), ng_x, ng_y, adj_x, adj_y));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateBatchNDAndSpaceNDOp(
@@ -851,7 +851,7 @@ static Status TranslateBatchNDAndSpaceNDOp(
   // return with input if rank < 2 as ngraph's impl doesn't support it
   if (N < 2) {
     SaveNgOp(ng_op_map, op->name(), ng_input);
-    return OkStatus();
+    return Status::OK();
   }
 
   auto crops = ConstructNgNode<opset::Pad>(
@@ -905,7 +905,7 @@ static Status TranslateBatchNDAndSpaceNDOp(
     return errors::Unknown("Unknown Op Name: ", op->name());
   }
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateBiasAddOp(
@@ -915,7 +915,8 @@ static Status TranslateBiasAddOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_bias));
 
   std::string tf_data_format;
-  if (GetNodeAttr(op->attrs(), "data_format", &tf_data_format) != OkStatus()) {
+  if (GetNodeAttr(op->attrs(), "data_format", &tf_data_format) !=
+      Status::OK()) {
     tf_data_format = "NHWC";
   }
 
@@ -956,7 +957,7 @@ static Status TranslateBiasAddOp(
       ConstructNgNode<opset::Add>(op->name(), ng_input, ng_bias_reshaped);
 
   SaveNgOp(ng_op_map, op->name(), ng_add);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
@@ -978,7 +979,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
                                                   ov::Shape{}, 0);
     SaveNgOp(ng_op_map, op->name(),
              ConstructNgNode<opset::NotEqual>(op->name(), ng_input, zeros));
-    return OkStatus();
+    return Status::OK();
   }
 
   try {
@@ -988,7 +989,7 @@ static Status TranslateCastOp(const Node* op, const std::vector<const Tensor*>&,
     return errors::Unimplemented("Failed to convert TF data type: ",
                                  DataType_Name(dtype));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateConcatV2Op(
@@ -1048,7 +1049,7 @@ static Status TranslateConcatV2Op(
              ConstructNgNode<opset::Concat>(op->name(), ng_args,
                                             size_t(concat_axis)));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateConstOp(const Node* op,
@@ -1078,7 +1079,7 @@ static Status TranslateConstOp(const Node* op,
   }
 
   SaveNgOp(ng_op_map, op->name(), ng_node);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateConv2DOp(const Node* op,
@@ -1195,7 +1196,7 @@ static Status TranslateConv2DOp(const Node* op,
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateConv2DBackpropInputOp(
@@ -1288,7 +1289,7 @@ static Status TranslateConv2DBackpropInputOp(
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_data);
   SaveNgOp(ng_op_map, op->name(), ng_data);
-  return OkStatus();
+  return Status::OK();
 }
 
 // Translate Conv3D Op
@@ -1363,7 +1364,7 @@ static Status TranslateConv3DOp(const Node* op,
 
   NCHWtoNHWC(op->name(), is_ndhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateConv3DBackpropInputV2Op(
@@ -1459,7 +1460,7 @@ static Status TranslateConv3DBackpropInputV2Op(
 
   NCHWtoNHWC(op->name(), is_ndhwc, ng_data);
   SaveNgOp(ng_op_map, op->name(), ng_data);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateCropAndResizeOp(
@@ -1587,7 +1588,7 @@ static Status TranslateCropAndResizeOp(
 
     SaveNgOp(ng_op_map, op->name(), ng_crop_and_resize);
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateCTCGreedyDecoderOp(const Node* op,
@@ -1725,7 +1726,7 @@ static Status TranslateCTCGreedyDecoderOp(const Node* op,
   SaveNgOp(ng_op_map, op->name(), ng_decoded_shape);
   SaveNgOp(ng_op_map, op->name(), ng_log_probs);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFusedCTCGreedyDecoder(const Node* op,
@@ -1834,7 +1835,7 @@ static Status TranslateFusedCTCGreedyDecoder(const Node* op,
       std::vector<const Edge*>(op->out_edges().begin(), op->out_edges().end());
   SaveNgOp(ng_op_map, edges.at(1)->dst()->name(), ng_ctc_decoded_classes);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateCumsumOp(const Node* op,
@@ -1849,7 +1850,7 @@ static Status TranslateCumsumOp(const Node* op,
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::CumSum>(op->name(), ng_x, ng_axis, exclusive,
                                           reverse));
-  return OkStatus();
+  return Status::OK();
 }
 
 // Translate DepthToSpace op
@@ -1878,7 +1879,7 @@ static Status TranslateDepthToSpaceOp(const Node* op,
       op->name(), ng_input, ng_mode, block_size);
   NCHWtoNHWC(op->name(), is_nhwc, depth_to_space);
   SaveNgOp(ng_op_map, op->name(), depth_to_space);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateDepthwiseConv2dNativeOp(
@@ -1954,7 +1955,7 @@ static Status TranslateDepthwiseConv2dNativeOp(
 
   NCHWtoNHWC(op->name(), is_nhwc, ng_conv);
   SaveNgOp(ng_op_map, op->name(), ng_conv);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateEluOp(const Node* op,
@@ -1966,7 +1967,7 @@ static Status TranslateEluOp(const Node* op,
   // No alpha in TF, so default to 1.0
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Elu>(op->name(), ng_input, 1.0));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateExpandDimsOp(
@@ -1980,7 +1981,7 @@ static Status TranslateExpandDimsOp(
                                                   ov::Shape{dims.size()}, dims);
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Unsqueeze>(op->name(), ng_input, ng_dims));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFakeQuantWithMinMaxVarsOp(
@@ -2057,7 +2058,7 @@ static Status TranslateFakeQuantWithMinMaxVarsOp(
 
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFillOp(
@@ -2069,7 +2070,7 @@ static Status TranslateFillOp(
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 1, ng_value));
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Broadcast>(op->name(), ng_value, ng_dims));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFloorDivOp(
@@ -2105,7 +2106,7 @@ static Status TranslateFusedBatchNormOp(
   OVTF_VLOG(3) << "data_format: " << tf_data_format;
 
   float tf_epsilon;
-  if (GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) != OkStatus()) {
+  if (GetNodeAttr(op->attrs(), "epsilon", &tf_epsilon) != Status::OK()) {
     OVTF_VLOG(3) << "epsilon attribute not present, setting to 0.0001";
     // TensorFlow default
     tf_epsilon = 0.0001;
@@ -2143,7 +2144,7 @@ static Status TranslateFusedBatchNormOp(
       SaveNgOp(ng_op_map, op->name(), ng_mean);  // reserve_space_3
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFusedMatMulOp(const Node* op,
@@ -2194,7 +2195,7 @@ static Status TranslateFusedMatMulOp(const Node* op,
     return errors::Internal("Unsupported combination");
   }
 
-  return OkStatus();
+  return Status::OK();
 }
 
 // See .../tensorflow/include/tensorflow/cc/ops/array_ops.h
@@ -2212,7 +2213,7 @@ static Status TranslateGatherOp(
                                                   ng_input_indices, ng_axis);
 
   SaveNgOp(ng_op_map, op->name(), gather_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateGatherV2Op(
@@ -2252,7 +2253,7 @@ static Status TranslateGatherV2Op(
                                                   ng_input_coords, ng_axis);
 
   SaveNgOp(ng_op_map, op->name(), gather_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateGatherNdOp(
@@ -2268,7 +2269,7 @@ static Status TranslateGatherNdOp(
       op->name(), ng_input, ng_input_indices, batch_dims);
 
   SaveNgOp(ng_op_map, op->name(), gathernd_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFusedConv2DOp(const Node* op,
@@ -2389,7 +2390,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
             ng_padding_below, ng_padding_above, ng_dilations, pad_type);
       }
     }
-    return OkStatus();
+    return Status::OK();
   };
 
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
@@ -2557,7 +2558,7 @@ static Status TranslateFusedConv2DOp(const Node* op,
     return errors::Unimplemented("Unsupported _FusedConv2D " +
                                  absl::StrJoin(fused_ops, ","));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateFusedDepthwiseConv2dNativeOp(
@@ -2643,7 +2644,7 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
         op->name(), ng_input, transposed_filter, ng_strides, ng_padding_below,
         ng_padding_above, ng_dilations);
 
-    return OkStatus();
+    return Status::OK();
   };
 
   if (VecStrCmp(fused_ops, {"BiasAdd"}) ||
@@ -2691,7 +2692,7 @@ static Status TranslateFusedDepthwiseConv2dNativeOp(
     return errors::Unimplemented("Unsupported _FusedDepthwiseConv2dNative " +
                                  absl::StrJoin(fused_ops, ","));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateIdentityOp(const Node* op,
@@ -2700,7 +2701,7 @@ static Status TranslateIdentityOp(const Node* op,
   ov::Output<ov::Node> ng_arg;
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_arg));
   SaveNgOp(ng_op_map, op->name(), ng_arg);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateIsFiniteOp(
@@ -2732,7 +2733,7 @@ static Status TranslateIsFiniteOp(
       op->name(), neq_inf_and_neq_neg_inf, eq_nan);
 
   SaveNgOp(ng_op_map, op->name(), is_finite);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateL2LossOp(const Node* op,
@@ -2761,7 +2762,7 @@ static Status TranslateL2LossOp(const Node* op,
       ConstructNgNode<opset::ReduceSum>(op->name(), ng_pow, ng_reduction_axes);
   auto ng_l2loss = ConstructNgNode<opset::Divide>(op->name(), ng_sum, const_2);
   SaveNgOp(ng_op_map, op->name(), ng_l2loss);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateLog1pOp(
@@ -2807,7 +2808,7 @@ static Status TranslateLRNOp(const Node* op,
                                                bias, (size_t)size);
   NCHWtoNHWC(op->name(), true, ng_output);
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateLogSoftmaxOp(const Node* op,
@@ -2821,7 +2822,7 @@ static Status TranslateLogSoftmaxOp(const Node* op,
 
   auto ng_output = ConstructNgNode<opset::LogSoftmax>(op->name(), ng_inp, axes);
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateLeakyReluOp(const Node* op,
@@ -2837,7 +2838,7 @@ static Status TranslateLeakyReluOp(const Node* op,
 
   auto ng_output = ConstructNgNode<opset::PRelu>(op->name(), ng_inp, ng_alpha);
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateMatMulOp(const Node* op,
@@ -2856,7 +2857,7 @@ static Status TranslateMatMulOp(const Node* op,
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::MatMul>(op->name(), ng_lhs, ng_rhs,
                                           transpose_a, transpose_b));
-  return OkStatus();
+  return Status::OK();
 }
 
 template <unsigned int N>
@@ -2915,7 +2916,7 @@ static Status TranslateMaxPoolOp(const Node* op,
                << "}";
 
   SaveNgOp(ng_op_map, op->name(), ng_maxpool);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateMklSwishOp(
@@ -2927,7 +2928,7 @@ static Status TranslateMklSwishOp(
   auto ng_result =
       ConstructNgNode<opset::Multiply>(op->name(), ng_input, ng_sigmoid);
   SaveNgOp(ng_op_map, op->name(), ng_result);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateNonMaxSuppressionOp(
@@ -2993,7 +2994,7 @@ static Status TranslateNonMaxSuppressionOp(
   std::string device;
   // Correct output variables dimensions for CPU device
   Status exec_status = BackendManager::GetBackendName(device);
-  if (exec_status != OkStatus()) {
+  if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
 
@@ -3054,7 +3055,7 @@ static Status TranslateNonMaxSuppressionOp(
       SaveNgOp(ng_op_map, op->name(), valid_outputs);
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateReduceOp(
@@ -3066,7 +3067,7 @@ static Status TranslateReduceOp(
   ov::Output<ov::Node> ng_input;
   TF_RETURN_IF_ERROR(GetInputNode(ng_op_map, op, 0, ng_input));
   bool tf_keep_dims;
-  if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != OkStatus()) {
+  if (GetNodeAttr(op->attrs(), "keep_dims", &tf_keep_dims) != Status::OK()) {
     tf_keep_dims = false;
   }
 
@@ -3089,7 +3090,7 @@ static Status TranslateReduceOp(
       create_ng_node(ng_input, ng_reduction_axes, tf_keep_dims);
 
   SaveNgOp(ng_op_map, op->name(), ng_node);
-  return OkStatus();
+  return Status::OK();
 }
 
 template <typename T>
@@ -3125,7 +3126,7 @@ static Status TranslateOneHotOp(
   auto ng_onehot = ConstructNgNode<opset::OneHot>(
       op->name(), ng_features, ng_depth, ng_on, ng_off, one_hot_axis);
   SaveNgOp(ng_op_map, op->name(), ng_onehot);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslatePackOp(const Node* op, const std::vector<const Tensor*>&,
@@ -3151,7 +3152,7 @@ static Status TranslatePackOp(const Node* op, const std::vector<const Tensor*>&,
   // to create output_shape (2, num_inputs, 3, 4)
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Concat>(
                                       op->name(), ng_concat_inputs, tf_axis));
-  return OkStatus();
+  return Status::OK();
 }
 
 // 3 different Pad Ops: Pad, PadV2, MirrorPad
@@ -3218,7 +3219,7 @@ static Status TranslatePadOp(const Node* op,
                                   pads_end_node, pad_val_op, pad_mode);
 
   SaveNgOp(ng_op_map, op->name(), result_pad_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateRangeOp(
@@ -3234,7 +3235,7 @@ static Status TranslateRangeOp(
   auto ng_range = ConstructNgNode<opset::Range>(op->name(), ng_start, ng_stop,
                                                 ng_step, out_type);
   SaveNgOp(ng_op_map, op->name(), ng_range);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
@@ -3250,7 +3251,7 @@ static Status TranslateRankOp(const Node* op, const std::vector<const Tensor*>&,
       std::vector<int>({input_rank}));
 
   SaveNgOp(ng_op_map, op->name(), ng_rank);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateReciprocalOp(
@@ -3280,7 +3281,7 @@ static Status TranslateRelu6Op(const Node* op,
   std::string device;
   // Enable transpose before and after only for CPU device
   Status exec_status = BackendManager::GetBackendName(device);
-  if (exec_status != OkStatus()) {
+  if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
   if (device == "CPU") {
@@ -3292,7 +3293,7 @@ static Status TranslateRelu6Op(const Node* op,
   }
   SaveNgOp(ng_op_map, op->name(), ng_output);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateReshapeOp(
@@ -3310,7 +3311,7 @@ static Status TranslateReshapeOp(
       op->name(), ov::element::i64, ov::Shape{shape.size()}, shape);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Reshape>(
                                       op->name(), ng_input, ng_shape, false));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateRoundOp(
@@ -3324,7 +3325,7 @@ static Status TranslateRoundOp(
   opset::Round::RoundMode round_mode = opset::Round::RoundMode::HALF_TO_EVEN;
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Round>(op->name(), ng_input, round_mode));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateResizeBilinearOp(
@@ -3363,7 +3364,7 @@ static Status TranslateResizeBilinearOp(
       op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
   Transpose<0, 2, 3, 1>(ng_output);
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateResizeNearestNeighborOp(
@@ -3403,7 +3404,7 @@ static Status TranslateResizeNearestNeighborOp(
       op->name(), ng_inp, ng_inp_sizes, ng_scales, ng_axes, interpolate_attrs);
   Transpose<0, 2, 3, 1>(ng_output);
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateReverseOp(
@@ -3415,7 +3416,7 @@ static Status TranslateReverseOp(
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<ov::op::v1::Reverse>(op->name(), ng_input,
                                                 ng_reversed_axis, mode));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateRsqrtOp(
@@ -3453,7 +3454,7 @@ static Status TranslateScatterNdOp(
       op->name(), ng_input, ng_input_indices, ng_updates);
 
   SaveNgOp(ng_op_map, op->name(), scatternd_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateShapeOp(const Node* op,
@@ -3471,7 +3472,7 @@ static Status TranslateShapeOp(const Node* op,
   // default output_type = element::i64
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::ShapeOf>(op->name(), ng_input, type));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
@@ -3505,7 +3506,7 @@ static Status TranslateSizeOp(const Node* op, const std::vector<const Tensor*>&,
   }
 
   SaveNgOp(ng_op_map, op->name(), ng_result);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSliceOp(
@@ -3566,7 +3567,7 @@ static Status TranslateSliceOp(
            ConstructNgNode<opset::StridedSlice>(op->name(), ng_input, begin,
                                                 end, std::vector<int64_t>{},
                                                 std::vector<int64_t>{}));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSoftmaxOp(const Node* op,
@@ -3582,7 +3583,7 @@ static Status TranslateSoftmaxOp(const Node* op,
 
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Softmax>(op->name(), ng_input, rank - 1));
-  return OkStatus();
+  return Status::OK();
 }
 
 // TODO: Change the translation back to unary softplus
@@ -3600,7 +3601,7 @@ static Status TranslateSoftPlusOp(const Node* op,
   auto ng_output = ConstructNgNode<opset::Log>(op->name(), add);
 
   SaveNgOp(ng_op_map, op->name(), ng_output);
-  return OkStatus();
+  return Status::OK();
 }
 
 // Translate SpaceToDepthOp
@@ -3629,7 +3630,7 @@ static Status TranslateSpaceToDepthOp(const Node* op,
       op->name(), ng_input, ng_mode, block_size);
   NCHWtoNHWC(op->name(), is_nhwc, space_to_depth);
   SaveNgOp(ng_op_map, op->name(), space_to_depth);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSparseToDenseOp(
@@ -3652,7 +3653,7 @@ static Status TranslateSparseToDenseOp(
       op->name(), ng_dense_tensor, ng_indices, ng_values);
 
   SaveNgOp(ng_op_map, op->name(), ng_scatternd_op);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSplitOp(
@@ -3680,7 +3681,7 @@ static Status TranslateSplitOp(
     Builder::SetTracingInfo(op->name(), out);
     SaveNgOp(ng_op_map, op->name(), out);
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSplitVOp(
@@ -3759,7 +3760,7 @@ static Status TranslateSplitVOp(
     SaveNgOp(ng_op_map, op->name(), ng_input);
   }
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSquareOp(
@@ -3793,7 +3794,7 @@ static Status TranslateSqueezeOp(const Node* op,
                ConstructNgNode<opset::Constant>(
                    op->name(), ng_input.get_element_type(), ov::Shape{0},
                    std::vector<int>({0})));
-      return OkStatus();
+      return Status::OK();
     }
   }
   auto ng_const = ConstructNgNode<opset::Constant>(
@@ -3801,7 +3802,7 @@ static Status TranslateSqueezeOp(const Node* op,
 
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Squeeze>(op->name(), ng_input, ng_const));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateStridedSliceOp(
@@ -3841,13 +3842,12 @@ static Status TranslateStridedSliceOp(
     return vec;
   };
 
-  SaveNgOp(
-      ng_op_map, op->name(),
-      ConstructNgNode<opset::StridedSlice>(
-          op->name(), input, begin, end, strides, mask_to_vec(begin_mask),
-          mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
-          mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
-  return OkStatus();
+  SaveNgOp(ng_op_map, op->name(),
+           ConstructNgNode<opset::StridedSlice>(
+               op->name(), input, begin, end, strides, mask_to_vec(begin_mask),
+               mask_to_vec(end_mask), mask_to_vec(new_axis_mask),
+               mask_to_vec(shrink_axis_mask), mask_to_vec(ellipsis_mask)));
+  return Status::OK();
 }
 
 static Status TranslateTileOp(
@@ -3863,7 +3863,7 @@ static Status TranslateTileOp(
       op->name(), ov::element::i64, ov::Shape{multiples.size()}, multiples);
   SaveNgOp(ng_op_map, op->name(),
            ConstructNgNode<opset::Tile>(op->name(), ng_input, ng_repeats));
-  return OkStatus();
+  return Status::OK();
 }
 
 // Translate TopKV2 Op using ngraph core op TopK
@@ -3900,7 +3900,7 @@ static Status TranslateTopKV2Op(
   SaveNgOp(ng_op_map, op->name(), ng_values);
   SaveNgOp(ng_op_map, op->name(), ng_indices);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateTransposeOp(
@@ -3910,7 +3910,7 @@ static Status TranslateTransposeOp(
   TF_RETURN_IF_ERROR(GetInputNodes(ng_op_map, op, ng_input, ng_permutation));
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Transpose>(
                                       op->name(), ng_input, ng_permutation));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateUnpackOp(const Node* op,
@@ -3955,7 +3955,7 @@ static Status TranslateUnpackOp(const Node* op,
         ConstructNgNode<opset::Squeeze>(op->name(), slice, squeeze_axis);
     SaveNgOp(ng_op_map, op->name(), squeeze);
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateXdivyOp(
@@ -3969,7 +3969,7 @@ static Status TranslateXdivyOp(
   auto ng_xdivy = ConstructNgNode<opset::Divide>(op->name(), ng_x, ng_y);
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Select>(
                                       op->name(), x_is_zero, ng_x, ng_xdivy));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateSelectOp(const Node* op,
@@ -4008,7 +4008,7 @@ static Status TranslateSelectOp(const Node* op,
                                                ng_input2);
   }
   SaveNgOp(ng_op_map, op->name(), ng_select);
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateWhereOp(
@@ -4021,7 +4021,7 @@ static Status TranslateWhereOp(
       op->name(), ov::element::i64, ov::Shape{2}, std::vector<int64_t>({1, 0}));
   SaveNgOp(ng_op_map, op->name(), ConstructNgNode<opset::Transpose>(
                                       op->name(), non_zero, transpose_order));
-  return OkStatus();
+  return Status::OK();
 }
 
 static Status TranslateZerosLikeOp(const Node* op,
@@ -4043,7 +4043,7 @@ static Status TranslateZerosLikeOp(const Node* op,
         ConstructNgNode<opset::Broadcast>(op->name(), zero, input_shape);
   }
   SaveNgOp(ng_op_map, op->name(), ng_result);
-  return OkStatus();
+  return Status::OK();
 }
 
 const static std::map<
@@ -4146,7 +4146,7 @@ const static std::map<
         // bureaucratic
         // reasons, but they have no data flow inputs or outputs.
         {"NoOp", [](const Node*, const std::vector<const Tensor*>&,
-                    Builder::OpMap&) { return OkStatus(); }},
+                    Builder::OpMap&) { return Status::OK(); }},
         {"OneHot", TranslateOneHotOp},
         {"Pack", TranslatePackOp},
         {"Pad", TranslatePadOp},
@@ -4236,7 +4236,7 @@ Status Builder::TranslateGraph(
   std::vector<Tensor> tf_input_tensors;
   TranslateGraph(inputs, static_input_map, input_graph, name, ng_function,
                  ng_result_list, tf_input_tensors);
-  return OkStatus();
+  return Status::OK();
 }
 
 Status Builder::TranslateGraph(
@@ -4308,11 +4308,11 @@ Status Builder::TranslateGraph(
 
   for (auto parm : tf_params) {
     DataType dtype;
-    if (GetNodeAttr(parm->attrs(), "T", &dtype) != OkStatus()) {
+    if (GetNodeAttr(parm->attrs(), "T", &dtype) != Status::OK()) {
       return errors::InvalidArgument("No data type defined for _Arg");
     }
     int64_t index;
-    if (GetNodeAttr(parm->attrs(), "index", &index) != OkStatus()) {
+    if (GetNodeAttr(parm->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Arg");
     }
 
@@ -4486,7 +4486,7 @@ Status Builder::TranslateGraph(
     }
 
     int64_t index;
-    if (GetNodeAttr(n->attrs(), "index", &index) != OkStatus()) {
+    if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
       return errors::InvalidArgument("No index defined for _Retval");
     }
 
@@ -4564,7 +4564,7 @@ Status Builder::TranslateGraph(
     result->set_needs_default_layout(true);
   }
   NGRAPH_SUPPRESS_DEPRECATED_END
-  return OkStatus();
+  return Status::OK();
 }
 
 std::mutex Builder::m_translate_lock_;
@@ -4603,7 +4603,7 @@ Status Builder::TranslateGraphWithTFFE(
     if (n->IsArg()) {
       bool static_input = false;
       try {
-        if (OkStatus() !=
+        if (Status::OK() !=
             GetNodeAttr(n->attrs(), "_static_input", &static_input)) {
           n->AddAttr("_static_input", false);
           static_input = false;
@@ -4626,11 +4626,11 @@ Status Builder::TranslateGraphWithTFFE(
       }
       if (static_input) {
         DataType dtype;
-        if (GetNodeAttr(n->attrs(), "T", &dtype) != OkStatus()) {
+        if (GetNodeAttr(n->attrs(), "T", &dtype) != Status::OK()) {
           return errors::InvalidArgument("No data type defined for _Arg");
         }
         int64_t index;
-        if (GetNodeAttr(n->attrs(), "index", &index) != OkStatus()) {
+        if (GetNodeAttr(n->attrs(), "index", &index) != Status::OK()) {
           return errors::InvalidArgument("No index defined for _Arg");
         }
         const Tensor tensor = tf_input_tensors[index];
@@ -4639,7 +4639,7 @@ Status Builder::TranslateGraphWithTFFE(
       }
       try {
         std::string prov_tag;
-        if (OkStatus() != GetNodeAttr(n->attrs(), "_prov_tag", &prov_tag)) {
+        if (Status::OK() != GetNodeAttr(n->attrs(), "_prov_tag", &prov_tag)) {
           // TODO: Assign a proper prov tag instead of an empty string.
           n->AddAttr("_prov_tag", prov_tag);
         }
@@ -4843,7 +4843,7 @@ Status Builder::TranslateGraphWithTFFE(
   }
   OVTF_VLOG(5) << "Done with translations";
 
-  return OkStatus();
+  return Status::OK();
 }
 
 }  // namespace openvino_tensorflow

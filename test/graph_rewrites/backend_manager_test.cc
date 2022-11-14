@@ -24,7 +24,7 @@ namespace tensorflow {
 namespace openvino_tensorflow {
 namespace testing {
 
-#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::OkStatus());
+#define ASSERT_NOT_OK(x) ASSERT_NE((x), ::tensorflow::Status::OK());
 
 /*
 These tests test the Backend Handling by the bridge.

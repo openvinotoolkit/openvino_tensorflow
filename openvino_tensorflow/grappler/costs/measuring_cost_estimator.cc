@@ -146,7 +146,7 @@ Status MeasuringCostEstimator::PredictCosts(const GraphDef& optimized_graph,
   RobustStats stats(times);
   costs->execution_time = Costs::Duration(stats.mean());
 
-  return OkStatus();
+  return Status::OK();
 }
 }  // end namespace grappler
 }  // end namespace tensorflow

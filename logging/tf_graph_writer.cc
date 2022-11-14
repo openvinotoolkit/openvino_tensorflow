@@ -124,7 +124,7 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
     // this file does not live inside src.
     bool is_marked;
     if (GetNodeAttr(node->attrs(), "_ovtf_marked_for_clustering", &is_marked) !=
-        OkStatus()) {
+        Status::OK()) {
       is_marked = false;
     }
 
@@ -135,7 +135,7 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
     // Clustered nodes get a color based on their cluster index.
     int cluster_idx;
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) ==
-        OkStatus()) {
+        Status::OK()) {
       if (cluster_color_map.find(cluster_idx) == cluster_color_map.end()) {
         bg_color = cluster_bg_colors[seen_cluster_count];
         cluster_color_map[cluster_idx] = bg_color;
@@ -167,7 +167,7 @@ std::string GraphToDot(Graph* graph, const std::string& title) {
 
     // Print the data type if this node an op node
     DataType datatype;
-    if (GetNodeAttr(node->def(), "T", &datatype) == OkStatus()) {
+    if (GetNodeAttr(node->def(), "T", &datatype) == Status::OK()) {
       dot_string << DataTypeString(datatype) << "<br/>";
     }
 
@@ -217,7 +217,7 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
                          const std::string& title) {
   GraphDef gdef;
   auto status = ReadTextProto(Env::Default(), pbtxt_filename, &gdef);
-  if (status != OkStatus()) {
+  if (status != Status::OK()) {
     OVTF_VLOG(5) << "Can't read protobuf graph";
     return;
   }
@@ -226,7 +226,7 @@ void PbTextFileToDotFile(const std::string& pbtxt_filename,
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
   status = ConvertGraphDefToGraph(opts, gdef, &input_graph);
-  if (status != OkStatus()) {
+  if (status != Status::OK()) {
     OVTF_VLOG(5) << "Can't convert graphdef to graph";
     return;
   }

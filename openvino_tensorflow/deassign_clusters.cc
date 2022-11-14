@@ -182,7 +182,7 @@ Status PopulateClusterGraphDef(
     int cluster_idx;
 
     if (GetNodeAttr(node->attrs(), "_ovtf_cluster", &cluster_idx) !=
-        OkStatus()) {
+        Status::OK()) {
       continue;
     }
 
@@ -253,7 +253,7 @@ Status PopulateClusterGraphDef(
       }
     }
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 Status DeassignClusters(Graph* graph) {
@@ -269,18 +269,18 @@ Status DeassignClusters(Graph* graph) {
     for (auto node : graph->nodes()) {
       int cluster_idx;
 
-      if (GetNodeCluster(node, &cluster_idx) == OkStatus()) {
+      if (GetNodeCluster(node, &cluster_idx) == Status::OK()) {
         num_nodes_marked_before_deassign++;
       }
     }
     MaybeLogPlacement(graph);
-    return OkStatus();
+    return Status::OK();
   }
 
   std::map<int, std::set<Node*>> cluster_map;
   for (auto node : graph->nodes()) {
     int cluster_idx;
-    if (GetNodeCluster(node, &cluster_idx) != OkStatus()) {
+    if (GetNodeCluster(node, &cluster_idx) != Status::OK()) {
       continue;
     }
     num_nodes_marked_before_deassign++;
@@ -289,7 +289,7 @@ Status DeassignClusters(Graph* graph) {
 
   string device;
   Status exec_status = BackendManager::GetBackendName(device);
-  if (exec_status != OkStatus()) {
+  if (exec_status != Status::OK()) {
     throw runtime_error(exec_status.error_message());
   }
 
@@ -329,11 +329,11 @@ Status DeassignClusters(Graph* graph) {
 
       int dst_cluster_idx;
       bool dst_clustered =
-          (GetNodeCluster(dst, &dst_cluster_idx) == OkStatus());
+          (GetNodeCluster(dst, &dst_cluster_idx) == Status::OK());
 
       int src_cluster_idx;
       bool src_clustered =
-          (GetNodeCluster(src, &src_cluster_idx) == OkStatus());
+          (GetNodeCluster(src, &src_cluster_idx) == Status::OK());
 
       // Ignore edges within a cluster. (Note that this test also works when
       // both nodes are unclustered; GetNodeCluster gives us -1 in that case.
@@ -401,7 +401,8 @@ Status DeassignClusters(Graph* graph) {
       pair_idx_cost.second = 0;
       for (auto n : g.nodes()) {
         tensorflow::int64 node_cost = 0;
-        if (GetNodeAttr(n->attrs(), "cost", &node_cost) != OkStatus()) continue;
+        if (GetNodeAttr(n->attrs(), "cost", &node_cost) != Status::OK())
+          continue;
         pair_idx_cost.second += node_cost;
         num_nodes++;
       }
@@ -531,7 +532,7 @@ Status DeassignClusters(Graph* graph) {
         for (auto it : node->out_nodes()) {
           int out_cluster;
           Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-          if (s == OkStatus()) {
+          if (s == Status::OK()) {
             if (out_cluster == cluster_idx &&
                 (it->type_string() != "NonMaxSuppressionV2")) {
               if (it->type_string() == "ZerosLike") {
@@ -574,8 +575,8 @@ Status DeassignClusters(Graph* graph) {
           for (auto it : node->out_nodes()) {
             int out_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &out_cluster);
-            if ((s == OkStatus() && out_cluster != cluster_idx) ||
-                (s != OkStatus())) {
+            if ((s == Status::OK() && out_cluster != cluster_idx) ||
+                (s != Status::OK())) {
               omit_cluster = true;
               break;
             }
@@ -586,8 +587,8 @@ Status DeassignClusters(Graph* graph) {
           for (auto it : node->in_nodes()) {
             int in_cluster;
             Status s = GetNodeAttr(it->attrs(), "_ovtf_cluster", &in_cluster);
-            if ((s == OkStatus() && in_cluster != cluster_idx) ||
-                s != OkStatus()) {
+            if ((s == Status::OK() && in_cluster != cluster_idx) ||
+                s != Status::OK()) {
               omit_cluster = true;
               break;
             }
@@ -663,7 +664,7 @@ Status DeassignClusters(Graph* graph) {
   //
   MaybeLogPlacement(graph);
 
-  return OkStatus();
+  return Status::OK();
 }
 
 }  // namespace openvino_tensorflow

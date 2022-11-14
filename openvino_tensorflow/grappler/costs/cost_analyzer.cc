@@ -36,7 +36,7 @@ Status CostAnalyzer::GenerateReport(std::ostream& os, bool print_analysis,
   PreprocessCosts();
   AnalyzeCosts();
   if (print_analysis) PrintAnalysis(os, true, verbose);
-  return OkStatus();
+  return Status::OK();
 }
 
 void CostAnalyzer::PredictCosts(CostEstimator* cost_estimator,
@@ -63,7 +63,7 @@ Status CostAnalyzer::AnnotateOpCosts(tensorflow::Graph& graph) {
     SetAttrValue(op_cost_map_[node->name()],
                  &((*(def->mutable_attr()))["cost"]));
   }
-  return OkStatus();
+  return Status::OK();
 }
 
 void CostAnalyzer::GatherCosts() {
