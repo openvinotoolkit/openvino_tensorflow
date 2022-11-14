@@ -59,7 +59,7 @@ SET(OPENVINO_TF_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts" CACHE STR
 SET(OPENVINO_ARTIFACTS_DIR     "${OPENVINO_TF_INSTALL_PREFIX}/openvino" CACHE STRING "OpenVINO install location" )
 SET(OPENVINO_VERSION           "2022.3.0" CACHE STRING "OpenVINO version to be used" )
 SET(OPENVINO_BUILD_VERSION     "${OPENVINO_VERSION}" CACHE STRING "OpenVINO version to be used" )
-SET(TF_PIP_VERSION             "2.10.0" CACHE STRING "TensorFlow version to be installed from PyPi" )
+SET(TF_PIP_VERSION             "2.9.2" CACHE STRING "TensorFlow version to be installed from PyPi" )
 
 # Build options
 option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
