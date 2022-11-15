@@ -5,9 +5,9 @@
 # ******************************************************************************
 
 # Create the pip package
-if(PYTHON_EXECUTABLE)
-    set(PYTHON ${PYTHON_EXECUTABLE})
-else(PYTHON_EXECUTABLE)
+if(Python3_EXECUTABLE)
+    set(PYTHON ${Python3_EXECUTABLE})
+else(Python3_EXECUTABLE)
     find_program(PYTHON "python")
 endif()
 
@@ -66,7 +66,7 @@ if (PYTHON)
     endforeach()
 
     # Get the list of license files for ngraph
-    file(GLOB NGRAPH_LICENSE_FILES "${NGRAPH_INSTALL_DIR}/licenses/*")
+    file(GLOB NGRAPH_LICENSE_FILES "${OPENVINO_INSTALL_DIR}/licenses/*")
 
     # Copy the licenses for openvino-tensorflow
     foreach(DEP_FILE ${NGRAPH_LICENSE_FILES})
@@ -124,9 +124,36 @@ if (PYTHON)
         endif()
      endif()
 
+    # Glob and install TBB libs during install time
+    if (NOT PY_SCRIPT_BUILD)
+        file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
+        foreach(LIB_FILE ${TBB_LIB_FILES})
+            get_filename_component(lib_file_name ${LIB_FILE} NAME)
+            set(lib_file_real_path "${OPENVINO_TF_INSTALL_PREFIX}/lib/${lib_file_name}")
+            if(${lib_file_name} MATCHES ".so*")
+                execute_process(COMMAND cp -av ${LIB_FILE} ${OPENVINO_TF_INSTALL_PREFIX}/lib/ COMMAND_ECHO STDOUT)
+                execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
+                set(ovtf_libraries "${ovtf_libraries}\"${lib_file_name}\",\n\t")
+            endif()
+        endforeach()
+    endif()
+
     execute_process(
         COMMAND ${PYTHON} "setup.py" "bdist_wheel"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/
     )
+
+    if (NOT PY_SCRIPT_BUILD)
+
+        file(GLOB OVTF_WHEEL_FILE "${CMAKE_BINARY_DIR}/python/dist/*")
+
+        # Install the wheel into the python virtual environment and
+        # copy the wheelk to artifacts
+        execute_process (
+        COMMAND cp ${OVTF_WHEEL_FILE} ${OPENVINO_TF_INSTALL_PREFIX}
+        COMMAND ${PYTHON} -m pip install --force-reinstall ${OVTF_WHEEL_FILE}
+        COMMAND_ECHO STDOUT)
+
+    endif()
 
 endif()

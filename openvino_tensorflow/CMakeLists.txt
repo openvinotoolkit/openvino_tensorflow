@@ -4,10 +4,9 @@
 
 set(LIB_NAME openvino_tensorflow)
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-include_directories(${NGRAPH_INSTALL_DIR}/include)
-include_directories(${ABSL_INCLUDE_DIR})
+if (PY_SCRIPT_BUILD)
+  include_directories(${OPENVINO_INSTALL_DIR}/include)
+endif()
 
 set(TF_CONVERSION_EXTENSIONS_MODULE_NAME "tf_conversion_extensions")
 add_compile_definitions(TF_CONVERSION_EXTENSIONS_MODULE_NAME="${TF_CONVERSION_EXTENSIONS_MODULE_NAME}")
@@ -74,6 +73,11 @@ endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
 
+target_include_directories(${LIB_NAME} PRIVATE 
+                          ${TensorFlow_INCLUDE_DIR}
+                          ${TensorFlow_INCLUDE_DIR}/external/nsync/public
+                          ${ABSL_INCLUDE_DIR})
+
 target_link_libraries(
         ${LIB_NAME}
         ovtf_logger
@@ -92,7 +96,7 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${OPENVINO_INSTALL_DIR}/include")
 
 add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
 
@@ -202,15 +206,23 @@ set (IE_LIBS
     )
 
 # Install Openvino and TBB libraries
-if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
+
+if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
+  # TBB Libs are not glob-able here for standalone CMake but will be installed
+  # when CreatePipWhl.cmake is run
   file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
   foreach(LIB_FILE ${OPENVINO_LIB_FILES})
-      file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      if (PY_SCRIPT_BUILD)
+        file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      endif()
       get_filename_component(lib_file_name ${LIB_FILE} NAME)
       set(lib_file_real_path "${OVTF_INSTALL_LIB_DIR}/${lib_file_name}")
       if(${lib_file_name} MATCHES ".so*")
+          if (NOT PY_SCRIPT_BUILD)
+            install(CODE "execute_process(COMMAND cp -av ${LIB_FILE} ${OVTF_INSTALL_LIB_DIR} COMMAND_ECHO STDOUT)")
+          endif()
           install(CODE "
           execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
           ")
@@ -218,19 +230,39 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
   endforeach()
 endif()
 
+if (NOT PY_SCRIPT_BUILD)
+
+  if (NOT USE_OPENVINO_FROM_LOCATION)
+    # Configure OpenVINO as OVTF's dependency
+    add_dependencies(${LIB_NAME}
+                    openvino::runtime
+                    openvino::runtime::c
+                    openvino::frontend::tensorflow)
+  endif()
+
+endif()
+
+
 # Now create the Python pip package. The following variables are passed to the
 # CreatePipWhl.cmake
 # CMake "install" target "CODE" will propagate these variables to the
 # target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
 # So any variable that we need to propagate needs to be added here
 install(CODE "set(OS_VERSION ${OS_VERSION})")
-install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
+install(CODE "set(OPENVINO_INSTALL_DIR \"${OPENVINO_INSTALL_DIR}\")")
 install(CODE "set(OVTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(OVTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
-if(PYTHON_EXECUTABLE)
-    install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
+install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
+install(CODE "set(PY_SCRIPT_BUILD \"${PY_SCRIPT_BUILD}\")")
+install(CODE "set(TBB_LIBS \"${TBB_LIBS}\")")
+
+if(PYTHON3X_EXECUTABLE)
+    install(CODE "set(Python3_EXECUTABLE \"${PYTHON3X_EXECUTABLE}\")")
+else()
+    install(CODE "set(Python3_EXECUTABLE \"${Python3_EXECUTABLE}\")")
 endif()
+
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")
