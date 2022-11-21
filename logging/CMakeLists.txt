@@ -6,7 +6,7 @@ set(LIB_NAME ovtf_logger)
 
 # For some reason the following is needed for ABI compatibility with TF.
 # (There must be some dependency on it in the struct/class definitions.)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -std=c++17")
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
