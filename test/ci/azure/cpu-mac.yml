@@ -44,7 +44,7 @@ jobs:
     - script: |
         git submodule init
         git submodule update
-        python3 build_ovtf.py --cxx11_abi_version 0
+        python3 build_ovtf.py --cxx11_abi_version 0 --openvino_branch master
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 

@@ -37,14 +37,14 @@ jobs:
 
     - powershell: |
         $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri https://github.com/openvinotoolkit/openvino/releases/download/2022.2.0/w_openvino_toolkit_windows_2022.2.0.7713.af16ea1d79a_x86_64.zip -OutFile openvino.zip
+        Invoke-WebRequest -Uri https://storage.openvinotoolkit.org/repositories/openvino/packages/master/2022.3.0.dev20221103/w_openvino_toolkit_windows_2022.3.0.dev20221103_x86_64.zip -OutFile openvino.zip
         Expand-Archive openvino.zip -DestinationPath $(OV_LOCATION)
       displayName: "Download OpenVINO"
 
     - script: |
         git submodule init
         git submodule update
-        python build_ovtf.py --use_openvino_from_location $(OV_LOCATION)/w_openvino_toolkit_windows_2022.2.0.7713.af16ea1d79a_x86_64/
+        python build_ovtf.py --use_openvino_from_location $(OV_LOCATION)/w_openvino_toolkit_windows_2022.3.0.dev20221103_x86_64/
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
