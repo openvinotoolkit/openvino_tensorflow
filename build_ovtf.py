@@ -372,7 +372,7 @@ def main():
             if tags.interpreter == "cp39":
                 command_executor([
                     "pip", "install", "--force-reinstall",
-                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.3.0/tensorflow-2.10.0-cp39-cp39-win_amd64.whl"
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.2.0/tensorflow-2.9.2-cp39-cp39-win_amd64.whl"
                 ])
             else:
                 raise AssertionError("Only python39 is supported on Windows")
