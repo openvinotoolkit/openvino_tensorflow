@@ -32,7 +32,7 @@
 
 #include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
 
-#define ZERODIM_FIX
+//#define ZERODIM_FIX
 
 using tensorflow::int32;
 using namespace std;

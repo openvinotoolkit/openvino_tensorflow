@@ -187,7 +187,13 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
+<<<<<<< HEAD
     if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "2022.3.0", "rkazants/muse_2022_2", "feature/optimize_muse"]):
+=======
+    if (arguments.openvino_version not in [
+            "master", "2022.1.0", "2022.2.0", "rkazants/muse_2022_2", "feature/optimize_muse"
+    ]):
+>>>>>>> 7dd28074 (Dynamic input shape improvements and additional op support (#404))
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
@@ -456,16 +462,30 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
+<<<<<<< HEAD
         if arguments.openvino_branch:
             openvino_release_tag = arguments.openvino_branch
         else:
             openvino_release_tag = arguments.openvino_version
+=======
+        if (arguments.openvino_version == "master"):
+            openvino_release_tag = "master"
+        elif (arguments.openvino_version == "2022.1.0"):
+            openvino_release_tag = "2022.1.0"
+        elif (arguments.openvino_version == "2022.2.0"):
+            openvino_release_tag = "2022.2.0"
+        elif (arguments.openvino_version == "rkazants/muse_2022_2"):
+            openvino_release_tag = "rkazants/muse_2022_2"
+        elif (arguments.openvino_version == "feature/optimize_muse"):
+            openvino_release_tag = "feature/optimize_muse"
+>>>>>>> 7dd28074 (Dynamic input shape improvements and additional op support (#404))
 
         # Download OpenVINO
         download_repo(
             "openvino",
             #"https://github.com/openvinotoolkit/openvino.git",
-            "https://github.com/rkazants/openvino.git",
+            #"https://github.com/rkazants/openvino.git",
+            "https://github.com/dmitry-gorokhov/openvino.git",
             openvino_release_tag,
             submodule_update=True)
         openvino_src_dir = os.path.join(os.getcwd(), "openvino")
