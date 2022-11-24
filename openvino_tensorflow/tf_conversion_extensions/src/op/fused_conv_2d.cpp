@@ -65,12 +65,23 @@ void fill_explicit_pads_vectors(const ov::frontend::NodeContext& node,
     } 
 }
 
+std::shared_ptr<ov::opset8::Transpose> make_transpose(const ov::Output<ov::Node>& arg,
+                                                      const ov::AxisVector& input_order) {
+    auto order = std::make_shared<ov::opset8::Constant>(element::i64, Shape{input_order.size()}, input_order);
+    auto transpose = std::make_shared<ov::opset8::Transpose>(arg, order);
+    return transpose;
+}
+
 OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
   auto num_args = node.get_attribute<int64_t>("num_args");
   auto fused_ops = node.get_attribute<std::vector<string>>("fused_ops");
 
   auto tf_data_format = node.get_attribute<std::string>("data_format");
   bool is_nhwc = (tf_data_format == "NHWC");
+  
+  auto ng_input = node.get_input(0), ng_filter = node.get_input(1);
+  
+  int spatial_dims_num = 2; // for conv2d
 
   auto CreateNgConv = [&](Output<Node>& ng_input, Output<Node>& ng_filter) {
     auto tf_strides = node.get_attribute<std::vector<int64_t>>("strides");
@@ -103,20 +114,18 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
     convert_nhwc_to_hw(is_nhwc, tf_strides, ng_strides);
     convert_nhwc_to_hw(is_nhwc, tf_dilations, ng_dilations);
-    convert_nhwc_to_nchw(is_nhwc, ng_input, ov::Rank(4));
 
-    auto& ng_filter_shape = ng_filter.get_shape();
-    ng_kernel_shape[0] = ng_filter_shape[0];
-    ng_kernel_shape[1] = ng_filter_shape[1];
-    Transpose<3, 2, 0, 1>(ng_filter);
+    ov::frontend::tensorflow::convert_nhwc_to_nchw(is_nhwc, ng_input, ov::Rank(spatial_dims_num + 2));
+    ov::AxisVector permutation_2d = {3, 2, 0, 1};
+    auto filter = make_transpose(ng_filter, permutation_2d);
 
     CoordinateDiff pads_begin;
     CoordinateDiff pads_end;
     if (auto_pad == ov::op::PadType::EXPLICIT) {
-        fill_explicit_pads_vectors(node, is_nhwc, 2, tf_explicit_paddings, pads_begin, pads_end);
+        fill_explicit_pads_vectors(node, is_nhwc, spatial_dims_num, tf_explicit_paddings, pads_begin, pads_end);
     }
 
-    auto res_node = make_shared<Convolution>(ng_input, ng_filter, ng_strides,
+    auto res_node = make_shared<Convolution>(ng_input, filter, ng_strides,
                                              pads_begin, pads_end,
                                              ng_dilations);
     return res_node->output(0);
@@ -144,9 +153,8 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
       }
     }
 
-    auto ng_input = node.get_input(0), ng_filter = node.get_input(1),
-         ng_bias = node.get_input(2),
-         ng_conv = CreateNgConv(ng_input, ng_filter);
+    auto ng_conv = CreateNgConv(ng_input, ng_filter);
+    auto ng_bias = node.get_input(2);
 
     auto ng_conv_shape = ng_conv.get_shape();
     auto ng_bias_shape = ng_bias.get_shape();

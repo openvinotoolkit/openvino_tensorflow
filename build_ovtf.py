@@ -117,15 +117,15 @@ def main():
     parser.add_argument(
         '--openvino_version',
         help="Openvino version to be used for building from source or when using a pre-built package",
-        #default='2022.3.0')
+        default='2022.3.0')
         #default='rkazants/muse_2022_2')
-        default='feature/optimize_muse')
     
     parser.add_argument(
         '--openvino_branch',
         help="Openvino branch to be used for building from source. \n" +
         "Note that this has to be used along openvino_version to specify an appropriate version",
-        action="store")
+        action="store",
+        default='feature/optimize_muse')
 
     parser.add_argument(
         '--python_executable',
