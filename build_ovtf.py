@@ -456,23 +456,10 @@ def main():
         print(
             "NOTE: OpenVINO python module is not built when building from source."
         )
-<<<<<<< HEAD
         if arguments.openvino_branch:
             openvino_release_tag = arguments.openvino_branch
         else:
             openvino_release_tag = arguments.openvino_version
-=======
-        if (arguments.openvino_version == "master"):
-            openvino_release_tag = "master"
-        elif (arguments.openvino_version == "2022.1.0"):
-            openvino_release_tag = "2022.1.0"
-        elif (arguments.openvino_version == "2022.2.0"):
-            openvino_release_tag = "2022.2.0"
-        elif (arguments.openvino_version == "rkazants/muse_2022_2"):
-            openvino_release_tag = "rkazants/muse_2022_2"
-        elif (arguments.openvino_version == "feature/optimize_muse"):
-            openvino_release_tag = "feature/optimize_muse"
->>>>>>> 7dd28074 (Dynamic input shape improvements and additional op support (#404))
 
         # Download OpenVINO
         download_repo(
