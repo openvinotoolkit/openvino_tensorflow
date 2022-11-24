@@ -293,6 +293,10 @@ Status Encapsulator::AnalysisPass() {
         SetAttrValue(
             false,
             &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+      } else if (dst->type_string() == "Reshape" && edge->dst_input() == 1) {
+        SetAttrValue(
+            false,
+            &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
       } else {
         SetAttrValue(
             true, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));

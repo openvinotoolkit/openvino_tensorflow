@@ -39,8 +39,12 @@ from tensorflow.python.eager import context
 from tensorflow.python.eager import wrap_function
 from tensorflow.python.framework import importer
 
+
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
+if (os.environ.get("OPENVINO_TF_DISABLE_REMAPPING") != "0"):
+    tf.config.optimizer.set_experimental_options({'remapping': False})
 
 import ctypes
 
