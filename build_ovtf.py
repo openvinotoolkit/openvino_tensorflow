@@ -187,13 +187,7 @@ def main():
     # Default directories
     build_dir = arguments.build_dir
 
-<<<<<<< HEAD
     if (arguments.openvino_version not in ["master", "2022.1.0", "2022.2.0", "2022.3.0", "rkazants/muse_2022_2", "feature/optimize_muse"]):
-=======
-    if (arguments.openvino_version not in [
-            "master", "2022.1.0", "2022.2.0", "rkazants/muse_2022_2", "feature/optimize_muse"
-    ]):
->>>>>>> 7dd28074 (Dynamic input shape improvements and additional op support (#404))
         raise AssertionError(
             "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
         )
