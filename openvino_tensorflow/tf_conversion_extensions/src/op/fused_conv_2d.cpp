@@ -156,14 +156,18 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
     auto ng_conv = CreateNgConv(ng_input, ng_filter);
     auto ng_bias = node.get_input(2);
 
-    auto ng_conv_shape = ng_conv.get_shape();
-    auto ng_bias_shape = ng_bias.get_shape();
-    if (ng_bias_shape.size() != 1) {
+    auto ng_conv_rank = ng_conv.get_partial_shape().rank();
+    if (ng_conv_rank == ov::Rank::dynamic()) {
+      FRONT_END_GENERAL_CHECK(
+          false, "Convolution shape has dynamic rank");
+    }
+    auto ng_bias_rank = ng_bias.get_partial_shape().rank();
+    if (ng_bias_rank.get_length() != 1) {
       FRONT_END_GENERAL_CHECK(
           false, "Bias argument to BiasAdd does not have one dimension");
     }
 
-    std::vector<size_t> reshape_pattern_values(ng_conv_shape.size(), 1U);
+    std::vector<size_t> reshape_pattern_values(ng_conv_rank.get_length(), 1U);
     reshape_pattern_values[1] = ng_bias.get_shape().front();
     auto reshape_pattern = make_shared<Constant>(
         element::u64, Shape{reshape_pattern_values.size()},
