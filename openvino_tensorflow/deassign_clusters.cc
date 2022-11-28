@@ -430,10 +430,17 @@ Status DeassignClusters(Graph* graph) {
         cluster_cost_map_in_ms.end());
 
   } else {
+    int max_nodes = 0;
+    for (auto& kv : cluster_map) {
+      int cluster_nodes = kv.second.size();
+      if (cluster_nodes > max_nodes) max_nodes = cluster_nodes;
+    }
     min_non_trivial_nodes = num_nodes_marked_before_deassign >> 5;
     int avg_nodes_marked_before_deassign =
         num_nodes_marked_before_deassign / cluster_map.size();
-    if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
+    if (avg_nodes_marked_before_deassign < (max_nodes >> 5)) {
+      min_non_trivial_nodes <<= 1;
+    } else if (min_non_trivial_nodes < avg_nodes_marked_before_deassign * 2) {
       min_non_trivial_nodes >>= 2;
     }
     if (min_non_trivial_nodes < 6) {
