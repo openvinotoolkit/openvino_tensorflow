@@ -18,8 +18,6 @@ ov::op::PadType convert_tf_padding(const ov::frontend::NodeContext& node,
                                                              const std::string& tf_padding) {
     auto op_type = node.get_op_type();
 
-    std::set<std::string> supported_modes = {"VALID", "SAME", "EXPLICIT"};
-
     if (tf_padding == "VALID") {
         return ov::op::PadType::VALID;
     }
@@ -85,7 +83,7 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
   auto CreateNgConv = [&](Output<Node>& ng_input, Output<Node>& ng_filter) {
     auto tf_strides = node.get_attribute<std::vector<int64_t>>("strides");
-    auto tf_dilations = node.get_attribute<std::vector<int64_t>>("dilations");
+    auto tf_dilations = node.get_attribute<std::vector<int64_t>>("dilations", {1, 1, 1, 1});
     auto tf_padding_type = node.get_attribute<std::string>("padding");
     ov::op::PadType auto_pad = convert_tf_padding(node, tf_padding_type);
 
@@ -125,10 +123,11 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
         fill_explicit_pads_vectors(node, is_nhwc, spatial_dims_num, tf_explicit_paddings, pads_begin, pads_end);
     }
 
-    auto res_node = make_shared<Convolution>(ng_input, filter, ng_strides,
+    ov::Output<ov::Node> conv = make_shared<Convolution>(ng_input, filter, ng_strides,
                                              pads_begin, pads_end,
-                                             ng_dilations);
-    return res_node->output(0);
+                                             ng_dilations, auto_pad);
+    
+    return conv;
   };
 
   if (vec_str_cmp(fused_ops, {"BiasAdd"}) ||
