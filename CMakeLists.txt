@@ -261,10 +261,6 @@ elseif (${OPENVINO_VERSION} MATCHES "2022.3.0")
   add_definitions(-DOPENVINO_2022_3=1)
 elseif (${OPENVINO_VERSION} MATCHES "master")
   add_definitions(-DOPENVINO_2022_3=1)
-elseif (${OPENVINO_VERSION} MATCHES "rkazants/muse_2022_2")
-  add_definitions(-DOPENVINO_2022_3=1)
-elseif (${OPENVINO_VERSION} MATCHES "feature/optimize_muse")
-  add_definitions(-DOPENVINO_2022_3=1)
 else()
   message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION}")
 endif()
@@ -296,18 +292,18 @@ include_directories(${InferenceEngine_INCLUDE_DIRS}
                     ${OPENVINO_INSTALL_DIR}/include/)
 
 if(APPLE)
-    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.${OPENVINO_VERSION}.dylib)
+    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.${OPENVINO_VERSION}.dylib)
     set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino.${OPENVINO_VERSION}.dylib)
 elseif(WIN32)
-    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/openvino_tensorflow_fe.dll)
+    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/openvino_tensorflow_frontend.dll)
     set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/openvino.dll)
 else()
 
     if(PY_SCRIPT_BUILD OR USE_OPENVINO_FROM_LOCATION)
-        set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so.${OPENVINO_VERSION_EXT})
+        set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION_EXT})
         set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino.so.${OPENVINO_VERSION_EXT})
     elseif(NOT USE_OPENVINO_FROM_LOCATION)
-        set(libtensorflow_frontend_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/Release/libopenvino_tensorflow_fe.so.${OPENVINO_VERSION_EXT})
+        set(libtensorflow_frontend_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/Release/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION_EXT})
         set(libopenvino_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/Release/libopenvino.so.${OPENVINO_VERSION_EXT})
     endif()
 endif()
@@ -321,7 +317,7 @@ set_target_properties(
 if(WIN32)
     set_target_properties(
             tensorflow_frontend_lib
-            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_fe.lib
+            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_frontend.lib
         )
 endif()
 
