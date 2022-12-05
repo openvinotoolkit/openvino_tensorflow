@@ -32,7 +32,7 @@
 
 #include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
 
-//#define ZERODIM_FIX
+#define ZERODIM_FIX
 
 using tensorflow::int32;
 using namespace std;
@@ -4798,7 +4798,8 @@ Status Builder::TranslateGraphWithTFFE(
   };
 
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+    if (!(ng_parameter_list[i]->get_partial_shape().is_static()) ||
+        !(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }
