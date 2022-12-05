@@ -48,6 +48,8 @@ OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
       return {make_shared<Clamp>(ng_add, 0, 6)};
     } else if (fused_ops[1] == "Elu") {
       return {make_shared<Elu>(ng_add, 1.0)};
+    } else if (fused_ops[1] == "Tanh") {
+      return {make_shared<Tanh>(ng_add)};
     } else {
       FRONT_END_GENERAL_CHECK(
           false,
