@@ -15,59 +15,60 @@ namespace tensorflow {
 namespace op {
 
 ov::op::PadType convert_tf_padding(const ov::frontend::NodeContext& node,
-                                                             const std::string& tf_padding) {
-    auto op_type = node.get_op_type();
+                                   const std::string& tf_padding) {
+  auto op_type = node.get_op_type();
 
-    if (tf_padding == "VALID") {
-        return ov::op::PadType::VALID;
-    }
-    if (tf_padding == "SAME") {
-            // According to the formulas for calculating auto_pad values of the
-            // Conv layer in the Operation specification,
-            // the SAME_UPPER value matches to the SAME value in TensorFlow
-            return ov::op::PadType::SAME_UPPER;
-    }
+  if (tf_padding == "VALID") {
+    return ov::op::PadType::VALID;
+  }
+  if (tf_padding == "SAME") {
+    // According to the formulas for calculating auto_pad values of the
+    // Conv layer in the Operation specification,
+    // the SAME_UPPER value matches to the SAME value in TensorFlow
+    return ov::op::PadType::SAME_UPPER;
+  }
 
-    return ov::op::PadType::EXPLICIT;
+  return ov::op::PadType::EXPLICIT;
 }
 
-void fill_explicit_pads_vectors(const ov::frontend::NodeContext& node,
-                                                          bool is_nhwc,
-                                                          size_t spatial_dims_num,
-                                                          const std::vector<int64_t>& tf_explicit_paddings,
-                                                          ov::CoordinateDiff& pads_begin,
-                                                          ov::CoordinateDiff& pads_end) {
-    auto fullfill_pads = [&](ov::CoordinateDiff& pads, const std::vector<int64_t>& indexes) {
-        pads.resize(indexes.size());
-        for (int i = 0; i < indexes.size(); ++i) {
-            pads[i] = tf_explicit_paddings[indexes[i]];
-        }
-    };
+void fill_explicit_pads_vectors(
+    const ov::frontend::NodeContext& node, bool is_nhwc,
+    size_t spatial_dims_num, const std::vector<int64_t>& tf_explicit_paddings,
+    ov::CoordinateDiff& pads_begin, ov::CoordinateDiff& pads_end) {
+  auto fullfill_pads = [&](ov::CoordinateDiff& pads,
+                           const std::vector<int64_t>& indexes) {
+    pads.resize(indexes.size());
+    for (int i = 0; i < indexes.size(); ++i) {
+      pads[i] = tf_explicit_paddings[indexes[i]];
+    }
+  };
 
-    if (spatial_dims_num == 2) {
-        // TENSORFLOW_OP_VALIDATION(node,
-        //                          tf_explicit_paddings.size() == 8,
-        //                          "Conv2D expects 8 padding values for EXPLICIT padding mode.");
-        // prepare pads_begin and pads_end attributes for EXPLICIT padding mode
-        if (is_nhwc) {
-            // For NHWC layout, explicit paddings has the following form:
-            // [0, 0, pad_h1, pad_h2, pad_w1, pad_w2, 0, 0]
-            fullfill_pads(pads_begin, {2, 4});
-            fullfill_pads(pads_end, {3, 5});
-        } else {
-            // For NCHW layout, explicit paddings has the following form:
-            // [0, 0, 0, 0, pad_h1, pad_h2, pad_w1, pad_w2]
-            fullfill_pads(pads_begin, {4, 6});
-            fullfill_pads(pads_end, {5, 7});
-        }
-    } 
+  if (spatial_dims_num == 2) {
+    // TENSORFLOW_OP_VALIDATION(node,
+    //                          tf_explicit_paddings.size() == 8,
+    //                          "Conv2D expects 8 padding values for EXPLICIT
+    //                          padding mode.");
+    // prepare pads_begin and pads_end attributes for EXPLICIT padding mode
+    if (is_nhwc) {
+      // For NHWC layout, explicit paddings has the following form:
+      // [0, 0, pad_h1, pad_h2, pad_w1, pad_w2, 0, 0]
+      fullfill_pads(pads_begin, {2, 4});
+      fullfill_pads(pads_end, {3, 5});
+    } else {
+      // For NCHW layout, explicit paddings has the following form:
+      // [0, 0, 0, 0, pad_h1, pad_h2, pad_w1, pad_w2]
+      fullfill_pads(pads_begin, {4, 6});
+      fullfill_pads(pads_end, {5, 7});
+    }
+  }
 }
 
-std::shared_ptr<ov::opset8::Transpose> make_transpose(const ov::Output<ov::Node>& arg,
-                                                      const ov::AxisVector& input_order) {
-    auto order = std::make_shared<ov::opset8::Constant>(element::i64, Shape{input_order.size()}, input_order);
-    auto transpose = std::make_shared<ov::opset8::Transpose>(arg, order);
-    return transpose;
+std::shared_ptr<ov::opset8::Transpose> make_transpose(
+    const ov::Output<ov::Node>& arg, const ov::AxisVector& input_order) {
+  auto order = std::make_shared<ov::opset8::Constant>(
+      element::i64, Shape{input_order.size()}, input_order);
+  auto transpose = std::make_shared<ov::opset8::Transpose>(arg, order);
+  return transpose;
 }
 
 OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
@@ -76,20 +77,22 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
   auto tf_data_format = node.get_attribute<std::string>("data_format");
   bool is_nhwc = (tf_data_format == "NHWC");
-  
+
   auto ng_input = node.get_input(0), ng_filter = node.get_input(1);
-  
-  int spatial_dims_num = 2; // for conv2d
+
+  int spatial_dims_num = 2;  // for conv2d
 
   auto CreateNgConv = [&](Output<Node>& ng_input, Output<Node>& ng_filter) {
     auto tf_strides = node.get_attribute<std::vector<int64_t>>("strides");
-    auto tf_dilations = node.get_attribute<std::vector<int64_t>>("dilations", {1, 1, 1, 1});
+    auto tf_dilations =
+        node.get_attribute<std::vector<int64_t>>("dilations", {1, 1, 1, 1});
     auto tf_padding_type = node.get_attribute<std::string>("padding");
     ov::op::PadType auto_pad = convert_tf_padding(node, tf_padding_type);
 
     auto tf_explicit_paddings = std::vector<int64_t>{};
     if (auto_pad == ov::op::PadType::EXPLICIT) {
-        tf_explicit_paddings = node.get_attribute<std::vector<int64_t>>("explicit_paddings", {});
+      tf_explicit_paddings =
+          node.get_attribute<std::vector<int64_t>>("explicit_paddings", {});
     }
 
     if (tf_data_format != "NHWC" && tf_data_format != "NCHW") {
@@ -113,20 +116,22 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
     convert_nhwc_to_hw(is_nhwc, tf_strides, ng_strides);
     convert_nhwc_to_hw(is_nhwc, tf_dilations, ng_dilations);
 
-    ov::frontend::tensorflow::convert_nhwc_to_nchw(is_nhwc, ng_input, ov::Rank(spatial_dims_num + 2));
+    ov::frontend::tensorflow::convert_nhwc_to_nchw(
+        is_nhwc, ng_input, ov::Rank(spatial_dims_num + 2));
     ov::AxisVector permutation_2d = {3, 2, 0, 1};
     auto filter = make_transpose(ng_filter, permutation_2d);
 
     CoordinateDiff pads_begin;
     CoordinateDiff pads_end;
     if (auto_pad == ov::op::PadType::EXPLICIT) {
-        fill_explicit_pads_vectors(node, is_nhwc, spatial_dims_num, tf_explicit_paddings, pads_begin, pads_end);
+      fill_explicit_pads_vectors(node, is_nhwc, spatial_dims_num,
+                                 tf_explicit_paddings, pads_begin, pads_end);
     }
 
-    ov::Output<ov::Node> conv = make_shared<Convolution>(ng_input, filter, ng_strides,
-                                             pads_begin, pads_end,
-                                             ng_dilations, auto_pad);
-    
+    ov::Output<ov::Node> conv =
+        make_shared<Convolution>(ng_input, filter, ng_strides, pads_begin,
+                                 pads_end, ng_dilations, auto_pad);
+
     return conv;
   };
 
@@ -157,8 +162,7 @@ OutputVector translate_fused_conv_2d_op(const ov::frontend::NodeContext& node) {
 
     auto ng_conv_rank = ng_conv.get_partial_shape().rank();
     if (ng_conv_rank == ov::Rank::dynamic()) {
-      FRONT_END_GENERAL_CHECK(
-          false, "Convolution shape has dynamic rank");
+      FRONT_END_GENERAL_CHECK(false, "Convolution shape has dynamic rank");
     }
     auto ng_bias_rank = ng_bias.get_partial_shape().rank();
     if (ng_bias_rank.get_length() != 1) {
