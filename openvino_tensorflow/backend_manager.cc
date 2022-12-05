@@ -40,7 +40,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
   m_backend = backend;
   if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
-    m_tf_frontend_disabled = true;
   } else if (bname.find("GPU") != string::npos) {
     // Since m_backend_name is assigned "GPU" whenever the string "GPU" is found
     // in bname,
@@ -53,7 +52,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
-    if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
   // read value of OPENVINO_TF_ENABLE_PERF_COUNT
   const char* openvino_tf_enable_perf_count =
