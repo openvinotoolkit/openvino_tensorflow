@@ -125,7 +125,7 @@ if (PYTHON)
      endif()
 
     # Glob and install TBB libs during install time
-    if (NOT PY_SCRIPT_BUILD)
+    if (STANDALONE_CMAKE)
         file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
         foreach(LIB_FILE ${TBB_LIB_FILES})
             get_filename_component(lib_file_name ${LIB_FILE} NAME)
@@ -143,7 +143,7 @@ if (PYTHON)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/
     )
 
-    if (NOT PY_SCRIPT_BUILD)
+    if (STANDALONE_CMAKE)
 
         file(GLOB OVTF_WHEEL_FILE "${CMAKE_BINARY_DIR}/python/dist/*")
 

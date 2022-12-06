@@ -4,7 +4,7 @@
 
 set(LIB_NAME openvino_tensorflow)
 
-if (PY_SCRIPT_BUILD)
+if (NOT STANDALONE_CMAKE)
   include_directories(${OPENVINO_INSTALL_DIR}/include)
 endif()
 
@@ -214,13 +214,13 @@ if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
   foreach(LIB_FILE ${OPENVINO_LIB_FILES})
-      if (PY_SCRIPT_BUILD)
+      if (NOT STANDALONE_CMAKE)
         file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
       endif()
       get_filename_component(lib_file_name ${LIB_FILE} NAME)
       set(lib_file_real_path "${OVTF_INSTALL_LIB_DIR}/${lib_file_name}")
       if(${lib_file_name} MATCHES ".so*")
-          if (NOT PY_SCRIPT_BUILD)
+          if (STANDALONE_CMAKE)
             install(CODE "execute_process(COMMAND cp -av ${LIB_FILE} ${OVTF_INSTALL_LIB_DIR} COMMAND_ECHO STDOUT)")
           endif()
           install(CODE "
@@ -230,7 +230,7 @@ if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
   endforeach()
 endif()
 
-if (NOT PY_SCRIPT_BUILD)
+if (STANDALONE_CMAKE)
 
   if (NOT USE_OPENVINO_FROM_LOCATION)
     # Configure OpenVINO as OVTF's dependency
@@ -256,7 +256,7 @@ install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
 install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
-install(CODE "set(PY_SCRIPT_BUILD \"${PY_SCRIPT_BUILD}\")")
+install(CODE "set(STANDALONE_CMAKE \"${STANDALONE_CMAKE}\")")
 install(CODE "set(TBB_LIBS \"${TBB_LIBS}\")")
 
 if(PYTHON3X_EXECUTABLE)

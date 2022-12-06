@@ -66,6 +66,10 @@ option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
 option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
 option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
 
+if(NOT PY_SCRIPT_BUILD)
+option(STANDALONE_CMAKE "Global flag to specify that this is a cmake only build" TRUE)
+endif()
+
 message(STATUS "OPENVINO_TF_INSTALL_PREFIX: ${OPENVINO_TF_INSTALL_PREFIX}")
 message(STATUS "OPENVINO_ARTIFACTS_DIR: ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
@@ -74,7 +78,8 @@ message(STATUS "TF_PIP_VERSION: ${TF_PIP_VERSION}")
 
 find_package (Python3 REQUIRED COMPONENTS Interpreter)
 
-if(NOT PY_SCRIPT_BUILD)
+
+if(STANDALONE_CMAKE)
     # Create the python virtual environment
     set(VENV "${CMAKE_CURRENT_BINARY_DIR}/venv-tf-py3")
 
@@ -183,7 +188,12 @@ else()
 endif()
 
 # Find TensorFlow
-find_package(TensorFlow REQUIRED)
+if(STANDALONE_CMAKE)
+    # Use a separate TensorFlow finder if we're building with standalone CMake
+    include(cmake/FindTensorFlowStandalone.cmake)
+else()
+    find_package(TensorFlow REQUIRED)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
