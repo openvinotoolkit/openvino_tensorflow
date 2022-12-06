@@ -32,7 +32,7 @@ target_include_directories(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME} tensorflow_frontend_lib openvino_lib)
 
-if ((NOT PY_SCRIPT_BUILD) AND (NOT USE_OPENVINO_FROM_LOCATION))
+if ((STANDALONE_CMAKE) AND (NOT USE_OPENVINO_FROM_LOCATION))
   add_dependencies(${TARGET_NAME}
                    openvino::runtime
                    openvino::runtime::c
