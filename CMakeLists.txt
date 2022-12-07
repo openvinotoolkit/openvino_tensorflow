@@ -274,9 +274,9 @@ endif()
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 elseif(APPLE)
-    set(LIB "lib/intel64/Release")
+    set(LIB "lib/intel64/${CMAKE_BUILD_TYPE}")
 elseif(WIN32)
-    set(LIB "bin/intel64/Release")
+    set(LIB "bin/intel64/${CMAKE_BUILD_TYPE}")
 else()
     set(LIB "lib/intel64")
 endif()
@@ -305,8 +305,8 @@ else()
         set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION})
         set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino.so.${OPENVINO_VERSION})
     elseif(NOT USE_OPENVINO_FROM_LOCATION)
-        set(libtensorflow_frontend_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/Release/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION})
-        set(libopenvino_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/Release/libopenvino.so.${OPENVINO_VERSION})
+        set(libtensorflow_frontend_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/${CMAKE_BUILD_TYPE}/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION})
+        set(libopenvino_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/${CMAKE_BUILD_TYPE}/libopenvino.so.${OPENVINO_VERSION})
     endif()
 endif()
 
@@ -319,7 +319,7 @@ set_target_properties(
 if(WIN32)
     set_target_properties(
             tensorflow_frontend_lib
-            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_frontend.lib
+            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/${CMAKE_BUILD_TYPE}/openvino_tensorflow_frontend.lib
         )
 endif()
 
@@ -333,7 +333,7 @@ set_target_properties(
 if(WIN32)
     set_target_properties(
             openvino_lib
-            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/Release/openvino.lib
+            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/${CMAKE_BUILD_TYPE}/openvino.lib
         )
 endif()
 
