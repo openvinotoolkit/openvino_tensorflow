@@ -97,6 +97,7 @@ Status EncapsulateClusters(
       ss << "ovtf_cluster_" << cluster_idx;
       std::string filename_prefix = ss.str();
 
+      GraphToPbFile(&g, filename_prefix + ".pb");
       GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
       GraphToDotFile(&g, filename_prefix + ".dot",
                      "nGraph Cluster Dump: " + filename_prefix);
