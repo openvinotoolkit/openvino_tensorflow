@@ -32,7 +32,7 @@ OutputVector translate_depthwise_conv_2d_native_op(
   convert_nhwc_to_hw(is_nhwc, ng_input.get_shape(), ng_image_shape);
   convert_nhwc_to_hw(is_nhwc, tf_strides, ng_strides);
   convert_nhwc_to_hw(is_nhwc, tf_dilations, ng_dilations);
-  convert_nhwc_to_nchw(is_nhwc, ng_input);
+  convert_nhwc_to_nchw(is_nhwc, ng_input, ov::Rank(4));
   auto& ng_filter_shape = ng_filter.get_shape();
   ng_kernel_shape[0] = ng_filter_shape[0];
   ng_kernel_shape[1] = ng_filter_shape[1];
@@ -58,7 +58,7 @@ OutputVector translate_depthwise_conv_2d_native_op(
 
   auto op_type = node.get_op_type();
   if (op_type == "DepthwiseConv2dNative") {
-    convert_nchw_to_nhwc(is_nhwc, ng_conv);
+    convert_nchw_to_nhwc(is_nhwc, ng_conv, ov::Rank(4));
     return {ng_conv};
   } else if (op_type == "_FusedDepthwiseConv2dNative") {
     int num_args = node.get_attribute<int>("num_args");
@@ -89,10 +89,10 @@ OutputVector translate_depthwise_conv_2d_native_op(
 
     if (fused_ops == vector<string>{"BiasAdd", "Relu6"}) {
       auto ng_relu6 = make_shared<Clamp>(ng_add, 0, 6)->output(0);
-      convert_nchw_to_nhwc(is_nhwc, ng_relu6);
+      convert_nchw_to_nhwc(is_nhwc, ng_relu6, ov::Rank(4));
       return {ng_relu6};
     } else {
-      convert_nchw_to_nhwc(is_nhwc, ng_add);
+      convert_nchw_to_nhwc(is_nhwc, ng_add, ov::Rank(4));
       return {ng_add};
     }
   }

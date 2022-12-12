@@ -39,6 +39,7 @@ from tensorflow.python.eager import context
 from tensorflow.python.eager import wrap_function
 from tensorflow.python.framework import importer
 
+
 # This will turn off V1 API related warnings
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -487,7 +488,123 @@ if ovtf_classic_loaded:
           return optimized_func
         else:
           return optimized_func
-                
+
+
+
+    def convert_variables_to_constants_with_openvino_tf2(saved_model_dir,
+                                                         input_tensors=None,
+                                                         saved_model_signature=
+                                                         signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+                                                         saved_model_tag=tag_constants.SERVING
+                                                         ):
+        """
+        Converts all Variable ops into Const ops, and inlines supported compute heavy subgraphs 
+        as encapsulated OpenVINO custom ops. Returns a single ConcreteFunction specialized to 
+        input shape and dtype of the provided 'input_tensor'.
+
+        Example usage:
+
+        >>> import openvino_tensorflow as ovtf
+        >>> model_path = "ssd_resnet101_v1_fpn_1024x1024"
+        >>> image_numpy = np.array(np.random.rand(1, 1024,1024,3)).astype(np.uint8)
+        >>> input_tensor = tf.convert_to_tensor(image_numpy, dtype=tf.uint8)
+        >>> model = ovtf.convert_variables_to_constants_with_openvino_tf2(model_path, input_tensor)
+        >>> print(model)
+        <ConcreteFunction pruned(args_0) at 0x>
+        >>> results = model(input_tensor)
+        
+        Args:
+          saved_model_dir: The SavedModel directory to load from.
+          input_tensors: A tf.Tensor, a list or a dict of tf.Tensor or numpy arrays, whose shape and
+            type will be used by OpenVINOGrapplerOptimizer for cost analysis. 
+          saved_model_signature: SavedModel tag to load
+          saved_model_tag: The SavedModel function signature key, whose graph will be optimized
+
+        Raises:
+          AssertionError: If the SavedModel path is invalid
+          AssertionError: If a backend other than CPU is used
+
+        Returns:
+          The optimized TF ConcreteFunction object
+        """
+
+        #[TODO] Add support for taking direct tf.Graph or tf.function inputs
+        
+        if not ((TF_MAJOR_VERSION >= 2) and (TF_MINOR_VERSION >= 8)):
+            raise AssertionError("Only TF Versions >= 2.8.x are supported for the optimize_graph APIs")
+
+        if not os.path.exists(saved_model_dir):
+          raise AssertionError("Could not find saved model path")
+
+        if get_backend() != "CPU":
+          raise AssertionError(("Offline TF Graph optimization with OpenVINOGrapplerOptimizer "
+                                  "is only available for the CPU backend."
+                                  "\n Consider removing the call to "
+                                  "optimize_graph_with_openvino_tf2 to use OpenVINO"
+                                  "on other backends."))
+        
+        # prepare tf function from saved_model
+        # Load model with provided saved model tag
+        try:
+          # Try the provided tag or the default tag
+          saved_model = load.load(saved_model_dir, saved_model_tag)
+        except RuntimeError as e:
+          # Catch RuntimeError if failed to load tag
+          # Try skipping tag if the SavedModel contains a single MetaGraph, 
+          # as for those exported from `tf.saved_model.save`.
+          if saved_model_tag == tag_constants.SERVING:
+              saved_model = load.load(saved_model_dir)
+          else:
+              raise RuntimeError(e)
+
+        # form a concrete function with input tensor in it so grappler can do shape inference
+        # Select desired saved model function signature
+        try:
+          # try the provided signature or the default signature
+          print("Available Saved Model Signatures: ", saved_model.signatures)
+          print("Selecting Signature: ", saved_model_signature)
+            
+          func = tf.function(saved_model.signatures[saved_model_signature])
+          
+        except KeyError as e:
+          # If the provided signature doesn't work, 
+          # let tf.function try inferring available signatures
+          # If `None`, a separate function is instantiated for each inferred input signature
+          if saved_model_signature == signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+              func = tf.function(saved_model)
+          else:
+              raise RuntimeError(e)
+
+        # Handle all types of possible input tensors
+        if isinstance(input_tensors, dict):
+          tensors = {name:(ops.convert_to_tensor(v) if not isinstance(v, tf.Tensor) else v) 
+                     for name, v in input_tensors.items()}
+          func = tf.function(func)
+          args, kwargs = [], tensors
+        elif isinstance(input_tensors, list):
+          tensors = [ops.convert_to_tensor(v) if not isinstance(v, tf.Tensor) else v 
+                     for v in input_tensors]
+          input_signature = [tf.TensorSpec.from_tensor(v) for v in tensors]
+          func = tf.function(func, input_signature=input_signature)
+          args, kwargs = [], {}
+        else:
+          if not isinstance(input_tensors, tf.Tensor):
+            tensors = ops.convert_to_tensor(input_tensors) 
+          else:
+            tensors = input_tensors
+          input_signature = [tf.TensorSpec.from_tensor(tensors)]
+          func = tf.function(func, input_signature=input_signature)
+          args, kwargs = [], {}
+        
+        func = func.get_concrete_function(*args, **kwargs)
+        
+        # Converting var2consts for larger models might take a long time
+        frozen_func = convert_to_constants.convert_variables_to_constants_v2(func, 
+                                                lower_control_flow=False, aggressive_inlining=True)
+
+        return frozen_func
+
+
     __version__ = \
     "OpenVINO integration with TensorFlow version: " + str(openvino_tensorflow_lib.version()) \
     + "\n" + \

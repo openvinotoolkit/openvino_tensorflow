@@ -47,6 +47,21 @@ void GraphToPbTextFile(Graph* graph, const string& filename) {
 }
 
 //-----------------------------------------------------------------------------
+// GraphToPbFile
+//-----------------------------------------------------------------------------
+void GraphToPbFile(Graph* graph, const string& filename) {
+  GraphDef g_def;
+  graph->ToGraphDef(&g_def);
+
+  // Create a FileSystem object.
+  std::ofstream output_file(filename, std::ios::binary);
+
+  // Save the GraphDef to a pb file.
+  g_def.SerializeToOstream(&output_file);
+  
+}
+
+//-----------------------------------------------------------------------------
 // GraphToDotFile
 //-----------------------------------------------------------------------------
 void GraphToDotFile(Graph* graph, const std::string& filename,

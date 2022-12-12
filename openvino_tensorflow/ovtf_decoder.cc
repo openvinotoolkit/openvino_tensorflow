@@ -207,6 +207,8 @@ ov::Any OVTFDecoder::get_attribute(const std::string& name) const {
             break;
           case ov::element::bf16:
             extract_tensor_content<bfloat16>(tensor_content, &res);
+          case ov::element::boolean:
+            extract_tensor_content<bool>(tensor_content, &res);
             break;
           default:
             FRONT_END_THROW("Encountered unknown element type " +

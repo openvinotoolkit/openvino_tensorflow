@@ -507,26 +507,28 @@ Status AssignClusters(Graph* graph) {
 
     auto log_reason = [](EdgeNonContractionReasons reason, Edge* edge) {
 
-      if (edge->src()->type_string()!="_Arg" && edge->src()->type_string()!="ReadVariableOp" &&
-          edge->dst()->type_string()!="ReadVariableOp" && edge->dst()->type_string()!="_Retval") {
+      if (edge->src()->type_string() != "_Arg" &&
+          edge->src()->type_string() != "ReadVariableOp" &&
+          edge->dst()->type_string() != "ReadVariableOp" &&
+          edge->dst()->type_string() != "_Retval") {
+        std::string unsupported_op = "";
+        if (!NodeIsMarkedForClustering(edge->src()))
+          unsupported_op = edge->src()->type_string();
+        if (!NodeIsMarkedForClustering(edge->dst()))
+          unsupported_op = edge->dst()->type_string();
+        if (!NodeIsMarkedForClustering(edge->src()) &&
+            !NodeIsMarkedForClustering(edge->dst()))
+          unsupported_op =
+              edge->src()->type_string() + " AND " + edge->dst()->type_string();
 
-      std::string unsupported_op = "";
-      if(!NodeIsMarkedForClustering(edge->src()))
-        unsupported_op = edge->src()->type_string();
-      if(!NodeIsMarkedForClustering(edge->dst()))
-        unsupported_op = edge->dst()->type_string();
-      if(!NodeIsMarkedForClustering(edge->src()) && 
-         !NodeIsMarkedForClustering(edge->dst()))
-        unsupported_op = edge->src()->type_string() + " AND " + edge->dst()->type_string();
-
-      OVTF_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << " (" << unsupported_op << "): "
-                   << edge->src()->name() << "<" << edge->src()->type_string()
-                   << ">"
-                   << "[" << edge->src_output() << "] -> "
-                   << edge->dst()->name() << "<" << edge->dst()->type_string()
-                   << ">"
-                   << "[" << edge->dst_input() << "]";
-          }
+        OVTF_VLOG(0) << "NONCONTRACTION: " << reason_string[reason] << " ("
+                     << unsupported_op << "): " << edge->src()->name() << "<"
+                     << edge->src()->type_string() << ">"
+                     << "[" << edge->src_output() << "] -> "
+                     << edge->dst()->name() << "<" << edge->dst()->type_string()
+                     << ">"
+                     << "[" << edge->dst_input() << "]";
+      }
     };
 
     for (auto edge : graph->edges()) {
