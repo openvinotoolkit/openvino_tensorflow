@@ -21,6 +21,7 @@ char* BackendManager::m_model_cache_dir = nullptr;
 bool BackendManager::m_tf_frontend_disabled = false;
 bool BackendManager::m_dynamic_shapes_enabled = false;
 bool BackendManager::m_output_zero_copy = false;
+bool BackendManager::m_static_input_checks_disabled = false;
 
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
@@ -92,6 +93,19 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if (openvino_tf_output_zero_copy != nullptr) {
     if (1 == std::stoi(openvino_tf_output_zero_copy)) {
       m_output_zero_copy = true;
+    }
+  }
+
+  const char* openvino_tf_disable_static_input_checks =
+      std::getenv("OPENVINO_TF_DISABLE_STATIC_INPUT_CHECKS");
+  if (openvino_tf_disable_static_input_checks != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_static_input_checks)) {
+      m_static_input_checks_disabled = true;
+    }
+    if (m_tf_frontend_disabled == true) {
+      m_static_input_checks_disabled = false;  // ignore envvar and always
+                                               // enable static input checking
+                                               // when TFFE is not enabled
     }
   }
 
@@ -191,6 +205,11 @@ bool BackendManager::DynamicShapesEnabled() { return m_dynamic_shapes_enabled; }
 
 // Returns true if zero-copy enabled for dynamic outputs
 bool BackendManager::OutputZeroCopy() { return m_output_zero_copy; }
+
+// Returns true if static input checking is disabled
+bool BackendManager::StaticInputChecksDisabled() {
+  return m_static_input_checks_disabled;
+}
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow
