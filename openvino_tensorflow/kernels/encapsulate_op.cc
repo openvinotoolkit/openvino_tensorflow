@@ -96,7 +96,7 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   m_iter = 0;
   // if this is set to 1, run time cost based assignment of clusters will be
   // disabled
-  m_disable_cost_based_assignment = 1;
+  m_disable_cost_based_assignment = 0;
   const char* openvino_tf_disable_cost_assignment =
       std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT");
   if (openvino_tf_disable_cost_assignment != nullptr) {
