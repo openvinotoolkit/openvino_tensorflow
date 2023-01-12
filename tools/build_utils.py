@@ -877,7 +877,8 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
         "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"", "-DTHREADING=" + threading,
-        "-DENABLE_INTEL_MYRIAD=OFF", "-DENABLE_INTEL_MYRIAD_COMMON=OFF"
+        "-DENABLE_INTEL_MYRIAD=OFF", "-DENABLE_INTEL_MYRIAD_COMMON=OFF",
+        "-DCMAKE_DISABLE_FIND_PACKAGE_gflags=1"
     ]
 
     if (platform.system() == 'Windows'):
