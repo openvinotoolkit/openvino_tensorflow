@@ -495,6 +495,9 @@ Status DeassignClusters(Graph* graph) {
           non_trivial_count++;
         }
 
+        // Check for illegal patterns to deassign.
+        // TODO: This should be removed once these
+        // patterns are passing OV optimizations.
         if (node->type_string() == "Select") {
             Node *in_node_first = nullptr;
             node->input_node(0, &in_node_first);
