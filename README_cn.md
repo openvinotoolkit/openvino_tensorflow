@@ -25,7 +25,7 @@
 
 - Ubuntu 18.04, 20.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
 - Python* 3.7, 3.8 or 3.9
-- TensorFlow* v2.9.2
+- TensorFlow* v2.9.3
 
 <sup>1</sup>Windows安装包仅支持Python3.9 
 
@@ -38,7 +38,7 @@
   
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.2
+        pip3 install tensorflow==2.9.3
         pip3 install openvino-tensorflow==2.3.0
 
 关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#windows)
@@ -60,10 +60,11 @@
 
 它会生成以下输出：
 
-        TensorFlow version:  2.9.2
+        TensorFlow version:  2.9.3
         OpenVINO integration with TensorFlow version: b'2.3.0'
         OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.9.2
+
         CXX11_ABI flag used for this build: 1
 
 默认情况下，英特尔<sup>®</sup> CPU 用于运行推理。您也可以将默认选项改为英特尔<sup>®</sup> 集成 GPU 或英特尔<sup>®</sup> VPU 来进行 AI 推理。调用以下函数，更改执行推理的硬件。

@@ -145,7 +145,7 @@
 
 1. 从 PyPi 中获取兼容的TensorFlow 包，使用指定位置的OpenVINO™库。这是针对大多数使用案例推荐的构建选项。
 
-       python3 build_ovtf.py --tf_version=v2.9.2 --use_openvino_from_location=/opt/intel/openvino_2022.3.0/
+       python3 build_ovtf.py --tf_version=v2.9.3 --use_openvino_from_location=/opt/intel/openvino_2022.3.0/
 
 2. 从 PyPi 中获取兼容的TensorFlow 包，从源代码克隆和构建 OpenVINO™。确保构建选项与CXX11_ABI兼容。早于2.9.0版本的TensorFlow使用CXX11_ABI=0编译，这与OpenVINO™发行包不兼容。选择该选项主要为了在早于2.9.0版本的TensorFlow上构建**OpenVINO™ integration with TensorFlow**或在没有安装OpenVINO™发行包时。如果不设置"--cxx11_abi_version"的默认值，默认值为1.
 
@@ -172,13 +172,13 @@
 
 从PyPi中获取兼容的TensorFlow 版本，克隆并编译OpenVINO™ 源码。当前在macOS上仅支持ABI0。
 
-        python3 build_ovtf.py --tf_version=v2.9.2 --openvino_version=2022.3.0 --cxx11_abi_version=0
+        python3 build_ovtf.py --tf_version=v2.9.3 --openvino_version=2022.3.0 --cxx11_abi_version=0
 
 ###  2.3. <a name='BuildInstructionsWindows'></a>针对 **Windows**的构建指令
 使用管理员权限打开 "Command Prompt"或"x64 Native Tools Command Prompt for VS 2019"，并从源代码采用以下构建选项：
-1. 从 Github 发布版本中获取预构建 TensorFlow 2.9.2 python包。 使用来自指定位置的 OpenVINO™ 二进制文件。
+1. 从 Github 发布版本中获取预构建 TensorFlow 2.9.3 python包。 使用来自指定位置的 OpenVINO™ 二进制文件。
 
-        python build_ovtf.py --tf_version=v2.9.2 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.3.0" 
+        python build_ovtf.py --tf_version=v2.9.3 --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.3.0" 
 
 2.  使用指定位置的预构建 TensorFlow（[参阅 TensorFlow 构建指令](#TFWindows)）。使用指定位置的OpenVINO™ 二进制文件。使用此构建选项运行C++示例，并将openvino-tensorflow集成至TensorFlow C++推理应用中。
 
@@ -187,7 +187,7 @@
 ###  2.4. <a name='BuildInstructionsforIntelAtomProcessor'></a>Intel Atom® 处理器的构建指令
 为了构建 **OpenVINO™ integration with TensorFlow** 与英特尔凌动® 处理器一起使用，我们建议使用以下命令从源代码构建 TensorFlow：
 
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.2 --target_arch silvermont
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.3 --target_arch silvermont
         python3 build_ovtf.py --use_tensorflow_from_location=${PATH_TO_TF_BUILD} --openvino_version=2022.3.0 --target_arch silvermont
 
 ###  2.5. <a name='BuildVerification'></a> 编译校验
@@ -206,7 +206,7 @@
 
 它会生成以下输出：
 
-        TensorFlow version:  2.9.2
+        TensorFlow version:  2.9.3
         OpenVINO integration with TensorFlow version: b'2.3.0'
         OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.9.2
@@ -220,11 +220,12 @@
 该命令将运行 `openvino_tensorflow` 源代码树的所有 C++ 和 Python 单元测试。还使用 OpenVINO™ 运行各种 TensorFlow Python 测试。
   
 ##  3. <a name='BackwardsCompatibilitywithTensorFlow'></a>TensorFlow在Linux平台的向后兼容性
-**OpenVINO™ integration with TensorFlow**核心库保证**TensorFlow 2.x APIs**的向后兼容性。这意味着您将可以使用TensorFlow 2.x.过去的副版本（已验证TensorFlow v2.4.4、v2.5.3、v2.6.3、v2.7.1、v2.8.0和2.9.2版本) 构建源代码。但TensorFlow不保证其副版本对C++运行时库的二进制界面兼容性（参见https://www.tensorflow.org/guide/versions）。 
+**OpenVINO™ integration with TensorFlow**核心库保证**TensorFlow 2.x APIs**的向后兼容性。这意味着您将可以使用TensorFlow 2.x.过去的副版本（已验证TensorFlow v2.4.4、v2.5.3、v2.6.3、v2.7.1、v2.8.0和2.9.3版本) 构建源代码。但TensorFlow不保证其副版本对C++运行时库的二进制界面兼容性（参见https://www.tensorflow.org/guide/versions）。 
 
-因此依赖指定TensorFlow版本的 **OpenVINO™ integration with TensorFlow** wheel将无法兼容TensorFlow out-of-the-box过去的副版本（示例：依赖TF 2.9.2的PyPi openvino-tensorflow 2.3.0无法兼容PyPi TensorFlow 2.6.0）。
+因此依赖指定TensorFlow版本的 **OpenVINO™ integration with TensorFlow** wheel将无法兼容TensorFlow out-of-the-box过去的副版本（示例：依赖TF 2.9.3的PyPi openvino-tensorflow 2.3.0无法兼容PyPi TensorFlow 2.6.0）。
 
 请注意PyPi openvino-tensorflow 2.3.0仍兼容TensorFlow PATCH版本。例如，针对 TF 2.9.2构建的openvino-tensorflow将兼容像TF 2.9.0和2.9.2 PATCH版本。 这是因为TensorFlow PATCH版本中完成的安全与漏洞修复不影响其C++运行时库的二进制接口。
+
 
 ##  4. <a name='OpenVINO'></a>OpenVINO™
 
@@ -245,11 +246,11 @@ TensorFlow 可以使用 `build_tf.py` 从源代码构建。 可以在 ${PATH_TO_
 		
 - 用 CXX11_ABI=1 构建指定版本的TensorFlow。
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.2	
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.3	
 
 - 用 CXX11_ABI=0 构建指定版本的TensorFlow。
   
-        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.2 --cxx11_abi_version=0 
+        python3 build_tf.py --output_dir=${PATH_TO_TF_BUILD} --tf_version=v2.9.3 --cxx11_abi_version=0 
 
 
 ### <a name='TFWindows'></a> 针对Windows
