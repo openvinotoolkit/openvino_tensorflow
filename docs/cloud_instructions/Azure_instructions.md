@@ -40,15 +40,15 @@ $ sudo apt install python3-pip
 
 $ sudo pip3 install tensorflow==2.9.2
 
-$ sudo pip3 install openvino-tensorflow==2.2.0
+$ sudo pip3 install openvino-tensorflow==2.3.0
 ```
 
 - Verify the installation 
 ```bash
 azureuser@tf-u26:~$ python3 -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__); import openvino_tensorflow; print(openvino_tensorflow.__version__)" 
 TensorFlow version:  2.9.2
-OpenVINO integration with TensorFlow version: b'2.2.0'
-OpenVINO version used for this build: b'2022.2.0'
+OpenVINO integration with TensorFlow version: b'2.3.0'
+OpenVINO version used for this build: b'2022.3.0'
 TensorFlow version used for this build: v2.9.2
 CXX11_ABI flag used for this build: 1
 ```

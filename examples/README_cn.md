@@ -228,7 +228,7 @@ $ ./build_cmake/examples/classification_sample/infer_image
 - 运行以下指令构建openvino_tensorflow及示例
 ```bash
 cd <path-to-openvino_tensorflow-repository>
-python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.2.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
+python build_ovtf.py --use_openvino_from_location="C:\Program Files (x86)\Intel\openvino_2022.3.0" --use_tensorflow_from_location="\path\to\directory\containing\tensorflow\"
 ```
 
 - 现在，classification_sample的二进制可执行文件已构建完成。更新PATH并运行示例：

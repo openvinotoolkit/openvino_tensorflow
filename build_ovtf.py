@@ -37,7 +37,7 @@ def main():
 
     # Component versions
     tf_version = "v2.9.2"
-    ovtf_version = "v2.2.0"
+    ovtf_version = "v2.3.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -195,7 +195,7 @@ def main():
             "master", "2022.1.0", "2022.2.0", "2022.3.0"
     ]):
         raise AssertionError(
-            "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
+            "Only 2022.1.0, 2022.2.0, 2022.3.0, and master branch of OpenVINO are supported"
         )
 
     if (arguments.openvino_threading not in ["TBB", "OMP"]):
