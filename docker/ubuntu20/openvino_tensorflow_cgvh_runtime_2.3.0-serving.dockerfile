@@ -1,7 +1,7 @@
 # Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG TF_SERVING_VERSION="2.9.2"
+ARG TF_SERVING_VERSION="2.9.3"
 ARG OVTF_VERSION="2.3.0"
 
 

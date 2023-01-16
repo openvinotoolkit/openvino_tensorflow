@@ -9,7 +9,7 @@ They contain all required runtime python packages, and shared libraries to suppo
 
 The following ARGS are available to configure the docker build
 
-TF_VERSION: TensorFlow version to be used. Defaults to "v2.9.2"
+TF_VERSION: TensorFlow version to be used. Defaults to "v2.9.3"
 OPENVINO_VERSION: OpenVINO version to be used. Defaults to "2022.3.0"
 OVTF_BRANCH: OpenVINO™ integration with TensorFlow branch to be used. Defaults to "releases/2.3.0"
 
@@ -96,7 +96,7 @@ The TF Serving dockerfile requires the **OpenVINO™ integration with TensorFlow
 
 The following ARGS are available to configure the docker build
 
-TF_SERVING_VERSION: Tag of the TF Serving image to use to build the model serving executable. Defaults to "2.9.2"
+TF_SERVING_VERSION: Tag of the TF Serving image to use to build the model serving executable. Defaults to "2.9.3"
 OVTF_VERSION: Tag of the **OpenVINO™ integration with TensorFlow Runtime** image to use. Defaults to "2.3.0"
 
 Build serving docker images:

@@ -12,7 +12,7 @@
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup> integrated GPUs, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support 
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.2
+        pip3 install tensorflow==2.9.3
         pip3 install openvino-tensorflow==2.3.0
     The openvino-tensorflow PyPi package is cross-compatible with PATCH versions of TensorFlow. For example, openvino-tensorflow wheel for TF 2.9.2 would work with any future PATCH versions like TF 2.9.2, and 2.9.3
   <br/>  
@@ -35,7 +35,7 @@
   * Supports Intel<sup>®</sup> CPUs, Intel<sup>®</sup>, and Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs). No VAD-M support
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.2
+        pip3 install tensorflow==2.9.3
         pip3 install openvino-tensorflow==2.3.0
 
 
@@ -48,5 +48,5 @@
 
         pip3.9 install -U pip
         pip3.9 install https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.2.0/tensorflow-2.9.2-cp39-cp39-win_amd64.whl
-        pip3.9 install openvino-tensorflow==2.3.0
+        pip3.9 install openvino-tensorflow==2.2.0
   
