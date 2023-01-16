@@ -2,9 +2,9 @@
 
 [**OpenVINO™ integration with TensorFlow**](https://github.com/openvinotoolkit/openvino_tensorflow/) is a product designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. This product delivers [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) inline optimizations which enhance inferencing performance with minimal code modifications. **OpenVINO™ integration with TensorFlow** accelerates inference across many [AI models](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/MODELS.md) on a variety of Intel<sup>®</sup> silicon such as:
 - Intel<sup>®</sup> CPUs
-- Intel<sup>®</sup> integrated GPUs
-- Intel<sup>®</sup> Movidius™ Vision Processing Units - referred to as VPU
-- Intel<sup>®</sup> Vision Accelerator Design with 8 Intel Movidius™ MyriadX VPUs - referred to as VAD-M or HDDL
+- Intel<sup>®</sup> integrated and discrete GPUs
+
+Note: Support for Intel Movidius™ MyriadX VPUs is no longer maintained. Consider previous releases for running on Myriad VPUs.
 
 [Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend the developers to adopt native OpenVINO™ APIs and its runtime.]
 
@@ -22,13 +22,10 @@ This **OpenVINO™ integration with TensorFlow** package comes with pre-built li
 This package supports:
 - Intel<sup>®</sup> CPUs
 - Intel<sup>®</sup> integrated GPUs
-- Intel<sup>®</sup> Movidius™ Vision Processing Units (VPUs)
 
         pip3 install -U pip
         pip3 install tensorflow==2.9.3
         pip3 install openvino-tensorflow==2.3.0
-
-To leverage Intel® Vision Accelerator Design with Movidius™ (VAD-M) for inference, please refer to: [**OpenVINO™ integration with TensorFlow** alongside the Intel® Distribution of OpenVINO™ Toolkit](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#install-openvino™-integration-with-tensorflow-pypi-release-alongside-the-intel®-distribution-of-openvino™-toolkit-for-vad-m-support).
 
 For installation instructions on Windows please refer to [**OpenVINO™ integration with TensorFlow** for Windows ](https://github.com/openvinotoolkit/openvino_tensorflow/blob/master/docs/INSTALL.md#windows)
 
@@ -53,11 +50,11 @@ This should produce an output like:
 
 ## Usage
 
-By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to either Intel<sup>®</sup> integrated GPU or Intel<sup>®</sup> VPU for AI inferencing. Invoke the following function to change the hardware on which inferencing is done.
+By default, Intel<sup>®</sup> CPU is used to run inference. However, you can change the default option to Intel<sup>®</sup> integrated or discrete GPUs (GPU, GPU.0, GPU.1 etc). Invoke the following function to change the hardware on which inferencing is done.
 
     openvino_tensorflow.set_backend('<backend_name>')
 
-Supported backends include 'CPU', 'GPU', 'GPU_FP16', and 'MYRIAD'.
+Supported backends include 'CPU', 'GPU', 'GPU_FP16'.
 
 To determine what processing units are available on your system for inference, use the following function:
 
@@ -72,7 +69,7 @@ For further performance improvements, it is advised to set the environment varia
 To see what you can do with **OpenVINO™ integration with TensorFlow**, explore the demos located in the [examples](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/examples) repository.
 
 ## Docker Support
-Dockerfiles for Ubuntu* 18.04, Ubuntu* 20.04, and TensorFlow* Serving are provided which can be used to build runtime Docker* images for **OpenVINO™ integration with TensorFlow** on CPU, GPU, VPU, and VAD-M. 
+Dockerfiles for Ubuntu* 18.04, Ubuntu* 20.04, and TensorFlow* Serving are provided which can be used to build runtime Docker* images for **OpenVINO™ integration with TensorFlow** on CPU, GPU. 
 For more details see [docker readme](https://github.com/openvinotoolkit/openvino_tensorflow/tree/master/docker/README.md).
 
 ### Prebuilt Images
