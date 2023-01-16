@@ -15,8 +15,6 @@
 
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
-- 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
-- 支持 8 颗英特尔 Movidius™ MyriadX VPU 的英特尔<sup>®</sup> 视觉加速器设计（称作 VAD-M 或 HDDL）
 
 [注：为实现最佳的性能、效率、工具定制和硬件控制，我们建议开发人员使用原生 OpenVINO™ API 及其运行时。]
 
@@ -34,7 +32,6 @@
 **OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.3.0 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
-- 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
   
 
         pip3 install -U pip
@@ -45,7 +42,6 @@
 
 如果您想使用Intel<sup>®</sup> 集成显卡进行推理，请确保安装[Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 
-如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#安装-openvino-integration-with-tensorflow-pypi-发布版与独立安装intel-openvino-发布版以支持vad-m)。
 
 更多安装详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多源构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
 
