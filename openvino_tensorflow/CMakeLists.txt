@@ -195,6 +195,7 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_frontend.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
+    "${IE_LIBS_PATH}/plugins.xml"
     )
 
 # Install Openvino and TBB libraries
