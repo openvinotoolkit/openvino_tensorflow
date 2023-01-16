@@ -145,9 +145,6 @@ if (APPLE)
   endif()
 
   set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/${CMAKE_BUILD_TYPE})
-  set(IE_LIBS 
-      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
-      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
@@ -161,7 +158,6 @@ elseif(WIN32)
   set (IE_LIBS 
       "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
       "${IE_LIBS_PATH}/cache.json"
-      "${IE_LIBS_PATH}/pcie-ma2x8x.elf"
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${CMAKE_BUILD_TYPE}/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
@@ -183,7 +179,6 @@ else()
   set (IE_LIBS 
       "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
       "${IE_LIBS_PATH}/cache.json"
-      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
@@ -200,9 +195,6 @@ set (IE_LIBS
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_frontend.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
-    "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
-    "${IE_LIBS_PATH}/plugins.xml" 
     )
 
 # Install Openvino and TBB libraries
