@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG TF_SERVING_VERSION="2.9.2"
-ARG OVTF_VERSION="2.2.0"
+ARG OVTF_VERSION="2.3.0"
 
 
 #######################################################################################
-FROM openvino/openvino_tensorflow_ubuntu18_runtime:${OVTF_VERSION} as ovtf_runtime
+FROM openvino/openvino_tensorflow_ubuntu20_runtime:${OVTF_VERSION} as ovtf_runtime
 #######################################################################################
 
 #######################################################################################
 FROM tensorflow/serving:${TF_SERVING_VERSION}-devel as build_serving
 #######################################################################################
 
-LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
+LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root
@@ -59,7 +59,7 @@ RUN bazel clean --expunge --color=yes && \
 FROM ovtf_runtime AS ovtf_serving_runtime
 ################################################################################
 
-LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 18.04 LTS"
+LABEL description="This is the TF Serving runtime image for OpenVINO™ integration with TensorFlow on Ubuntu 20.04 LTS"
 LABEL vendor="Intel Corporation"
 
 USER root

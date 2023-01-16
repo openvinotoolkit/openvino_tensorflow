@@ -68,7 +68,7 @@ package_data_dict['openvino_tensorflow'] = ov_libs_list
 
 setup(
     name='openvino_tensorflow',
-    version='2.2.0',
+    version='2.3.0',
     description='OpenVINO™ integration with TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",

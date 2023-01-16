@@ -39,16 +39,16 @@ jobs:
       displayName: "Setup"
 
     - script: |
-        wget https://github.com/openvinotoolkit/openvino/releases/download/2022.2.0/l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64.tgz
-        tar -xvf l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64.tgz
-        mv l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64 openvino_2022.2.0.7713
+        wget https://storage.openvinotoolkit.org/repositories/openvino/packages/2022.3/linux/l_openvino_toolkit_ubuntu20_2022.3.0.9052.9752fafe8eb_x86_64.tgz
+        tar -xvf l_openvino_toolkit_ubuntu20_2022.3.0.9052.9752fafe8eb_x86_64.tgz
+        mv l_openvino_toolkit_ubuntu20_2022.3.0.9052.9752fafe8eb_x86_64 openvino_2022.3.0.9052
       workingDirectory: $(OV_LOCATION)
       displayName: "Install OpenVINO"
 
     - script: |
         git submodule init
         git submodule update
-        python3 build_ovtf.py --use_openvino_from_location ${OV_LOCATION}/openvino_2022.2.0.7713/ --cxx11_abi_version 1
+        python3 build_ovtf.py --use_openvino_from_location ${OV_LOCATION}/openvino_2022.3.0.9052/ --cxx11_abi_version 1
       workingDirectory: $(WORK_DIR)
       displayName: "Build"
 
