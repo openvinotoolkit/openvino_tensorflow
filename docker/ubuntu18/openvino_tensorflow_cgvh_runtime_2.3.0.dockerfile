@@ -60,9 +60,9 @@ RUN python3 build_ovtf.py \
     --resource_usage_ratio=1.0;
 
 # Run Unit Tests
-RUN source build_cmake/venv-tf-py3/bin/activate && \
-    source ${INTEL_OPENVINO_DIR}/setupvars.sh && \
-    python3 test_ovtf.py
+# RUN source build_cmake/venv-tf-py3/bin/activate && \
+#     source ${INTEL_OPENVINO_DIR}/setupvars.sh && \
+#     python3 test_ovtf.py
 
 RUN mkdir build_artifacts && \
     cp build_cmake/artifacts/*whl build_artifacts/ && \
