@@ -25,13 +25,14 @@ index decc54acc3a..270927782f0 100644
    // The GraphDef version range of this graph (see graph.proto).
    const VersionDef& versions() const;
 diff --git a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-index ecf2312a36c..e425724a85b 100644
+index ecf2312a36c..4c36f77f924 100644
 --- a/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
 +++ b/tensorflow/tools/def_file_filter/def_file_filter.py.tpl
-@@ -272,6 +272,95 @@ def main():
+@@ -272,7 +272,96 @@ def main():
      def_fp.write("\t ?MaybeSavedModelDirectory@tensorflow@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z\n")
      def_fp.write("\t ?_TensorShapeProto_default_instance_@tensorflow@@3VTensorShapeProtoDefaultTypeInternal@1@A\n")
      def_fp.write("\t ?_GraphDef_default_instance_@tensorflow@@3VGraphDefDefaultTypeInternal@1@A\n")
+-
 +    
 +	# OVTF core linking issues
 +    def_fp.write("\t ?GetReversePostOrder@tensorflow@@YAXAEBVGraph@1@PEAV?$vector@PEAVNode@tensorflow@@V?$allocator@PEAVNode@tensorflow@@@std@@@std@@AEBV?$function@$$A6A_NPEBVNode@tensorflow@@0@Z@4@AEBV?$function@$$A6A_NAEBVEdge@tensorflow@@@Z@4@@Z\n")
@@ -121,9 +122,7 @@ index ecf2312a36c..e425724a85b 100644
 +    def_fp.write("\t ?begin@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBA?AV?$RepeatedPtrIterator@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?end@?$RepeatedPtrField@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@protobuf@google@@QEBA?AV?$RepeatedPtrIterator@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@internal@23@XZ\n")
 +    def_fp.write("\t ?_AttrValue_ListValue_default_instance_@tensorflow@@3VAttrValue_ListValueDefaultTypeInternal@1@A\n")
- 
++    def_fp.write("\t ?SerializeToOstream@MessageLite@protobuf@google@@QEBA_NPEAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z\n")
      # Each symbols returned by undname matches the same position in candidates.
      # We compare on undname but use the decorated name from candidates.
--- 
-2.34.1.windows.1
-
+     dupes = 0
