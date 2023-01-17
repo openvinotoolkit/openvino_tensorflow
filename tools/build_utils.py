@@ -764,7 +764,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    command = "git clone  {repo} {target_name}".format(
+    command = "git clone -c core.longpaths=true {repo} {target_name}".format(
         repo=repo, target_name=target_name)
     process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     so, se = process.communicate()
