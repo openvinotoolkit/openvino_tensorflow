@@ -50,14 +50,11 @@ ENV OVTF_ARTIFACTS_DIR /opt/intel/openvino_tensorflow/build_artifacts/
 RUN python3 build_ovtf.py \
     --tf_version=${TF_VERSION} \
     --openvino_version=${OPENVINO_VERSION} \
-    --use_openvino_from_location=${INTEL_OPENVINO_DIR} \
     --cxx11_abi_version=1 \
-    --disable_packaging_openvino_libs \
     --resource_usage_ratio=1.0;
 
 # Run Unit Tests
 RUN source build_cmake/venv-tf-py3/bin/activate && \
-    source ${INTEL_OPENVINO_DIR}/setupvars.sh && \
     python3 test_ovtf.py
 
 RUN mkdir build_artifacts && \
@@ -123,7 +120,7 @@ WORKDIR /home/openvino/openvino_tensorflow/examples/notebooks/
 ## Creating a shell script file which will be executed at the end to activate the environment and run jupyter notebook and
 ## Granting execution permission to shell script
 
-RUN echo -e "source \${INTEL_OPENVINO_DIR}/setupvars.sh\njupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root" | \
+RUN echo -e "jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root" | \
         tee /home/openvino/run-jupyter.sh && chmod +x /home/openvino/run-jupyter.sh
 
 USER openvino
