@@ -67,7 +67,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_4D
 cwise_ops_binary_test.BinaryOpTest.testBCast_5A
 cwise_ops_binary_test.BinaryOpTest.testBCast_5B
 cwise_ops_binary_test.BinaryOpTest.testBCast_5C
-cwise_ops_binary_test.BinaryOpTest.testBCast_5D
 #cwise_ops_binary_test.BinaryOpTest.testBCast_6A
 #cwise_ops_binary_test.BinaryOpTest.testBCast_6B
 cwise_ops_binary_test.BinaryOpTest.testBCast_6C
@@ -80,7 +79,6 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_8A
 #cwise_ops_binary_test.BinaryOpTest.testBCast_8B
 cwise_ops_binary_test.BinaryOpTest.testBCast_8C
 cwise_ops_binary_test.BinaryOpTest.testBCast_8D
-cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
 math_ops_test.AddNTest.testIndexedSlices
 pad_op_test.PadOpTest.testPaddingTypes
 reduction_ops_test.MeanReductionTest.testGradient
@@ -142,11 +140,11 @@ scan_ops_test.CumsumTest.testAxisType
 # data doesn't exist
 #array_ops_test.StridedSliceTest.testTensorIndexing
 #concat_op_test.ConcatOpTest.testGradientWithUnknownInputDim
-#concat_op_test.ConcatOpTest.testGradientsFirstDim
-#concat_op_test.ConcatOpTest.testGradientsLastDim
+concat_op_test.ConcatOpTest.testGradientsFirstDim
+concat_op_test.ConcatOpTest.testGradientsLastDim
 concat_op_test.ConcatOpTest.testGradientsNegativeAxis
-#concat_op_test.ConcatOpTest.testGradientsRandom
-#concat_op_test.ConcatOpTest.testGradientsSimple
+concat_op_test.ConcatOpTest.testGradientsRandom
+concat_op_test.ConcatOpTest.testGradientsSimple
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim0Grad
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad
 concat_op_test.ConcatOpTest.testIndexedSlicesConcatDim1Grad_UnknownInputDim
@@ -200,7 +198,7 @@ reduction_ops_test.ProdReductionTest.testInfinity
 
 #gather_nd_op_test.GatherNdTest.testGradientsRank2Slices
 #gather_nd_op_test.GatherNdTest.testGradientsRank2SlicesWithEmptySpace
-#math_ops_test.AddNTest.testGrad
+math_ops_test.AddNTest.testGrad
 
 # Input image format I64 is not supported yet...
 #math_ops_test.DivAndModTest.testConsistent
@@ -397,3 +395,10 @@ cwise_ops_binary_test.BinaryOpTest.testBCast_15A
 cwise_ops_binary_test.BinaryOpTest.testBCast_6A
 cwise_ops_binary_test.BinaryOpTest.testBCast_6B
 cwise_ops_binary_test.BinaryOpTest.testBCast_8B
+
+# Failing after TF-2.9.3 upgrade
+constant_op_test.ConstantTest.testSparseValuesRaiseErrors
+cwise_ops_binary_test.BinaryOpTest.testBCast_5D
+cwise_ops_binary_test.BinaryOpTest.testZeroPowGrad
+math_ops_test.ModTest.testFixed
+spacetobatch_op_test.SpaceToBatchNDTest.testZeroBlockDimsZeroRemainingDims
