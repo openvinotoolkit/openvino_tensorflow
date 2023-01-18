@@ -489,13 +489,45 @@ Status DeassignClusters(Graph* graph) {
     } else {  // Cluster Selection based on Min Number of Non Trivial Nodes
       int non_trivial_count = 0;
       std::unordered_set<std::string> trivial_ops = {"Const", "Identitiy"};
+      bool illegal_pattern = false;
       for (auto node : nodes) {
         if (trivial_ops.find(node->type_string()) == trivial_ops.end()) {
           non_trivial_count++;
         }
+
+        // Check for illegal patterns to deassign.
+        // TODO: This should be removed once these
+        // patterns are passing OV optimizations.
+        if (node->type_string() == "Select") {
+            Node *in_node_first = nullptr;
+            node->input_node(0, &in_node_first);
+            if (in_node_first && (in_node_first->type_string() == "Less" || in_node_first->type_string() == "Greater")) {
+                Node *in_node_second = nullptr;
+                in_node_first->input_node(0, &in_node_second);
+                if (in_node_second && in_node_second->type_string() == "Const") {
+                    illegal_pattern = true;
+                }
+            }
+        }
+
+        if (node->type_string() == "Pack") {
+            Node *in_node_first = nullptr;
+            node->input_node(1, &in_node_first);
+            if (in_node_first && in_node_first->type_string() == "Reshape") {
+                Node *in_node_second = nullptr;
+                in_node_first->input_node(0, &in_node_second);
+                if (in_node_second && in_node_second->type_string() == "Tile") {
+                    Node *in_node_third = nullptr;
+                    in_node_second->input_node(1, &in_node_third);
+                    if (in_node_third && in_node_third->type_string() == "Const") {
+                        illegal_pattern = true;
+                    }
+                }
+            }
+        }
       }
 
-      if (non_trivial_count < min_non_trivial_nodes) {
+      if (non_trivial_count < min_non_trivial_nodes || illegal_pattern) {
         OVTF_VLOG(2) << "Busting cluster " << cluster_idx
                      << " as number of non trivial nodes in it are less than "
                         "MIN_NONTRIVIAL_NODES threshold";
