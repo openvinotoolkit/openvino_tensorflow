@@ -69,7 +69,6 @@ RUN for py_ver in 3.7 3.8 3.9; do \
         # start build
         python build_ovtf.py --python_executable=`which python` \
                              --cxx11_abi_version=1 \
-                             --use_openvino_from_location=/opt/intel/openvino/ \
                              --build_dir=build_venv_${py_ver}; \
         # copy to artifacts dir
         cp build_venv_${py_ver}/artifacts/openvino_tensorflow*.whl /whl/abi1/; \
