@@ -76,7 +76,9 @@ message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 message(STATUS "TF_PIP_VERSION: ${TF_PIP_VERSION}")
 
 
-find_package (Python3 REQUIRED COMPONENTS Interpreter)
+if(NOT APPLE)
+    find_package (Python3 REQUIRED COMPONENTS Interpreter)
+endif()
 
 
 if(STANDALONE_CMAKE)
