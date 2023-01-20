@@ -20,6 +20,8 @@ Note: Support for Intel Movidius™ MyriadX VPUs is no longer maintained. Consid
 
 [Note: For maximum performance, efficiency, tooling customization, and hardware control, we recommend the developers to adopt native OpenVINO™ APIs and its runtime.]
 
+*New: [OpenVINO™ TensorFlow FrontEnd](https://github.com/openvinotoolkit/openvino/tree/master/src/frontends/tensorflow) can be used as an alternative to deploy your models whenever a model is fully supported by OpenVINO, and you can move from TensorFlow APIs to Native OpenVINO APIs.*
+
 ## Installation
 ### Prerequisites
 
