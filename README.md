@@ -103,6 +103,10 @@ and release your contribution under these terms.
 
 Submit your questions, feature requests and bug reports via [GitHub issues](https://github.com/openvinotoolkit/openvino_tensorflow/issues).
 
+## Troubleshooting
+
+Some known issues and troubleshooting guide can be found [here](docs/TROUBLESHOOTING.md).
+
 ## How to Contribute
 
 We welcome community contributions to **OpenVINO™ integration with TensorFlow**. If you have an idea for improvement:
