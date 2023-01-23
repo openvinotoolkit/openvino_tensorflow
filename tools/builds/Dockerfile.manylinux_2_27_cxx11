@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG OV_TAG="2022.3.0"
-ARG TF_VERSION="2.8.4"
+ARG TF_VERSION="v2.8.4"
 
 ################################################################################
 FROM openvino/ubuntu18_dev:${OV_TAG}
