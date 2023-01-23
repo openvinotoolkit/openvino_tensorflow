@@ -36,7 +36,7 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.9.3"
+    tf_version = "v2.8.4"
     ovtf_version = "v2.3.0"
     use_intel_tf = False
 
