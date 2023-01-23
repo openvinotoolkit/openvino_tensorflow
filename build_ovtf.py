@@ -552,6 +552,9 @@ def main():
         openvino_tf_cmake_flags.extend(
             ["-DTensorFlow_VERSION=" + tf_version.replace("v", "")])
 
+    openvino_tf_cmake_flags.extend(
+            ["-DTF_PIP_VERSION=" + tf_version.replace("v", "")])
+
     # add openvino build version as compile time definition
     openvino_tf_cmake_flags.extend(
         ["-DOPENVINO_BUILD_VERSION=%s" % str(arguments.openvino_version)])
