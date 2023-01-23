@@ -222,6 +222,13 @@ This environment variable is used to print operator level performance counter in
     
         OPENVINO_TF_ENABLE_PERF_COUNT=1
 
+- **OPENVINO_TF_ENABLE_DYNAMIC_SHAPES:**
+This environmental variable is used to enable the dynamic input shapes support in OpenVINO, that allows some dimensions of input parameters to be undefined during model compilation
+
+    Example:
+
+        OPENVINO_TF_ENABLE_DYNAMIC_SHAPES=1
+
 ## GPU Precision
 
 The default precision for Intel<sup>®</sup> Integrated GPU (iGPU) is FP32. So, if you set the backend name as **'GPU'**, the execution on iGPU will be operated on FP32 precision. To change the iGPU precision to FP16, use the device name **'GPU_FP16'**.
