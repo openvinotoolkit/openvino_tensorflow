@@ -1,3 +1,6 @@
 [submodule "ocm"]
 	path = ocm
 	url = https://github.com/intel/ocm
+[submodule "third-party/openvino"]
+	path = third-party/openvino
+	url = https://github.com/openvinotoolkit/openvino

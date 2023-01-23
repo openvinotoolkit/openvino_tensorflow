@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -97,6 +97,7 @@ Status EncapsulateClusters(
       ss << "ovtf_cluster_" << cluster_idx;
       std::string filename_prefix = ss.str();
 
+      GraphToPbFile(&g, filename_prefix + ".pb");
       GraphToPbTextFile(&g, filename_prefix + ".pbtxt");
       GraphToDotFile(&g, filename_prefix + ".dot",
                      "nGraph Cluster Dump: " + filename_prefix);
@@ -287,6 +288,19 @@ Status Encapsulator::AnalysisPass() {
       } else {
         SetAttrValue(
             false, &((*(new_input_node_def->mutable_attr()))["_is_variable"]));
+      }
+
+      if (dst->type_string() == "SparseToDense" && edge->dst_input() == 1) {
+        SetAttrValue(
+            false,
+            &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+      } else if (dst->type_string() == "Reshape" && edge->dst_input() == 1) {
+        SetAttrValue(
+            false,
+            &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
+      } else {
+        SetAttrValue(
+            true, &((*(new_input_node_def->mutable_attr()))["_dynamic_shape"]));
       }
 
       vector<int> static_input_indexes;

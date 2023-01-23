@@ -29,13 +29,14 @@ OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
   Output<Node> ng_matmul =
       make_shared<MatMul>(ng_lhs, ng_rhs, transpose_a, transpose_b);
 
-  auto ng_matmul_shape = ng_matmul.get_shape();
-  auto ng_bias_shape = ng_bias.get_shape();
+  // TODO: Revisit to handle this with dynamic shapes
+  // auto ng_matmul_shape = ng_matmul.get_shape();
+  // auto ng_bias_shape = ng_bias.get_shape();
 
-  if (ng_bias_shape.size() != 1) {
-    FRONT_END_GENERAL_CHECK(
-        false, "Bias argument to BiasAdd does not have one dimension");
-  }
+  // if (ng_bias_shape.size() != 1) {
+  //  FRONT_END_GENERAL_CHECK(
+  //      false, "Bias argument to BiasAdd does not have one dimension");
+  //}
 
   auto ng_add = make_shared<Add>(ng_matmul, ng_bias);
   if (fused_ops.size() == 1) {  // Only fusing BiasAdd
@@ -45,6 +46,10 @@ OutputVector translate_fused_mat_mul_op(const ov::frontend::NodeContext& node) {
       return {make_shared<Relu>(ng_add)};
     } else if (fused_ops[1] == "Relu6") {
       return {make_shared<Clamp>(ng_add, 0, 6)};
+    } else if (fused_ops[1] == "Elu") {
+      return {make_shared<Elu>(ng_add, 1.0)};
+    } else if (fused_ops[1] == "Tanh") {
+      return {make_shared<Tanh>(ng_add)};
     } else {
       FRONT_END_GENERAL_CHECK(
           false,

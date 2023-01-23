@@ -133,3 +133,23 @@ prob_tensor = frozen_func.graph.get_tensor_by_name(full_model.outputs[0].name)
 # Run the inference on the frozen model
 session.run(prob_tensor, feed_dict={full_model.inputs[0].name : input_data})
 ```
+
+## 6. Known issues
+
+For the version **2.3.0**
+
+1. The Ubuntu18 and Ubuntu20 OS packages of OpenVINO no longer contain libtbb in them. This may cause the error `libtbb.so.2: cannot open shared object file: No such file or directory` when you try to import openvino_tensorflow. To overcome this, consider using pre-built packages of OVTF from PyPi or build OpenVINO from source i.e, avoid using the build option `--use_openvino_from_location` when building OpenVINO™ integration with TensorFlow.
+
+2. Support for the MYRIAD device has been discontinued, and it will no longer be available from the OpenVINO™ integration with TensorFlow version v2.3.0.
+
+3. EfficientDet and SSD family of models may experience a performance regression because of a problem executing one of the clusters in OpenVINO, and so they had to be intentionally disabled based on a heuristic. This effect is also likely be observed in the Object Detection notebooks under `examples/notebooks/` (See https://github.com/openvinotoolkit/openvino_tensorflow/pull/412)
+
+4. The TFHub notebook under `examples/notebook/OpenVINO_TensorFlow_tfhub_object_detection_example.ipynb` may experience python kernel crashes when executed on a machine with an insufficinet compute and memory configuration.
+
+5. Enabling Dynamic Shapes support using OPENVINO_TF_ENABLE_DYNAMIC_SHAPES is likely to see a performance drop when compared to its static shape counterpart (as of OpenVINO 2022.3.0). Use static inputs shapes wherever possible.
+
+6. This error may occur on Ubuntu if the pugixml library is missing when importing openvino_tensorflow: `tensorflow.python.framework.errors_impl.NotFoundError: libpugixml.so.1: cannot open shared object file: No such file or directory`. The solution for this is to install libpugixml through apt.
+
+    ```
+    apt install libpugixml-dev
+    ```

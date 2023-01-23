@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -19,7 +19,7 @@ def main():
         type=str,
         help="TensorFlow tag/branch/SHA\n",
         action="store",
-        default="v2.9.2")
+        default="v2.9.3")
     parser.add_argument(
         '--output_dir',
         type=str,

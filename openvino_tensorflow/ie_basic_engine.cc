@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -39,11 +39,11 @@ void IE_Basic_Engine::infer(
     std::vector<std::string>& output_names,
     std::vector<std::shared_ptr<IETensor>>& hoisted_params,
     std::vector<std::string>& param_names) {
-  int64_t start_ns = 0;
+  double start_ns = 0;
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   load_network();
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_LOAD_NETWORK_TIME: " << duration_in_ms << " ms";
   }
 
@@ -52,7 +52,7 @@ void IE_Basic_Engine::infer(
     m_infer_reqs.push_back(m_compiled_model.create_infer_request());
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_CREATE_REQUEST_TIME: " << duration_in_ms << " ms";
   }
 
@@ -71,6 +71,8 @@ void IE_Basic_Engine::infer(
     if (inputs[i] != nullptr) {
       OVTF_VLOG(4) << "IE_Basic_Engine::infer() set_input_tensor() ("
                    << input_names[i] << ")";
+      if (inputs[i]->get_shape().size() > 0 && inputs[i]->get_shape()[0] == 0)
+        continue;
       const int in_idx = m_in_idx[i];
       if (in_idx < 0) {
         throw std::runtime_error("Input with friendly name " + input_names[i] +
@@ -80,7 +82,7 @@ void IE_Basic_Engine::infer(
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_INPUTS_SET_TIME: " << duration_in_ms << " ms";
   }
 
@@ -106,7 +108,7 @@ void IE_Basic_Engine::infer(
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_PARAMS_SET_TIME: " << duration_in_ms << " ms";
   }
 
@@ -132,13 +134,13 @@ void IE_Basic_Engine::infer(
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_OUTPUTS_SET_TIME: " << duration_in_ms << " ms";
   }
   if (BackendManager::OVTFProfilingEnabled()) start_ns = GetCurrentTimeNanos();
   m_infer_reqs[0].infer();
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_INFERENCE_TIME: " << duration_in_ms << " ms";
   }
 
@@ -176,7 +178,7 @@ void IE_Basic_Engine::infer(
     }
   }
   if (BackendManager::OVTFProfilingEnabled()) {
-    int64_t duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
+    double duration_in_ms = (GetCurrentTimeNanos() - start_ns) / 1e6;
     OVTF_VLOG(1) << "OVTF_DYNAMIC_OUTPUT_SET_TIME: " << duration_in_ms << " ms";
   }
   OVTF_VLOG(4) << "Inference Successful";

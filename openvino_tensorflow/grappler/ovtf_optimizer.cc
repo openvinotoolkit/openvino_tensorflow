@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -186,6 +186,8 @@ Status OVTFOptimizer::Optimize(tensorflow::grappler::Cluster* cluster,
   ov_version = "2022.1.0";
 #elif defined(OPENVINO_2022_2)
   ov_version = "2022.2.0";
+#elif defined(OPENVINO_2022_3)
+  ov_version = "2022.3.0";
 #endif
   ocm::Framework_Names fName = ocm::Framework_Names::TF;
   ocm::FrameworkNodesChecker FC(fName, device_id, ov_version, &graph);

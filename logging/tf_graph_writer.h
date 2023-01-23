@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -29,6 +29,10 @@ void GraphToDotFile(Graph* graph, const std::string& filename,
 // GraphToPbTextFile
 // Saves a TensorFlow graph into a protobuf text
 void GraphToPbTextFile(Graph* graph, const std::string& filename);
+
+// GraphToPbFile
+// Saves a TensorFlow graph into a protobuf
+void GraphToPbFile(Graph* graph, const std::string& filename);
 
 // PbTextFileToDotFile
 // Saves a protobuf text into a DOT file

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -44,6 +44,20 @@ void GraphToPbTextFile(Graph* graph, const string& filename) {
   protobuf::TextFormat::PrintToString(g_def, &graph_pb_str);
   std::ofstream ostrm_out(filename, std::ios_base::trunc);
   ostrm_out << graph_pb_str;
+}
+
+//-----------------------------------------------------------------------------
+// GraphToPbFile
+//-----------------------------------------------------------------------------
+void GraphToPbFile(Graph* graph, const string& filename) {
+  GraphDef g_def;
+  graph->ToGraphDef(&g_def);
+
+  // Create a FileSystem object.
+  std::ofstream output_file(filename, std::ios::binary);
+
+  // Save the GraphDef to a pb file.
+  g_def.SerializeToOstream(&output_file);
 }
 
 //-----------------------------------------------------------------------------

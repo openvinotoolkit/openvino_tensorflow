@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -19,6 +19,9 @@ bool BackendManager::m_perf_counters_enabled = false;
 bool BackendManager::m_enable_ovtf_profiling = false;
 char* BackendManager::m_model_cache_dir = nullptr;
 bool BackendManager::m_tf_frontend_disabled = false;
+bool BackendManager::m_dynamic_shapes_enabled = false;
+bool BackendManager::m_output_zero_copy = false;
+bool BackendManager::m_static_input_checks_disabled = false;
 
 BackendManager::~BackendManager() {
   OVTF_VLOG(2) << "BackendManager::~BackendManager()";
@@ -38,7 +41,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
   m_backend = backend;
   if (bname.find("MYRIAD") != string::npos) {
     m_backend_name = "MYRIAD";
-    m_tf_frontend_disabled = true;
   } else if (bname.find("GPU") != string::npos) {
     // Since m_backend_name is assigned "GPU" whenever the string "GPU" is found
     // in bname,
@@ -51,7 +53,6 @@ Status BackendManager::SetBackend(const string& backend_name) {
     m_backend_name = "GPU";
   } else {
     m_backend_name = bname;
-    if (bname.find("HDDL") != string::npos) m_tf_frontend_disabled = true;
   }
   // read value of OPENVINO_TF_ENABLE_PERF_COUNT
   const char* openvino_tf_enable_perf_count =
@@ -76,6 +77,35 @@ Status BackendManager::SetBackend(const string& backend_name) {
   if (openvino_tf_disable_tffe != nullptr) {
     if (1 == std::stoi(openvino_tf_disable_tffe)) {
       m_tf_frontend_disabled = true;
+    }
+  }
+
+  const char* openvino_tf_enable_dynamic_shapes =
+      std::getenv("OPENVINO_TF_ENABLE_DYNAMIC_SHAPES");
+  if (openvino_tf_enable_dynamic_shapes != nullptr) {
+    if (1 == std::stoi(openvino_tf_enable_dynamic_shapes)) {
+      m_dynamic_shapes_enabled = true;
+    }
+  }
+
+  const char* openvino_tf_output_zero_copy =
+      std::getenv("OPENVINO_TF_OUTPUT_ZERO_COPY");
+  if (openvino_tf_output_zero_copy != nullptr) {
+    if (1 == std::stoi(openvino_tf_output_zero_copy)) {
+      m_output_zero_copy = true;
+    }
+  }
+
+  const char* openvino_tf_disable_static_input_checks =
+      std::getenv("OPENVINO_TF_DISABLE_STATIC_INPUT_CHECKS");
+  if (openvino_tf_disable_static_input_checks != nullptr) {
+    if (1 == std::stoi(openvino_tf_disable_static_input_checks)) {
+      m_static_input_checks_disabled = true;
+    }
+    if (m_tf_frontend_disabled == true) {
+      m_static_input_checks_disabled = false;  // ignore envvar and always
+                                               // enable static input checking
+                                               // when TFFE is not enabled
     }
   }
 
@@ -169,6 +199,17 @@ char* BackendManager::GetModelCacheDir() { return m_model_cache_dir; }
 
 // Returns if TF Frontend is disabled
 bool BackendManager::TFFrontendDisabled() { return m_tf_frontend_disabled; }
+
+// Returns true if dynamic input shape support is enabled
+bool BackendManager::DynamicShapesEnabled() { return m_dynamic_shapes_enabled; }
+
+// Returns true if zero-copy enabled for dynamic outputs
+bool BackendManager::OutputZeroCopy() { return m_output_zero_copy; }
+
+// Returns true if static input checking is disabled
+bool BackendManager::StaticInputChecksDisabled() {
+  return m_static_input_checks_disabled;
+}
 
 }  // namespace openvino_tensorflow
 }  // namespace tensorflow

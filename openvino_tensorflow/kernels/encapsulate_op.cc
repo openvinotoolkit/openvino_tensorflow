@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -99,7 +99,10 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   m_disable_cost_based_assignment = 0;
   const char* openvino_tf_disable_cost_assignment =
       std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT");
-  if (openvino_tf_disable_cost_assignment != nullptr) {
+
+  if (BackendManager::DynamicShapesEnabled()) {
+    m_disable_cost_based_assignment = 1;
+  } else if (openvino_tf_disable_cost_assignment != nullptr) {
     if (1 == std::stoi(openvino_tf_disable_cost_assignment)) {
       m_disable_cost_based_assignment = 1;
     }
@@ -233,7 +236,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                  << " ms.";
     // Restore the fallback to false, if TF is taking more time than OVTF for
     // this cluster
-    if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
+    if (duration_in_ms >= s_ovtf_cluster_timings_map[m_cluster_id]) {
       NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
     }
     // Disable timing run for this cluster
@@ -310,7 +313,8 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
         }
         return false;
       };
-      if (check_ng_shape()) continue;
+      if (!(BackendManager::DynamicShapesEnabled()) && check_ng_shape())
+        continue;
       ov::element::Type ng_element_type;
       OP_REQUIRES_OK(ctx, util::TFDataTypeToNGraphElementType(
                               tf_input_tensors[i].dtype(), &ng_element_type));
@@ -506,22 +510,33 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
       // TODO: Zero-copy is depreciated temporarily because of memory allocation
       // alignment
       // mismatch related to EIGEN_MAX_ALIGN_BYTES.
-      Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(
-          ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
+      // It can be enabled manually by setting env variable below
+      // OPENVINO_TF_OUTPUT_ZERO_COPY=1
+      if (BackendManager::OutputZeroCopy()) {
+        // Zero-copy OV tensor to TF
+        IETensorBuffer* tf_buffer =
+            new IETensorBuffer(static_pointer_cast<IETensor>(ng_output));
+        Tensor tf_tensor(ctx->expected_output_dtype(output_index), tf_shape,
+                         tf_buffer);
+        ctx->set_output(output_index, tf_tensor);
+      } else {
+        Tensor* output_tensor = nullptr;
+        OP_REQUIRES_OK(
+            ctx, ctx->allocate_output(output_index, tf_shape, &output_tensor));
 
-      auto size = ng_output->get_byte_size();
-      auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
+        auto size = ng_output->get_byte_size();
+        auto ie_tensor = static_pointer_cast<IETensor>(ng_output);
 
 #if TF_VERSION < 2
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t**)DMAHelper::base(output_tensor));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t**)DMAHelper::base(output_tensor));
 #else
-      std::copy((uint8_t*)(ng_output->data()),
-                ((uint8_t*)(ng_output->data())) + size,
-                (uint8_t*)(output_tensor->data()));
+        std::copy((uint8_t*)(ng_output->data()),
+                  ((uint8_t*)(ng_output->data())) + size,
+                  (uint8_t*)(output_tensor->data()));
 #endif
+      }
     }
   } else {
     for (int i = 0; i < results.size(); i++) {
@@ -623,7 +638,11 @@ Status NGraphEncapsulateOp::GetExecutable(
     const Tensor& input_tensor = tf_input_tensors[i];
     input_shapes.push_back(input_tensor.shape());
     for (const auto& x : input_tensor.shape()) {
-      signature_ss << x.size << ",";
+      if (BackendManager::DynamicShapesEnabled()) {
+        signature_ss << "-1,";
+      } else {
+        signature_ss << x.size << ",";
+      }
     }
     signature_ss << ";";
   }
@@ -655,21 +674,17 @@ Status NGraphEncapsulateOp::GetExecutable(
 
     zero_dim_outputs.clear();
     OVTF_VLOG(1) << "Compilation cache miss: " << m_name;
-#if !defined(__APPLE__) && !defined(__MACH__)
     if (BackendManager::TFFrontendDisabled()) {
-#endif
       OVTF_VLOG(1) << "Using Base OVTF Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraph(
           input_shapes, static_input_map, &m_graph, m_name, ng_function,
           zero_dim_outputs, tf_input_tensors));
-#if !defined(__APPLE__) && !defined(__MACH__)
     } else {
       OVTF_VLOG(1) << "Using TF FE Translator: " << name();
       TF_RETURN_IF_ERROR(Builder::TranslateGraphWithTFFE(
           input_shapes, &m_graph, m_name, ng_function, zero_dim_outputs,
           tf_input_tensors));
     }
-#endif
     util::DumpNGGraph(ng_function, m_name);
 
     // Evict the cache if the number of elements exceeds the limit

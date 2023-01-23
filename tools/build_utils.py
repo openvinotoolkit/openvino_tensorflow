@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -687,6 +687,8 @@ def build_openvino_tf(build_dir, artifacts_location, ovtf_src_loc, venv_dir,
             cmake_cmd.extend(["-DCMAKE_BUILD_TYPE=Release"])
         cmake_cmd.extend(cmake_flags)
         cmake_cmd.extend([ovtf_src_loc])
+    # to indicate that the build was triggered from a python script
+    cmake_cmd.extend(["-DPY_SCRIPT_BUILD=1"])
     command_executor(cmake_cmd)
 
     import psutil
@@ -762,7 +764,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    command = "git clone  {repo} {target_name}".format(
+    command = "git clone -c core.longpaths=true {repo} {target_name}".format(
         repo=repo, target_name=target_name)
     process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     so, se = process.communicate()
@@ -859,26 +861,24 @@ def get_bazel_version():
 
 
 def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
-                   artifacts_location, debug_enabled, verbosity):
+                   artifacts_location, debug_enabled, verbosity, threading):
     install_location = os.path.join(artifacts_location, "openvino")
     print("INSTALL location: " + artifacts_location)
 
     # Now build OpenVINO
     # TODO: Enable other options once 80842 ticket is resolved
     openvino_cmake_flags = [
-        # "-DENABLE_TESTS=OFF",
-        "-DENABLE_SAMPLES=OFF",
-        # "-DENABLE_FUNCTIONAL_TESTS=OFF",
-        # "-DENABLE_INTEL_GNA=OFF",
-        # "-DENABLE_OV_PADDLE_FRONTEND=OFF",
-        # "-DENABLE_OV_ONNX_FRONTEND=OFF",
-        # "-DENABLE_OV_IR_FRONTEND=ON",
-        # "-DENABLE_OV_TF_FRONTEND=OFF",
+        "-DENABLE_PYTHON=OFF", "-DENABLE_SYSTEM_TBB=OFF", "-DENABLE_AUTO=OFF",
+        "-DENABLE_AUTO_BATCH=OFF", "-DENABLE_INTEL_GNA=OFF",
+        "-DENABLE_HETERO=OFF", "-DENABLE_OV_IR_FRONTEND=OFF",
+        "-DENABLE_OV_ONNX_FRONTEND=OFF", "-DENABLE_OV_PADDLE_FRONTEND=OFF",
+        "-DENABLE_FASTER_BUILD=ON", "-DENABLE_TESTS=OFF",
+        "-DENABLE_TESTING=OFF", "-DENABLE_SAMPLES=OFF",
+        "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
-        # "-DENABLE_OPENCV=OFF",  #Enable opencv only for ABI 1 build if required, as it is not ABI 0 compatible
-        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"",
-        "-DENABLE_PYTHON=OFF",
-        "-DENABLE_SYSTEM_TBB=OFF"
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"", "-DTHREADING=" + threading,
+        "-DENABLE_INTEL_MYRIAD=OFF", "-DENABLE_INTEL_MYRIAD_COMMON=OFF",
+        "-DCMAKE_DISABLE_FIND_PACKAGE_gflags=1"
     ]
 
     if (platform.system() == 'Windows'):

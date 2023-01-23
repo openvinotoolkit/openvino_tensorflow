@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 
@@ -24,8 +24,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /wd4308 /wd4146 /wd4703 /wd4244 /wd4819 /EHsc")
 endif()
 
-# In order to compile ngraph-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.
-# N.B.: This *will* crash python unit tests because ngraph-tf will be loaded "too late" via `dlopen`,
+# In order to compile openvino-tf with memory leak detection, run `cmake` with `-DCMAKE_BUILD_TYPE=Sanitize`.
+# N.B.: This *will* crash python unit tests because openvino-tf will be loaded "too late" via `dlopen`,
 # so only use this with C++ tests.
 # (In theory using `LD_PRELOAD` should address the python issue, but it doesn't appear to work on OS X, at least.)
 # If there are any memory leaks, then upon running the binary a report will be automatically generated.
@@ -52,8 +52,81 @@ MARK_AS_ADVANCED(
     CMAKE_SHARED_LINKER_FLAGS_SANITIZE)
 
 # These variables are undocumented but useful.
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Set project related CACHE defaults
+SET(OPENVINO_TF_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts" CACHE STRING "Install path for build artifacts" FORCE )
+SET(OPENVINO_ARTIFACTS_DIR     "${OPENVINO_TF_INSTALL_PREFIX}/openvino" CACHE STRING "OpenVINO install location" )
+SET(OPENVINO_VERSION           "2022.3.0" CACHE STRING "OpenVINO version to be used" )
+SET(OPENVINO_BUILD_VERSION     "${OPENVINO_VERSION}" CACHE STRING "OpenVINO version to be used" )
+SET(TF_PIP_VERSION             "2.9.3" CACHE STRING "TensorFlow version to be installed from PyPi" )
+
+# Build options
+option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
+option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
+option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
+
+if(NOT PY_SCRIPT_BUILD)
+option(STANDALONE_CMAKE "Global flag to specify that this is a cmake only build" TRUE)
+endif()
+
+message(STATUS "OPENVINO_TF_INSTALL_PREFIX: ${OPENVINO_TF_INSTALL_PREFIX}")
+message(STATUS "OPENVINO_ARTIFACTS_DIR: ${OPENVINO_ARTIFACTS_DIR}")
+message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
+message(STATUS "TF_PIP_VERSION: ${TF_PIP_VERSION}")
+
+
+if(NOT APPLE)
+    find_package (Python3 REQUIRED COMPONENTS Interpreter)
+endif()
+
+
+if(STANDALONE_CMAKE)
+    # Create the python virtual environment
+    set(VENV "${CMAKE_CURRENT_BINARY_DIR}/venv-tf-py3")
+
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m venv "${VENV}"
+    )
+    
+    set (ENV{VIRTUAL_ENV} "${VENV}")
+    set (Python3_FIND_VIRTUALENV FIRST)
+    unset (Python3_EXECUTABLE)
+    
+    find_package (Python3 COMPONENTS Interpreter Development)
+    
+    # Upgrade pip in the virtual environment
+    message(STATUS "Upgrading pip")
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -q -U pip
+    )
+    
+    if(NOT USE_OPENVINO_FROM_LOCATION)
+        set(ENABLE_SAMPLES OFF CACHE BOOL "" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${OPENVINO_ARTIFACTS_DIR} CACHE STRING "" FORCE)
+        set(ENABLE_PYTHON OFF CACHE BOOL "" FORCE)
+        set(ENABLE_SYSTEM_TBB OFF CACHE BOOL "" FORCE)
+        set(ENABLE_AUTO OFF CACHE BOOL "" FORCE)
+        set(ENABLE_AUTO_BATCH OFF CACHE BOOL "" FORCE)
+        set(ENABLE_INTEL_GNA OFF CACHE BOOL "" FORCE)
+        set(ENABLE_HETERO OFF CACHE BOOL "" FORCE)
+        set(ENABLE_OV_IR_FRONTEND OFF CACHE BOOL "" FORCE)
+        set(ENABLE_OV_ONNX_FRONTEND OFF CACHE BOOL "" FORCE)
+        set(ENABLE_OV_PADDLE_FRONTEND OFF CACHE BOOL "" FORCE)
+        set(ENABLE_FASTER_BUILD ON CACHE BOOL "" FORCE)
+        set(BUILT_TESTS OFF CACHE BOOL "" FORCE)
+        set(BUILT_TESTING OFF CACHE BOOL "" FORCE)
+        set(BUILT_EXAMPLES OFF CACHE BOOL "" FORCE)
+        add_subdirectory(third-party/openvino)
+        install (TARGETS openvino RUNTIME DESTINATION ${OPENVINO_ARTIFACTS_DIR})
+    endif()
+
+    # Install the desired TensorFlow version from PyPi
+    message(STATUS "Installing TensorFlow ${TF_PIP_VERSION}")
+    execute_process (
+        COMMAND "${Python3_EXECUTABLE}" -m pip install -q -U tensorflow==${TF_PIP_VERSION}
+    )
+endif()
 
 # Invoke a command to determine how many CPU cores we have, and set
 # NUM_MAKE_PROCESSES accordingly so we know what number to pass to make -j.
@@ -79,7 +152,7 @@ if(NOT APPLE)
 
     string(REGEX MATCH "ID=\"([a-z])+\"" OS_VERSION "${LSB_RELEASE_ID_SHORT}")
     string(REGEX MATCH "\"([a-z])+\"" OS_VERSION "${OS_VERSION}")
-    message("OS version is ${OS_VERSION}")
+    message(STATUS "OS version is ${OS_VERSION}")
 else()
     # Handle the case for MacOS
     # TBD
@@ -87,7 +160,7 @@ endif()
 
 # Default to four jobs if the command fails.
 if(NPROC_RESULT)
-    message (WARNING "Unable to detect number of processors. Building nGraph with make -j4.")
+    message (WARNING "Unable to detect number of processors. Building OpenVINO-TensorFlow with make -j4.")
     set(NUM_MAKE_PROCESSES 4)
 endif()
 
@@ -117,7 +190,12 @@ else()
 endif()
 
 # Find TensorFlow
-find_package(TensorFlow REQUIRED)
+if(STANDALONE_CMAKE)
+    # Use a separate TensorFlow finder if we're building with standalone CMake
+    include(cmake/FindTensorFlowStandalone.cmake)
+else()
+    find_package(TensorFlow REQUIRED)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(OPENVINO_TF_CXX11_ABI "${TensorFlow_CXX_ABI}")
@@ -129,35 +207,29 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${OPENVINO_TF_CXX11_ABI}")    
 endif()
 
-if(APPLE)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(LIBNGRAPH "libngraphd.dylib")
-    else()
-        set(LIBNGRAPH "libngraph.dylib")
-    endif()
-elseif(WIN32)
-    set(LIBNGRAPH "ngraph.lib")
-else()
-    set(LIBNGRAPH "libngraph.so")
-endif(APPLE)
-
 if(WIN32)
 	add_definitions(-DNOMINMAX)
 endif()
 
-# Build options
-option(UNIT_TEST_ENABLE "Control the building of unit tests" FALSE)
-option(UNIT_TEST_TF_CC_DIR "Location where TensorFlow CC library is located" FALSE)
-option(USE_OPENVINO_FROM_LOCATION "Use OpenVINO located in OPENVINO_ARTIFACTS_DIR" FALSE)
-option(OPENVINO_ARTIFACTS_DIR "Where would OpenVINO be installed after build" FALSE)
+if(PY_SCRIPT_BUILD OR USE_OPENVINO_FROM_LOCATION)
+    set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
+else()
+    set(InferenceEngine_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    set(OpenVINO_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    find_package(OpenVINO REQUIRED COMPONENTS Runtime TensorFlow)
+    get_target_property(OV_FRONTEND_INCLUDE_DIRECTORIES 
+    openvino::frontend::tensorflow INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(OV_RUNTIME_INCLUDE_DIRECTORIES 
+    openvino::runtime INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(OV_RUNTIME_C_INCLUDE_DIRECTORIES 
+    openvino::runtime::c INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
-set(InferenceEngine_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(InferenceEngine REQUIRED)
 
 set(ngraph_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/cmake)
 find_package(ngraph QUIET)
 
-include_directories(${InferenceEngine_INCLUDE_DIRS})
 if (THREADING STREQUAL "TBB" OR THREADING STREQUAL "TBB_AUTO")
     set(TBB_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/cmake)
     find_package(TBB COMPONENTS tbb tbbmalloc)
@@ -187,13 +259,12 @@ message(STATUS "OPENVINO_ARTIFACTS_DIR:     ${OPENVINO_ARTIFACTS_DIR}")
 message(STATUS "USE_PRE_BUILT_OPENVINO:       ${USE_PRE_BUILT_OPENVINO}")
 message(STATUS "OPENVINO_VERSION: ${OPENVINO_VERSION}")
 
-if (${OPENVINO_VERSION} MATCHES "master")
-  # master works with checks of latest release
-  add_definitions(-DOPENVINO_2022_2=1)
-elseif (${OPENVINO_VERSION} MATCHES "2022.1.0")
+if (${OPENVINO_VERSION} MATCHES "2022.1.0")
   add_definitions(-DOPENVINO_2022_1=1)
 elseif (${OPENVINO_VERSION} MATCHES "2022.2.0")
   add_definitions(-DOPENVINO_2022_2=1)
+elseif (${OPENVINO_VERSION} MATCHES "2022.3.0")
+  add_definitions(-DOPENVINO_2022_3=1)
 else()
   message(FATAL_ERROR "Unsupported OpenVINO version: ${OPENVINO_VERSION}")
 endif()
@@ -205,28 +276,40 @@ endif()
 if(OS_VERSION STREQUAL "\"centos\"")
     set(LIB "lib64")
 elseif(APPLE)
-    set(LIB "lib/intel64/Release")
+    set(LIB "lib/intel64/${CMAKE_BUILD_TYPE}")
 elseif(WIN32)
-    set(LIB "bin/intel64/Release")
+    set(LIB "bin/intel64/${CMAKE_BUILD_TYPE}")
 else()
     set(LIB "lib/intel64")
 endif()
 
 if(ngraph_FOUND)
-    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime)
+    set(OPENVINO_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR}/runtime)
 else()
-    set(NGRAPH_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
+    set(OPENVINO_INSTALL_DIR ${OPENVINO_ARTIFACTS_DIR})
 endif()
 
+include_directories(${InferenceEngine_INCLUDE_DIRS}
+                    ${OV_FRONTEND_INCLUDE_DIRECTORIES}
+                    ${OV_RUNTIME_INCLUDE_DIRECTORIES}
+                    ${OV_RUNTIME_C_INCLUDE_DIRECTORIES}
+                    ${OPENVINO_INSTALL_DIR}/include/)
+
 if(APPLE)
-    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.dylib)
-    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.dylib)
+    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.${OPENVINO_VERSION}.dylib)
+    set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino.${OPENVINO_VERSION}.dylib)
 elseif(WIN32)
-    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/openvino_tensorflow_fe.dll)
-    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/openvino.dll)
+    set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/openvino_tensorflow_frontend.dll)
+    set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/openvino.dll)
 else()
-    set(libtensorflow_frontend_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_fe.so)
-    set(libopenvino_path ${NGRAPH_INSTALL_DIR}/${LIB}/libopenvino.so)
+
+    if(PY_SCRIPT_BUILD OR USE_OPENVINO_FROM_LOCATION)
+        set(libtensorflow_frontend_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION})
+        set(libopenvino_path ${OPENVINO_INSTALL_DIR}/${LIB}/libopenvino.so.${OPENVINO_VERSION})
+    elseif(NOT USE_OPENVINO_FROM_LOCATION)
+        set(libtensorflow_frontend_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/${CMAKE_BUILD_TYPE}/libopenvino_tensorflow_frontend.so.${OPENVINO_VERSION})
+        set(libopenvino_path ${CMAKE_SOURCE_DIR}/third-party/openvino/bin/intel64/${CMAKE_BUILD_TYPE}/libopenvino.so.${OPENVINO_VERSION})
+    endif()
 endif()
 
 add_library(tensorflow_frontend_lib SHARED IMPORTED)                                                                       
@@ -238,7 +321,7 @@ set_target_properties(
 if(WIN32)
     set_target_properties(
             tensorflow_frontend_lib
-            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino_tensorflow_fe.lib
+            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/${CMAKE_BUILD_TYPE}/openvino_tensorflow_frontend.lib
         )
 endif()
 
@@ -252,7 +335,7 @@ set_target_properties(
 if(WIN32)
     set_target_properties(
             openvino_lib
-            PROPERTIES IMPORTED_IMPLIB ${NGRAPH_INSTALL_DIR}/lib/intel64/Release/openvino.lib
+            PROPERTIES IMPORTED_IMPLIB ${OPENVINO_INSTALL_DIR}/lib/intel64/${CMAKE_BUILD_TYPE}/openvino.lib
         )
 endif()
 
@@ -274,9 +357,9 @@ get_filename_component(
     ABSOLUTE
 )
 
-add_subdirectory(examples)
 if (DEFINED TF_SRC_DIR)
     message(STATUS "TensorFlow_SRC_DIR: ${TensorFlow_SRC_DIR}")
+    add_subdirectory(examples)
     add_subdirectory(examples/classification_sample)
 else()
     message(

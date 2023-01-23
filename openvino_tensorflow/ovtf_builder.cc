@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -31,6 +31,8 @@
 #include "openvino_tensorflow/pass/transpose_sinking.h"
 
 #include "openvino_tensorflow/tf_conversion_extensions/src/conversion_extensions.hpp"
+
+#define ZERODIM_FIX
 
 using tensorflow::int32;
 using namespace std;
@@ -4293,16 +4295,16 @@ Status Builder::TranslateGraph(
   ov::ParameterVector ng_func_parameter_list;
   ng_func_parameter_list.reserve(tf_params.size());
   // Variables to constant conversion is disabled by default
-  bool convert_var_const = false;
+  bool convert_var_const = true;
   const char* convert_var_const_env =
       std::getenv("OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS");
 
   if (!(convert_var_const_env == nullptr)) {
     // Array should have either "0" or "1"
     char env_value = convert_var_const_env[0];
-    if (env_value == '1') {
-      OVTF_VLOG(1) << "OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS is Enabled ";
-      convert_var_const = true;
+    if (env_value == '0') {
+      OVTF_VLOG(1) << "OPENVINO_TF_CONVERT_VARIABLES_TO_CONSTANTS is Disabled ";
+      convert_var_const = false;
     }
   }
 
@@ -4658,7 +4660,7 @@ Status Builder::TranslateGraphWithTFFE(
   ov::frontend::tensorflow::GraphIterator::Ptr gi_ptr = giter;
   ov::Any gany(gi_ptr);
 
-  std::vector<ov::Shape> indexed_shape;
+  std::vector<ov::PartialShape> indexed_shape;
   indexed_shape.reserve(inputs.size());
   for (size_t i = 0; i < inputs.size(); ++i) {
     ov::Shape ng_shape;
@@ -4727,6 +4729,15 @@ Status Builder::TranslateGraphWithTFFE(
             } else {
               auto element_type = node.get_attribute<ov::element::Type>("T");
               auto shape = indexed_shape.at(index);
+              if (BackendManager::DynamicShapesEnabled()) {
+                auto dynamic_shape_support =
+                    node.get_attribute<bool>("_dynamic_shape");
+                if (dynamic_shape_support) {
+                  for (int d = 0; d < shape.size(); d++) {
+                    shape[d] = -1;
+                  }
+                }
+              }
               res =
                   std::make_shared<ov::opset8::Parameter>(element_type, shape);
             }
@@ -4773,6 +4784,7 @@ Status Builder::TranslateGraphWithTFFE(
     return errors::Internal("Frontend conversion error");
   }
 
+#ifdef ZERODIM_FIX
   // Get the parameter nodes with non zero dim values or valid dim values
   auto ng_parameter_list = ng_function->get_parameters();
   ov::ParameterVector ng_func_parameter_list;
@@ -4786,10 +4798,12 @@ Status Builder::TranslateGraphWithTFFE(
   };
 
   for (int i = 0; i < ng_parameter_list.size(); i++) {
-    if (!(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
+    if (!(ng_parameter_list[i]->get_partial_shape().is_static()) ||
+        !(ng_parameter_list[i]->get_shape().size() > 0 && param_dim_check(i))) {
       ng_func_parameter_list.push_back(ng_parameter_list[i]);
     }
   }
+#endif
 
   // Get the result nodes with valid dim values
   auto ng_result_list = ng_function->get_results();
@@ -4801,6 +4815,18 @@ Status Builder::TranslateGraphWithTFFE(
     return false;
   };
 
+#ifndef ZERODIM_FIX
+  ov::ResultVector ng_func_result_list;
+  for (int i = 0; i < ng_result_list.size(); i++) {
+    if (!(ng_result_list[i]->is_dynamic() ||
+          !(ng_result_list[i]->get_shape().size() > 0 &&
+            result_dim_check(i)))) {
+      zero_dim_outputs.push_back(ng_result_list[i]);
+    }
+  }
+
+  ng_function->set_friendly_name(name);
+#else
   ov::ResultVector ng_func_result_list;
   for (int i = 0; i < ng_result_list.size(); i++) {
     if (ng_result_list[i]->is_dynamic() ||
@@ -4820,6 +4846,7 @@ Status Builder::TranslateGraphWithTFFE(
     return errors::Internal("Failed to create OpenVINO Model for " + name +
                             ": " + string(exp.what()));
   }
+#endif
 
   //
   // Apply additional passes on the nGraph function here.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -93,6 +93,20 @@ const std::map<std::string, SetAttributesFunction>& GetAttributeSetters() {
 
   static std::map<std::string, SetAttributesFunction> set_attributes_map;
   static bool initialized = false;
+
+  if (BackendManager::DynamicShapesEnabled() ||  // DynamicShapesEnabled();
+                                                 // default=false; when
+                                                 // dynamic shapes are
+                                                 // enabled, don't check for
+                                                 // static inputs in clusters
+      // [TODO]: Find a permanent fix for these failures in OpenVINO
+      BackendManager::
+          StaticInputChecksDisabled())  // StaticInputChecksDisabled();
+                                        // default=false; by default, check
+                                        // for static inputs in clusters
+  {
+    initialized = true;  // this skips static input checks
+  }
 
   if (!initialized) {
     // Set Additional Attributes (if any)

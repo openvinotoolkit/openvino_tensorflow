@@ -1,13 +1,12 @@
- # Copyright (C) 2021-2022 Intel Corporation
+ # Copyright (C) 2023 Intel Corporation
 
  # SPDX-License-Identifier: Apache-2.0
 
 set(LIB_NAME openvino_tensorflow)
 
-include_directories(${TensorFlow_INCLUDE_DIR})
-include_directories(${TensorFlow_INCLUDE_DIR}/external/nsync/public)
-include_directories(${NGRAPH_INSTALL_DIR}/include)
-include_directories(${ABSL_INCLUDE_DIR})
+if (NOT STANDALONE_CMAKE)
+  include_directories(${OPENVINO_INSTALL_DIR}/include)
+endif()
 
 set(TF_CONVERSION_EXTENSIONS_MODULE_NAME "tf_conversion_extensions")
 add_compile_definitions(TF_CONVERSION_EXTENSIONS_MODULE_NAME="${TF_CONVERSION_EXTENSIONS_MODULE_NAME}")
@@ -74,6 +73,11 @@ endif()
 
 add_library(${LIB_NAME} SHARED ${SRC})
 
+target_include_directories(${LIB_NAME} PRIVATE 
+                          ${TensorFlow_INCLUDE_DIR}
+                          ${TensorFlow_INCLUDE_DIR}/external/nsync/public
+                          ${ABSL_INCLUDE_DIR})
+
 target_link_libraries(
         ${LIB_NAME}
         ovtf_logger
@@ -92,7 +96,7 @@ target_compile_definitions(
     _GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}
 )
 
-target_include_directories(${LIB_NAME} PUBLIC "${NGRAPH_INSTALL_DIR}/include")
+target_include_directories(${LIB_NAME} PUBLIC "${OPENVINO_INSTALL_DIR}/include")
 
 add_compile_definitions(TF_VERSION=${TF_MAJOR_VERSION})
 
@@ -119,17 +123,28 @@ message(STATUS "OVTF_INSTALL_LIB_DIR: ${OVTF_INSTALL_LIB_DIR}")
 # Install the openvino_tensorflow lib
 install(TARGETS ${LIB_NAME} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 
+string(REPLACE "." ";" OPENVINO_VERSION_LIST ${OPENVINO_VERSION})
+list(GET OPENVINO_VERSION_LIST 0 OPENVINO_VERSION_MAJOR)
+string(SUBSTRING ${OPENVINO_VERSION_MAJOR} 2 2 OPENVINO_VERSION_MAJOR)
+list(GET OPENVINO_VERSION_LIST 1 OPENVINO_VERSION_MINOR)
+list(GET OPENVINO_VERSION_LIST 2 OPENVINO_VERSION_PATCH)
+set(OPENVINO_SO_VER "${OPENVINO_VERSION_MAJOR}${OPENVINO_VERSION_MINOR}${OPENVINO_VERSION_PATCH}")
+
 # Install OCM and set a variable with required OpenVINO libraries path,
 if (APPLE)
   set(OCM_LIB libocm.dylib)
   set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dylib")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
-  SET(OV_LIB_EXT "dylib")
-  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/Release)
-  set (IE_LIBS 
-      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
-      )
+  
+  if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT_DOT "${OPENVINO_VERSION}.dylib")
+    set(OV_LIB_EXT "${OPENVINO_SO_VER}.dylib")
+  else()
+    set(OV_LIB_EXT ".dylib")
+  endif()
+
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64/${CMAKE_BUILD_TYPE})
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
@@ -138,27 +153,34 @@ elseif(WIN32)
   set(TF_CONVERSION_EXTENSIONS_LIB "${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.dll")
   set(LIB_PREFIX "")
   set(PLUGIN_LIB_EXT "dll")
-  SET(OV_LIB_EXT ${PLUGIN_LIB_EXT})
-  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/Release)
+  set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+  set(OV_LIB_EXT_DOT ${OV_LIB_EXT})
+
+  set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/bin/intel64/${CMAKE_BUILD_TYPE})
   set (IE_LIBS 
       "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
       "${IE_LIBS_PATH}/cache.json"
-      "${IE_LIBS_PATH}/pcie-ma2x8x.elf"
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/bin/)
-  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/Release/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/Release/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${CMAKE_BUILD_TYPE}/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TF_CONVERSION_EXTENSIONS_MODULE_NAME}/${CMAKE_BUILD_TYPE}/${TF_CONVERSION_EXTENSIONS_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
 else()
   set(OCM_LIB libocm.so)
   set(TF_CONVERSION_EXTENSIONS_LIB "lib${TF_CONVERSION_EXTENSIONS_MODULE_NAME}.so")
   set(LIB_PREFIX "lib")
   set(PLUGIN_LIB_EXT "so")
-  set(OV_LIB_EXT ${PLUGIN_LIB_EXT})
+
+  if ((OPENVINO_SO_VER STRGREATER_EQUAL "2230"))
+    set(OV_LIB_EXT_DOT "${PLUGIN_LIB_EXT}.${OPENVINO_VERSION}")
+    set(OV_LIB_EXT "${PLUGIN_LIB_EXT}.${OPENVINO_SO_VER}")
+  else()
+    set(OV_LIB_EXT "${PLUGIN_LIB_EXT}")
+  endif()
+
   set(IE_LIBS_PATH ${OPENVINO_ARTIFACTS_DIR}/runtime/lib/intel64)
   set (IE_LIBS 
       "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_gpu_plugin.${PLUGIN_LIB_EXT}"
       "${IE_LIBS_PATH}/cache.json"
-      "${IE_LIBS_PATH}/pcie-ma2x8x.mvcmd" 
      )
   set(TBB_LIBS ${OPENVINO_ARTIFACTS_DIR}/runtime/3rdparty/tbb/lib/)
   install(FILES ${CMAKE_INSTALL_PREFIX}/../ocm/OCM/${OCM_LIB} DESTINATION "${OVTF_INSTALL_LIB_DIR}")
@@ -170,23 +192,32 @@ set (IE_LIBS
     "${IE_LIBS}" 
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_fe.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_frontend.${OV_LIB_EXT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino.${OV_LIB_EXT_DOT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_c.${OV_LIB_EXT_DOT}"
+    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_tensorflow_frontend.${OV_LIB_EXT_DOT}"
     "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_cpu_plugin.${PLUGIN_LIB_EXT}"
-    "${IE_LIBS_PATH}/${LIB_PREFIX}openvino_intel_myriad_plugin.${PLUGIN_LIB_EXT}"
-    "${IE_LIBS_PATH}/usb-ma2x8x.mvcmd" 
-    "${IE_LIBS_PATH}/plugins.xml" 
+    "${IE_LIBS_PATH}/plugins.xml"
     )
 
 # Install Openvino and TBB libraries
-if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
+
+if((NOT DISABLE_PACKAGING_OPENVINO_LIBS))
+  # TBB Libs are not glob-able here for standalone CMake but will be installed
+  # when CreatePipWhl.cmake is run
   file(GLOB TBB_LIB_FILES "${TBB_LIBS}/*")
   set(OPENVINO_LIB_FILES "${IE_LIBS};${TBB_LIB_FILES}")
 
   foreach(LIB_FILE ${OPENVINO_LIB_FILES})
-      file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      if (NOT STANDALONE_CMAKE)
+        file(COPY ${LIB_FILE} DESTINATION ${OVTF_INSTALL_LIB_DIR})
+      endif()
       get_filename_component(lib_file_name ${LIB_FILE} NAME)
       set(lib_file_real_path "${OVTF_INSTALL_LIB_DIR}/${lib_file_name}")
       if(${lib_file_name} MATCHES ".so*")
+          if (STANDALONE_CMAKE)
+            install(CODE "execute_process(COMMAND cp -av ${LIB_FILE} ${OVTF_INSTALL_LIB_DIR} COMMAND_ECHO STDOUT)")
+          endif()
           install(CODE "
           execute_process(COMMAND patchelf --set-rpath $ORIGIN ${lib_file_real_path} COMMAND_ECHO STDOUT)
           ")
@@ -194,19 +225,39 @@ if(NOT DISABLE_PACKAGING_OPENVINO_LIBS)
   endforeach()
 endif()
 
+if (STANDALONE_CMAKE)
+
+  if (NOT USE_OPENVINO_FROM_LOCATION)
+    # Configure OpenVINO as OVTF's dependency
+    add_dependencies(${LIB_NAME}
+                    openvino::runtime
+                    openvino::runtime::c
+                    openvino::frontend::tensorflow)
+  endif()
+
+endif()
+
+
 # Now create the Python pip package. The following variables are passed to the
 # CreatePipWhl.cmake
 # CMake "install" target "CODE" will propagate these variables to the
 # target "SCRIPT" so that the "SCRIPT" (in ths case CreatePipWhl.cmake)
 # So any variable that we need to propagate needs to be added here
 install(CODE "set(OS_VERSION ${OS_VERSION})")
-install(CODE "set(NGRAPH_INSTALL_DIR \"${NGRAPH_INSTALL_DIR}\")")
+install(CODE "set(OPENVINO_INSTALL_DIR \"${OPENVINO_INSTALL_DIR}\")")
 install(CODE "set(OVTF_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/../\")")
 install(CODE "set(OVTF_INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}\")")
 install(CODE "set(TensorFlow_GIT_VERSION \"${TensorFlow_GIT_VERSION}\")")
 install(CODE "set(TensorFlow_VERSION \"${TensorFlow_VERSION}\")")
 install(CODE "set(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")")
-if(PYTHON_EXECUTABLE)
-    install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
+install(CODE "set(OPENVINO_TF_INSTALL_PREFIX \"${OPENVINO_TF_INSTALL_PREFIX}\")")
+install(CODE "set(STANDALONE_CMAKE \"${STANDALONE_CMAKE}\")")
+install(CODE "set(TBB_LIBS \"${TBB_LIBS}\")")
+
+if(PYTHON3X_EXECUTABLE)
+    install(CODE "set(Python3_EXECUTABLE \"${PYTHON3X_EXECUTABLE}\")")
+else()
+    install(CODE "set(Python3_EXECUTABLE \"${Python3_EXECUTABLE}\")")
 endif()
+
 install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../python/CreatePipWhl.cmake")

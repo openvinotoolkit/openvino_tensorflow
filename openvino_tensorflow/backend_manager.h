@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -48,6 +48,15 @@ class BackendManager {
   // Returns if TF Frontend is disabled
   static bool TFFrontendDisabled();
 
+  // Returns true if dynamic input shape support is enabled
+  static bool DynamicShapesEnabled();
+
+  // Returns true if zero-copy enabled for dynamic outputs
+  static bool OutputZeroCopy();
+
+  // Returns true if static input checking is disabled
+  static bool StaticInputChecksDisabled();
+
   ~BackendManager();
 
  private:
@@ -62,6 +71,9 @@ class BackendManager {
   static bool m_enable_ovtf_profiling;
   static char* m_model_cache_dir;
   static bool m_tf_frontend_disabled;
+  static bool m_dynamic_shapes_enabled;
+  static bool m_output_zero_copy;
+  static bool m_static_input_checks_disabled;
 };
 
 }  // namespace openvino_tensorflow
