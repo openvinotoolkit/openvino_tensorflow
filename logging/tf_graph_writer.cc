@@ -58,7 +58,6 @@ void GraphToPbFile(Graph* graph, const string& filename) {
 
   // Save the GraphDef to a pb file.
   g_def.SerializeToOstream(&output_file);
-  
 }
 
 //-----------------------------------------------------------------------------
