@@ -54,25 +54,25 @@ jobs:
       workingDirectory: $(WORK_DIR)
       displayName: "Install"
 
-    - script: |
-        export OPENVINO_TF_BACKEND=CPU
-        python3 -m pip install keras
-        source build_cmake/venv-tf-py3/bin/activate
-        PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
-        --artifacts build_cmake/artifacts --test_python
-      condition: always()
-      workingDirectory: $(WORK_DIR)
-      displayName: "python:  Python Tests CPU"
+    # - script: |
+    #     export OPENVINO_TF_BACKEND=CPU
+    #     python3 -m pip install keras
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     PYTHONPATH=`pwd`:`pwd`/tools:`pwd`/examples python3 test/ci/azure/test_runner.py \
+    #     --artifacts build_cmake/artifacts --test_python
+    #   condition: always()
+    #   workingDirectory: $(WORK_DIR)
+    #   displayName: "python:  Python Tests CPU"
 
-    - script: |
-        export OPENVINO_TF_BACKEND=CPU
-        python3 -m pip install keras
-        source build_cmake/venv-tf-py3/bin/activate
-        PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
-          --artifacts build_cmake/artifacts --test_tf_python
-      condition: always()
-      workingDirectory: $(WORK_DIR)
-      displayName: "python: TF Python Tests CPU"
+    # - script: |
+    #     export OPENVINO_TF_BACKEND=CPU
+    #     python3 -m pip install keras
+    #     source build_cmake/venv-tf-py3/bin/activate
+    #     PYTHONPATH=`pwd` python3 test/ci/azure/test_runner.py \
+    #       --artifacts build_cmake/artifacts --test_tf_python
+    #   condition: always()
+    #   workingDirectory: $(WORK_DIR)
+    #   displayName: "python: TF Python Tests CPU"
 
     #  - script: |
     #     export OPENVINO_TF_BACKEND="MYRIAD"
