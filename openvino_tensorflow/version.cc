@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -15,7 +15,7 @@
 // http://semver.org/
 
 #define OV_TF_MAJOR_VERSION 2
-#define OV_TF_MINOR_VERSION 2
+#define OV_TF_MINOR_VERSION 3
 #define OV_TF_PATCH_VERSION 0
 
 // The version suffix is used for pre-release version numbers

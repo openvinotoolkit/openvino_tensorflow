@@ -1,5 +1,5 @@
 # ==============================================================================
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
  
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -68,7 +68,7 @@ package_data_dict['openvino_tensorflow'] = ov_libs_list
 
 setup(
     name='openvino_tensorflow',
-    version='2.2.0',
+    version='2.3.0',
     description='OpenVINO™ integration with TensorFlow',
     long_description=long_description,
     long_description_content_type="text/markdown",

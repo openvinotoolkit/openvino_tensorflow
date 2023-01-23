@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -764,7 +764,7 @@ def install_openvino_tf(tf_version, venv_dir, ovtf_pip_whl):
 
 def download_repo(target_name, repo, version, submodule_update=False):
     # First download to a temp folder
-    command = "git clone  {repo} {target_name}".format(
+    command = "git clone -c core.longpaths=true {repo} {target_name}".format(
         repo=repo, target_name=target_name)
     process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     so, se = process.communicate()
@@ -876,7 +876,9 @@ def build_openvino(build_dir, openvino_src_dir, cxx_abi, target_arch,
         "-DENABLE_TESTING=OFF", "-DENABLE_SAMPLES=OFF",
         "-DENABLE_FUNCTIONAL_TESTS=OFF",
         "-DCMAKE_CXX_FLAGS=-D_GLIBCXX_USE_CXX11_ABI=" + cxx_abi,
-        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"", "-DTHREADING=" + threading
+        "-DCMAKE_INSTALL_RPATH=\"$ORIGIN\"", "-DTHREADING=" + threading,
+        "-DENABLE_INTEL_MYRIAD=OFF", "-DENABLE_INTEL_MYRIAD_COMMON=OFF",
+        "-DCMAKE_DISABLE_FIND_PACKAGE_gflags=1"
     ]
 
     if (platform.system() == 'Windows'):

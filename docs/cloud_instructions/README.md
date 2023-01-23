@@ -1,1 +1,0 @@
-The newer and updated Colab notebooks can be found in [examples](../../examples/notebooks).

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 
 # SPDX-License-Identifier: Apache-2.0
 # ==============================================================================
@@ -36,8 +36,8 @@ def main():
     '''
 
     # Component versions
-    tf_version = "v2.9.2"
-    ovtf_version = "v2.2.0"
+    tf_version = "v2.9.3"
+    ovtf_version = "v2.3.0"
     use_intel_tf = False
 
     # Command line parser options
@@ -195,7 +195,7 @@ def main():
             "master", "2022.1.0", "2022.2.0", "2022.3.0"
     ]):
         raise AssertionError(
-            "Only 2022.1.0, 2022.2.0, and master branch of OpenVINO are supported"
+            "Only 2022.1.0, 2022.2.0, 2022.3.0, and master branch of OpenVINO are supported"
         )
 
     if (arguments.openvino_threading not in ["TBB", "OMP"]):
@@ -393,7 +393,7 @@ def main():
             if tags.interpreter == "cp39":
                 command_executor([
                     "pip", "install", "--force-reinstall",
-                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.2.0/tensorflow-2.9.2-cp39-cp39-win_amd64.whl"
+                    "https://github.com/openvinotoolkit/openvino_tensorflow/releases/download/v2.3.0/tensorflow-2.9.3-cp39-cp39-win_amd64.whl"
                 ])
             else:
                 raise AssertionError("Only python39 is supported on Windows")

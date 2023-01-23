@@ -15,8 +15,6 @@
 
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
-- 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
-- 支持 8 颗英特尔 Movidius™ MyriadX VPU 的英特尔<sup>®</sup> 视觉加速器设计（称作 VAD-M 或 HDDL）
 
 [注：为实现最佳的性能、效率、工具定制和硬件控制，我们建议开发人员使用原生 OpenVINO™ API 及其运行时。]
 
@@ -25,27 +23,25 @@
 
 - Ubuntu 18.04, 20.04, macOS 11.2.3 or Windows<sup>1</sup> 10 - 64 bit
 - Python* 3.7, 3.8 or 3.9
-- TensorFlow* v2.9.2
+- TensorFlow* v2.9.3
 
 <sup>1</sup>Windows安装包仅支持Python3.9 
 
 请参阅我们的[交互式安装表](https://openvinotoolkit.github.io/openvino_tensorflow/)，查看安装选项菜单。该表格将帮助您配置安装过程。
 
-**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.2.0 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
+**OpenVINO™ integration with TensorFlow** 安装包附带 OpenVINO™ 2022.3.0 版本的预建库，用户无需单独安装 OpenVINO™。该安装包支持：
 - 英特尔<sup>®</sup> CPU
 - 英特尔<sup>®</sup> 集成 GPU
-- 英特尔<sup>®</sup> Movidius™ 视觉处理单元 (VPU)
   
 
         pip3 install -U pip
-        pip3 install tensorflow==2.9.2
-        pip3 install openvino-tensorflow==2.2.0
+        pip3 install tensorflow==2.9.3
+        pip3 install openvino-tensorflow==2.3.0
 
 关于在Windows上的安装步骤，请参考 [**OpenVINO™ integration with TensorFlow** for Windows ](docs/INSTALL_cn.md#windows)
 
 如果您想使用Intel<sup>®</sup> 集成显卡进行推理，请确保安装[Intel® Graphics Compute Runtime for OpenCL™ drivers](https://docs.openvino.ai/latest/openvino_docs_install_guides_installing_openvino_linux.html#install-gpu)
 
-如果您想使用支持 Movidius™ (VAD-M)进行推理的英特尔® 视觉加速器设计 (VAD-M) 进行推理，请安装 [**OpenVINO™ integration with TensorFlow** 以及英特尔® OpenVINO™ 工具套件发布版](docs/INSTALL_cn.md#安装-openvino-integration-with-tensorflow-pypi-发布版与独立安装intel-openvino-发布版以支持vad-m)。
 
 更多安装详情，请参阅 [INSTALL.md](docs/INSTALL_cn.md), 更多源构建选项请参阅 [BUILD.md](docs/BUILD_cn.md)
 
@@ -60,10 +56,11 @@
 
 它会生成以下输出：
 
-        TensorFlow version:  2.9.2
-        OpenVINO integration with TensorFlow version: b'2.2.0'
-        OpenVINO version used for this build: b'2022.2.0'
+        TensorFlow version:  2.9.3
+        OpenVINO integration with TensorFlow version: b'2.3.0'
+        OpenVINO version used for this build: b'2022.3.0'
         TensorFlow version used for this build: v2.9.2
+
         CXX11_ABI flag used for this build: 1
 
 默认情况下，英特尔<sup>®</sup> CPU 用于运行推理。您也可以将默认选项改为英特尔<sup>®</sup> 集成 GPU 或英特尔<sup>®</sup> VPU 来进行 AI 推理。调用以下函数，更改执行推理的硬件。

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2023 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
@@ -96,10 +96,13 @@ NGraphEncapsulateOp::NGraphEncapsulateOp(OpKernelConstruction* ctx)
   m_iter = 0;
   // if this is set to 1, run time cost based assignment of clusters will be
   // disabled
-  m_disable_cost_based_assignment = 1;
+  m_disable_cost_based_assignment = 0;
   const char* openvino_tf_disable_cost_assignment =
       std::getenv("OPENVINO_TF_DISABLE_COST_ASSIGNMENT");
-  if (openvino_tf_disable_cost_assignment != nullptr) {
+
+  if (BackendManager::DynamicShapesEnabled()) {
+    m_disable_cost_based_assignment = 1;
+  } else if (openvino_tf_disable_cost_assignment != nullptr) {
     if (1 == std::stoi(openvino_tf_disable_cost_assignment)) {
       m_disable_cost_based_assignment = 1;
     }
@@ -233,7 +236,7 @@ void NGraphEncapsulateOp::Compute(OpKernelContext* ctx) {
                  << " ms.";
     // Restore the fallback to false, if TF is taking more time than OVTF for
     // this cluster
-    if (duration_in_ms > s_ovtf_cluster_timings_map[m_cluster_id]) {
+    if (duration_in_ms >= s_ovtf_cluster_timings_map[m_cluster_id]) {
       NGraphClusterManager::SetClusterFallback(m_cluster_id, false);
     }
     // Disable timing run for this cluster

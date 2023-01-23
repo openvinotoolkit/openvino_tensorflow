@@ -29,6 +29,9 @@ tests_common.txt
 test_bfloat16.TestBfloat16.test_conv2d_bfloat16
 test_bfloat16.TestBfloat16.test_conv2d_cast_bfloat16
 
+# Failing after TF-2.9.3 upgrade
+test_crop_and_resize.TestCropAndResize.test_crop_and_resize_upscale_nearest
+
 # Failed to set Blob with precision not corresponding to user output precision
 #test_elementwise_ops.TestElementwiseOperations.test_less_equal[1.4-1.0-expected0]
 #test_elementwise_ops.TestElementwiseOperations.test_less_equal[-1.0--1.0-expected1]

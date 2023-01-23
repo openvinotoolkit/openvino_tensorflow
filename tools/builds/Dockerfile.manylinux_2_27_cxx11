@@ -1,7 +1,7 @@
-# Copyright (C) 2021-2022 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG OV_TAG="2022.2.0"
+ARG OV_TAG="2022.3.0"
 
 ################################################################################
 FROM openvino/ubuntu18_dev:${OV_TAG}
@@ -17,10 +17,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
-ARG OVTF_BRANCH="releases/2.2.0"
+ARG OVTF_BRANCH="releases/2.3.0"
+
+RUN rm /usr/bin/python3 && \
+    ln -s /usr/bin/python3.6 /usr/bin/python3 && \
+    python3 --version
 
 RUN apt-get update; \
-    apt install -y --no-install-recommends software-properties-common && \
+    apt-get install -y --no-install-recommends software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa; \
     apt-get install -y --no-install-recommends \
     git \
@@ -35,7 +39,7 @@ RUN apt-get update; \
     rm -rf /var/lib/apt/lists/*;
 
 RUN apt-get update; \
-    apt install -y --no-install-recommends software-properties-common && \
+    apt-get install -y --no-install-recommends software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa; \
     apt-get install -y --no-install-recommends \
         python3.6-dev python3.7-dev python3.8-dev python3.9-dev && \
@@ -65,7 +69,6 @@ RUN for py_ver in 3.7 3.8 3.9; do \
         # start build
         python build_ovtf.py --python_executable=`which python` \
                              --cxx11_abi_version=1 \
-                             --use_openvino_from_location=/opt/intel/openvino/ \
                              --build_dir=build_venv_${py_ver}; \
         # copy to artifacts dir
         cp build_venv_${py_ver}/artifacts/openvino_tensorflow*.whl /whl/abi1/; \
