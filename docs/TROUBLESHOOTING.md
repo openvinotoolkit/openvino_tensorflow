@@ -147,3 +147,9 @@ For the version **2.3.0**
 4. The TFHub notebook under `examples/notebook/OpenVINO_TensorFlow_tfhub_object_detection_example.ipynb` may experience python kernel crashes when executed on a machine with an insufficinet compute and memory configuration.
 
 5. Enabling Dynamic Shapes support using OPENVINO_TF_ENABLE_DYNAMIC_SHAPES is likely to see a performance drop when compared to its static shape counterpart (as of OpenVINO 2022.3.0). Use static inputs shapes wherever possible.
+
+6. This error may occur on Ubuntu if the pugixml library is missing when importing openvino_tensorflow: `tensorflow.python.framework.errors_impl.NotFoundError: libpugixml.so.1: cannot open shared object file: No such file or directory`. The solution for this is to install libpugixml through apt.
+
+    ```
+    apt install libpugixml-dev
+    ```
