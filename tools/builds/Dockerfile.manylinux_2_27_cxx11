@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG OV_TAG="2022.3.0"
+ARG TF_VERSION="2.8.4"
 
 ################################################################################
 FROM openvino/ubuntu18_dev:${OV_TAG}
@@ -68,6 +69,7 @@ RUN for py_ver in 3.7 3.8 3.9; do \
         pip3 install -r requirements.txt; \
         # start build
         python build_ovtf.py --python_executable=`which python` \
+                             --tf_version=${TF_VERSION} \
                              --cxx11_abi_version=1 \
                              --build_dir=build_venv_${py_ver}; \
         # copy to artifacts dir
