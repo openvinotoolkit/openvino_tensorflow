@@ -4,6 +4,11 @@
   <img src="images/openvino_wbgd.png">
 </p>
 
+# **OpenVINO™ integration with TensorFlow will no longer be supported as of OpenVINO™ 2023.0 release.**
+If you are looking to deploy your TensorFlow models on Intel based devices, you have a few options.
+
+If you prefer the native TensorFlow framework API, consider using the [Intel Extension for TensorFlow (ITEX)](https://github.com/intel/intel-extension-for-tensorflow). Another option is to utilize the [OpenVINO Model Conversion API](https://docs.openvino.ai/2023.0/openvino_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html), which enables the automatic importation and conversion of standard TensorFlow models during runtime. so you no longer need to convert your model offline.
+
 # **OpenVINO™ integration with TensorFlow**
 
 This repository contains the source code of **OpenVINO™ integration with TensorFlow**, designed for TensorFlow* developers who want to get started with [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) in their inferencing applications. TensorFlow* developers can now take advantage of [OpenVINO™](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html) toolkit optimizations with TensorFlow inference applications across a wide range of Intel® compute devices by adding just two lines of code.
