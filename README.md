@@ -7,7 +7,7 @@
 # **OpenVINO™ integration with TensorFlow will no longer be supported as of OpenVINO™ 2023.0 release.**
 If you are looking to deploy your TensorFlow models on Intel based devices, you have a few options.
 
-If you prefer the native TensorFlow framework APIs, consider using the [Intel Extension for TensorFlow (ITEX)](https://github.com/intel/intel-extension-for-tensorflow). Another option is to utilize the [OpenVINO Model Conversion API](https://docs.openvino.ai/2023.0/openvino_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html), which enables the automatic importation and conversion of standard TensorFlow models during runtime. It is not necessary to convert your TensorFlow models offline now..
+If you prefer the native TensorFlow framework APIs, consider using the [Intel Extension for TensorFlow (ITEX)](https://github.com/intel/intel-extension-for-tensorflow). Another option is to utilize the [OpenVINO Model Conversion API](https://docs.openvino.ai/2023.0/openvino_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html), which enables the automatic importation and conversion of standard TensorFlow models during runtime. It is not necessary to convert your TensorFlow models offline now.
 
 # **OpenVINO™ integration with TensorFlow**
 
